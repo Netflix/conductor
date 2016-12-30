@@ -5,7 +5,6 @@ COPY tmp/startup.sh startup.sh
 
 #Install Packages
 RUN apt-get update -y \
-    && apt-get install -y software-properties-common python-software-properties apt-transport-https \
 
     # Install NodeJS
     && apt-get install -y curl \
