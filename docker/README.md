@@ -1,5 +1,5 @@
 # Netflix Conductor (Sample) Docker Image
-A docker image that builds the Netflix Conductor on Ubuntu with [DynomiteDB](http://www.dynomitedb.com) and [Apache Tomcat](http://tomcat.apache.org).
+A docker image that builds the Netflix Conductor on Ubuntu w
 
 This image runs the sample conductor server described in the [Getting Started Guide](https://netflix.github.io/conductor/intro/). If the server dies/stops data will not be persisted
 
