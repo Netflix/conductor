@@ -29,7 +29,12 @@ import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
+import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.service.MetadataService;
@@ -61,12 +66,52 @@ public class ActionProcessor {
 		logger.info("Executing {}", action.getAction());
 
 		switch (action.getAction()) {
-		case start_workflow:
-			Map<String, Object> op = startWorkflow(action, payload);
-			return op;
+			case start_workflow:
+				Map<String, Object> op = startWorkflow(action, payload);
+				return op;
+			case complete_task:
+				op = completeTask(action, payload, action.getComplete_task(), Status.COMPLETED);
+				return op;
+			case fail_task:
+				op = completeTask(action, payload, action.getFail_task(), Status.FAILED);
+				return op;
+			default:
+				break;
 		}
 		throw new UnsupportedOperationException("Action not supported " + action.getAction());
 
+	}
+
+	private Map<String, Object> completeTask(Action action, String payload, TaskDetails taskDetails, Status status) {
+		
+		Map<String, Object> input = new HashMap<>();
+		input.put("workflowId", taskDetails.getWorkflowId());
+		input.put("taskRefName", taskDetails.getTaskRefName());
+		input.putAll(taskDetails.getOutput());
+		
+		Map<String, Object> replaced = pu.replace(input, payload);
+		String workflowId = "" + replaced.get("workflowId");
+		String taskRefName = "" + replaced.get("taskRefName");
+		Workflow found = executor.getWorkflow(workflowId, true);
+		if(found == null) {
+			replaced.put("error", "No workflow found with ID: " + workflowId);
+			return replaced;
+		}
+		Task task = found.getTaskByRefName(taskRefName);
+		if(task == null) {
+			replaced.put("error", "No task found with reference name: " + taskRefName + ", workflowId: " + workflowId);
+			return replaced;
+		}
+		
+		task.setStatus(status);
+		task.setOutputData(replaced);
+		try {
+			executor.updateTask(new TaskResult(task));
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			replaced.put("error", e.getMessage());
+		}
+		return replaced;
 	}
 
 	private Map<String, Object> startWorkflow(Action action, String payload) throws Exception {
