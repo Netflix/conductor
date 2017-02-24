@@ -130,6 +130,8 @@ public class EventHandler {
 		private TaskDetails complete_task;
 		
 		private TaskDetails fail_task;
+		
+		private boolean expandInlineJSON;
 
 		/**
 		 * @return the action
@@ -189,6 +191,22 @@ public class EventHandler {
 		 */
 		public void setFail_task(TaskDetails fail_task) {
 			this.fail_task = fail_task;
+		}
+		
+		/**
+		 * 
+		 * @param expandInlineJSON when set to true, the in-lined JSON strings are expanded to a full json document 
+		 */
+		public void setExpandInlineJSON(boolean expandInlineJSON) {
+			this.expandInlineJSON = expandInlineJSON;
+		}
+		
+		/**
+		 * 
+		 * @return true if the json strings within the payload should be expanded.
+		 */
+		public boolean isExpandInlineJSON() {
+			return expandInlineJSON;
 		}
 	}
 	
