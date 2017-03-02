@@ -114,7 +114,7 @@ public class WorkflowSweeper {
 					
 				} catch (ApplicationException e) {
 					if(e.getCode().equals(Code.NOT_FOUND)) {
-						logger.error("Workflow NOT found id=" + workflowId, e);
+						logger.error("Workflow NOT found for id: " + workflowId, e);
 						queues.remove(WorkflowExecutor.deciderQueue, workflowId);
 					}
 					

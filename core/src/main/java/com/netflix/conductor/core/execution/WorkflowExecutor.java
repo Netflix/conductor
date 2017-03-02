@@ -126,7 +126,6 @@ public class WorkflowExecutor {
 			wf.setUpdatedBy(null);
 			wf.setUpdateTime(null);
 			edao.createWorkflow(wf);
-			queue.push(deciderQueue, wf.getWorkflowId(), config.getSweepFrequency());		//Let's check on this workflow in some time (sweep frequency)
 			decide(workflowId);
 			return workflowId;
 			
@@ -205,7 +204,6 @@ public class WorkflowExecutor {
 		}
 
 		edao.createWorkflow(wf);
-		queue.push(deciderQueue, wf.getWorkflowId(), config.getSweepFrequency());		//Let's check on this workflow in some time (sweep frequency)
 		decide(workflowId);
 		return workflowId;
 	}
@@ -223,7 +221,6 @@ public class WorkflowExecutor {
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		edao.updateWorkflow(workflow);
-		queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());		//Let's check on this workflow in some time (sweep frequency)
 		decide(workflowId);
 	}
 
@@ -579,6 +576,7 @@ public class WorkflowExecutor {
 			edao.updateTasks(tasksToBeUpdated);
 			if(stateChanged) {
 				edao.updateWorkflow(workflow);
+				queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());
 				decide(workflowId);				
 			}
 			
@@ -654,11 +652,6 @@ public class WorkflowExecutor {
 	
 	public Workflow getWorkflow(String workflowId, boolean includeTasks) {
 		return edao.getWorkflow(workflowId, includeTasks);
-	}
-	
-	void cleanupFromPending(Workflow workflow) {
-		edao.removeFromPendingWorkflow(workflow.getWorkflowType(), workflow.getWorkflowId());
-		queue.remove(deciderQueue, workflow.getWorkflowId());
 	}
 	
 	private void terminate(final WorkflowDef def, final Workflow workflow, TerminateWorkflow tw) throws Exception {

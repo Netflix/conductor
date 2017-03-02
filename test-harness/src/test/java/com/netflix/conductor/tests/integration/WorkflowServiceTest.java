@@ -63,7 +63,6 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.core.execution.SystemTaskType;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
@@ -97,8 +96,6 @@ public class WorkflowServiceTest {
 	@Inject
 	private MetadataService ms;
 	
-	@Inject
-	private DeciderService ds;
 	
 	@Inject
 	private WorkflowSweeper sweeper;
