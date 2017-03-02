@@ -18,6 +18,8 @@
  */
 package com.netflix.conductor.server.resources;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +39,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.service.ExecutionService;
@@ -101,6 +104,26 @@ public class EventResource {
 	@ApiOperation("Get event handlers for a given event")
 	public List<EventHandler> getEventHandlersForEvent(@PathParam("event") String event, @QueryParam("activeOnly") @DefaultValue("true") boolean activeOnly) {
 		return service.getEventHandlersForEvent(event, activeOnly);
+	}
+	
+	@GET
+	@Path("/search")
+	@ApiOperation("Search for event executions")
+	public SearchResult<List<Map<String, Object>>> search(
+    		@QueryParam("start") @DefaultValue("0") int start,
+    		@QueryParam("size") @DefaultValue("100") int size,
+    		@QueryParam("sort") String sort,
+    		@QueryParam("freeText") @DefaultValue("*") String freeText
+    		) {
+		return es.searchEvents(freeText, start, size, convert(sort));
+	}
+	
+	private List<String> convert(String sortStr) {
+		List<String> list = new ArrayList<String>();
+		if(sortStr != null && sortStr.length() != 0){
+			list = Arrays.asList(sortStr.split("\\|"));
+		}
+		return list;
 	}
 	
 	@GET

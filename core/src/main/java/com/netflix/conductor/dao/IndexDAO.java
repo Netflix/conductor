@@ -16,6 +16,7 @@
 package com.netflix.conductor.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -87,6 +88,16 @@ public interface IndexDAO {
 	 * @param msg Message
 	 */
 	public void addMessage(String queue, Message msg);
+
+	/**
+	 * Search for event executions.
+	 * @param freeText Search Query
+	 * @param start start index
+	 * @param count total number of results to return
+	 * @param sort sorting
+	 * @return Search Results
+	 */
+	public SearchResult<Map<String, Object>> searchEvents(String freeText, int start, int count, List<String> sort);
 	
 
 }

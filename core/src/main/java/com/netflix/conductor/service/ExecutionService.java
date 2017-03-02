@@ -320,4 +320,8 @@ public class ExecutionService {
 		edao.addMessage(name, msg);
 	}
 
+	public SearchResult<Map<String, Object>> searchEvents(String freeText, int start, int count, List<String> sort) {
+		return indexer.searchEvents(freeText, start, count, sort);
+	}
+
 }

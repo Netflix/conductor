@@ -97,6 +97,8 @@ public class ElasticSearchDAO implements IndexDAO {
 	private String indexName;
 	
 	private String logIndexName;
+	
+	private String logIndexPrefix;
 
 	private ObjectMapper om;
 	
@@ -129,8 +131,8 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	private void updateIndexName(Configuration config) {
-		String prefix = config.getProperty("workflow.elasticsearch.tasklog.index.name", "task_log");
-		this.logIndexName = prefix + "_" + sdf.format(new Date());
+		this.logIndexPrefix = config.getProperty("workflow.elasticsearch.tasklog.index.name", "task_log");
+		this.logIndexName = this.logIndexPrefix + "_" + sdf.format(new Date());
 
 		try {
 			client.admin().indices().prepareGetIndex().addIndices(logIndexName).execute().actionGet();
@@ -332,6 +334,11 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	@Override
+	public SearchResult<Map<String, Object>> searchEvents(String freeText, int start, int count, List<String> sort) {
+		return null;
+	}
+	
+	@Override
 	public void remove(String workflowId) {
 		try {
 
@@ -393,4 +400,6 @@ public class ElasticSearchDAO implements IndexDAO {
 		long count = response.getHits().getTotalHits();
 		return new SearchResult<String>(count, result);
 	}
+	
+	
 }

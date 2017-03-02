@@ -18,8 +18,10 @@
  */
 package com.netflix.conductor.server.resources;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -59,11 +61,28 @@ public class AdminResource {
 	
 	private QueueDAO queue;
 	
+	private String version;
+	
+	private String buildDate;
+	
 	@Inject
 	public AdminResource(Configuration config, ExecutionService service, QueueDAO queue) {
 		this.config = config;
 		this.service = service;
 		this.queue = queue;
+		this.version = "UNKNOWN";
+		this.buildDate = "UNKNOWN";
+		
+		try {
+			
+			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
+			Properties prop = new Properties();
+			prop.load(propertiesIs);
+			this.version = prop.getProperty("Implementation-Version");
+			this.buildDate = prop.getProperty("Build-Date");
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@ApiOperation(value = "Get all the configuration parameters")
@@ -72,7 +91,10 @@ public class AdminResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/config")
 	public Map<String, Object> getAllConfig() {
-		return config.getAll();
+		Map<String, Object> map = config.getAll();
+		map.put("version", version);
+		map.put("buildDate", buildDate);
+		return map;
 	}
 	
 	
