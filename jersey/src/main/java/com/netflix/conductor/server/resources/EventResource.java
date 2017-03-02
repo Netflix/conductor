@@ -109,7 +109,7 @@ public class EventResource {
 	@GET
 	@Path("/search")
 	@ApiOperation("Search for event executions")
-	public SearchResult<List<Map<String, Object>>> search(
+	public SearchResult<Map<String, Object>> search(
     		@QueryParam("start") @DefaultValue("0") int start,
     		@QueryParam("size") @DefaultValue("100") int size,
     		@QueryParam("sort") String sort,
