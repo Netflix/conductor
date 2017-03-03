@@ -35,6 +35,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -55,6 +58,8 @@ import io.swagger.annotations.ApiOperation;
 @Singleton
 public class AdminResource {
 
+	private static Logger logger = LoggerFactory.getLogger(AdminResource.class);
+	
 	private Configuration config;
 
 	private ExecutionService service;
@@ -81,7 +86,7 @@ public class AdminResource {
 			this.version = prop.getProperty("Implementation-Version");
 			this.buildDate = prop.getProperty("Build-Date");
 		}catch(Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 	}
 

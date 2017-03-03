@@ -391,6 +391,7 @@ public class WorkflowExecutor {
 
 		List<Task> created = edao.createTasks(tasks);
 		List<Task> createdSystemTasks = created.stream().filter(task -> SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
+		boolean startedSystemTasks = false;
 		for(Task task : createdSystemTasks) {
 
 			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
@@ -400,9 +401,10 @@ public class WorkflowExecutor {
 			task.setStartTime(System.currentTimeMillis());
 			stt.start(workflow, task, this);
 			edao.updateTask(task);
+			startedSystemTasks = true;
 		}
 
-		return addTaskToQueue(created);
+		return addTaskToQueue(created) || startedSystemTasks;
 	}
 
 	public void updateTask(TaskResult result) throws Exception {
