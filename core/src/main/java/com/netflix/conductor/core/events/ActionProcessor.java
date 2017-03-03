@@ -66,7 +66,7 @@ public class ActionProcessor {
 		this.metadata = metadata;
 	}
 
-	public Map<String, Object> execute(Action action, String payload, String event) throws Exception {
+	public Map<String, Object> execute(Action action, String payload, String event, String messageId) throws Exception {
 
 		logger.debug("Executing {}", action.getAction());
 		Object jsonObj = om.readValue(payload, Object.class);
@@ -76,13 +76,13 @@ public class ActionProcessor {
 
 		switch (action.getAction()) {
 			case start_workflow:
-				Map<String, Object> op = startWorkflow(action, jsonObj, event);
+				Map<String, Object> op = startWorkflow(action, jsonObj, event, messageId);
 				return op;
 			case complete_task:
-				op = completeTask(action, jsonObj, action.getComplete_task(), Status.COMPLETED, event);
+				op = completeTask(action, jsonObj, action.getComplete_task(), Status.COMPLETED, event, messageId);
 				return op;
 			case fail_task:
-				op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, event);
+				op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, event, messageId);
 				return op;
 			default:
 				break;
@@ -91,7 +91,7 @@ public class ActionProcessor {
 
 	}
 
-	private Map<String, Object> completeTask(Action action, Object payload, TaskDetails taskDetails, Status status, String event) {
+	private Map<String, Object> completeTask(Action action, Object payload, TaskDetails taskDetails, Status status, String event, String messageId) {
 		
 		Map<String, Object> input = new HashMap<>();
 		input.put("workflowId", taskDetails.getWorkflowId());
@@ -115,6 +115,7 @@ public class ActionProcessor {
 		task.setStatus(status);
 		task.setOutputData(replaced);
 		task.getOutputData().put("__event", event);
+		task.getOutputData().put("__messageId", messageId);
 		
 		try {
 			executor.updateTask(new TaskResult(task));
@@ -125,7 +126,7 @@ public class ActionProcessor {
 		return replaced;
 	}
 
-	private Map<String, Object> startWorkflow(Action action, Object payload, String event) throws Exception {
+	private Map<String, Object> startWorkflow(Action action, Object payload, String event, String messageId) throws Exception {
 		StartWorkflow params = action.getStart_workflow();
 		Map<String, Object> op = new HashMap<>();
 		try {
@@ -133,8 +134,10 @@ public class ActionProcessor {
 			WorkflowDef def = metadata.getWorkflowDef(params.getName(), params.getVersion());
 			Map<String, Object> inputParams = params.getInput();
 			Map<String, Object> workflowInput = pu.replace(inputParams, payload);
+			workflowInput.put("__messageId", messageId);
 			String id = executor.startWorkflow(def.getName(), def.getVersion(), params.getCorrelationId(), workflowInput, event);
 			op.put("workflowId", id);
+			
 			
 		}catch(Exception e) {
 			logger.error(e.getMessage(), e);
