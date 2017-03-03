@@ -87,10 +87,14 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
-		return startWorkflow(name, version, input, correlationId, null, null);
+		return startWorkflow(name, version, correlationId, input, null);
 	}
 	
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId) throws Exception {
+	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event) throws Exception {
+		return startWorkflow(name, version, input, correlationId, null, null, event);
+	}
+	
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
 		
 		try {
 			
@@ -125,6 +129,7 @@ public class WorkflowExecutor {
 			wf.setCreateTime(System.currentTimeMillis());
 			wf.setUpdatedBy(null);
 			wf.setUpdateTime(null);
+			wf.setEvent(event);
 			edao.createWorkflow(wf);
 			decide(workflowId);
 			return workflowId;
@@ -362,7 +367,7 @@ public class WorkflowExecutor {
 			input.put("failureStatus", workflow.getStatus().toString());
 
 			try {
-				startWorkflow(failureWorkflow, 1, input, workflowId, null, null);
+				startWorkflow(failureWorkflow, 1, input, workflowId, null, null, null);
 			} catch (Exception e) {
 				logger.error("Failed to start error workflow", e);
 				Monitors.recordWorkflowStartError(failureWorkflow);
