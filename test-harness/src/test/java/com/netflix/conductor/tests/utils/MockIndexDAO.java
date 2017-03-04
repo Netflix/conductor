@@ -20,7 +20,6 @@ package com.netflix.conductor.tests.utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -72,8 +71,4 @@ public class MockIndexDAO implements IndexDAO {
 		
 	}
 	
-	@Override
-	public SearchResult<Map<String, Object>> searchEvents(String freeText, int start, int count, List<String> sort) {
-		return null;
-	}
 }

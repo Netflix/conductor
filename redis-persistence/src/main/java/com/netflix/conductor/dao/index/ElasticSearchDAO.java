@@ -332,12 +332,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			throw new ApplicationException(Code.BACKEND_ERROR, e.getMessage(), e);
 		}
 	}
-	
-	@Override
-	public SearchResult<Map<String, Object>> searchEvents(String freeText, int start, int count, List<String> sort) {
-		return null;
-	}
-	
+
 	@Override
 	public void remove(String workflowId) {
 		try {
