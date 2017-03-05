@@ -380,38 +380,6 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
 	}
 
-	public boolean scheduleTask(List<Task> tasks) throws Exception {
-		
-		if (tasks == null || tasks.isEmpty()) {
-			return false;
-		}
-		
-		String workflowId = tasks.get(0).getWorkflowInstanceId();
-		Workflow workflow = edao.getWorkflow(workflowId);
-		int count = workflow.getTasks().size();
-
-		for (Task task : tasks) {
-			task.setSeq(++count);
-		}
-
-		List<Task> created = edao.createTasks(tasks);
-		List<Task> createdSystemTasks = created.stream().filter(task -> SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
-		boolean startedSystemTasks = false;
-		for(Task task : createdSystemTasks) {
-
-			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-			if(stt == null) {
-				throw new RuntimeException("No system task found by name " + task.getTaskType());
-			}
-			task.setStartTime(System.currentTimeMillis());
-			stt.start(workflow, task, this);
-			edao.updateTask(task);
-			startedSystemTasks = true;
-		}
-
-		return addTaskToQueue(created) || startedSystemTasks;
-	}
-
 	public void updateTask(TaskResult result) throws Exception {
 		if (result == null) {
 			logger.info("null task given for update..." + result);
@@ -497,15 +465,6 @@ public class WorkflowExecutor {
 
 	}
 
-	private long getTaskDuration(long s, Task task) {
-		long duration = task.getEndTime() - task.getStartTime();
-		s += duration;
-		if (task.getRetriedTaskId() == null) {
-			return s;
-		}
-		return s + getTaskDuration(s, edao.getTask(task.getRetriedTaskId()));
-	}
-
 	public List<Task> getTasks(String taskType, String startKey, int count) throws Exception {
 		return edao.getTasks(taskType, startKey, count);
 	}
@@ -523,28 +482,6 @@ public class WorkflowExecutor {
 
 	public List<String> getRunningWorkflowIds(String workflowName) throws Exception {
 		return edao.getRunningWorkflowIds(workflowName);
-	}
-
-	
-	private boolean addTaskToQueue(final List<Task> tasks) throws Exception {
-		boolean stateChanged = false;
-		for (Task t : tasks) {
-			if (!(t instanceof SystemTask)) {
-				addTaskToQueue(t);
-				stateChanged = true;
-			}
-		}
-		return stateChanged;
-	}
-
-	public void addTaskToQueue(Task task) throws Exception {
-		// put in queue
-		queue.remove(task.getTaskType(), task.getTaskId());
-		if (task.getCallbackAfterSeconds() > 0) {
-			queue.push(task.getTaskType(), task.getTaskId(), task.getCallbackAfterSeconds());
-		} else {
-			queue.push(task.getTaskType(), task.getTaskId(), 0);
-		}
 	}
 
 	/**
@@ -659,6 +596,68 @@ public class WorkflowExecutor {
 	
 	public Workflow getWorkflow(String workflowId, boolean includeTasks) {
 		return edao.getWorkflow(workflowId, includeTasks);
+	}
+	
+	private long getTaskDuration(long s, Task task) {
+		long duration = task.getEndTime() - task.getStartTime();
+		s += duration;
+		if (task.getRetriedTaskId() == null) {
+			return s;
+		}
+		return s + getTaskDuration(s, edao.getTask(task.getRetriedTaskId()));
+	}
+	
+	private boolean scheduleTask(List<Task> tasks) throws Exception {
+		
+		if (tasks == null || tasks.isEmpty()) {
+			return false;
+		}
+		
+		String workflowId = tasks.get(0).getWorkflowInstanceId();
+		Workflow workflow = edao.getWorkflow(workflowId);
+		int count = workflow.getTasks().size();
+
+		for (Task task : tasks) {
+			task.setSeq(++count);
+		}
+
+		List<Task> created = edao.createTasks(tasks);
+		List<Task> createdSystemTasks = created.stream().filter(task -> SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
+		boolean startedSystemTasks = false;
+		for(Task task : createdSystemTasks) {
+
+			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
+			if(stt == null) {
+				throw new RuntimeException("No system task found by name " + task.getTaskType());
+			}
+			task.setStartTime(System.currentTimeMillis());
+			stt.start(workflow, task, this);
+			edao.updateTask(task);
+			startedSystemTasks = true;
+		}
+
+		return addTaskToQueue(created) || startedSystemTasks;
+	}
+
+	private boolean addTaskToQueue(final List<Task> tasks) throws Exception {
+		boolean stateChanged = false;
+		for (Task t : tasks) {
+			if (!(t instanceof SystemTask)) {
+				addTaskToQueue(t);
+				stateChanged = true;
+			}
+		}
+		return stateChanged;
+	}
+
+	private void addTaskToQueue(Task task) throws Exception {
+		// put in queue
+		queue.remove(task.getTaskType(), task.getTaskId());
+		if (task.getCallbackAfterSeconds() > 0) {
+			queue.push(task.getTaskType(), task.getTaskId(), task.getCallbackAfterSeconds());
+		} else {
+			queue.push(task.getTaskType(), task.getTaskId(), 0);
+		}
 	}
 	
 	private void terminate(final WorkflowDef def, final Workflow workflow, TerminateWorkflow tw) throws Exception {
