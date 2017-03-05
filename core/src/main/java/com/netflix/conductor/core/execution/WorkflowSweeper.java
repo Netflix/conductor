@@ -75,8 +75,9 @@ public class WorkflowSweeper {
 		deciderPool.scheduleWithFixedDelay(() -> {
 
 			try{
-
-				if(config.disableSweep()){
+				boolean disable = config.disableSweep();
+				logger.debug("Workflow Sweep disabled? {}", disable);
+				if (disable) {
 					logger.info("Workflow sweep is disabled.");
 					return;
 				}
