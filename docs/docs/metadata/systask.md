@@ -320,3 +320,40 @@ The task is marked as ```FAILED``` if the request cannot be completed or the rem
 
 !!!note
 	HTTP task currently only supports Content-Type as application/json and is able to parse the text as well as JSON response.  XML input/output is currently not supported.  However, if the response cannot be parsed as JSON or Text, a string representation is stored as a text value.
+	
+# Event
+Event task provides ability to publish an event (message) to either Conductor or an external eventing system like SQS.  Event tasks are useful for creating event based dependencies for workflows and tasks.
+
+### Parameters
+|name|description|
+|---|---|
+| sink |Qualified name of the event that is produced.  e.g. conductor or sqs:sqs_queue_name|
+
+
+### Example
+
+``` json
+{
+	"sink": 'sqs:example_sqs_queue_name'
+}
+```
+
+When producing an event with Conductor as sink, the event name follows the structure:
+```conductor:<workflow_name>:<task_reference_name>```
+
+For SQS, use the **name** of the queue and NOT the URI.  Conductor looks up the URI based on the name.
+
+!!!warning
+	When using SQS add the [ContribsModule](https://github.com/Netflix/conductor/blob/master/contribs/src/main/java/com/netflix/conductor/contribs/ContribsModule.java) to the deployment.  The module needs to be configured with AWSCredentialsProvider for Conductor to be able to use AWS APIs.
+
+### Supported Sinks
+* Conductor
+* SQS
+
+
+### Event Task Input
+The input given to the event task is made available to the published message as payload.  e.g. if a message is put into SQS queue (sink is sqs) then the message payload will be the input to the task.
+
+
+### Event Task Output
+`event_produced` Name of the event produced.	
