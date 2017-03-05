@@ -223,6 +223,8 @@ public class WorkflowExecutor {
 		workflow.getTasks().forEach(t -> edao.removeTask(t.getTaskId()));
 		workflow.getTasks().clear();
 		workflow.setReasonForIncompletion(null);
+		workflow.setStartTime(System.currentTimeMillis());
+		workflow.setEndTime(0);
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		edao.updateWorkflow(workflow);
