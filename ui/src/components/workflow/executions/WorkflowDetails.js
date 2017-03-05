@@ -202,7 +202,8 @@ class WorkflowDetails extends Component {
           </div>
           </Tab>
           <Tab eventKey={4} title="JSON">
-            <pre style={{height:'80%'}}>{JSON.stringify(wf, null, 3)}</pre>
+            <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#fulljson"></i>
+            <pre style={{height:'80%'}} id="fulljson">{JSON.stringify(wf, null, 3)}</pre>
           </Tab>
 
         </Tabs>

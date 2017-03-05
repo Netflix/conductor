@@ -297,11 +297,12 @@ public class DeciderService {
 		
 		Task rescheduled = task.copy();
 		rescheduled.setStartDelayInSeconds(startDelay);
+		rescheduled.setCallbackAfterSeconds(startDelay);
 		rescheduled.setRetryCount(task.getRetryCount() + 1);
 		rescheduled.setRetried(false);
 		rescheduled.setTaskId(IDGenerator.generate());
 		rescheduled.setRetriedTaskId(task.getTaskId());
-		rescheduled.setStatus(Status.SCHEDULED);
+		rescheduled.setStatus(Status.SCHEDULED);		
 		return rescheduled;
 
 	}
