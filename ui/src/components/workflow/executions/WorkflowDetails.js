@@ -52,7 +52,7 @@ class WorkflowDetails extends Component {
     }
     let tasks = wf['tasks'];
     tasks = tasks.sort(function(a,b){
-      return a.endTime - b.endTime;
+      return a.sqe - b.seq;
     });
     function formatDate(dt){
       if(dt == null || dt == ''){
