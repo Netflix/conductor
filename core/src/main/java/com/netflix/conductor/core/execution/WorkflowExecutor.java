@@ -598,6 +598,16 @@ public class WorkflowExecutor {
 		return edao.getWorkflow(workflowId, includeTasks);
 	}
 	
+	public void addTaskToQueue(Task task) throws Exception {
+		// put in queue
+		queue.remove(task.getTaskType(), task.getTaskId());
+		if (task.getCallbackAfterSeconds() > 0) {
+			queue.push(task.getTaskType(), task.getTaskId(), task.getCallbackAfterSeconds());
+		} else {
+			queue.push(task.getTaskType(), task.getTaskId(), 0);
+		}
+	}
+	
 	private long getTaskDuration(long s, Task task) {
 		long duration = task.getEndTime() - task.getStartTime();
 		s += duration;
@@ -648,16 +658,6 @@ public class WorkflowExecutor {
 			}
 		}
 		return stateChanged;
-	}
-
-	private void addTaskToQueue(Task task) throws Exception {
-		// put in queue
-		queue.remove(task.getTaskType(), task.getTaskId());
-		if (task.getCallbackAfterSeconds() > 0) {
-			queue.push(task.getTaskType(), task.getTaskId(), task.getCallbackAfterSeconds());
-		} else {
-			queue.push(task.getTaskType(), task.getTaskId(), 0);
-		}
 	}
 	
 	private void terminate(final WorkflowDef def, final Workflow workflow, TerminateWorkflow tw) throws Exception {
