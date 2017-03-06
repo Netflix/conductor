@@ -152,4 +152,4 @@ These are critical endpoints used to poll for task, send ack (after polling) and
 }
 ```
 !!!info "Acknowledging tasks after poll"
-	If the worker fails to ack the task after polling, the task is requeued and put back in queue and is made available during subsequent poll.
+	If the worker fails to ack the task after polling, the task is re-queued and put back in queue and is made available during subsequent poll.

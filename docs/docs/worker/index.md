@@ -1,5 +1,3 @@
-
-
 Conductor tasks executed by remote workers communicates over HTTP endpoints to poll for the task and updates the status of the execution.
 
 Conductor provides a framework to poll for tasks, manage the execution thread and update the status of the execution back to the server.  The framework provides libraries in Java and Python.  Other language support can be added by using the HTTP endpoints for task management.

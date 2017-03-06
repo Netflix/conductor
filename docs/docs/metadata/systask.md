@@ -128,7 +128,7 @@ A dynamic fork is same as FORK_JOIN task.  Except that the list of tasks to be f
 |name|description|
 |---|---|
 | dynamicForkTasksParam |Name of the parameter that contains list of workflow task configuration to be executed in parallel|
-|dynamicForkTasksInputParamName|Name of the parameter whose value should be a map with key as forked task's referece name and value as input the forked task|
+|dynamicForkTasksInputParamName|Name of the parameter whose value should be a map with key as forked task's reference name and value as input the forked task|
 
 ###Example
 
@@ -177,7 +177,7 @@ Consider **taskA**'s output as:
 ```
 When executed, the dynamic fork task will schedule two parallel task of type "encode_task" with reference names "forkedTask1" and "forkedTask2" and inputs as specified by _ dynamicTasksInputJSON_
 
-!!!warning "Dyanmic Fork and Join"
+!!!warning "Dynamic Fork and Join"
 	**A Join task MUST follow FORK_JOIN_DYNAMIC**
 	
 	Workflow definition MUST include a Join task definition followed by FORK_JOIN_DYNAMIC task.  However, given the dynamic nature of the task, no joinOn parameters are required for this Join.  The join will wait for ALL the forked branches to complete before completing.

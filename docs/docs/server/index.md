@@ -17,7 +17,7 @@ java -jar conductor-server-VERSION-all.jar
 ```
 
 #### 2. Download pre-built binaries from jcenter or maven central
-Use the following coordiates:
+Use the following coordinates:
 
 |group|artifact|version
 |---|---|---|
