@@ -1,3 +1,5 @@
+
+
 #### How do you schedule a task to be put in the queue after some time (e.g. 1 hour, 1 day etc.)
 
 After polling for the task update the status of the task to `IN_PROGRESS` and set the `callbackAfterSeconds` value to the desired time.  The task will remain in the queue until the specified second before worker polling for it will receive it again.
@@ -19,7 +21,7 @@ Conductor, however will run [system tasks](/metadata/systask/) on the Conductor 
 
 #### How can I schedule workflows to run at a specific time?
 
-Conductor does not provide any scheduling mechanism.  But you can use any of the avaible scheduling systems to make REST calls to Conductor to start a workflow.  Alternatively, publish a message to a supported eventing system like SQS to trigger a workflow.  
+Conductor does not provide any scheduling mechanism.  But you can use any of the available scheduling systems to make REST calls to Conductor to start a workflow.  Alternatively, publish a message to a supported eventing system like SQS to trigger a workflow.  
 More details about [eventing](/events).
 
 #### How do I setup Dynomite cluster?

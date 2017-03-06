@@ -53,7 +53,7 @@ log4j.properties file path is optional and allows finer control over the logging
 ```properties
 
 # Database persistence model.  Possible values are memory, redis, and dynomite.
-# If ommitted, the persistence used is memory
+# If omitted, the persistence used is memory
 #
 # memory : The data is stored in memory and lost when the server dies.  Useful for testing or demo
 # redis : non-Dynomite based redis instance

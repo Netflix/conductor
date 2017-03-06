@@ -21,7 +21,7 @@
 If the workflow is started with input parameter user_supplied_task's value as __user_task_2__, Conductor will schedule __user_task_2__ when scheduling this dynamic task.
 
 # Decision
-A decision task is similar to ```case...switch``` statement in a programming langugage.
+A decision task is similar to ```case...switch``` statement in a programming language.
 The task takes 3 parameters:
 
 ### Parameters:
@@ -238,7 +238,7 @@ To use a wait task, set the task type as ```WAIT```
 ### Parameters
 None required.
 
-### Exernal Triggers for Wait Task
+### External Triggers for Wait Task
 
 Task Resource endpoint can be used to update the status of a task to a terminate state. 
 
@@ -277,7 +277,7 @@ The task expects an input parameter named ```http_request``` as part of the task
 |---|---|
 | uri |URI for the service.  Can be a partial when using vipAddress or includes the server address.|
 |method|HTTP method.  One of the GET, PUT, POST, DELETE, OPTIONS, HEAD|
-|accept|Accpet header as required by server.|
+|accept|Accept header as required by server.|
 |contentType|Content Type - supported types are text/plain, text/html and, application/json|
 |headers|A map of additional http headers to be sent along with the request.|
 |body|Request body|

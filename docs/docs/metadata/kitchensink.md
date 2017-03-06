@@ -178,9 +178,9 @@ curl -X POST --header 'Content-Type: application/json' --header 'Accept: text/pl
 }
 '
 ```
-The response is a text string identifyin the workflow instance id.
+The response is a text string identifying the workflow instance id.
 
-#### Poll for the fist task:
+#### Poll for the first task:
   
 ```shell
 curl http://localhost:8080/api/tasks/poll/task_1
@@ -256,4 +256,4 @@ This will mark the task_1 as completed and schedule ```task_5``` as the next tas
 Repeat the same process for the subsequently scheduled tasks until the completion.
 
 !!! hint "Using Client Libraries"
-	Conductor provides client libaraies in Java (a Python client is works) to simplify task polling and execution.  
+	Conductor provides client libraries in Java (a Python client is works) to simplify task polling and execution.  
