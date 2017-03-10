@@ -124,14 +124,7 @@ public class ConductorServer {
 		
 		JedisCommands jedis = null;
 		switch(db) {
-		case redis:
-			
-			String host = dynoHosts.get(0).getHostName();
-			int port = dynoHosts.get(0).getPort();
-			jedis = new Jedis(host, port);
-			logger.info("Starting conductor server using standalone redis on " + host + ":" + port);
-			break;
-			
+		case redis:	
 		case dynomite:
 			
 			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(new TokenMapSupplier() {
@@ -161,7 +154,6 @@ public class ConductorServer {
 			break;
 			
 		case memory:
-			
 			jedis = new JedisMock();
 			try {
 				EmbeddedElasticSearch.start();
