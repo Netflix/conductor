@@ -51,7 +51,6 @@ import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.sun.jersey.api.client.Client;
 
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCommands;
 
 /**
