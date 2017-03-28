@@ -71,6 +71,7 @@ public class Event extends WorkflowSystemTask {
 		ObservableQueue queue = getQueue(workflow, task);
 		if(queue != null) {
 			queue.publish(Arrays.asList(message));
+			task.getOutputData().putAll(payload);
 			task.setStatus(Status.COMPLETED);
 		}
 	}
@@ -109,11 +110,10 @@ public class Event extends WorkflowSystemTask {
 		String queueName = null;
 		Sink sink = null;
 		
-		if(sinkValue.startsWith("conductor")) {
-			
+		if(sinkValue.startsWith("conductor")) {		
 			sink = Sink.conductor;			
 			if("conductor".equals(sinkValue)) {
-				queueName = workflow.getWorkflowType() + ":" + task.getReferenceTaskName();	
+				queueName = workflow.getWorkflowType() + ":" + task.getReferenceTaskName();
 			} else {
 				queueName = sinkValue;
 			}
