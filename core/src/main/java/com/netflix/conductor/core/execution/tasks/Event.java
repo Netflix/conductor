@@ -114,7 +114,7 @@ public class Event extends WorkflowSystemTask {
 			} else if(sinkValue.startsWith("conductor:")) {
 				
 				queueName = sinkValue.replaceAll("conductor:", "");
-				queueName = "conductor:conductor_" + queueName;
+				queueName = "conductor:" + workflow.getWorkflowType() + ":" + queueName;
 				
 			} else {
 				task.setStatus(Status.FAILED);

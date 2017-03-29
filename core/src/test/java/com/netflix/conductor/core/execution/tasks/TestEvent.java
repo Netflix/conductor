@@ -255,10 +255,10 @@ public class TestEvent {
 		ObservableQueue queue = event.getQueue(workflow, task);
 		assertEquals(Task.Status.IN_PROGRESS, task.getStatus());
 		assertNotNull(queue);
-		assertEquals("conductor_some_arbitary_queue", queue.getName());
-		assertEquals("conductor_some_arbitary_queue", queue.getURI());
+		assertEquals("testWorkflow:some_arbitary_queue", queue.getName());
+		assertEquals("testWorkflow:some_arbitary_queue", queue.getURI());
 		assertEquals("conductor", queue.getType());
-		assertEquals("conductor:conductor_some_arbitary_queue", task.getOutputData().get("event_produced"));
+		assertEquals("conductor:testWorkflow:some_arbitary_queue", task.getOutputData().get("event_produced"));
 		
 		task.getInputData().put("sink", "conductor");
 		queue = event.getQueue(workflow, task);
