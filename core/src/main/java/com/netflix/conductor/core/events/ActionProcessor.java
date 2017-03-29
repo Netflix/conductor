@@ -114,8 +114,8 @@ public class ActionProcessor {
 		
 		task.setStatus(status);
 		task.setOutputData(replaced);
-		task.getOutputData().put("__event", event);
-		task.getOutputData().put("__messageId", messageId);
+		task.getOutputData().put("conductor.event.messageId", messageId);
+		task.getOutputData().put("conductor.event.name", event);
 		
 		try {
 			executor.updateTask(new TaskResult(task));
