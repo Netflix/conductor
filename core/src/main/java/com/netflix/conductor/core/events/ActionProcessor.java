@@ -134,7 +134,9 @@ public class ActionProcessor {
 			WorkflowDef def = metadata.getWorkflowDef(params.getName(), params.getVersion());
 			Map<String, Object> inputParams = params.getInput();
 			Map<String, Object> workflowInput = pu.replace(inputParams, payload);
-			workflowInput.put("__messageId", messageId);
+			workflowInput.put("conductor.event.messageId", messageId);
+			workflowInput.put("conductor.event.name", event);
+			
 			String id = executor.startWorkflow(def.getName(), def.getVersion(), params.getCorrelationId(), workflowInput, event);
 			op.put("workflowId", id);
 			
