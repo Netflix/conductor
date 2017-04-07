@@ -22,10 +22,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.util.concurrent.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +45,6 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.servo.monitor.Stopwatch;
 
-import javax.annotation.Nullable;
-
 /**
  * 
  * @author Viren
@@ -52,7 +56,7 @@ public class WorkflowTaskCoordinator {
     
 	private TaskClient client;
 	
-	private ListeningExecutorService es;
+	private ExecutorService es;
 	
 	private ScheduledExecutorService ses;
 	
@@ -232,7 +236,7 @@ public class WorkflowTaskCoordinator {
 		logger.info("Initialized the worker with {} threads", threadCount);
 		
 		AtomicInteger count = new AtomicInteger(0);
-		this.es = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(threadCount, threadCount,
+		this.es = new ThreadPoolExecutor(threadCount, threadCount,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(workerQueueSize),
                 new ThreadFactory() {
@@ -243,7 +247,7 @@ public class WorkflowTaskCoordinator {
 				t.setName("workflow-worker-" + count.getAndIncrement());
 				return t;
 			}
-		}));
+		});
 		this.ses = Executors.newScheduledThreadPool(workers.size());
 		workers.forEach(worker -> {
 			environmentData.put(worker, getEnvData(worker));
@@ -274,15 +278,11 @@ public class WorkflowTaskCoordinator {
 			List<Task> tasks = client.poll(taskType, worker.getIdentity(), worker.getPollCount(), worker.getLongPollTimeoutInMS());
 			sw.stop();
 			logger.debug("Polled {} and receivd {} tasks", worker.getTaskDefName(), tasks.size());
-
 			for(Task task : tasks) {
-				ListenableFuture<TaskResult> future = es.submit(() -> execute(worker, task));
-				Futures.addCallback(future, new FutureCallback<TaskResult>() {
-					@Override
-					public void onSuccess(@Nullable TaskResult result) {
-					}
-					@Override
-					public void onFailure(Throwable t) {
+				es.submit(() -> {
+					try {
+						execute(worker, task);
+					} catch (Throwable t) {
 						task.setStatus(Task.Status.FAILED);
 						TaskResult result = new TaskResult(task);
 						handleException(t, result, worker, true, task);
@@ -299,19 +299,7 @@ public class WorkflowTaskCoordinator {
 		}
 	}
 
-	private void handleException(Throwable t, TaskResult result, Worker worker, boolean updateTask, Task task) {
-		WorkflowTaskMetrics.executionException(worker.getTaskDefName(), t);
-		result.setStatus(TaskResult.Status.FAILED);
-		result.setReasonForIncompletion("Error while executing the task: " + t);
-		TaskExecLog execLog = result.getLog();
-		execLog.setError(t.getMessage());
-		for (StackTraceElement ste : t.getStackTrace()) {
-            execLog.getErrorTrace().add(ste.toString());
-        }
-		updateWithRetry(updateRetryCount, task, result, worker);
-	}
-
-	private TaskResult execute(Worker worker, Task task) {
+	private void execute(Worker worker, Task task) {
 		
 		String taskType = task.getTaskDefName();
 
@@ -319,18 +307,19 @@ public class WorkflowTaskCoordinator {
 			
 			if(!worker.preAck(task)) {
 				logger.debug("Worker {} decided not to ack the task {}", taskType, task.getTaskId());
-				return null;
+				return;
 			}
 			
 			if (!client.ack(task.getTaskId(), worker.getIdentity())) {
 				WorkflowTaskMetrics.ackFailed(worker.getTaskDefName());
 				logger.error("Ack failed for {}, id {}", taskType, task.getTaskId());
-				return null;
+				return;
 			}
 			
 		} catch (Exception e) {
 			logger.error("ack exception for " + worker.getTaskDefName(), e);
 			WorkflowTaskMetrics.ackException(worker.getTaskDefName(), e);
+			return;
 		}
 		
 		Stopwatch sw = WorkflowTaskMetrics.executionTimer(worker.getTaskDefName());
@@ -356,7 +345,7 @@ public class WorkflowTaskCoordinator {
 		logger.debug("Task {} executed by worker {} with status {}", task.getTaskId(), worker.getClass().getSimpleName(), task.getStatus());
 		result.getLog().getEnvironment().putAll(environmentData.get(worker));
 		updateWithRetry(updateRetryCount, task, result, worker);
-		return result;
+
 	}
 	
 	/**
@@ -434,5 +423,17 @@ public class WorkflowTaskCoordinator {
 				Thread.currentThread().interrupt();
 			}
 		}
+	}
+
+	private void handleException(Throwable t, TaskResult result, Worker worker, boolean updateTask, Task task) {
+		WorkflowTaskMetrics.executionException(worker.getTaskDefName(), t);
+		result.setStatus(TaskResult.Status.FAILED);
+		result.setReasonForIncompletion("Error while executing the task: " + t);
+		TaskExecLog execLog = result.getLog();
+		execLog.setError(t.getMessage());
+		for (StackTraceElement ste : t.getStackTrace()) {
+			execLog.getErrorTrace().add(ste.toString());
+		}
+		updateWithRetry(updateRetryCount, task, result, worker);
 	}
 }

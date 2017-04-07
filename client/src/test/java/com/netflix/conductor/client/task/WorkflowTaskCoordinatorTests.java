@@ -112,13 +112,14 @@ public class WorkflowTaskCoordinatorTests {
 		WorkflowTaskCoordinator coordinator = new WorkflowTaskCoordinator.Builder().withWorkers(worker, worker, worker).withTaskClient(client).build();
 		coordinator = new WorkflowTaskCoordinator.Builder()
 				.withWorkers(worker)
-				.withThreadCount(100)
-				.withWorkerQueueSize(400)
-				.withSleepWhenRetry(100)
-				.withUpdateRetryCount(10)
+				.withThreadCount(1)
+				.withWorkerQueueSize(1)
+				.withSleepWhenRetry(100000)
+				.withUpdateRetryCount(1)
 				.withTaskClient(client)
 				.build();
 		when(client.poll(anyString(), anyString(), anyInt(), anyInt())).thenReturn(ImmutableList.of(new Task()));
+		when(client.ack(anyString(), anyString())).thenReturn(true);
 		CountDownLatch latch = new CountDownLatch(1);
 		doAnswer(new Answer<Void>() {
 			@Override
