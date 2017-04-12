@@ -28,6 +28,7 @@ public class Task {
 		CANCELED(true, false, false), 
 		FAILED(true, false, true), 
 		COMPLETED(true, true, true), 
+		COMPLETED_WITH_ERRORS(true, true, true), 
 		SCHEDULED(false, true, true), 
 		TIMED_OUT(true, false, true),
 		READY_FOR_RERUN(false, true, true),
@@ -61,8 +62,8 @@ public class Task {
 	private String taskType;
 
 	private Status status;
-
-	private Map<String, Object> inputData = new HashMap<>();;
+	
+	private Map<String, Object> inputData = new HashMap<>();
 
 	private String referenceTaskName;
 
@@ -120,8 +121,6 @@ public class Task {
 
 	private Map<String, Object> outputData = new HashMap<>();
 	
-	private long polledTime;
-	
 	public Task(){
 		
 	}
@@ -139,12 +138,30 @@ public class Task {
 		this.taskType = taskType;
 	}
 
+	/**
+	 * 
+	 * @return Status of the task
+	 */
 	public Status getStatus() {
 		return status;
 	}
 
+	/**
+	 * 
+	 * @param status Status of the task
+	 */
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+	
+	@Deprecated
+	public Status getTaskStatus() {
+		return status;
+	}
+	
+	@Deprecated
+	public void setTaskStatus(Status taskStatus) {
+		this.status = taskStatus;
 	}
 	
 	public Map<String, Object> getInputData() {
@@ -480,37 +497,27 @@ public class Task {
 		this.outputData = outputData;
 	}
 
-	
-	/**
-	 * @return the polledTime Epoch time when the task was polled out of the queue
-	 */
-	public long getPolledTime() {
-		return polledTime;
-	}
-
-	/**
-	 * @param polledTime the polledTime to set
-	 * 
-	 */
-	public void setPolledTime(long polledTime) {
-		this.polledTime = polledTime;
-	}
-
 	public Task copy() {
 		
 		Task copy = new Task();
-		copy.setCallbackAfterSeconds(getCallbackAfterSeconds());
+		copy.setCallbackAfterSeconds(callbackAfterSeconds);
 		copy.setCallbackFromWorker(callbackFromWorker);
 		copy.setCorrelationId(correlationId);
 		copy.setDynamicWorkflowTask(dynamicWorkflowTask);
 		copy.setInputData(inputData);
-		copy.setOutputData(getOutputData());
+		copy.setOutputData(outputData);
 		copy.setReferenceTaskName(referenceTaskName);
 		copy.setStartDelayInSeconds(startDelayInSeconds);
 		copy.setTaskDefName(taskDefName);
 		copy.setTaskType(taskType);
-		copy.setWorkflowInstanceId(getWorkflowInstanceId());
+		copy.setWorkflowInstanceId(workflowInstanceId);
 		copy.setResponseTimeoutSeconds(responseTimeoutSeconds);
+		copy.setStatus(status);
+		copy.setRetryCount(retryCount);
+		copy.setPollCount(pollCount);
+		copy.setTaskId(taskId);
+		copy.setReasonForIncompletion(reasonForIncompletion);
+		copy.setWorkerId(workerId);
 		
 		return copy;
 	}

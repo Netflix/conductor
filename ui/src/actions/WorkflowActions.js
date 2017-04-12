@@ -1,6 +1,6 @@
 import http from '../core/HttpClient';
 
-export function searchWorkflows(query, search, hours, fullstr) {
+export function searchWorkflows(query, search, hours, fullstr, start) {
 
   return function (dispatch) {
     dispatch({
@@ -11,7 +11,7 @@ export function searchWorkflows(query, search, hours, fullstr) {
     if(fullstr && search != null && search.length > 0) {
       search = '"' + search + '"';
     }
-    return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search).then((data) => {
+    return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search + '&start=' + start).then((data) => {
       dispatch({
         type: 'RECEIVED_WORKFLOWS',
         data
@@ -238,6 +238,50 @@ export function updateWorkflow(workflow){
     return http.put('/api/wfe/metadata/', workflow).then((data) => {
       dispatch({
         type: 'RECEIVED_UPDATE_WORKFLOW_DEF'
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
+
+export function getEventHandlers() {
+
+  return function (dispatch) {
+    dispatch({
+      type: 'LIST_EVENT_HANDLERS'
+    });
+
+
+    return http.get('/api/events').then((data) => {
+      dispatch({
+        type: 'RECEIVED_LIST_EVENT_HANDLERS',
+        events : data
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
+
+export function getEvents(event, time, query) {
+
+  return function (dispatch) {
+    dispatch({
+      type: 'LIST_EVENT'
+    });
+
+
+    return http.get('/api/events/executions').then((data) => {
+      dispatch({
+        type: 'RECEIVED_LIST_EVENT',
+        events : data
       });
     }).catch((e) => {
       dispatch({

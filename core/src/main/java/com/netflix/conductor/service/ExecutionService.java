@@ -117,7 +117,6 @@ public class ExecutionService {
 			}
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
-			task.setPolledTime(System.currentTimeMillis());
 			
 			edao.updateTask(task);
 			tasks.add(task);
@@ -311,10 +310,6 @@ public class ExecutionService {
 	
 	public void updateEventExecution(EventExecution ee) {
 		edao.updateEventExecution(ee);
-	}
-	
-	public List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max) {
-		return edao.getEventExecutions(eventHandlerName, eventName, messageId, max);
 	}
 
 	public void addMessage(String name, Message msg) {	

@@ -40,7 +40,6 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionService;
-import com.netflix.conductor.service.MetadataService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -60,8 +59,6 @@ public class TaskResource {
 	private ExecutionService taskService;
 
 	private QueueDAO queues;
-	
-	private MetadataService metadata;
 
 	@Inject
 	public TaskResource(ExecutionService taskService, QueueDAO queues) {
@@ -144,10 +141,11 @@ public class TaskResource {
 		taskService.removeTaskfromQueue(taskType, taskId);
 	}
 
-	@POST
+	@GET
 	@Path("/queue/sizes")
 	@ApiOperation("Get Task type queue sizes")
-	public Map<String, Integer> size(List<String> taskTypes) throws Exception {
+	@Consumes({ MediaType.WILDCARD })
+	public Map<String, Integer> size(@QueryParam("taskType") List<String> taskTypes) throws Exception {
 		return taskService.getTaskQueueSizes(taskTypes);
 	}
 

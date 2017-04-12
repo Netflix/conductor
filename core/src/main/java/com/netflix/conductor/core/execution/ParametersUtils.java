@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.core.execution;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +47,7 @@ public class ParametersUtils {
 	}
 	
 	public ParametersUtils() {
-		
+
 	}
 	
 	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef) {
@@ -63,22 +64,61 @@ public class ParametersUtils {
 		Map<String, Object> wf = new HashMap<>();
 		wf.put("input", workflow.getInput());
 		wf.put("output", workflow.getOutput());
+		wf.put("status", workflow.getStatus());
+		wf.put("workflowId", workflow.getWorkflowId());
+		wf.put("parentWorkflowId", workflow.getParentWorkflowId());
+		wf.put("parentWorkflowTaskId", workflow.getParentWorkflowTaskId());
+		wf.put("workflowType", workflow.getWorkflowType());
+		wf.put("version", workflow.getVersion());
+		wf.put("correlationId", workflow.getCorrelationId());
+		wf.put("reasonForIncompletion", workflow.getReasonForIncompletion());
+		wf.put("schemaVersion", workflow.getSchemaVersion());
+		
 		inputMap.put("workflow", wf);
 		
 		workflow.getTasks().stream().map(Task::getReferenceTaskName).map(taskRefName -> workflow.getTaskByRefName(taskRefName)).forEach(task -> {
 			Map<String, Object> taskIO = new HashMap<>();
 			taskIO.put("input", task.getInputData());
 			taskIO.put("output", task.getOutputData());
+			taskIO.put("taskType", task.getTaskType());
+			if(task.getStatus() != null) {
+				taskIO.put("status", task.getStatus().toString());
+			}
+			taskIO.put("referenceTaskName", task.getReferenceTaskName());
+			taskIO.put("retryCount", task.getRetryCount());
+			taskIO.put("correlationId", task.getCorrelationId());
+			taskIO.put("pollCount", task.getPollCount());
+			taskIO.put("taskDefName", task.getTaskDefName());
+			taskIO.put("scheduledTime", task.getScheduledTime());
+			taskIO.put("startTime", task.getStartTime());
+			taskIO.put("endTime", task.getEndTime());
+			taskIO.put("workflowInstanceId", task.getWorkflowInstanceId());
+			taskIO.put("taskId", task.getTaskId());
+			taskIO.put("reasonForIncompletion", task.getReasonForIncompletion());
+			taskIO.put("callbackAfterSeconds", task.getCallbackAfterSeconds());
+			taskIO.put("workerId", task.getWorkerId());
 			inputMap.put(task.getReferenceTaskName(), taskIO);
 		});
+		
 		DocumentContext io = JsonPath.parse(inputMap, option);
 		Map<String, Object> replaced = replace(inputParams, io, taskId);
 		return replaced;
 	}
 	
-	public Map<String, Object> replace(Map<String, Object> input, String json) {
-		DocumentContext io = JsonPath.parse(json, option);
+	public Map<String, Object> replace(Map<String, Object> input, Object json) {
+		Object doc = null;
+		if(json instanceof String) {
+			doc = JsonPath.parse(json.toString());
+		} else {
+			doc = json;
+		}
+		DocumentContext io = JsonPath.parse(doc, option);
 		return replace(input, io, null);
+	}
+	
+	public Object replace(String paramString){
+		DocumentContext io = JsonPath.parse(Collections.emptyMap(), option);
+		return replaceVariables(paramString, io, null);
 	}
 	
 	@SuppressWarnings("unchecked")
