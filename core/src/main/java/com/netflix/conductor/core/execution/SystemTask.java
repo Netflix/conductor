@@ -36,7 +36,7 @@ import com.netflix.conductor.common.run.Workflow;
 public class SystemTask extends Task {
 	
 	private SystemTask(){}
-
+	
 	public static Task decisionTask(String workflowId, String taskId, String correlationId, String refName, Map<String, Object> input, String caseValue, List<String> caseOuput){
 		SystemTask st = new SystemTask();
 		st.setTaskType(SystemTaskType.DECISION.name());

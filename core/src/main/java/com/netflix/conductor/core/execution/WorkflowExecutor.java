@@ -20,6 +20,7 @@ package com.netflix.conductor.core.execution;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -262,7 +264,7 @@ public class WorkflowExecutor {
 		retried.setRetriedTaskId(last.getTaskId());
 		retried.setStatus(Status.SCHEDULED);
 		retried.setRetryCount(last.getRetryCount() + 1);
-		scheduleTask(Arrays.asList(retried));
+		scheduleTask(workflow, Arrays.asList(retried));
 
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		edao.updateWorkflow(workflow);
@@ -522,7 +524,7 @@ public class WorkflowExecutor {
 					}
 				}
 			}
-			stateChanged = scheduleTask(tasksToBeScheduled) || stateChanged;
+			stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
 
 			edao.updateTasks(tasksToBeUpdated);
 			if(stateChanged) {
@@ -624,14 +626,12 @@ public class WorkflowExecutor {
 		return s + getTaskDuration(s, edao.getTask(task.getRetriedTaskId()));
 	}
 	
-	private boolean scheduleTask(List<Task> tasks) throws Exception {
+	@VisibleForTesting
+	boolean scheduleTask(Workflow workflow, List<Task> tasks) throws Exception {
 		
 		if (tasks == null || tasks.isEmpty()) {
 			return false;
 		}
-		
-		String workflowId = tasks.get(0).getWorkflowInstanceId();
-		Workflow workflow = edao.getWorkflow(workflowId);
 		int count = workflow.getTasks().size();
 
 		for (Task task : tasks) {
@@ -640,7 +640,9 @@ public class WorkflowExecutor {
 
 		List<Task> created = edao.createTasks(tasks);
 		List<Task> createdSystemTasks = created.stream().filter(task -> SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
+		List<Task> toBeQueued = created.stream().filter(task -> !SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
 		boolean startedSystemTasks = false;
+		Set<String> startedSystemTaks = new HashSet<>();
 		for(Task task : createdSystemTasks) {
 
 			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
@@ -648,23 +650,23 @@ public class WorkflowExecutor {
 				throw new RuntimeException("No system task found by name " + task.getTaskType());
 			}
 			task.setStartTime(System.currentTimeMillis());
-			stt.start(workflow, task, this);
-			edao.updateTask(task);
-			startedSystemTasks = true;
-		}
-
-		return addTaskToQueue(created) || startedSystemTasks;
-	}
-
-	private boolean addTaskToQueue(final List<Task> tasks) throws Exception {
-		boolean stateChanged = false;
-		for (Task t : tasks) {
-			if (!(t instanceof SystemTask)) {
-				addTaskToQueue(t);
-				stateChanged = true;
+			if(!stt.isAsync()) {
+				stt.start(workflow, task, this);
+				startedSystemTasks = true;
+				startedSystemTaks.add(task.getTaskId());
+				edao.updateTask(task);
+			} else {
+				toBeQueued.add(task);
 			}
 		}
-		return stateChanged;
+		addTaskToQueue(toBeQueued);
+		return !toBeQueued.isEmpty() || startedSystemTasks;
+	}
+
+	private void addTaskToQueue(final List<Task> tasks) throws Exception {
+		for (Task t : tasks) {
+			addTaskToQueue(t);
+		}
 	}
 	
 	private void terminate(final WorkflowDef def, final Workflow workflow, TerminateWorkflow tw) throws Exception {

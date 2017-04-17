@@ -75,6 +75,14 @@ public class WorkflowSystemTask {
 	
 	/**
 	 * 
+	 * @return True if the task is supposed to be started asynchronously using internal queues.
+	 */
+	public boolean isAsync() {
+		return false;
+	}
+	
+	/**
+	 * 
 	 * @return name of the system task
 	 */
 	public String getName(){
@@ -85,7 +93,6 @@ public class WorkflowSystemTask {
 	public String toString(){
 		return name;
 	}
-	
 	
 	public static boolean is(String type){
 		return registry.containsKey(type);

@@ -225,6 +225,11 @@ public class HttpTask extends WorkflowSystemTask {
 		task.setStatus(Status.CANCELED);
 	}
 	
+	@Override
+	public boolean isAsync() {
+		return true;
+	}
+	
 	private static ObjectMapper objectMapper() {
 	    final ObjectMapper om = new ObjectMapper();
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
