@@ -69,6 +69,9 @@ public class Event extends WorkflowSystemTask {
 			queue.publish(Arrays.asList(message));
 			task.getOutputData().putAll(payload);
 			task.setStatus(Status.COMPLETED);
+		} else {
+			task.setReasonForIncompletion("No queue found to publish.");
+			task.setStatus(Status.FAILED);
 		}
 	}
 

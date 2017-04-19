@@ -131,7 +131,7 @@ public class AsyncTaskWorkerCoordinator {
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
-		logger.info("Done, Executing {}/{}", queue.getName(), msg.getId());
+		logger.info("Done, Executing {}/{}-{}", queue.getName(), msg.getId(), task.getStatus());
 	}
 
 	
