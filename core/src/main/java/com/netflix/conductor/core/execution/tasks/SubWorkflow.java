@@ -59,7 +59,6 @@ public class SubWorkflow extends WorkflowSystemTask {
 		try {
 			
 			String subWorkflowId = provider.startWorkflow(name, version, wfInput, correlationId, workflow.getWorkflowId(), task.getTaskId(), null);
-			task.getInputData().put("subWorkflowId", subWorkflowId);
 			task.getOutputData().put("subWorkflowId", subWorkflowId);
 			task.setStatus(Status.IN_PROGRESS);
 			
@@ -72,9 +71,9 @@ public class SubWorkflow extends WorkflowSystemTask {
 	
 	@Override
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
-		String workflowId = (String) task.getInputData().get("subWorkflowId");
-		if(workflowId == null){
-			workflowId = (String) task.getOutputData().get("subWorkflowId");
+		String workflowId = (String) task.getOutputData().get("subWorkflowId");
+		if (workflowId == null) {
+			workflowId = (String) task.getInputData().get("subWorkflowId");	//Backward compatibility
 		}
 		
 		if(StringUtils.isEmpty(workflowId)) {
@@ -97,9 +96,9 @@ public class SubWorkflow extends WorkflowSystemTask {
 	
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
-		String workflowId = (String) task.getInputData().get("subWorkflowId");
+		String workflowId = (String) task.getOutputData().get("subWorkflowId");
 		if(workflowId == null) {
-			workflowId = (String) task.getOutputData().get("subWorkflowId");
+			workflowId = (String) task.getInputData().get("subWorkflowId");	//Backward compatibility
 		}
 		
 		if(StringUtils.isEmpty(workflowId)) {

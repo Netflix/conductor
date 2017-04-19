@@ -19,6 +19,7 @@
 package com.netflix.conductor.contribs.http;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -80,6 +81,7 @@ public class TestHttpTask {
 	
 	@BeforeClass
 	public static void init() throws Exception {
+		
 		Map<String, Object> map = new HashMap<>();
 		map.put("key", "value1");
 		map.put("num", 42);
@@ -239,20 +241,8 @@ public class TestHttpTask {
 		task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
 		task.setStatus(Status.SCHEDULED);
 		task.setScheduledTime(0);
-		httpTask.execute(workflow, task, executor);
-
-		Map<String, Object> hr = (Map<String, Object>) task.getOutputData().get("response");
-		Object response = hr.get("body");
-		assertEquals(Task.Status.COMPLETED, task.getStatus());
-		assertTrue(response instanceof Map);
-		Map<String, Object> map = (Map<String, Object>) response;
-		assertEquals(JSON_RESPONSE, om.writeValueAsString(map));
-		
-		task.setStatus(Status.SCHEDULED);
-		task.setScheduledTime(System.currentTimeMillis()-100);
-		//For a recently scheduled task, execute does NOP
-		httpTask.execute(workflow, task, executor);
-		assertEquals(Task.Status.SCHEDULED, task.getStatus());
+		boolean executed = httpTask.execute(workflow, task, executor);
+		assertFalse(executed);
 
 	}
 	

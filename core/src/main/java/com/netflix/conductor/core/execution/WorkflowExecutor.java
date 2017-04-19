@@ -455,8 +455,9 @@ public class WorkflowExecutor {
 			break;
 		case IN_PROGRESS:
 			// put it back in queue based in callbackAfterSeconds
-			queue.remove(task.getTaskType(), task.getTaskId());
 			long callBack = result.getCallbackAfterSeconds();
+			//queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), callBack);		//TODO: Can we use this?
+			queue.remove(task.getTaskType(), task.getTaskId());			
 			queue.push(task.getTaskType(), task.getTaskId(), callBack); // Milliseconds
 			break;
 		default:

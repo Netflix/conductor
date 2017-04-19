@@ -3,11 +3,13 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -15,8 +17,10 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
@@ -42,31 +46,46 @@ public class AsyncTaskWorkerCoordinator {
 	
 	private ExecutorService es;
 	
-	private long unackTimeout = 30_000;	//30 second!
+	private long unackTimeout;
 	
-	private static Set<WorkflowSystemTask> tasks = new HashSet<>();
+	private String workerId;
 	
-	private static AsyncTaskWorkerCoordinator instance;
+	private static BlockingQueue<WorkflowSystemTask> queue = new LinkedBlockingQueue<>();
 	
+	private static Set<WorkflowSystemTask> listeningTasks = new HashSet<>();
+		
 	@Inject
 	public AsyncTaskWorkerCoordinator(DynoEventQueueProvider queueProvider, ExecutionDAO edao, WorkflowExecutor executor, Configuration config) {
 		this.queueProvider = queueProvider;
 		this.edao = edao;
 		this.executor = executor;
-		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 5);
+		this.workerId = config.getServerId();
+		this.unackTimeout = config.getIntProperty("workflow.async.task.worker.callback.seconds", 30);
+		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 1);		
 		if(threadCount > 0) {
-			this.es = Executors.newFixedThreadPool(threadCount);
-			logger.info("Async Task Worker Initialized with {} threads", threadCount);
+			this.es = Executors.newFixedThreadPool(threadCount, new ThreadFactoryBuilder().setNameFormat("async-worker-%d").build());
+			new Thread(()->listen()).start();
+			logger.info("Async Task Worker Initialized with {} threads and a callback time of {} second", threadCount, unackTimeout);
 		} else {
 			logger.info("Async Task Worker DISABLED");
 		}
-		instance = this;
 	}
 
 	static synchronized void add(WorkflowSystemTask systemTask) {
-		boolean added = tasks.add(systemTask);
-		if(added && systemTask.isAsync()) {
-			instance.listen(systemTask);
+		queue.add(systemTask);
+	}
+	
+	private void listen() {
+		try {
+			for(;;) {
+				WorkflowSystemTask st = queue.poll(10, TimeUnit.SECONDS);
+				if(st != null && st.isAsync() && !listeningTasks.contains(st)) {
+					listen(st);
+					listeningTasks.add(st);
+				}
+			}
+		}catch(InterruptedException ie) {
+			logger.warn(ie.getMessage(), ie);
 		}
 	}
 	
@@ -82,9 +101,9 @@ public class AsyncTaskWorkerCoordinator {
 	}
 	
 	private void _handle(WorkflowSystemTask systemTask, Message msg, ObservableQueue queue) {
-		logger.info("Executing {}/{}", queue.getName(), msg.getId());
 		String taskId = msg.getId();
 		Task task = edao.getTask(taskId);
+		logger.info("Executing {}/{}-{}", queue.getName(), msg.getId(), task.getStatus());
 		String workflowId = task.getWorkflowInstanceId();
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		try {
@@ -104,20 +123,15 @@ public class AsyncTaskWorkerCoordinator {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(e.getMessage());
 		}
-		edao.updateTask(task);
-		
-		if(task.getStatus().isTerminal()) {
-			queue.ack(Arrays.asList(msg));	
-		} else {
-			logger.info("Setting unack to {} for {}/{}", unackTimeout, queue.getName(), msg.getId());
-			queue.setUnackTimeout(msg, unackTimeout);
-		}
-		
+		task.setWorkerId(workerId);
+		task.setCallbackAfterSeconds(unackTimeout);
+
 		try {
-			executor.decide(workflowId);
+			executor.updateTask(new TaskResult(task));
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
+		logger.info("Done, Executing {}/{}", queue.getName(), msg.getId());
 	}
 
 	

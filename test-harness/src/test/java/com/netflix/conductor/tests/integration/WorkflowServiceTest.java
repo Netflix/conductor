@@ -2506,8 +2506,8 @@ public class WorkflowServiceTest {
 		task = es.getTasks().stream().filter(t -> t.getTaskType().equals(Type.SUB_WORKFLOW.name().toString())).findAny().get();
 		assertNotNull(task);
 		assertNotNull(task.getOutputData());
-		assertNotNull("Input: " + task.getInputData().toString(), task.getInputData().get("subWorkflowId"));
-		String subWorkflowId = task.getInputData().get("subWorkflowId").toString();
+		assertNotNull("Input: " + task.getOutputData().toString(), task.getOutputData().get("subWorkflowId"));
+		String subWorkflowId = task.getOutputData().get("subWorkflowId").toString();
 		
 		es = ess.getExecutionStatus(subWorkflowId, true);
 		assertNotNull(es);
