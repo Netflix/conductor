@@ -74,17 +74,11 @@ public class SubWorkflow extends WorkflowSystemTask {
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
 		String workflowId = (String) task.getInputData().get("subWorkflowId");
 		if(workflowId == null){
-			workflowId = (String) task.getOutputData().get("subWorkflowId");	//This is for backward compatibility, can be removed in future.
+			workflowId = (String) task.getOutputData().get("subWorkflowId");
 		}
 		
-		if (task.getStatus().equals(Status.SCHEDULED)) {
-			long timeSince = System.currentTimeMillis() - task.getScheduledTime();
-			if(timeSince > 600_000) {
-				start(workflow, task, provider);
-				return true;	
-			}else {
-				return false;
-			}				
+		if(StringUtils.isEmpty(workflowId)) {
+			return false;
 		}
 		
 		Workflow subWorkflow = provider.getWorkflow(workflowId, false);
@@ -105,7 +99,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
 		String workflowId = (String) task.getInputData().get("subWorkflowId");
 		if(workflowId == null) {
-			workflowId = (String) task.getOutputData().get("subWorkflowId");	//TODO: Remove in the next release.  Only for the backward compatibility
+			workflowId = (String) task.getOutputData().get("subWorkflowId");
 		}
 		
 		if(StringUtils.isEmpty(workflowId)) {

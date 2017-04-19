@@ -208,15 +208,6 @@ public class HttpTask extends WorkflowSystemTask {
 
 	@Override
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		if (task.getStatus().equals(Status.SCHEDULED)) {
-			long timeSince = System.currentTimeMillis() - task.getScheduledTime();
-			if(timeSince > 600_000) {
-				start(workflow, task, executor);
-				return true;	
-			}else {
-				return false;
-			}				
-		}
 		return false;
 	}
 	

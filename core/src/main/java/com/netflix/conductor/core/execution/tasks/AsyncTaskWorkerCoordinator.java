@@ -1,14 +1,13 @@
 /**
  * 
  */
-package com.netflix.conductor.core.execution.worker;
+package com.netflix.conductor.core.execution.tasks;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -24,7 +23,6 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.dao.ExecutionDAO;
 
 /**
@@ -44,34 +42,38 @@ public class AsyncTaskWorkerCoordinator {
 	
 	private ExecutorService es;
 	
-	private long unackTimeout = 30_1000;	//30 second!
+	private long unackTimeout = 30_000;	//30 second!
+	
+	private static Set<WorkflowSystemTask> tasks = new HashSet<>();
+	
+	private static AsyncTaskWorkerCoordinator instance;
 	
 	@Inject
 	public AsyncTaskWorkerCoordinator(DynoEventQueueProvider queueProvider, ExecutionDAO edao, WorkflowExecutor executor, Configuration config) {
 		this.queueProvider = queueProvider;
 		this.edao = edao;
 		this.executor = executor;
-		
-		//TODO: Find a better of doing this!
-		Executors.newSingleThreadScheduledExecutor().schedule(() -> {
-			
-			List<WorkflowSystemTask> asyncTasks = WorkflowSystemTask.all().stream().filter(stt -> stt.isAsync()).collect(Collectors.toList());
-			int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", asyncTasks.size());
-			if(threadCount > 0) {
-				this.es = Executors.newFixedThreadPool(threadCount);
-				asyncTasks.forEach(task -> listen(task));
-				logger.info("Async Task Worker Initialized with {} threads", threadCount);
-			} else {
-				logger.info("Async Task Worker DISABLED");
-			}
-			
-		}, 1000, TimeUnit.MINUTES);
-		
+		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 5);
+		if(threadCount > 0) {
+			this.es = Executors.newFixedThreadPool(threadCount);
+			logger.info("Async Task Worker Initialized with {} threads", threadCount);
+		} else {
+			logger.info("Async Task Worker DISABLED");
+		}
+		instance = this;
 	}
 
+	static synchronized void add(WorkflowSystemTask systemTask) {
+		boolean added = tasks.add(systemTask);
+		if(added && systemTask.isAsync()) {
+			instance.listen(systemTask);
+		}
+	}
+	
 	private void listen(WorkflowSystemTask systemTask) {
 		String name = systemTask.getName();
 		ObservableQueue queue = queueProvider.getQueue(name);
+		logger.info("Started listening {}", name);
 		queue.observe().subscribe((Message msg) -> handle(systemTask, msg, queue));		
 	}
 
@@ -80,7 +82,7 @@ public class AsyncTaskWorkerCoordinator {
 	}
 	
 	private void _handle(WorkflowSystemTask systemTask, Message msg, ObservableQueue queue) {
-		
+		logger.info("Executing {}/{}", queue.getName(), msg.getId());
 		String taskId = msg.getId();
 		Task task = edao.getTask(taskId);
 		String workflowId = task.getWorkflowInstanceId();
@@ -107,6 +109,7 @@ public class AsyncTaskWorkerCoordinator {
 		if(task.getStatus().isTerminal()) {
 			queue.ack(Arrays.asList(msg));	
 		} else {
+			logger.info("Setting unack to {} for {}/{}", unackTimeout, queue.getName(), msg.getId());
 			queue.setUnackTimeout(msg, unackTimeout);
 		}
 		
@@ -116,5 +119,7 @@ public class AsyncTaskWorkerCoordinator {
 			logger.error(e.getMessage(), e);
 		}
 	}
+
+	
 	
 }	

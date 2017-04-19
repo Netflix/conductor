@@ -460,7 +460,8 @@ public class WorkflowServiceTest {
 		ess.updateTask(t1);
 		ess.updateTask(t2);
 		ess.updateTask(t3);
-
+		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+		
 		wf = ess.getExecutionStatus(wfid, true);
 		
 		assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t16")));
@@ -469,7 +470,7 @@ public class WorkflowServiceTest {
 		String[] tasks = new String[]{"junit_task_1","junit_task_2","junit_task_14","junit_task_16"};
 		for(String tt : tasks){
 			Task polled = ess.poll(tt, "test");
-			assertNotNull(polled);
+			assertNotNull("poll resulted empty for task: " + tt, polled);
 			polled.setStatus(Status.COMPLETED);
 			ess.updateTask(polled);
 		}
@@ -2496,10 +2497,12 @@ public class WorkflowServiceTest {
 		assertNotNull(task);
 		task.setStatus(Status.COMPLETED);
 		ess.updateTask(task);
+		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 		
 		es = ess.getExecutionStatus(wfId, true);
 		assertNotNull(es);
 		assertNotNull(es.getTasks());
+		
 		task = es.getTasks().stream().filter(t -> t.getTaskType().equals(Type.SUB_WORKFLOW.name().toString())).findAny().get();
 		assertNotNull(task);
 		assertNotNull(task.getOutputData());
@@ -2517,6 +2520,7 @@ public class WorkflowServiceTest {
 		ess.updateTask(task);
 		
 		task = ess.poll("junit_task_2", "test");
+		assertEquals(subWorkflowId, task.getWorkflowInstanceId());
 		String uuid = UUID.randomUUID().toString();
 		task.getOutputData().put("uuid", uuid);
 		task.setStatus(Status.COMPLETED);
@@ -2530,7 +2534,6 @@ public class WorkflowServiceTest {
 		assertTrue(es.getOutput().containsKey("o2"));
 		assertEquals("sub workflow input param1", es.getOutput().get("o1"));
 		assertEquals(uuid, es.getOutput().get("o2"));
-		
 		es = ess.getExecutionStatus(wfId, true);
 		assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
 
@@ -2564,6 +2567,7 @@ public class WorkflowServiceTest {
 		assertNotNull(task);
 		task.setStatus(Status.COMPLETED);
 		ess.updateTask(task);
+		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 		
 		es = ess.getExecutionStatus(wfId, true);
 		assertNotNull(es);
@@ -2626,6 +2630,7 @@ public class WorkflowServiceTest {
 		assertNotNull(task);
 		task.setStatus(Status.COMPLETED);
 		ess.updateTask(task);
+		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 		
 		es = ess.getExecutionStatus(wfId, true);
 		assertNotNull(es);

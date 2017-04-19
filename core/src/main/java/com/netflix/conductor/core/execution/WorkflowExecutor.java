@@ -518,7 +518,7 @@ public class WorkflowExecutor {
 			for(Task task : tasksToBeScheduled) {
 				if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-					if (!stt.isAsync() && stt.execute(workflow, task, this)) {
+					if (stt.execute(workflow, task, this)) {
 						tasksToBeUpdated.add(task);
 						stateChanged = true;
 					}
@@ -530,7 +530,7 @@ public class WorkflowExecutor {
 			if(stateChanged) {
 				edao.updateWorkflow(workflow);
 				queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());
-				decide(workflowId);				
+				decide(workflowId);
 			}
 			
 		} catch (TerminateWorkflow tw) {

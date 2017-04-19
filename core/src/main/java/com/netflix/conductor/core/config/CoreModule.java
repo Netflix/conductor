@@ -22,7 +22,7 @@ import com.google.inject.AbstractModule;
 import com.netflix.conductor.core.events.ActionProcessor;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
-import com.netflix.conductor.core.execution.worker.AsyncTaskWorkerCoordinator;
+import com.netflix.conductor.core.execution.tasks.AsyncTaskWorkerCoordinator;
 
 
 /**
