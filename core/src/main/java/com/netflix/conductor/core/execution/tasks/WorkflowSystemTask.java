@@ -18,6 +18,7 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -101,6 +102,9 @@ public class WorkflowSystemTask {
 	public static WorkflowSystemTask get(String type) {
 		return registry.get(type);
 	}
-
+	
+	public static Collection<WorkflowSystemTask> all() {
+		return registry.values();
+	}
 	
 }
