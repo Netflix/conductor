@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 
@@ -38,6 +39,8 @@ public class AsyncTaskWorkerCoordinator {
 	private static Logger logger = LoggerFactory.getLogger(AsyncTaskWorkerCoordinator.class);
 	
 	private ExecutionService executionService;
+	
+	private ExecutionDAO dao;
 	
 	private WorkflowExecutor executor;
 	
@@ -54,8 +57,9 @@ public class AsyncTaskWorkerCoordinator {
 	private static final String className = AsyncTaskWorkerCoordinator.class.getName();
 		
 	@Inject
-	public AsyncTaskWorkerCoordinator(ExecutionService executionService, WorkflowExecutor executor, Configuration config) {
+	public AsyncTaskWorkerCoordinator(ExecutionService executionService, ExecutionDAO dao, WorkflowExecutor executor, Configuration config) {
 		this.executionService = executionService;
+		this.dao = dao;
 		this.executor = executor;
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.async.task.worker.callback.seconds", 30);
@@ -95,7 +99,7 @@ public class AsyncTaskWorkerCoordinator {
 	private void pollAndExecute(WorkflowSystemTask systemTask) {
 		try {
 			String name = systemTask.getName();
-			List<Task> polled = executionService.poll(name, workerId, 1, 500);
+			List<Task> polled = executionService.justPoll(name, 1, 500);
 			polled.forEach(task -> es.submit(()->execute(systemTask, task)));
 		} catch (Exception e) {
 			Monitors.error(className, "pollAndExecute");
@@ -109,22 +113,34 @@ public class AsyncTaskWorkerCoordinator {
 			
 			String workflowId = task.getWorkflowInstanceId();
 			Workflow workflow = executionService.getExecutionStatus(workflowId, true);
-			if(task.getPollCount() < 2) {
-				systemTask.start(workflow, task, executor);
-			} else {
-				systemTask.execute(workflow, task, executor);
+			switch (task.getStatus()) {
+				case SCHEDULED:
+					task.setStartTime(System.currentTimeMillis());
+					Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());				
+					systemTask.start(workflow, task, executor);
+					break;
+				case IN_PROGRESS:
+					systemTask.execute(workflow, task, executor);
+					break;
+				default:
+					break;
 			}
+			
+			task.setWorkerId(workerId);
+			task.setPollCount(task.getPollCount() + 1);
+			Monitors.recordTaskPoll(task.getTaskType());
 			
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(e.getMessage());
 		}
-		task.setWorkerId(workerId);
+		
 		if(!task.getStatus().isTerminal()) {
 			task.setCallbackAfterSeconds(unackTimeout);
 		}
-
+		dao.updateTask(task);
+		
 		try {
 			executor.updateTask(new TaskResult(task));
 		} catch (Exception e) {
