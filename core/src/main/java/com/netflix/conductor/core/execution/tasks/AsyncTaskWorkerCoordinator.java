@@ -113,10 +113,18 @@ public class AsyncTaskWorkerCoordinator {
 			
 			String workflowId = task.getWorkflowInstanceId();
 			Workflow workflow = executionService.getExecutionStatus(workflowId, true);
+			
+			if (task.getStartTime() == 0) {
+				task.setStartTime(System.currentTimeMillis());
+				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
+			}
+			task.setWorkerId(workerId);
+			task.setPollCount(task.getPollCount() + 1);
+			dao.updateTask(task);
+			Monitors.recordTaskPoll(task.getTaskType());
+			
 			switch (task.getStatus()) {
 				case SCHEDULED:
-					task.setStartTime(System.currentTimeMillis());
-					Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());				
 					systemTask.start(workflow, task, executor);
 					break;
 				case IN_PROGRESS:
@@ -125,10 +133,6 @@ public class AsyncTaskWorkerCoordinator {
 				default:
 					break;
 			}
-			
-			task.setWorkerId(workerId);
-			task.setPollCount(task.getPollCount() + 1);
-			Monitors.recordTaskPoll(task.getTaskType());
 			
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -139,7 +143,6 @@ public class AsyncTaskWorkerCoordinator {
 		if(!task.getStatus().isTerminal()) {
 			task.setCallbackAfterSeconds(unackTimeout);
 		}
-		dao.updateTask(task);
 		
 		try {
 			executor.updateTask(new TaskResult(task));
