@@ -2715,8 +2715,6 @@ public class WorkflowServiceTest {
 	
 	private void createSubWorkflow() throws Exception {
 		
-		
-		
 		WorkflowTask wft1 = new WorkflowTask();
 		wft1.setName("junit_task_5");
 		Map<String, Object> ip1 = new HashMap<>();

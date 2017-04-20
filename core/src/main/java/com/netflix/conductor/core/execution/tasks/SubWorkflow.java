@@ -85,8 +85,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 		if(!subWorkflowStatus.isTerminal()){
 			return false;
 		}
-		task.setOutputData(subWorkflow.getOutput());
-		if(subWorkflowStatus.isSuccessful()){
+		task.getOutputData().putAll(subWorkflow.getOutput());
+		if (subWorkflowStatus.isSuccessful()) {
 			task.setStatus(Status.COMPLETED);
 		}else{
 			task.setStatus(Status.FAILED);

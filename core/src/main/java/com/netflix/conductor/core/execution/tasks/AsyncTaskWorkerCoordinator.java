@@ -109,11 +109,10 @@ public class AsyncTaskWorkerCoordinator {
 		try {
 			switch(task.getStatus()) {
 				case SCHEDULED:
-					logger.info("Starting the task {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
+					task.setStartTime(System.currentTimeMillis());
 					systemTask.start(workflow, task, executor);
 					break;
 				case IN_PROGRESS:
-					logger.info("execute() {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
 					systemTask.execute(workflow, task, executor);
 					break;
 				default:
@@ -126,7 +125,9 @@ public class AsyncTaskWorkerCoordinator {
 			task.setReasonForIncompletion(e.getMessage());
 		}
 		task.setWorkerId(workerId);
-		task.setCallbackAfterSeconds(unackTimeout);
+		if(!task.getStatus().isTerminal()) {
+			task.setCallbackAfterSeconds(unackTimeout);
+		}
 
 		try {
 			executor.updateTask(new TaskResult(task));
