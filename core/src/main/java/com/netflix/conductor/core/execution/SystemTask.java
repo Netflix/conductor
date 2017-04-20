@@ -112,7 +112,7 @@ public class SystemTask extends Task {
 		st.setInputData(input);
 		st.getInputData().put("sink", sink);
 		st.setTaskId(taskId);
-		st.setStatus(Status.IN_PROGRESS);
+		st.setStatus(Status.SCHEDULED);
 		return st;
 	}	
 	

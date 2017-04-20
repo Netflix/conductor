@@ -2684,6 +2684,35 @@ public class WorkflowServiceTest {
 		assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
 	}
 	
+	@Test
+	public void testEvent() throws Exception {
+
+		
+		WorkflowDef def = new WorkflowDef();
+		def.setName("test_event");
+		def.setSchemaVersion(2);
+		WorkflowTask event = new WorkflowTask();
+		event.setWorkflowTaskType(Type.EVENT);
+		event.setName("EVENT");
+		event.setTaskReferenceName("wait0");
+		event.setSink("conductor");
+		def.getTasks().add(event);
+		ms.registerWorkflowDef(def);
+		
+		String id = provider.startWorkflow(def.getName(), def.getVersion(), "", new HashMap<>());
+		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+		Workflow workflow = provider.getWorkflow(id, true);
+		assertNotNull(workflow);
+		assertEquals(1, workflow.getTasks().size());
+		
+		Task eventTask = workflow.getTasks().get(0);
+		assertEquals(WorkflowTask.Type.EVENT.name(), eventTask.getTaskType());
+		assertEquals(Task.Status.COMPLETED, eventTask.getStatus());
+		assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
+		assertTrue(!eventTask.getOutputData().isEmpty());
+		assertNotNull(eventTask.getOutputData().get("event_produced"));
+	}
+	
 	private void createSubWorkflow() throws Exception {
 		
 		

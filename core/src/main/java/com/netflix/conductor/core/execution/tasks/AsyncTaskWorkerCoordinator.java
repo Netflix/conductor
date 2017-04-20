@@ -109,9 +109,11 @@ public class AsyncTaskWorkerCoordinator {
 		try {
 			switch(task.getStatus()) {
 				case SCHEDULED:
+					logger.info("Starting the task {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
 					systemTask.start(workflow, task, executor);
 					break;
 				case IN_PROGRESS:
+					logger.info("execute() {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
 					systemTask.execute(workflow, task, executor);
 					break;
 				default:
