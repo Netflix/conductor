@@ -93,7 +93,7 @@ public class AsyncTaskWorkerCoordinator {
 		String name = systemTask.getName();
 		ObservableQueue queue = queueProvider.getQueue(name);
 		logger.info("Started listening {}", name);
-		queue.observe().subscribe((Message msg) -> handle(systemTask, msg, queue));		
+		queue.observe().subscribe((Message msg) -> handle(systemTask, msg, queue));
 	}
 
 	private void handle(WorkflowSystemTask systemTask, Message msg, ObservableQueue queue) {

@@ -63,8 +63,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 			task.setStatus(Status.IN_PROGRESS);
 			
 		} catch (Exception e) {
-			// If we are not able to start the sub workflow now, let's
-			// continue for now and let the sweep job take care of it.
+			task.setStatus(Status.FAILED);
+			task.setReasonForIncompletion(e.getMessage());
 			logger.error(e.getMessage(), e);
 		}
 	}
