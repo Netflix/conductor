@@ -518,7 +518,7 @@ public class WorkflowExecutor {
 			for(Task task : tasksToBeScheduled) {
 				if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-					if (stt.execute(workflow, task, this)) {
+					if (!stt.isAsync() && stt.execute(workflow, task, this)) {
 						tasksToBeUpdated.add(task);
 						stateChanged = true;
 					}

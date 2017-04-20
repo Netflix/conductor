@@ -492,7 +492,7 @@ public class WorkflowServiceTest {
 		assertNotNull(task20);
 		task20.setStatus(Status.COMPLETED);
 		ess.updateTask(task20);
-		
+		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 		wf = ess.getExecutionStatus(wfid, true);
 		assertNotNull(wf);
 		assertEquals(WorkflowStatus.RUNNING, wf.getStatus());
@@ -2535,8 +2535,6 @@ public class WorkflowServiceTest {
 		assertEquals("sub workflow input param1", es.getOutput().get("o1"));
 		assertEquals(uuid, es.getOutput().get("o2"));
 		es = ess.getExecutionStatus(wfId, true);
-		assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
-
 	}
 	
 	@Test
@@ -2592,7 +2590,7 @@ public class WorkflowServiceTest {
 		es = ess.getExecutionStatus(subWorkflowId, true);
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
-		
+		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 		es = ess.getExecutionStatus(wfId, true);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
 		
@@ -2687,13 +2685,18 @@ public class WorkflowServiceTest {
 	@Test
 	public void testEvent() throws Exception {
 
+		TaskDef td = new TaskDef();
+		td.setName("eventX");
+		td.setTimeoutSeconds(1);
+		
+		ms.registerTaskDef(Arrays.asList(td));
 		
 		WorkflowDef def = new WorkflowDef();
 		def.setName("test_event");
 		def.setSchemaVersion(2);
 		WorkflowTask event = new WorkflowTask();
 		event.setWorkflowTaskType(Type.EVENT);
-		event.setName("EVENT");
+		event.setName("eventX");
 		event.setTaskReferenceName("wait0");
 		event.setSink("conductor");
 		def.getTasks().add(event);
@@ -2708,7 +2711,7 @@ public class WorkflowServiceTest {
 		Task eventTask = workflow.getTasks().get(0);
 		assertEquals(WorkflowTask.Type.EVENT.name(), eventTask.getTaskType());
 		assertEquals(Task.Status.COMPLETED, eventTask.getStatus());
-		assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
+		assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
 		assertTrue(!eventTask.getOutputData().isEmpty());
 		assertNotNull(eventTask.getOutputData().get("event_produced"));
 	}
