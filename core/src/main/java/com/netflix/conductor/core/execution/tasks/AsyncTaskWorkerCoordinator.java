@@ -4,6 +4,7 @@
 package com.netflix.conductor.core.execution.tasks;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -23,11 +24,9 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.core.events.queue.ObservableQueue;
-import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.dao.ExecutionDAO;
+import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.service.ExecutionService;
 
 /**
  * @author Viren
@@ -38,9 +37,7 @@ public class AsyncTaskWorkerCoordinator {
 
 	private static Logger logger = LoggerFactory.getLogger(AsyncTaskWorkerCoordinator.class);
 	
-	private DynoEventQueueProvider queueProvider;
-	
-	private ExecutionDAO edao;
+	private ExecutionService executionService;
 	
 	private WorkflowExecutor executor;
 	
@@ -53,11 +50,12 @@ public class AsyncTaskWorkerCoordinator {
 	private static BlockingQueue<WorkflowSystemTask> queue = new LinkedBlockingQueue<>();
 	
 	private static Set<WorkflowSystemTask> listeningTasks = new HashSet<>();
+	
+	private static final String className = AsyncTaskWorkerCoordinator.class.getName();
 		
 	@Inject
-	public AsyncTaskWorkerCoordinator(DynoEventQueueProvider queueProvider, ExecutionDAO edao, WorkflowExecutor executor, Configuration config) {
-		this.queueProvider = queueProvider;
-		this.edao = edao;
+	public AsyncTaskWorkerCoordinator(ExecutionService executionService, WorkflowExecutor executor, Configuration config) {
+		this.executionService = executionService;
 		this.executor = executor;
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.async.task.worker.callback.seconds", 30);
@@ -90,33 +88,31 @@ public class AsyncTaskWorkerCoordinator {
 	}
 	
 	private void listen(WorkflowSystemTask systemTask) {
-		String name = systemTask.getName();
-		ObservableQueue queue = queueProvider.getQueue(name);
-		logger.info("Started listening {}", name);
-		queue.observe().subscribe((Message msg) -> handle(systemTask, msg, queue));
+		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(()->pollAndExecute(systemTask), 500, 500, TimeUnit.MILLISECONDS);
+		logger.info("Started listening {}", systemTask.getName());
 	}
 
-	private void handle(WorkflowSystemTask systemTask, Message msg, ObservableQueue queue) {
-		es.submit(()->_handle(systemTask, msg, queue));
-	}
-	
-	private void _handle(WorkflowSystemTask systemTask, Message msg, ObservableQueue queue) {
-		String taskId = msg.getId();
-		Task task = edao.getTask(taskId);
-		logger.info("Executing {}/{}-{}", queue.getName(), msg.getId(), task.getStatus());
-		String workflowId = task.getWorkflowInstanceId();
-		Workflow workflow = edao.getWorkflow(workflowId, true);
+	private void pollAndExecute(WorkflowSystemTask systemTask) {
 		try {
-			switch(task.getStatus()) {
-				case SCHEDULED:
-					task.setStartTime(System.currentTimeMillis());
-					systemTask.start(workflow, task, executor);
-					break;
-				case IN_PROGRESS:
-					systemTask.execute(workflow, task, executor);
-					break;
-				default:
-					//do nothing					
+			String name = systemTask.getName();
+			List<Task> polled = executionService.poll(name, workerId, 1, 500);
+			polled.forEach(task -> es.submit(()->execute(systemTask, task)));
+		} catch (Exception e) {
+			Monitors.error(className, "pollAndExecute");
+			logger.error(e.getMessage(), e);
+		}
+	}
+
+	private void execute(WorkflowSystemTask systemTask, Task task) {
+		logger.info("Executing {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
+		try {
+			
+			String workflowId = task.getWorkflowInstanceId();
+			Workflow workflow = executionService.getExecutionStatus(workflowId, true);
+			if(task.getPollCount() < 2) {
+				systemTask.start(workflow, task, executor);
+			} else {
+				systemTask.execute(workflow, task, executor);
 			}
 			
 		} catch (Exception e) {
@@ -134,7 +130,7 @@ public class AsyncTaskWorkerCoordinator {
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
-		logger.info("Done, Executing {}/{}-{}", queue.getName(), msg.getId(), task.getStatus());
+		logger.info("Done, Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
 	}
 
 	
