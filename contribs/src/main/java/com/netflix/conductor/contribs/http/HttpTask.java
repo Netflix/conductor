@@ -114,6 +114,8 @@ public class HttpTask extends WorkflowSystemTask {
 			return;
 		}
 		
+		boolean isOptionalTask = input.getOptional() != null && input.getOptional();
+		
 		try {
 			
 			HttpResponse response = httpCall(input);
@@ -121,7 +123,7 @@ public class HttpTask extends WorkflowSystemTask {
 				task.setStatus(Status.COMPLETED);
 			} else {
 				task.setReasonForIncompletion(response.body.toString());
-				task.setStatus(Status.FAILED);
+				task.setStatus(isOptionalTask ? Status.COMPLETED_WITH_ERRORS : Status.FAILED);
 			}
 			if(response != null) {
 				task.getOutputData().put("response", response.asMap());
@@ -272,6 +274,8 @@ public class HttpTask extends WorkflowSystemTask {
 		private Object body;
 		
 		private String accept = MediaType.APPLICATION_JSON;
+		
+		private Boolean optional;		
 
 		/**
 		 * @return the method
@@ -359,5 +363,19 @@ public class HttpTask extends WorkflowSystemTask {
 			this.accept = accept;
 		}
 		
+		/**
+		 * @return boolean indicating if the task is optional
+		 */
+		public Boolean getOptional() {
+			return optional;
+		}
+
+		/**
+		 *
+		 * @param optional set to true if the task is optional
+		 */
+		public void setOptional(Boolean optional) {
+			this.optional = optional;
+		}
 	}
 }
