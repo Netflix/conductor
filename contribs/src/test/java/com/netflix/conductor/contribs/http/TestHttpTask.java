@@ -256,6 +256,29 @@ public class TestHttpTask {
 
 	}
 	
+	@Test
+	public void testOptional() throws Exception {
+		Task task = new Task();
+		Input input = new Input();
+		input.setUri("http://localhost:7009/failure");
+		input.setMethod("GET");
+		input.setOptional(true);
+		task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+		
+		//should return COMPLETED_WITH_ERRORS if the task completes but with a non-200 status code
+		httpTask.start(workflow, task, executor);
+		assertEquals("Task output: " + task.getOutputData(), Task.Status.COMPLETED_WITH_ERRORS, task.getStatus());
+		assertEquals(ERROR_RESPONSE, task.getReasonForIncompletion());
+		assertTrue(task.getStatus().isSuccessful());
+
+		//should still return FAILED is the task is not properly configured
+		task.setStatus(Status.SCHEDULED);
+		task.getInputData().remove(HttpTask.REQUEST_PARAMETER_NAME);
+		httpTask.start(workflow, task, executor);
+		assertEquals(Task.Status.FAILED, task.getStatus());
+		assertEquals(HttpTask.MISSING_REQUEST, task.getReasonForIncompletion());
+	}
+	
 	private static class EchoHandler extends AbstractHandler {
 
 		private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String,Object>>() {};
