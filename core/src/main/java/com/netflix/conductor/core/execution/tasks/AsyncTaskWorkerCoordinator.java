@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
@@ -28,6 +29,7 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
+import com.netflix.conductor.service.MetadataService;
 
 /**
  * @author Viren
@@ -46,6 +48,8 @@ public class AsyncTaskWorkerCoordinator {
 	
 	private ExecutorService es;
 	
+	private MetadataService ms;
+	
 	private long unackTimeout;
 	
 	private String workerId;
@@ -57,8 +61,9 @@ public class AsyncTaskWorkerCoordinator {
 	private static final String className = AsyncTaskWorkerCoordinator.class.getName();
 		
 	@Inject
-	public AsyncTaskWorkerCoordinator(ExecutionService executionService, ExecutionDAO dao, WorkflowExecutor executor, Configuration config) {
+	public AsyncTaskWorkerCoordinator(ExecutionService executionService, MetadataService ms, ExecutionDAO dao, WorkflowExecutor executor, Configuration config) {
 		this.executionService = executionService;
+		this.ms = ms;
 		this.dao = dao;
 		this.executor = executor;
 		this.workerId = config.getServerId();
@@ -80,7 +85,7 @@ public class AsyncTaskWorkerCoordinator {
 	private void listen() {
 		try {
 			for(;;) {
-				WorkflowSystemTask st = queue.poll(10, TimeUnit.SECONDS);
+				WorkflowSystemTask st = queue.poll(60, TimeUnit.SECONDS);
 				if(st != null && st.isAsync() && !listeningTasks.contains(st)) {
 					listen(st);
 					listeningTasks.add(st);
@@ -107,21 +112,32 @@ public class AsyncTaskWorkerCoordinator {
 		}
 	}
 
+	//TODO: ACK!!!
 	private void execute(WorkflowSystemTask systemTask, Task task) {
 		logger.info("Executing {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
 		try {
 			
+			TaskDef taskDef = ms.getTaskDef(task.getTaskDefName());
+			int limit = 0;
+			if(taskDef != null) {
+				limit = taskDef.getConcurrencyLimit();
+			}			
+			if(limit > 0 && dao.rateLimited(task, limit)) {
+				logger.warn("Rate limited for {}", task.getTaskDefName());
+				return;
+			}
+			
 			String workflowId = task.getWorkflowInstanceId();
-			Workflow workflow = executionService.getExecutionStatus(workflowId, true);
+			Workflow workflow = executionService.getExecutionStatus(workflowId, true);			
 			
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());
 				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
 			}
+			
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
 			dao.updateTask(task);
-			Monitors.recordTaskPoll(task.getTaskType());
 			
 			switch (task.getStatus()) {
 				case SCHEDULED:

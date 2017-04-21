@@ -60,6 +60,8 @@ public class TaskDef extends Auditable {
 	
 	private int responseTimeoutSeconds = ONE_HOUR;
 	
+	private int concurrencyLimit;
+	
 	private Map<String, Object> inputTemplate = new HashMap<>();
 		
 	public TaskDef() {
@@ -232,6 +234,23 @@ public class TaskDef extends Auditable {
 		return inputTemplate;
 	}
 
+	/**
+	 * 
+	 * @param concurrencyLimit number of concurrent task that can be IN_PROGRESS at a given time.  
+	 * A value less than 1 indicates no concurrency.  (Default)
+	 */
+	public void setConcurrencyLimit(int concurrencyLimit) {
+		this.concurrencyLimit = concurrencyLimit;
+	}
+	
+	/**
+	 * 
+	 * @return concurrency limit
+	 */
+	public int getConcurrencyLimit() {
+		return concurrencyLimit;
+	}
+	
 	/**
 	 * @param inputTemplate the inputTemplate to set
 	 * 

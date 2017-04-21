@@ -125,6 +125,11 @@ public class DynoProxy {
 		Long retVal = dynoClient.hsetnx(key, field, value);
 		return retVal;
 	}
+	
+	public Long hlen(String key) {
+		Long retVal = dynoClient.hlen(key);
+		return retVal;
+	}
 
 	public String hget(String key, String field) {
 		return dynoClient.hget(key, field);

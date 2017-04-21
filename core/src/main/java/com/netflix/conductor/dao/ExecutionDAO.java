@@ -72,6 +72,14 @@ public interface ExecutionDAO {
 	public abstract void updateTask(Task task);
 	
 	/**
+	 * Checks if the number of concurrent tasks for the given taskDef will exceed the limit if the task is executed
+	 * @param task The task to be executed
+	 * @param limit max number of concurrent tasks that should be in progress
+	 * @return true if by executing this task, the limit is breached.  false otherwise.
+	 */
+	public abstract boolean rateLimited(Task task, int limit);
+	
+	/**
 	 * 
 	 * @param tasks Multiple tasks to be updated
 	 *  

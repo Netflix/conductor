@@ -46,7 +46,9 @@ import com.netflix.conductor.dao.IndexDAO;
 @Trace
 public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
+	
 	// Keys Families
+	private static final String TASKS_RATE = "TASKS_RATE";
 	private final static String IN_PROGRESS_TASKS = "IN_PROGRESS_TASKS";
 	private final static String WORKFLOW_TO_TASKS = "WORKFLOW_TO_TASKS";
 	private final static String SCHEDULED_TASKS = "SCHEDULED_TASKS";
@@ -154,10 +156,22 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 		dynoClient.set(nsKey(TASK, task.getTaskId()), toJson(task));
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
-			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId()); 
+			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
+			String key = nsKey(TASKS_RATE, task.getTaskDefName());
+			dynoClient.zrem(key, task.getTaskId());
 		}
 		
 		indexer.index(task);
+	}
+	
+	@Override
+	public boolean rateLimited(Task task, int limit) {
+		String key = nsKey(TASKS_RATE, task.getTaskDefName());
+		double score = System.currentTimeMillis();
+		String member = task.getTaskId();
+		dynoClient.zadd(key, score, member);
+		Set<String> ids = dynoClient.zrangeByScore(key, 0, System.currentTimeMillis()+1, limit);
+		return !ids.contains(task.getTaskId());
 	}
 
 	@Override
@@ -206,7 +220,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			}
 		}
 		return tasks;
-
 	}
 
 	@Override
