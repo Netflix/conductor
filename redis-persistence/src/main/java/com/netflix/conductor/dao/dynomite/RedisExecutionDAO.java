@@ -188,7 +188,8 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.hdel(nsKey(SCHEDULED_TASKS, task.getWorkflowInstanceId()), taskKey);
 		dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 		dynoClient.srem(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
-		dynoClient.del(nsKey(TASK, task.getTaskId()));
+		dynoClient.del(nsKey(TASK, task.getTaskId()));		
+		dynoClient.zrem(nsKey(TASKS_RATE, task.getTaskDefName()), task.getTaskId());
 
 	}
 
