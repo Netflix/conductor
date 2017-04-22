@@ -117,9 +117,9 @@ public class ExecutionService {
 				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
 			}
 			task.setWorkerId(workerId);
-			task.setPollCount(task.getPollCount() + 1);
-			
+			task.setPollCount(task.getPollCount() + 1);			
 			edao.updateTask(task);
+			Monitors.updateTaskInProgress(task.getTaskDefName(), 1);
 			tasks.add(task);
 		}
 		Monitors.recordTaskPoll(taskType);

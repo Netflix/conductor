@@ -41,6 +41,7 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.metrics.Monitors;
 
 @Singleton
 @Trace
@@ -153,15 +154,15 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			task.setEndTime(System.currentTimeMillis());
 		}
-
+		
 		dynoClient.set(nsKey(TASK, task.getTaskId()), toJson(task));
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 			String key = nsKey(TASKS_RATE, task.getTaskDefName());
 			Long removed = dynoClient.zrem(key, task.getTaskId());			
 			logger.info("Removed from rate limiting bucket {} ? {}", task.getTaskId(), removed);
+			Monitors.updateTaskInProgress(task.getTaskDefName(), -1);
 		}
-		
 		indexer.index(task);
 	}
 	

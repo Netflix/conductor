@@ -125,7 +125,7 @@ public class AsyncTaskWorkerCoordinator {
 			}
 
 			if(limit > 0 && dao.rateLimited(task, limit)) {
-				logger.warn("Rate limited for {}", task.getTaskDefName());
+				logger.warn("Rate limited for {}", task.getTaskDefName());				
 				return;
 			}
 			
@@ -140,6 +140,8 @@ public class AsyncTaskWorkerCoordinator {
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
 			dao.updateTask(task);
+			
+			Monitors.updateTaskInProgress(task.getTaskDefName(), 1);
 			
 			switch (task.getStatus()) {
 				case SCHEDULED:

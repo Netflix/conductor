@@ -170,6 +170,10 @@ public class Monitors {
 	public static void recordQueueDepth(String taskType, long size, String ownerApp) {
 		gauge(classQualifier, "task_queue_depth", size, "taskType", taskType, "ownerApp", ownerApp);
 	}
+	
+	public static void updateTaskInProgress(String taskType, long delta) {
+		gauge(classQualifier, "task_in_progress", delta, "taskType", taskType);
+	}
 
 	public static void recordRunningWorkflows(long count, String name, String version, String ownerApp) {
 		gauge(classQualifier, "workflow_running", count, "workflowName", name, "version", version, "ownerApp", ""+ownerApp);
