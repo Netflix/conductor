@@ -172,7 +172,7 @@ public class Monitors {
 	}
 	
 	public static void updateTaskInProgress(String taskType, long delta) {
-		gauge(classQualifier, "task_in_progress", delta, "taskType", taskType);
+		getGauge(classQualifier, "task_in_progress", "taskType", taskType).addAndGet(delta);
 	}
 
 	public static void recordRunningWorkflows(long count, String name, String version, String ownerApp) {
