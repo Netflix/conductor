@@ -39,6 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
@@ -617,6 +618,66 @@ public class WorkflowExecutor {
 		}
 	}
 	
+	public void executeSystemTask(WorkflowSystemTask systemTask, Task task, String workerId, int unackTimeout) {
+		
+		logger.info("Executing {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
+		try {
+			
+			TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+			int limit = 0;
+			if(taskDef != null) {
+				limit = taskDef.getConcurrencyLimit();
+			}
+
+			if(limit > 0 && edao.rateLimited(task, limit)) {
+				logger.warn("Rate limited for {}", task.getTaskDefName());		
+				queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);	//try again in 10 seconds!
+				return;
+			}
+			
+			String workflowId = task.getWorkflowInstanceId();			
+			Workflow workflow = edao.getWorkflow(workflowId, true);			
+			
+			if (task.getStartTime() == 0) {
+				task.setStartTime(System.currentTimeMillis());
+				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
+			}
+			
+			task.setWorkerId(workerId);
+			task.setPollCount(task.getPollCount() + 1);
+			edao.updateTask(task);
+			
+			Monitors.updateTaskInProgress(task.getTaskDefName(), 1);
+			
+			switch (task.getStatus()) {
+				case SCHEDULED:
+					systemTask.start(workflow, task, this);
+					break;
+				case IN_PROGRESS:
+					systemTask.execute(workflow, task, this);
+					break;
+				default:
+					break;
+			}
+			
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			task.setStatus(Status.FAILED);
+			task.setReasonForIncompletion(e.getMessage());
+		}
+		
+		if(!task.getStatus().isTerminal()) {
+			task.setCallbackAfterSeconds(unackTimeout);
+		}
+		
+		try {
+			updateTask(new TaskResult(task));
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+		logger.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
+	}
+
 	private long getTaskDuration(long s, Task task) {
 		long duration = task.getEndTime() - task.getStartTime();
 		s += duration;

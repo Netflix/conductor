@@ -85,6 +85,13 @@ public class WorkflowSystemTask {
 	
 	/**
 	 * 
+	 * @return Time in seconds after which the task should be retried if rate limited or remains in in_progress after start method execution. 
+	 */
+	public int getRetryTimeInSecond() {
+		return 10;
+	}
+	/**
+	 * 
 	 * @return name of the system task
 	 */
 	public String getName(){
@@ -92,7 +99,7 @@ public class WorkflowSystemTask {
 	}
 	
 	@Override
-	public String toString(){
+	public String toString() {
 		return name;
 	}
 	
