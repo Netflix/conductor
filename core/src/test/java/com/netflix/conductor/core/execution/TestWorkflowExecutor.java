@@ -91,8 +91,13 @@ public class TestWorkflowExecutor {
 		taskToSchedule2.setWorkflowTaskType(Type.USER_DEFINED);
 		taskToSchedule2.setType("HTTP2");
 		
+		WorkflowTask wait = new WorkflowTask();
+		wait.setWorkflowTaskType(Type.WAIT);
+		wait.setType("WAIT");
+		wait.setTaskReferenceName("wait");
+		
 		Task task1 = SystemTask.userDefined(workflow, taskToSchedule, null, 0, "1", new HashMap<>());
-		Task task2 = SystemTask.waitTask(workflow.getWorkflowId(), "2", null, "wait", new HashMap<>());
+		Task task2 = SystemTask.waitTask(workflow.getWorkflowId(), "2", null, wait, new HashMap<>());
 		Task task3 = SystemTask.userDefined(workflow, taskToSchedule2, null, 0, "1", new HashMap<>());
 		
 		tasks.add(task1);
