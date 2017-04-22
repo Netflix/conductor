@@ -38,6 +38,7 @@ import redis.clients.jedis.JedisCommands;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.Tuple;
+import redis.clients.jedis.params.sortedset.ZAddParams;
 
 /**
  * 
@@ -113,6 +114,12 @@ public class DynoProxy {
 
 	public Long zadd(String key, double score, String member) {
 		Long retVal = dynoClient.zadd(key, score, member);
+		return retVal;
+	}
+
+	public Long zaddnx(String key, double score, String member) {
+		ZAddParams params = ZAddParams.zAddParams().nx();
+		Long retVal = dynoClient.zadd(key, score, member, params);
 		return retVal;
 	}
 

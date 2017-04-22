@@ -15,7 +15,6 @@
  */
 package com.netflix.conductor.service;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +31,7 @@ import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
@@ -100,16 +100,17 @@ public class ExecutionService {
 			if(task == null) {
 				continue;
 			}
-
-			if (!taskType.equals(task.getTaskType())) {
-				// Try and remove it from the queue and add it back in -- in
-				// hopes it wont be inserted into the wrong queue again.
-				removeTaskfromQueue(task.getTaskType(), task.getTaskId());
-				executor.addTaskToQueue(task);
-				logger.error("Queue name '{}' did not match type of task retrieved '{}' for task id '{}'.", new Object[]{taskType, task.getTaskType(), task.getTaskId()});
-				return Collections.emptyList();
+			
+			TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+			if(taskDef != null) {
+				int limit = taskDef.getConcurrencyLimit();
+				if(limit > 0) {
+					if(edao.rateLimited(task, limit)) {
+						continue;
+					}
+				}
 			}
-
+			
 			task.setStatus(Status.IN_PROGRESS);
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());

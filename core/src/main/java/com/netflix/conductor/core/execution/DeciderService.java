@@ -476,7 +476,7 @@ public class DeciderService {
 					workflowVersion = Integer.parseInt(version.toString());
 				}
 				task = SystemTask.subWorkflowTask(
-						workflow.getWorkflowId(), IDGenerator.generate(), workflow.getCorrelationId(), taskToSchedule.getTaskReferenceName(), 
+						workflow.getWorkflowId(), IDGenerator.generate(), workflow.getCorrelationId(), taskToSchedule, 
 						workflowName, workflowVersion, input);
 				tasks.add(task);
 				break;
@@ -485,13 +485,13 @@ public class DeciderService {
 				taskToSchedule.getInputParameters().put("sink", taskToSchedule.getSink());
 				Map<String, Object> eventTaskInput = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, null);
 				String sink = (String)eventTaskInput.get("sink");				
-				Task eventTask = SystemTask.eventTask(workflow.getWorkflowId(), taskId, workflow.getCorrelationId(), taskToSchedule.getTaskReferenceName(), sink, eventTaskInput);
+				Task eventTask = SystemTask.eventTask(workflow.getWorkflowId(), taskId, workflow.getCorrelationId(), taskToSchedule, sink, eventTaskInput);
 				tasks.add(eventTask);
 				break;
 			case WAIT:
 				if(taskId == null) taskId = IDGenerator.generate();
 				Map<String, Object> waitTaskInput = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, null);
-				Task waitTask = SystemTask.waitTask(workflow.getWorkflowId(), taskId,  workflow.getCorrelationId(), taskToSchedule.getTaskReferenceName(), waitTaskInput);
+				Task waitTask = SystemTask.waitTask(workflow.getWorkflowId(), taskId,  workflow.getCorrelationId(), taskToSchedule, waitTaskInput);
 				tasks.add(waitTask);
 				break;
 			default:

@@ -2716,6 +2716,63 @@ public class WorkflowServiceTest {
 		assertNotNull(eventTask.getOutputData().get("event_produced"));
 	}
 	
+	
+	//@Test
+	public void testRateLimiting() throws Exception {
+		
+		TaskDef td = new TaskDef();
+		td.setName("eventX1");
+		td.setTimeoutSeconds(1);
+		td.setConcurrencyLimit(1);
+		
+		ms.registerTaskDef(Arrays.asList(td));
+		
+		WorkflowDef def = new WorkflowDef();
+		def.setName("test_rate_limit");
+		def.setSchemaVersion(2);
+		
+		WorkflowTask event = new WorkflowTask();
+		event.setType("USER_TASK");
+		event.setName("eventX1");
+		event.setTaskReferenceName("event0");
+		event.setSink("conductor");
+		
+		def.getTasks().add(event);
+		ms.registerWorkflowDef(def);
+		
+		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
+			queue.processUnacks("USER_TASK");	
+		}, 2, 2, TimeUnit.SECONDS);
+		
+		String[] ids = new String[100];
+		ExecutorService es = Executors.newFixedThreadPool(10);
+		for(int i = 0; i < 10; i++) {
+			final int index = i;
+			es.submit(()->{
+				try {
+					String id = provider.startWorkflow(def.getName(), def.getVersion(), "", new HashMap<>());
+					ids[index] = id;
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+			});
+		}		
+		Uninterruptibles.sleepUninterruptibly(20, TimeUnit.SECONDS);
+		for(int i = 0; i < 10; i++) {
+			String id = ids[i];
+			Workflow workflow = provider.getWorkflow(id, true);
+			assertNotNull(workflow);
+			assertEquals(1, workflow.getTasks().size());
+			
+			Task eventTask = workflow.getTasks().get(0);
+			assertEquals(Task.Status.COMPLETED, eventTask.getStatus());
+			assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
+			assertTrue(!eventTask.getOutputData().isEmpty());
+			assertNotNull(eventTask.getOutputData().get("event_produced"));
+		}
+	}
+	
 	private void createSubWorkflow() throws Exception {
 		
 		WorkflowTask wft1 = new WorkflowTask();

@@ -79,11 +79,12 @@ public class TestModule extends AbstractModule {
 		bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
 		bind(DynoQueueDAO.class).toInstance(queueDao);
 		bind(QueueDAO.class).to(DynoQueueDAO.class);
-		bind(IndexDAO.class).to(MockIndexDAO.class);
-		
+		bind(IndexDAO.class).to(MockIndexDAO.class);		
 		DynoProxy proxy = new DynoProxy(jedisMock);
 		bind(DynoProxy.class).toInstance(proxy);
 		install(new CoreModule());
+		bind(UserTask.class).asEagerSingleton();
+		
 	}
 	
 	@Provides

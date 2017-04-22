@@ -158,7 +158,8 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 			String key = nsKey(TASKS_RATE, task.getTaskDefName());
-			dynoClient.zrem(key, task.getTaskId());
+			Long removed = dynoClient.zrem(key, task.getTaskId());			
+			logger.info("Removed from rate limiting bucket {} ? {}", task.getTaskId(), removed);
 		}
 		
 		indexer.index(task);
@@ -169,9 +170,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		String key = nsKey(TASKS_RATE, task.getTaskDefName());
 		double score = System.currentTimeMillis();
 		String member = task.getTaskId();
-		dynoClient.zadd(key, score, member);
+		dynoClient.zaddnx(key, score, member);
 		Set<String> ids = dynoClient.zrangeByScore(key, 0, System.currentTimeMillis()+1, limit);
-		return !ids.contains(task.getTaskId());
+		boolean rateLimited = !ids.contains(task.getTaskId());
+		logger.info("rate limiting {}/{} ? {}", task.getTaskDefName(), task.getTaskId(), rateLimited);
+		return rateLimited;
 	}
 
 	@Override
@@ -189,7 +192,8 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 		dynoClient.srem(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
 		dynoClient.del(nsKey(TASK, task.getTaskId()));		
-		dynoClient.zrem(nsKey(TASKS_RATE, task.getTaskDefName()), task.getTaskId());
+		long removed = dynoClient.zrem(nsKey(TASKS_RATE, task.getTaskDefName()), task.getTaskId());
+		logger.info("Removed from rate limiting bucket {} ? {}", task.getTaskId(), removed);
 
 	}
 

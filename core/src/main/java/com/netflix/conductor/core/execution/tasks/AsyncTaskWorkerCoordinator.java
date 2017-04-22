@@ -43,7 +43,7 @@ public class AsyncTaskWorkerCoordinator {
 	private ExecutionService executionService;
 	
 	private ExecutionDAO dao;
-	
+
 	private WorkflowExecutor executor;
 	
 	private ExecutorService es;
@@ -68,7 +68,7 @@ public class AsyncTaskWorkerCoordinator {
 		this.executor = executor;
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.async.task.worker.callback.seconds", 30);
-		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 1);		
+		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 10);		
 		if(threadCount > 0) {
 			this.es = Executors.newFixedThreadPool(threadCount, new ThreadFactoryBuilder().setNameFormat("async-worker-%d").build());
 			new Thread(()->listen()).start();
@@ -79,13 +79,14 @@ public class AsyncTaskWorkerCoordinator {
 	}
 
 	static synchronized void add(WorkflowSystemTask systemTask) {
+		logger.info("Adding system task {}", systemTask.getName());
 		queue.add(systemTask);
 	}
 	
 	private void listen() {
 		try {
 			for(;;) {
-				WorkflowSystemTask st = queue.poll(60, TimeUnit.SECONDS);
+				WorkflowSystemTask st = queue.poll(60, TimeUnit.SECONDS);				
 				if(st != null && st.isAsync() && !listeningTasks.contains(st)) {
 					listen(st);
 					listeningTasks.add(st);
@@ -97,7 +98,7 @@ public class AsyncTaskWorkerCoordinator {
 	}
 	
 	private void listen(WorkflowSystemTask systemTask) {
-		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(()->pollAndExecute(systemTask), 500, 500, TimeUnit.MILLISECONDS);
+		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 500, 200, TimeUnit.MILLISECONDS);
 		logger.info("Started listening {}", systemTask.getName());
 	}
 
@@ -121,7 +122,8 @@ public class AsyncTaskWorkerCoordinator {
 			int limit = 0;
 			if(taskDef != null) {
 				limit = taskDef.getConcurrencyLimit();
-			}			
+			}
+
 			if(limit > 0 && dao.rateLimited(task, limit)) {
 				logger.warn("Rate limited for {}", task.getTaskDefName());
 				return;
@@ -165,7 +167,7 @@ public class AsyncTaskWorkerCoordinator {
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
-		logger.info("Done, Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
+		logger.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
 	}
 
 	
