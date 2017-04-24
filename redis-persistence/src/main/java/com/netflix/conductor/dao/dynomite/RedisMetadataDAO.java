@@ -17,10 +17,13 @@ package com.netflix.conductor.dao.dynomite;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -49,9 +52,13 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	private final static String EVENT_HANDLERS_BY_EVENT = "EVENT_HANDLERS_BY_EVENT";
 	private final static String LATEST = "latest";
 
+	private Map<String, TaskDef> taskDefCache = new HashMap<>();
+	
 	@Inject
 	public RedisMetadataDAO(DynoProxy dynoClient, ObjectMapper om, Configuration config) {
 		super(dynoClient, om, config);
+		refreshTaskDefs();
+		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(()->refreshTaskDefs(), 1, 1, TimeUnit.MINUTES);
 	}
 
 	@Override
@@ -77,16 +84,29 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 		return taskDef.getName();
 	}
 
+	private void refreshTaskDefs() {
+		Map<String, TaskDef> map = new HashMap<>();
+		getAllTaskDefs().forEach(taskDef -> map.put(taskDef.getName(), taskDef));
+		this.taskDefCache = map;
+	}
+	
 	@Override
 	public TaskDef getTaskDef(String name) {
+		TaskDef taskDef = taskDefCache.get(name);
+		if(taskDef == null) {
+			taskDef = getTaskDefFromDB(name);
+		}
+		return taskDef;
+	}
+	
+	private TaskDef getTaskDefFromDB(String name) {
 		Preconditions.checkNotNull(name, "TaskDef name cannot be null");
+		
 		TaskDef taskDef = null;
-
 		String taskDefJsonStr = dynoClient.hget(nsKey(ALL_TASK_DEFS), name);
 		if (taskDefJsonStr != null) {
 			taskDef = readValue(taskDefJsonStr, TaskDef.class);
-		}
-
+		}	
 		return taskDef;
 	}
 
