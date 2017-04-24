@@ -631,7 +631,8 @@ public class WorkflowExecutor {
 
 			if(limit > 0 && edao.rateLimited(task, limit)) {
 				logger.warn("Rate limited for {}", task.getTaskDefName());		
-				queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);	//try again in 10 seconds!
+				//TODO: Maybe use the taskdef here?
+				queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 				return;
 			}
 			
