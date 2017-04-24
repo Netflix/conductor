@@ -176,8 +176,9 @@ public class Monitors {
 		getGauge(classQualifier, "task_in_progress", "taskType", taskType).getAndUpdate(new LongUnaryOperator() {
 			
 			@Override
-			public long applyAsLong(long operand) {
+			public long applyAsLong(long operand) {				
 				long value = operand + delta;
+				System.out.println("updateTaskInProgress. operand:" + operand + ", delta:" + delta + ", value:" + value);
 				return value < 0 ? 0 : value;
 			}
 		});
