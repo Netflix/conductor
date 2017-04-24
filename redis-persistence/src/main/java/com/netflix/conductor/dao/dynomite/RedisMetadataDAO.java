@@ -58,7 +58,8 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	public RedisMetadataDAO(DynoProxy dynoClient, ObjectMapper om, Configuration config) {
 		super(dynoClient, om, config);
 		refreshTaskDefs();
-		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(()->refreshTaskDefs(), 1, 1, TimeUnit.MINUTES);
+		int cacheRefreshTime = config.getIntProperty("conductor.taskdef.cache.refresh.time.seconds", 60);
+		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(()->refreshTaskDefs(), cacheRefreshTime, cacheRefreshTime, TimeUnit.SECONDS);
 	}
 
 	@Override
