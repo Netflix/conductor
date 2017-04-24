@@ -182,6 +182,7 @@ public class Monitors {
 				return value < 0 ? 0 : value;
 			}
 		});
+		getCounter(classQualifier, "task_in_progress_c", "taskType", taskType).increment(delta);
 	}
 
 	public static void recordRunningWorkflows(long count, String name, String version, String ownerApp) {
