@@ -618,6 +618,7 @@ public class WorkflowExecutor {
 		}
 	}
 	
+	//Executes the async system task 
 	public void executeSystemTask(WorkflowSystemTask systemTask, Task task, String workerId, int unackTimeout) {
 		
 		logger.info("Executing {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
@@ -631,6 +632,20 @@ public class WorkflowExecutor {
 				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
 			}
 			
+			if(task.getStatus().equals(Status.SCHEDULED)) {
+				TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+				int limit = 0;
+				if(taskDef != null) {
+					limit = taskDef.getConcurrencyLimit();
+				}
+
+				if(limit > 0 && edao.rateLimited(task, limit)) {
+					logger.warn("Rate limited for {}", task.getTaskDefName());		
+					queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+					return;
+				}
+			}
+			
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
 			edao.updateTask(task);
@@ -638,20 +653,8 @@ public class WorkflowExecutor {
 			switch (task.getStatus()) {
 			
 				case SCHEDULED:
-					
-					TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
-					int limit = 0;
-					if(taskDef != null) {
-						limit = taskDef.getConcurrencyLimit();
-					}
-
-					if(limit > 0 && edao.rateLimited(task, limit)) {
-						logger.warn("Rate limited for {}", task.getTaskDefName());		
-						queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
-						return;
-					}
-					systemTask.start(workflow, task, this);
 					Monitors.updateTaskInProgress(task.getTaskDefName(), 1);
+					systemTask.start(workflow, task, this);					
 					break;
 					
 				case IN_PROGRESS:

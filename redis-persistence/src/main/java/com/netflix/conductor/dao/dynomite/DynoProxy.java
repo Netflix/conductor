@@ -220,6 +220,10 @@ public class DynoProxy {
 		Long retVal = dynoClient.srem(key, member);
 		return retVal;
 	}
+	
+	public boolean sismember(String key, String member) {
+		return dynoClient.sismember(key, member);
+	}
 
 	public Set<String> smembers(String key) {
 		logger.trace("smembers {}", key);

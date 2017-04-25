@@ -45,9 +45,9 @@ import com.netflix.conductor.service.ExecutionService;
  *
  */
 @Singleton
-public class AsyncTaskWorkerCoordinator {
+public class SystemTaskWorkerCoordinator {
 
-	private static Logger logger = LoggerFactory.getLogger(AsyncTaskWorkerCoordinator.class);
+	private static Logger logger = LoggerFactory.getLogger(SystemTaskWorkerCoordinator.class);
 	
 	private ExecutionService executionService;
 	
@@ -65,22 +65,22 @@ public class AsyncTaskWorkerCoordinator {
 	
 	private static Set<WorkflowSystemTask> listeningTasks = new HashSet<>();
 	
-	private static final String className = AsyncTaskWorkerCoordinator.class.getName();
+	private static final String className = SystemTaskWorkerCoordinator.class.getName();
 		
 	@Inject
-	public AsyncTaskWorkerCoordinator(ExecutionService executionService, WorkflowExecutor executor, Configuration config) {
+	public SystemTaskWorkerCoordinator(ExecutionService executionService, WorkflowExecutor executor, Configuration config) {
 		this.executionService = executionService;
 		this.executor = executor;
 		this.config = config;
 		this.workerId = config.getServerId();
-		this.unackTimeout = config.getIntProperty("workflow.async.task.worker.callback.seconds", 30);
-		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 10);
+		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
+		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 10);
 		if(threadCount > 0) {
-			this.es = Executors.newFixedThreadPool(threadCount, new ThreadFactoryBuilder().setNameFormat("async-worker-%d").build());
+			this.es = Executors.newFixedThreadPool(threadCount, new ThreadFactoryBuilder().setNameFormat("system-task-worker-%d").build());
 			new Thread(()->listen()).start();
-			logger.info("Async Task Worker Initialized with {} threads and a callback time of {} second", threadCount, unackTimeout);
+			logger.info("System Task Worker Initialized with {} threads and a callback time of {} second", threadCount, unackTimeout);
 		} else {
-			logger.info("Async Task Worker DISABLED");
+			logger.info("System Task Worker DISABLED");
 		}
 	}
 
@@ -111,7 +111,7 @@ public class AsyncTaskWorkerCoordinator {
 	private void pollAndExecute(WorkflowSystemTask systemTask) {
 		try {
 			if(config.disableAsyncWorkers()) {
-				logger.warn("Async Task Worker is DISABLED.  Not polling.");
+				logger.warn("System Task Worker is DISABLED.  Not polling.");
 				return;
 			}
 			String name = systemTask.getName();

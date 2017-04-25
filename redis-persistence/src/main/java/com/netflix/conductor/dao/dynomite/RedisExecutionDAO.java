@@ -33,6 +33,7 @@ import com.google.inject.Singleton;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
@@ -51,6 +52,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	// Keys Families
 	private static final String TASKS_RATE = "TASKS_RATE";
 	private final static String IN_PROGRESS_TASKS = "IN_PROGRESS_TASKS";
+	private final static String TASKS_IN_PROGRESS_STATUS = "TASKS_IN_PROGRESS_STATUS";	//Tasks which are in IN_PROGRESS status.
 	private final static String WORKFLOW_TO_TASKS = "WORKFLOW_TO_TASKS";
 	private final static String SCHEDULED_TASKS = "SCHEDULED_TASKS";
 	private final static String TASK = "TASK";
@@ -164,18 +166,26 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 				Monitors.updateTaskInProgress(task.getTaskDefName(), -1);
 			}
 		}
+		if(task.getStatus().equals(Status.IN_PROGRESS)) {
+			dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
+		}else {
+			dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
+		}
 		indexer.index(task);
 	}
 	
 	@Override
 	public boolean rateLimited(Task task, int limit) {
-		String key = nsKey(TASKS_RATE, task.getTaskDefName());
+		String rateLimitKey = nsKey(TASKS_RATE, task.getTaskDefName());
 		double score = System.currentTimeMillis();
 		String member = task.getTaskId();
-		dynoClient.zaddnx(key, score, member);
-		Set<String> ids = dynoClient.zrangeByScore(key, 0, System.currentTimeMillis()+1, limit);
+		dynoClient.zaddnx(rateLimitKey, score, member);
+		Set<String> ids = dynoClient.zrangeByScore(rateLimitKey, 0, System.currentTimeMillis()+1, limit);
 		boolean rateLimited = !ids.contains(task.getTaskId());
 		if(rateLimited) {
+			String inProgressKey = nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName());
+			//Cleanup any items that are still present in the rate limit bucket but not in progress anymore!
+			ids.stream().filter(id -> !dynoClient.sismember(inProgressKey, id)).forEach(id2 -> dynoClient.zrem(rateLimitKey, id2));
 			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
 		}
 		return rateLimited;
@@ -195,6 +205,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.hdel(nsKey(SCHEDULED_TASKS, task.getWorkflowInstanceId()), taskKey);
 		dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 		dynoClient.srem(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
+		dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
 		dynoClient.del(nsKey(TASK, task.getTaskId()));		
 		long removed = dynoClient.zrem(nsKey(TASKS_RATE, task.getTaskDefName()), task.getTaskId());
 		if(removed > 0) {
