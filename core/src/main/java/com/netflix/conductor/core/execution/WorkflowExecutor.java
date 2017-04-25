@@ -622,19 +622,7 @@ public class WorkflowExecutor {
 		
 		logger.info("Executing {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
 		try {
-			
-			TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
-			int limit = 0;
-			if(taskDef != null) {
-				limit = taskDef.getConcurrencyLimit();
-			}
 
-			if(limit > 0 && edao.rateLimited(task, limit)) {
-				logger.warn("Rate limited for {}", task.getTaskDefName());		
-				queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
-				return;
-			}
-			
 			String workflowId = task.getWorkflowInstanceId();			
 			Workflow workflow = edao.getWorkflow(workflowId, true);			
 			
@@ -646,13 +634,26 @@ public class WorkflowExecutor {
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
 			edao.updateTask(task);
-			
-			Monitors.updateTaskInProgress(task.getTaskDefName(), 1);
-			
+
 			switch (task.getStatus()) {
+			
 				case SCHEDULED:
+					
+					TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+					int limit = 0;
+					if(taskDef != null) {
+						limit = taskDef.getConcurrencyLimit();
+					}
+
+					if(limit > 0 && edao.rateLimited(task, limit)) {
+						logger.warn("Rate limited for {}", task.getTaskDefName());		
+						queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+						return;
+					}
 					systemTask.start(workflow, task, this);
+					Monitors.updateTaskInProgress(task.getTaskDefName(), 1);
 					break;
+					
 				case IN_PROGRESS:
 					systemTask.execute(workflow, task, this);
 					break;
