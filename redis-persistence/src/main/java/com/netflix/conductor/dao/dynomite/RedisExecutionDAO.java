@@ -163,7 +163,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			String key = nsKey(TASKS_RATE, task.getTaskDefName());
 			dynoClient.zrem(key, task.getTaskId());			
 		}
-		if(task.getStatus().equals(Status.IN_PROGRESS)) {
+		if(task.getStatus() != null && task.getStatus().equals(Status.IN_PROGRESS)) {
 			dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
 		}else {
 			dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
