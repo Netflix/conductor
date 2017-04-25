@@ -631,6 +631,11 @@ public class WorkflowExecutor {
 				task.setStartTime(System.currentTimeMillis());
 				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
 			}
+			if(workflow.getStatus().isTerminal()) {
+				//how did this happen?
+				logger.warn("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
+				queue.remove(task.getTaskType(), task.getTaskId());
+			}
 			
 			if(task.getStatus().equals(Status.SCHEDULED)) {
 				TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
@@ -640,7 +645,7 @@ public class WorkflowExecutor {
 				}
 
 				if(limit > 0 && edao.exceedsInProgressLimit(task, limit)) {
-					logger.warn("Rate limited for {}", task.getTaskDefName());		
+					logger.warn("Rate limited for {}", task.getTaskDefName());
 					queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 					return;
 				}
