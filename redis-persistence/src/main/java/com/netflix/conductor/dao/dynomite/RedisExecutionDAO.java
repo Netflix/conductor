@@ -50,7 +50,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	
 	// Keys Families
-	private static final String TASKS_RATE = "TASKS_RATE";
+	private static final String TASK_LIMIT_BUCKET = "TASK_LIMIT_BUCKET";
 	private final static String IN_PROGRESS_TASKS = "IN_PROGRESS_TASKS";
 	private final static String TASKS_IN_PROGRESS_STATUS = "TASKS_IN_PROGRESS_STATUS";	//Tasks which are in IN_PROGRESS status.
 	private final static String WORKFLOW_TO_TASKS = "WORKFLOW_TO_TASKS";
@@ -160,7 +160,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.set(nsKey(TASK, task.getTaskId()), toJson(task));
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
-			String key = nsKey(TASKS_RATE, task.getTaskDefName());
+			String key = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
 			dynoClient.zrem(key, task.getTaskId());			
 		}
 		if(task.getStatus() != null && task.getStatus().equals(Status.IN_PROGRESS)) {
@@ -172,8 +172,8 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	}
 	
 	@Override
-	public boolean rateLimited(Task task, int limit) {
-		String rateLimitKey = nsKey(TASKS_RATE, task.getTaskDefName());
+	public boolean exceedsInProgressLimit(Task task, int limit) {
+		String rateLimitKey = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
 		double score = System.currentTimeMillis();
 		String member = task.getTaskId();
 		dynoClient.zaddnx(rateLimitKey, score, member);
@@ -204,7 +204,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.srem(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
 		dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
 		dynoClient.del(nsKey(TASK, task.getTaskId()));		
-		dynoClient.zrem(nsKey(TASKS_RATE, task.getTaskDefName()), task.getTaskId());		
+		dynoClient.zrem(nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName()), task.getTaskId());		
 	}
 
 	@Override

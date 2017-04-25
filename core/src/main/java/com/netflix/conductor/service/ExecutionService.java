@@ -105,7 +105,7 @@ public class ExecutionService {
 			if(taskDef != null) {
 				int limit = taskDef.getConcurrencyLimit();
 				if(limit > 0) {
-					if(edao.rateLimited(task, limit)) {
+					if(edao.exceedsInProgressLimit(task, limit)) {
 						continue;
 					}
 				}

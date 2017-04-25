@@ -639,7 +639,7 @@ public class WorkflowExecutor {
 					limit = taskDef.getConcurrencyLimit();
 				}
 
-				if(limit > 0 && edao.rateLimited(task, limit)) {
+				if(limit > 0 && edao.exceedsInProgressLimit(task, limit)) {
 					logger.warn("Rate limited for {}", task.getTaskDefName());		
 					queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 					return;
