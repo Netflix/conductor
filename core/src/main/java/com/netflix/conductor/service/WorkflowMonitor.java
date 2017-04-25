@@ -98,7 +98,9 @@ public class WorkflowMonitor {
 
 				tasks.forEach(task -> {
 					long size = queue.getSize(task.getName());
+					long inProgressCount = edao.getInProgressTaskCount(task.getName());
 					Monitors.recordQueueDepth(task.getName(), size, task.getOwnerApp());
+					Monitors.recordTaskInProgress(task.getName(), inProgressCount, task.getOwnerApp());
 				});
 
 				refreshCounter--;

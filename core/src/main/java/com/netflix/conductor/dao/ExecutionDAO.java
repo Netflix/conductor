@@ -201,7 +201,12 @@ public interface ExecutionDAO {
 	 */
 	public abstract long getPendingWorkflowCount(String workflowName);
 
-	
+	/**
+	 * 
+	 * @param taskDefName Name of the task
+	 * @return Number of task currently in IN_PROGRESS status
+	 */
+	public abstract long getInProgressTaskCount(String taskDefName);
 
 	/**
 	 * 

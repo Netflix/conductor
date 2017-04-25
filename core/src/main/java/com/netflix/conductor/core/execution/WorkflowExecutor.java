@@ -653,7 +653,6 @@ public class WorkflowExecutor {
 			switch (task.getStatus()) {
 			
 				case SCHEDULED:
-					Monitors.updateTaskInProgress(task.getTaskDefName(), 1);
 					systemTask.start(workflow, task, this);					
 					break;
 					

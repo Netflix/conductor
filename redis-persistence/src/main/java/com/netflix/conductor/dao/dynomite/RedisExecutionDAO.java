@@ -161,10 +161,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 			String key = nsKey(TASKS_RATE, task.getTaskDefName());
-			Long removed = dynoClient.zrem(key, task.getTaskId());
-			if(removed > 0) {
-				Monitors.updateTaskInProgress(task.getTaskDefName(), -1);
-			}
+			dynoClient.zrem(key, task.getTaskId());			
 		}
 		if(task.getStatus().equals(Status.IN_PROGRESS)) {
 			dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
@@ -207,10 +204,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.srem(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
 		dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
 		dynoClient.del(nsKey(TASK, task.getTaskId()));		
-		long removed = dynoClient.zrem(nsKey(TASKS_RATE, task.getTaskDefName()), task.getTaskId());
-		if(removed > 0) {
-			Monitors.updateTaskInProgress(task.getTaskDefName(), -1);
-		}
+		dynoClient.zrem(nsKey(TASKS_RATE, task.getTaskDefName()), task.getTaskId());		
 	}
 
 	@Override
@@ -450,7 +444,12 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		String key = nsKey(PENDING_WORKFLOWS, workflowName);
 		return dynoClient.scard(key);
 	}
-
+	
+	@Override
+	public long getInProgressTaskCount(String taskDefName) {
+		String inProgressKey = nsKey(TASKS_IN_PROGRESS_STATUS, taskDefName);
+		return dynoClient.scard(inProgressKey);
+	}
 
 	@Override
 	public boolean addEventExecution(EventExecution ee) {

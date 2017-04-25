@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.LongUnaryOperator;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
@@ -169,20 +168,11 @@ public class Monitors {
 	}
 
 	public static void recordQueueDepth(String taskType, long size, String ownerApp) {
-		gauge(classQualifier, "task_queue_depth", size, "taskType", taskType, "ownerApp", ownerApp);
+		gauge(classQualifier, "task_queue_depth", size, "taskType", taskType, "ownerApp", ""+ownerApp);
 	}
 	
-	public static void updateTaskInProgress(String taskType, final long delta) {
-		getGauge(classQualifier, "task_in_progress", "taskType", taskType).getAndUpdate(new LongUnaryOperator() {
-			
-			@Override
-			public long applyAsLong(long operand) {				
-				long value = operand + delta;
-				System.out.println("updateTaskInProgress" + taskType + ". operand:" + operand + ", delta:" + delta + ", value:" + value);
-				return value < 0 ? 0 : value;
-			}
-		});
-		getCounter(classQualifier, "task_in_progress_c", "taskType", taskType).increment(delta);
+	public static void recordTaskInProgress(String taskType, long size, String ownerApp) {
+		gauge(classQualifier, "task_in_progress", size, "taskType", taskType, "ownerApp", ""+ownerApp);
 	}
 
 	public static void recordRunningWorkflows(long count, String name, String version, String ownerApp) {
