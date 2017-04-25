@@ -25,6 +25,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -55,6 +58,10 @@ public class SystemTaskWorkerCoordinator {
 	
 	private ExecutorService es;
 	
+	private int workerQueueSize;
+	
+	private LinkedBlockingQueue<Runnable> workerQueue;
+	
 	private int unackTimeout;
 	
 	private String workerId;
@@ -75,8 +82,15 @@ public class SystemTaskWorkerCoordinator {
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
 		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 5);
+		int workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
+		this.workerQueue = new LinkedBlockingQueue<Runnable>(workerQueueSize);
 		if(threadCount > 0) {
-			this.es = Executors.newFixedThreadPool(threadCount, new ThreadFactoryBuilder().setNameFormat("system-task-worker-%d").build());
+			ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("system-task-worker-%d").build();
+			this.es = new ThreadPoolExecutor(threadCount, threadCount,
+	                0L, TimeUnit.MILLISECONDS,
+	                workerQueue,
+	                tf);
+
 			new Thread(()->listen()).start();
 			logger.info("System Task Worker Initialized with {} threads and a callback time of {} second", threadCount, unackTimeout);
 		} else {
@@ -110,14 +124,28 @@ public class SystemTaskWorkerCoordinator {
 
 	private void pollAndExecute(WorkflowSystemTask systemTask) {
 		try {
+			
 			if(config.disableAsyncWorkers()) {
 				logger.warn("System Task Worker is DISABLED.  Not polling.");
 				return;
 			}
+			
+			if(workerQueue.size() >= workerQueueSize) {
+				logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
+				return;
+			}
+			
 			String name = systemTask.getName();
 			List<Task> polled = executionService.justPoll(name, 10, 1000);
 			logger.debug("Polling for {}, got {}", name, polled.size());
-			polled.forEach(task -> es.submit(()->executor.executeSystemTask(systemTask, task, workerId, unackTimeout)));
+			for(Task task : polled) {
+				try {
+					es.submit(()->executor.executeSystemTask(systemTask, task, workerId, unackTimeout));
+				}catch(RejectedExecutionException ree) {
+					logger.warn("Queue full for workers {}", workerQueue.size());
+				}
+			}
+			
 		} catch (Exception e) {
 			Monitors.error(className, "pollAndExecute");
 			logger.error(e.getMessage(), e);
