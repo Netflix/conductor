@@ -159,9 +159,10 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 			String key = nsKey(TASKS_RATE, task.getTaskDefName());
-			Long removed = dynoClient.zrem(key, task.getTaskId());			
-			logger.info("Removed from rate limiting bucket {} ? {}", task.getTaskId(), removed);
-			Monitors.updateTaskInProgress(task.getTaskDefName(), -1);
+			Long removed = dynoClient.zrem(key, task.getTaskId());
+			if(removed > 0) {
+				Monitors.updateTaskInProgress(task.getTaskDefName(), -1);
+			}
 		}
 		indexer.index(task);
 	}
@@ -174,7 +175,9 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.zaddnx(key, score, member);
 		Set<String> ids = dynoClient.zrangeByScore(key, 0, System.currentTimeMillis()+1, limit);
 		boolean rateLimited = !ids.contains(task.getTaskId());
-		logger.info("rate limiting {}/{} ? {}", task.getTaskDefName(), task.getTaskId(), rateLimited);
+		if(rateLimited) {
+			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
+		}
 		return rateLimited;
 	}
 
@@ -194,8 +197,9 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.srem(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
 		dynoClient.del(nsKey(TASK, task.getTaskId()));		
 		long removed = dynoClient.zrem(nsKey(TASKS_RATE, task.getTaskDefName()), task.getTaskId());
-		logger.info("Removed from rate limiting bucket {} ? {}", task.getTaskId(), removed);
-
+		if(removed > 0) {
+			Monitors.updateTaskInProgress(task.getTaskDefName(), -1);
+		}
 	}
 
 	@Override
@@ -443,7 +447,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			
 			String key = nsKey(EVENT_EXECUTION, ee.getName(), ee.getEvent(), ee.getMessageId());
 			String json = om.writeValueAsString(ee);
-			logger.info("adding event execution {}", key);
 			if(dynoClient.hsetnx(key, ee.getId(), json) == 1L) {
 				indexer.add(ee);
 				return true;

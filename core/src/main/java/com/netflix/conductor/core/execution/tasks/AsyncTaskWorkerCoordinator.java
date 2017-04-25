@@ -1,4 +1,19 @@
 /**
+ * Copyright 2017 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/**
  * 
  */
 package com.netflix.conductor.core.execution.tasks;
@@ -44,6 +59,8 @@ public class AsyncTaskWorkerCoordinator {
 	
 	private String workerId;
 	
+	private Configuration config;
+	
 	private static BlockingQueue<WorkflowSystemTask> queue = new LinkedBlockingQueue<>();
 	
 	private static Set<WorkflowSystemTask> listeningTasks = new HashSet<>();
@@ -54,6 +71,7 @@ public class AsyncTaskWorkerCoordinator {
 	public AsyncTaskWorkerCoordinator(ExecutionService executionService, WorkflowExecutor executor, Configuration config) {
 		this.executionService = executionService;
 		this.executor = executor;
+		this.config = config;
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.async.task.worker.callback.seconds", 30);
 		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 10);
@@ -92,6 +110,10 @@ public class AsyncTaskWorkerCoordinator {
 
 	private void pollAndExecute(WorkflowSystemTask systemTask) {
 		try {
+			if(config.disableAsyncWorkers()) {
+				logger.warn("Async Task Worker is DISABLED.  Not polling.");
+				return;
+			}
 			String name = systemTask.getName();
 			List<Task> polled = executionService.justPoll(name, 1, 500);
 			polled.forEach(task -> es.submit(()->executor.executeSystemTask(systemTask, task, workerId, unackTimeout)));
