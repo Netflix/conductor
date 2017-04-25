@@ -56,6 +56,7 @@ public class TestModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		System.setProperty("workflow.system.task.worker.callback.seconds", "0");
+		System.setProperty("workflow.system.task.worker.queue.size", "10000");
 		configureExecutorService();
 		ConductorConfig config = new ConductorConfig();
 		bind(Configuration.class).toInstance(config);
