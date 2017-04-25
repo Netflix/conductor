@@ -56,7 +56,7 @@ public class AsyncTaskWorkerCoordinator {
 		this.executor = executor;
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.async.task.worker.callback.seconds", 30);
-		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 10);		
+		int threadCount = config.getIntProperty("workflow.async.task.worker.thread.count", 10);
 		if(threadCount > 0) {
 			this.es = Executors.newFixedThreadPool(threadCount, new ThreadFactoryBuilder().setNameFormat("async-worker-%d").build());
 			new Thread(()->listen()).start();

@@ -221,6 +221,11 @@ public class HttpTask extends WorkflowSystemTask {
 		return true;
 	}
 	
+	@Override
+	public int getRetryTimeInSecond() {
+		return 1;
+	}
+	
 	private static ObjectMapper objectMapper() {
 	    final ObjectMapper om = new ObjectMapper();
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
