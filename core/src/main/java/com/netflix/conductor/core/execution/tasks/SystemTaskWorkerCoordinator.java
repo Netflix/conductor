@@ -74,7 +74,7 @@ public class SystemTaskWorkerCoordinator {
 		this.config = config;
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
-		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 10);
+		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 5);
 		if(threadCount > 0) {
 			this.es = Executors.newFixedThreadPool(threadCount, new ThreadFactoryBuilder().setNameFormat("system-task-worker-%d").build());
 			new Thread(()->listen()).start();
@@ -104,7 +104,7 @@ public class SystemTaskWorkerCoordinator {
 	}
 	
 	private void listen(WorkflowSystemTask systemTask) {
-		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 500, 200, TimeUnit.MILLISECONDS);
+		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, 500, TimeUnit.MILLISECONDS);
 		logger.info("Started listening {}", systemTask.getName());
 	}
 
@@ -115,7 +115,7 @@ public class SystemTaskWorkerCoordinator {
 				return;
 			}
 			String name = systemTask.getName();
-			List<Task> polled = executionService.justPoll(name, 2, 500);
+			List<Task> polled = executionService.justPoll(name, 10, 1000);
 			logger.debug("Polling for {}, got {}", name, polled.size());
 			polled.forEach(task -> es.submit(()->executor.executeSystemTask(systemTask, task, workerId, unackTimeout)));
 		} catch (Exception e) {

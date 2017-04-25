@@ -175,10 +175,10 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	public boolean exceedsInProgressLimit(Task task, int limit) {
 		String rateLimitKey = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
 		double score = System.currentTimeMillis();
-		String member = task.getTaskId();
-		dynoClient.zaddnx(rateLimitKey, score, member);
-		Set<String> ids = dynoClient.zrangeByScore(rateLimitKey, 0, System.currentTimeMillis()+1, limit);
-		boolean rateLimited = !ids.contains(task.getTaskId());
+		String taskId = task.getTaskId();
+		dynoClient.zaddnx(rateLimitKey, score, taskId);
+		Set<String> ids = dynoClient.zrangeByScore(rateLimitKey, 0, score + 1, limit);
+		boolean rateLimited = !ids.contains(taskId);
 		if(rateLimited) {
 			String inProgressKey = nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName());
 			//Cleanup any items that are still present in the rate limit bucket but not in progress anymore!
