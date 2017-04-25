@@ -89,6 +89,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 		Map<String, TaskDef> map = new HashMap<>();
 		getAllTaskDefs().forEach(taskDef -> map.put(taskDef.getName(), taskDef));
 		this.taskDefCache = map;
+		logger.info("Refreshed task defs " + this.taskDefCache.size());
 	}
 	
 	@Override
@@ -100,7 +101,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 		return taskDef;
 	}
 	
-	private TaskDef getTaskDefFromDB(String name) {
+	public TaskDef getTaskDefFromDB(String name) {
 		Preconditions.checkNotNull(name, "TaskDef name cannot be null");
 		
 		TaskDef taskDef = null;
