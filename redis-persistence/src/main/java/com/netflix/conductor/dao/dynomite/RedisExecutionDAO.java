@@ -174,7 +174,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	@Override
 	public boolean exceedsInProgressLimit(Task task, int limit) {
 		
-		if(getInProgressTaskCount(task.getTaskDefName()) > limit) {
+		if(getInProgressTaskCount(task.getTaskDefName()) >= limit) {
 			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
 			return true;
 		}
