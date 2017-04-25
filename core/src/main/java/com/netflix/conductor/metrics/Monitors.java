@@ -178,7 +178,7 @@ public class Monitors {
 			@Override
 			public long applyAsLong(long operand) {				
 				long value = operand + delta;
-				System.out.println("updateTaskInProgress. operand:" + operand + ", delta:" + delta + ", value:" + value);
+				System.out.println("updateTaskInProgress" + taskType + ". operand:" + operand + ", delta:" + delta + ", value:" + value);
 				return value < 0 ? 0 : value;
 			}
 		});
