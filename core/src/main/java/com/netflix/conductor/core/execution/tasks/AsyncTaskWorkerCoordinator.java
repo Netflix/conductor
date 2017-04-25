@@ -115,7 +115,8 @@ public class AsyncTaskWorkerCoordinator {
 				return;
 			}
 			String name = systemTask.getName();
-			List<Task> polled = executionService.justPoll(name, 1, 500);
+			List<Task> polled = executionService.justPoll(name, 2, 500);
+			logger.info("Polling for {}, got {}", name, polled.size());
 			polled.forEach(task -> es.submit(()->executor.executeSystemTask(systemTask, task, workerId, unackTimeout)));
 		} catch (Exception e) {
 			Monitors.error(className, "pollAndExecute");
