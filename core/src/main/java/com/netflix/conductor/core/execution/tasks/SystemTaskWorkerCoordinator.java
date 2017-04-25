@@ -60,6 +60,8 @@ public class SystemTaskWorkerCoordinator {
 	
 	private int workerQueueSize;
 	
+	private int pollCount;
+	
 	private LinkedBlockingQueue<Runnable> workerQueue;
 	
 	private int unackTimeout;
@@ -82,6 +84,7 @@ public class SystemTaskWorkerCoordinator {
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
 		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 5);
+		this.pollCount = config.getIntProperty("workflow.system.task.worker.poll.count", 5);
 		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 1000);
 		this.workerQueue = new LinkedBlockingQueue<Runnable>(workerQueueSize);
 		if(threadCount > 0) {
@@ -92,7 +95,7 @@ public class SystemTaskWorkerCoordinator {
 	                tf);
 
 			new Thread(()->listen()).start();
-			logger.info("System Task Worker Initialized with {} threads and a callback time of {} second and queue size {}", threadCount, unackTimeout, workerQueueSize);
+			logger.info("System Task Worker Initialized with {} threads and a callback time of {} second and queue size {} with pollCount {}", threadCount, unackTimeout, workerQueueSize, pollCount);
 		} else {
 			logger.info("System Task Worker DISABLED");
 		}
@@ -137,7 +140,7 @@ public class SystemTaskWorkerCoordinator {
 			}
 			
 			String name = systemTask.getName();
-			List<Task> polled = executionService.justPoll(name, 10, 200);
+			List<Task> polled = executionService.justPoll(name, pollCount, 200);
 			logger.debug("Polling for {}, got {}", name, polled.size());
 			for(Task task : polled) {
 				try {
