@@ -160,19 +160,25 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.set(nsKey(TASK, task.getTaskId()), toJson(task));
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
-			String key = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
-			dynoClient.zrem(key, task.getTaskId());			
 		}
 		if(task.getStatus() != null && task.getStatus().equals(Status.IN_PROGRESS)) {
 			dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
-		}else {
+		}else {			
 			dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
+			String key = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
+			dynoClient.zrem(key, task.getTaskId());
 		}
 		indexer.index(task);
 	}
 	
 	@Override
 	public boolean exceedsInProgressLimit(Task task, int limit) {
+		
+		if(getInProgressTaskCount(task.getTaskDefName()) > limit) {
+			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
+			return true;
+		}
+		
 		String rateLimitKey = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
 		double score = System.currentTimeMillis();
 		String taskId = task.getTaskId();
