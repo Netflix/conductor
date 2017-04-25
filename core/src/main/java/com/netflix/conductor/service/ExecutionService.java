@@ -119,7 +119,6 @@ public class ExecutionService {
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);			
 			edao.updateTask(task);
-			Monitors.updateTaskInProgress(task.getTaskDefName(), 1);
 			tasks.add(task);
 		}
 		Monitors.recordTaskPoll(taskType);
