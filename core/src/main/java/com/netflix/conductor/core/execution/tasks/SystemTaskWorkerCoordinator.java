@@ -92,7 +92,7 @@ public class SystemTaskWorkerCoordinator {
 	                tf);
 
 			new Thread(()->listen()).start();
-			logger.info("System Task Worker Initialized with {} threads and a callback time of {} second", threadCount, unackTimeout);
+			logger.info("System Task Worker Initialized with {} threads and a callback time of {} second and queue size {}", threadCount, unackTimeout, workerQueueSize);
 		} else {
 			logger.info("System Task Worker DISABLED");
 		}
@@ -132,16 +132,19 @@ public class SystemTaskWorkerCoordinator {
 			
 			if(workerQueue.size() >= workerQueueSize) {
 				logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
+				System.out.println("All workers are busy, not polling.  queue size " + workerQueue.size() + ", max=" + workerQueueSize);
 				return;
 			}
 			
 			String name = systemTask.getName();
-			List<Task> polled = executionService.justPoll(name, 10, 1000);
+			List<Task> polled = executionService.justPoll(name, 10, 200);
 			logger.debug("Polling for {}, got {}", name, polled.size());
 			for(Task task : polled) {
 				try {
 					es.submit(()->executor.executeSystemTask(systemTask, task, workerId, unackTimeout));
 				}catch(RejectedExecutionException ree) {
+					ree.printStackTrace();
+					//System.out.println("All workers are busy, not polling.  queue size " + workerQueue.size() + ", max=" + workerQueueSize);
 					logger.warn("Queue full for workers {}", workerQueue.size());
 				}
 			}
