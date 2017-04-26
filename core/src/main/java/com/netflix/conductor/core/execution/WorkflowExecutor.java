@@ -39,7 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
@@ -403,6 +402,11 @@ public class WorkflowExecutor {
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
 			queue.remove(task.getTaskType(), result.getTaskId());
+			task.setStatus(Status.CANCELED);
+			task.setOutputData(result.getOutputData());
+			task.setReasonForIncompletion(result.getReasonForIncompletion());
+			task.setWorkerId(result.getWorkerId());
+			edao.updateTask(task);
 			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ", reason=" + wf.getReasonForIncompletion();
 			logger.info(msg);
 			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
@@ -638,13 +642,8 @@ public class WorkflowExecutor {
 			}
 			
 			if(task.getStatus().equals(Status.SCHEDULED)) {
-				TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
-				int limit = 0;
-				if(taskDef != null) {
-					limit = taskDef.getConcurrencyLimit();
-				}
-
-				if(limit > 0 && edao.exceedsInProgressLimit(task, limit)) {
+				
+				if(edao.exceedsInProgressLimit(task)) {
 					logger.warn("Rate limited for {}", task.getTaskDefName());
 					queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 					return;

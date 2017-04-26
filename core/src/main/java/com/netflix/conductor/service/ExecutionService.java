@@ -31,7 +31,6 @@ import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
@@ -101,14 +100,8 @@ public class ExecutionService {
 				continue;
 			}
 
-			TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
-			if(taskDef != null) {
-				int limit = taskDef.getConcurrencyLimit();
-				if(limit > 0) {
-					if(edao.exceedsInProgressLimit(task, limit)) {
-						continue;
-					}
-				}
+			if(edao.exceedsInProgressLimit(task)) {
+				continue;
 			}
 			
 			task.setStatus(Status.IN_PROGRESS);

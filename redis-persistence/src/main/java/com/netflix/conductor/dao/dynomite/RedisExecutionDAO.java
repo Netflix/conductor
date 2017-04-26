@@ -34,6 +34,7 @@ import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
@@ -42,6 +43,7 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
 
 @Singleton
@@ -66,10 +68,13 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	private IndexDAO indexer;
 
+	private MetadataDAO metadata;
+	
 	@Inject
-	public RedisExecutionDAO(DynoProxy dynoClient, ObjectMapper om, IndexDAO indexer, Configuration config) {
+	public RedisExecutionDAO(DynoProxy dynoClient, ObjectMapper om, IndexDAO indexer, MetadataDAO metadata, Configuration config) {
 		super(dynoClient, om, config);
 		this.indexer = indexer;
+		this.metadata = metadata;
 	}
 
 	@Override
@@ -161,25 +166,39 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 		}
-		if(task.getStatus() != null && task.getStatus().equals(Status.IN_PROGRESS)) {
-			dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
-		}else {			
-			dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
-			String key = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
-			dynoClient.zrem(key, task.getTaskId());
+		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+		
+		if(taskDef != null && taskDef.getConcurrencyLimit() > 0) {
+			
+			if(task.getStatus() != null && task.getStatus().equals(Status.IN_PROGRESS)) {
+				dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
+			}else {			
+				dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
+				String key = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
+				dynoClient.zrem(key, task.getTaskId());
+			}	
 		}
+
 		indexer.index(task);
 	}
 	
 	@Override
-	public boolean exceedsInProgressLimit(Task task, int limit) {
-		
-		if(getInProgressTaskCount(task.getTaskDefName()) >= limit) {
+	public boolean exceedsInProgressLimit(Task task) {
+		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+		if(taskDef == null) {
+			return false;			
+		}
+		int limit = taskDef.getConcurrencyLimit();		
+		if(limit <= 0) {
+			return false;
+		}
+
+		long current = getInProgressTaskCount(task.getTaskDefName());
+		if(current >= limit) {
 			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
 			return true;
 		}
-		
-		
+
 		String rateLimitKey = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
 		double score = System.currentTimeMillis();
 		String taskId = task.getTaskId();
