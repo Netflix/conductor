@@ -66,6 +66,7 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.SystemTaskType;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
+import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
@@ -92,6 +93,9 @@ public class WorkflowServiceTest {
 
 	@Inject
 	private ExecutionService ess;
+	
+	@Inject
+	private SubWorkflow subworkflow;
 	
 	@Inject
 	private MetadataService ms;
@@ -2579,6 +2583,7 @@ public class WorkflowServiceTest {
 		es = ess.getExecutionStatus(subWorkflowId, true);
 		assertNotNull(es);
 		assertNotNull(es.getTasks());
+		
 		assertEquals(wfId, es.getParentWorkflowId());
 		assertEquals(WorkflowStatus.RUNNING, es.getStatus());
 		
@@ -2590,7 +2595,7 @@ public class WorkflowServiceTest {
 		es = ess.getExecutionStatus(subWorkflowId, true);
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
-		Uninterruptibles.sleepUninterruptibly(10, TimeUnit.SECONDS);
+		provider.executeSystemTask(subworkflow, es.getParentWorkflowTaskId(), "test", 1);
 		es = ess.getExecutionStatus(wfId, true);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
 		
