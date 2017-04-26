@@ -55,6 +55,7 @@ import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.config.TestConfiguration;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
+import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.index.ElasticSearchDAO;
@@ -106,7 +107,7 @@ public class RedisExecutionDAOTest {
 		when(client.prepareBulk().add(any(IndexRequest.class)).execute().actionGet()).thenReturn(response);
 		
 		ElasticSearchDAO indexer = new ElasticSearchDAO(client, config, om);
-		dao = new RedisExecutionDAO(dynoClient, om, indexer, config);
+		dao = new RedisExecutionDAO(dynoClient, om, indexer, mock(MetadataDAO.class), config);
 	}
 	
 	@Rule
