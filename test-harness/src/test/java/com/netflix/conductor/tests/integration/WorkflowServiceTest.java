@@ -2590,7 +2590,7 @@ public class WorkflowServiceTest {
 		es = ess.getExecutionStatus(subWorkflowId, true);
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
-		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+		Uninterruptibles.sleepUninterruptibly(10, TimeUnit.SECONDS);
 		es = ess.getExecutionStatus(wfId, true);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
 		
