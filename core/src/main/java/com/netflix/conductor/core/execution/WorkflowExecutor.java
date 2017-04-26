@@ -625,11 +625,19 @@ public class WorkflowExecutor {
 	}
 	
 	//Executes the async system task 
-	public void executeSystemTask(WorkflowSystemTask systemTask, Task task, String workerId, int unackTimeout) {
+	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, String workerId, int unackTimeout) {
 		
 		
 		try {
-
+			
+			Task task = edao.getTask(taskId);
+			if(task.getStatus().isTerminal()) {
+				//Tune the SystemTaskWorkerCoordinator's queues- if the queue size is very big this can happen!
+				logger.info("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
+				//don't do anything
+				return;
+			}
+			
 			String workflowId = task.getWorkflowInstanceId();			
 			Workflow workflow = edao.getWorkflow(workflowId, true);			
 			
@@ -637,11 +645,16 @@ public class WorkflowExecutor {
 				task.setStartTime(System.currentTimeMillis());
 				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
 			}
+			
 			if(workflow.getStatus().isTerminal()) {
 				//how did this happen?
 				logger.warn("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
+				if(!task.getStatus().isTerminal()) {
+					task.setStatus(Status.CANCELED);
+				}
 				edao.updateTask(task);
 				queue.remove(task.getTaskType(), task.getTaskId());
+				return;
 			}
 			
 			if(task.getStatus().equals(Status.SCHEDULED)) {
@@ -672,22 +685,21 @@ public class WorkflowExecutor {
 					break;
 			}
 			
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			task.setStatus(Status.FAILED);
-			task.setReasonForIncompletion(e.getMessage());
-		}
-		
-		if(!task.getStatus().isTerminal()) {
-			task.setCallbackAfterSeconds(unackTimeout);
-		}
-		
-		try {
+			if(!task.getStatus().isTerminal()) {
+				task.setCallbackAfterSeconds(unackTimeout);
+			}
+			
 			updateTask(new TaskResult(task));
+			logger.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
+			
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
-		logger.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
+		
+		
+		
+		
+		
 	}
 
 	private long getTaskDuration(long s, Task task) {

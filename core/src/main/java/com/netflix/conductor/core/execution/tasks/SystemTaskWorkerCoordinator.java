@@ -37,11 +37,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
-import com.netflix.conductor.service.ExecutionService;
 
 /**
  * @author Viren
@@ -52,7 +51,7 @@ public class SystemTaskWorkerCoordinator {
 
 	private static Logger logger = LoggerFactory.getLogger(SystemTaskWorkerCoordinator.class);
 	
-	private ExecutionService executionService;
+	private QueueDAO taskQueues;
 	
 	private WorkflowExecutor executor;
 	
@@ -77,15 +76,15 @@ public class SystemTaskWorkerCoordinator {
 	private static final String className = SystemTaskWorkerCoordinator.class.getName();
 		
 	@Inject
-	public SystemTaskWorkerCoordinator(ExecutionService executionService, WorkflowExecutor executor, Configuration config) {
-		this.executionService = executionService;
+	public SystemTaskWorkerCoordinator(QueueDAO taskQueues, WorkflowExecutor executor, Configuration config) {
+		this.taskQueues = taskQueues;
 		this.executor = executor;
 		this.config = config;
 		this.workerId = config.getServerId();
 		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
 		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 5);
 		this.pollCount = config.getIntProperty("workflow.system.task.worker.poll.count", 5);
-		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 1000);
+		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
 		this.workerQueue = new LinkedBlockingQueue<Runnable>(workerQueueSize);
 		if(threadCount > 0) {
 			ThreadFactory tf = new ThreadFactoryBuilder().setNameFormat("system-task-worker-%d").build();
@@ -139,13 +138,13 @@ public class SystemTaskWorkerCoordinator {
 			}
 			
 			String name = systemTask.getName();
-			List<Task> polled = executionService.justPoll(name, pollCount, 200);
+			List<String> polled = taskQueues.pop(name, pollCount, 200);
+			Monitors.recordTaskPoll(name);
 			logger.debug("Polling for {}, got {}", name, polled.size());
-			for(Task task : polled) {
+			for(String task : polled) {
 				try {
 					es.submit(()->executor.executeSystemTask(systemTask, task, workerId, unackTimeout));
 				}catch(RejectedExecutionException ree) {
-					//System.out.println("All workers are busy, not polling.  queue size " + workerQueue.size() + ", max=" + workerQueueSize);
 					logger.warn("Queue full for workers {}", workerQueue.size());
 				}
 			}

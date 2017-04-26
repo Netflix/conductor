@@ -117,30 +117,6 @@ public class ExecutionService {
 		Monitors.recordTaskPoll(taskType);
 		return tasks;
 	}
-	
-	/**
-	 * Similar to {@link #poll(String, String, int, int)} but does not update the task or its status
-	 * @param taskType Task type to poll for 
-	 * @param count number of items to poll
-	 * @param timeoutInMilliSecond timeout for long poll
-	 * @return List of tasks
-	 * @throws Exception If there was an error polling 
-	 */
-	public List<Task> justPoll(String taskType, int count, int timeoutInMilliSecond) throws Exception {
-
-		List<String> taskIds = queue.pop(taskType, count, timeoutInMilliSecond);
-		List<Task> tasks = new LinkedList<>();
-		for(String taskId : taskIds) {
-			Task task = getTask(taskId);
-			if (task.getStartTime() == 0) {
-				task.setStartTime(System.currentTimeMillis());
-				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
-			}
-			tasks.add(task);
-		}
-		Monitors.recordTaskPoll(taskType);
-		return tasks;
-	}
 
 	//For backward compatibility - to be removed in the later versions
 	public void updateTask(Task task) throws Exception {

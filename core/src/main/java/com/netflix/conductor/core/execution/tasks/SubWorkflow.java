@@ -47,8 +47,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
-		
-		super.start(workflow, task, provider);
+
 		Map<String, Object> input = task.getInputData();
 		String name = input.get("subWorkflowName").toString();
 		int version = (int) input.get("subWorkflowVersion");
