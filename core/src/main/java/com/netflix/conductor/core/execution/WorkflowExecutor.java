@@ -402,7 +402,9 @@ public class WorkflowExecutor {
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
 			queue.remove(task.getTaskType(), result.getTaskId());
-			task.setStatus(Status.CANCELED);
+			if(!task.getStatus().isTerminal()) {
+				task.setStatus(Status.COMPLETED);
+			}
 			task.setOutputData(result.getOutputData());
 			task.setReasonForIncompletion(result.getReasonForIncompletion());
 			task.setWorkerId(result.getWorkerId());
