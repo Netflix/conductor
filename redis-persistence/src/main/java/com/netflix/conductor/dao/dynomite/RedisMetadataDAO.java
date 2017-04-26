@@ -135,6 +135,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 		if (!result.equals(1L)) {
 			throw new ApplicationException(Code.NOT_FOUND, "Cannot remove the task - no such task definition");
 		}
+		refreshTaskDefs();
 	}
 
 	@Override

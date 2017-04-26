@@ -632,7 +632,7 @@ public class WorkflowExecutor {
 			
 			Task task = edao.getTask(taskId);
 			if(task.getStatus().isTerminal()) {
-				//Tune the SystemTaskWorkerCoordinator's queues- if the queue size is very big this can happen!
+				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
 				logger.info("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
 				//don't do anything
 				return;

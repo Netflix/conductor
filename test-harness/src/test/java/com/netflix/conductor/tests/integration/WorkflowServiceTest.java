@@ -2537,7 +2537,7 @@ public class WorkflowServiceTest {
 		es = ess.getExecutionStatus(wfId, true);
 	}
 	
-	//@Test
+	@Test
 	public void testSubWorkflowFailure() throws Exception {
 
 		TaskDef taskDef = ms.getTaskDef("junit_task_1");
@@ -2723,7 +2723,7 @@ public class WorkflowServiceTest {
 		TaskDef td = new TaskDef();
 		td.setName("eventX1");
 		td.setTimeoutSeconds(1);
-		td.setConcurrencyLimit(1);
+		td.setConcurrentExecLimit(1);
 		
 		ms.registerTaskDef(Arrays.asList(td));
 		

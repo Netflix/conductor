@@ -100,7 +100,7 @@ public class WorkflowMonitor {
 					long size = queue.getSize(task.getName());
 					long inProgressCount = edao.getInProgressTaskCount(task.getName());
 					Monitors.recordQueueDepth(task.getName(), size, task.getOwnerApp());
-					if(task.getConcurrencyLimit() > 0) {
+					if(task.concurrencyLimit() > 0) {
 						Monitors.recordTaskInProgress(task.getName(), inProgressCount, task.getOwnerApp());
 					}
 				});

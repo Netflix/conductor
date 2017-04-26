@@ -164,7 +164,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		
 		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
 		
-		if(taskDef != null && taskDef.getConcurrencyLimit() > 0) {
+		if(taskDef != null && taskDef.concurrencyLimit() > 0) {
 			
 			if(task.getStatus() != null && task.getStatus().equals(Status.IN_PROGRESS)) {
 				dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
@@ -191,7 +191,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		if(taskDef == null) {
 			return false;			
 		}
-		int limit = taskDef.getConcurrencyLimit();		
+		int limit = taskDef.concurrencyLimit();		
 		if(limit <= 0) {
 			return false;
 		}
