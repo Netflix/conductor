@@ -81,7 +81,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 
 		// Store all task def in under one key
 		dynoClient.hset(nsKey(ALL_TASK_DEFS), taskDef.getName(), toJson(taskDef));
-
+		refreshTaskDefs();
 		return taskDef.getName();
 	}
 
