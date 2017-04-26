@@ -135,7 +135,6 @@ public class SystemTaskWorkerCoordinator {
 			
 			if(workerQueue.size() >= workerQueueSize) {
 				logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
-				System.out.println("All workers are busy, not polling.  queue size " + workerQueue.size() + ", max=" + workerQueueSize);
 				return;
 			}
 			
@@ -146,7 +145,6 @@ public class SystemTaskWorkerCoordinator {
 				try {
 					es.submit(()->executor.executeSystemTask(systemTask, task, workerId, unackTimeout));
 				}catch(RejectedExecutionException ree) {
-					ree.printStackTrace();
 					//System.out.println("All workers are busy, not polling.  queue size " + workerQueue.size() + ", max=" + workerQueueSize);
 					logger.warn("Queue full for workers {}", workerQueue.size());
 				}
