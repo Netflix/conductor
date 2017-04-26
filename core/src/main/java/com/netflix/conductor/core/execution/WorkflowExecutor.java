@@ -644,12 +644,12 @@ public class WorkflowExecutor {
 			if(task.getStatus().equals(Status.SCHEDULED)) {
 				
 				if(edao.exceedsInProgressLimit(task)) {
-					logger.warn("Rate limited for {}", task.getTaskDefName());
-					queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+					logger.warn("Rate limited for {}", task.getTaskDefName());					
 					return;
 				}
 			}
 			
+			queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
 			edao.updateTask(task);
