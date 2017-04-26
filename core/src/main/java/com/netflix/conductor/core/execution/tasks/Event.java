@@ -48,8 +48,10 @@ public class Event extends WorkflowSystemTask {
 	
 	private ParametersUtils pu = new ParametersUtils();
 	
+	public static final String NAME = "EVENT";
+	
 	public Event() {
-		super("EVENT");
+		super(NAME);
 	}
 	
 	@Override

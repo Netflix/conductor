@@ -26,6 +26,9 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.execution.tasks.Event;
+import com.netflix.conductor.core.execution.tasks.SubWorkflow;
+import com.netflix.conductor.core.execution.tasks.Wait;
 
 
 
@@ -102,7 +105,7 @@ public class SystemTask extends Task {
 	
 	public static Task eventTask(String workflowId, String taskId, String correlationId, WorkflowTask taskToSchedule, String sink, Map<String, Object> input){
 		SystemTask st = new SystemTask();
-		st.setTaskType(SystemTaskType.EVENT.name());
+		st.setTaskType(Event.NAME);
 		st.setTaskDefName(taskToSchedule.getName());
 		st.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
 		st.setWorkflowInstanceId(workflowId);
@@ -118,7 +121,7 @@ public class SystemTask extends Task {
 	
 	public static Task waitTask(String workflowId, String taskId, String correlationId, WorkflowTask taskToSchedule, Map<String, Object> input){
 		SystemTask st = new SystemTask();
-		st.setTaskType(SystemTaskType.WAIT.name());
+		st.setTaskType(Wait.NAME);
 		st.setTaskDefName(taskToSchedule.getName());
 		st.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
 		st.setWorkflowInstanceId(workflowId);
@@ -133,7 +136,7 @@ public class SystemTask extends Task {
 	
 	public static Task subWorkflowTask(String workflowId, String taskId, String correlationId, WorkflowTask taskToSchedule, String subWorkflowName, Integer subWorkflowVersion, Map<String, Object> workflowInput){
 		SystemTask st = new SystemTask();
-		st.setTaskType(SystemTaskType.SUB_WORKFLOW.name());
+		st.setTaskType(SubWorkflow.NAME);
 		st.setTaskDefName(taskToSchedule.getName());
 		st.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
 		st.setWorkflowInstanceId(workflowId);

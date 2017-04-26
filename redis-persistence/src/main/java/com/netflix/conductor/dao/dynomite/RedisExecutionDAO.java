@@ -162,10 +162,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			task.setEndTime(System.currentTimeMillis());
 		}
 		
-		dynoClient.set(nsKey(TASK, task.getTaskId()), toJson(task));
-		if (task.getStatus() != null && task.getStatus().isTerminal()) {
-			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
-		}
 		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
 		
 		if(taskDef != null && taskDef.getConcurrencyLimit() > 0) {
@@ -178,6 +174,13 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 				dynoClient.zrem(key, task.getTaskId());
 			}	
 		}
+		
+		dynoClient.set(nsKey(TASK, task.getTaskId()), toJson(task));
+		if (task.getStatus() != null && task.getStatus().isTerminal()) {
+			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
+		}
+		
+		
 
 		indexer.index(task);
 	}

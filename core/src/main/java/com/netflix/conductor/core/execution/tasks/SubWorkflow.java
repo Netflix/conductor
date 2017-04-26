@@ -38,8 +38,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
 	
+	public static final String NAME = "SUB_WORKFLOW";
+	
 	public SubWorkflow() {
-		super("SUB_WORKFLOW");
+		super(NAME);
 	}
 	
 	@SuppressWarnings("unchecked")

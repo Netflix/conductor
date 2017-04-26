@@ -223,7 +223,7 @@ public class HttpTask extends WorkflowSystemTask {
 	
 	@Override
 	public int getRetryTimeInSecond() {
-		return 1;
+		return 60;
 	}
 	
 	private static ObjectMapper objectMapper() {

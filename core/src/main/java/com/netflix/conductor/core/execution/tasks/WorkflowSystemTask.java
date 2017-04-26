@@ -88,7 +88,7 @@ public class WorkflowSystemTask {
 	 * @return Time in seconds after which the task should be retried if rate limited or remains in in_progress after start method execution. 
 	 */
 	public int getRetryTimeInSecond() {
-		return 10;
+		return 30;
 	}
 	/**
 	 * 

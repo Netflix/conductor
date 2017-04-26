@@ -43,6 +43,7 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -60,6 +61,7 @@ public class TestWorkflowExecutor {
 		AtomicBoolean httpTaskExecuted = new AtomicBoolean(false);
 		AtomicBoolean http2TaskExecuted = new AtomicBoolean(false);
 	
+		new Wait();
 		new WorkflowSystemTask("HTTP") {
 			@Override
 			public boolean isAsync() {

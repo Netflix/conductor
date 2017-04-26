@@ -627,7 +627,7 @@ public class WorkflowExecutor {
 	//Executes the async system task 
 	public void executeSystemTask(WorkflowSystemTask systemTask, Task task, String workerId, int unackTimeout) {
 		
-		logger.info("Executing {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
+		
 		try {
 
 			String workflowId = task.getWorkflowInstanceId();			
@@ -640,6 +640,7 @@ public class WorkflowExecutor {
 			if(workflow.getStatus().isTerminal()) {
 				//how did this happen?
 				logger.warn("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
+				edao.updateTask(task);
 				queue.remove(task.getTaskType(), task.getTaskId());
 			}
 			
@@ -650,6 +651,8 @@ public class WorkflowExecutor {
 					return;
 				}
 			}
+			
+			logger.info("Executing {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
 			
 			queue.setUnackTimeout(task.getTaskType(), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 			task.setWorkerId(workerId);
