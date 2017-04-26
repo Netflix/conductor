@@ -206,13 +206,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		Set<String> ids = dynoClient.zrangeByScore(rateLimitKey, 0, score + 1, limit);
 		boolean rateLimited = !ids.contains(taskId);
 		if(rateLimited) {
-			logger.info("NOT OK to go - rate limited.  {}, limit {}, current {}", task.getTaskDefName(), limit, getInProgressTaskCount(task.getTaskDefName()));
+			logger.info("Tak execution count limited.  {}, limit {}, current {}", task.getTaskDefName(), limit, getInProgressTaskCount(task.getTaskDefName()));
 			String inProgressKey = nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName());
 			//Cleanup any items that are still present in the rate limit bucket but not in progress anymore!
 			ids.stream().filter(id -> !dynoClient.sismember(inProgressKey, id)).forEach(id2 -> dynoClient.zrem(rateLimitKey, id2));
 			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
-		} else {
-			logger.info("OK to go {}, limit {}, current {}", task.getTaskDefName(), limit, getInProgressTaskCount(task.getTaskDefName()));
 		}
 		return rateLimited;
 	}
