@@ -2537,7 +2537,7 @@ public class WorkflowServiceTest {
 		es = ess.getExecutionStatus(wfId, true);
 	}
 	
-	@Test
+	//@Test
 	public void testSubWorkflowFailure() throws Exception {
 
 		TaskDef taskDef = ms.getTaskDef("junit_task_1");
