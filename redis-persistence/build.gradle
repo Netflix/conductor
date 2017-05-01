@@ -9,6 +9,7 @@ dependencies {
 	compile 'org.elasticsearch:elasticsearch:2.+'
 	compile 'org.elasticsearch:elasticsearch:5.3.0'
 	compile 'org.elasticsearch.client:transport:5.3.0'
+	compile 'org.elasticsearch.client:x-pack-transport:5.3.0'
 
 	//In memory redis for unit testing
  	testCompile 'org.rarefiedredis.redis:redis-java:0.0.17'
