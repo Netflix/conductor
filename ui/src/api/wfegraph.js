@@ -79,6 +79,10 @@ class Workflow2Graph {
           style = 'stroke: #cccccc; fill: #ccc';
           labelStyle = 'fill:#ffffff; stroke-width: 1px';
           break;
+        case 'NO_OP':
+          style = 'stroke: #cccccc; fill: #ccc';
+          labelStyle = 'fill:#ffffff; stroke-width: 1px';
+          break;
         case '':
           break;
         default:
