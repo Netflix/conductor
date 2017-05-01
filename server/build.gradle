@@ -39,6 +39,13 @@ dependencies {
 	
 	//In memory
 	compile 'org.rarefiedredis.redis:redis-java:0.0.17'
+
+	//log4j
+	compile 'org.apache.logging.log4j:log4j-api:2.8.+'
+	compile 'org.apache.logging.log4j:log4j-core:2.8.+'
+
+	//netty
+	compile 'org.elasticsearch.plugin:transport-netty4-client:5.3.0'
 }
 
 shadowJar {

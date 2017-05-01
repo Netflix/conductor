@@ -59,7 +59,7 @@ com.netflix.conductor.dao.RedisESWorkflowModule
 
 * The default persistence used is [Dynomite](https://github.com/Netflix/dynomite)
 * For queues, we are relying on [dyno-queues](https://github.com/Netflix/dyno-queues)
-* The indexing backend is [Elasticsearch](https://www.elastic.co/) (2.+)
+* The indexing backend is [Elasticsearch](https://www.elastic.co/) (5.3.0)
 
 ## Other Requirements
 * JDK 1.8+

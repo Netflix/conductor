@@ -34,6 +34,7 @@ import javax.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -43,12 +44,14 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
-import org.elasticsearch.indices.IndexAlreadyExistsException;
+import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,7 +142,7 @@ public class ElasticSearchDAO implements IndexDAO {
 		} catch (IndexNotFoundException infe) {
 			try {
 				client.admin().indices().prepareCreate(logIndexName).execute().actionGet();
-			} catch (IndexAlreadyExistsException ilee) {
+			} catch (ResourceAlreadyExistsException ilee) {
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -160,7 +163,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			byte[] templateSource = IOUtils.toByteArray(stream);
 			
 			try {
-				client.admin().indices().preparePutTemplate("wfe_template").setSource(templateSource).execute().actionGet();
+				client.admin().indices().preparePutTemplate("wfe_template").setSource(templateSource, XContentType.JSON).execute().actionGet();
 			}catch(Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -172,7 +175,7 @@ public class ElasticSearchDAO implements IndexDAO {
 		}catch(IndexNotFoundException infe) {
 			try {
 				client.admin().indices().prepareCreate(indexName).execute().actionGet();
-			}catch(IndexAlreadyExistsException done) {}
+			}catch(ResourceAlreadyExistsException done) {}
 		}
 				
 		//2. Mapping for the workflow document type
@@ -183,7 +186,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			byte[] bytes = IOUtils.toByteArray(stream);
 			String source = new String(bytes);
 			try {
-				client.admin().indices().preparePutMapping(indexName).setType(WORKFLOW_DOC_TYPE).setSource(source).execute().actionGet();
+				client.admin().indices().preparePutMapping(indexName).setType(WORKFLOW_DOC_TYPE).setSource(source, XContentType.JSON).execute().actionGet();
 			}catch(Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -199,8 +202,8 @@ public class ElasticSearchDAO implements IndexDAO {
 			byte[] doc = om.writeValueAsBytes(summary);
 			
 			UpdateRequest req = new UpdateRequest(indexName, WORKFLOW_DOC_TYPE, id);
-			req.doc(doc);
-			req.upsert(doc);
+			req.doc(doc, XContentType.JSON);
+			req.upsert(doc, XContentType.JSON);
 			req.retryOnConflict(5);
 			updateWithRetry(req);
  			
@@ -218,8 +221,8 @@ public class ElasticSearchDAO implements IndexDAO {
 			byte[] doc = om.writeValueAsBytes(summary);
 			
 			UpdateRequest req = new UpdateRequest(indexName, TASK_DOC_TYPE, id);
-			req.doc(doc);
-			req.upsert(doc);
+			req.doc(doc, XContentType.JSON);
+			req.upsert(doc, XContentType.JSON);
 			updateWithRetry(req);
  			
 		} catch (Throwable e) {
@@ -239,7 +242,7 @@ public class ElasticSearchDAO implements IndexDAO {
 				
 				taskExecLog.setCreatedTime(created);
 				IndexRequest request = new IndexRequest(logIndexName, LOG_DOC_TYPE);
-				request.source(om.writeValueAsBytes(taskExecLog));
+				request.source(om.writeValueAsBytes(taskExecLog), XContentType.JSON);
 	 			client.index(request).actionGet();
 	 			break;
 	 			
@@ -290,8 +293,8 @@ public class ElasticSearchDAO implements IndexDAO {
 			byte[] doc = om.writeValueAsBytes(ee);
 			String id = ee.getName() + "." + ee.getEvent() + "." + ee.getMessageId() + "." + ee.getId();
 			UpdateRequest req = new UpdateRequest(logIndexName, EVENT_DOC_TYPE, id);
-			req.doc(doc);
-			req.upsert(doc);
+			req.doc(doc, XContentType.JSON);
+			req.upsert(doc, XContentType.JSON);
 			req.retryOnConflict(5);
 			updateWithRetry(req);
  			
@@ -339,7 +342,7 @@ public class ElasticSearchDAO implements IndexDAO {
 
 			DeleteRequest req = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
 			DeleteResponse response = client.delete(req).actionGet();
-			if (!response.isFound()) {
+			if (response.getResult() == Result.DELETED) {
 				log.error("Index removal failed - document not found by id " + workflowId);
 			}
 		} catch (Throwable e) {
@@ -374,7 +377,7 @@ public class ElasticSearchDAO implements IndexDAO {
 		BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(qf);
 		QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(freeTextQuery);
 		BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
-		final SearchRequestBuilder srb = client.prepareSearch(indexName).setQuery(fq).setTypes(WORKFLOW_DOC_TYPE).setNoFields().setFrom(start).setSize(size);
+		final SearchRequestBuilder srb = client.prepareSearch(indexName).setQuery(fq).setTypes(WORKFLOW_DOC_TYPE).storedFields("_id").setFrom(start).setSize(size);
 		if(sortOptions != null){
 			sortOptions.forEach(sortOption -> {
 				SortOrder order = SortOrder.ASC;
@@ -388,7 +391,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			});
 		}
 		List<String> result = new LinkedList<String>();
-		SearchResponse response = srb.execute().actionGet();
+		SearchResponse response = srb.get();
 		response.getHits().forEach(hit -> {
 			result.add(hit.getId());
 		});

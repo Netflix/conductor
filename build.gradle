@@ -2,6 +2,9 @@ buildscript {
 	
 	repositories {
         jcenter()
+        maven {
+            url "https://artifacts.elastic.co/maven"
+        }
     }
     
     dependencies {
@@ -33,6 +36,9 @@ subprojects {
 
     repositories {
         jcenter()
+        maven {
+            url "https://artifacts.elastic.co/maven"
+        }
     }
 
     dependencies {

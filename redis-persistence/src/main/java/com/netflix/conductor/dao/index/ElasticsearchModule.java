@@ -24,6 +24,8 @@ import javax.inject.Singleton;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.slf4j.Logger;
@@ -41,6 +43,8 @@ import com.netflix.conductor.core.config.Configuration;
 public class ElasticsearchModule extends AbstractModule {
 
 	private static Logger log = LoggerFactory.getLogger(ElasticSearchDAO.class);
+	private static final String DEFAULT_USER = "elastic";
+	private static final String DEFAULT_PASSWORD = "changeme";
 	
 	@Provides
 	@Singleton
@@ -51,11 +55,17 @@ public class ElasticsearchModule extends AbstractModule {
 			log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
 		}
 		
-    	Settings.Builder settings = Settings.settingsBuilder();
-        settings.put("client.transport.ignore_cluster_name", true);
-        settings.put("client.transport.sniff", true);
+		String credentials = config.getProperty("elasticsearch.xpack.security.user", "");
+		if(credentials.equals("")) {
+			credentials = DEFAULT_USER + ":" + DEFAULT_PASSWORD;
+			log.warn("elasticsearch.xpack.security.user is not set.  Will try using default values: " + credentials);
+		}
+		
+        Settings settings = Settings.builder().put("client.transport.ignore_cluster_name",true)
+                                              .put("client.transport.sniff", true)
+                                              .put("xpack.security.user", credentials).build();
         
-        TransportClient tc = TransportClient.builder().settings(settings).build();
+        TransportClient tc = new PreBuiltXPackTransportClient(settings);
         String[] hosts = clusterAddress.split(",");
         for (String host : hosts) {
             String[] hostparts = host.split(":");
