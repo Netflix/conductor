@@ -381,7 +381,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			throw new ApplicationException(Code.BACKEND_ERROR, e.getMessage(), e);
 		}
 	}
-	
+
 	@Override
 	public SearchResult<String> searchTasks(String query, String freeText, int start, int count, List<String> sort) {
 
@@ -393,7 +393,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			throw new ApplicationException(Code.BACKEND_ERROR, e.getMessage(), e);
 		}
 	}
-
+	
 	@Override
 	public void remove(String workflowId) {
 		try {

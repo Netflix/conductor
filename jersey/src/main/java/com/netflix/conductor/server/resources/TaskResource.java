@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -50,6 +52,7 @@ import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionService;
 
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -75,7 +78,7 @@ public class TaskResource {
 	public TaskResource(ExecutionService taskService, QueueDAO queues, Configuration config) {
 		this.taskService = taskService;
 		this.queues = queues;
-		this.maxSearchSize = config.getIntProperty("workflow.max.search.size", 5_000);
+		this.maxSearchSize = config.getIntProperty("task.max.search.size", 5_000);
 	}
 
 	@GET
@@ -238,7 +241,7 @@ public class TaskResource {
 	public String requeue(@PathParam("taskType") String taskType) throws Exception {
 		return "" + taskService.requeuePendingTasks(taskType);
 	}
-	
+
 	@ApiOperation(value="Search for tasks based in payload and other parameters", notes="use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC.  If order is not specified, defaults to ASC")
 	@GET
 	@Consumes(MediaType.WILDCARD)
@@ -253,7 +256,7 @@ public class TaskResource {
     		){
 
 		if(size > maxSearchSize) {
-			throw new ApplicationException(Code.INVALID_INPUT, "Cannot return more than " + maxSearchSize + " workflows.  Please use pagination");
+			throw new ApplicationException(Code.INVALID_INPUT, "Cannot return more than " + maxSearchSize + " tasks.  Please use pagination");
 		}
 		return taskService.searchTasks(query , freeText, start, size, convert(sort));
 	}
