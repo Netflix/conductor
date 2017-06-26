@@ -93,13 +93,29 @@ public class HttpTask extends WorkflowSystemTask {
 	
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+		logger.info("--------------0------Starting HTTP TASK ");
+		logger.info("--------------0------Starting HTTP TASK NAME =  " + task.getTaskDefName());
+		logger.info("--------------0------Starting HTTP Task Workflow ID =  " + workflow.getWorkflowId());
 		Object request = task.getInputData().get(requestParameter);
 		task.setWorkerId(config.getServerId());
+		String url = null;
+		Input input = om.convertValue(request, Input.class);
+		logger.info("--------------1------URI =" + input.getUri());
 		if(request == null) {
 			String reason = MISSING_REQUEST;
 			task.setReasonForIncompletion(reason);
 			task.setStatus(Status.FAILED);
 			return;
+		} else {
+			if (input.getServiceDiscoveryQuery() != null) {
+				DNSLookup lookup = new DNSLookup();
+				DNSLookup.DNSResponses responses = lookup.lookupService(input.getServiceDiscoveryQuery());
+				if (responses != null) {
+					String address = responses.getResponses()[0].address;
+					int port = responses.getResponses()[0].port;
+					url = "http://" + address + ":" + port;
+				}
+			}
 		}
 		
 		Input input = om.convertValue(request, Input.class);
@@ -108,7 +124,13 @@ public class HttpTask extends WorkflowSystemTask {
 			task.setReasonForIncompletion(reason);
 			task.setStatus(Status.FAILED);
 			return;
+		} else {
+			if (url != null) {
+				input.setUri(url + input.getUri());
+				logger.info("--------------2---------- URI = " + input.getUri());
+			}
 		}
+		logger.info("--------------3---------- URI = " + input.getUri());
 		
 		if(input.getMethod() == null) {
 			String reason = "No HTTP method specified";
@@ -118,7 +140,8 @@ public class HttpTask extends WorkflowSystemTask {
 		}
 		
 		try {
-			
+			logger.info("--------------4---------- URI = " + input.getUri());
+ 			logger.info("--------------4---------- BODY =" + input.getBody());
 			HttpResponse response = httpCall(input);
 			logger.info("response {}, {}", response.statusCode, response.body);
 			if(response.statusCode > 199 && response.statusCode < 300) {
@@ -151,6 +174,7 @@ public class HttpTask extends WorkflowSystemTask {
 	 * @throws Exception If there was an error making http call
 	 */
 	protected HttpResponse httpCall(Input input) throws Exception {
+
 		Client client = rcm.getClient(input);
 
 		if(input.oauthConsumerKey != null) {
@@ -297,6 +321,8 @@ public class HttpTask extends WorkflowSystemTask {
 
 		private String oauthConsumerSecret;
 
+		private String serviceDiscoveryQuery;
+
 		/**
 		 * @return the method
 		 */
@@ -409,6 +435,14 @@ public class HttpTask extends WorkflowSystemTask {
 		 */
 		public void setOauthConsumerSecret(String oauthConsumerSecret) {
 			this.oauthConsumerSecret = oauthConsumerSecret;
+		}
+
+		public void setServiceDiscoveryQuery(String query){
+			this.serviceDiscoveryQuery = query;
+		}
+
+		public String getServiceDiscoveryQuery(){
+			return serviceDiscoveryQuery;
 		}
 	}
 }
