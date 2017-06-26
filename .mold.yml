@@ -1,0 +1,13 @@
+artifacts:
+  publish:
+  - master
+  registry: 583623634344.dkr.ecr.us-west-2.amazonaws.com
+  images:
+  - name: conductor
+    dockerfile: docker/server/Dockerfile
+    tags:
+        - "${APP_VERSION}-server"
+  - name: conductor
+    dockerfile: docker/ui/Dockerfile
+    tags:
+        - "${APP_VERSION}-ui"

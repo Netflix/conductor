@@ -9,7 +9,7 @@ MAINTAINER Netflix OSS <conductor@netflix.com>
 RUN mkdir -p /app/config /app/logs /app/libs
 
 # Startup script(s)
-COPY ./bin /app
+COPY ./docker/ui/bin /app
 
 # Get all the dependencies
 RUN apt-get update -y \
@@ -18,11 +18,10 @@ RUN apt-get update -y \
   # Chmod scripts
   && chmod +x /app/startup.sh
 
-# Get and install conductor UI
-RUN git clone https://github.com/netflix/conductor.git \
+COPY . /conductor
 
-  # Get UI project
-  && mv /conductor/ui /app \
+# Get and install conductor UI
+RUN mv /conductor/ui /app \
 
   # Remove the conductor project
   && rm -rf conductor \
