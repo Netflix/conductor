@@ -118,7 +118,7 @@ public class HttpTask extends WorkflowSystemTask {
 			}
 		}
 		
-		Input input = om.convertValue(request, Input.class);
+		
 		if(input.getUri() == null) {
 			String reason = "Missing HTTP URI.  See documentation for HttpTask for required input parameters";
 			task.setReasonForIncompletion(reason);
