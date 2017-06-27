@@ -11,3 +11,4 @@ artifacts:
     dockerfile: docker/ui/Dockerfile
     tags:
         - "${APP_VERSION}-ui"
+        
