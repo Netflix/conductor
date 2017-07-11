@@ -96,8 +96,58 @@ public class HttpWaitTask extends WorkflowSystemTask {
 			task.setStatus(Status.FAILED);
 			return;
 		}
-		input.setUri(input.getUri()+"&taskid="+task.getTaskId());
-		System.out.println("Uri_-----------------------------------------------@@@@"+input.getUri());
+		
+		if(input.getTaskId()!=null)
+		{
+		if(input.getTaskId().equalsIgnoreCase("true"))
+		{
+		  
+		  if(input.getBody()!=null)
+		  {
+		  
+	      int index = input.getBody().toString().indexOf("}");
+		   if(input.getBody().toString()=="{}")
+		   {
+		   }
+		   else
+		   {
+           input.setBody(input.getBody().toString().substring(0, index) + ", taskid="+task.getTaskId() + input.getBody().toString().substring(index));
+		   }
+	      }
+		  else
+		  {
+			
+			input.setBody("{taskid="+task.getTaskId()+"}");
+		  }
+	    }
+	  }
+	  
+	   if(input.getCurtimestamp()!=null)
+		{
+		if(input.getCurtimestamp().equalsIgnoreCase("true"))
+		{
+		 
+		 
+		  if(input.getBody()!=null)
+		  {
+		
+	      int index = input.getBody().toString().indexOf("}");
+		   if(input.getBody().toString()=="{}")
+		   {
+		   }
+		   else
+		   {
+           input.setBody(input.getBody().toString().substring(0, index) + ", Curtimestamp="+System.currentTimeMillis() + input.getBody().toString().substring(index));
+		   }
+	      }
+		  else
+		  {
+			
+			input.setBody("{Curtimestamp="+System.currentTimeMillis()+"}");
+		  }
+	    }
+	  }
+		System.out.println(input.getBody());
 		try {
 			
 			HttpResponse response = httpCall(input);
@@ -143,7 +193,6 @@ public class HttpWaitTask extends WorkflowSystemTask {
 		}
 
 		Builder builder = client.resource(input.uri).type(MediaType.APPLICATION_JSON);
-
 		if(input.body != null) {
 			builder.entity(input.body);
 		}
@@ -266,6 +315,10 @@ public class HttpWaitTask extends WorkflowSystemTask {
 		private String method;	//PUT, POST, GET, DELETE, OPTIONS, HEAD
 		
 		private String vipAddress;
+		
+	    private String taskId;
+		
+		private String curtimestamp;
 		
 		private Map<String, Object> headers = new HashMap<>();
 		
@@ -391,6 +444,33 @@ public class HttpWaitTask extends WorkflowSystemTask {
 		 */
 		public void setOauthConsumerSecret(String oauthConsumerSecret) {
 			this.oauthConsumerSecret = oauthConsumerSecret;
+		}
+		
+		/**
+		 * @return the vipAddress
+		 */
+		public String getTaskId() {
+			return taskId;
+		}
+
+		/**
+		 * @param vipAddress the vipAddress to set
+		 * 
+		 */
+		public void setTaskId(String taskId) {
+			this.taskId = taskId;
+		}
+		
+		public String getCurtimestamp() {
+			return curtimestamp;
+		}
+
+		/**
+		 * @param vipAddress the vipAddress to set
+		 * 
+		 */
+		public void setCurtimestamp(String curtimestamp) {
+			this.curtimestamp = curtimestamp;
 		}
 	}
 }
