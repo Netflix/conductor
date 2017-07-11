@@ -108,6 +108,7 @@ public class HttpWaitTask extends WorkflowSystemTask {
 	      int index = input.getBody().toString().indexOf("}");
 		   if(input.getBody().toString()=="{}")
 		   {
+			 input.setBody("{taskid="+task.getTaskId()+"}");
 		   }
 		   else
 		   {
@@ -134,6 +135,7 @@ public class HttpWaitTask extends WorkflowSystemTask {
 	      int index = input.getBody().toString().indexOf("}");
 		   if(input.getBody().toString()=="{}")
 		   {
+			 input.setBody("{Curtimestamp="+System.currentTimeMillis()+"}");
 		   }
 		   else
 		   {
