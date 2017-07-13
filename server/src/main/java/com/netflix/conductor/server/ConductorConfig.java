@@ -96,11 +96,10 @@ public class ConductorConfig implements Configuration {
 	@Override
 	public int getIntProperty(String key, int defaultValue) {
 		String val = getProperty(key, Integer.toString(defaultValue));
-		int value  = defaultValue;
 		try{
-			value = Integer.parseInt(val);
-		}catch(Exception e){}
-		return value;
+			defaultValue = Integer.parseInt(val);
+		}catch(NumberFormatException e){}
+		return defaultValue;
 	}
 
 	@Override
@@ -109,7 +108,7 @@ public class ConductorConfig implements Configuration {
 		String val = null;
 		try{
 			val = System.getenv(key);
-			if (val == null || val.length() == 0) {
+			if (val == null || val.isEmpty()) {
 				val = Optional.ofNullable(System.getProperty(key)).orElse(defaultValue);
 			}
 		}catch(Exception e){
