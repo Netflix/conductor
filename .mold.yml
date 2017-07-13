@@ -7,8 +7,10 @@ artifacts:
     dockerfile: docker/server/Dockerfile
     tags:
         - "${APP_VERSION}-server"
+        - server
   - name: conductor
     dockerfile: docker/ui/Dockerfile
     tags:
         - "${APP_VERSION}-ui"
+        - ui
         

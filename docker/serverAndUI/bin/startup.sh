@@ -11,7 +11,7 @@ if [ -z "$WF_SERVER" ];
     echo "using Conductor API server from '$WF_SERVER'"
 fi
 
-nohup node server.js 1>&2 > /app/logs/ui.log &
+nohup node server.js
 
 # Start the server
 cd /app/libs
@@ -28,4 +28,4 @@ if [ -z "$CONFIG_PROP" ];
     export config_file=/app/config/$CONFIG_PROP
 fi
 
-nohup java -jar conductor-server-*-all.jar $config_file 1>&2 > /app/logs/server.log
+nohup java -jar conductor-server-*-all.jar $config_file

@@ -13,10 +13,13 @@ build: clean login
 	mold
 
 login:
-	@eval $$(aws ecr get-login --region us-west-2)
+	@eval $$(aws ecr get-login --no-include-email --region us-west-2)
 
-debug:
-	@docker run -v ./Test/MediaInfo.WebApi.Tests:/data mediainfo dotnet /app/MediaInfo.WebApi.dll /data/movie.mpg
+up:
+	@docker-compose -f docker/docker-compose.yaml up -d
+
+down:
+	@docker-compose -f docker/docker-compose.yaml down
 
 .convert-deploy-template:
 	@if test "$(APP_VERSION)" = "" ; then APP_VERSION=$$(mold -app-version); fi
