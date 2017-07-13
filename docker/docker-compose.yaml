@@ -10,9 +10,10 @@ services:
       - workflow.namespace.queue.prefix=conductor_queues
       - queues.dynomite.threads=10
       - queues.dynomite.nonQuorum.port=22122
-      - workflow.elasticsearch.url=es:9300
+      - workflow.elasticsearch.mode=memory
+      - workflow.elasticsearch.url=localhost:9300
       - workflow.elasticsearch.index.name=conductor
-      - loadSample=true      
+      - loadSample=true
     image: conductor:server
     build:
       context: ./server
