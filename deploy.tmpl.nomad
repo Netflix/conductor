@@ -51,7 +51,7 @@ job "conductor" {
       }
 
       env {
-        WF_SERVER = "http://conductor-server.service:30000/api/"
+        WF_SERVER = "http://${NOMAD_JOB_NAME}-server.service:30000/api/"
       }
 
       # The service block tells Nomad how to register this service
@@ -107,12 +107,14 @@ job "conductor" {
           }
         }
       }
-
+      
+      /*
       env {
         db = "dynomite"
         workflow.dynomite.cluster.hosts = "${NOMAD_JOB_NAME}-db:8102:us-east-1c"
         workflow.elasticsearch.mode = "memory"
       }
+      */
 
       service {
         name = "${JOB}-${TASK}"
