@@ -9,10 +9,10 @@ MAINTAINER Netflix OSS <conductor@netflix.com>
 RUN mkdir -p /app/config /app/logs /app/libs
 
 # Startup script(s)
-COPY ./bin /app
+COPY ./docker/server/bin /app
 
 # Configs
-COPY ./config /app/config
+COPY ./docker/server/config /app/config
 
 # Get all the dependencies
 RUN apt-get update -y \
@@ -22,8 +22,9 @@ RUN apt-get update -y \
   && chmod +x /app/startup.sh
 
 # Get and install conductor
-RUN git clone https://github.com/Netflix/conductor.git \
-  && cd conductor \
+COPY . /conductor
+
+RUN cd conductor \
   && ./gradlew build -x test \
 
   # Get Server Jar
