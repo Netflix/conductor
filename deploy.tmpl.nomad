@@ -108,13 +108,11 @@ job "conductor" {
         }
       }
       
-      /*
       env {
         db = "dynomite"
-        workflow.dynomite.cluster.hosts = "${NOMAD_JOB_NAME}-db:8102:us-east-1c"
+        workflow.dynomite.cluster.hosts = "${NOMAD_JOB_NAME}-db.service:8102:us-east-1c"
         workflow.elasticsearch.mode = "memory"
       }
-      */
 
       service {
         name = "${JOB}-${TASK}"
