@@ -64,6 +64,10 @@ public class ConductorServer {
 	private enum DB {
 		redis, dynomite, memory
 	}
+
+	private enum SearchMode {
+		elasticsearch, memory
+	}
 	
 	private ServerModule sm;
 	
@@ -72,6 +76,8 @@ public class ConductorServer {
 	private ConductorConfig cc;
 	
 	private DB db;
+
+	private SearchMode mode;
 	
 	public ConductorServer(ConductorConfig cc) {
 		this.cc = cc;
@@ -84,6 +90,14 @@ public class ConductorServer {
 		}catch(IllegalArgumentException ie) {
 			logger.error("Invalid db name: " + dbstring + ", supported values are: redis, dynomite, memory");
 			System.exit(1);
+		}
+
+		String modestring = cc.getProperty("workflow.elasticsearch.mode", "memory");
+		try {
+			mode = SearchMode.valueOf(modestring);
+		}catch(IllegalArgumentException ie) {
+			logger.error("Invalid setting for workflow.elasticsearch.mode: " + modestring + ", supported values are: elasticsearch, memory");
+			System.exit(1);			
 		}
 		
 		if(!db.equals(DB.memory)) {
@@ -154,21 +168,29 @@ public class ConductorServer {
 			
 		case memory:
 			jedis = new JedisMock();
+		}
+		
+		switch (mode) {
+		case memory:
+
 			try {
 				EmbeddedElasticSearch.start();
-				if(System.getProperty("workflow.elasticsearch.url") == null) {
+				if(cc.getProperty("workflow.elasticsearch.url", null) == null) {
 					System.setProperty("workflow.elasticsearch.url", "localhost:9300");
 				}
-				if(System.getProperty("workflow.elasticsearch.index.name") == null) {
+				if(cc.getProperty("workflow.elasticsearch.index.name", null) == null) {
 					System.setProperty("workflow.elasticsearch.index.name", "conductor");
 				}
 			} catch (Exception e) {
 				logger.error("Error starting embedded elasticsearch.  Search functionality will be impacted: " + e.getMessage(), e);
 			}
 			logger.info("Starting conductor server using in memory data store");
+			break;			
+
+		case elasticsearch:
 			break;
 		}
-		
+
 		this.sm = new ServerModule(jedis, hs, cc);
 	}
 	

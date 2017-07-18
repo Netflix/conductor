@@ -95,24 +95,37 @@ public class ConductorConfig implements Configuration {
 
 	@Override
 	public int getIntProperty(String key, int defaultValue) {
-		String val = System.getProperty(key);
-		int value  = defaultValue;
+		String val = getProperty(key, Integer.toString(defaultValue));
 		try{
-			value = Integer.parseInt(val);
-		}catch(Exception e){}
-		return value;
+			defaultValue = Integer.parseInt(val);
+		}catch(NumberFormatException e){}
+		return defaultValue;
 	}
 
 	@Override
 	public String getProperty(String key, String defaultValue) {
-		return Optional.ofNullable(System.getProperty(key)).orElse(defaultValue);
+
+		String val = null;
+		try{
+			val = System.getenv(key.replace('.','_'));
+			if (val == null || val.isEmpty()) {
+				val = Optional.ofNullable(System.getProperty(key)).orElse(defaultValue);
+			}
+		}catch(Exception e){
+			logger.error(e.getMessage(), e);
+		}
+		return val;
 	}
 
 	@Override
 	public Map<String, Object> getAll() {
 		Map<String, Object> map = new HashMap<>();
 		Properties props = System.getProperties();
-		props.entrySet().forEach(entry -> map.put(entry.getKey().toString(), entry.getValue()));
+		props.entrySet().forEach(entry -> {
+			String key = entry.getKey().toString();
+			String val = entry.getValue().toString();
+			map.put(key, getProperty(key, val));
+		});
 		return map;
 	}
 

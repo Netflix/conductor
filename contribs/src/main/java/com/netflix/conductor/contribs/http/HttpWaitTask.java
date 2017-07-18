@@ -1,23 +1,4 @@
-/**
- * Copyright 2016 Netflix, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/**
- * 
- */
 package com.netflix.conductor.contribs.http;
-
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -52,19 +33,17 @@ import com.sun.jersey.oauth.signature.OAuthParameters;
 import com.sun.jersey.oauth.signature.OAuthSecrets;
 
 /**
- * @author Viren
- * Task that enables calling another http endpoint as part of its execution
+ * Created by pavanj on 6/22/17.
  */
-@Singleton
-public class HttpTask extends WorkflowSystemTask {
+public class HttpWaitTask extends WorkflowSystemTask {
 
-	public static final String REQUEST_PARAMETER_NAME = "http_request";
+   	public static final String REQUEST_PARAMETER_NAME = "http_request";
 	
 	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 
-	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
+	private static final Logger logger = LoggerFactory.getLogger(HttpWaitTask.class);
 	
-	public static final String NAME = "HTTP";
+	public static final String NAME = "HTTPWAIT";
 	
 	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>(){};
 	
@@ -72,18 +51,18 @@ public class HttpTask extends WorkflowSystemTask {
 	
 	protected ObjectMapper om = objectMapper();
 
-	protected RestClientManager rcm;
+	protected RestClientManagerHttpWait rcm;
 	
 	protected Configuration config;
 	
 	private String requestParameter;
 	
 	@Inject
-	public HttpTask(RestClientManager rcm, Configuration config) {
+	public HttpWaitTask(RestClientManagerHttpWait rcm, Configuration config) {
 		this(NAME, rcm, config);
 	}
 	
-	public HttpTask(String name, RestClientManager rcm, Configuration config) {
+	public HttpWaitTask(String name, RestClientManagerHttpWait rcm, Configuration config) {
 		super(name);
 		this.rcm = rcm;
 		this.config = config;
@@ -93,44 +72,23 @@ public class HttpTask extends WorkflowSystemTask {
 	
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		logger.info("--------------0------Starting HTTP TASK ");
-		logger.info("--------------0------Starting HTTP TASK NAME =  " + task.getTaskDefName());
-		logger.info("--------------0------Starting HTTP Task Workflow ID =  " + workflow.getWorkflowId());
+		System.out.println("taskid----------------------------------------------------------------"+task.getTaskId());
 		Object request = task.getInputData().get(requestParameter);
 		task.setWorkerId(config.getServerId());
-		String url = null;
-		Input input = om.convertValue(request, Input.class);
-		logger.info("--------------1------URI =" + input.getUri());
 		if(request == null) {
 			String reason = MISSING_REQUEST;
 			task.setReasonForIncompletion(reason);
 			task.setStatus(Status.FAILED);
 			return;
-		} else {
-			if (input.getServiceDiscoveryQuery() != null) {
-				DNSLookup lookup = new DNSLookup();
-				DNSLookup.DNSResponses responses = lookup.lookupService(input.getServiceDiscoveryQuery());
-				if (responses != null) {
-					String address = responses.getResponses()[0].address;
-					int port = responses.getResponses()[0].port;
-					url = "http://" + address + ":" + port;
-				}
-			}
 		}
 		
-		
+		Input input = om.convertValue(request, Input.class);
 		if(input.getUri() == null) {
 			String reason = "Missing HTTP URI.  See documentation for HttpTask for required input parameters";
 			task.setReasonForIncompletion(reason);
 			task.setStatus(Status.FAILED);
 			return;
-		} else {
-			if (url != null) {
-				input.setUri(url + input.getUri());
-				logger.info("--------------2---------- URI = " + input.getUri());
-			}
 		}
-		logger.info("--------------3---------- URI = " + input.getUri());
 		
 		if(input.getMethod() == null) {
 			String reason = "No HTTP method specified";
@@ -139,13 +97,66 @@ public class HttpTask extends WorkflowSystemTask {
 			return;
 		}
 		
+		if(input.getTaskId()!=null)
+		{
+		if(input.getTaskId().equalsIgnoreCase("true"))
+		{
+		  
+		  if(input.getBody()!=null)
+		  {
+		  
+	      int index = input.getBody().toString().indexOf("}");
+		   if(input.getBody().toString()=="{}")
+		   {
+			 input.setBody("{taskid="+task.getTaskId()+"}");
+		   }
+		   else
+		   {
+           input.setBody(input.getBody().toString().substring(0, index) + ", taskid="+task.getTaskId() + input.getBody().toString().substring(index));
+		   }
+	      }
+		  else
+		  {
+			
+			input.setBody("{taskid="+task.getTaskId()+"}");
+		  }
+	    }
+	  }
+	  
+	   if(input.getCurtimestamp()!=null)
+		{
+		if(input.getCurtimestamp().equalsIgnoreCase("true"))
+		{
+		 
+		 
+		  if(input.getBody()!=null)
+		  {
+		
+	      int index = input.getBody().toString().indexOf("}");
+		   if(input.getBody().toString()=="{}")
+		   {
+			 input.setBody("{Curtimestamp="+System.currentTimeMillis()+"}");
+		   }
+		   else
+		   {
+           input.setBody(input.getBody().toString().substring(0, index) + ", Curtimestamp="+System.currentTimeMillis() + input.getBody().toString().substring(index));
+		   }
+	      }
+		  else
+		  {
+			
+			input.setBody("{Curtimestamp="+System.currentTimeMillis()+"}");
+		  }
+	    }
+	  }
+		System.out.println(input.getBody());
 		try {
-			logger.info("--------------4---------- URI = " + input.getUri());
- 			logger.info("--------------4---------- BODY =" + input.getBody());
+			
 			HttpResponse response = httpCall(input);
 			logger.info("response {}, {}", response.statusCode, response.body);
 			if(response.statusCode > 199 && response.statusCode < 300) {
-				task.setStatus(Status.COMPLETED);
+				
+				task.setStatus(Status.IN_PROGRESS);
 			} else {
 				if(response.body != null) {
 					task.setReasonForIncompletion(response.body.toString());
@@ -174,7 +185,6 @@ public class HttpTask extends WorkflowSystemTask {
 	 * @throws Exception If there was an error making http call
 	 */
 	protected HttpResponse httpCall(Input input) throws Exception {
-
 		Client client = rcm.getClient(input);
 
 		if(input.oauthConsumerKey != null) {
@@ -185,7 +195,6 @@ public class HttpTask extends WorkflowSystemTask {
 		}
 
 		Builder builder = client.resource(input.uri).type(MediaType.APPLICATION_JSON);
-
 		if(input.body != null) {
 			builder.entity(input.body);
 		}
@@ -309,6 +318,10 @@ public class HttpTask extends WorkflowSystemTask {
 		
 		private String vipAddress;
 		
+	    private String taskId;
+		
+		private String curtimestamp;
+		
 		private Map<String, Object> headers = new HashMap<>();
 		
 		private String uri;
@@ -320,8 +333,6 @@ public class HttpTask extends WorkflowSystemTask {
 		private String oauthConsumerKey;
 
 		private String oauthConsumerSecret;
-
-		private String serviceDiscoveryQuery;
 
 		/**
 		 * @return the method
@@ -436,13 +447,32 @@ public class HttpTask extends WorkflowSystemTask {
 		public void setOauthConsumerSecret(String oauthConsumerSecret) {
 			this.oauthConsumerSecret = oauthConsumerSecret;
 		}
-
-		public void setServiceDiscoveryQuery(String query){
-			this.serviceDiscoveryQuery = query;
+		
+		/**
+		 * @return the vipAddress
+		 */
+		public String getTaskId() {
+			return taskId;
 		}
 
-		public String getServiceDiscoveryQuery(){
-			return serviceDiscoveryQuery;
+		/**
+		 * @param vipAddress the vipAddress to set
+		 * 
+		 */
+		public void setTaskId(String taskId) {
+			this.taskId = taskId;
+		}
+		
+		public String getCurtimestamp() {
+			return curtimestamp;
+		}
+
+		/**
+		 * @param vipAddress the vipAddress to set
+		 * 
+		 */
+		public void setCurtimestamp(String curtimestamp) {
+			this.curtimestamp = curtimestamp;
 		}
 	}
 }

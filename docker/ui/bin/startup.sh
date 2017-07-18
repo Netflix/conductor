@@ -12,4 +12,4 @@ if [ -z "$WF_SERVER" ];
     echo "using Conductor API server from '$WF_SERVER'"
 fi
 
-nohup node server.js 1>&2 > /app/logs/ui.log
+nohup node server.js
