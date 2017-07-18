@@ -75,11 +75,11 @@ job "conductor" {
       # Specify the maximum resources required to run the job,
       # include CPU, memory, and bandwidth.
       resources {
-        cpu    = 200 # MHz
-        memory = 128 # MB
+        cpu    = 128 # MHz
+        memory = 256 # MB
 
         network {
-          mbits = 1
+          mbits = 4
           port "http" {}
         }
       }
@@ -126,11 +126,11 @@ job "conductor" {
       }
 
       resources {
-        cpu    = 200 # MHz
-        memory = 1000 # MB
+        cpu    = 128 # MHz
+        memory = 512 # MB
 
         network {
-          mbits = 1
+          mbits = 2
           port "http" {
             static = 30000
           }
