@@ -48,6 +48,7 @@ public class TestPropertyFactory {
 	public void test() {
 		
 		int val = PropertyFactory.getInteger("workerB", "pollingInterval", 100).intValue();
+		assertEquals("test-group-", PropertyFactory.getString("allWorkers", "workerNamePrefix", "workflow-worker-"));
 		assertEquals("got: " + val, 2, val);
 		assertEquals(100, PropertyFactory.getInteger("workerB", "propWithoutValue", 100).intValue());
 		
