@@ -20,6 +20,7 @@ package com.netflix.conductor.common.run;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.TimeZone;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -38,6 +39,8 @@ public class TaskSummary {
 	
 	private String workflowId;
 	
+	private String taskId;
+	
 	private String correlationId;
 	
 	private String scheduledTime;
@@ -49,6 +52,8 @@ public class TaskSummary {
 	private String endTime;
 	
 	private Status status;
+	
+	private Map<String, Object> inputData;
 	
 	private String reasonForIncompletion;
 	
@@ -75,6 +80,8 @@ public class TaskSummary {
     	this.taskDefName = task.getTaskDefName();
     	this.taskType = task.getTaskType();
 		this.workflowId = task.getWorkflowInstanceId();
+		this.taskId = task.getTaskId();
+		this.inputData = task.getInputData();
 		this.correlationId = task.getCorrelationId();
 		this.scheduledTime = sdf.format(new Date(task.getScheduledTime()));
 		this.startTime = sdf.format(new Date(task.getStartTime()));
@@ -109,6 +116,20 @@ public class TaskSummary {
 	 */
 	public void setWorkflowId(String workflowId) {
 		this.workflowId = workflowId;
+	}
+	
+	/**
+	 * @return the taskId
+	 */
+	public String getTaskId() {
+		return taskId;
+	}
+
+	/**
+	 * @param taskdd the taskId to set
+	 */
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
 	}
 
 	/**
@@ -197,6 +218,21 @@ public class TaskSummary {
 	 */
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+	
+	/**
+	 * @return the inputData
+	 */
+	public Map<String, Object> getInputData() {
+		return inputData;
+	}
+	
+	/**
+	 * @param inputData the inputData to set
+	 * 
+	 */
+	public void setInputData(Map<String, Object> inputData) {
+		this.inputData = inputData;
 	}
 
 	/**
