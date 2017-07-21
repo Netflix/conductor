@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # startup.sh - startup script for the server docker image
 
 echo "Starting Conductor server"
@@ -11,11 +11,13 @@ export config_file=
 
 if [ -z "$CONFIG_PROP" ];
   then
-    echo "Using an in-memory instance of conductor";
     export config_file=/app/config/config-local.properties
   else
-    echo "Using '$CONFIG_PROP'";
     export config_file=/app/config/$CONFIG_PROP
 fi
 
-nohup java -jar conductor-server-*-all.jar $config_file 1>&2 > /app/logs/server.log
+# Log the configuration settings as defaults
+echo "Starting conductor server with the following defaults: $(cat $config_file | grep = | grep -v '#' | sed ':a;N;$!ba;s/\n/ /g')"
+
+# Run java in the foreground and stream messages directly to stdout
+java -jar conductor-server-*-all.jar $config_file
