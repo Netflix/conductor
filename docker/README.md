@@ -9,7 +9,9 @@ The build process for Java requires 3 docker commands. The first command install
 Building Conductor server:
 
 `docker build --no-cache -t conductor:server-build -f docker/server/Dockerfile.build .`
+
 `docker run --rm -v $(pwd)/server/build:/conductor/server/build conductor:server-build`
+
 `docker build --no-cache -t conductor:server -f docker/server/Dockerfile .`
 
 Building Conductor ui:
@@ -18,23 +20,24 @@ Building Conductor ui:
 
 ## Running Conductor
 
-Use docker-compose to run Conductor.
+Use docker-compose to start and stop Conductor.
 
- - Start: `docker-compose -f docker/docker-compose.yml up -d`
- - Stop: `docker-compose -f docker/docker-compose.yml down`
+ `docker-compose -f docker/docker-compose.yml up -d`
+ 
+ `docker-compose -f docker/docker-compose.yml down`
 
 Environment Variables:
 
- - db (memory | redis | dynomite) - whether to run the data store and search index in memory or externally
- - workflow_dynomite_cluster_hosts - hostname, port and region for the external dynomite data store
- - workflow_dynomite_cluster_name=dyno1 - name of the dynomite cluster
- - workflow_namespace_prefix=conductor - prefix for workflows
- - workflow_namespace_queue_prefix=conductor_queues - prefix for queues
- - queues_dynomite_threads=10 - number of dynomite queue threads
- - queues_dynomite_nonQuorum_port=22122 - port for dynomite queue
- - workflow_elasticsearch_url=es:9300 - host and port to use for elasticsearch index
- - workflow_elasticsearch_index_name=conductor - name for elasticsearch index
- - loadSample=true - whether or not to create kitchensink workflow on initialization
+ - **db** (memory | redis | dynomite) - whether to run the data store and search index in memory or externally
+ - **workflow_dynomite_cluster_hosts** - hostname, port and region for the external dynomite data store
+ - **workflow_dynomite_cluster_name** - name of the dynomite cluster
+ - **workflow_namespace_prefix** - prefix for workflows
+ - **workflow_namespace_queue_prefix** - prefix for queues
+ - **queues_dynomite_threads** - number of dynomite queue threads
+ - **queues_dynomite_nonQuorum_port** - port for dynomite queue
+ - **workflow_elasticsearch_url** - host and port to use for elasticsearch index
+ - **workflow_elasticsearch_index_name** - name for elasticsearch index
+ - **loadSample** - whether or not to create kitchensink workflow on initialization
 
 ## Inspecting Running Conductor Containers
 
