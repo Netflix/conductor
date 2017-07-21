@@ -6,7 +6,7 @@ This dockerfile runs using dynomite and elasticsearch. Conductor is split into b
 
 The build process for Java requires 3 docker commands. The first command installs the server source code onto to the Java JDK image.  The second command executes the build process and writes the JAR files back to the project folder at server/build.  Finally, the third command takes the built JAR files and installs them onto the Java 8 JRE Alpine image.  The end result should be a runtime image which is roughly 150 MB in size.
 
-Building Conductor server:
+**server:**
 
 `docker build --no-cache -t conductor:server-build -f docker/server/Dockerfile.build .`
 
@@ -14,7 +14,7 @@ Building Conductor server:
 
 `docker build --no-cache -t conductor:server -f docker/server/Dockerfile .`
 
-Building Conductor ui:
+**ui:**
 
 `docker build --no-cache -t conductor:ui -f docker/ui/Dockerfile .`
 
