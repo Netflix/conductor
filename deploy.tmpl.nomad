@@ -22,7 +22,6 @@ job "conductor" {
    max_parallel = 1
   }
 
-
   group "ui" {
 
     count = 1
@@ -51,7 +50,7 @@ job "conductor" {
       }
 
       env {
-        WF_SERVER = "http://${NOMAD_JOB_NAME}-server.service:30000/api/"
+        WF_SERVER = "http://${NOMAD_JOB_NAME}-server.service.<TLD>:30000/api/"
       }
 
       # The service block tells Nomad how to register this service
@@ -110,8 +109,8 @@ job "conductor" {
       
       env {
         db = "dynomite"
-        workflow.dynomite.cluster.hosts = "${NOMAD_JOB_NAME}-db.service:8102:us-east-1c"
-        workflow.elasticsearch.mode = "memory"
+        workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
+        workflow_elasticsearch_mode = "memory"
       }
 
       service {
@@ -154,13 +153,7 @@ job "conductor" {
         }
         labels {
             service = "${NOMAD_JOB_NAME}"
-        }
-        logging {
-          type = "syslog"
-          config {
-            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
-          }
-        }
+        }        
       }
 
       service {
