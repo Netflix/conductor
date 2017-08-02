@@ -159,10 +159,10 @@ public class ConductorServer {
 			jedis = new JedisMock();
 			try {
 				EmbeddedElasticSearch.start();
-				if(System.getProperty("workflow.elasticsearch.url") == null) {
+				if(cc.getProperty("workflow.elasticsearch.url", null) == null) {
 					System.setProperty("workflow.elasticsearch.url", "localhost:9300");
 				}
-				if(System.getProperty("workflow.elasticsearch.index.name") == null) {
+				if(cc.getProperty("workflow.elasticsearch.index.name", null) == null) {
 					System.setProperty("workflow.elasticsearch.index.name", "conductor");
 				}
 			} catch (Exception e) {

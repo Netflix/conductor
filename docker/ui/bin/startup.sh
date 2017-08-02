@@ -12,4 +12,5 @@ if [ -z "$WF_SERVER" ];
     echo "using Conductor API server from '$WF_SERVER'"
 fi
 
-nohup node server.js 1>&2 > /app/logs/ui.log
+# Run server.js in the foreground, sending messages to stdout
+node server.js
