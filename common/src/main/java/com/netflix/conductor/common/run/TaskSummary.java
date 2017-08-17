@@ -39,8 +39,6 @@ public class TaskSummary {
 	
 	private String workflowId;
 	
-	private String taskId;
-	
 	private String correlationId;
 	
 	private String scheduledTime;
@@ -71,6 +69,8 @@ public class TaskSummary {
 	
 	private String taskId;
 	
+    private String referenceTaskName;
+
 	public TaskSummary(Task task) {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -79,8 +79,8 @@ public class TaskSummary {
     	this.taskId = task.getTaskId();
     	this.taskDefName = task.getTaskDefName();
     	this.taskType = task.getTaskType();
+    	this.referenceTaskName = task.getReferenceTaskName();
 		this.workflowId = task.getWorkflowInstanceId();
-		this.taskId = task.getTaskId();
 		this.inputData = task.getInputData();
 		this.correlationId = task.getCorrelationId();
 		this.scheduledTime = sdf.format(new Date(task.getScheduledTime()));
@@ -118,20 +118,6 @@ public class TaskSummary {
 		this.workflowId = workflowId;
 	}
 	
-	/**
-	 * @return the taskId
-	 */
-	public String getTaskId() {
-		return taskId;
-	}
-
-	/**
-	 * @param taskdd the taskId to set
-	 */
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
-	}
-
 	/**
 	 * @return the correlationId
 	 */
@@ -357,5 +343,17 @@ public class TaskSummary {
 		this.taskId = taskId;
 	}
 	
-	
+    /**	
+	 * @return the referenceTaskName
+	 */
+	public String getReferenceTaskName() {
+		return referenceTaskName;
+	}
+
+	/**
+	 * @param referenceTaskName the referenceTaskName to set
+	 */
+	public void setReferenceTaskName(String referenceTaskName) {
+		this.referenceTaskName = referenceTaskName;
+	}
 }
