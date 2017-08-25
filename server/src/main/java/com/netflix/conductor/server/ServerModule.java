@@ -40,6 +40,7 @@ import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
 import com.netflix.conductor.dao.index.ElasticSearchDAO;
 import com.netflix.conductor.dao.index.ElasticsearchModule;
+import com.netflix.conductor.dao.mysql.MySQLESWorkflowModule;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.redis.DynoShardSupplier;
 
@@ -65,12 +66,15 @@ public class ServerModule extends AbstractModule {
 	
 	private ConductorConfig config;
 	
-	public ServerModule(JedisCommands jedis, HostSupplier hs, ConductorConfig config) {
+	private ConductorServer.DB db;
+
+	public ServerModule(JedisCommands jedis, HostSupplier hs, ConductorConfig config, ConductorServer.DB db) {
 		this.dynoConn = jedis;
 		this.hs = hs;
 		this.config = config;
 		this.region = config.getRegion();
 		this.localRack = config.getAvailabilityZone();
+		this.db = db;
 		
 	}
 	
@@ -80,20 +84,26 @@ public class ServerModule extends AbstractModule {
 		configureExecutorService();
 		
 		bind(Configuration.class).toInstance(config);
-		String localDC = localRack;
-		localDC = localDC.replaceAll(region, "");
-		DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
-		DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
-		
-		install(new ElasticsearchModule());
-		bind(MetadataDAO.class).to(RedisMetadataDAO.class);
-		bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
-		bind(DynoQueueDAO.class).toInstance(queueDao);
-		bind(QueueDAO.class).to(DynoQueueDAO.class);
-		bind(IndexDAO.class).to(ElasticSearchDAO.class);
-		
-		DynoProxy proxy = new DynoProxy(dynoConn);
-		bind(DynoProxy.class).toInstance(proxy);
+
+		if (db == ConductorServer.DB.mysql) {
+			install(new MySQLESWorkflowModule());
+			install(new ElasticsearchModule());
+			bind(IndexDAO.class).to(ElasticSearchDAO.class);
+		} else {
+			String localDC = localRack;
+			localDC = localDC.replaceAll(region, "");
+			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
+			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
+
+			install(new ElasticsearchModule());
+			bind(MetadataDAO.class).to(RedisMetadataDAO.class);
+			bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
+			bind(DynoQueueDAO.class).toInstance(queueDao);
+			bind(QueueDAO.class).to(DynoQueueDAO.class);
+			bind(IndexDAO.class).to(ElasticSearchDAO.class);
+			DynoProxy proxy = new DynoProxy(dynoConn);
+			bind(DynoProxy.class).toInstance(proxy);
+		}
 		
 		install(new CoreModule());
 		install(new JerseyModule());
