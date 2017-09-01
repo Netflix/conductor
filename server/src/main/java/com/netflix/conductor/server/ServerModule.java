@@ -18,13 +18,9 @@
  */
 package com.netflix.conductor.server;
 
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.netflix.conductor.contribs.NatsModule;
 import com.netflix.conductor.contribs.http.HttpTask;
 import com.netflix.conductor.contribs.http.HttpWaitTask;
 import com.netflix.conductor.contribs.http.RestClientManager;
@@ -44,8 +40,14 @@ import com.netflix.conductor.dao.index.ElasticSearchDAO;
 import com.netflix.conductor.dao.index.ElasticsearchModule;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.redis.DynoShardSupplier;
-
+import io.nats.client.ConnectionFactory;
 import redis.clients.jedis.JedisCommands;
+
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Viren
@@ -80,7 +82,13 @@ public class ServerModule extends AbstractModule {
 	protected void configure() {
 		
 		configureExecutorService();
-		
+
+		// Merge system properties and environments into single map
+		Properties sysProps = new Properties();
+		sysProps.putAll(System.getProperties());
+		sysProps.putAll(System.getenv());
+		bind(ConnectionFactory.class).toInstance(new ConnectionFactory(sysProps));
+
 		bind(Configuration.class).toInstance(config);
 		String localDC = localRack;
 		localDC = localDC.replaceAll(region, "");
@@ -99,6 +107,7 @@ public class ServerModule extends AbstractModule {
 		
 		install(new CoreModule());
 		install(new JerseyModule());
+		install(new NatsModule());
 		new HttpTask(new RestClientManager(), config);
 		new HttpWaitTask(new RestClientManagerHttpWait(), config);
 		new JsonJqTransform();

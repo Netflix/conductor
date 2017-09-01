@@ -9,6 +9,7 @@ dependencies {
 	compile 'dnsjava:dnsjava:2.1.8'
 
 	compile 'net.thisptr:jackson-jq:+'
+	compile 'io.nats:jnats:1.0'
 
 	compile 'com.sun.jersey.contribs.jersey-oauth:oauth-client:1.19.+'
 	compile 'com.sun.jersey.contribs.jersey-oauth:oauth-signature:1.19.+'
