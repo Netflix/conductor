@@ -39,6 +39,10 @@ dependencies {
 	
 	//In memory
 	compile 'org.rarefiedredis.redis:redis-java:0.0.17'
+	
+	//For eureka client
+	compile "com.netflix.governator:governator:1.12.10"
+	runtime 'org.slf4j:slf4j-simple:1.7.7'
 }
 
 shadowJar {

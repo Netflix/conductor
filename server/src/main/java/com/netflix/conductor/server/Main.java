@@ -24,12 +24,26 @@ import java.util.Properties;
 
 import org.apache.log4j.PropertyConfigurator;
 
+import com.netflix.appinfo.ApplicationInfoManager;
+import com.netflix.appinfo.EurekaInstanceConfig;
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.appinfo.MyDataCenterInstanceConfig;
+import com.netflix.appinfo.providers.EurekaConfigBasedInstanceInfoProvider;
+import com.netflix.discovery.DefaultEurekaClientConfig;
+import com.netflix.discovery.DiscoveryClient;
+import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.EurekaClientConfig;
+import com.netflix.appinfo.InstanceInfo.InstanceStatus;
+
 /**
  * @author Viren
  * Entry point for the server
  */
 public class Main {
 	
+	private static ApplicationInfoManager applicationInfoManager;
+    private static EurekaClient eurekaClient;
+    
 	public static void main(String[] args) throws Exception {
 		
 		if(args.length > 0) {
@@ -57,10 +71,37 @@ public class Main {
 		System.out.println(" / __/ _ \\| '_ \\ / _` | | | |/ __| __/ _ \\| '__|");
 		System.out.println("| (_| (_) | | | | (_| | |_| | (__| || (_) | |   ");
 		System.out.println(" \\___\\___/|_| |_|\\__,_|\\__,_|\\___|\\__\\___/|_|   ");
-		System.out.println("\n\n\n");                                                
+		System.out.println("\n\n\n");
+
+		if(config.getProperty("eureka.registration.enabled", "false").equals("true")) {
+			System.out.println("Registering conductor as eureka client");
+			//System.out.println("IP Address => " + InetAddress.getLocalHost().getHostAddress());
+			ApplicationInfoManager applicationInfoManager = initializeApplicationInfoManager(new MyDataCenterInstanceConfig());
+			EurekaClient eurekaClient = initializeEurekaClient(applicationInfoManager, new DefaultEurekaClientConfig());
+			applicationInfoManager.setInstanceStatus(InstanceStatus.UP);
+			System.out.println("Registerted as eureka client");
+		}
 		
 		server.start(config.getIntProperty("port", 8080), true);
 		
 		
 	}
+	
+
+    private static synchronized ApplicationInfoManager initializeApplicationInfoManager(EurekaInstanceConfig instanceConfig) {
+        if (applicationInfoManager == null) {
+            InstanceInfo instanceInfo = new EurekaConfigBasedInstanceInfoProvider(instanceConfig).get();
+            applicationInfoManager = new ApplicationInfoManager(instanceConfig, instanceInfo);
+        }
+
+        return applicationInfoManager;
+    }
+
+    private static synchronized EurekaClient initializeEurekaClient(ApplicationInfoManager applicationInfoManager, EurekaClientConfig clientConfig) {
+        if (eurekaClient == null) {
+            eurekaClient = new DiscoveryClient(applicationInfoManager, clientConfig);
+        }
+
+        return eurekaClient;
+    }
 }
