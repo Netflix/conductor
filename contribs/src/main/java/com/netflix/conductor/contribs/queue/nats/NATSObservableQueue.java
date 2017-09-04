@@ -20,15 +20,17 @@ package com.netflix.conductor.contribs.queue.nats;
 
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import io.nats.client.NUID;
 import io.nats.stan.Connection;
+import io.nats.stan.SubscriptionOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +40,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class NATSObservableQueue implements ObservableQueue {
     private static Logger logger = LoggerFactory.getLogger(NATSObservableQueue.class);
+    private final SubscriptionOptions.Builder builder = new SubscriptionOptions.Builder();
     private LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     private static final String TYPE = "nats";
     private Connection connection;
@@ -49,12 +52,13 @@ public class NATSObservableQueue implements ObservableQueue {
         this.subject = subject;
         this.qgroup = qgroup;
         try {
+            SubscriptionOptions.Builder builder = new SubscriptionOptions.Builder().startWithLastReceived();
             connection.subscribe(subject, qgroup, natMsg -> {
                 Message dstMsg = new Message();
-                dstMsg.setId(UUID.randomUUID().toString());
+                dstMsg.setId(NUID.nextGlobal());
                 dstMsg.setPayload(new String(natMsg.getData()));
                 messages.add(dstMsg);
-            });
+            }, builder.build());
         } catch (Exception e) {
             logger.error("Unable to start subscription for " + subject + " @ " + qgroup, e);
         }
@@ -88,12 +92,12 @@ public class NATSObservableQueue implements ObservableQueue {
 
     @Override
     public String getURI() {
-        return subject; // TODO Full ?
+        return subject;
     }
 
     @Override
     public List<String> ack(List<Message> messages) {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override

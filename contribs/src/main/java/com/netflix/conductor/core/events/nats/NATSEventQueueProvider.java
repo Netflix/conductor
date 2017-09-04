@@ -19,6 +19,7 @@
 package com.netflix.conductor.core.events.nats;
 
 import com.netflix.conductor.contribs.queue.nats.NATSObservableQueue;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
@@ -44,10 +45,24 @@ public class NATSEventQueueProvider implements EventQueueProvider {
     private ConnectionFactory connectionFactory;
 
     @Inject
-    public NATSEventQueueProvider(ConnectionFactory connectionFactory) {
-        logger.info("NATSEventQueueProvider initialized...");
-        this.connectionFactory = connectionFactory;
+    public NATSEventQueueProvider(Configuration config) {
+        logger.info("NATSEventQueueProvider ...");
+
+        // Get NATS Streaming options
+        String clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
+        String clientId = config.getProperty("io.nats.streaming.clientId", "test-client");
+        String natsUrl = config.getProperty("io.nats.streaming.url", "nats://localhost:4222");
+
+        logger.info("NATS Streaming clusterId=" + clusterId + ", clientId=" + clientId + ", natsUrl=" + natsUrl);
+
+        // Init NATS Streaming API
+        this.connectionFactory = new ConnectionFactory();
+        this.connectionFactory.setClusterId(clusterId);
+        this.connectionFactory.setClientId(clientId);
+        this.connectionFactory.setNatsUrl(natsUrl);
+
         EventQueues.registerProvider(QueueType.nats, this);
+        logger.info("NATSEventQueueProvider initialized...");
     }
 
     @Override
@@ -56,14 +71,15 @@ public class NATSEventQueueProvider implements EventQueueProvider {
             Connection connection = null;
             try {
                 connection = connectionFactory.createConnection();
-            } catch (Exception e) {
-                logger.error("Unable to create connection for {}", queueURI);
-            }
 
-            // Using queueURI as the subject and queue group.
-            // All subscribers with the same queue name will form the queue group and only one member of the group
-            // will be selected to receive any given message asynchronously.
-            return new NATSObservableQueue(connection, queueURI, queueURI);
+                // Using queueURI as the subject and queue group.
+                // All subscribers with the same queue name will form the queue group and only one member of the group
+                // will be selected to receive any given message asynchronously.
+                return new NATSObservableQueue(connection, queueURI, queueURI);
+            } catch (Exception e) {
+                logger.error("Unable to create connection for " + queueURI, e);
+                throw new RuntimeException(e);
+            }
         });
     }
 }
