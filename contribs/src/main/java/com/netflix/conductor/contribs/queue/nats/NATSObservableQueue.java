@@ -20,7 +20,7 @@ package com.netflix.conductor.contribs.queue.nats;
 
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.client.Connection;
+import io.nats.stan.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -47,12 +47,17 @@ public class NATSObservableQueue implements ObservableQueue {
     public NATSObservableQueue(Connection connection, String subject, String qgroup) {
         this.connection = connection;
         this.subject = subject;
-        connection.subscribe(subject, qgroup, natMsg -> {
-            Message dstMsg = new Message();
-            dstMsg.setId(UUID.randomUUID().toString());
-            dstMsg.setPayload(new String(natMsg.getData()));
-            messages.add(dstMsg);
-        });
+        this.qgroup = qgroup;
+        try {
+            connection.subscribe(subject, qgroup, natMsg -> {
+                Message dstMsg = new Message();
+                dstMsg.setId(UUID.randomUUID().toString());
+                dstMsg.setPayload(new String(natMsg.getData()));
+                messages.add(dstMsg);
+            });
+        } catch (Exception e) {
+            logger.error("Unable to start subscription for " + subject + " @ " + qgroup, e);
+        }
     }
 
     @Override

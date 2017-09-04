@@ -23,14 +23,13 @@ import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.client.Connection;
-import io.nats.client.ConnectionFactory;
+import io.nats.stan.Connection;
+import io.nats.stan.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -57,7 +56,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
             Connection connection = null;
             try {
                 connection = connectionFactory.createConnection();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error("Unable to create connection for {}", queueURI);
             }
 
