@@ -75,7 +75,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
                 // Using queueURI as the subject and queue group.
                 // All subscribers with the same queue name will form the queue group and only one member of the group
                 // will be selected to receive any given message asynchronously.
-                return new NATSObservableQueue(connection, queueURI, queueURI);
+                return new NATSObservableQueue(connection, queueURI, "conductor");
             } catch (Exception e) {
                 logger.error("Unable to create connection for " + queueURI, e);
                 throw new RuntimeException(e);

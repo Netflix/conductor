@@ -71,7 +71,7 @@ public class NATSObservableQueue implements ObservableQueue {
 
     private Observable.OnSubscribe<Message> getOnSubscribe() {
         return subscriber -> {
-            Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS); //TODO Configuration ?
+            Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
             interval.flatMap((Long x) -> {
                 List<Message> available = new LinkedList<>();
                 messages.drainTo(available);
@@ -114,7 +114,6 @@ public class NATSObservableQueue implements ObservableQueue {
 
     @Override
     public void setUnackTimeout(Message message, long unackTimeout) {
-
     }
 
     @Override

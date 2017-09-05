@@ -79,7 +79,6 @@ task server(type: JavaExec) {
   systemProperty 'io.nats.streaming.clientId', 'conductor-1'
   systemProperty 'io.nats.streaming.url', 'nats://localhost:4222'
 
-  systemProperty 'decider.sweep.frequency.seconds', '10'
   systemProperty 'workflow.elasticsearch.url', 'localhost:9300'
   systemProperty 'loadSample', 'true'
 
