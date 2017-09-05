@@ -46,7 +46,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
     @Inject
     public NATSEventQueueProvider(Configuration config) {
-        logger.info("NATSEventQueueProvider ...");
+        logger.info("NATS Event Queue Provider init");
 
         // Get NATS Streaming options
         String clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
@@ -56,19 +56,19 @@ public class NATSEventQueueProvider implements EventQueueProvider {
         logger.info("NATS Streaming clusterId=" + clusterId + ", clientId=" + clientId + ", natsUrl=" + natsUrl);
 
         // Init NATS Streaming API
-        this.connectionFactory = new ConnectionFactory();
-        this.connectionFactory.setClusterId(clusterId);
-        this.connectionFactory.setClientId(clientId);
-        this.connectionFactory.setNatsUrl(natsUrl);
+        connectionFactory = new ConnectionFactory();
+        connectionFactory.setClusterId(clusterId);
+        connectionFactory.setClientId(clientId);
+        connectionFactory.setNatsUrl(natsUrl);
 
         EventQueues.registerProvider(QueueType.nats, this);
-        logger.info("NATSEventQueueProvider initialized...");
+        logger.info("NATS Event Queue Provider initialized...");
     }
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
         return queues.computeIfAbsent(queueURI, q -> {
-            Connection connection = null;
+            Connection connection;
             try {
                 connection = connectionFactory.createConnection();
 
