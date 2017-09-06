@@ -44,6 +44,8 @@ public class NATSEventQueueProvider implements EventQueueProvider {
     private static Logger logger = LoggerFactory.getLogger(NATSEventQueueProvider.class);
     private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
     private Connection connection;
+    private String queueGroup;
+    private String durableName;
 
     @Inject
     public NATSEventQueueProvider(Configuration config) {
@@ -53,8 +55,12 @@ public class NATSEventQueueProvider implements EventQueueProvider {
         String clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
         String clientId = config.getProperty("io.nats.streaming.clientId", UUID.randomUUID().toString());
         String natsUrl = config.getProperty("io.nats.streaming.url", "nats://localhost:4222");
+        durableName = config.getProperty("io.nats.streaming.durableName", "conductor");
+        queueGroup = config.getProperty("io.nats.streaming.queueGroup", "conductor");
 
-        logger.info("NATS Streaming clusterId=" + clusterId + ", clientId=" + clientId + ", natsUrl=" + natsUrl);
+        logger.info("NATS Streaming clusterId=" + clusterId +
+                ", clientId=" + clientId + ", natsUrl=" + natsUrl +
+                ", durableName=" + durableName + ", queueGroup=" + queueGroup);
 
         // Init NATS Streaming API
         ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -75,6 +81,6 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
-        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(connection, queueURI, "conductor"));
+        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(connection, queueURI, queueGroup, durableName));
     }
 }

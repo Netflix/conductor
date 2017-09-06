@@ -46,15 +46,17 @@ public class NATSObservableQueue implements ObservableQueue {
     private Connection connection;
     private String subject;
 
-    public NATSObservableQueue(Connection connection, String subject, String qgroup) {
+    public NATSObservableQueue(Connection connection, String subject, String qgroup, String durableName) {
         this.connection = connection;
         this.subject = subject;
         try {
-            SubscriptionOptions.Builder builder = new SubscriptionOptions.Builder().startWithLastReceived();
+            SubscriptionOptions.Builder builder = new SubscriptionOptions.Builder().setDurableName(durableName);
             connection.subscribe(subject, qgroup, natMsg -> {
                 Message dstMsg = new Message();
                 dstMsg.setId(NUID.nextGlobal());
                 dstMsg.setPayload(new String(natMsg.getData()));
+
+                logger.info("Received message from NATs\n" + new String(natMsg.getData()));
                 messages.add(dstMsg);
             }, builder.build());
         } catch (Exception e) {
