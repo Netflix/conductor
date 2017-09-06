@@ -45,12 +45,10 @@ public class NATSObservableQueue implements ObservableQueue {
     private static final String TYPE = "nats";
     private Connection connection;
     private String subject;
-    private String qgroup;
 
     public NATSObservableQueue(Connection connection, String subject, String qgroup) {
         this.connection = connection;
         this.subject = subject;
-        this.qgroup = qgroup;
         try {
             SubscriptionOptions.Builder builder = new SubscriptionOptions.Builder().startWithLastReceived();
             connection.subscribe(subject, qgroup, natMsg -> {

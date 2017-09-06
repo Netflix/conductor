@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -42,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NATSEventQueueProvider implements EventQueueProvider {
     private static Logger logger = LoggerFactory.getLogger(NATSEventQueueProvider.class);
     private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-    private ConnectionFactory connectionFactory;
+    private Connection connection;
 
     @Inject
     public NATSEventQueueProvider(Configuration config) {
@@ -50,16 +51,23 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
         // Get NATS Streaming options
         String clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
-        String clientId = config.getProperty("io.nats.streaming.clientId", "test-client");
+        String clientId = config.getProperty("io.nats.streaming.clientId", UUID.randomUUID().toString());
         String natsUrl = config.getProperty("io.nats.streaming.url", "nats://localhost:4222");
 
         logger.info("NATS Streaming clusterId=" + clusterId + ", clientId=" + clientId + ", natsUrl=" + natsUrl);
 
         // Init NATS Streaming API
-        connectionFactory = new ConnectionFactory();
+        ConnectionFactory connectionFactory = new ConnectionFactory();
         connectionFactory.setClusterId(clusterId);
         connectionFactory.setClientId(clientId);
         connectionFactory.setNatsUrl(natsUrl);
+
+        try {
+            connection = connectionFactory.createConnection();
+        } catch (Exception e) {
+            logger.error("Unable to create NATS Streaming Connection", e);
+            throw new RuntimeException(e);
+        }
 
         EventQueues.registerProvider(QueueType.nats, this);
         logger.info("NATS Event Queue Provider initialized...");
@@ -67,19 +75,6 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
-        return queues.computeIfAbsent(queueURI, q -> {
-            Connection connection;
-            try {
-                connection = connectionFactory.createConnection();
-
-                // Using queueURI as the subject and queue group.
-                // All subscribers with the same queue name will form the queue group and only one member of the group
-                // will be selected to receive any given message asynchronously.
-                return new NATSObservableQueue(connection, queueURI, "conductor");
-            } catch (Exception e) {
-                logger.error("Unable to create connection for " + queueURI, e);
-                throw new RuntimeException(e);
-            }
-        });
+        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(connection, queueURI, "conductor"));
     }
 }

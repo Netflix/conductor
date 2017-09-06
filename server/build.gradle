@@ -74,7 +74,7 @@ configurations.grettyRunnerTomcat8 {
 build.dependsOn('shadowJar')
 
 task server(type: JavaExec) {
-  setDebug true
+  //setDebug true
 
   // Configure NATS Streaming client
   systemProperty 'io.nats.streaming.clusterId', 'test-cluster'
