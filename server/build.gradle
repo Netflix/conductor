@@ -39,6 +39,9 @@ dependencies {
 	
 	//In memory
 	compile 'org.rarefiedredis.redis:redis-java:0.0.17'
+
+    // JNA library for EmbeddedElasticSearch
+    compile 'net.java.dev.jna:jna:4.1.0'
 }
 
 shadowJar {
@@ -78,7 +81,7 @@ task server(type: JavaExec) {
 
   // Configure NATS Streaming client
   systemProperty 'io.nats.streaming.clusterId', 'test-cluster'
-  systemProperty 'io.nats.streaming.clientId', 'conductor-1'
+  systemProperty 'io.nats.streaming.clientId', 'conductor'
   systemProperty 'io.nats.streaming.url', 'nats://localhost:4222'
 
   systemProperty 'workflow.elasticsearch.url', 'localhost:9300'
