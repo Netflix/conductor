@@ -58,7 +58,7 @@ public class NATSObservableQueue implements ObservableQueue {
 
     @Override
     public Observable<Message> observe() {
-        logger.info("observe called for " + subject + ". messages available=" + messages.size());
+        logger.info("observe called for {}", subject);
         if (subscription == null) {
             logger.info("No subscription. Creating new one");
             try {
@@ -70,7 +70,7 @@ public class NATSObservableQueue implements ObservableQueue {
                     dstMsg.setId(NUID.nextGlobal());
                     dstMsg.setPayload(payload);
 
-                    logger.trace(String.format("Received message for " + subject + ":%s\nPayload: %s", natMsg.toString(), payload));
+                    logger.trace(String.format("Received message for %s:%s\nPayload: %s", subject, natMsg.toString(), payload));
                     messages.add(dstMsg);
                 }, builder.build());
             } catch (Exception e) {
