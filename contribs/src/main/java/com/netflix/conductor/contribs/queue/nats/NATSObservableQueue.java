@@ -22,6 +22,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import io.nats.client.NUID;
 import io.nats.stan.Connection;
+import io.nats.stan.Subscription;
 import io.nats.stan.SubscriptionOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,37 +41,46 @@ import java.util.concurrent.TimeUnit;
  */
 public class NATSObservableQueue implements ObservableQueue {
     private static Logger logger = LoggerFactory.getLogger(NATSObservableQueue.class);
-    private final SubscriptionOptions.Builder builder = new SubscriptionOptions.Builder();
     private LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     private static final String TYPE = "nats";
     private Connection connection;
+    private Subscription subscription;
+    private String durableName;
     private String subject;
+    private String qgroup;
 
     public NATSObservableQueue(Connection connection, String subject, String qgroup, String durableName) {
         this.connection = connection;
+        this.durableName = durableName;
         this.subject = subject;
-        try {
-            SubscriptionOptions.Builder builder = new SubscriptionOptions.Builder().setDurableName(durableName);
-            connection.subscribe(subject, qgroup, natMsg -> {
-                Message dstMsg = new Message();
-                dstMsg.setId(NUID.nextGlobal());
-                dstMsg.setPayload(new String(natMsg.getData()));
-
-                logger.info("Received message from NATs\n" + new String(natMsg.getData()));
-                messages.add(dstMsg);
-            }, builder.build());
-        } catch (Exception e) {
-            logger.error("Unable to start subscription for " + subject + " @ " + qgroup, e);
-        }
+        this.qgroup = qgroup;
     }
 
     @Override
     public Observable<Message> observe() {
-        return Observable.create(getOnSubscribe());
-    }
+        logger.info("observe called for " + subject + ". messages available=" + messages.size());
+        if (subscription == null) {
+            logger.info("No subscription. Creating new one");
+            try {
+                SubscriptionOptions.Builder builder = new SubscriptionOptions.Builder().setDurableName(durableName);
+                subscription = connection.subscribe(subject, qgroup, natMsg -> {
+                    String payload = new String(natMsg.getData());
 
-    private Observable.OnSubscribe<Message> getOnSubscribe() {
-        return subscriber -> {
+                    Message dstMsg = new Message();
+                    dstMsg.setId(NUID.nextGlobal());
+                    dstMsg.setPayload(payload);
+
+                    logger.trace(String.format("Received message for " + subject + ":%s\nPayload: %s", natMsg.toString(), payload));
+                    messages.add(dstMsg);
+                }, builder.build());
+            } catch (Exception e) {
+                String error = "Unable to start subscription for " + subject + " @ " + qgroup;
+                logger.error(error, e);
+                throw new RuntimeException(error);
+            }
+        }
+
+        Observable.OnSubscribe<Message> subscribe = subscriber -> {
             Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
             interval.flatMap((Long x) -> {
                 List<Message> available = new LinkedList<>();
@@ -78,6 +88,8 @@ public class NATSObservableQueue implements ObservableQueue {
                 return Observable.from(available);
             }).subscribe(subscriber::onNext, subscriber::onError);
         };
+
+        return Observable.create(subscribe);
     }
 
     @Override
@@ -104,12 +116,12 @@ public class NATSObservableQueue implements ObservableQueue {
     public void publish(List<Message> messages) {
         messages.forEach(message -> {
             try {
+                logger.trace(String.format("Publishing message to %s subject:\n%s", subject, message.getPayload()));
                 connection.publish(subject, message.getPayload().getBytes());
             } catch (IOException e) {
-                logger.error("Failed to publish message {}", message);
+                logger.error("Failed to publish message " + message);
             }
         });
-
     }
 
     @Override
@@ -118,6 +130,6 @@ public class NATSObservableQueue implements ObservableQueue {
 
     @Override
     public long size() {
-        return 0;
+        return messages.size();
     }
 }
