@@ -24,15 +24,15 @@ import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.stan.Connection;
-import io.nats.stan.ConnectionFactory;
+import io.nats.client.Connection;
+import io.nats.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -42,36 +42,21 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class NATSEventQueueProvider implements EventQueueProvider {
     private static Logger logger = LoggerFactory.getLogger(NATSEventQueueProvider.class);
-    private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
+    protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
     private Connection connection;
-    private String queueGroup;
-    private String durableName;
 
     @Inject
     public NATSEventQueueProvider(Configuration config) {
         logger.info("NATS Event Queue Provider init");
 
-        // Get NATS Streaming options
-        String clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
-        String clientId = config.getProperty("io.nats.streaming.clientId", UUID.randomUUID().toString());
-        String natsUrl = config.getProperty("io.nats.streaming.url", "nats://localhost:4222");
-        durableName = config.getProperty("io.nats.streaming.durableName", "conductor");
-        queueGroup = config.getProperty("io.nats.streaming.queueGroup", "conductor");
-
-        logger.info("NATS Streaming clusterId=" + clusterId +
-                ", clientId=" + clientId + ", natsUrl=" + natsUrl +
-                ", durableName=" + durableName + ", queueGroup=" + queueGroup);
-
-        // Init NATS Streaming API
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setClusterId(clusterId);
-        connectionFactory.setClientId(clientId);
-        connectionFactory.setNatsUrl(natsUrl);
-
+        // Init NATS API
+        Properties props = new Properties();
+        props.putAll(config.getAll());
+        ConnectionFactory connectionFactory = new ConnectionFactory(props);
         try {
             connection = connectionFactory.createConnection();
         } catch (Exception e) {
-            logger.error("Unable to create NATS Streaming Connection", e);
+            logger.error("Unable to create NATS Connection", e);
             throw new RuntimeException(e);
         }
 
@@ -81,6 +66,6 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
-        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(connection, queueURI, queueGroup, durableName));
+        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(connection, queueURI));
     }
 }

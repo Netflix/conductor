@@ -19,7 +19,7 @@
 package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.core.events.nats.NATSEventQueueProvider;
+import com.netflix.conductor.core.events.nats.NATSStreamEventQueueProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,13 +28,13 @@ import org.slf4j.LoggerFactory;
  * @author Oleksiy Lysak
  *
  */
-public class NatsModule extends AbstractModule {
-    private static Logger logger = LoggerFactory.getLogger(NatsModule.class);
+public class NatsStreamModule extends AbstractModule {
+    private static Logger logger = LoggerFactory.getLogger(NatsStreamModule.class);
 
 	@Override
 	protected void configure() {
-		bind(NATSEventQueueProvider.class).asEagerSingleton();
-		logger.info("NATS Module configured ...");
+		bind(NATSStreamEventQueueProvider.class).asEagerSingleton();
+		logger.info("NATS Streaming Module configured ...");
 	}
 
 }

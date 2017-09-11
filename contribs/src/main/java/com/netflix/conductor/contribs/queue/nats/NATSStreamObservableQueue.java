@@ -21,8 +21,9 @@ package com.netflix.conductor.contribs.queue.nats;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.client.AsyncSubscription;
-import io.nats.client.Connection;
+import io.nats.stan.Connection;
+import io.nats.stan.Subscription;
+import io.nats.stan.SubscriptionOptions;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +37,16 @@ import java.util.List;
  * @author Oleksiy Lysak
  *
  */
-public class NATSObservableQueue extends NATSAbstractQueue implements ObservableQueue {
-    private static Logger logger = LoggerFactory.getLogger(NATSObservableQueue.class);
+public class NATSStreamObservableQueue extends NATSAbstractQueue implements ObservableQueue {
+    private static Logger logger = LoggerFactory.getLogger(NATSStreamObservableQueue.class);
     private Connection connection;
-    private AsyncSubscription subscription;
+    private Subscription subscription;
+    private String durableName;
 
-    public NATSObservableQueue(Connection connection, String queueURI) {
+    public NATSStreamObservableQueue(Connection connection, String queueURI, String durableName) {
         super(queueURI);
         this.connection = connection;
+        this.durableName = durableName;
     }
 
     @Override
@@ -52,15 +55,18 @@ public class NATSObservableQueue extends NATSAbstractQueue implements Observable
         if (subscription == null) {
             logger.info("No subscription. Creating a new one");
             try {
+                SubscriptionOptions subscriptionOptions = new SubscriptionOptions
+                        .Builder().setDurableName(durableName).build();
+
                 // Create subject/queue subscription if the queue has been provided
                 if (!StringUtils.isEmpty(queue)) {
                     subscription = connection.subscribe(subject, queue, natMsg -> {
                         handleOnMessage(subject, natMsg.getData(), natMsg.toString());
-                    });
+                    }, subscriptionOptions);
                 } else {
                     subscription = connection.subscribe(subject, natMsg -> {
                         handleOnMessage(subject, natMsg.getData(), natMsg.toString());
-                    });
+                    }, subscriptionOptions);
                 }
             } catch (Exception e) {
                 String error = "Unable to start subscription for queueURI=" + queueURI;
@@ -74,7 +80,7 @@ public class NATSObservableQueue extends NATSAbstractQueue implements Observable
 
     @Override
     public String getType() {
-        return EventQueues.QueueType.nats.name();
+        return EventQueues.QueueType.nats_stream.name();
     }
 
     @Override
@@ -98,16 +104,16 @@ public class NATSObservableQueue extends NATSAbstractQueue implements Observable
     }
 
     @Override
+    public void publish(String subject, byte[] data) throws IOException {
+        connection.publish(subject, data);
+    }
+
+    @Override
     public void setUnackTimeout(Message message, long unackTimeout) {
     }
 
     @Override
     public long size() {
         return messages.size();
-    }
-
-    @Override
-    public void publish(String subject, byte[] data) throws IOException {
-        connection.publish(subject, data);
     }
 }
