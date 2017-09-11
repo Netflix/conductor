@@ -13,10 +13,6 @@ services:
       - workflow_elasticsearch_url=es:9300
       - workflow_elasticsearch_index_name=conductor
       - loadSample=true
-      - io_nats_streaming_clusterId=test-cluster
-      - io_nats_streaming_clientId=docker
-      - io_nats_streaming_url=nats://nats:4222
-      - conductor_additional_modules=com.netflix.conductor.contribs.NatsStreamModule
     image: conductor:server
     build:
       context: ./server
@@ -26,7 +22,6 @@ services:
     links:
       - elasticsearch:es
       - dynomite:dyno1
-      - nats:nats
 
   conductor-ui:
     environment:
@@ -45,6 +40,3 @@ services:
 
   elasticsearch:
     image: elasticsearch:2.4
-
-  nats:
-    image: nats-streaming:0.5.0
