@@ -16,7 +16,7 @@ services:
       - io_nats_streaming_clusterId=test-cluster
       - io_nats_streaming_clientId=docker
       - io_nats_streaming_url=nats://nats:4222
-      - conductor_additional_modules=com.netflix.conductor.contribs.NatsModule
+      - conductor_additional_modules=com.netflix.conductor.contribs.NatsStreamModule
     image: conductor:server
     build:
       context: ./server
