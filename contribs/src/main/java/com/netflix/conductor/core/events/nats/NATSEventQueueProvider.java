@@ -49,9 +49,21 @@ public class NATSEventQueueProvider implements EventQueueProvider {
     public NATSEventQueueProvider(Configuration config) {
         logger.info("NATS Event Queue Provider init");
 
-        // Init NATS API
+        // Init NATS API. Handle "io_nats" and "io.nats" ways to specify parameters
         Properties props = new Properties();
-        props.putAll(config.getAll());
+        Properties temp = new Properties();
+        temp.putAll(System.getenv());
+        temp.putAll(System.getProperties());
+        temp.forEach((key1, value) -> {
+            String key = key1.toString();
+            String val = value.toString();
+
+            if (key.startsWith("io_nats")) {
+                key = key.replace("_", ".");
+            }
+            props.put(key, config.getProperty(key, val));
+        });
+
         ConnectionFactory connectionFactory = new ConnectionFactory(props);
         try {
             connection = connectionFactory.createConnection();
