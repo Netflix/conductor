@@ -114,7 +114,7 @@ job "conductor" {
         io_nats_streaming_url = "nats://${NOMAD_JOB_NAME}-nats.service.<TLD>:4222:us-east-1c"
         io_nats_streaming_clusterId = "test-cluster"
         io_nats_streaming_clientId = "nomad"
-        conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule"
+        conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule"
       }
 
       service {
