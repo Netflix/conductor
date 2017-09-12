@@ -54,7 +54,7 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
         String clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
         String clientId = config.getProperty("io.nats.streaming.clientId", UUID.randomUUID().toString());
         String natsUrl = config.getProperty("io.nats.streaming.url", "nats://localhost:4222");
-        durableName = config.getProperty("io.nats.streaming.durableName", "conductor");
+        durableName = config.getProperty("io.nats.streaming.durableName", null);
 
         logger.info("NATS Streaming clusterId=" + clusterId +
                 ", clientId=" + clientId + ", natsUrl=" + natsUrl +
