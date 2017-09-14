@@ -18,23 +18,6 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
@@ -47,6 +30,19 @@ import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.TestConfiguration;
 import com.netflix.conductor.dao.QueueDAO;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Viren
@@ -58,6 +54,8 @@ public class TestEvent {
 	public void setup() {
 		new MockQueueProvider(QueueType.sqs);
 		new MockQueueProvider(QueueType.conductor);
+		new MockQueueProvider(QueueType.nats_stream);
+		new MockQueueProvider(QueueType.nats);
 	}
 	
 	@Test
@@ -136,7 +134,25 @@ public class TestEvent {
 		assertEquals("sqs", queue.getType());
 		assertEquals(sink, task.getOutputData().get("event_produced"));
 		System.out.println(task.getOutputData().get("event_produced"));
-		
+
+		sink = "nats:nats_value";
+		task.getInputData().put("sink", sink);
+		queue = event.getQueue(workflow, task);
+		assertNotNull(queue);
+		assertEquals("nats_value", queue.getName());
+		assertEquals("nats", queue.getType());
+		assertEquals(sink, task.getOutputData().get("event_produced"));
+		System.out.println(task.getOutputData().get("event_produced"));
+
+		sink = "nats_stream:nats_stream_value";
+		task.getInputData().put("sink", sink);
+		queue = event.getQueue(workflow, task);
+		assertNotNull(queue);
+		assertEquals("nats_stream_value", queue.getName());
+		assertEquals("nats_stream", queue.getType());
+		assertEquals(sink, task.getOutputData().get("event_produced"));
+		System.out.println(task.getOutputData().get("event_produced"));
+
 		sink = "bad:queue";
 		task.getInputData().put("sink", sink);
 		queue = event.getQueue(workflow, task);

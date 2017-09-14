@@ -111,6 +111,10 @@ job "conductor" {
         db = "dynomite"
         workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
         workflow_elasticsearch_mode = "memory"
+        //io_nats_streaming_url = "nats://${NOMAD_JOB_NAME}-nats.service.<TLD>:4222:us-east-1c"
+        //io_nats_streaming_clusterId = "test-cluster"
+        //io_nats_streaming_clientId = "nomad"
+        //conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule"
       }
 
       service {
