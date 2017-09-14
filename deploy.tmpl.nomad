@@ -112,7 +112,7 @@ job "conductor" {
         workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
         workflow_elasticsearch_mode = "memory"
         // Uncomment for NATS
-        io_nats_client_url = "tcp://events.service.owf-dev:4222"
+        io_nats_client_url = "nats://events.service.owf-dev:4222"
         conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule"
 
         // Uncomment for NAT Streaming
