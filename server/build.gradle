@@ -80,17 +80,17 @@ task server(type: JavaExec) {
   //setDebug true
 
   // Configure NATS client
-  systemProperty 'io.nats.client.url', 'nats://localhost:4222'
+  // systemProperty 'io.nats.client.url', 'nats://localhost:4222'
 
   // Configure NATS Streaming client
-  systemProperty 'io.nats.streaming.clusterId', 'test-cluster'
-  systemProperty 'io.nats.streaming.clientId', 'conductor'
-  systemProperty 'io.nats.streaming.url', 'nats://localhost:5222'
+  // systemProperty 'io.nats.streaming.clusterId', 'test-cluster'
+  // systemProperty 'io.nats.streaming.clientId', 'conductor'
+  // systemProperty 'io.nats.streaming.url', 'nats://localhost:5222'
 
   // Tune Conductor to bootstrap additional module. NatsModule/NatsStreamModule in our case
   // com.netflix.conductor.contribs.NatsModule - simple NATS
   // com.netflix.conductor.contribs.NatsStreamModule - NATS Streaming
-  systemProperty 'conductor.additional.modules', 'com.netflix.conductor.contribs.NatsModule,com.netflix.conductor.contribs.NatsStreamModule'
+  // systemProperty 'conductor.additional.modules', 'com.netflix.conductor.contribs.NatsModule,com.netflix.conductor.contribs.NatsStreamModule'
 
   systemProperty 'loadSample', 'true'
   systemProperty 'workflow.elasticsearch.url', 'localhost:9300'
