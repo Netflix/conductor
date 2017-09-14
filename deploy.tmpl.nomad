@@ -111,10 +111,10 @@ job "conductor" {
         db = "dynomite"
         workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
         workflow_elasticsearch_mode = "memory"
-        io_nats_streaming_url = "nats://${NOMAD_JOB_NAME}-nats.service.<TLD>:4222:us-east-1c"
-        io_nats_streaming_clusterId = "test-cluster"
-        io_nats_streaming_clientId = "nomad"
-        conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule"
+        //io_nats_streaming_url = "nats://${NOMAD_JOB_NAME}-nats.service.<TLD>:4222:us-east-1c"
+        //io_nats_streaming_clusterId = "test-cluster"
+        //io_nats_streaming_clientId = "nomad"
+        //conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule"
       }
 
       service {
@@ -188,37 +188,6 @@ job "conductor" {
           }
         }
       }
-    } // end task
-  } // end group
-
-  group "nats" {
-    count = 1
-
-    task "nats" {
-      driver = "docker"
-
-      config {
-        image = "nats-streaming:0.5.0"
-        port_map {
-            port4222 = 4222
-            port8222 = 8222
-        }
-        labels {
-            service = "${NOMAD_JOB_NAME}"
-        }
-      }
-
-      service {
-        name = "${JOB}-${TASK}"
-        port = "port4222"
-
-        check {
-          type     = "tcp"
-          interval = "10s"
-          timeout  = "3s"
-        }
-      }
-
     } // end task
   } // end group
 }
