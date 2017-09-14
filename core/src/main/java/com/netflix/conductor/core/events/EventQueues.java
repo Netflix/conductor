@@ -18,16 +18,15 @@
  */
 package com.netflix.conductor.core.events;
 
+import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.execution.ParametersUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.netflix.conductor.core.events.queue.ObservableQueue;
-import com.netflix.conductor.core.execution.ParametersUtils;
 
 /**
  * @author Viren
@@ -40,7 +39,7 @@ public class EventQueues {
 	private static ParametersUtils pu = new ParametersUtils();
 	
 	public enum QueueType {
-		sqs, conductor
+		sqs, conductor, nats, nats_stream
 	}
 	
 	private static Map<QueueType, EventQueueProvider> providers = new HashMap<>();

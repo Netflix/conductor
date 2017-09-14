@@ -4,15 +4,14 @@ services:
   conductor-server:
     environment:
       - db=dynomite
-      - workflow.dynomite.cluster.hosts=dyno1:8102:us-east-1c
-      - workflow.dynomite.cluster.name=dyno1
-      - workflow.namespace.prefix=conductor
-      - workflow.namespace.queue.prefix=conductor_queues
-      - queues.dynomite.threads=10
-      - queues.dynomite.nonQuorum.port=22122
-      - workflow.elasticsearch.mode=memory
-      - workflow.elasticsearch.url=localhost:9300
-      - workflow.elasticsearch.index.name=conductor
+      - workflow_dynomite_cluster_hosts=dyno1:8102:us-east-1c
+      - workflow_dynomite_cluster_name=dyno1
+      - workflow_namespace_prefix=conductor
+      - workflow_namespace_queue_prefix=conductor_queues
+      - queues_dynomite_threads=10
+      - queues_dynomite_nonQuorum_port=22122
+      - workflow_elasticsearch_url=es:9300
+      - workflow_elasticsearch_index_name=conductor
       - loadSample=true
     image: conductor:server
     build:
@@ -20,13 +19,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8080:8080
-    depends_on:
-      - elasticsearch
-      - dynomite
-    networks:
-      conductornet:
-        aliases:
-          - conductor-server
+    links:
+      - elasticsearch:es
+      - dynomite:dyno1
 
   conductor-ui:
     environment:
@@ -37,34 +32,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - 5000:5000
-    depends_on:
+    links:
       - conductor-server
-    networks:
-      conductornet:
-        aliases:
-          - conductor-ui
 
   dynomite:
     image: v1r3n/dynomite
-    ports:
-      - 8102:8102
-      - 22122:22122
-      - 22222:22222
-    networks:
-      conductornet:
-        aliases:
-          - dyno1
 
   elasticsearch:
     image: elasticsearch:2.4
-    ports:
-      - 9300:9300
-      - 9200:9200
-    networks:
-      conductornet:
-        aliases:
-          - es
-
-networks:
-  conductornet:
-    driver: bridge

@@ -1,43 +1,20 @@
 #
 # conductor:server - Netflix conductor server
 #
-FROM java:8-jdk
+FROM java:8-jre-alpine
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
 # Make app folders
 RUN mkdir -p /app/config /app/logs /app/libs
 
-# Startup script(s)
+# Copy the project directly onto the image
 COPY ./docker/server/bin /app
-
-# Configs
 COPY ./docker/server/config /app/config
+COPY ./server/build/libs/conductor-server-*-all.jar /app/libs
 
-# Get all the dependencies
-RUN apt-get update -y \
-  && apt-get -y install git \
-
-  # Chmod scripts
-  && chmod +x /app/startup.sh
-
-# Get and install conductor
-COPY . /conductor
-
-RUN cd conductor \
-  && ./gradlew build -x test \
-
-  # Get Server Jar
-  && mv ./server/build/libs/conductor-server-*-all.jar /app/libs/ \
-
-  # Go back to root
-  && cd / \
-
-  # Clean up
-  && rm -rf conductor
-
+# Copy the files for the server into the app folders
+RUN chmod +x /app/startup.sh
 
 EXPOSE 8080
-
-CMD ["/app/startup.sh"]
-ENTRYPOINT ["/bin/bash"]
+CMD [ "/app/startup.sh" ]

@@ -18,11 +18,6 @@
  */
 package com.netflix.conductor.server;
 
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.netflix.conductor.contribs.http.HttpTask;
@@ -44,8 +39,12 @@ import com.netflix.conductor.dao.index.ElasticSearchDAO;
 import com.netflix.conductor.dao.index.ElasticsearchModule;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.redis.DynoShardSupplier;
-
 import redis.clients.jedis.JedisCommands;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Viren
@@ -80,7 +79,7 @@ public class ServerModule extends AbstractModule {
 	protected void configure() {
 		
 		configureExecutorService();
-		
+
 		bind(Configuration.class).toInstance(config);
 		String localDC = localRack;
 		localDC = localDC.replaceAll(region, "");

@@ -50,7 +50,11 @@ import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.oauth.client.OAuthClientFilter;
 import com.sun.jersey.oauth.signature.OAuthParameters;
 import com.sun.jersey.oauth.signature.OAuthSecrets;
-
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.util.Iterator;
 /**
  * @author Viren
  * Task that enables calling another http endpoint as part of its execution
@@ -101,6 +105,8 @@ public class HttpTask extends WorkflowSystemTask {
 		String url = null;
 		Input input = om.convertValue(request, Input.class);
 		logger.info("--------------1------URI =" + input.getUri());
+		System.out.println("Content type=="+input.getContentType());
+		
 		if(request == null) {
 			String reason = MISSING_REQUEST;
 			task.setReasonForIncompletion(reason);
@@ -138,11 +144,31 @@ public class HttpTask extends WorkflowSystemTask {
 			task.setStatus(Status.FAILED);
 			return;
 		}
-		
+		 
 		try {
 			logger.info("--------------4---------- URI = " + input.getUri());
  			logger.info("--------------4---------- BODY =" + input.getBody());
-			HttpResponse response = httpCall(input);
+			HttpResponse response = new HttpResponse();
+			if(input.getContentType()!=null)
+			{
+			if(input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded"))
+			{
+				 String json = new ObjectMapper().writeValueAsString(task.getInputData());
+		         JSONObject obj = new JSONObject(json);
+		         JSONObject getSth = obj.getJSONObject("http_request");
+	
+	            Object main_body = getSth.get("body");
+		        String body=main_body.toString();
+		 
+		       System.out.println("body====="+body);
+		      response = httpCallurlencoded(input,body);
+			}
+			else
+			{
+			 response = httpCall(input);
+			}
+			}
+			
 			logger.info("response {}, {}", response.statusCode, response.body);
 			if(response.statusCode > 199 && response.statusCode < 300) {
 				task.setStatus(Status.COMPLETED);
@@ -167,6 +193,45 @@ public class HttpTask extends WorkflowSystemTask {
 		}
 	}
 
+	
+	protected HttpResponse httpCallurlencoded(Input input,String body) throws Exception {
+		System.out.println("inside url");
+
+		Client client = Client.create();
+		MultivaluedMap formData = new MultivaluedMapImpl();
+        Map<String, String> bodyparam = new ObjectMapper().readValue(body, HashMap.class);
+		  Iterator it = bodyparam.entrySet().iterator();
+         while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+           System.out.println(pair.getKey() + " = " + pair.getValue());
+		    
+		     formData.add(pair.getKey(),  pair.getValue());
+             it.remove(); 
+         }
+		WebResource webResource = client
+		   .resource(input.uri);
+
+		
+		   ClientResponse response = webResource
+          .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+          .post(ClientResponse.class, formData);
+
+		if (response.getStatus() != 201&&response.getStatus() != 200) {
+
+			throw new RuntimeException("Failed : HTTP error code : "
+			     + response.getStatus()+response.getEntity(String.class));
+			
+
+		}
+             HttpResponse responsehttp = new HttpResponse();
+		
+		     responsehttp.body = extractBody(response);
+			
+			responsehttp.statusCode = response.getStatus();
+			responsehttp.headers = response.getHeaders();
+			return responsehttp;
+		
+	}
 	/**
 	 * 
 	 * @param input HTTP Request
@@ -174,6 +239,7 @@ public class HttpTask extends WorkflowSystemTask {
 	 * @throws Exception If there was an error making http call
 	 */
 	protected HttpResponse httpCall(Input input) throws Exception {
+		System.out.println("inside normal");
 
 		Client client = rcm.getClient(input);
 
@@ -223,6 +289,7 @@ public class HttpTask extends WorkflowSystemTask {
 				throw new Exception(reason);
 			}
 		}
+		
 	}
 
 	private Object extractBody(ClientResponse cr) {
@@ -315,6 +382,8 @@ public class HttpTask extends WorkflowSystemTask {
 		
 		private Object body;
 		
+		private String contentType;
+		
 		private String accept = MediaType.APPLICATION_JSON;
 		
 		private String oauthConsumerKey;
@@ -392,6 +461,21 @@ public class HttpTask extends WorkflowSystemTask {
 		 */
 		public void setVipAddress(String vipAddress) {
 			this.vipAddress = vipAddress;
+		}
+		
+		/**
+		 * @return the vipAddress
+		 */
+		public String getContentType() {
+			return contentType;
+		}
+
+		/**
+		 * @param vipAddress the vipAddress to set
+		 * 
+		 */
+		public void setContentType(String contentType) {
+			this.contentType = contentType;
 		}
 
 		/**

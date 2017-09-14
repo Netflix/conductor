@@ -43,8 +43,8 @@ const Events = React.createClass({
       return (<OverlayTrigger trigger="click" rootClose placement="bottom" overlay={
         <Popover title='Event / Queue' style={{ width: '500px'}}>
           <div className="info">
-            <p>Name of the Queue which the handler listens to.  The supported queue systems are <b>SQS</b>  and <b>Conductor</b>.</p>
-            <p>The name is prefixed by the source (sqs, conductor).  e.g. sqs:sqs_queue_name</p>
+            <p>Name of the Queue which the handler listens to.  The supported queue systems are <b>SQS</b>, <b>Conductor</b> and <b>NATs</b>.</p>
+            <p>The name is prefixed by the source (sqs, conductor, nats).  e.g. sqs:sqs_queue_name</p>
             <p>For SQS this is the name of the queue and NOT the URI of the queue.</p>
             <p>For Conductor the name is same as 'sink' name provided for Event tasks.</p>
           </div>

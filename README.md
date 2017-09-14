@@ -1,10 +1,9 @@
 ![Conductor](docs/docs/img/conductor-vector-x.png)
-
+ 
 ## Conductor
 Conductor is an _orchestration_ engine that runs in the cloud.
 
 [![Build Status](https://travis-ci.org/Netflix/conductor.svg?branch=master)](https://travis-ci.org/Netflix/conductor)
-
 
 
 ## Documentation & Getting Started

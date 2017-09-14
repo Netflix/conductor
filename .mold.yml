@@ -1,3 +1,11 @@
+# build the server using java 8 jdk
+build:
+  - image: java:8-jdk
+    workdir: /conductor
+    commands:
+     - ./gradlew build -x test 
+
+# build the runtime artifact images
 artifacts:
   publish:
   - master
