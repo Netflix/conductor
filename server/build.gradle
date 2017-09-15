@@ -21,6 +21,7 @@ dependencies {
     // Log4j
     compile 'org.apache.logging.log4j:log4j-core:2.9.0'
     compile 'org.apache.logging.log4j:log4j-jul:2.9.0'
+    compile 'org.slf4j:jul-to-slf4j:1.7.25'
 
 	//Conductor
 	compile project(':conductor-core')

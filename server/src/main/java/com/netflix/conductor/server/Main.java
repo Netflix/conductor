@@ -30,7 +30,11 @@ import java.util.Properties;
  */
 public class Main {
 	static {
-		System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+		// Workaround to send java util logging to log4j
+		java.util.logging.LogManager.getLogManager().reset();
+		org.slf4j.bridge.SLF4JBridgeHandler.removeHandlersForRootLogger();
+		org.slf4j.bridge.SLF4JBridgeHandler.install();
+		java.util.logging.Logger.getLogger("global").setLevel(java.util.logging.Level.FINEST);
 	}
 
 	public static void main(String[] args) throws Exception {
