@@ -18,20 +18,23 @@
  */
 package com.netflix.conductor.server;
 
+import org.apache.log4j.PropertyConfigurator;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
-
-import org.apache.log4j.PropertyConfigurator;
 
 /**
  * @author Viren
  * Entry point for the server
  */
 public class Main {
-	
+	static {
+		System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+	}
+
 	public static void main(String[] args) throws Exception {
-		
+
 		if(args.length > 0) {
 			String propertyFile = args[0];	
 			System.out.println("Using " + propertyFile);

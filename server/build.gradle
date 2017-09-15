@@ -18,7 +18,10 @@ apply plugin: 'war'
 apply plugin: "org.akhikhl.gretty"
 
 dependencies {
- 
+    // Log4j
+    compile 'org.apache.logging.log4j:log4j-core:2.9.0'
+    compile 'org.apache.logging.log4j:log4j-jul:2.9.0'
+
 	//Conductor
 	compile project(':conductor-core')
 	compile project(':conductor-jersey')
