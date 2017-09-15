@@ -15,15 +15,6 @@
  */
 package com.netflix.conductor.core.execution;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.Configuration;
@@ -33,6 +24,13 @@ import com.jayway.jsonpath.Option;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.run.Workflow;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * 
@@ -48,7 +46,9 @@ public class ParametersUtils {
 	public enum SystemParameters {
 		CPEWF_TASK_ID,
 		NETFLIX_ENV,
-		NETFLIX_STACK
+		NETFLIX_STACK,
+        CPEWF_CURRENT_TIMESTAMP,
+        CPEWF_CURRENT_TIMESTAMP_UTC
 	}
 	
 	public ParametersUtils() {
@@ -218,11 +218,18 @@ public class ParametersUtils {
 		}
 		return retObj;
 	}
-	
-	private String getSystemParametersValue(String sysParam, String taskId){
-		if("CPEWF_TASK_ID".equals(sysParam)) {
+
+    private String getSystemParametersValue(String sysParam, String taskId){
+        if("CPEWF_TASK_ID".equals(sysParam)) {
 			return taskId;
-		}
+		} else if ("CPEWF_CURRENT_TIMESTAMP".equals(sysParam)) {
+            DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
+            return fmt.print(new DateTime());
+        } else if ("CPEWF_CURRENT_TIMESTAMP_UTC".equals(sysParam)) {
+            DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
+            return fmt.print(new DateTime());
+        }
+
 		String value = System.getenv(sysParam);
 		if(value == null) {
 			value = System.getProperty(sysParam);
