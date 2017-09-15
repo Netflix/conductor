@@ -4,6 +4,17 @@
   "version": 1,
   "tasks": [
     {
+      "name": "task_0",
+      "taskReferenceName": "task_0",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://localhost:9200/conductor/_search?size=10",
+          "method": "GET"
+        }
+      },
+      "type": "HTTP"
+    },
+    {
       "name": "task_1",
       "taskReferenceName": "task_1",
       "inputParameters": {
