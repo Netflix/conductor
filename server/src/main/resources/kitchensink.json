@@ -4,6 +4,20 @@
   "version": 1,
   "tasks": [
     {
+      "name": "task_0",
+      "taskReferenceName": "task_0",
+      "inputParameters": {
+        "payload": "${workflow.input}",
+        "conditions": {
+          "DeliverableGUID": "$.DeliverableGUID && $.DeliverableGUID !== ''",
+          "order.DeliveryNotes": "$.order && $.order.deliverynotes !== ''",
+          "order.assetType": "$.order && $.order.assetType && $.order.assetType !== ''",
+          "custom.present": "$.custom != undefined"
+        }
+      },
+      "type": "VALIDATION"
+    },
+    {
       "name": "task_1",
       "taskReferenceName": "task_1",
       "inputParameters": {
