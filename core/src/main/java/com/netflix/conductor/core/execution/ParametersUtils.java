@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *	 http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,8 +47,8 @@ public class ParametersUtils {
 		CPEWF_TASK_ID,
 		NETFLIX_ENV,
 		NETFLIX_STACK,
-        CPEWF_CURRENT_TIMESTAMP,
-        CPEWF_CURRENT_TIMESTAMP_UTC
+		CPEWF_CURRENT_TIMESTAMP,
+		CPEWF_CURRENT_TIMESTAMP_UTC
 	}
 	
 	public ParametersUtils() {
@@ -219,16 +219,16 @@ public class ParametersUtils {
 		return retObj;
 	}
 
-    private String getSystemParametersValue(String sysParam, String taskId){
-        if("CPEWF_TASK_ID".equals(sysParam)) {
+	private String getSystemParametersValue(String sysParam, String taskId){
+		if("CPEWF_TASK_ID".equals(sysParam)) {
 			return taskId;
 		} else if ("CPEWF_CURRENT_TIMESTAMP".equals(sysParam)) {
-            DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
-            return fmt.print(new DateTime());
-        } else if ("CPEWF_CURRENT_TIMESTAMP_UTC".equals(sysParam)) {
-            DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
-            return fmt.print(new DateTime());
-        }
+			DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
+			return fmt.print(new DateTime());
+		} else if ("CPEWF_CURRENT_TIMESTAMP_UTC".equals(sysParam)) {
+			DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
+			return fmt.print(new DateTime());
+		}
 
 		String value = System.getenv(sysParam);
 		if(value == null) {
@@ -238,13 +238,13 @@ public class ParametersUtils {
 	}
 	
 	private boolean contains(String test) {
-	    for (SystemParameters c : SystemParameters.values()) {
-	        if (c.name().equals(test)) {
-	            return true;
-	        }
-	    }
-	    String value = Optional.ofNullable(System.getProperty(test)).orElse(Optional.ofNullable(System.getenv(test)).orElse(null));
-	    return value != null;
+		for (SystemParameters c : SystemParameters.values()) {
+			if (c.name().equals(test)) {
+				return true;
+			}
+		}
+		String value = Optional.ofNullable(System.getProperty(test)).orElse(Optional.ofNullable(System.getenv(test)).orElse(null));
+		return value != null;
 	}
 	
 }
