@@ -27,8 +27,11 @@ import com.netflix.conductor.common.run.Workflow;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -38,6 +41,7 @@ import java.util.Map.Entry;
  *
  */
 public class ParametersUtils {
+	private static Logger logger = LoggerFactory.getLogger(ParametersUtils.class);
 	
 	private ObjectMapper om = new ObjectMapper();
 	
@@ -222,12 +226,20 @@ public class ParametersUtils {
 	private String getSystemParametersValue(String sysParam, String taskId){
 		if("CPEWF_TASK_ID".equals(sysParam)) {
 			return taskId;
-		} else if ("CPEWF_CURRENT_TIMESTAMP".equals(sysParam)) {
-			DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
-			return fmt.print(new DateTime());
-		} else if ("CPEWF_CURRENT_TIMESTAMP_UTC".equals(sysParam)) {
-			DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
-			return fmt.print(new DateTime());
+		} else if (sysParam.startsWith("CPEWF_CURRENT_TIMESTAMP")) {
+			try {
+				if (sysParam.contains(":")) {
+					String format = sysParam.substring(sysParam.indexOf(":") + 1);
+					SimpleDateFormat fmt = new SimpleDateFormat(format);
+					return fmt.format(new Date());
+				} else {
+					DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
+					return fmt.print(new DateTime());
+				}
+			} catch (Exception ex) {
+				logger.error("Unable to get param value for '" + sysParam + "'", ex);
+				return null;
+			}
 		}
 
 		String value = System.getenv(sysParam);
@@ -239,7 +251,7 @@ public class ParametersUtils {
 	
 	private boolean contains(String test) {
 		for (SystemParameters c : SystemParameters.values()) {
-			if (c.name().equals(test)) {
+			if (test.startsWith(c.name())) {
 				return true;
 			}
 		}
