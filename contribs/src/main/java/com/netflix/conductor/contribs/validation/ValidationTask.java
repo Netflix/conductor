@@ -28,10 +28,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @author Viren
+ * @author Oleksiy Lysak
  *
  */
 @Singleton
@@ -39,10 +41,9 @@ public class ValidationTask extends WorkflowSystemTask {
     private static final Logger logger = LoggerFactory.getLogger(ValidationTask.class);
     private static final String PAYLOAD_PARAMETER = "payload";
     private static final String CONDITIONS_PARAMETER = "conditions";
-    private static final String NAME = "VALIDATION";
 
     public ValidationTask() {
-        super(NAME);
+        super("VALIDATION");
     }
 
     @Override
@@ -74,23 +75,71 @@ public class ValidationTask extends WorkflowSystemTask {
         // Set the task status to complete at the begin
         task.setStatus(Status.COMPLETED);
 
+        // Get an additional configuration
+        boolean failOnFalse = getFailOnFalse(task);
+
+        // Default is true. Will be set to false upon some condition fails
+        AtomicBoolean overallStatus = new AtomicBoolean(true);
+
         // Go over all conditions and evaluate them
         conditionsObj.forEach((name, condition) -> {
             try {
                 Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
                 logger.debug("Evaluation resulted in " + success + " for " + name + "=" + condition);
-                taskOutput.put(name, success);
 
-                // Set the overall task status to FAILED if any of the conditions fails
-                if (!success)
-                    task.setStatus(Status.FAILED);
-            } catch (Throwable ex) {
-                // Set the overall task status to FAILED if any of the conditions fails
-                task.setStatus(Status.FAILED);
-                taskOutput.put(name, ex.getMessage());
+                // Add condition evaluation result into output map
+                addEvalResult(task, name, success);
+
+                // Failed ?
+                if (!success) {
+
+                    // Set the over all status to false
+                    overallStatus.set(false);
+
+                    // Set the task status to FAILED if not suppressed by configuration
+                    if (failOnFalse) {
+                        task.setStatus(Status.FAILED);
+                    }
+                }
+            } catch (Exception ex) {
                 logger.error("Evaluation failed for " + name + "=" + condition, ex);
+
+                // Set the error message instead of false
+                addEvalResult(task, name, ex.getMessage());
+
+                // Set the over all status to false
+                overallStatus.set(false);
+
+                // Set the task status to FAILED if not suppressed by configuration
+                if (failOnFalse) {
+                    task.setStatus(Status.FAILED);
+                }
             }
         });
+
+        // Set the overall status to the output map
+        taskOutput.put("overallStatus", overallStatus.get());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addEvalResult(Task task, String condition, Object result) {
+        Map<String, Object> taskOutput = task.getOutputData();
+        Map<String, Object> conditions = (Map<String, Object>)taskOutput.get(CONDITIONS_PARAMETER);
+        if (conditions == null) {
+            conditions = new HashMap<>();
+            taskOutput.put(CONDITIONS_PARAMETER, conditions);
+        }
+        conditions.put(condition, result);
+    }
+
+    private boolean getFailOnFalse(Task task) {
+        Object obj = task.getInputData().get("failOnFalse");
+        if (obj instanceof Boolean) {
+            return (Boolean)obj;
+        } else if (obj instanceof String) {
+            return Boolean.parseBoolean((String)obj);
+        }
+        return true;
     }
 
     @Override
