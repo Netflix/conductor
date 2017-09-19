@@ -75,9 +75,6 @@ public class ValidationTask extends WorkflowSystemTask {
         // Set the task status to complete at the begin
         task.setStatus(Status.COMPLETED);
 
-        // Get an additional configuration
-        boolean failOnFalse = getFailOnFalse(task);
-
         // Default is true. Will be set to false upon some condition fails
         AtomicBoolean overallStatus = new AtomicBoolean(true);
 
@@ -92,14 +89,8 @@ public class ValidationTask extends WorkflowSystemTask {
 
                 // Failed ?
                 if (!success) {
-
                     // Set the over all status to false
                     overallStatus.set(false);
-
-                    // Set the task status to FAILED if not suppressed by configuration
-                    if (failOnFalse) {
-                        task.setStatus(Status.FAILED);
-                    }
                 }
             } catch (Exception ex) {
                 logger.error("Evaluation failed for " + name + "=" + condition, ex);
@@ -109,16 +100,20 @@ public class ValidationTask extends WorkflowSystemTask {
 
                 // Set the over all status to false
                 overallStatus.set(false);
-
-                // Set the task status to FAILED if not suppressed by configuration
-                if (failOnFalse) {
-                    task.setStatus(Status.FAILED);
-                }
             }
         });
 
         // Set the overall status to the output map
         taskOutput.put("overallStatus", overallStatus.get());
+
+        // Get an additional configuration
+        boolean failOnFalse = getFailOnFalse(task);
+
+        // If overall status is false and we need to fail whole workflow
+        if (!overallStatus.get() && failOnFalse) {
+            task.setReasonForIncompletion("Payload validation failed");
+            task.setStatus(Status.FAILED);
+        }
     }
 
     @SuppressWarnings("unchecked")
