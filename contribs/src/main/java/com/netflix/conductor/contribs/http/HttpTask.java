@@ -146,15 +146,6 @@ public class HttpTask extends WorkflowSystemTask {
             return;
         }
 
-        HttpResponse httpResponse = callAuth();
-        if (httpResponse.body != null) {
-            AuthResponse authResponse = (AuthResponse) httpResponse.body;
-            if (!StringUtils.isEmpty(authResponse.getAccess_token())) {
-                task.getOutputData().put("access_token", authResponse.getAccess_token());
-            }
-        }
-        // validateAuth(httpResponse);
-
         try {
             logger.info("--------------4---------- URI = " + input.getUri());
             logger.info("--------------4---------- BODY =" + input.getBody());
@@ -198,49 +189,6 @@ public class HttpTask extends WorkflowSystemTask {
             task.setReasonForIncompletion(e.getMessage());
             task.getOutputData().put("response", e.getMessage());
         }
-    }
-
-    private HttpResponse callAuth() throws Exception {
-        Client client = Client.create();
-        MultivaluedMap<String, String> data = new MultivaluedMapImpl();
-        data.add("grant_type", "client_credentials");
-        data.add("client_id", "deluxe.conductor"); //TODO Read from configuration ?
-        data.add("client_secret", "4ecafd6a-a3ce-45dd-bf05-85f2941413d3"); //TODO Read from configuration
-
-        //TODO Read URI from configuration or service discovery
-        WebResource webResource = client.resource("https://auth.dmlib.de/api/v1/auth/token?tenant=deluxe");
-        ClientResponse clientResponse = webResource.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-                .post(ClientResponse.class, data);
-
-        HttpResponse httpResponse = new HttpResponse();
-        httpResponse.statusCode = clientResponse.getStatus();
-        httpResponse.headers = clientResponse.getHeaders();
-        httpResponse.body = clientResponse.getEntity(AuthResponse.class);
-
-        return httpResponse;
-    }
-
-    public static void main(String[] args) throws Exception {
-        String token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIzUmVQUmxxaDBSdUxfcUd5c3dSZXRJbjZNZkZWblp4S2NCdU5GaW55QlM4In0.eyJqdGkiOiI2NDI0Nzk3Ny02MWM3LTQ0MzQtYTM3Yi02NjcwN2Y3ODY5YjciLCJleHAiOjE1MDU0NzkzNjgsIm5iZiI6MCwiaWF0IjoxNTA1NDc5MDY4LCJpc3MiOiJodHRwOi8va2V5Y2xvYWsuc2VydmljZS5vd2YtZGV2OjQwOTg0L2F1dGgvcmVhbG1zL2RlbHV4ZSIsImF1ZCI6ImRlbHV4ZS5jb25kdWN0b3IiLCJzdWIiOiJmN2EzNGRjZi1lYjg5LTQwYTgtYWY2Ni1kZTQ4ODFjNTI4OWEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJkZWx1eGUuY29uZHVjdG9yIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiNmRkNTFmMzktMDcxZC00MjI1LTgzOTUtNmQ5M2Y2ZDcyYjA0IiwiYWNyIjoiMSIsImNsaWVudF9zZXNzaW9uIjoiNTNiZWM2OTktZDA1NC00NmFkLTg2OTMtYWE2NmUwMGM1NWNjIiwiYWxsb3dlZC1vcmlnaW5zIjpbXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwiY2xpZW50SG9zdCI6IjE3Mi4zMS44NS4xNjciLCJjbGllbnRJZCI6ImRlbHV4ZS5jb25kdWN0b3IiLCJuYW1lIjoiIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWRlbHV4ZS5jb25kdWN0b3IiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjMxLjg1LjE2NyIsImVtYWlsIjoic2VydmljZS1hY2NvdW50LWRlbHV4ZS5jb25kdWN0b3JAcGxhY2Vob2xkZXIub3JnIn0.Sv_MzX-D5pwO2W3FIjdtoUcRlkBgvekbU4WzeokGKVIQxoW3o84B87kzYsBBZzHBzHiM_DRCDgA17wJCC-YtJ5mLOCcfZkceF_IX23YU167F3VJwD26jsjVavW5eUp1f5KtNvj-RkBE2VmAxb21s5_XY6fgXpS3RHy8pJ-o_4uvlH7aDVHuQj8YLgn1g7Pkjc7egiZJ87eidpy3Ukgv7KC7jea0Eu0L0Xw2WLws08YlRry8oztdLOfVWPQr4H6xxLjw-pPVRIbfQU0JtisU45qIQkm3o9uJKZTWvYYZwSOCbvouHuyN4GOvB-hK4McbNHxQrpNJDcj4YQ7OVDWmZkQ";
-        DecodedJWT decoded = JWT.decode(token);
-        Map<String, Claim> claims = decoded.getClaims();
-        Map<String, Object> realm_access = claims.get("realm_access").asMap();
-        System.out.println("realm_access = " + realm_access);
-
-        Map<String, Object> resource_access = claims.get("resource_access").asMap();
-        System.out.println("resource_access = " + resource_access);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void validateAuth(HttpResponse httpResponse) {
-        AuthResponse authResponse = (AuthResponse) httpResponse.body;
-        DecodedJWT decoded = JWT.decode(authResponse.getAccess_token());
-        Map<String, Claim> claims = decoded.getClaims();
-        Map<String, Object> realm_access = claims.get("realm_access").asMap();
-        System.out.println("realm_access = " + realm_access);
-
-        Map<String, Object> resource_access = claims.get("resource_access").asMap();
-        System.out.println("resource_access = " + resource_access);
     }
 
     private HttpResponse httpCallUrlEncoded(Input input, String body) throws Exception {
@@ -576,34 +524,4 @@ public class HttpTask extends WorkflowSystemTask {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private static class AuthResponse {
-        private String error;
-        private String error_description;
-        private String access_token;
-
-        public String getError() {
-            return error;
-        }
-
-        public void setError(String error) {
-            this.error = error;
-        }
-
-        public String getError_description() {
-            return error_description;
-        }
-
-        public void setError_description(String error_description) {
-            this.error_description = error_description;
-        }
-
-        public String getAccess_token() {
-            return access_token;
-        }
-
-        public void setAccess_token(String access_token) {
-            this.access_token = access_token;
-        }
-    }
 }

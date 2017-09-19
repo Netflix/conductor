@@ -7,12 +7,26 @@
       "name": "task_0",
       "taskReferenceName": "task_0",
       "inputParameters": {
-        "http_request": {
-          "uri": "http://localhost:9200/conductor/_search?size=10",
-          "method": "GET"
+        "failOnError": false,
+        "authorize": true,
+        "validate": {
+          "realm_access": {
+            "roles": [
+              "uma_authorization"
+            ]
+          },
+          "resource_access": {
+            "account": {
+              "roles": [
+                "manage-account",
+                "manage-account-links",
+                "view-profile"
+              ]
+            }
+          }
         }
       },
-      "type": "HTTP"
+      "type": "AUTH"
     },
     {
       "name": "task_1",

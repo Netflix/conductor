@@ -92,6 +92,10 @@ task server(type: JavaExec) {
   // com.netflix.conductor.contribs.NatsStreamModule - NATS Streaming
   // systemProperty 'conductor.additional.modules', 'com.netflix.conductor.contribs.NatsModule,com.netflix.conductor.contribs.NatsStreamModule'
 
+  systemProperty 'conductor.auth.url', 'https://auth.dmlib.de/api/v1/auth/token?tenant=deluxe'
+  systemProperty 'conductor.auth.clientId', 'deluxe.conductor'
+  systemProperty 'conductor.auth.clientSecret', '4ecafd6a-a3ce-45dd-bf05-85f2941413d3'
+
   systemProperty 'loadSample', 'true'
   systemProperty 'workflow.elasticsearch.url', 'localhost:9300'
   main = 'com.netflix.conductor.server.Main'
