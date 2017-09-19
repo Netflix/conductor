@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *	 http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.conductor.core.execution;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +24,16 @@ import com.jayway.jsonpath.Option;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.run.Workflow;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * 
@@ -40,6 +41,7 @@ import com.netflix.conductor.common.run.Workflow;
  *
  */
 public class ParametersUtils {
+	private static Logger logger = LoggerFactory.getLogger(ParametersUtils.class);
 	
 	private ObjectMapper om = new ObjectMapper();
 	
@@ -48,7 +50,8 @@ public class ParametersUtils {
 	public enum SystemParameters {
 		CPEWF_TASK_ID,
 		NETFLIX_ENV,
-		NETFLIX_STACK
+		NETFLIX_STACK,
+		CPEWF_CURRENT_TIMESTAMP
 	}
 	
 	public ParametersUtils() {
@@ -218,11 +221,26 @@ public class ParametersUtils {
 		}
 		return retObj;
 	}
-	
+
 	private String getSystemParametersValue(String sysParam, String taskId){
 		if("CPEWF_TASK_ID".equals(sysParam)) {
 			return taskId;
+		} else if (sysParam.startsWith("CPEWF_CURRENT_TIMESTAMP")) {
+			try {
+				if (sysParam.contains(":")) {
+					String format = sysParam.substring(sysParam.indexOf(":") + 1);
+					SimpleDateFormat fmt = new SimpleDateFormat(format);
+					return fmt.format(new Date());
+				} else {
+					DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
+					return fmt.print(new DateTime());
+				}
+			} catch (Exception ex) {
+				logger.error("Unable to get param value for '" + sysParam + "'", ex);
+				return null;
+			}
 		}
+
 		String value = System.getenv(sysParam);
 		if(value == null) {
 			value = System.getProperty(sysParam);
@@ -231,13 +249,13 @@ public class ParametersUtils {
 	}
 	
 	private boolean contains(String test) {
-	    for (SystemParameters c : SystemParameters.values()) {
-	        if (c.name().equals(test)) {
-	            return true;
-	        }
-	    }
-	    String value = Optional.ofNullable(System.getProperty(test)).orElse(Optional.ofNullable(System.getenv(test)).orElse(null));
-	    return value != null;
+		for (SystemParameters c : SystemParameters.values()) {
+			if (test.startsWith(c.name())) {
+				return true;
+			}
+		}
+		String value = Optional.ofNullable(System.getProperty(test)).orElse(Optional.ofNullable(System.getenv(test)).orElse(null));
+		return value != null;
 	}
 	
 }
