@@ -51,8 +51,7 @@ public class ParametersUtils {
 		CPEWF_TASK_ID,
 		NETFLIX_ENV,
 		NETFLIX_STACK,
-		CPEWF_CURRENT_TIMESTAMP,
-		CPEWF_CURRENT_TIMESTAMP_UTC
+		CPEWF_CURRENT_TIMESTAMP
 	}
 	
 	public ParametersUtils() {
