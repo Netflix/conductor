@@ -52,9 +52,9 @@ public class AuthTask extends WorkflowSystemTask {
 	private static final String PARAM_URL = "conductor.auth.url";
 	private static final String PARAM_CLIENT = "conductor.auth.clientId";
 	private static final String PARAM_SECRET = "conductor.auth.clientSecret";
-	private final String authUrl;
+    private final String clientSecret;
 	private final String clientId;
-	private final String clientSecret;
+    private final String authUrl;
 
 	public AuthTask(Configuration config) {
 		super("AUTH");
@@ -168,5 +168,4 @@ public class AuthTask extends WorkflowSystemTask {
         Map<String, Object> resource_access = claims.get("resource_access").asMap();
         System.out.println("resource_access = " + resource_access);
     }
-
 }
