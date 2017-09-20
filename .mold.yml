@@ -5,7 +5,7 @@ build:
     commands:
      - ./gradlew build -x test 
 
-# build the runtime artifact images
+# build the runtime artifact images..
 artifacts:
   publish:
   - master
