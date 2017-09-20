@@ -135,7 +135,7 @@ job "conductor" {
 
       resources {
         cpu    = 128 # MHz
-        memory = 512 # MB
+        memory = 1024 # MB
 
         network {
           mbits = 2
