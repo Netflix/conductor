@@ -34,15 +34,15 @@ import java.util.Map;
  * @author Oleksiy Lysak
  *
  */
-public class Complete extends WorkflowSystemTask {
-	private static Logger logger = LoggerFactory.getLogger(Complete.class);
+public class CompleteTask extends WorkflowSystemTask {
+	private static Logger logger = LoggerFactory.getLogger(CompleteTask.class);
 	private static final String STATUS_PARAMETER = "status";
 	private static final String WORKFLOW_ID_PARAMETER = "workflowId";
 	private static final String TASKREF_NAME_PARAMETER = "taskRefName";
 	private static final String OUTPUT_PARAMETER = "output";
-	public static final String NAME = "COMPLETE";
+	public static final String NAME = "COMPLETE_TASK";
 
-	public Complete() {
+	public CompleteTask() {
 		super(NAME);
 	}
 	
