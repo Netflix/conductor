@@ -109,7 +109,7 @@ job "conductor" {
       
       env {
         db = "dynomite"
-        workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-dyno.service.<TLD>:8102:us-east-1c"
+        workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
         workflow_elasticsearch_mode = "memory"
         // Uncomment for NATS
         io_nats_client_url = "nats://events.service.owf-dev:4222"
@@ -147,10 +147,10 @@ job "conductor" {
     } // end task
   } // end group
 
-  group "dyno" {
+  group "db" {
     count = 1
 
-    task "dyno" {
+    task "db" {
 
       driver = "docker"
       config {
