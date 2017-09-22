@@ -39,7 +39,7 @@ public class KeyValueLayout extends Layout {
         if (message != null) {
             response = message.toString();
             if (response.contains("\n")) {
-                response = response.replace("\n", "'");
+                response = response.replace("\n", "");
             }
             if (response.contains("\"")) {
                 response = response.replace("\"", "'");
