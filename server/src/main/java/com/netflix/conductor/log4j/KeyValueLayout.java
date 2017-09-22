@@ -11,27 +11,49 @@ import java.net.UnknownHostException;
 
 public class KeyValueLayout extends Layout {
     private DateTimeFormatter dateTime = ISODateTimeFormat.dateTime().withZoneUTC();
+    private String hostname;
+    private String fromhost;
+
+    public KeyValueLayout() {
+        hostname = getHostName();
+        fromhost = getHostIp();
+    }
 
     @Override
     public String format(LoggingEvent event) {
         StringBuilder buf = new StringBuilder();
         buf.append("timestamp=").append(timestamp()).append(" ");
         buf.append("service=").append("conductor").append(" ");
-        buf.append("hostname=").append(hostname()).append(" ");
-        buf.append("fromhost=").append(fromhost()).append(" ");
+        buf.append("hostname=").append(hostname).append(" ");
+        buf.append("fromhost=").append(fromhost).append(" ");
         buf.append("log-level=").append(event.getLevel().toString().toLowerCase()).append(" ");
         buf.append("severity=").append(event.getLevel().toString().toLowerCase()).append(" ");
         buf.append("logger=").append(event.getLoggerName().toLowerCase()).append(" ");
-        buf.append("text=").append(event.getMessage());
+        buf.append("text=").append("\"").append(normalizeMessage(event.getMessage())).append("\"");
         buf.append("\n");
         return buf.toString();
+    }
+
+    private String normalizeMessage(Object message) {
+        String response = "";
+        if (message != null) {
+            response = message.toString();
+            if (response.contains("\n")) {
+                response = response.replace("\n", "'");
+            }
+            if (response.contains("\"")) {
+                response = response.replace("\"", "'");
+            }
+        }
+
+        return response;
     }
 
     private String timestamp() {
         return dateTime.print(new DateTime());
     }
 
-    private String hostname() {
+    private String getHostName() {
         try {
             return InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
@@ -40,7 +62,7 @@ public class KeyValueLayout extends Layout {
         }
     }
 
-    private String fromhost() {
+    private String getHostIp() {
         try {
             return InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException e) {
