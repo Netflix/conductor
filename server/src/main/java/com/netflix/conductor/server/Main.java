@@ -18,20 +18,27 @@
  */
 package com.netflix.conductor.server;
 
+import org.apache.log4j.PropertyConfigurator;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
-
-import org.apache.log4j.PropertyConfigurator;
 
 /**
  * @author Viren
  * Entry point for the server
  */
 public class Main {
-	
+	static {
+		// Workaround to send java util logging to log4j
+		java.util.logging.LogManager.getLogManager().reset();
+		org.slf4j.bridge.SLF4JBridgeHandler.removeHandlersForRootLogger();
+		org.slf4j.bridge.SLF4JBridgeHandler.install();
+		java.util.logging.Logger.getLogger("global").setLevel(java.util.logging.Level.FINEST);
+	}
+
 	public static void main(String[] args) throws Exception {
-		
+
 		if(args.length > 0) {
 			String propertyFile = args[0];	
 			System.out.println("Using " + propertyFile);
