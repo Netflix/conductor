@@ -123,7 +123,7 @@ job "conductor" {
       }
 
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}.dmlib.de/ auth=true"]
+        tags = ["urlprefix-${JOB}-${TASK}.dmlib.de/ auth=true"]
         name = "${JOB}-${TASK}"
         port = "http"
         check {
