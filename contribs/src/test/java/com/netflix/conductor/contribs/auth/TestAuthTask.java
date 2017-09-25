@@ -58,9 +58,7 @@ public class TestAuthTask {
 	private static Server server;
 	private static ObjectMapper om = new ObjectMapper();
 	private AuthTask authTask;
-	private Configuration config;
-	private String jwtTxt;
-	private String jwtJson;
+	private String accessToken;
 
 	@BeforeClass
 	public static void init() throws Exception {
@@ -83,13 +81,12 @@ public class TestAuthTask {
 
 	@Before
 	public void setup() throws Exception {
-		jwtJson = Resources.toString(Resources.getResource("jwt.json"), Charsets.UTF_8);
-		jwtTxt = Resources.toString(Resources.getResource("jwt.txt"), Charsets.UTF_8);
+		accessToken = Resources.toString(Resources.getResource("jwt.txt"), Charsets.UTF_8);
 
-		config = mock(Configuration.class);
-		when(config.getProperty("conductor.auth.url", null)).thenReturn("https://auth.dmlib.de/v1/tenant/deluxe/auth/token");
-		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("deluxe.conductor");
-		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("4ecafd6a-a3ce-45dd-bf05-85f2941413d3");
+		Configuration config = mock(Configuration.class);
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7009/auth/success");
+		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
 		authTask = new AuthTask(config);
 	}
 
@@ -156,7 +153,7 @@ public class TestAuthTask {
 	public void validate_no_verifyList() throws Exception {
 		Task task = new Task();
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", jwtTxt);
+		validate.put("accessToken", accessToken);
 
 		Map<String, Object> inputData = task.getInputData();
 		inputData.put("validate", validate);
@@ -183,7 +180,7 @@ public class TestAuthTask {
 	@Test
 	public void validate_wrong_verifyList() throws Exception {
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", jwtTxt);
+		validate.put("accessToken", accessToken);
 		validate.put("verifyList", "wrong type");
 
 		Task task = new Task();
@@ -199,7 +196,7 @@ public class TestAuthTask {
 	public void validate_success() throws Exception {
 		Task task = new Task();
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", jwtTxt);
+		validate.put("accessToken", accessToken);
 		validate.put("verifyList", Collections.singletonList(".realm_access.roles | contains([\"uma_authorization\"])"));
 
 		Map<String, Object> inputData = task.getInputData();
@@ -214,10 +211,10 @@ public class TestAuthTask {
 	}
 
 	@Test
-	public void validate_not_success() throws Exception {
+	public void validate_not_success_failed() throws Exception {
 		Task task = new Task();
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", jwtTxt);
+		validate.put("accessToken", accessToken);
 		validate.put("verifyList", Collections.singletonList(".dummy.object"));
 
 		Map<String, Object> inputData = task.getInputData();
@@ -242,8 +239,38 @@ public class TestAuthTask {
 		assertEquals(".dummy.object", entry2.getValue());
 	}
 
-//	@Test
-	public void do_auth() throws Exception {
+	@Test
+	public void validate_not_success_completed() throws Exception {
+		Task task = new Task();
+		Map<String, Object> validate = new HashMap<>();
+		validate.put("accessToken", accessToken);
+		validate.put("verifyList", Collections.singletonList(".dummy.object"));
+
+		Map<String, Object> inputData = task.getInputData();
+		inputData.put("failOnError", false);
+		inputData.put("validate", validate);
+
+		authTask.start(workflow, task, executor);
+		assertEquals(Task.Status.COMPLETED, task.getStatus());
+
+		Map<String, Object> outputData = task.getOutputData();
+		assertEquals(false, outputData.get("success"));
+		List<Map<String, Object>> failedList = (List<Map<String, Object>>)outputData.get("failedList");
+		assertNotNull("No failedList", failedList);
+		assertEquals(1, failedList.size());
+		Iterator<Map.Entry<String, Object>> iterator = failedList.iterator().next().entrySet().iterator();
+
+		Map.Entry<String, Object> entry1 = iterator.next();
+		assertEquals("result", entry1.getKey());
+		assertEquals(false, entry1.getValue());
+
+		Map.Entry<String, Object> entry2 = iterator.next();
+		assertEquals("condition", entry2.getKey());
+		assertEquals(".dummy.object", entry2.getValue());
+	}
+
+	@Test
+	public void auth_success() throws Exception {
 		Task task = new Task();
 		authTask.start(workflow, task, executor);
 		assertEquals(Task.Status.COMPLETED, task.getStatus());
@@ -254,6 +281,62 @@ public class TestAuthTask {
 		assertNotNull("No refreshToken", outputData.get("refreshToken"));
 	}
 
+	@Test
+	public void auth_error_no_data() throws Exception {
+		Configuration config = mock(Configuration.class);
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7009/auth/empty");
+		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
+		AuthTask authTask = new AuthTask(config);
+
+		Task task = new Task();
+		authTask.start(workflow, task, executor);
+		assertEquals(Task.Status.FAILED, task.getStatus());
+
+		Map<String, Object> outputData = task.getOutputData();
+		assertEquals(false, outputData.get("success"));
+		assertEquals("no content", outputData.get("error"));
+		assertEquals("server did not return body", outputData.get("errorDescription"));
+	}
+
+	@Test
+	public void auth_error_failed() throws Exception {
+		Configuration config = mock(Configuration.class);
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7009/auth/error");
+		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
+		AuthTask authTask = new AuthTask(config);
+
+		Task task = new Task();
+		authTask.start(workflow, task, executor);
+		assertEquals(Task.Status.FAILED, task.getStatus());
+
+		Map<String, Object> outputData = task.getOutputData();
+		assertEquals(false, outputData.get("success"));
+		assertEquals("invalid_request", outputData.get("error"));
+		assertEquals("Invalid grant_type", outputData.get("errorDescription"));
+	}
+
+	@Test
+	public void auth_error_completed() throws Exception {
+		Configuration config = mock(Configuration.class);
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7009/auth/error");
+		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
+		authTask = new AuthTask(config);
+
+		Task task = new Task();
+		task.getInputData().put("failOnError", false);
+
+		authTask.start(workflow, task, executor);
+		assertEquals(Task.Status.COMPLETED, task.getStatus());
+
+		Map<String, Object> outputData = task.getOutputData();
+		assertEquals(false, outputData.get("success"));
+		assertEquals("invalid_request", outputData.get("error"));
+		assertEquals("Invalid grant_type", outputData.get("errorDescription"));
+	}
+
 	private static class EchoHandler extends AbstractHandler {
 
 		private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String,Object>>() {};
@@ -261,17 +344,32 @@ public class TestAuthTask {
 		@Override
 		public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 				throws IOException, ServletException {
-			if(request.getMethod().equals("GET") && request.getRequestURI().equals("/json")) {
-				Map<String, Object> map = new HashMap<>();
-				map.put("key", "value1");
-				map.put("num", 42);
-				String JSON_RESPONSE = om.writeValueAsString(map);
 
-				response.addHeader("Content-Type", "application/json");
-				PrintWriter writer = response.getWriter();
-				writer.print(JSON_RESPONSE);
-				writer.flush();
-				writer.close();
+			if(request.getMethod().equals("POST")) {
+				if (request.getRequestURI().equals("/auth/success")) {
+					response.addHeader("Content-Type", "application/json; charset=utf-8");
+					PrintWriter writer = response.getWriter();
+					writer.print(Resources.toString(Resources.getResource("auth-success.json"), Charsets.UTF_8));
+					writer.flush();
+					writer.close();
+				} else if (request.getRequestURI().equals("/auth/error")) {
+					String data = Resources.toString(Resources.getResource("auth-error.json"), Charsets.UTF_8);
+					response.addHeader("Content-Type", "application/json; charset=utf-8");
+					response.addHeader("Content-Length", "" + data.length());
+					response.setStatus(400); // Bad request
+					PrintWriter writer = response.getWriter();
+					writer.print(data);
+					writer.flush();
+					writer.close();
+				} else if (request.getRequestURI().equals("/auth/empty")) {
+					response.addHeader("Content-Type", "application/json; charset=utf-8");
+					response.addHeader("Content-Length", "0");
+					response.setStatus(502); // Bad Gateway
+					PrintWriter writer = response.getWriter();
+					writer.print("");
+					writer.flush();
+					writer.close();
+				}
 			}
 		}
 	}

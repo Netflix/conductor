@@ -231,15 +231,20 @@ public class AuthTask extends WorkflowSystemTask {
         if (response.getStatus() == 200) {
             return response.getEntity(AuthResponse.class);
         } else {
-            String json = response.getEntity(String.class);
-            if (StringUtils.isEmpty(json)) {
+            String entity = response.getEntity(String.class);
+            if (StringUtils.isEmpty(entity)) {
                 return new AuthResponse("no content", "server did not return body");
             }
+            ObjectMapper mapper = new ObjectMapper();
+            String reason = response.getStatusInfo().getReasonPhrase();
 
             // Workaround to handle response like this:
             // Bad request: { ... json here ... }
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(json.substring(json.indexOf(":") + 1), AuthResponse.class);
+            if (entity.startsWith(reason)) {
+                return mapper.readValue(entity.substring(entity.indexOf(":") + 1), AuthResponse.class);
+            } else {
+                return mapper.readValue(entity, AuthResponse.class);
+            }
         }
     }
 
