@@ -5,21 +5,21 @@ job "conductor" {
 
   // Define which env to deploy service in
   constraint {
-      attribute = "${meta.hood}"
-      // Options: [ corp | prod | shared ]
-      value     = "shared"
+    attribute = "${meta.hood}"
+    // Options: [ corp | prod | shared ]
+    value     = "shared"
   }
 
   constraint {
-      attribute = "${meta.env_type}"
-      // Options: [ test | live ]
-      value     = "test"
+    attribute = "${meta.env_type}"
+    // Options: [ test | live ]
+    value     = "test"
   }
 
   // Configure the job to do rolling updates
   update {
-   stagger      = "15s"
-   max_parallel = 1
+    stagger      = "15s"
+    max_parallel = 1
   }
 
   group "ui" {
@@ -36,10 +36,10 @@ job "conductor" {
       config {
         image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-ui"
         port_map {
-            http = 5000
+          http = 5000
         }
         labels {
-            service = "${NOMAD_JOB_NAME}"
+          service = "${NOMAD_JOB_NAME}"
         }
         logging {
           type = "syslog"
@@ -94,10 +94,10 @@ job "conductor" {
       config {
         image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-server"
         port_map {
-            http = 8080
+          http = 8080
         }
         labels {
-            service = "${NOMAD_JOB_NAME}"
+          service = "${NOMAD_JOB_NAME}"
         }
         logging {
           type = "syslog"
@@ -106,11 +106,12 @@ job "conductor" {
           }
         }
       }
-      
+
       env {
         db = "dynomite"
         workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
         workflow_elasticsearch_mode = "memory"
+
         // Uncomment for NATS
         io_nats_client_url = "nats://events.service.owf-dev:4222"
         conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule"
@@ -120,9 +121,15 @@ job "conductor" {
         //io_nats_streaming_clusterId = "test-cluster"
         //io_nats_streaming_clientId = "nomad"
         //conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule"
+
+        // Auth settings
+        conductor_auth_url = "https://auth.dmlib.de/v1/tenant/deluxe/auth/token"
+        conductor_auth_clientId = "deluxe.conductor"
+        conductor_auth_clientSecret = "4ecafd6a-a3ce-45dd-bf05-85f2941413d3"
       }
 
       service {
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.de/ auth=true"]
         name = "${JOB}-${TASK}"
         port = "http"
         check {
@@ -135,7 +142,7 @@ job "conductor" {
 
       resources {
         cpu    = 128 # MHz
-        memory = 512 # MB
+        memory = 1024 # MB
 
         network {
           mbits = 2
@@ -156,13 +163,13 @@ job "conductor" {
       config {
         image = "v1r3n/dynomite"
         port_map {
-            port8102 = 8102
-            port22122 = 22122
-            port22222 = 22222
+          port8102 = 8102
+          port22122 = 22122
+          port22222 = 22222
         }
         labels {
-            service = "${NOMAD_JOB_NAME}"
-        }        
+          service = "${NOMAD_JOB_NAME}"
+        }
       }
 
       service {
