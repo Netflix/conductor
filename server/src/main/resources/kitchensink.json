@@ -4,31 +4,6 @@
   "version": 1,
   "tasks": [
     {
-      "name": "task_0",
-      "taskReferenceName": "task_0",
-      "inputParameters": {
-        "failOnError": false,
-        "authorize": true,
-        "validate": {
-          "realm_access": {
-            "roles": [
-              "uma_authorization"
-            ]
-          },
-          "resource_access": {
-            "account": {
-              "roles": [
-                "manage-account",
-                "manage-account-links",
-                "view-profile"
-              ]
-            }
-          }
-        }
-      },
-      "type": "AUTH"
-    },
-    {
       "name": "task_1",
       "taskReferenceName": "task_1",
       "inputParameters": {
