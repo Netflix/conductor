@@ -18,21 +18,6 @@
  */
 package com.netflix.conductor.core.execution;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -58,6 +43,13 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren Workflow services provider interface
@@ -541,10 +533,23 @@ public class WorkflowExecutor {
 				queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());	
 			}
 
+			if (outcome.startWorkflow != null) {
+				DeciderService.StartWorkflowParams startWorkflow = outcome.startWorkflow;
+				String workflowName = startWorkflow.name;
+				int workflowVersion;
+				if (startWorkflow.version == null) {
+					WorkflowDef subFlowDef = metadata.getLatest(workflowName);
+					workflowVersion = subFlowDef.getVersion();
+				} else {
+					workflowVersion = startWorkflow.version;
+				}
+				startWorkflow(workflowName, workflowVersion, startWorkflow.params, null, workflow.getWorkflowId(), null,null);
+			}
+
 			if(stateChanged) {				
 				decide(workflowId);
 			}
-			
+
 		} catch (TerminateWorkflow tw) {
 			logger.debug(tw.getMessage(), tw);
 			terminate(def, workflow, tw);

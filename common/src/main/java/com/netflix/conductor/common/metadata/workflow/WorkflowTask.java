@@ -95,6 +95,8 @@ public class WorkflowTask {
 	private String sink;
 	
 	private Boolean optional;
+
+	private SubWorkflowParams timeOutWorkflow;
 	
 	/**
 	 * @return the name
@@ -356,7 +358,23 @@ public class WorkflowTask {
 	public void setOptional(Boolean optional) {
 		this.optional = optional;
 	}
-	
+
+	/**
+	 *
+	 * @return workflow name to be started once the task timed out
+	 */
+	public SubWorkflowParams getTimeOutWorkflow() {
+		return timeOutWorkflow;
+	}
+
+	/**
+	 *
+	 * @param timeOutWorkflow workflow name to be started once the task timed out
+	 */
+	public void setTimeOutWorkflow(SubWorkflowParams timeOutWorkflow) {
+		this.timeOutWorkflow = timeOutWorkflow;
+	}
+
 	private Collection<List<WorkflowTask>> children(){
 		Collection<List<WorkflowTask>> v1 = new LinkedList<>();
 		Type tt = Type.USER_DEFINED;
@@ -524,7 +542,7 @@ public class WorkflowTask {
 		return null;
 		
 	}
-	
+
 	@Override
 	public String toString() {
 		return name + "/" + taskReferenceName;
