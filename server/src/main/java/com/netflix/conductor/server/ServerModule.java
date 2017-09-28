@@ -20,6 +20,7 @@ package com.netflix.conductor.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.netflix.conductor.contribs.auth.AuthTask;
 import com.netflix.conductor.contribs.http.HttpTask;
 import com.netflix.conductor.contribs.http.HttpWaitTask;
 import com.netflix.conductor.contribs.http.RestClientManager;
@@ -99,6 +100,7 @@ public class ServerModule extends AbstractModule {
 		
 		install(new CoreModule());
 		install(new JerseyModule());
+		new AuthTask(config);
 		new HttpTask(new RestClientManager(), config);
 		new HttpWaitTask(new RestClientManagerHttpWait(), config);
 		new JsonJqTransform();
