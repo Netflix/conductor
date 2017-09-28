@@ -111,7 +111,7 @@ job "conductor" {
         db = "dynomite"
         workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
         workflow_elasticsearch_mode = "memory"
-        decider_sweep_frequency_seconds = "1"
+        workflow_sweeper_delay_seconds = "1"
         workflow_sweeper_mode = "direct"
 
         // Uncomment for NATS
