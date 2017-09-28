@@ -18,22 +18,6 @@
  */
 package com.netflix.conductor.core.execution;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.script.ScriptException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -41,11 +25,7 @@ import com.google.common.base.Preconditions;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.workflow.DynamicForkJoinTask;
-import com.netflix.conductor.common.metadata.workflow.DynamicForkJoinTaskList;
-import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.metadata.workflow.*;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
@@ -53,6 +33,14 @@ import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.script.ScriptException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren
@@ -140,6 +128,24 @@ public class DeciderService {
 				if (workflowTask != null && workflowTask.isOptional()) {					
 					task.setStatus(Status.COMPLETED_WITH_ERRORS);
 				} else {
+					if (workflowTask != null && workflowTask.getTimeOutWorkflow() != null &&
+							!StringUtils.isEmpty(workflowTask.getTimeOutWorkflow().getName())) {
+						Map<String, Object> params = new HashMap<>();
+						params.put("workflowId", workflow.getWorkflowId());
+						params.put("workflowType", workflow.getWorkflowType());
+						params.put("workflowInput", workflow.getInput());
+						params.put("taskId", task.getTaskId());
+						params.put("taskInput", task.getInputData());
+						params.put("taskRefName", task.getReferenceTaskName());
+						params.put("taskRetryCount", task.getRetryCount());
+
+						StartWorkflowParams startWorkflow = new StartWorkflowParams();
+						startWorkflow.name = workflowTask.getTimeOutWorkflow().getName();
+						startWorkflow.version = (Integer)workflowTask.getTimeOutWorkflow().getVersion();
+						startWorkflow.params = params;
+
+						outcome.startWorkflow = startWorkflow;
+					}
 					Task rt = retry(taskDef, workflowTask, task, workflow);
 					tasksToBeScheduled.put(rt.getReferenceTaskName(), rt);
 					executedTaskRefNames.remove(rt.getReferenceTaskName());
@@ -358,7 +364,7 @@ public class DeciderService {
 		Monitors.recordTaskTimeout(task.getTaskDefName());
 		
 		switch (taskType.getTimeoutPolicy()) {
-		case ALERT_ONLY:						
+		case ALERT_ONLY:
 			return;
 		case RETRY:
 			task.setStatus(Status.TIMED_OUT);
@@ -670,8 +676,16 @@ public class DeciderService {
 		List<Task> tasksToBeUpdated = new LinkedList<>();
 		
 		boolean isComplete;
-		
+
+		StartWorkflowParams startWorkflow;
+
 		private DeciderOutcome() { }
-		
+
+	}
+
+	public static class StartWorkflowParams {
+		String name;
+		Integer version;
+		Map<String, Object> params;
 	}
 }

@@ -110,7 +110,19 @@ job "conductor" {
       env {
         db = "dynomite"
         workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
+
+        // Workflow settings
+        workflow_dynomite_cluster_name = "owf"
+        workflow_namespace_prefix = "conductor"
+        workflow_namespace_queue_prefix = "conductor_queues"
         workflow_elasticsearch_mode = "memory"
+
+
+        // Dynomite settings
+        queues_dynomite_threads = "10"
+        queues_dynomite_nonQuorum_port = "22122"
+        decider_sweep_frequency_seconds = "1"
+
 
         // Uncomment for NATS
         io_nats_client_url = "nats://events.service.owf-dev:4222"
