@@ -58,6 +58,7 @@ public class WorkflowSweeper {
     private static final String className = WorkflowSweeper.class.getSimpleName();
 
     private static final String MODE_DIRECT = "direct";
+    private static final String MODE_UNACK = "unack";
 
     @Inject
     public WorkflowSweeper(WorkflowExecutor executor, MetadataDAO metadata, Configuration config, QueueDAO queues) {
@@ -65,7 +66,7 @@ public class WorkflowSweeper {
         this.queues = queues;
         this.executorThreadPoolSize = config.getIntProperty("workflow.sweeper.thread.count", 5);
         int delaySeconds = config.getIntProperty("workflow.sweeper.delay.seconds", 1);
-        String mode = config.getProperty("workflow.sweeper.mode", null);
+        String mode = config.getProperty("workflow.sweeper.mode", MODE_UNACK);
         if (this.executorThreadPoolSize > 0) {
             this.es = Executors.newFixedThreadPool(executorThreadPoolSize);
             init(executor, metadata, mode, delaySeconds);
@@ -76,9 +77,9 @@ public class WorkflowSweeper {
     }
 
     public void init(WorkflowExecutor executor, MetadataDAO metadata, String mode, int delaySeconds) {
+        logger.info("Workflow sweep mode is " + mode);
 
         ScheduledExecutorService deciderPool = Executors.newScheduledThreadPool(1);
-
         deciderPool.scheduleWithFixedDelay(() -> {
 
             try {
@@ -88,7 +89,7 @@ public class WorkflowSweeper {
                     return;
                 }
 
-                if (MODE_DIRECT.equals(mode)) {
+                if (MODE_DIRECT.equalsIgnoreCase(mode)) {
                     List<String> workflowIds = metadata.getAll().stream().map(workflowDef -> {
                         try {
                             return executor.getRunningWorkflowIds(workflowDef.getName());
@@ -125,8 +126,10 @@ public class WorkflowSweeper {
                         logger.debug("Running sweeper for workflow {}", workflowId);
                     }
                     boolean done = executor.decide(workflowId);
-                    if (!done && isUnack) {
-                        queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
+                    if (!done) {
+                        if (isUnack) {
+                            queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
+                        }
                     } else {
                         queues.remove(WorkflowExecutor.deciderQueue, workflowId);
                     }
