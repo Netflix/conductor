@@ -438,7 +438,7 @@ public class WorkflowExecutor {
 		} else {
 			if (result.isResetStartTime()) {
 				task.setStartTime(System.currentTimeMillis());
-				// We must reset endtime  if it is set previously
+				// We must reset endtime  only when it is set
 				if (task.getEndTime() > 0) {
 					task.setEndTime(System.currentTimeMillis());
 				}
