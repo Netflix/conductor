@@ -100,7 +100,7 @@ public class UpdateTask extends WorkflowSystemTask {
 			}
 
 			targetTask.setStatus(Status.valueOf(status));
-			targetTask.getOutputData().putAll(output);
+			targetTask.setOutputData(output);
 
 			TaskResult taskResult = new TaskResult(targetTask);
 			taskResult.setResetStartTime(getResetStartTime(task));
