@@ -333,8 +333,12 @@ public class WorkflowExecutor {
 		workflow.setStatus(WorkflowStatus.TERMINATED);
 		terminateWorkflow(workflow, reason, null);
 	}
-	
+
 	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow) throws Exception {
+		terminateWorkflow(workflow, reason, failureWorkflow, null);
+	}
+	
+	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow, Task failedTask) throws Exception {
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.TERMINATED);
@@ -373,6 +377,14 @@ public class WorkflowExecutor {
 			input.put("workflowId", workflowId);
 			input.put("reason", reason);
 			input.put("failureStatus", workflow.getStatus().toString());
+			if (failedTask != null) {
+				Map<String, Object> map = new HashMap<>();
+				map.put("input", failedTask.getInputData());
+				map.put("output", failedTask.getOutputData());
+				map.put("referenceName", failedTask.getReferenceTaskName());
+				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
+				input.put("failedTask", map);
+			}
 
 			try {
 				
@@ -825,7 +837,7 @@ public class WorkflowExecutor {
 		if(tw.task != null){
 			edao.updateTask(tw.task);
 		}
-		terminateWorkflow(workflow, tw.getMessage(), failureWorkflow);
+		terminateWorkflow(workflow, tw.getMessage(), failureWorkflow, tw.task);
 	}
 	
 
