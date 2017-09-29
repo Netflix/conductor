@@ -435,6 +435,14 @@ public class WorkflowExecutor {
 
 		if (task.getStatus().isTerminal()) {
 			task.setEndTime(System.currentTimeMillis());
+		} else {
+			if (result.isResetStartTime()) {
+				task.setStartTime(System.currentTimeMillis());
+				// We must reset endtime  if it is set previously
+				if (task.getEndTime() > 0) {
+					task.setEndTime(System.currentTimeMillis());
+				}
+			}
 		}
 		edao.updateTask(task);
 

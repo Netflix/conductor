@@ -51,6 +51,8 @@ public class TaskResult {
 	
 	private List<TaskExecLog> logs = new CopyOnWriteArrayList<>();
 
+	private boolean resetStartTime;
+
 	public TaskResult(Task task) {
 		this.workflowInstanceId = task.getWorkflowInstanceId();
 		this.taskId = task.getTaskId();
@@ -190,7 +192,23 @@ public class TaskResult {
 		this.logs.add(new TaskExecLog(log));
 		return this;
 	}
-	
+
+	/**
+	 *
+	 * @return Whether we reset the start/end time during status update
+	 */
+	public boolean isResetStartTime() {
+		return resetStartTime;
+	}
+
+	/**
+	 *
+	 * @param resetStartTime true to reset start/end time during status update
+	 */
+	public void setResetStartTime(boolean resetStartTime) {
+		this.resetStartTime = resetStartTime;
+	}
+
 	@Override
 	public String toString() {
 		return "TaskResult [workflowInstanceId=" + workflowInstanceId + ", taskId=" + taskId + ", status=" + status + "]";

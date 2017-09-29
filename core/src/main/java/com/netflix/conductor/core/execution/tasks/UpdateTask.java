@@ -39,6 +39,7 @@ public class UpdateTask extends WorkflowSystemTask {
 	private static final String STATUS_PARAMETER = "status";
 	private static final String WORKFLOW_ID_PARAMETER = "workflowId";
 	private static final String TASKREF_NAME_PARAMETER = "taskRefName";
+	private static final String RESET_PARAMETER = "resetStartTime";
 	private static final String OUTPUT_PARAMETER = "output";
 	public static final String NAME = "UPDATE_TASK";
 
@@ -76,36 +77,48 @@ public class UpdateTask extends WorkflowSystemTask {
 			return;
 		}
 
-		// Get the output map (optional) to be propagated to the target task
-		Map<String, Object> output = (Map<String, Object>) inputData.get(OUTPUT_PARAMETER);
-		if (output == null) {
-			output = new HashMap<>();
-		}
-
-		Workflow targetWorkflow = executor.getWorkflow(workflowId, true);
-		if (targetWorkflow == null) {
-			task.getOutputData().put("error", "No workflow found with id " + workflowId);
-			task.setStatus(Status.COMPLETED_WITH_ERRORS);
-			return;
-		}
-
-		Task targetTask = targetWorkflow.getTaskByRefName(taskRefName);
-		if (targetTask == null) {
-			task.getOutputData().put("error", "No task found with reference name " + taskRefName + ", workflowId " + workflowId);
-			task.setStatus(Status.COMPLETED_WITH_ERRORS);
-			return;
-		}
-
-		targetTask.setStatus(Status.valueOf(status));
-		targetTask.getOutputData().putAll(output);
-
 		try {
-			executor.updateTask(new TaskResult(targetTask));
+			// Get the output map (optional) to be propagated to the target task
+			Map<String, Object> output = (Map<String, Object>) inputData.get(OUTPUT_PARAMETER);
+			if (output == null) {
+				output = new HashMap<>();
+			}
+
+			Workflow targetWorkflow = executor.getWorkflow(workflowId, true);
+			if (targetWorkflow == null) {
+				task.getOutputData().put("error", "No workflow found with id " + workflowId);
+				task.setStatus(Status.COMPLETED_WITH_ERRORS);
+				return;
+			}
+
+			Task targetTask = targetWorkflow.getTaskByRefName(taskRefName);
+			if (targetTask == null) {
+				task.getOutputData().put("error", "No task found with reference name " + taskRefName + ", workflowId " + workflowId);
+				task.setStatus(Status.COMPLETED_WITH_ERRORS);
+				return;
+			}
+
+			targetTask.setStatus(Status.valueOf(status));
+			targetTask.getOutputData().putAll(output);
+
+			TaskResult taskResult = new TaskResult(targetTask);
+			taskResult.setResetStartTime(getResetStartTime(task));
+			executor.updateTask(taskResult);
 		} catch (Exception e) {
 			task.setStatus(Status.COMPLETED_WITH_ERRORS);
 			logger.error("Unable to update task: " + e.getMessage(), e);
 			task.getOutputData().put("error", "Unable to update task: " + e.getMessage());
 		}
+	}
+
+	private boolean getResetStartTime(Task task) {
+		Object obj = task.getInputData().get(RESET_PARAMETER);
+		if (obj instanceof Boolean) {
+			return (boolean)obj;
+		} else if (obj instanceof String) {
+			return Boolean.parseBoolean((String)obj);
+		}
+		return false;
 	}
 
 	@Override
