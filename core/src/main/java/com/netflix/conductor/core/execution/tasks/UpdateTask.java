@@ -41,6 +41,7 @@ public class UpdateTask extends WorkflowSystemTask {
 	private static final String TASKREF_NAME_PARAMETER = "taskRefName";
 	private static final String RESET_PARAMETER = "resetStartTime";
 	private static final String OUTPUT_PARAMETER = "output";
+	private static final String REASON_PARAMETER = "reason";
 	public static final String NAME = "UPDATE_TASK";
 
 	public UpdateTask() {
@@ -103,6 +104,7 @@ public class UpdateTask extends WorkflowSystemTask {
 
 			TaskResult taskResult = new TaskResult(targetTask);
 			taskResult.setResetStartTime(getResetStartTime(task));
+			taskResult.setReasonForIncompletion(getReasonForIncompletion(task));
 			executor.updateTask(taskResult);
 		} catch (Exception e) {
 			task.setStatus(Status.COMPLETED_WITH_ERRORS);
@@ -119,6 +121,20 @@ public class UpdateTask extends WorkflowSystemTask {
 			return Boolean.parseBoolean((String)obj);
 		}
 		return false;
+	}
+
+	private String getReasonForIncompletion(Task task) {
+		if (!task.getInputData().containsKey(REASON_PARAMETER)) {
+			return null;
+		}
+		Object obj = task.getInputData().get(REASON_PARAMETER);
+		if (obj == null) {
+			return null;
+		}
+		if (obj instanceof String) {
+			return (String)obj;
+		}
+		return obj.toString();
 	}
 
 	@Override
