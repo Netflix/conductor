@@ -34,15 +34,15 @@ import java.util.Map;
  * @author Oleksiy Lysak
  *
  */
-public class CompleteTask extends WorkflowSystemTask {
-	private static Logger logger = LoggerFactory.getLogger(CompleteTask.class);
+public class UpdateTask extends WorkflowSystemTask {
+	private static Logger logger = LoggerFactory.getLogger(UpdateTask.class);
 	private static final String STATUS_PARAMETER = "status";
 	private static final String WORKFLOW_ID_PARAMETER = "workflowId";
 	private static final String TASKREF_NAME_PARAMETER = "taskRefName";
 	private static final String OUTPUT_PARAMETER = "output";
-	public static final String NAME = "COMPLETE_TASK";
+	public static final String NAME = "UPDATE_TASK";
 
-	public CompleteTask() {
+	public UpdateTask() {
 		super(NAME);
 	}
 	
@@ -58,15 +58,22 @@ public class CompleteTask extends WorkflowSystemTask {
 		if (StringUtils.isEmpty(status)) {
 			task.setReasonForIncompletion("Missing '" + STATUS_PARAMETER + "' in input parameters");
 			task.setStatus(Status.FAILED);
-		} else if (!status.equals(Status.COMPLETED.name()) && !status.equals(Status.FAILED.name())) {
-			task.setReasonForIncompletion("Invalid '" + STATUS_PARAMETER + "' value. Allowed COMPLETED/FAILED only");
+			return;
+		} else if (!status.equals(Status.COMPLETED.name())
+				&& !status.equals(Status.COMPLETED_WITH_ERRORS.name())
+				&& !status.equals(Status.FAILED.name())
+				&& !status.equals(Status.IN_PROGRESS.name())) {
+			task.setReasonForIncompletion("Invalid '" + STATUS_PARAMETER + "' value. Allowed COMPLETED/COMPLETED_WITH_ERRORS/FAILED/IN_PROGRESS only");
 			task.setStatus(Status.FAILED);
+			return;
 		} else if (StringUtils.isEmpty(workflowId)) {
 			task.setReasonForIncompletion("Missing '" + WORKFLOW_ID_PARAMETER + "' in input parameters");
 			task.setStatus(Status.FAILED);
+			return;
 		} else if (StringUtils.isEmpty(taskRefName)) {
 			task.setReasonForIncompletion("Missing '" + TASKREF_NAME_PARAMETER + "' in input parameters");
 			task.setStatus(Status.FAILED);
+			return;
 		}
 
 		// Get the output map (optional) to be propagated to the target task
@@ -77,13 +84,15 @@ public class CompleteTask extends WorkflowSystemTask {
 
 		Workflow targetWorkflow = executor.getWorkflow(workflowId, true);
 		if (targetWorkflow == null) {
-			task.getOutputData().put("error", "No workflow found with ID: " + workflowId);
+			task.getOutputData().put("error", "No workflow found with id " + workflowId);
+			task.setStatus(Status.COMPLETED_WITH_ERRORS);
 			return;
 		}
 
 		Task targetTask = targetWorkflow.getTaskByRefName(taskRefName);
 		if (targetTask == null) {
-			task.getOutputData().put("error", "No task found with reference name: " + taskRefName + ", workflowId: " + workflowId);
+			task.getOutputData().put("error", "No task found with reference name " + taskRefName + ", workflowId " + workflowId);
+			task.setStatus(Status.COMPLETED_WITH_ERRORS);
 			return;
 		}
 
@@ -93,8 +102,9 @@ public class CompleteTask extends WorkflowSystemTask {
 		try {
 			executor.updateTask(new TaskResult(targetTask));
 		} catch (Exception e) {
-			logger.error("Unable to complete task", e);
-			task.getOutputData().put("error", "Unable to complete task. " + e.getMessage());
+			task.setStatus(Status.COMPLETED_WITH_ERRORS);
+			logger.error("Unable to update task: " + e.getMessage(), e);
+			task.getOutputData().put("error", "Unable to update task: " + e.getMessage());
 		}
 	}
 
