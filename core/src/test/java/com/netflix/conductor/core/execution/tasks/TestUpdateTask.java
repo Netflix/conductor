@@ -9,9 +9,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Oleksiy Lysak
@@ -123,4 +121,87 @@ public class TestUpdateTask {
         assertEquals("Unable to update task: test", task.getOutputData().get("error"));
     }
 
+    @Test
+    public void completed() throws Exception {
+        Task task = new Task();
+        task.getInputData().put("status", "COMPLETED");
+        task.getInputData().put("workflowId", "1");
+        task.getInputData().put("taskRefName", "wait");
+
+        Workflow workflow = mock(Workflow.class);
+        when(workflow.getTaskByRefName("wait")).thenReturn(task);
+
+        WorkflowExecutor executor = mock(WorkflowExecutor.class);
+        when(executor.getWorkflow("1", true)).thenReturn(workflow);
+        doNothing().when(executor).updateTask(any(TaskResult.class));
+
+        UpdateTask updateTask = new UpdateTask();
+        updateTask.start(workflow, task, executor);
+
+        assertEquals(Task.Status.COMPLETED, task.getStatus());
+        assertNotNull(task.getOutputData());
+    }
+
+    @Test
+    public void completed_with_errors() throws Exception {
+        Task task = new Task();
+        task.getInputData().put("status", "COMPLETED_WITH_ERRORS");
+        task.getInputData().put("workflowId", "1");
+        task.getInputData().put("taskRefName", "wait");
+
+        Workflow workflow = mock(Workflow.class);
+        when(workflow.getTaskByRefName("wait")).thenReturn(task);
+
+        WorkflowExecutor executor = mock(WorkflowExecutor.class);
+        when(executor.getWorkflow("1", true)).thenReturn(workflow);
+        doNothing().when(executor).updateTask(any(TaskResult.class));
+
+        UpdateTask updateTask = new UpdateTask();
+        updateTask.start(workflow, task, executor);
+
+        assertEquals(Task.Status.COMPLETED_WITH_ERRORS, task.getStatus());
+        assertNotNull(task.getOutputData());
+    }
+
+    @Test
+    public void failed() throws Exception {
+        Task task = new Task();
+        task.getInputData().put("status", "FAILED");
+        task.getInputData().put("workflowId", "1");
+        task.getInputData().put("taskRefName", "wait");
+
+        Workflow workflow = mock(Workflow.class);
+        when(workflow.getTaskByRefName("wait")).thenReturn(task);
+
+        WorkflowExecutor executor = mock(WorkflowExecutor.class);
+        when(executor.getWorkflow("1", true)).thenReturn(workflow);
+        doNothing().when(executor).updateTask(any(TaskResult.class));
+
+        UpdateTask updateTask = new UpdateTask();
+        updateTask.start(workflow, task, executor);
+
+        assertEquals(Task.Status.FAILED, task.getStatus());
+        assertNotNull(task.getOutputData());
+    }
+
+    @Test
+    public void in_progress() throws Exception {
+        Task task = new Task();
+        task.getInputData().put("status", "IN_PROGRESS");
+        task.getInputData().put("workflowId", "1");
+        task.getInputData().put("taskRefName", "wait");
+
+        Workflow workflow = mock(Workflow.class);
+        when(workflow.getTaskByRefName("wait")).thenReturn(task);
+
+        WorkflowExecutor executor = mock(WorkflowExecutor.class);
+        when(executor.getWorkflow("1", true)).thenReturn(workflow);
+        doNothing().when(executor).updateTask(any(TaskResult.class));
+
+        UpdateTask updateTask = new UpdateTask();
+        updateTask.start(workflow, task, executor);
+
+        assertEquals(Task.Status.IN_PROGRESS, task.getStatus());
+        assertNotNull(task.getOutputData());
+    }
 }
