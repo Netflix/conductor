@@ -121,7 +121,7 @@ job "conductor" {
         workflow_elasticsearch_url = "${NOMAD_TASK_NAME}.${NOMAD_JOB_NAME}.service.<TLD>:9300"
         workflow_elasticsearch_mode = "elasticsearch"
         workflow_elasticsearch_index_name = "conductor"
-        workflow_elasticsearch_cluster_name = "owf"
+        workflow_elasticsearch_cluster_name = "search.conductor"
 
         // Dynomite settings
         queues_dynomite_threads = "10"
