@@ -218,11 +218,6 @@ job "conductor" {
     task "es" {
 
       driver = "docker"
-      env {
-        "cluster.name" = "owf"
-        "xpack.security.enabled" = "false"
-      }
-
       config {
         image = "docker.elastic.co/elasticsearch/elasticsearch:5.6.2"
         port_map {
@@ -232,6 +227,11 @@ job "conductor" {
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
+      }
+
+      env {
+        "cluster.name" = "owf"
+        "xpack.security.enabled" = "false"
       }
 
       service {
