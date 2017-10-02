@@ -115,24 +115,21 @@ job "conductor" {
         workflow_dynomite_cluster_name = "owf"
         workflow_namespace_prefix = "conductor"
         workflow_namespace_queue_prefix = "conductor_queues"
-        workflow_elasticsearch_mode = "memory"
+        decider_sweep_frequency_seconds = "1"
 
+        // Elasticsearch settings
+        workflow_elasticsearch_url = "${NOMAD_JOB_NAME}-es.service.<TLD>:9300"
+        workflow_elasticsearch_mode = "elasticsearch"
+        workflow_elasticsearch_index_name = "conductor"
+        workflow_elasticsearch_cluster_name = "owf"
 
         // Dynomite settings
         queues_dynomite_threads = "10"
         queues_dynomite_nonQuorum_port = "22122"
-        decider_sweep_frequency_seconds = "1"
 
-
-        // Uncomment for NATS
+        // NATS settings
         io_nats_client_url = "nats://events.service.owf-dev:4222"
         conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule"
-
-        // Uncomment for NAT Streaming
-        //io_nats_streaming_url = "nats://${NOMAD_JOB_NAME}-nats.service.<TLD>:4222:us-east-1c"
-        //io_nats_streaming_clusterId = "test-cluster"
-        //io_nats_streaming_clientId = "nomad"
-        //conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule"
 
         // Auth settings
         conductor_auth_url = "https://auth.dmlib.de/v1/tenant/deluxe/auth/token"
@@ -209,6 +206,56 @@ job "conductor" {
           }
           port "port22222" {
             static = 22222
+          }
+        }
+      }
+    } // end task
+  } // end group
+
+  group "es" {
+    count = 1
+
+    task "es" {
+
+      driver = "docker"
+      env {
+        "cluster.name" = "owf"
+        "xpack.security.enabled" = "false"
+      }
+
+      config {
+        image = "docker.elastic.co/elasticsearch/elasticsearch:5.6.2"
+        port_map {
+          port9200 = 9200
+          port9300 = 9300
+        }
+        labels {
+          service = "${NOMAD_JOB_NAME}"
+        }
+      }
+
+      service {
+        name = "${JOB}-${TASK}"
+        port = "port9200"
+
+        check {
+          type     = "tcp"
+          interval = "10s"
+          timeout  = "3s"
+        }
+      }
+
+      resources {
+        cpu    = 128 # MHz
+        memory = 1024 # MB
+
+        network {
+          mbits = 4
+          port "port9200" {
+            static = 9200
+          }
+          port "port9300" {
+            static = 9300
           }
         }
       }
