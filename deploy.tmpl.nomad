@@ -112,16 +112,14 @@ job "conductor" {
         workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
 
         // Workflow settings
-        workflow_dynomite_cluster_name = "${NOMAD_TASK_NAME}.${NOMAD_JOB_NAME}"
+        workflow_dynomite_cluster_name = "owf"
         workflow_namespace_prefix = "conductor"
         workflow_namespace_queue_prefix = "conductor_queues"
         decider_sweep_frequency_seconds = "1"
 
         // Elasticsearch settings
-        workflow_elasticsearch_url = "${NOMAD_TASK_NAME}.${NOMAD_JOB_NAME}.service.<TLD>:9300"
-        workflow_elasticsearch_mode = "elasticsearch"
+        workflow_elasticsearch_mode = "memory"
         workflow_elasticsearch_index_name = "conductor"
-        workflow_elasticsearch_cluster_name = "search.conductor"
 
         // Dynomite settings
         queues_dynomite_threads = "10"
@@ -207,56 +205,6 @@ job "conductor" {
           port "port22222" {
             static = 22222
           }
-        }
-      }
-    } // end task
-  } // end group
-
-  group "search" {
-    count = 1
-
-    task "search" {
-
-      driver = "docker"
-      config {
-        image = "docker.elastic.co/elasticsearch/elasticsearch:5.6.2"
-        port_map {
-          http = 9200
-          tcp = 9300
-        }
-        labels {
-          service = "${NOMAD_JOB_NAME}"
-        }
-      }
-
-      env {
-        ES_JAVA_OPTS = "-Xms512m -Xmx512m"
-        discovery.type = "single-node"
-        cluster.name = "search.conductor"
-        xpack.security.enabled = "false"
-      }
-
-      service {
-        tags = ["${NOMAD_TASK_NAME}"]
-        name = "${JOB}"
-        port = "http"
-
-        check {
-          type     = "http"
-          path     = "/"
-          interval = "10s"
-          timeout  = "3s"
-        }
-      }
-
-      resources {
-        cpu    = 128 # MHz
-        memory = 1024 # MB
-
-        network {
-          mbits = 4
-          port "http" {}
-          port "tcp" {}
         }
       }
     } // end task
