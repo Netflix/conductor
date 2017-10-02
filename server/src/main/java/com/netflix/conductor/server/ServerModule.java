@@ -37,8 +37,8 @@ import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
-import com.netflix.conductor.dao.index.ElasticSearchDAO;
-import com.netflix.conductor.dao.index.ElasticsearchModule;
+import com.netflix.conductor.dao.es5.index.ElasticSearch5DAO;
+import com.netflix.conductor.dao.es5.index.Elasticsearch5Module;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.redis.DynoShardSupplier;
 import redis.clients.jedis.JedisCommands;
@@ -88,12 +88,12 @@ public class ServerModule extends AbstractModule {
 		DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
 		DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
 		
-		install(new ElasticsearchModule());
+		install(new Elasticsearch5Module());
 		bind(MetadataDAO.class).to(RedisMetadataDAO.class);
 		bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
 		bind(DynoQueueDAO.class).toInstance(queueDao);
 		bind(QueueDAO.class).to(DynoQueueDAO.class);
-		bind(IndexDAO.class).to(ElasticSearchDAO.class);
+		bind(IndexDAO.class).to(ElasticSearch5DAO.class);
 		
 		DynoProxy proxy = new DynoProxy(dynoConn);
 		bind(DynoProxy.class).toInstance(proxy);
