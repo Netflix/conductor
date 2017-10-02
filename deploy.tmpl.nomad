@@ -112,16 +112,16 @@ job "conductor" {
         workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
 
         // Workflow settings
-        workflow_dynomite_cluster_name = "owf"
+        workflow_dynomite_cluster_name = "${NOMAD_TASK_NAME}.${NOMAD_JOB_NAME}"
         workflow_namespace_prefix = "conductor"
         workflow_namespace_queue_prefix = "conductor_queues"
         decider_sweep_frequency_seconds = "1"
 
         // Elasticsearch settings
-        workflow_elasticsearch_url = "${NOMAD_JOB_NAME}-es.service.<TLD>:9300"
+        workflow_elasticsearch_url = "${NOMAD_TASK_NAME}.${NOMAD_JOB_NAME}.service.<TLD>:9300"
         workflow_elasticsearch_mode = "elasticsearch"
         workflow_elasticsearch_index_name = "conductor"
-        workflow_elasticsearch_cluster_name = "owf"
+        workflow_elasticsearch_cluster_name = "search.conductor"
 
         // Dynomite settings
         queues_dynomite_threads = "10"
@@ -212,17 +212,17 @@ job "conductor" {
     } // end task
   } // end group
 
-  group "es" {
+  group "search" {
     count = 1
 
-    task "es" {
+    task "search" {
 
       driver = "docker"
       config {
         image = "docker.elastic.co/elasticsearch/elasticsearch:5.6.2"
         port_map {
-          port9200 = 9200
-          port9300 = 9300
+          http = 9200
+          tcp = 9300
         }
         labels {
           service = "${NOMAD_JOB_NAME}"
@@ -230,16 +230,20 @@ job "conductor" {
       }
 
       env {
-        "cluster.name" = "owf"
-        "xpack.security.enabled" = "false"
+        ES_JAVA_OPTS = "-Xms512m -Xmx512m"
+        discovery.type = "single-node"
+        cluster.name = "search.conductor"
+        xpack.security.enabled = "false"
       }
 
       service {
-        name = "${JOB}-${TASK}"
-        port = "port9200"
+        tags = ["${NOMAD_TASK_NAME}"]
+        name = "${JOB}"
+        port = "http"
 
         check {
-          type     = "tcp"
+          type     = "http"
+          path     = "/"
           interval = "10s"
           timeout  = "3s"
         }
@@ -251,12 +255,8 @@ job "conductor" {
 
         network {
           mbits = 4
-          port "port9200" {
-            static = 9200
-          }
-          port "port9300" {
-            static = 9300
-          }
+          port "http" {}
+          port "tcp" {}
         }
       }
     } // end task
