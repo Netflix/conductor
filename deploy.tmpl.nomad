@@ -13,7 +13,7 @@ job "conductor" {
   constraint {
     attribute = "${meta.env_type}"
     // Options: [ test | live ]
-    value     = "test"
+    value     = "<ENV_TYPE>"
   }
 
   // Configure the job to do rolling updates
