@@ -16,6 +16,10 @@ if [ -z "$CONFIG_PROP" ];
     export config_file=/app/config/$CONFIG_PROP
 fi
 
+# Remove me later!
+echo "Waiting 2 minutes for my slow database to start up."
+sleep 120
+
 # Log the configuration settings as defaults
 echo "Starting conductor server with the following defaults: $(cat $config_file | grep = | grep -v '#' | sed ':a;N;$!ba;s/\n/ /g')"
 

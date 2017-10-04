@@ -7,7 +7,7 @@ job "conductor" {
   constraint {
     attribute = "${meta.hood}"
     // Options: [ corp | prod | shared ]
-    value     = "shared"
+    value     = "corp"
   }
 
   constraint {
@@ -209,4 +209,4 @@ job "conductor" {
       }
     } // end task
   } // end group
-}
+} // end job
