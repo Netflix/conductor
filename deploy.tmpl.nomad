@@ -108,28 +108,31 @@ job "conductor" {
       }
 
       env {
-        db = "dynomite"
-        workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:8102:us-east-1c"
+        STACK = "<TLD>" // Important for redis key
+        environment = "<TLD>"
+
+        // Database settings
+        db = "redis"
+        workflow_dynomite_cluster_name = "${NOMAD_JOB_NAME}"
+        workflow_dynomite_cluster_hosts = "${NOMAD_JOB_NAME}-db.service.<TLD>:6379:us-east-1c"
 
         // Workflow settings
-        workflow_dynomite_cluster_name = "owf"
-        workflow_namespace_prefix = "conductor"
-        workflow_namespace_queue_prefix = "conductor_queues"
+        workflow_namespace_prefix = "${NOMAD_JOB_NAME}.conductor"
+        workflow_namespace_queue_prefix = "${NOMAD_JOB_NAME}.conductor.queues"
         decider_sweep_frequency_seconds = "1"
 
         // Elasticsearch settings
-        workflow_elasticsearch_mode = "memory"
-        workflow_elasticsearch_index_name = "conductor"
-
-        // Dynomite settings
-        queues_dynomite_threads = "10"
-        queues_dynomite_nonQuorum_port = "22122"
+        workflow_elasticsearch_url = "${NOMAD_JOB_NAME}-search.service.<TLD>:9300"
+        workflow_elasticsearch_mode = "elasticsearch"
+        workflow_elasticsearch_index_name = "${NOMAD_JOB_NAME}.conductor.<TLD>"
+        workflow_elasticsearch_cluster_name = "${NOMAD_JOB_NAME}.search"
 
         // NATS settings
-        io_nats_client_url = "nats://events.service.owf-dev:4222"
+        io_nats_client_url = "nats://events.service.<TLD>:4222"
         conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule"
 
         // Auth settings
+        // TODO: Move client secret to VAULT!
         conductor_auth_url = "https://auth.dmlib.de/v1/tenant/deluxe/auth/token"
         conductor_auth_clientId = "deluxe.conductor"
         conductor_auth_clientSecret = "4ecafd6a-a3ce-45dd-bf05-85f2941413d3"
@@ -168,11 +171,9 @@ job "conductor" {
 
       driver = "docker"
       config {
-        image = "v1r3n/dynomite"
+        image = "redis:3.2"
         port_map {
-          port8102 = 8102
-          port22122 = 22122
-          port22222 = 22222
+          port6379 = 6379
         }
         labels {
           service = "${NOMAD_JOB_NAME}"
@@ -181,7 +182,7 @@ job "conductor" {
 
       service {
         name = "${JOB}-${TASK}"
-        port = "port8102"
+        port = "port6379"
 
         check {
           type     = "tcp"
@@ -196,17 +197,79 @@ job "conductor" {
 
         network {
           mbits = 4
-          port "port8102" {
-            static = 8102
-          }
-          port "port22122" {
-            static = 22122
-          }
-          port "port22222" {
-            static = 22222
+          port "port6379" {
+            static = 6379
           }
         }
       }
-    } // end task
-  } // end group
+    }
+    // end task
+  }
+  // end group
+
+  group "search" {
+    count = 1
+
+    task "search" {
+
+      driver = "docker"
+      config {
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/consul-elasticsearch:0.1.2"
+        port_map {
+          http = 9200
+          tcp = 9300
+        }
+        labels {
+          service = "${NOMAD_JOB_NAME}"
+        }
+        logging {
+          type = "syslog"
+          config {
+            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
+          }
+        }
+      }
+
+      env {
+        ES_JAVA_OPTS        = "-Xms512m -Xmx512m"
+        CONSUL_ADDR         = "consul.service.<TLD>:8500"
+        CLUSTER_NAME        = "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}"
+        PUBLISH_IP          = "${NOMAD_IP_tcp}"
+        PUBLISH_PORT        = "${NOMAD_HOST_PORT_tcp}"
+        DISCOVERY_MIN_NODES = "1"
+        DISCOVERY_HOST      = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
+        DISCOVERY_WAIT      = "30s:60s"
+      }
+
+      service {
+        name = "${JOB}-${TASK}"
+        port = "http"
+
+        check {
+          type     = "http"
+          path     = "/"
+          interval = "10s"
+          timeout  = "3s"
+        }
+      }
+
+      resources {
+        cpu    = 128 # MHz
+        memory = 1024 # MB
+
+        network {
+          mbits = 4
+          port "http" {
+            static = 9200
+          }
+          port "tcp" {
+            static = 9300
+          }
+        }
+      }
+    }
+    // end task
+  }
+  // end group
+
 } // end job
