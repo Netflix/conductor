@@ -166,6 +166,10 @@ public class ExecutionService {
 		return executor.getTasks(taskType, startKey, count);
 	}
 
+	public List<Task> getTasks(String taskType) throws Exception {
+		return executor.getTasks(taskType);
+	}
+
 	public Task getTask(String taskId) throws Exception {
 		return edao.getTask(taskId);
 	}

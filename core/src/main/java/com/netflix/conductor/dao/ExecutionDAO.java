@@ -54,6 +54,14 @@ public interface ExecutionDAO {
 	public abstract List<Task> getTasks(String taskType, String startKey, int count);
 
 	/**
+	 *
+	 * @param taskType Type of task
+	 * @return List of tasks filtered by taskType
+	 *
+	 */
+	public abstract List<Task> getTasks(String taskType);
+
+	/**
 	 * 
 	 * @param tasks tasks to be created
 	 * @return List of tasks that were created.
