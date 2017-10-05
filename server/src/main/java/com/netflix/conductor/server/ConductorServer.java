@@ -153,9 +153,36 @@ public class ConductorServer {
 				.withDynomiteClusterName(dynoClusterName)
 				.withCPConfig(cp)
 				.build();
-			
+
+			int connectAttempts = cc.getIntProperty("workflow.dynomite.connection.attempts", 60);
+			int connectSleepSecs = cc.getIntProperty("workflow.dynomite.connection.sleep.seconds", 1);
+			logger.info("Initializing dynomite waiter. Connection attempts {}, sleep time {} seconds", connectAttempts, connectSleepSecs);
+
+			int attemptsMade = 0;
+			boolean connected = false;
+			do {
+				attemptsMade++;
+				try {
+					// In response, the echo should return the 'ping'
+					String response = jedis.echo("ping");
+					connected = "ping".equalsIgnoreCase(response);
+				} catch (Exception ex) {
+					logger.error("Dynomite connection failed: " + ex.getMessage() + ". Sleep for a while. Attempts made " + attemptsMade, ex);
+					try {
+						Thread.sleep(connectSleepSecs * 1000L);
+					} catch (InterruptedException e) {
+						logger.error("Dynomite connection sleep got an error: " + e.getMessage());
+					}
+				}
+			} while (!connected && attemptsMade < connectAttempts);
+
+			// Print give up
+			if (!connected && attemptsMade >= connectAttempts) {
+				logger.warn("No db connection obtained during {} attempts. Giving up ...", attemptsMade);
+				System.exit(-1);
+			}
+
 			logger.info("Starting conductor server using dynomite cluster " + dynoClusterName);
-			
 			break;
 			
 		case memory:
