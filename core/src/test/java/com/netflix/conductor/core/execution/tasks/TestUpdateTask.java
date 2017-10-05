@@ -37,7 +37,7 @@ public class TestUpdateTask {
         task.getInputData().put("status", "SKIPPED");
         updateTask.start(workflow, task, executor);
         assertEquals(Task.Status.FAILED, task.getStatus());
-        assertEquals("Invalid 'status' value. Allowed COMPLETED/COMPLETED_WITH_ERRORS/FAILED/IN_PROGRESS only", task.getReasonForIncompletion());
+        assertEquals("Invalid 'status' value. Allowed COMPLETED/FAILED/IN_PROGRESS only", task.getReasonForIncompletion());
     }
 
     @Test
@@ -74,8 +74,8 @@ public class TestUpdateTask {
         updateTask.start(workflow, task, executor);
 
         assertNotNull(task.getOutputData());
-        assertEquals(Task.Status.COMPLETED_WITH_ERRORS, task.getStatus());
-        assertEquals("No workflow found with id 1", task.getOutputData().get("error"));
+        assertEquals(Task.Status.FAILED, task.getStatus());
+        assertEquals("No workflow found with id 1", task.getReasonForIncompletion());
     }
 
     @Test
@@ -95,8 +95,8 @@ public class TestUpdateTask {
         updateTask.start(workflow, task, executor);
 
         assertNotNull(task.getOutputData());
-        assertEquals(Task.Status.COMPLETED_WITH_ERRORS, task.getStatus());
-        assertEquals("No task found with reference name wait, workflowId 1", task.getOutputData().get("error"));
+        assertEquals(Task.Status.FAILED, task.getStatus());
+        assertEquals("No task found with reference name wait, workflowId 1", task.getReasonForIncompletion());
     }
 
     @Test
@@ -117,8 +117,8 @@ public class TestUpdateTask {
         updateTask.start(workflow, task, executor);
 
         assertNotNull(task.getOutputData());
-        assertEquals(Task.Status.COMPLETED_WITH_ERRORS, task.getStatus());
-        assertEquals("Unable to update task: test", task.getOutputData().get("error"));
+        assertEquals(Task.Status.FAILED, task.getStatus());
+        assertEquals("Unable to update task: test", task.getReasonForIncompletion());
     }
 
     @Test
@@ -139,27 +139,6 @@ public class TestUpdateTask {
         updateTask.start(workflow, task, executor);
 
         assertEquals(Task.Status.COMPLETED, task.getStatus());
-        assertNotNull(task.getOutputData());
-    }
-
-    @Test
-    public void completed_with_errors() throws Exception {
-        Task task = new Task();
-        task.getInputData().put("status", "COMPLETED_WITH_ERRORS");
-        task.getInputData().put("workflowId", "1");
-        task.getInputData().put("taskRefName", "wait");
-
-        Workflow workflow = mock(Workflow.class);
-        when(workflow.getTaskByRefName("wait")).thenReturn(task);
-
-        WorkflowExecutor executor = mock(WorkflowExecutor.class);
-        when(executor.getWorkflow("1", true)).thenReturn(workflow);
-        doNothing().when(executor).updateTask(any(TaskResult.class));
-
-        UpdateTask updateTask = new UpdateTask();
-        updateTask.start(workflow, task, executor);
-
-        assertEquals(Task.Status.COMPLETED_WITH_ERRORS, task.getStatus());
         assertNotNull(task.getOutputData());
     }
 
