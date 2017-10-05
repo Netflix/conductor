@@ -51,6 +51,8 @@ job "conductor" {
 
       env {
         WF_SERVER = "http://${NOMAD_JOB_NAME}-server.service.<TLD>:30000/api/"
+        TLD = "<TLD>"
+        DM_TLD = "<DM_TLD>"
       }
 
       # The service block tells Nomad how to register this service
@@ -133,6 +135,9 @@ job "conductor" {
         conductor_auth_url = "https://auth.dmlib.de/v1/tenant/deluxe/auth/token"
         conductor_auth_clientId = "deluxe.conductor"
         conductor_auth_clientSecret = "4ecafd6a-a3ce-45dd-bf05-85f2941413d3"
+        
+        TLD = "<TLD>"
+        DM_TLD = "<DM_TLD>"
       }
 
       service {
