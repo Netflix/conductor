@@ -62,10 +62,9 @@ public class UpdateTask extends WorkflowSystemTask {
 			task.setStatus(Status.FAILED);
 			return;
 		} else if (!status.equals(Status.COMPLETED.name())
-				&& !status.equals(Status.COMPLETED_WITH_ERRORS.name())
 				&& !status.equals(Status.FAILED.name())
 				&& !status.equals(Status.IN_PROGRESS.name())) {
-			task.setReasonForIncompletion("Invalid '" + STATUS_PARAMETER + "' value. Allowed COMPLETED/COMPLETED_WITH_ERRORS/FAILED/IN_PROGRESS only");
+			task.setReasonForIncompletion("Invalid '" + STATUS_PARAMETER + "' value. Allowed COMPLETED/FAILED/IN_PROGRESS only");
 			task.setStatus(Status.FAILED);
 			return;
 		} else if (StringUtils.isEmpty(workflowId)) {
@@ -87,15 +86,15 @@ public class UpdateTask extends WorkflowSystemTask {
 
 			Workflow targetWorkflow = executor.getWorkflow(workflowId, true);
 			if (targetWorkflow == null) {
-				task.getOutputData().put("error", "No workflow found with id " + workflowId);
-				task.setStatus(Status.COMPLETED_WITH_ERRORS);
+				task.setReasonForIncompletion("No workflow found with id " + workflowId);
+				task.setStatus(Status.FAILED);
 				return;
 			}
 
 			Task targetTask = targetWorkflow.getTaskByRefName(taskRefName);
 			if (targetTask == null) {
-				task.getOutputData().put("error", "No task found with reference name " + taskRefName + ", workflowId " + workflowId);
-				task.setStatus(Status.COMPLETED_WITH_ERRORS);
+				task.setReasonForIncompletion("No task found with reference name " + taskRefName + ", workflowId " + workflowId);
+				task.setStatus(Status.FAILED);
 				return;
 			}
 
@@ -107,9 +106,9 @@ public class UpdateTask extends WorkflowSystemTask {
 			taskResult.setReasonForIncompletion(getReasonForIncompletion(task));
 			executor.updateTask(taskResult);
 		} catch (Exception e) {
-			task.setStatus(Status.COMPLETED_WITH_ERRORS);
+			task.setStatus(Status.FAILED);
 			logger.error("Unable to update task: " + e.getMessage(), e);
-			task.getOutputData().put("error", "Unable to update task: " + e.getMessage());
+			task.setReasonForIncompletion("Unable to update task: " + e.getMessage());
 		}
 	}
 
