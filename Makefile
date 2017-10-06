@@ -23,7 +23,7 @@ down:
 
 .convert-deploy-template:
 	@if test "$(APP_VERSION)" = "" ; then APP_VERSION=$$(mold -app-version); fi
-	@sed -e "s/<APP_VERSION>/${APP_VERSION}/g" -e "s/<ENV_TYPE>/${ENV_TYPE}/g" -e "s#<SERVICE_TAG>#urlprefix-${NAME}.dmlib.${TLDEXT}/#g" -e "s/<TLD>/owf-dev/g" deploy.tmpl.nomad > deploy.nomad
+	@sed -e "s/<APP_VERSION>/${APP_VERSION}/g" -e "s/<ENV_TYPE>/${ENV_TYPE}/g" -e "s#<SERVICE_TAG>#urlprefix-${NAME}.dmlib.${TLDEXT}/#g" -e "s/<TLD>/${TLD}/g" deploy.tmpl.nomad > deploy.nomad
 
 plan: .convert-deploy-template
 	-nomad plan deploy.nomad
