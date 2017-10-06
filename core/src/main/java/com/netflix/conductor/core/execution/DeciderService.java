@@ -128,8 +128,10 @@ public class DeciderService {
 				if (workflowTask != null && workflowTask.isOptional()) {					
 					task.setStatus(Status.COMPLETED_WITH_ERRORS);
 				} else {
-					if (workflowTask != null && workflowTask.getTimeOutWorkflow() != null &&
-							!StringUtils.isEmpty(workflowTask.getTimeOutWorkflow().getName())) {
+					if (task.getStatus() == Status.TIMED_OUT
+							&& workflowTask != null
+							&& workflowTask.getTimeOutWorkflow() != null
+							&& !StringUtils.isEmpty(workflowTask.getTimeOutWorkflow().getName())) {
 						Map<String, Object> params = new HashMap<>();
 						params.put("workflowId", workflow.getWorkflowId());
 						params.put("workflowType", workflow.getWorkflowType());
