@@ -161,6 +161,7 @@ public class HttpTask extends WorkflowSystemTask {
 
                     System.out.println("body=====" + body);
                     response = httpCallUrlEncoded(input, body);
+					logger.info("http task started taskId" + task.getTaskId()+",request input="+input);
                 } else {
                     response = httpCall(input);
                 }
@@ -168,7 +169,7 @@ public class HttpTask extends WorkflowSystemTask {
                 response = httpCall(input);
             }
 
-            logger.info("response {}, {}", response.statusCode, response.body);
+            logger.info("http task completed response="+ response.body+",taskId="+task.getTaskId());
             if (response.statusCode > 199 && response.statusCode < 300) {
                 task.setStatus(Status.COMPLETED);
             } else {

@@ -307,6 +307,7 @@ public class DeciderService {
 		if (!task.getStatus().isRetriable() || SystemTaskType.isBuiltIn(task.getTaskType()) || taskDef == null || taskDef.getRetryCount() <= retryCount) {
 			WorkflowStatus status = task.getStatus().equals(Status.TIMED_OUT) ? WorkflowStatus.TIMED_OUT : WorkflowStatus.FAILED;
 			task.setRetried(true);
+			logger.info("Timeout or failed  error occurred. workflowId=" + workflow.getWorkflowId()+",taskId"+task.getTaskId()+",CorrelationId="+workflow.getCorrelationId()+",Reason="+task.getReasonForIncompletion()+",workflowstatus="+workflow.getStatus());
 			throw new TerminateWorkflow(task.getReasonForIncompletion(), status, task);
 		}
 

@@ -138,6 +138,7 @@ public class WorkflowExecutor {
 			wf.setTaskToDomain(taskToDomain);
 			edao.createWorkflow(wf);
 			decide(workflowId);
+			logger.info("Workflow has started.Current status=" + wf.getStatus() + ", workflowId=" + wf.getWorkflowId()+",input="+wf.getInput());
 			return workflowId;
 			
 		}catch (Exception e) {
@@ -317,8 +318,8 @@ public class WorkflowExecutor {
 		workflow.setStatus(WorkflowStatus.COMPLETED);
 		workflow.setOutput(wf.getOutput());
 		edao.updateWorkflow(workflow);
-
-		// If the following task, for some reason fails, the sweep will take
+       
+	 	// If the following task, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
@@ -326,6 +327,7 @@ public class WorkflowExecutor {
 		}
 		Monitors.recordWorkflowCompletion(workflow.getWorkflowType(), workflow.getEndTime() - workflow.getStartTime());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input"+wf.getInput()+",CorrelationId="+wf.getCorrelationId(),"output=",wf.getOutput());
 	}
 
 	public void terminateWorkflow(String workflowId, String reason) throws Exception {
@@ -413,7 +415,6 @@ public class WorkflowExecutor {
 		String workflowId = result.getWorkflowInstanceId();
 		Workflow wf = edao.getWorkflow(workflowId);
 		Task task = edao.getTask(result.getTaskId());
-		
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
@@ -838,6 +839,7 @@ public class WorkflowExecutor {
 			edao.updateTask(tw.task);
 		}
 		terminateWorkflow(workflow, tw.getMessage(), failureWorkflow, tw.task);
+		logger.info("Workflow failed. workflowId=" + workflow.getWorkflowId()+",Reason="+tw.getMessage()+",taskId="+tw.task.getTaskId());
 	}
 	
 
