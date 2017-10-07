@@ -170,6 +170,11 @@ job "conductor" {
   group "db" {
     count = 1
 
+    constraint {
+      attribute = "${attr.platform.aws.placement.availability-zone}"
+      value = "us-west-2b"
+    }
+
     task "db" {
 
       driver = "docker"
@@ -178,9 +183,19 @@ job "conductor" {
         port_map {
           port6379 = 6379
         }
+        volume_driver = "ebs"
+        volumes = [
+          "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}:/data"
+        ]        
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
+        logging {
+          type = "syslog"
+          config {
+            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
+          }
+        }        
       }
 
       service {
@@ -213,6 +228,11 @@ job "conductor" {
   group "search" {
     count = 1
 
+    constraint {
+      attribute = "${attr.platform.aws.placement.availability-zone}"
+      value = "us-west-2b"
+    }
+
     task "search" {
 
       driver = "docker"
@@ -222,6 +242,10 @@ job "conductor" {
           http = 9200
           tcp = 9300
         }
+        volume_driver = "ebs"
+        volumes = [
+          "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}:/usr/share/elasticsearch/data"
+        ]        
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
