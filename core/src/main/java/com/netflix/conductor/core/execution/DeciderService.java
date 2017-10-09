@@ -160,18 +160,18 @@ public class DeciderService {
 				List<Task> nextTasks = getNextTask(def, workflow, task);
 				nextTasks.forEach(rt -> tasksToBeScheduled.put(rt.getReferenceTaskName(), rt));
 				outcome.tasksToBeUpdated.add(task);
-				logger.debug("Scheduling Tasks from " + task.getTaskDefName() + ", next = " + nextTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList()));				
+				logger.debug("Scheduling Tasks from " + task.getTaskDefName() + ", next = " + nextTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId());				
 			}
 		}
 		
 		List<Task> unScheduledTasks = tasksToBeScheduled.values().stream().filter(tt -> !executedTaskRefNames.contains(tt.getReferenceTaskName())).collect(Collectors.toList());
 		if (!unScheduledTasks.isEmpty()) {
-			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList()));
+			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId());
 			outcome.tasksToBeScheduled.addAll(unScheduledTasks);
 		}
 		updateOutput(def, workflow);
 		if (outcome.tasksToBeScheduled.isEmpty() && checkForWorkflowCompletion(def, workflow)) {
-			logger.debug("Marking workflow as complete.  workflow=" + workflow.getWorkflowId() + ", tasks=" + workflow.getTasks());
+			logger.debug("Marking workflow as complete.  workflow=" + workflow.getWorkflowId() + ", tasks=" + workflow.getTasks()+"output=",workflow.getOutput());
 			outcome.isComplete = true;
 		}
 
@@ -307,7 +307,7 @@ public class DeciderService {
 		if (!task.getStatus().isRetriable() || SystemTaskType.isBuiltIn(task.getTaskType()) || taskDef == null || taskDef.getRetryCount() <= retryCount) {
 			WorkflowStatus status = task.getStatus().equals(Status.TIMED_OUT) ? WorkflowStatus.TIMED_OUT : WorkflowStatus.FAILED;
 			task.setRetried(true);
-			logger.info("Timeout or failed  error occurred. workflowId=" + workflow.getWorkflowId()+",taskId"+task.getTaskId()+",CorrelationId="+workflow.getCorrelationId()+",Reason="+task.getReasonForIncompletion()+",workflowstatus="+workflow.getStatus());
+			logger.error("Timeout or failed  error occurred. workflowId=" + workflow.getWorkflowId()+",taskId"+task.getTaskId()+",CorrelationId="+workflow.getCorrelationId()+",Reason="+task.getReasonForIncompletion()+",workflowstatus="+workflow.getStatus());
 			throw new TerminateWorkflow(task.getReasonForIncompletion(), status, task);
 		}
 

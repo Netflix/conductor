@@ -839,7 +839,7 @@ public class WorkflowExecutor {
 			edao.updateTask(tw.task);
 		}
 		terminateWorkflow(workflow, tw.getMessage(), failureWorkflow, tw.task);
-		logger.info("Workflow failed. workflowId=" + workflow.getWorkflowId()+",Reason="+tw.getMessage()+",taskId="+tw.task.getTaskId());
+		logger.error("Workflow failed. workflowId=" + workflow.getWorkflowId()+",Reason="+tw.getMessage()+",taskId="+tw.task.getTaskId());
 	}
 	
 
