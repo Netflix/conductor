@@ -378,9 +378,15 @@ public class WorkflowExecutor {
 		}
 
 		if (!StringUtils.isBlank(failureWorkflow)) {
+			// Backward compatible by default
+			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
 			Map<String, Object> input = new HashMap<>();
-			input.putAll(workflow.getInput());
+			if (expandInline) {
+				input.putAll(workflow.getInput());
+			}
 			input.put("workflowId", workflowId);
+			input.put("workflowType", workflow.getWorkflowType());
+			input.put("workflowVersion", workflow.getVersion());
 			input.put("reason", reason);
 			input.put("failureStatus", workflow.getStatus().toString());
 			if (failedTask != null) {
@@ -392,6 +398,9 @@ public class WorkflowExecutor {
 				input.put("failedTask", map);
 				logger.error("Error in task execution.workflowid="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion());
 			}
+			Map<String, Object> additionInfo = new HashMap<>();
+			additionInfo.put("input", workflow.getInput());
+			input.put("failureAdditionalInfo", additionInfo);
 
 			try {
 				

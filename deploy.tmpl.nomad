@@ -120,6 +120,7 @@ job "conductor" {
         // Workflow settings
         workflow_namespace_prefix = "${NOMAD_JOB_NAME}.conductor"
         workflow_namespace_queue_prefix = "${NOMAD_JOB_NAME}.conductor.queues"
+        workflow_failure_expandInline = "false"
         decider_sweep_frequency_seconds = "1"
 
         // Elasticsearch settings
