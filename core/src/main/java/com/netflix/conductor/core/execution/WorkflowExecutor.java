@@ -331,7 +331,7 @@ public class WorkflowExecutor {
 		}
 		Monitors.recordWorkflowCompletion(workflow.getWorkflowType(), workflow.getEndTime() - workflow.getStartTime());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
-		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input"+wf.getInput()+",CorrelationId="+wf.getCorrelationId(),"output=",wf.getOutput());
+		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
 
 	public void terminateWorkflow(String workflowId, String reason) throws Exception {
@@ -353,7 +353,7 @@ public class WorkflowExecutor {
 		String workflowId = workflow.getWorkflowId();
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
-	    logger.error("Workflow is terminated.workflowid="+workflowId+",correlationId="+workflow.getCorrelationId()+"reasonForIncompletion="+reason);
+	    logger.error("Workflow is terminated.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
 		List<Task> tasks = workflow.getTasks();
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {

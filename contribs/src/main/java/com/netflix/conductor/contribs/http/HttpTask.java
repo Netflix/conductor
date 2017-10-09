@@ -143,7 +143,7 @@ public class HttpTask extends WorkflowSystemTask {
 
         try {
             HttpResponse response = new HttpResponse();
-			logger.info("http task started.Workflowid="+workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId()+",taskId=" + task.getTaskId()+",taskreference name="+task.getReferenceTaskName()+",request input="+request);
+			logger.info("http task started.workflowId="+workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId()+",taskId=" + task.getTaskId()+",taskreference name="+task.getReferenceTaskName()+",request input="+request);
             if (input.getContentType() != null) {
                 if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
                     String json = new ObjectMapper().writeValueAsString(task.getInputData());
@@ -163,7 +163,7 @@ public class HttpTask extends WorkflowSystemTask {
                 response = httpCall(input);
             }
 
-            logger.info("http task execution completed.Workflowid="+workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId()+",taskId="+task.getTaskId()+",taskreference name="+task.getReferenceTaskName()+",response code="+response.statusCode+",response="+ response.body);
+            logger.info("http task execution completed.workflowId="+workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId()+",taskId="+task.getTaskId()+",taskreference name="+task.getReferenceTaskName()+",response code="+response.statusCode+",response="+ response.body);
             if (response.statusCode > 199 && response.statusCode < 300) {
                 task.setStatus(Status.COMPLETED);
             } else {
