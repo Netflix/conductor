@@ -36,13 +36,10 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.dao.es5.index.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -69,7 +66,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -155,19 +151,19 @@ public class ElasticSearch5DAO implements IndexDAO {
 	 */
 	private void initIndex() throws Exception {
 
-		//0. Add the index template
-		GetIndexTemplatesResponse result = client.admin().indices().prepareGetTemplates("wfe_template").execute().actionGet();
-		if(result.getIndexTemplates().isEmpty()) {
-			log.info("Creating the index template 'wfe_template'");
-			InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/template.json");
-			byte[] templateSource = IOUtils.toByteArray(stream);
-
-			try {
-				client.admin().indices().preparePutTemplate("wfe_template").setSource(templateSource, XContentType.JSON).execute().actionGet();
-			}catch(Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
+//		//0. Add the index template
+//		GetIndexTemplatesResponse result = client.admin().indices().prepareGetTemplates("wfe_template").execute().actionGet();
+//		if(result.getIndexTemplates().isEmpty()) {
+//			log.info("Creating the index template 'wfe_template'");
+//			InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/template.json");
+//			byte[] templateSource = IOUtils.toByteArray(stream);
+//
+//			try {
+//				client.admin().indices().preparePutTemplate("wfe_template").setSource(templateSource, XContentType.JSON).execute().actionGet();
+//			}catch(Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+//		}
 
 		//1. Create the required index
 		try {
@@ -178,19 +174,19 @@ public class ElasticSearch5DAO implements IndexDAO {
 			}catch(ResourceAlreadyExistsException done) {}
 		}
 				
-		//2. Mapping for the workflow document type
-		GetMappingsResponse response = client.admin().indices().prepareGetMappings(indexName).addTypes(WORKFLOW_DOC_TYPE).execute().actionGet();
-		if(response.mappings().isEmpty()) {
-			log.info("Adding the workflow type mappings");
-			InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/wfe_type.json");
-			byte[] bytes = IOUtils.toByteArray(stream);
-			String source = new String(bytes);
-			try {
-				client.admin().indices().preparePutMapping(indexName).setType(WORKFLOW_DOC_TYPE).setSource(source).execute().actionGet();
-			}catch(Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
+//		//2. Mapping for the workflow document type
+//		GetMappingsResponse response = client.admin().indices().prepareGetMappings(indexName).addTypes(WORKFLOW_DOC_TYPE).execute().actionGet();
+//		if(response.mappings().isEmpty()) {
+//			log.info("Adding the workflow type mappings");
+//			InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/wfe_type.json");
+//			byte[] bytes = IOUtils.toByteArray(stream);
+//			String source = new String(bytes);
+//			try {
+//				client.admin().indices().preparePutMapping(indexName).setType(WORKFLOW_DOC_TYPE).setSource(source).execute().actionGet();
+//			}catch(Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+//		}
 	}
 	
 	@Override
