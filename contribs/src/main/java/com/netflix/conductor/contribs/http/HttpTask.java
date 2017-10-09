@@ -102,16 +102,11 @@ public class HttpTask extends WorkflowSystemTask {
 
     @Override
     public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-        logger.info("--------------0------Starting HTTP TASK ");
-        logger.info("--------------0------Starting HTTP TASK NAME =  " + task.getTaskDefName());
-        logger.info("--------------0------Starting HTTP Task Workflow ID =  " + workflow.getWorkflowId());
         Object request = task.getInputData().get(requestParameter);
         task.setWorkerId(config.getServerId());
         String url = null;
         Input input = om.convertValue(request, Input.class);
-        logger.info("--------------1------URI =" + input.getUri());
-        System.out.println("Content type==" + input.getContentType());
-
+     
         if (request == null) {
             task.setReasonForIncompletion(MISSING_REQUEST);
             task.setStatus(Status.FAILED);
@@ -135,10 +130,10 @@ public class HttpTask extends WorkflowSystemTask {
         } else {
             if (url != null) {
                 input.setUri(url + input.getUri());
-                logger.info("--------------2---------- URI = " + input.getUri());
+              
             }
         }
-        logger.info("--------------3---------- URI = " + input.getUri());
+        
 
         if (input.getMethod() == null) {
             task.setReasonForIncompletion("No HTTP method specified");
@@ -147,9 +142,8 @@ public class HttpTask extends WorkflowSystemTask {
         }
 
         try {
-            logger.info("--------------4---------- URI = " + input.getUri());
-            logger.info("--------------4---------- BODY =" + input.getBody());
             HttpResponse response = new HttpResponse();
+			logger.info("http task started.workflowId="+workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId()+",taskId=" + task.getTaskId()+",taskreference name="+task.getReferenceTaskName()+",request input="+request);
             if (input.getContentType() != null) {
                 if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
                     String json = new ObjectMapper().writeValueAsString(task.getInputData());
@@ -159,9 +153,9 @@ public class HttpTask extends WorkflowSystemTask {
                     Object main_body = getSth.get("body");
                     String body = main_body.toString();
 
-                    System.out.println("body=====" + body);
+                    
                     response = httpCallUrlEncoded(input, body);
-					logger.info("http task started taskId" + task.getTaskId()+",request input="+input);
+					
                 } else {
                     response = httpCall(input);
                 }
@@ -169,7 +163,7 @@ public class HttpTask extends WorkflowSystemTask {
                 response = httpCall(input);
             }
 
-            logger.info("http task completed response="+ response.body+",taskId="+task.getTaskId());
+            logger.info("http task execution completed.workflowId="+workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId()+",taskId="+task.getTaskId()+",taskreference name="+task.getReferenceTaskName()+",response code="+response.statusCode+",response="+ response.body);
             if (response.statusCode > 199 && response.statusCode < 300) {
                 task.setStatus(Status.COMPLETED);
             } else {
@@ -293,8 +287,7 @@ public class HttpTask extends WorkflowSystemTask {
     private Object extractBody(ClientResponse cr) {
 
         String json = cr.getEntity(String.class);
-        logger.info(json);
-
+       
         try {
 
             JsonNode node = om.readTree(json);
