@@ -161,14 +161,14 @@ public class ElasticSearch5DAO implements IndexDAO {
 			log.info("Creating the index template 'wfe_template'");
 			InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/template.json");
 			byte[] templateSource = IOUtils.toByteArray(stream);
-			
+
 			try {
 				client.admin().indices().preparePutTemplate("wfe_template").setSource(templateSource, XContentType.JSON).execute().actionGet();
 			}catch(Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		}
-	
+
 		//1. Create the required index
 		try {
 			client.admin().indices().prepareGetIndex().addIndices(indexName).execute().actionGet();
@@ -353,7 +353,7 @@ public class ElasticSearch5DAO implements IndexDAO {
 				
 			}catch(Exception e) {
 				Monitors.error(className, "index");
-				log.error("Indexing failed for {}, {}: {}", request.index(), request.type(), e.getMessage());
+				log.error("Indexing failed for {}, {}: {}", request.index(), request.type(), e.getMessage(), e);
 				retry--;
 				if(retry > 0) {
 					Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
