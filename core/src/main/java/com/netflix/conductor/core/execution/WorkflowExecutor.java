@@ -383,6 +383,8 @@ public class WorkflowExecutor {
 			Map<String, Object> input = new HashMap<>();
 			if (expandInline) {
 				input.putAll(workflow.getInput());
+			} else {
+				input.put("workflowInput", workflow.getInput());
 			}
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());
@@ -391,16 +393,15 @@ public class WorkflowExecutor {
 			input.put("failureStatus", workflow.getStatus().toString());
 			if (failedTask != null) {
 				Map<String, Object> map = new HashMap<>();
+				map.put("id", failedTask.getTaskId());
 				map.put("input", failedTask.getInputData());
 				map.put("output", failedTask.getOutputData());
+				map.put("retryCount", failedTask.getRetryCount());
 				map.put("referenceName", failedTask.getReferenceTaskName());
 				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
 				input.put("failedTask", map);
 				logger.error("Error in task execution.workflowid="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion());
 			}
-			Map<String, Object> additionInfo = new HashMap<>();
-			additionInfo.put("input", workflow.getInput());
-			input.put("failureAdditionalInfo", additionInfo);
 
 			try {
 				
