@@ -393,7 +393,7 @@ public class WorkflowExecutor {
 			input.put("failureStatus", workflow.getStatus().toString());
 			if (failedTask != null) {
 				Map<String, Object> map = new HashMap<>();
-				map.put("id", failedTask.getTaskId());
+				map.put("taskId", failedTask.getTaskId());
 				map.put("input", failedTask.getInputData());
 				map.put("output", failedTask.getOutputData());
 				map.put("retryCount", failedTask.getRetryCount());
