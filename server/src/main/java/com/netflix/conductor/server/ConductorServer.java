@@ -22,8 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.redis.utils.JedisMock;
+import com.netflix.conductor.core.utils.WaitUtils;
 import com.netflix.conductor.dao.es5.es.EmbeddedElasticSearch;
+import com.netflix.conductor.redis.utils.JedisMock;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.Host.Status;
 import com.netflix.dyno.connectionpool.HostSupplier;
@@ -146,8 +147,8 @@ public class ConductorServer {
 					return token;
 				}
 			}).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
-			
-			jedis = new DynoJedisClient.Builder()
+
+			JedisCommands jedisClient = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
 				.withDynomiteClusterName(dynoClusterName)
@@ -156,32 +157,14 @@ public class ConductorServer {
 
 			int connectAttempts = cc.getIntProperty("workflow.dynomite.connection.attempts", 60);
 			int connectSleepSecs = cc.getIntProperty("workflow.dynomite.connection.sleep.seconds", 1);
-			logger.info("Initializing dynomite waiter. Connection attempts {}, sleep time {} seconds", connectAttempts, connectSleepSecs);
 
-			int attemptsMade = 0;
-			boolean connected = false;
-			do {
-				attemptsMade++;
-				try {
-					// In response, the echo should return the 'ping'
-					String response = jedis.echo("ping");
-					connected = "ping".equalsIgnoreCase(response);
-				} catch (Exception ex) {
-					logger.error("Dynomite connection failed: " + ex.getMessage() + ". Sleep for a while. Attempts made " + attemptsMade, ex);
-					try {
-						Thread.sleep(connectSleepSecs * 1000L);
-					} catch (InterruptedException e) {
-						logger.error("Dynomite connection sleep got an error: " + e.getMessage());
-					}
-				}
-			} while (!connected && attemptsMade < connectAttempts);
+			WaitUtils.wait("dynomite", connectAttempts, connectSleepSecs, () -> {
+				// In response, the echo should return the 'ping'
+				String response = jedisClient.echo("ping");
+				return "ping".equalsIgnoreCase(response);
+			});
 
-			// Print give up
-			if (!connected && attemptsMade >= connectAttempts) {
-				logger.warn("No db connection obtained during {} attempts. Giving up ...", attemptsMade);
-				System.exit(-1);
-			}
-
+			jedis = jedisClient;
 			logger.info("Starting conductor server using dynomite cluster " + dynoClusterName);
 			break;
 			

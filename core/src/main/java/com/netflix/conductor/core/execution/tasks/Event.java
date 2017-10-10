@@ -66,6 +66,7 @@ public class Event extends WorkflowSystemTask {
 		
 		String payloadJson = om.writeValueAsString(payload);
 		Message message = new Message(task.getTaskId(), payloadJson, task.getTaskId());
+		
 		ObservableQueue queue = getQueue(workflow, task);
 		if(queue != null) {
 			queue.publish(Arrays.asList(message));
@@ -73,6 +74,7 @@ public class Event extends WorkflowSystemTask {
 			task.setStatus(Status.COMPLETED);
 		} else {
 			task.setReasonForIncompletion("No queue found to publish.");
+			logger.error("No queue found to publish.");
 			task.setStatus(Status.FAILED);
 		}
 	}
@@ -113,6 +115,7 @@ public class Event extends WorkflowSystemTask {
 			} else {
 				task.setStatus(Status.FAILED);
 				task.setReasonForIncompletion("Invalid / Unsupported sink specified: " + sinkValue);
+				logger.error("Invalid / Unsupported sink specified: " + sinkValue);
 				return null;
 			}
 			
@@ -123,7 +126,7 @@ public class Event extends WorkflowSystemTask {
 		try {
 			return EventQueues.getQueue(queueName, true);
 		}catch(Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.error("Error when trying to access the specified queue/topic: " + sinkValue + ", error: " + e.getMessage());
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion("Error when trying to access the specified queue/topic: " + sinkValue + ", error: " + e.getMessage());
 			return null;			

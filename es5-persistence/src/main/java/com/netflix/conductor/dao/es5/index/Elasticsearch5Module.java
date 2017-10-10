@@ -18,20 +18,22 @@
  */
 package com.netflix.conductor.dao.es5.index;
 
-import java.net.InetAddress;
-
-import javax.inject.Singleton;
-
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.utils.WaitUtils;
+import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.netflix.conductor.core.config.Configuration;
+
+import javax.inject.Singleton;
+import java.net.InetAddress;
 
 
 /**
@@ -62,6 +64,25 @@ public class Elasticsearch5Module extends AbstractModule {
             if (hostparts.length == 2) hostport = Integer.parseInt(hostparts[1]);
             tc.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostname), hostport));
         }
+
+        // Elasticsearch wait will be in place only when indexed enabled
+        if (StringUtils.isNotEmpty(clusterAddress)) {
+            int connectAttempts = config.getIntProperty("workflow.elasticsearch.connection.attempts", 60);
+            int connectSleepSecs = config.getIntProperty("workflow.elasticsearch.connection.sleep.seconds", 1);
+
+            WaitUtils.wait("elasticsearch", connectAttempts, connectSleepSecs, () -> {
+                ClusterHealthResponse healthResponse = null;
+                try {
+                    // Get cluster health status
+                    healthResponse = tc.admin().cluster().prepareHealth().execute().get();
+                    log.info("Cluster health response:" + healthResponse.toString());
+                    return true;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
         return tc;
     
     }

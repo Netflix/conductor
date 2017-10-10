@@ -52,7 +52,6 @@ job "conductor" {
       env {
         WF_SERVER = "http://${NOMAD_JOB_NAME}-server.service.<TLD>:30000/api/"
         TLD = "<TLD>"
-        DM_TLD = "<DM_TLD>"
       }
 
       # The service block tells Nomad how to register this service
@@ -121,6 +120,7 @@ job "conductor" {
         // Workflow settings
         workflow_namespace_prefix = "${NOMAD_JOB_NAME}.conductor"
         workflow_namespace_queue_prefix = "${NOMAD_JOB_NAME}.conductor.queues"
+        workflow_failure_expandInline = "false"
         decider_sweep_frequency_seconds = "1"
 
         // Elasticsearch settings
@@ -140,11 +140,10 @@ job "conductor" {
         conductor_auth_clientSecret = "4ecafd6a-a3ce-45dd-bf05-85f2941413d3"
         
         TLD = "<TLD>"
-        DM_TLD = "<DM_TLD>"
       }
 
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.de/ auth=true"]
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.<DM_TLD>/ auth=true"]
         name = "${JOB}-${TASK}"
         port = "http"
         check {
@@ -172,6 +171,11 @@ job "conductor" {
   group "db" {
     count = 1
 
+    constraint {
+      attribute = "${attr.platform.aws.placement.availability-zone}"
+      value = "us-west-2b"
+    }
+
     task "db" {
 
       driver = "docker"
@@ -180,9 +184,19 @@ job "conductor" {
         port_map {
           port6379 = 6379
         }
+        volume_driver = "ebs"
+        volumes = [
+          "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}:/data"
+        ]        
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
+        logging {
+          type = "syslog"
+          config {
+            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
+          }
+        }        
       }
 
       service {
@@ -215,6 +229,11 @@ job "conductor" {
   group "search" {
     count = 1
 
+    constraint {
+      attribute = "${attr.platform.aws.placement.availability-zone}"
+      value = "us-west-2b"
+    }
+
     task "search" {
 
       driver = "docker"
@@ -224,6 +243,10 @@ job "conductor" {
           http = 9200
           tcp = 9300
         }
+        volume_driver = "ebs"
+        volumes = [
+          "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}:/usr/share/elasticsearch/data"
+        ]        
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
