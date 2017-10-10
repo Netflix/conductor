@@ -136,6 +136,7 @@ public class DeciderService {
 						params.put("workflowId", workflow.getWorkflowId());
 						params.put("workflowType", workflow.getWorkflowType());
 						params.put("workflowInput", workflow.getInput());
+						params.put("workflowVersion", workflow.getVersion());
 						params.put("taskId", task.getTaskId());
 						params.put("taskInput", task.getInputData());
 						params.put("taskRefName", task.getReferenceTaskName());
