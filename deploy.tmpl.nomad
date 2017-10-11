@@ -126,8 +126,9 @@ job "conductor" {
         // Elasticsearch settings
         workflow_elasticsearch_url = "${NOMAD_JOB_NAME}-search.service.<TLD>:9300"
         workflow_elasticsearch_mode = "elasticsearch"
-        workflow_elasticsearch_index_name = "${NOMAD_JOB_NAME}.conductor.<TLD>"
+        workflow_elasticsearch_index_name = "conductor.<TLD>"
         workflow_elasticsearch_cluster_name = "${NOMAD_JOB_NAME}.search"
+        workflow_elasticsearch_tasklog_index_name = "task_log.<TLD>"
 
         // NATS settings
         io_nats_client_url = "nats://events.service.<TLD>:4222"
@@ -138,6 +139,9 @@ job "conductor" {
         conductor_auth_url = "https://auth.dmlib.de/v1/tenant/deluxe/auth/token"
         conductor_auth_clientId = "deluxe.conductor"
         conductor_auth_clientSecret = "4ecafd6a-a3ce-45dd-bf05-85f2941413d3"
+
+        // Exclude demo workflows
+        loadSample = "false"
         
         TLD = "<TLD>"
       }
