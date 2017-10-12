@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Singleton
 public class ValidationTask extends WorkflowSystemTask {
     private static final Logger logger = LoggerFactory.getLogger(ValidationTask.class);
+    private static final String REASON_PARAMETER = "reason";
     private static final String PAYLOAD_PARAMETER = "payload";
     private static final String CONDITIONS_PARAMETER = "conditions";
 
@@ -109,9 +110,17 @@ public class ValidationTask extends WorkflowSystemTask {
         // Get an additional configuration
         boolean failOnFalse = getFailOnFalse(task);
 
+        // Build the overall reason
+        String overallReason = (String)taskInput.get(REASON_PARAMETER);
+        if (overallReason == null) {
+            overallReason = "Payload validation failed";
+        }
+        // Set the overall reason to the output map
+        taskOutput.put("overallReason", overallReason);
+
         // If overall status is false and we need to fail whole workflow
         if (!overallStatus.get() && failOnFalse) {
-            task.setReasonForIncompletion("Payload validation failed");
+            task.setReasonForIncompletion(overallReason);
             task.setStatus(Status.FAILED);
         }
     }
