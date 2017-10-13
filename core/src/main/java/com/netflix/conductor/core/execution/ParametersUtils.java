@@ -66,13 +66,16 @@ public class ParametersUtils {
 		if(taskDef != null && taskDef.getInputTemplate() != null) {
 			inputParams.putAll(clone(taskDef.getInputTemplate()));
 		}
-		
+
 		Map<String, Map<String, Object>> inputMap = new HashMap<>();
-		
+
+		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
 		Map<String, Object> wf = new HashMap<>();
 		wf.put("input", workflow.getInput());
 		wf.put("output", workflow.getOutput());
 		wf.put("status", workflow.getStatus());
+		wf.put("startTime", workflow.getStartTime());
+		wf.put("startTimeIso", fmt.print(workflow.getStartTime()));
 		wf.put("workflowId", workflow.getWorkflowId());
 		wf.put("parentWorkflowId", workflow.getParentWorkflowId());
 		wf.put("parentWorkflowTaskId", workflow.getParentWorkflowTaskId());
