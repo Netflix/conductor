@@ -9,6 +9,7 @@ dependencies {
 
 	compile 'org.elasticsearch:elasticsearch:5.+'
 	compile 'org.elasticsearch.client:transport:5.+'
+	compile 'org.elasticsearch.client:x-pack-transport:5.+'
 	compile 'commons-io:commons-io:2.4'
 
 }
