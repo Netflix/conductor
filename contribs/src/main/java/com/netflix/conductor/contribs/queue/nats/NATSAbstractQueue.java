@@ -73,7 +73,7 @@ public abstract class NATSAbstractQueue  {
         dstMsg.setId(NUID.nextGlobal());
         dstMsg.setPayload(payload);
 
-        logger.info(String.format("Received message for %s:%s Payload: %s", subject, trace, payload));
+        logger.info(String.format("Received message for %s: %s", subject, payload));
         messages.add(dstMsg);
     }
 
@@ -82,7 +82,7 @@ public abstract class NATSAbstractQueue  {
             try {
                 String payload = message.getPayload();
                 publish(subject, payload.getBytes());
-                logger.info(String.format("Published message to %s subject: %s", subject, payload));
+                logger.info(String.format("Published message to %s: %s", subject, payload));
             } catch (IOException e) {
                 logger.error("Failed to publish message " + message, e);
             }
