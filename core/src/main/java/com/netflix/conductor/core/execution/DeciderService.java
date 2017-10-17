@@ -135,6 +135,7 @@ public class DeciderService {
 						Map<String, Object> params = new HashMap<>();
 						params.put("workflowId", workflow.getWorkflowId());
 						params.put("workflowType", workflow.getWorkflowType());
+						params.put("correlationId", workflow.getCorrelationId());
 						params.put("workflowInput", workflow.getInput());
 						params.put("workflowVersion", workflow.getVersion());
 						params.put("taskId", task.getTaskId());
