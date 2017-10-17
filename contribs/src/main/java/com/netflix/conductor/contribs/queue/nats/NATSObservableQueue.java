@@ -50,14 +50,15 @@ public class NATSObservableQueue extends NATSAbstractQueue implements Observable
     public Observable<Message> observe() {
         logger.info("Observe invoked for queueURI=" + queueURI);
         if (subscription == null) {
-            logger.info("No subscription. Creating a new one");
             try {
                 // Create subject/queue subscription if the queue has been provided
-                if (!StringUtils.isEmpty(queue)) {
+                if (StringUtils.isNotEmpty(queue)) {
+                    logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
                     subscription = connection.subscribe(subject, queue, natMsg -> {
                         handleOnMessage(subject, natMsg.getData(), natMsg.toString());
                     });
                 } else {
+                    logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
                     subscription = connection.subscribe(subject, natMsg -> {
                         handleOnMessage(subject, natMsg.getData(), natMsg.toString());
                     });
