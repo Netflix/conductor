@@ -390,6 +390,7 @@ public class WorkflowExecutor {
 			input.put("workflowType", workflow.getWorkflowType());
 			input.put("workflowVersion", workflow.getVersion());
 			input.put("reason", reason);
+			input.put("correlationId", workflow.getCorrelationId());
 			input.put("failureStatus", workflow.getStatus().toString());
 			if (failedTask != null) {
 				Map<String, Object> map = new HashMap<>();
@@ -406,7 +407,7 @@ public class WorkflowExecutor {
 			try {
 				
 				WorkflowDef latestFailureWorkflow = metadata.getLatest(failureWorkflow);
-				String failureWFId = startWorkflow(failureWorkflow, latestFailureWorkflow.getVersion(), input, workflowId, null, null, null);
+				String failureWFId = startWorkflow(failureWorkflow, latestFailureWorkflow.getVersion(), input, workflow.getCorrelationId(), null, null, null);
 				workflow.getOutput().put("conductor.failure_workflow", failureWFId);
 				
 			} catch (Exception e) {
@@ -579,7 +580,7 @@ public class WorkflowExecutor {
 				} else {
 					workflowVersion = startWorkflow.version;
 				}
-				startWorkflow(workflowName, workflowVersion, startWorkflow.params, null, workflow.getWorkflowId(), null,null);
+				startWorkflow(workflowName, workflowVersion, startWorkflow.params, workflow.getCorrelationId(), null, null,null);
 			}
 
 			if(stateChanged) {				
