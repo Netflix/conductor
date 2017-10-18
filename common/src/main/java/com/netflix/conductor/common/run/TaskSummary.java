@@ -20,6 +20,7 @@ package com.netflix.conductor.common.run;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.TimeZone;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -50,6 +51,8 @@ public class TaskSummary {
 	
 	private Status status;
 	
+	private Map<String, Object> inputData;
+	
 	private String reasonForIncompletion;
 	
 	private long executionTime;
@@ -66,6 +69,8 @@ public class TaskSummary {
 	
 	private String taskId;
 	
+    private String referenceTaskName;
+
 	public TaskSummary(Task task) {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -74,7 +79,9 @@ public class TaskSummary {
     	this.taskId = task.getTaskId();
     	this.taskDefName = task.getTaskDefName();
     	this.taskType = task.getTaskType();
+    	this.referenceTaskName = task.getReferenceTaskName();
 		this.workflowId = task.getWorkflowInstanceId();
+		this.inputData = task.getInputData();
 		this.correlationId = task.getCorrelationId();
 		this.scheduledTime = sdf.format(new Date(task.getScheduledTime()));
 		this.startTime = sdf.format(new Date(task.getStartTime()));
@@ -110,7 +117,7 @@ public class TaskSummary {
 	public void setWorkflowId(String workflowId) {
 		this.workflowId = workflowId;
 	}
-
+	
 	/**
 	 * @return the correlationId
 	 */
@@ -197,6 +204,21 @@ public class TaskSummary {
 	 */
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+	
+	/**
+	 * @return the inputData
+	 */
+	public Map<String, Object> getInputData() {
+		return inputData;
+	}
+	
+	/**
+	 * @param inputData the inputData to set
+	 * 
+	 */
+	public void setInputData(Map<String, Object> inputData) {
+		this.inputData = inputData;
 	}
 
 	/**
@@ -321,5 +343,17 @@ public class TaskSummary {
 		this.taskId = taskId;
 	}
 	
-	
+    /**	
+	 * @return the referenceTaskName
+	 */
+	public String getReferenceTaskName() {
+		return referenceTaskName;
+	}
+
+	/**
+	 * @param referenceTaskName the referenceTaskName to set
+	 */
+	public void setReferenceTaskName(String referenceTaskName) {
+		this.referenceTaskName = referenceTaskName;
+	}
 }

@@ -66,6 +66,7 @@ public interface IndexDAO {
 	 */
 	public SearchResult<String> searchTasks(String query, String freeText, int start, int count, List<String> sort);
 
+
 	/**
 	 * Remove the workflow index
 	 * @param workflowId workflow to be removed

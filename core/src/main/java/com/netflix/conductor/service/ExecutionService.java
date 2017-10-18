@@ -334,7 +334,7 @@ public class ExecutionService {
 	public SearchResult<TaskSummary> searchTasks(String query, String freeText, int start, int size, List<String> sortOptions) {
 		
 		SearchResult<String> result = indexer.searchTasks(query, freeText, start, size, sortOptions);
-		List<TaskSummary> workflows = result.getResults().stream().parallel().map(taskId -> {
+		List<TaskSummary> tasks = result.getResults().stream().parallel().map(taskId -> {
 			try {
 				
 				TaskSummary summary = new TaskSummary(edao.getTask(taskId));
@@ -345,9 +345,9 @@ public class ExecutionService {
 				return null;
 			}
 		}).filter(summary -> summary != null).collect(Collectors.toList());
-		int missing = result.getResults().size() - workflows.size();
+		int missing = result.getResults().size() - tasks.size();
 		long totalHits = result.getTotalHits() - missing;
-		SearchResult<TaskSummary> sr = new SearchResult<>(totalHits, workflows);
+		SearchResult<TaskSummary> sr = new SearchResult<>(totalHits, tasks);
 		
 		return sr;
 	}

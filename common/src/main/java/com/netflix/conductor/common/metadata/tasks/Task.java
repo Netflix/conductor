@@ -32,7 +32,8 @@ public class Task {
 		SCHEDULED(false, true, true), 
 		TIMED_OUT(true, false, true),
 		READY_FOR_RERUN(false, true, true),
-		SKIPPED(true, true, false);
+		SKIPPED(true, true, false),
+		NO_OP(true, true, true);
 		
 		private boolean terminal;
 		

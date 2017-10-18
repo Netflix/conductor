@@ -40,6 +40,9 @@ dependencies {
 	
 	//In memory
 	compile 'org.rarefiedredis.redis:redis-java:0.0.17'
+
+    //ElasticSearch5
+    compile project(':conductor-es5-persistence')
 }
 
 shadowJar {

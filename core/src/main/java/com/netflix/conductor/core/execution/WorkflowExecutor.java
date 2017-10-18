@@ -444,7 +444,6 @@ public class WorkflowExecutor {
 		case COMPLETED:
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			break;
-
 		case CANCELED:
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			break;
@@ -456,6 +455,9 @@ public class WorkflowExecutor {
 			long callBack = result.getCallbackAfterSeconds();
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());			
 			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), callBack); // Milliseconds
+			break;
+		case NO_OP:
+			queue.remove(task.getTaskType(), result.getTaskId());
 			break;
 		default:
 			break;
