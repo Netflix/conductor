@@ -67,21 +67,21 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 
 	@Override
 	public void push(String queueName, String id, long offsetTimeInSecond) {
-		logger.info("push: " + queueName + ", id=" + id + ", offsetTimeInSecond=" + offsetTimeInSecond);
+		logger.debug("push: " + queueName + ", id=" + id + ", offsetTimeInSecond=" + offsetTimeInSecond);
 		ensureExists(queueName);
 		pushMessage(queueName, id, null, offsetTimeInSecond);
 	}
 
 	@Override
 	public void push(String queueName, List<Message> messages) {
-		logger.info("push: " + queueName + ", messages=" + messages);
+		logger.debug("push: " + queueName + ", messages=" + messages);
 		ensureExists(queueName);
 		messages.forEach(message -> pushMessage(queueName, message.getId(), message.getPayload(), 0));
 	}
 
 	@Override
 	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
-		logger.info("pushIfNotExists: " + queueName + ", id=" + id + ", offsetTimeInSecond=" + offsetTimeInSecond);
+		logger.debug("pushIfNotExists: " + queueName + ", id=" + id + ", offsetTimeInSecond=" + offsetTimeInSecond);
 		ensureExists(queueName);
 		if (existsMessage(queueName, id)) {
 			return false;
@@ -93,7 +93,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
 		long session = System.currentTimeMillis();
-		logger.info("pop (" + session + "): " + queueName + ", count=" + count + ", timeout=" + timeout);
+		logger.debug("pop (" + session + "): " + queueName + ", count=" + count + ", timeout=" + timeout);
 		ensureExists(queueName);
 
 		// Read ids. For each: read object, try to lock - if success - add to ids
@@ -112,7 +112,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 			// Walk over all of them and 'lock'
 			for (SearchHit record : response.getHits().getHits()) {
 				try {
-					logger.info("pop (" + session + "): attempt for " + queueName + ", id=" + record.getId());
+					logger.debug("pop (" + session + "): attempt for " + queueName + ", id=" + record.getId());
 					Map<String, Object> json = new HashMap<>();
 					json.put("popped", true);
 					json.put("poppedOn", System.currentTimeMillis());
@@ -122,7 +122,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 							.get();
 					// Add id to the final collection
 					foundIds.add(record.getId());
-					logger.info("pop (" + session + "): success for " + queueName + ", id=" + record.getId());
+					logger.debug("pop (" + session + "): success for " + queueName + ", id=" + record.getId());
 				} catch (VersionConflictEngineException ignore) {
 					logger.warn("pop (" + session + "): got version conflict for " + queueName + ", id=" + record.getId() + ". No worries!");
 				} catch (Exception ex) {
@@ -132,7 +132,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 
 			Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
 		}
-		logger.info("pop (" + session + "): " + queueName + ", result " + foundIds);
+		logger.debug("pop (" + session + "): " + queueName + ", result " + foundIds);
 		return ImmutableList.copyOf(foundIds);
 	}
 
@@ -141,24 +141,24 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	 */
 	@Override
 	public List<Message> pollMessages(String queueName, int count, int timeout) {
-		logger.info("pollMessages: " + queueName + ", count=" + count + ", timeout=" + timeout);
+		logger.debug("pollMessages: " + queueName + ", count=" + count + ", timeout=" + timeout);
 		ensureExists(queueName);
 		List<String> ids = pop(queueName, count, timeout);
 		List<Message> messages = readMessages(queueName, ids);
 
-		logger.info("pollMessages: " + queueName + ", found " + messages);
+		logger.debug("pollMessages: " + queueName + ", found " + messages);
 		return messages;
 	}
 
 	@Override
 	public void remove(String queueName, String id) {
-		logger.info("remove: " + queueName + ", id=" + id);
+		logger.debug("remove: " + queueName + ", id=" + id);
 		client.prepareDelete(toIndexName(queueName), toTypeName(queueName), id).get();
 	}
 
 	@Override
 	public int getSize(String queueName) {
-		logger.info("getSize: " + queueName);
+		logger.debug("getSize: " + queueName);
 		Long total = client.prepareSearch(toIndexName(queueName))
 				.setTypes(toTypeName(queueName))
 				.setSize(0).get().getHits().getTotalHits();
@@ -167,7 +167,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 
 	@Override
 	public boolean ack(String queueName, String id) {
-		logger.info("ack: " + queueName + ", id=" + id);
+		logger.debug("ack: " + queueName + ", id=" + id);
 		ensureExists(queueName);
 		if (!existsMessage(queueName, id)) {
 			return false;
@@ -178,7 +178,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 
 	@Override
 	public boolean setUnackTimeout(String queueName, String id, long unackTimeout) {
-		logger.info("setUnackTimeout: " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout);
+		logger.debug("setUnackTimeout: " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout);
 		ensureExists(queueName);
 		GetResponse record = findMessage(queueName, id);
 		if (!record.isExists()) {
@@ -196,7 +196,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 					.setDoc(json)
 					.setVersion(record.getVersion())
 					.get();
-			logger.info("setUnackTimeout: Done " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout + ", version=" +record.getVersion());
+			logger.debug("setUnackTimeout: Done " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout + ", version=" +record.getVersion());
 		} catch (VersionConflictEngineException ignore) {
 			logger.warn("setUnackTimeout: Got version conflict for " + queueName + ", id=" + id + ". No worries!");
 		} catch (Exception ex) {
@@ -208,7 +208,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 
 	@Override
 	public void flush(String queueName) {
-		logger.info("flush: " + queueName);
+		logger.debug("flush: " + queueName);
 		client.prepareDelete().setIndex(toIndexName(queueName)).setType(toTypeName(queueName)).get();
 	}
 
@@ -224,7 +224,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 		for (StringTerms.Bucket bucket : countByType.getBuckets()) {
 			result.put(bucket.getKey().toString().replace(baseName, ""), bucket.getDocCount());
 		}
-		logger.info("queuesDetail: " + result);
+		logger.debug("queuesDetail: " + result);
 		return result;
 	}
 
@@ -257,13 +257,13 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 			result.put(queueName, shardMap);
 		}
 
-		logger.info("queuesDetailVerbose: " + result);
+		logger.debug("queuesDetailVerbose: " + result);
 		return result;
 	}
 
 	@Override
 	public void processUnacks(String queueName) {
-		logger.info("processUnacks: " + queueName);
+		logger.debug("processUnacks: " + queueName);
 		ensureExists(queueName);
 
 		TermQueryBuilder poppedFilter = QueryBuilders.termQuery ("popped", true);
