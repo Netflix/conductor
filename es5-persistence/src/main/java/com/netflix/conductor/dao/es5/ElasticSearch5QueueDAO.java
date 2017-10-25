@@ -205,7 +205,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 		} catch (VersionConflictEngineException ignore) {
 			logger.warn("setUnackTimeout: got version conflict for " + queueName + ", id=" + id + ". No worries!");
 		} catch (DocumentMissingException ignore) {
-			logger.warn("setUnackTimeout: got document missing for " + queueName + ", id=" + record.getId() + ". No worries!");
+			logger.warn("setUnackTimeout: got document missing for " + queueName + ", id=" + id + ". No worries!");
 		} catch (Exception ex) {
 			logger.error("setUnackTimeout: unable to set unack timeout for " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout, ex);
 			throw ex;
@@ -368,7 +368,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 			} catch (VersionConflictEngineException ignore) {
 				logger.warn("pushMessage: got version conflict for " + queueName + ", id=" + id + ". No worries!");
 			} catch (DocumentMissingException ignore) {
-				logger.warn("pushMessage: got document missing for " + queueName + ", id=" + record.getId() + ". No worries!");
+				logger.warn("pushMessage: got document missing for " + queueName + ", id=" + id + ". No worries!");
 			} catch (Exception ex) {
 				logger.error("pushMessage: unable to update " + queueName + ", id=" + id + ", payload=" + payload, ex);
 				throw ex;
