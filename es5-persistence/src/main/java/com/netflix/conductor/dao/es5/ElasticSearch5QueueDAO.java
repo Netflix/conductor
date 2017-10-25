@@ -32,6 +32,7 @@ import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.filter.InternalFilter;
@@ -193,6 +194,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 			Long newDeliverOn = createdOn + unackTimeout;
 
 			Map<String, Object> json = new HashMap<>();
+			json.put("popped", false);
 			json.put("deliverOn", newDeliverOn);
 			json.put("offsetSeconds", offsetSeconds);
 			client.prepareUpdate(toIndexName(queueName), toTypeName(queueName), id)
@@ -214,7 +216,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	@Override
 	public void flush(String queueName) {
 		logger.debug("flush: " + queueName);
-		client.prepareDelete().setIndex(toIndexName(queueName)).setType(toTypeName(queueName)).get();
+		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).source(toIndexName(queueName)).get();
 	}
 
 	@Override
