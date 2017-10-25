@@ -348,10 +348,10 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 				Long deliverTime = currentTime + (offsetTimeInSecond * 1000);
 				Map<String, Object> json = new HashMap<>();
 				json.put("popped", false);
+				json.put("payload", payload);
 				json.put("createdOn", currentTime);
 				json.put("deliverOn", deliverTime);
 				json.put("offsetSeconds", offsetTimeInSecond);
-				json.put("payload", payload);
 				client.prepareIndex(indexName, typeName, id).setSource(json).get();
 			} catch (Exception ex) {
 				logger.error("pushMessage: unable to insert into " + queueName + ", id=" + id + ", payload=" + payload, ex);
