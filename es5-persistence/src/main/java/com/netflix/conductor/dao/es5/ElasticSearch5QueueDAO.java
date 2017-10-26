@@ -15,7 +15,6 @@
  */
 package com.netflix.conductor.dao.es5;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -23,12 +22,9 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.dao.es5.index.ElasticSearch5DAO;
-import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.IdsQueryBuilder;
@@ -46,54 +42,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch5QueueDAO implements QueueDAO {
+public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements QueueDAO {
 	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5QueueDAO.class);
-	private Map<String, Object> defaultMapping;
 	private String baseName;
-	private Client client;
 
 	@Inject
 	public ElasticSearch5QueueDAO(Client client, Configuration config, ObjectMapper mapper) {
-		this.client = client;
-
-		String stack = config.getStack();
-		String prefix = config.getProperty("workflow.namespace.queue.prefix", "conductor.queues");
-		this.baseName = (prefix + "." + stack + ".").toLowerCase();
-
-		try {
-			InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/default_mapping.json");
-			defaultMapping = mapper.readValue(stream, new TypeReference<Map<String, Object>>() {});
-		} catch (IOException e) {
-			logger.error("Unable to load and process default_mapping.json");
-		}
+		super(client, config, mapper, "queues");
+		this.baseName = toIndexName();
 	}
 
 	@Override
 	public void push(String queueName, String id, long offsetTimeInSecond) {
 		logger.debug("push: " + queueName + ", id=" + id + ", offsetTimeInSecond=" + offsetTimeInSecond);
-		ensureExists(queueName);
+		ensureIndexExists(toIndexName(queueName));
 		pushMessage(queueName, id, null, offsetTimeInSecond);
 	}
 
 	@Override
 	public void push(String queueName, List<Message> messages) {
 		logger.debug("push: " + queueName + ", messages=" + messages);
-		ensureExists(queueName);
+		ensureIndexExists(toIndexName(queueName));
 		messages.forEach(message -> pushMessage(queueName, message.getId(), message.getPayload(), 0));
 	}
 
 	@Override
 	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
 		logger.debug("pushIfNotExists: " + queueName + ", id=" + id + ", offsetTimeInSecond=" + offsetTimeInSecond);
-		ensureExists(queueName);
+		ensureIndexExists(toIndexName(queueName));
 		if (existsMessage(queueName, id)) {
 			return false;
 		}
@@ -103,9 +85,11 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
-		long session = System.currentTimeMillis();
+		long session = System.nanoTime();
 		logger.debug("pop (" + session + "): " + queueName + ", count=" + count + ", timeout=" + timeout);
-		ensureExists(queueName);
+		String indexName = toIndexName(queueName);
+		String typeName = toTypeName(queueName);
+		ensureIndexExists(indexName);
 
 		// Read ids. For each: read object, try to lock - if success - add to ids
 		long start = System.currentTimeMillis();
@@ -114,9 +98,9 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 		RangeQueryBuilder deliverOnFilter = QueryBuilders.rangeQuery("deliverOn").lte(System.currentTimeMillis());
 		while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
 			// Find the suitable records
-			SearchResponse response = client.prepareSearch(toIndexName(queueName))
-					.setTypes(toTypeName(queueName))
+			SearchResponse response = client.prepareSearch(indexName)
 					.setQuery(QueryBuilders.boolQuery().must(poppedFilter).must(deliverOnFilter))
+					.setTypes(typeName)
 					.setVersion(true)
 					.setSize(count)
 					.get();
@@ -128,9 +112,9 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 					Map<String, Object> json = new HashMap<>();
 					json.put("popped", true);
 					json.put("poppedOn", System.currentTimeMillis());
-					client.prepareUpdate(toIndexName(queueName), toTypeName(queueName), record.getId())
-							.setDoc(json)
+					client.prepareUpdate(indexName, typeName, record.getId())
 							.setVersion(record.getVersion())
+							.setDoc(json)
 							.get();
 					// Add id to the final collection
 					foundIds.add(record.getId());
@@ -156,7 +140,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	@Override
 	public List<Message> pollMessages(String queueName, int count, int timeout) {
 		logger.debug("pollMessages: " + queueName + ", count=" + count + ", timeout=" + timeout);
-		ensureExists(queueName);
+		ensureIndexExists(toIndexName(queueName));
 		List<String> ids = pop(queueName, count, timeout);
 		List<Message> messages = readMessages(queueName, ids);
 
@@ -173,16 +157,18 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	@Override
 	public int getSize(String queueName) {
 		logger.debug("getSize: " + queueName);
-		Long total = client.prepareSearch(toIndexName(queueName))
-				.setTypes(toTypeName(queueName))
-				.setSize(0).get().getHits().getTotalHits();
+		String indexName = toIndexName(queueName);
+		String typeName = toTypeName(queueName);
+		ensureIndexExists(indexName);
+
+		Long total = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get().getHits().getTotalHits();
 		return total.intValue();
 	}
 
 	@Override
 	public boolean ack(String queueName, String id) {
 		logger.debug("ack: " + queueName + ", id=" + id);
-		ensureExists(queueName);
+		ensureIndexExists(toIndexName(queueName));
 		if (!existsMessage(queueName, id)) {
 			return false;
 		}
@@ -193,7 +179,11 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	@Override
 	public boolean setUnackTimeout(String queueName, String id, long unackTimeout) {
 		logger.debug("setUnackTimeout: " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout);
-		ensureExists(queueName);
+
+		String indexName = toIndexName(queueName);
+		String typeName = toTypeName(queueName);
+		ensureIndexExists(indexName);
+
 		GetResponse record = findMessage(queueName, id);
 		if (!record.isExists()) {
 			return false;
@@ -207,7 +197,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 			json.put("popped", false);
 			json.put("deliverOn", newDeliverOn);
 			json.put("offsetSeconds", offsetSeconds);
-			client.prepareUpdate(toIndexName(queueName), toTypeName(queueName), id)
+			client.prepareUpdate(indexName, typeName, id)
 					.setDoc(json)
 					.setVersion(record.getVersion())
 					.get();
@@ -257,8 +247,8 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 		agg.subAggregation(AggregationBuilders.filter("uacked", QueryBuilders.matchQuery("popped", true)));
 
 		SearchResponse response = client.prepareSearch(baseName + "*")
-				.addAggregation(agg)
 				.setFetchSource(false)
+				.addAggregation(agg)
 				.setSize(0)
 				.get();
 		Aggregation aggregation = response.getAggregations().get("countByQueue");
@@ -287,15 +277,17 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	@Override
 	public void processUnacks(String queueName) {
 		logger.debug("processUnacks: " + queueName);
-		ensureExists(queueName);
+		String indexName = toIndexName(queueName);
+		String typeName = toTypeName(queueName);
+		ensureIndexExists(indexName);
 
 		TermQueryBuilder poppedFilter = QueryBuilders.termQuery ("popped", true);
 		RangeQueryBuilder deliverOnFilter = QueryBuilders.rangeQuery("deliverOn").lte(System.currentTimeMillis());
 
 		// Find the suitable records
-		SearchResponse response = client.prepareSearch(toIndexName(queueName))
-				.setTypes(toTypeName(queueName))
+		SearchResponse response = client.prepareSearch(indexName)
 				.setQuery(QueryBuilders.boolQuery().must(poppedFilter).must(deliverOnFilter))
+				.setTypes(toTypeName(queueName))
 				.setVersion(true)
 				.get();
 
@@ -304,9 +296,9 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 			try {
 				Map<String, Object> json = new HashMap<>();
 				json.put("popped", false);
-				client.prepareUpdate(toIndexName(queueName), toTypeName(queueName), record.getId())
-						.setDoc(json)
+				client.prepareUpdate(indexName, typeName, record.getId())
 						.setVersion(record.getVersion())
+						.setDoc(json)
 						.get();
 			} catch (VersionConflictEngineException ignore) {
 				logger.debug("processUnacks: got version conflict for " + queueName + ", id=" + record.getId() + ". No worries!");
@@ -314,29 +306,6 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 				logger.debug("processUnacks: got document missing for " + queueName + ", id=" + record.getId() + ". No worries!");
 			} catch (Exception ex) {
 				logger.error("processUnacks: unable to execute for " + queueName + ", id=" + record.getId(), ex);
-			}
-		}
-	}
-
-	// Type cannot have a "_" character in its name
-	private String toTypeName(String typeName) {
-		return typeName.replace("_", "");
-	}
-
-	private String toIndexName(String queueName) {
-		return baseName + queueName.toLowerCase();
-	}
-
-	private void ensureExists(String queueName) {
-		String indexName = baseName + queueName.toLowerCase();
-		try {
-			client.admin().indices().prepareGetIndex().addIndices(indexName).get();
-		} catch (IndexNotFoundException notFound) {
-			try {
-				client.admin().indices().prepareCreate(indexName).addMapping("_default_", defaultMapping).get();
-			} catch (ResourceAlreadyExistsException ignore) {
-			} catch (Exception ex) {
-				logger.error("ensureExists: Failed for " + indexName + " with " + ex.getMessage(), ex);
 			}
 		}
 	}
@@ -378,8 +347,8 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 				Map<String, Object> json = new HashMap<>();
 				json.put("payload", payload);
 				client.prepareUpdate(indexName, typeName, id)
-						.setDoc(json)
 						.setVersion(record.getVersion())
+						.setDoc(json)
 						.get();
 			} catch (VersionConflictEngineException ignore) {
 				logger.debug("pushMessage: got version conflict for " + queueName + ", id=" + id + ". No worries!");
@@ -400,8 +369,8 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 
 		SearchResponse response = client.prepareSearch(toIndexName(queueName))
 				.setTypes(toTypeName(queueName))
-				.setQuery(addIds)
 				.setSize(messageIds.size())
+				.setQuery(addIds)
 				.get();
 		if (response.getHits().totalHits != messageIds.size()) {
 			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, "readMessages: Could not read all messages for given ids: " + messageIds);

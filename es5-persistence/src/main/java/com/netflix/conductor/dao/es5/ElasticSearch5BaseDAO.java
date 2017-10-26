@@ -1,0 +1,129 @@
+/**
+ * Copyright 2016 Netflix, Inc.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.netflix.conductor.dao.es5;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.core.config.Configuration;
+import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.ResourceAlreadyExistsException;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * @author Oleksiy Lysak
+ */
+public class ElasticSearch5BaseDAO {
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5BaseDAO.class);
+    final static String NAMESPACE_SEP = ".";
+    private Map<String, Object> defaultMapping;
+    private ObjectMapper mapper;
+    protected Client client;
+    private String context;
+    private String prefix;
+    private String stack;
+
+    ElasticSearch5BaseDAO(Client client, Configuration config, ObjectMapper mapper, String context) {
+        this.client = client;
+        this.mapper = mapper;
+        this.context = context;
+
+        prefix = config.getProperty("workflow.namespace.prefix", "conductor");
+        stack = config.getStack();
+
+        try {
+            InputStream stream = getClass().getResourceAsStream("/default_mapping.json");
+            defaultMapping = mapper.readValue(stream, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException e) {
+            logger.error("Unable to load default_mapping.json");
+        }
+    }
+
+    String toIndexName(String... nsValues) {
+        StringBuilder builder = new StringBuilder(prefix).append(NAMESPACE_SEP).append(context).append(NAMESPACE_SEP);
+        if (StringUtils.isNotEmpty(stack)) {
+            builder.append(stack).append(NAMESPACE_SEP);
+        }
+        for (int i = 0; i < nsValues.length; i++) {
+            builder.append(nsValues[i]);
+            if (i < nsValues.length - 1) {
+                builder.append(NAMESPACE_SEP);
+            }
+        }
+        return builder.toString().toLowerCase();
+    }
+
+    String toTypeName(String typeName) {
+        return typeName.replace("_", "");
+    }
+
+    void ensureIndexExists(String indexName) {
+        try {
+            client.admin().indices().prepareGetIndex().addIndices(indexName).get();
+        } catch (IndexNotFoundException notFound) {
+            try {
+                client.admin().indices().prepareCreate(indexName).addMapping("_default_", defaultMapping).get();
+            } catch (ResourceAlreadyExistsException ignore) {
+            } catch (Exception ex) {
+                logger.error("ensureIndexExists: Failed for " + indexName + " with " + ex.getMessage(), ex);
+            }
+        }
+    }
+
+    <T> List<T> findAll(String indexName, String typeName, Class<T> clazz) {
+        logger.debug("findAll: index={}, type={}, clazz={}", indexName, typeName, clazz);
+        SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
+
+        int size = (int) response.getHits().getTotalHits();
+        logger.debug("findAll: found={}", size);
+        if (size == 0) {
+            return Collections.emptyList();
+        }
+
+        response = client.prepareSearch(indexName).setTypes(typeName).setSize(size).get();
+
+        List<T> result = Arrays.stream(response.getHits().getHits())
+                .map(hit -> toObject(hit.getSource(), clazz))
+                .collect(Collectors.toList());
+
+        logger.debug("findAll: result={}", toJson(result));
+        return result;
+    }
+    Map toMap(Object value) {
+        return mapper.convertValue(value, HashMap.class);
+    }
+
+    <T> T toObject(Map json, Class<T> clazz) {
+        return mapper.convertValue(json, clazz);
+    }
+
+    String toJson(Object value) {
+        try {
+            return mapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}

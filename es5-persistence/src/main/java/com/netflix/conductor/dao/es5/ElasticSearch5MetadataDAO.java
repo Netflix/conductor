@@ -15,8 +15,6 @@
  */
 package com.netflix.conductor.dao.es5;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -25,22 +23,16 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.dao.es5.index.ElasticSearch5DAO;
-import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -49,36 +41,18 @@ import java.util.stream.Collectors;
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch5MetadataDAO implements MetadataDAO {
+public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements MetadataDAO {
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5MetadataDAO.class);
     private Map<String, TaskDef> taskDefCache = new HashMap<>();
-    private Map<String, Object> defaultMapping;
-    private ObjectMapper mapper;
-    private Client client;
-    private String prefix;
-    private String domain;
-    private String stack;
 
     // Keys Families
-    private final static String NAMESPACE_SEP = ".";
     private final static String TASK_DEFS = "TASK_DEFS";
     private final static String WORKFLOW_DEFS = "WORKFLOW_DEFS";
     private final static String EVENT_HANDLERS = "EVENT_HANDLERS";
 
     @Inject
     public ElasticSearch5MetadataDAO(Client client, Configuration config, ObjectMapper mapper) {
-        this.client = client;
-        this.mapper = mapper;
-        domain = config.getProperty("workflow.dyno.keyspace.domain", null);
-        prefix = config.getProperty("workflow.namespace.prefix", null);
-        stack = config.getStack();
-
-        try {
-            InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/default_mapping.json");
-            defaultMapping = mapper.readValue(stream, new TypeReference<Map<String, Object>>() {});
-        } catch (IOException e) {
-            logger.error("Unable to load and process default_mapping.json");
-        }
+        super(client, config, mapper, "metadata");
 
         refreshTaskDefs();
         int cacheRefreshTime = config.getIntProperty("conductor.taskdef.cache.refresh.time.seconds", 60);
@@ -379,26 +353,6 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
         return handler;
     }
 
-    private <T> List<T> findAll(String indexName, String typeName, Class<T> clazz) {
-        logger.debug("findAll: index={}, type={}, clazz={}", indexName, typeName, clazz);
-        SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
-
-        int size = (int) response.getHits().getTotalHits();
-        logger.debug("findAll: found={}", size);
-        if (size == 0) {
-            return Collections.emptyList();
-        }
-
-        response = client.prepareSearch(indexName).setTypes(typeName).setSize(size).get();
-
-        List<T> result = Arrays.stream(response.getHits().getHits())
-                .map(hit -> toObject(hit.getSource(), clazz))
-                .collect(Collectors.toList());
-
-        logger.debug("findAll: result={}", toJson(result));
-        return result;
-    }
-
     private String insertOrUpdate(TaskDef def) {
         logger.debug("insertOrUpdate: taskDef={}", toJson(def));
         Preconditions.checkNotNull(def, "TaskDef object cannot be null");
@@ -447,61 +401,4 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
         logger.debug("refreshTaskDefs: task defs={}", map);
     }
 
-    private String toIndexName(String... nsValues) {
-        StringBuilder namespaceKey = new StringBuilder(prefix).append(NAMESPACE_SEP).append("metadata").append(NAMESPACE_SEP);
-        if (StringUtils.isNotEmpty(stack)) {
-            namespaceKey.append(stack).append(NAMESPACE_SEP);
-        }
-        if (StringUtils.isNotEmpty(domain)) {
-            namespaceKey.append(domain).append(NAMESPACE_SEP);
-        }
-        for (int i = 0; i < nsValues.length; i++) {
-            namespaceKey.append(nsValues[i]);
-            if (i < nsValues.length - 1) {
-                namespaceKey.append(NAMESPACE_SEP);
-            }
-        }
-        return namespaceKey.toString().toLowerCase();
-    }
-
-    private void ensureIndexExists(String indexName) {
-        try {
-            client.admin().indices().prepareGetIndex().addIndices(indexName).get();
-        } catch (IndexNotFoundException notFound) {
-            try {
-                client.admin().indices().prepareCreate(indexName).addMapping("_default_", defaultMapping).get();
-            } catch (ResourceAlreadyExistsException ignore) {
-            } catch (Exception ex) {
-                logger.error("ensureIndexExists: Failed for " + indexName + " with " + ex.getMessage(), ex);
-            }
-        }
-    }
-
-    private String toTypeName(String typeName) {
-        return typeName.replace("_", "");
-    }
-
-    private Map toMap(Object value) {
-        return mapper.convertValue(value, HashMap.class);
-    }
-
-    private byte[] toBytes(Object value) {
-        try {
-            return mapper.writeValueAsBytes(value);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private <T> T toObject(Map json, Class<T> clazz) {
-        return mapper.convertValue(json, clazz);
-    }
-
-    private String toJson(Object value) {
-        try {
-            return mapper.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
