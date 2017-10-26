@@ -1,0 +1,37 @@
+{
+  "dynamic_templates": [
+    {
+      "string_fields": {
+        "mapping": {
+          "index": "not_analyzed",
+          "type": "string",
+          "doc_values": true
+        },
+        "match": "*",
+        "match_mapping_type": "string"
+      }
+    },
+    {
+      "long_fields": {
+        "mapping": {
+          "index": "not_analyzed",
+          "type": "string",
+          "doc_values": true
+        },
+        "match": "*",
+        "match_mapping_type": "long"
+      }
+    },
+    {
+      "double_fields": {
+        "mapping": {
+          "index": "not_analyzed",
+          "type": "string",
+          "doc_values": true
+        },
+        "match": "*",
+        "match_mapping_type": "double"
+      }
+    }
+  ]
+}

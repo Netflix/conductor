@@ -16,6 +16,7 @@
 package com.netflix.conductor.dao.es5;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -24,6 +25,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.dao.es5.index.ElasticSearch5DAO;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.get.GetResponse;
@@ -37,6 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +52,7 @@ import java.util.stream.Collectors;
 public class ElasticSearch5MetadataDAO implements MetadataDAO {
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5MetadataDAO.class);
     private Map<String, TaskDef> taskDefCache = new HashMap<>();
+    private Map<String, Object> defaultMapping;
     private ObjectMapper mapper;
     private Client client;
     private String prefix;
@@ -67,6 +72,13 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
         domain = config.getProperty("workflow.dyno.keyspace.domain", null);
         prefix = config.getProperty("workflow.namespace.prefix", null);
         stack = config.getStack();
+
+        try {
+            InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/default_mapping.json");
+            defaultMapping = mapper.readValue(stream, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException e) {
+            logger.error("Unable to load and process default_mapping.json");
+        }
 
         refreshTaskDefs();
         int cacheRefreshTime = config.getIntProperty("conductor.taskdef.cache.refresh.time.seconds", 60);
@@ -457,7 +469,7 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
             client.admin().indices().prepareGetIndex().addIndices(indexName).get();
         } catch (IndexNotFoundException notFound) {
             try {
-                client.admin().indices().prepareCreate(indexName).get();
+                client.admin().indices().prepareCreate(indexName).addMapping("_default_", defaultMapping).get();
             } catch (ResourceAlreadyExistsException ignore) {
             } catch (Exception ex) {
                 logger.error("ensureIndexExists: Failed for " + indexName + " with " + ex.getMessage(), ex);
@@ -471,6 +483,14 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
 
     private Map toMap(Object value) {
         return mapper.convertValue(value, HashMap.class);
+    }
+
+    private byte[] toBytes(Object value) {
+        try {
+            return mapper.writeValueAsBytes(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private <T> T toObject(Map json, Class<T> clazz) {

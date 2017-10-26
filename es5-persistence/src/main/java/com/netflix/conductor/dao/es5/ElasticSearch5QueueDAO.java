@@ -15,12 +15,15 @@
  */
 package com.netflix.conductor.dao.es5;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.dao.es5.index.ElasticSearch5DAO;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -34,6 +37,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.filter.InternalFilter;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
@@ -42,6 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -50,16 +56,24 @@ import java.util.concurrent.TimeUnit;
  */
 public class ElasticSearch5QueueDAO implements QueueDAO {
 	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5QueueDAO.class);
-	private Client client;
+	private Map<String, Object> defaultMapping;
 	private String baseName;
+	private Client client;
 
 	@Inject
-	public ElasticSearch5QueueDAO(Client client, Configuration config) {
+	public ElasticSearch5QueueDAO(Client client, Configuration config, ObjectMapper mapper) {
 		this.client = client;
 
 		String stack = config.getStack();
 		String prefix = config.getProperty("workflow.namespace.queue.prefix", "conductor.queues");
 		this.baseName = (prefix + "." + stack + ".").toLowerCase();
+
+		try {
+			InputStream stream = ElasticSearch5DAO.class.getResourceAsStream("/default_mapping.json");
+			defaultMapping = mapper.readValue(stream, new TypeReference<Map<String, Object>>() {});
+		} catch (IOException e) {
+			logger.error("Unable to load and process default_mapping.json");
+		}
 	}
 
 	@Override
@@ -217,15 +231,18 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 
 	@Override
 	public Map<String, Long> queuesDetail() {
+		Map<String, Long> result = new HashMap<>();
 		SearchResponse response = client.prepareSearch(baseName + "*")
-				.addAggregation(AggregationBuilders.terms("countByIndex").field("_index"))
+				.addAggregation(AggregationBuilders.terms("countByQueue").field("_index"))
 				.setFetchSource(false)
 				.setSize(0)
 				.get();
-		StringTerms countByType = response.getAggregations().get("countByIndex");
-		Map<String, Long> result = new HashMap<>();
-		for (StringTerms.Bucket bucket : countByType.getBuckets()) {
-			result.put(bucket.getKey().toString().replace(baseName, ""), bucket.getDocCount());
+		Aggregation aggregation = response.getAggregations().get("countByQueue");
+		if (aggregation instanceof StringTerms) {
+			StringTerms countByQueue = (StringTerms)aggregation;
+			for (StringTerms.Bucket bucket : countByQueue.getBuckets()) {
+				result.put(bucket.getKey().toString().replace(baseName, ""), bucket.getDocCount());
+			}
 		}
 		logger.debug("queuesDetail: " + result);
 		return result;
@@ -235,7 +252,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose() {
 		Map<String, Map<String, Map<String, Long>>> result = new HashMap<>();
 
-		TermsAggregationBuilder agg = AggregationBuilders.terms("countByIndex").field("_index");
+		TermsAggregationBuilder agg = AggregationBuilders.terms("countByQueue").field("_index");
 		agg.subAggregation(AggregationBuilders.filter("size", QueryBuilders.matchQuery("popped", false)));
 		agg.subAggregation(AggregationBuilders.filter("uacked", QueryBuilders.matchQuery("popped", true)));
 
@@ -244,20 +261,23 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 				.setFetchSource(false)
 				.setSize(0)
 				.get();
-		StringTerms countByIndex = response.getAggregations().get("countByIndex");
-		for (StringTerms.Bucket bucket : countByIndex.getBuckets()) {
-			String queueName = bucket.getKey().toString().replace(baseName, "");
-			InternalFilter size = bucket.getAggregations().get("size");
-			InternalFilter uacked = bucket.getAggregations().get("uacked");
+		Aggregation aggregation = response.getAggregations().get("countByQueue");
+		if (aggregation instanceof StringTerms) {
+			StringTerms countByQueue = (StringTerms) aggregation;
+			for (StringTerms.Bucket bucket : countByQueue.getBuckets()) {
+				String queueName = bucket.getKey().toString().replace(baseName, "");
+				InternalFilter size = bucket.getAggregations().get("size");
+				InternalFilter uacked = bucket.getAggregations().get("uacked");
 
-			Map<String, Long> sizeAndUacked = new HashMap<>();
-			sizeAndUacked.put("size", size.getDocCount());
-			sizeAndUacked.put("uacked", uacked.getDocCount());
+				Map<String, Long> sizeAndUacked = new HashMap<>();
+				sizeAndUacked.put("size", size.getDocCount());
+				sizeAndUacked.put("uacked", uacked.getDocCount());
 
-			Map<String, Map<String, Long>> shardMap = new HashMap<>();
-			shardMap.put("a", sizeAndUacked);
+				Map<String, Map<String, Long>> shardMap = new HashMap<>();
+				shardMap.put("a", sizeAndUacked);
 
-			result.put(queueName, shardMap);
+				result.put(queueName, shardMap);
+			}
 		}
 
 		logger.debug("queuesDetailVerbose: " + result);
@@ -313,7 +333,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 			client.admin().indices().prepareGetIndex().addIndices(indexName).get();
 		} catch (IndexNotFoundException notFound) {
 			try {
-				client.admin().indices().prepareCreate(indexName).get();
+				client.admin().indices().prepareCreate(indexName).addMapping("_default_", defaultMapping).get();
 			} catch (ResourceAlreadyExistsException ignore) {
 			} catch (Exception ex) {
 				logger.error("ensureExists: Failed for " + indexName + " with " + ex.getMessage(), ex);
