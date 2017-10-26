@@ -109,6 +109,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 					.setTypes(toTypeName(queueName))
 					.setQuery(QueryBuilders.boolQuery().must(poppedFilter).must(deliverOnFilter))
 					.setVersion(true)
+					.setSize(count)
 					.get();
 
 			// Walk over all of them and 'lock'
@@ -385,7 +386,7 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 		SearchResponse response = client.prepareSearch(toIndexName(queueName))
 				.setTypes(toTypeName(queueName))
 				.setQuery(addIds)
-				.setSize(0)
+				.setSize(messageIds.size())
 				.get();
 		if (response.getHits().totalHits != messageIds.size()) {
 			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, "readMessages: Could not read all messages for given ids: " + messageIds);
