@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.dao.es5;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -27,9 +28,10 @@ import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.IndexNotFoundException;
-import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +59,6 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
     private final static String TASK_DEFS = "TASK_DEFS";
     private final static String WORKFLOW_DEFS = "WORKFLOW_DEFS";
     private final static String EVENT_HANDLERS = "EVENT_HANDLERS";
-    private final static String EVENT_HANDLERS_BY_EVENT = "EVENT_HANDLERS_BY_EVENT";
 
     @Inject
     public ElasticSearch5MetadataDAO(Client client, Configuration config, ObjectMapper mapper) {
@@ -75,29 +76,49 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
 
     @Override
     public String createTaskDef(TaskDef taskDef) {
+        logger.debug("createTaskDef: taskDef={}", toJson(taskDef));
         taskDef.setCreateTime(System.currentTimeMillis());
         return insertOrUpdate(taskDef);
     }
 
     @Override
     public String updateTaskDef(TaskDef taskDef) {
+        logger.debug("updateTaskDef: taskDef={}", toJson(taskDef));
         taskDef.setUpdateTime(System.currentTimeMillis());
         return insertOrUpdate(taskDef);
     }
 
     @Override
     public TaskDef getTaskDef(String name) {
+        logger.debug("getTaskDef: name={}", name);
+        Preconditions.checkNotNull(name, "TaskDef name cannot be null");
+        TaskDef taskDef = taskDefCache.get(name);
+        if(taskDef != null) {
+            logger.debug("getTaskDef: found in cache={}", toJson(taskDef));
+            return taskDef;
+        }
+
         String indexName = toIndexName(TASK_DEFS);
         String typeName = toTypeName(TASK_DEFS);
 
         ensureIndexExists(indexName);
 
         GetResponse response = client.prepareGet(indexName, typeName, name).get();
-        return toObject(response.getSource(), TaskDef.class);
+        if (!response.isExists()) {
+            logger.debug("getTaskDef: no taskDef found");
+            return null;
+        }
+
+        taskDef = toObject(response.getSource(), TaskDef.class);
+        logger.debug("getTaskDef: result={}", toJson(taskDef));
+
+        return taskDef;
     }
 
     @Override
     public List<TaskDef> getAllTaskDefs() {
+        logger.debug("getAllTaskDefs");
+
         String indexName = toIndexName(TASK_DEFS);
         String typeName = toTypeName(TASK_DEFS);
 
@@ -108,16 +129,22 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
 
     @Override
     public void removeTaskDef(String name) {
+        logger.debug("removeTaskDef: name={}", name);
+
+        Preconditions.checkNotNull(name, "TaskDef name cannot be null");
         String indexName = toIndexName(TASK_DEFS);
         String typeName = toTypeName(TASK_DEFS);
 
         ensureIndexExists(indexName);
 
         client.prepareDelete(indexName, typeName, name).get();
+
+        logger.debug("removeTaskDef: done");
     }
 
     @Override
     public void create(WorkflowDef workflowDef) {
+        logger.debug("WorkflowDef: workflowDef={}", toJson(workflowDef));
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
 
@@ -134,52 +161,52 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
 
     @Override
     public void update(WorkflowDef workflowDef) {
+        logger.debug("update: workflowDef={}", toJson(workflowDef));
         workflowDef.setUpdateTime(System.currentTimeMillis());
         insertOrUpdate(workflowDef);
     }
 
-    private WorkflowDef getByVersion(String name, String version) {
-        Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
-
-        String indexName = toIndexName(WORKFLOW_DEFS);
-        String typeName = toTypeName(WORKFLOW_DEFS);
-
-        ensureIndexExists(indexName);
-
-        GetResponse record = client.prepareGet(indexName, typeName, name + NAMESPACE_SEP + version).get();
-        return toObject(record.getSource(), WorkflowDef.class);
-    }
-
     @Override
     public WorkflowDef getLatest(String name) {
+        logger.debug("getLatest: name={}", name);
         Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
 
         List<WorkflowDef> items = getAllVersions(name);
+        logger.debug("getLatest: items={}", toJson(items));
         if (items.isEmpty()) {
             return null;
         }
 
         items.sort(Comparator.comparingInt(WorkflowDef::getVersion).reversed());
-        return items.get(0);
+        WorkflowDef workflowDef = items.get(0);
+        logger.debug("getLatest: result={}", toJson(workflowDef));
+
+        return workflowDef;
     }
 
     @Override
     public WorkflowDef get(String name, int version) {
+        logger.debug("get: name={}, version={}", name, version);
         return getByVersion(name, String.valueOf(version));
     }
 
     @Override
     public List<String> findAll() {
+        logger.debug("findAll");
         List<WorkflowDef> items = getAll();
+        logger.debug("findAll: items={}", toJson(items));
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
 
-        return items.stream().map(WorkflowDef::getName).collect(Collectors.toList());
+        List<String> result = items.stream().map(WorkflowDef::getName).collect(Collectors.toList());
+        logger.debug("findAll: result={}", toJson(result));
+        return result;
     }
 
     @Override
     public List<WorkflowDef> getAll() {
+        logger.debug("getAll");
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
 
@@ -190,16 +217,20 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
 
     @Override
     public List<WorkflowDef> getAllLatest() {
+        logger.debug("getAllLatest");
         List<String> names = findAll();
         if (names.isEmpty()) {
             return Collections.emptyList();
         }
 
-        return names.stream().map(this::getLatest).collect(Collectors.toList());
+        List<WorkflowDef> result = names.stream().map(this::getLatest).collect(Collectors.toList());
+        logger.debug("getAllLatest: result={}", toJson(result));
+        return result;
     }
 
     @Override
     public List<WorkflowDef> getAllVersions(String name) {
+        logger.debug("getAllVersions: name={}", name);
         Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
 
         String indexName = toIndexName(WORKFLOW_DEFS);
@@ -207,7 +238,7 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
 
         ensureIndexExists(indexName);
 
-        MatchQueryBuilder query = QueryBuilders.matchQuery("name", name);
+        QueryBuilder query = QueryBuilders.wildcardQuery("_id", name + "*");
         SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0).get();
         int size = (int) response.getHits().getTotalHits();
         if (size == 0) {
@@ -215,47 +246,149 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
         }
 
         response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size).get();
-        return Arrays.stream(response.getHits().getHits())
+        List<WorkflowDef> result = Arrays.stream(response.getHits().getHits())
                 .map(item -> toObject(item.getSource(), WorkflowDef.class))
                 .collect(Collectors.toList());
+
+        logger.debug("getAllVersions: result={}", toJson(result));
+        return result;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void addEventHandler(EventHandler eventHandler) {
+        logger.debug("addEventHandler: eventHandler={}", toJson(eventHandler));
+        Preconditions.checkNotNull(eventHandler.getName(), "Missing Name");
+
+        EventHandler existing = getEventHandler(eventHandler.getName());
+        if(existing != null) {
+            throw new ApplicationException(ApplicationException.Code.CONFLICT, "EventHandler with name " + eventHandler.getName() + " already exists!");
+        }
+
+        String indexName = toIndexName(EVENT_HANDLERS);
+        String typeName = toTypeName(EVENT_HANDLERS);
+        client.prepareIndex(indexName, typeName, eventHandler.getName()).setSource(toMap(eventHandler)) .get();
+
+        logger.debug("addEventHandler: done");
     }
 
     @Override
     public void updateEventHandler(EventHandler eventHandler) {
+        logger.debug("updateEventHandler: eventHandler={}", toJson(eventHandler));
+        Preconditions.checkNotNull(eventHandler.getName(), "Missing Name");
+
+        EventHandler existing = getEventHandler(eventHandler.getName());
+        if(existing == null) {
+            throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
+        }
+
+        String indexName = toIndexName(EVENT_HANDLERS);
+        String typeName = toTypeName(EVENT_HANDLERS);
+        client.prepareUpdate(indexName, typeName, eventHandler.getName()).setDoc(toMap(eventHandler)).get();
+
+        logger.debug("updateEventHandler: done");
     }
 
     @Override
     public void removeEventHandlerStatus(String name) {
+        logger.debug("removeEventHandlerStatus: name={}", name);
+
+        EventHandler existing = getEventHandler(name);
+        if(existing == null) {
+            throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
+        }
+
+        String indexName = toIndexName(EVENT_HANDLERS);
+        String typeName = toTypeName(EVENT_HANDLERS);
+        client.prepareDelete(indexName, typeName, name).get();
+
+        logger.debug("removeEventHandlerStatus: done");
     }
 
     @Override
     public List<EventHandler> getEventHandlers() {
-        return Collections.emptyList();
+        logger.debug("getEventHandlers");
+        String indexName = toIndexName(EVENT_HANDLERS);
+        String typeName = toTypeName(EVENT_HANDLERS);
+
+        ensureIndexExists(indexName);
+
+        return findAll(indexName, typeName, EventHandler.class);
     }
 
     @Override
     public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
-        return Collections.emptyList();
+        logger.debug("getEventHandlersForEvent: event={}, activeOnly={}", event, activeOnly);
+
+        List<EventHandler> handlers = getEventHandlers();
+        logger.debug("getEventHandlersForEvent: found={}", toJson(handlers));
+        if (handlers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        handlers = handlers.stream().filter(eh -> eh.getEvent().equals(event) && (!activeOnly || eh.isActive()))
+                .collect(Collectors.toList());
+        logger.debug("getEventHandlersForEvent: result={}", toJson(handlers));
+
+        return handlers;
+    }
+
+    private WorkflowDef getByVersion(String name, String version) {
+        logger.debug("getByVersion: name={}, version={}", name, version);
+        Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
+
+        String indexName = toIndexName(WORKFLOW_DEFS);
+        String typeName = toTypeName(WORKFLOW_DEFS);
+
+        ensureIndexExists(indexName);
+
+        GetResponse record = client.prepareGet(indexName, typeName, name + NAMESPACE_SEP + version).get();
+        if (!record.isExists()) {
+            return null;
+        }
+
+        return toObject(record.getSource(), WorkflowDef.class);
+    }
+
+    private EventHandler getEventHandler(String name) {
+        logger.debug("getEventHandler: name={}", name);
+        String indexName = toIndexName(EVENT_HANDLERS);
+        String typeName = toTypeName(EVENT_HANDLERS);
+
+        ensureIndexExists(indexName);
+
+        GetResponse response = client.prepareGet(indexName, typeName, name).get();
+        if (!response.isExists()) {
+            return null;
+        }
+        EventHandler handler = toObject(response.getSource(), EventHandler.class);;
+
+        logger.debug("getEventHandler: result={}", toJson(handler));
+        return handler;
     }
 
     private <T> List<T> findAll(String indexName, String typeName, Class<T> clazz) {
+        logger.debug("findAll: index={}, type={}, clazz={}", indexName, typeName, clazz);
         SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
+
         int size = (int) response.getHits().getTotalHits();
+        logger.debug("findAll: found={}", size);
         if (size == 0) {
             return Collections.emptyList();
         }
 
         response = client.prepareSearch(indexName).setTypes(typeName).setSize(size).get();
-        return Arrays.stream(response.getHits().getHits())
+
+        List<T> result = Arrays.stream(response.getHits().getHits())
                 .map(hit -> toObject(hit.getSource(), clazz))
                 .collect(Collectors.toList());
+
+        logger.debug("findAll: result={}", toJson(result));
+        return result;
     }
 
     private String insertOrUpdate(TaskDef def) {
+        logger.debug("insertOrUpdate: taskDef={}", toJson(def));
         Preconditions.checkNotNull(def, "TaskDef object cannot be null");
         Preconditions.checkNotNull(def.getName(), "TaskDef name cannot be null");
 
@@ -264,12 +397,18 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
 
         ensureIndexExists(indexName);
 
-        client.prepareUpdate(indexName, typeName, def.getName()).setDocAsUpsert(true).setDoc(toMap(def)).get();
+        client.prepareUpdate(indexName, typeName, def.getName())
+                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                .setDocAsUpsert(true)
+                .setDoc(toMap(def))
+                .get();
         refreshTaskDefs();
+        logger.debug("insertOrUpdate: done {}", def.getName());
         return def.getName();
     }
 
     private void insertOrUpdate(WorkflowDef def) {
+        logger.debug("insertOrUpdate: workflowDef={}", toJson(def));
         Preconditions.checkNotNull(def, "WorkflowDef object cannot be null");
         Preconditions.checkNotNull(def.getName(), "WorkflowDef name cannot be null");
 
@@ -277,21 +416,23 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
         String typeName = toTypeName(WORKFLOW_DEFS);
 
         String id = def.getName() + NAMESPACE_SEP + String.valueOf(def.getVersion());
-        client.prepareUpdate(indexName, typeName, id).setDocAsUpsert(true).setDoc(toMap(def)).get();
-//        // Let's re-update the 'latest' based on the version list
-//        List<Integer> versions = getAllVersions(def.getName()).stream()
-//                .map(WorkflowDef::getVersion).collect(Collectors.toList());
-//        Integer maxVer = Collections.max(versions);
-//        WorkflowDef maxVerDef = get(def.getName(), maxVer);
-//        String latestKey = def.getName() + NAMESPACE_SEP + LATEST;
-//        client.prepareUpdate(indexName, typeName, latestKey).setDocAsUpsert(true).setDoc(toMap(maxVerDef)).get();
+        client.prepareUpdate(indexName, typeName, id)
+                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                .setDocAsUpsert(true)
+                .setDoc(toMap(def))
+                .get();
+
+        logger.debug("insertOrUpdate: done");
     }
 
     private void refreshTaskDefs() {
+        logger.debug("refreshTaskDefs");
+
         Map<String, TaskDef> map = new HashMap<>();
         getAllTaskDefs().forEach(taskDef -> map.put(taskDef.getName(), taskDef));
         this.taskDefCache = map;
-        logger.debug("Refreshed task defs " + this.taskDefCache.size());
+
+        logger.debug("refreshTaskDefs: task defs={}", map);
     }
 
     private String toIndexName(String... nsValues) {
@@ -334,5 +475,13 @@ public class ElasticSearch5MetadataDAO implements MetadataDAO {
 
     private <T> T toObject(Map json, Class<T> clazz) {
         return mapper.convertValue(json, clazz);
+    }
+
+    private String toJson(Object value) {
+        try {
+            return mapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

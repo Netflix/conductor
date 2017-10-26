@@ -57,14 +57,9 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 	public ElasticSearch5QueueDAO(Client client, Configuration config) {
 		this.client = client;
 
-		String rootNamespace = config.getProperty("workflow.namespace.queue.prefix", null);
-		String domain = config.getProperty("workflow.dyno.keyspace.domain", null);
 		String stack = config.getStack();
-		baseName = rootNamespace + "." + stack + ".";
-		if (domain != null) {
-			baseName = baseName + domain + ".";
-		}
-		baseName = baseName.toLowerCase();
+		String prefix = config.getProperty("workflow.namespace.queue.prefix", "conductor.queues");
+		this.baseName = (prefix + "." + stack + ".").toLowerCase();
 	}
 
 	@Override
@@ -127,9 +122,9 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 					foundIds.add(record.getId());
 					logger.debug("pop (" + session + "): success for " + queueName + ", id=" + record.getId());
 				} catch (DocumentMissingException ignore) {
-					logger.warn("pop (" + session + "): got document missing for " + queueName + ", id=" + record.getId() + ". No worries!");
+					logger.debug("pop (" + session + "): got document missing for " + queueName + ", id=" + record.getId() + ". No worries!");
 				} catch (VersionConflictEngineException ignore) {
-					logger.warn("pop (" + session + "): got version conflict for " + queueName + ", id=" + record.getId() + ". No worries!");
+					logger.debug("pop (" + session + "): got version conflict for " + queueName + ", id=" + record.getId() + ". No worries!");
 				} catch (Exception ex) {
 					logger.error("pop (" + session + "): unable to execute for " + queueName + ", id=" + record.getId(), ex);
 				}
@@ -204,9 +199,9 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 					.get();
 			logger.debug("setUnackTimeout: done " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout + ", version=" +record.getVersion());
 		} catch (VersionConflictEngineException ignore) {
-			logger.warn("setUnackTimeout: got version conflict for " + queueName + ", id=" + id + ". No worries!");
+			logger.debug("setUnackTimeout: got version conflict for " + queueName + ", id=" + id + ". No worries!");
 		} catch (DocumentMissingException ignore) {
-			logger.warn("setUnackTimeout: got document missing for " + queueName + ", id=" + id + ". No worries!");
+			logger.debug("setUnackTimeout: got document missing for " + queueName + ", id=" + id + ". No worries!");
 		} catch (Exception ex) {
 			logger.error("setUnackTimeout: unable to set unack timeout for " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout, ex);
 			throw ex;
@@ -294,9 +289,9 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 						.setVersion(record.getVersion())
 						.get();
 			} catch (VersionConflictEngineException ignore) {
-				logger.warn("processUnacks: got version conflict for " + queueName + ", id=" + record.getId() + ". No worries!");
+				logger.debug("processUnacks: got version conflict for " + queueName + ", id=" + record.getId() + ". No worries!");
 			} catch (DocumentMissingException ignore) {
-				logger.warn("processUnacks: got document missing for " + queueName + ", id=" + record.getId() + ". No worries!");
+				logger.debug("processUnacks: got document missing for " + queueName + ", id=" + record.getId() + ". No worries!");
 			} catch (Exception ex) {
 				logger.error("processUnacks: unable to execute for " + queueName + ", id=" + record.getId(), ex);
 			}
@@ -367,9 +362,9 @@ public class ElasticSearch5QueueDAO implements QueueDAO {
 						.setVersion(record.getVersion())
 						.get();
 			} catch (VersionConflictEngineException ignore) {
-				logger.warn("pushMessage: got version conflict for " + queueName + ", id=" + id + ". No worries!");
+				logger.debug("pushMessage: got version conflict for " + queueName + ", id=" + id + ". No worries!");
 			} catch (DocumentMissingException ignore) {
-				logger.warn("pushMessage: got document missing for " + queueName + ", id=" + id + ". No worries!");
+				logger.debug("pushMessage: got document missing for " + queueName + ", id=" + id + ". No worries!");
 			} catch (Exception ex) {
 				logger.error("pushMessage: unable to update " + queueName + ", id=" + id + ", payload=" + payload, ex);
 				throw ex;

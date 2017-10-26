@@ -1,5 +1,5 @@
 {
-  "template": "task_log*",
+  "template": "*",
   "order": 0,
   "mappings": {
     "event": {

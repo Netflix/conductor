@@ -1,5 +1,5 @@
 {
-  "template": "conductor*",
+  "template": "*",
   "order": 0,
   "mappings": {
     "workflow": {
