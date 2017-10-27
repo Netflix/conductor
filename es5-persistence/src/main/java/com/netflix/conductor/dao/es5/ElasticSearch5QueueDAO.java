@@ -89,6 +89,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 		logger.debug("pop (" + session + "): " + queueName + ", count=" + count + ", timeout=" + timeout);
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
+
 		ensureIndexExists(indexName);
 
 		// Read ids. For each: read object, try to lock - if success - add to ids
@@ -159,6 +160,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 		logger.debug("getSize: " + queueName);
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
+
 		ensureIndexExists(indexName);
 
 		Long total = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get().getHits().getTotalHits();
@@ -182,6 +184,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
+
 		ensureIndexExists(indexName);
 
 		GetResponse record = findMessage(queueName, id);
@@ -198,8 +201,8 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 			json.put("deliverOn", newDeliverOn);
 			json.put("offsetSeconds", offsetSeconds);
 			client.prepareUpdate(indexName, typeName, id)
-					.setDoc(json)
 					.setVersion(record.getVersion())
+					.setDoc(json)
 					.get();
 			logger.debug("setUnackTimeout: done " + queueName + ", id=" + id + ", unackTimeout=" + unackTimeout + ", version=" +record.getVersion());
 		} catch (VersionConflictEngineException ignore) {
@@ -216,7 +219,9 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	@Override
 	public void flush(String queueName) {
 		logger.debug("flush: " + queueName);
-		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).source(toIndexName(queueName)).get();
+		String indexName = toIndexName(queueName);
+		ensureIndexExists(indexName);
+		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).source(indexName).get();
 	}
 
 	@Override
@@ -279,6 +284,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 		logger.debug("processUnacks: " + queueName);
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
+
 		ensureIndexExists(indexName);
 
 		TermQueryBuilder poppedFilter = QueryBuilders.termQuery ("popped", true);
