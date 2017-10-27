@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
@@ -27,7 +28,10 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.metrics.Monitors;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,19 +109,149 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         return tasks;
     }
 
-    @Override // TODO Implement
+    @Override
     public List<Task> createTasks(List<Task> tasks) {
-        return null;
+        List<Task> created = new LinkedList<Task>();
+
+        for (Task task : tasks) {
+
+            Preconditions.checkNotNull(task, "task object cannot be null");
+            Preconditions.checkNotNull(task.getTaskId(), "Task id cannot be null");
+            Preconditions.checkNotNull(task.getWorkflowInstanceId(), "Workflow instance id cannot be null");
+            Preconditions.checkNotNull(task.getReferenceTaskName(), "Task reference name cannot be null");
+
+            task.setScheduledTime(System.currentTimeMillis());
+
+            String indexName = toIndexName(SCHEDULED_TASKS);
+            String typeName = toTypeName(task.getTaskType());
+            String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
+            String id = toId(task.getWorkflowInstanceId(), taskKey);
+
+            if (exists(indexName, typeName, id)) {
+                logger.debug("Task already scheduled, skipping the run " + task.getTaskId() + ", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
+                continue;
+            }
+            // SCHEDULED_TASKS
+            insert(indexName, typeName, id, wrap(task.getTaskId()));
+
+            // WORKFLOW_TO_TASKS
+            indexName = toIndexName(WORKFLOW_TO_TASKS);
+            typeName = toTypeName(task.getTaskType());
+            id = toId(task.getWorkflowInstanceId(), task.getTaskId());
+            insert(indexName, typeName, id, wrap(task.getTaskId()));
+
+            // IN_PROGRESS_TASKS
+            indexName = toIndexName(IN_PROGRESS_TASKS);
+            typeName = toTypeName(task.getTaskType());
+            id = toId(task.getTaskDefName(), task.getTaskId());
+            insert(indexName, typeName, id, wrap(task.getTaskId()));
+
+            updateTask(task);
+            created.add(task);
+        }
+
+        return created;
     }
 
     @Override // TODO Implement
     public void updateTask(Task task) {
+        task.setUpdateTime(System.currentTimeMillis());
+        if (task.getStatus() != null && task.getStatus().isTerminal()) {
+            task.setEndTime(System.currentTimeMillis());
+        }
 
+        TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+
+        if(taskDef != null && taskDef.concurrencyLimit() > 0) {
+            String indexName = toIndexName(TASKS_IN_PROGRESS_STATUS);
+            String typeName = toTypeName(task.getTaskType());
+            String id = toId(task.getTaskDefName(), task.getTaskId());
+
+            if(task.getStatus() != null && task.getStatus().equals(Task.Status.IN_PROGRESS)) {
+                //dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
+                insert(indexName, typeName, id, wrap(task.getTaskId()));
+            } else {
+                //dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
+                delete(indexName, typeName, id);
+
+                //String key = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
+                //dynoClient.zrem(key, task.getTaskId());
+                indexName = toIndexName(TASK_LIMIT_BUCKET);
+                typeName = toTypeName(task.getTaskType());
+                delete(indexName, typeName, id);
+            }
+        }
+
+        String indexName = toIndexName(TASK);
+        String typeName = toTypeName(task.getTaskType());
+        String id = toId(task.getTaskId());
+        insert(indexName, typeName, id, toMap(task));
+
+        //dynoClient.set(nsKey(TASK, task.getTaskId()), toJson(task));
+        if (task.getStatus() != null && task.getStatus().isTerminal()) {
+            indexName = toIndexName(IN_PROGRESS_TASKS);
+            typeName = toTypeName(task.getTaskType());
+            id = toId(task.getTaskDefName(), task.getTaskId());
+            delete(indexName, typeName, id);
+
+            //dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
+        }
+
+        indexer.index(task);
     }
 
     @Override // TODO Implement
     public boolean exceedsInProgressLimit(Task task) {
-        return false;
+        TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+        if(taskDef == null) {
+            return false;
+        }
+        int limit = taskDef.concurrencyLimit();
+        if(limit <= 0) {
+            return false;
+        }
+
+        long current = getInProgressTaskCount(task.getTaskDefName());
+        if(current >= limit) {
+            Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
+            return true;
+        }
+
+        String indexName = toIndexName(TASK_LIMIT_BUCKET);
+        String typeName = toTypeName(task.getTaskType());
+        String id = toId(task.getTaskDefName(), task.getTaskId());
+
+        double score = System.currentTimeMillis();
+        String taskId = task.getTaskId();
+
+        Map<String, Object> object = new HashMap<>();
+        object.put("score", score);
+        object.put("taskId", taskId);
+
+        //String rateLimitKey = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
+        // Adds all the specified members with the specified scores to the sorted set stored at key.
+        // dynoClient.zaddnx(rateLimitKey, score, taskId); //NX - Don't update already existing elements. Always add new elements.
+        insert(indexName, typeName, id, object);
+
+        // Id prefix search as it is complex id: taskDefName + taskId
+        QueryBuilder idQuery = QueryBuilders.wildcardQuery("_id", task.getTaskDefName() + "*");
+        QueryBuilder rangeQuery = QueryBuilders.rangeQuery("score").gte(0).lte(score + 1);
+        QueryBuilder finalQuery = QueryBuilders.boolQuery().must(idQuery).must(rangeQuery);
+
+        // Search ids where the score between 0 and score + 1 using limit
+        //Set<String> ids = dynoClient.zrangeByScore(rateLimitKey, 0, score + 1, limit);
+        List<String> ids = findIds(indexName, finalQuery, limit);
+
+        boolean rateLimited = !ids.contains(taskId);
+        if(rateLimited) {
+            logger.info("Tak execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, getInProgressTaskCount(task.getTaskDefName()));
+            //Cleanup any items that are still present in the rate limit bucket but not in progress anymore!
+            //String inProgressKey = nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName());
+            //ids.stream().filter(id -> !dynoClient.sismember(inProgressKey, id)).forEach(id2 -> dynoClient.zrem(rateLimitKey, id2));
+
+            Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
+        }
+        return rateLimited;
     }
 
     @Override // TODO Implement
@@ -134,7 +268,23 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override // TODO Implement
     public void removeTask(String taskId) {
+        Task task = getTask(taskId);
+        if(task == null) {
+            logger.warn("No such Task by id {}", taskId);
+            return;
+        }
+        String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
 
+//        dynoClient.hdel(nsKey(SCHEDULED_TASKS, task.getWorkflowInstanceId()), taskKey);
+//        dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
+//        dynoClient.srem(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
+//        dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
+
+        // dynoClient.del(nsKey(TASK, task.getTaskId()));
+        delete(toIndexName(TASK), toTypeName(task.getTaskType()), taskId);
+
+        // dynoClient.zrem(nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName()), task.getTaskId());
+        delete(toIndexName(TASK_LIMIT_BUCKET), toTypeName(task.getTaskType()), toId(task.getTaskDefName(), taskId));
     }
 
     @Override // TODO Implement
@@ -226,7 +376,6 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override // TODO Implement
     public void updateEventExecution(EventExecution ee) {
-
     }
 
     @Override // TODO Implement
@@ -241,7 +390,6 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override // TODO Implement
     public void updateLastPoll(String taskDefName, String domain, String workerId) {
-
     }
 
     @Override // TODO Implement
@@ -264,50 +412,43 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         workflow.setTasks(new LinkedList<>());
 
         String indexName = toIndexName(WORKFLOW);
-        String typeName = toTypeName(WORKFLOW);
+        String typeName = toTypeName(workflow.getWorkflowType());
         String id = workflow.getWorkflowId();
 
         // Store the workflow object
-        ensureIndexExists(indexName);
         upsert(indexName, typeName, id, workflow);
 
         if (!update) {
             indexName = toIndexName(WORKFLOW_DEF_TO_WORKFLOWS);
-            typeName = toTypeName(WORKFLOW_DEF_TO_WORKFLOWS);
+            typeName = toTypeName(workflow.getWorkflowType());
             id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
 
             // Add to list of workflows for a workflowdef
-            ensureIndexExists(indexName);
             insert(indexName, typeName, id, wrap(workflow.getWorkflowId()));
-
-            //String key = nsKey(WORKFLOW_DEF_TO_WORKFLOWS, workflow.getWorkflowType(), dateStr(workflow.getCreateTime()));
-            //dynoClient.sadd(key, workflow.getWorkflowId());
 
             // Add to list of workflows for a correlationId
             if (workflow.getCorrelationId() != null) {
                 indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
-                typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
+                typeName = toTypeName(workflow.getWorkflowType());
                 id = toId(workflow.getCorrelationId(), workflow.getWorkflowId());
 
-                ensureIndexExists(indexName);
                 insert(indexName, typeName, id, wrap(workflow.getWorkflowId()));
-
-                //dynoClient.sadd(nsKey(CORR_ID_TO_WORKFLOWS, workflow.getCorrelationId()), workflow.getWorkflowId());
             }
         }
 
         // Add or remove from the pending workflows
         if (workflow.getStatus().isTerminal()) {
-            //dynoClient.srem(nsKey(PENDING_WORKFLOWS, workflow.getWorkflowType()), workflow.getWorkflowId());
-        } else {
             indexName = toIndexName(PENDING_WORKFLOWS);
-            typeName = toTypeName(PENDING_WORKFLOWS);
+            typeName = toTypeName(workflow.getWorkflowType());
             id = toId(workflow.getWorkflowType(), workflow.getWorkflowId());
 
-            ensureIndexExists(indexName);
-            insert(indexName, typeName, id, wrap(workflow.getWorkflowId()));
+            delete(indexName, typeName, id);
+        } else {
+            indexName = toIndexName(PENDING_WORKFLOWS);
+            typeName = toTypeName(workflow.getWorkflowType());
+            id = toId(workflow.getWorkflowType(), workflow.getWorkflowId());
 
-            //dynoClient.sadd(nsKey(PENDING_WORKFLOWS, workflow.getWorkflowType()), workflow.getWorkflowId());
+            insert(indexName, typeName, id, wrap(workflow.getWorkflowId()));
         }
 
         workflow.setTasks(tasks);

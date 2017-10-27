@@ -22,11 +22,13 @@ import com.netflix.conductor.core.config.Configuration;
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.ResourceAlreadyExistsException;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +42,7 @@ import java.util.stream.Collectors;
  */
 public class ElasticSearch5BaseDAO {
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5BaseDAO.class);
-    private ConcurrentSet<String> indexCache = new ConcurrentSet<>();
+    private Set<String> indexCache = new ConcurrentSet<>();
     final static String NAMESPACE_SEP = ".";
     private Map<String, Object> defaultMapping;
     private ObjectMapper mapper;
@@ -79,7 +81,7 @@ public class ElasticSearch5BaseDAO {
         return builder.toString().toLowerCase();
     }
 
-    String toId(String... nsValues) {
+    String toId(String ... nsValues) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < nsValues.length; i++) {
             builder.append(nsValues[i]);
@@ -90,8 +92,15 @@ public class ElasticSearch5BaseDAO {
         return builder.toString();
     }
 
-    String toTypeName(String typeName) {
-        return typeName.replace("_", "");
+    String toTypeName(String ... nsValues) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < nsValues.length; i++) {
+            builder.append(nsValues[i]);
+            if (i < nsValues.length - 1) {
+                builder.append(NAMESPACE_SEP);
+            }
+        }
+        return builder.toString().replace("_", "");
     }
 
     void ensureIndexExists(String indexName) {
@@ -112,11 +121,19 @@ public class ElasticSearch5BaseDAO {
         }
     }
 
+    boolean exists(String indexName, String typeName, String id) {
+        ensureIndexExists(indexName);
+        GetResponse record = client.prepareGet(indexName, typeName, id).get();
+        return record.isExists();
+    }
+
     void delete(String indexName, String typeName, String id) {
+        ensureIndexExists(indexName);
         client.prepareDelete(indexName, typeName, id).get();
     }
 
     void upsert(String indexName, String typeName, String id, Object payload) {
+        ensureIndexExists(indexName);
         client.prepareUpdate(indexName, typeName, id)
                 .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
                 .setDocAsUpsert(true)
@@ -125,6 +142,7 @@ public class ElasticSearch5BaseDAO {
     }
 
     void insert(String indexName, String typeName, String id, Object payload) {
+        ensureIndexExists(indexName);
         client.prepareIndex(indexName, typeName, id)
                 .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
                 .setSource(toMap(payload))
@@ -135,6 +153,7 @@ public class ElasticSearch5BaseDAO {
         logger.debug("findAll: index={}, type={}, clazz={}", indexName, typeName, clazz);
 
         // This type of the search fails if no such index
+        ensureIndexExists(indexName);
         SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
 
         int size = (int) response.getHits().getTotalHits();
@@ -157,6 +176,7 @@ public class ElasticSearch5BaseDAO {
         logger.debug("findAll: index={}, type={}, query={}, clazz={}", indexName, typeName, query, clazz);
 
         // This type of the search fails if no such index
+        ensureIndexExists(indexName);
         SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0).get();
         int size = (int) response.getHits().getTotalHits();
         logger.debug("findAll: found={}", size);
@@ -169,6 +189,19 @@ public class ElasticSearch5BaseDAO {
                 .map(item -> toObject(item.getSource(), clazz))
                 .collect(Collectors.toList());
         logger.debug("findAll: result={}", toJson(result));
+        return result;
+    }
+
+    List<String> findIds(String indexName, QueryBuilder query, int size) {
+        logger.debug("findIds: index={}, query={}, size={}", indexName, query, size);
+
+        // This type of the search fails if no such index
+        ensureIndexExists(indexName);
+        SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(size).get();
+        List<String> result = Arrays.stream(response.getHits().getHits())
+                .map(SearchHit::getId)
+                .collect(Collectors.toList());
+        logger.debug("findIds: result={}", toJson(result));
         return result;
     }
 
