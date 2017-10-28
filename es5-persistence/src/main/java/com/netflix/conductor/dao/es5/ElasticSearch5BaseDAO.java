@@ -45,7 +45,7 @@ public class ElasticSearch5BaseDAO {
     private Set<String> indexCache = new ConcurrentSet<>();
     final static String NAMESPACE_SEP = ".";
     private Map<String, Object> defaultMapping;
-    private ObjectMapper mapper;
+    protected ObjectMapper mapper;
     protected Client client;
     private String context;
     private String prefix;
@@ -115,6 +115,7 @@ public class ElasticSearch5BaseDAO {
                 client.admin().indices().prepareCreate(indexName).addMapping("_default_", defaultMapping).get();
                 indexCache.add(indexName);
             } catch (ResourceAlreadyExistsException ignore) {
+                indexCache.add(indexName);
             } catch (Exception ex) {
                 logger.error("ensureIndexExists: Failed for " + indexName + " with " + ex.getMessage(), ex);
             }
@@ -149,6 +150,24 @@ public class ElasticSearch5BaseDAO {
                 .get();
     }
 
+    <T> T findOne(String indexName, String typeName, String id, Class<T> clazz) {
+        ensureIndexExists(indexName);
+        GetResponse record = client.prepareGet(indexName, typeName, id).get();
+        if (record.isExists()) {
+            return convert(record.getSource(), clazz);
+        }
+
+        return null;
+    }
+
+    <T> T findOne(String indexName, QueryBuilder query, Class<T> clazz) {
+        List<T> items = findAll(indexName, query, clazz);
+        if (items == null || items.isEmpty()) {
+            return null;
+        }
+        return items.get(0);
+    }
+
     <T> List<T> findAll(String indexName, String typeName, Class<T> clazz) {
         logger.debug("findAll: index={}, type={}, clazz={}", indexName, typeName, clazz);
 
@@ -165,9 +184,29 @@ public class ElasticSearch5BaseDAO {
         response = client.prepareSearch(indexName).setTypes(typeName).setSize(size).get();
 
         List<T> result = Arrays.stream(response.getHits().getHits())
-                .map(hit -> toObject(hit.getSource(), clazz))
+                .map(hit -> convert(hit.getSource(), clazz))
                 .collect(Collectors.toList());
 
+        logger.debug("findAll: result={}", toJson(result));
+        return result;
+    }
+
+    <T> List<T> findAll(String indexName, QueryBuilder query, Class<T> clazz) {
+        logger.debug("findAll: index={}, query={}, clazz={}", indexName, query, clazz);
+
+        // This type of the search fails if no such index
+        ensureIndexExists(indexName);
+        SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(0).get();
+        int size = (int) response.getHits().getTotalHits();
+        logger.debug("findAll: found={}", size);
+        if (size == 0) {
+            return Collections.emptyList();
+        }
+
+        response = client.prepareSearch(indexName).setQuery(query).setSize(size).get();
+        List<T> result = Arrays.stream(response.getHits().getHits())
+                .map(item -> convert(item.getSource(), clazz))
+                .collect(Collectors.toList());
         logger.debug("findAll: result={}", toJson(result));
         return result;
     }
@@ -186,7 +225,7 @@ public class ElasticSearch5BaseDAO {
 
         response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size).get();
         List<T> result = Arrays.stream(response.getHits().getHits())
-                .map(item -> toObject(item.getSource(), clazz))
+                .map(item -> convert(item.getSource(), clazz))
                 .collect(Collectors.toList());
         logger.debug("findAll: result={}", toJson(result));
         return result;
@@ -205,13 +244,13 @@ public class ElasticSearch5BaseDAO {
         return result;
     }
 
-    Map<String, Object> wrap(Object value) {
+    Map wrap(Object value) {
         Map<String, Object> map = new HashMap<>();
         map.put("payload", value);
         return map;
     }
 
-    Object unwrap(Map<String, Object> map) {
+    Object unwrap(Map map) {
         return map.get("payload");
     }
 
@@ -219,11 +258,21 @@ public class ElasticSearch5BaseDAO {
         return mapper.convertValue(value, new TypeReference<Map<String, ?>>() {});
     }
 
-    <T> T toObject(Map json, Class<T> clazz) {
-        return mapper.convertValue(json, clazz);
+    <T> T convert(String json, Class<T> clazz) {
+        try {
+            return mapper.readValue(json, clazz);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    <T> T convert(Map map, Class<T> clazz) {
+        return mapper.convertValue(map, clazz);
     }
 
     String toJson(Object value) {
+        if (value == null) {
+            return "null";
+        }
         try {
             return mapper.writeValueAsString(value);
         } catch (JsonProcessingException e) {

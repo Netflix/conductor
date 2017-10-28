@@ -94,7 +94,7 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
             return null;
         }
 
-        taskDef = toObject(response.getSource(), TaskDef.class);
+        taskDef = convert(response.getSource(), TaskDef.class);
         logger.debug("getTaskDef: result={}", toJson(taskDef));
 
         return taskDef;
@@ -223,7 +223,7 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         ensureIndexExists(indexName);
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", name + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("name", name);
         List<WorkflowDef> result = findAll(indexName, typeName, query, WorkflowDef.class);
 
         logger.debug("getAllVersions: result={}", toJson(result));
@@ -332,7 +332,7 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
             return null;
         }
 
-        return toObject(record.getSource(), WorkflowDef.class);
+        return convert(record.getSource(), WorkflowDef.class);
     }
 
     private EventHandler getEventHandler(String name) {
@@ -346,7 +346,7 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         if (!response.isExists()) {
             return null;
         }
-        EventHandler handler = toObject(response.getSource(), EventHandler.class);;
+        EventHandler handler = convert(response.getSource(), EventHandler.class);;
 
         logger.debug("getEventHandler: result={}", toJson(handler));
         return handler;
