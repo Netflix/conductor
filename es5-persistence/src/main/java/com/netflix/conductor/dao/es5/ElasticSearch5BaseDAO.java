@@ -68,7 +68,7 @@ public class ElasticSearch5BaseDAO {
         }
     }
 
-    String toIndexName(String... nsValues) {
+    String toIndexName(String ... nsValues) {
         StringBuilder builder = new StringBuilder(prefix).append(NAMESPACE_SEP).append(context).append(NAMESPACE_SEP);
         if (StringUtils.isNotEmpty(stack)) {
             builder.append(stack).append(NAMESPACE_SEP);
@@ -90,7 +90,8 @@ public class ElasticSearch5BaseDAO {
                 builder.append(NAMESPACE_SEP);
             }
         }
-        return builder.toString();
+
+        return builder.toString().toLowerCase();
     }
 
     String toTypeName(String ... nsValues) {
@@ -101,7 +102,9 @@ public class ElasticSearch5BaseDAO {
                 builder.append(NAMESPACE_SEP);
             }
         }
-        return builder.toString().replace("_", "");
+
+        // Elastic type name does not allow '_'
+        return builder.toString().toLowerCase().replace("_", "");
     }
 
     void ensureIndexExists(String indexName) {
@@ -139,6 +142,14 @@ public class ElasticSearch5BaseDAO {
         client.prepareUpdate(indexName, typeName, id)
                 .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
                 .setDocAsUpsert(true)
+                .setDoc(toMap(payload))
+                .get();
+    }
+
+    void update(String indexName, String typeName, String id, Object payload) {
+        ensureIndexExists(indexName);
+        client.prepareUpdate(indexName, typeName, id)
+                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
                 .setDoc(toMap(payload))
                 .get();
     }

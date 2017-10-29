@@ -3,9 +3,9 @@
     {
       "string_fields": {
         "mapping": {
-          "index": "not_analyzed",
-          "type": "string",
-          "doc_values": true
+          "index": "no",
+          "type": "text",
+          "include_in_all": false
         },
         "match": "*",
         "match_mapping_type": "string"
@@ -15,8 +15,8 @@
       "long_fields": {
         "mapping": {
           "index": "not_analyzed",
-          "type": "string",
-          "doc_values": true
+          "type": "text",
+          "include_in_all": false
         },
         "match": "*",
         "match_mapping_type": "long"
@@ -26,8 +26,8 @@
       "double_fields": {
         "mapping": {
           "index": "not_analyzed",
-          "type": "string",
-          "doc_values": true
+          "type": "text",
+          "include_in_all": false
         },
         "match": "*",
         "match_mapping_type": "double"

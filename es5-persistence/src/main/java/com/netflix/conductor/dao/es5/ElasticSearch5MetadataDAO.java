@@ -23,8 +23,6 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.MetadataDAO;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -85,16 +83,9 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         String indexName = toIndexName(TASK_DEFS);
         String typeName = toTypeName(TASK_DEFS);
+        String id = toId(name);
 
-        ensureIndexExists(indexName);
-
-        GetResponse response = client.prepareGet(indexName, typeName, name).get();
-        if (!response.isExists()) {
-            logger.debug("getTaskDef: no taskDef found");
-            return null;
-        }
-
-        taskDef = convert(response.getSource(), TaskDef.class);
+        taskDef = findOne(indexName, typeName, id, TaskDef.class);
         logger.debug("getTaskDef: result={}", toJson(taskDef));
 
         return taskDef;
@@ -107,8 +98,6 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         String indexName = toIndexName(TASK_DEFS);
         String typeName = toTypeName(TASK_DEFS);
 
-        ensureIndexExists(indexName);
-
         return findAll(indexName, typeName, TaskDef.class);
     }
 
@@ -119,10 +108,9 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         Preconditions.checkNotNull(name, "TaskDef name cannot be null");
         String indexName = toIndexName(TASK_DEFS);
         String typeName = toTypeName(TASK_DEFS);
+        String id = toId(name);
 
-        ensureIndexExists(indexName);
-
-        client.prepareDelete(indexName, typeName, name).get();
+        delete(indexName, typeName, id);
 
         logger.debug("removeTaskDef: done");
     }
@@ -132,12 +120,8 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         logger.debug("create: workflowDef={}", toJson(workflowDef));
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
-
-        ensureIndexExists(indexName);
-
-        String id = workflowDef.getName() + NAMESPACE_SEP + String.valueOf(workflowDef.getVersion());
-        GetResponse record = client.prepareGet(indexName, typeName, id).get();
-        if (record.isExists()) {
+        String id = toId(workflowDef.getName(), String.valueOf(workflowDef.getVersion()));
+        if (exists(indexName, typeName, id)) {
             throw new ApplicationException(ApplicationException.Code.CONFLICT, "Workflow with " + workflowDef.key() + " already exists!");
         }
         workflowDef.setCreateTime(System.currentTimeMillis());
@@ -195,8 +179,6 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
 
-        ensureIndexExists(indexName);
-
         return findAll(indexName, typeName, WorkflowDef.class);
     }
 
@@ -221,9 +203,7 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
 
-        ensureIndexExists(indexName);
-
-        QueryBuilder query = QueryBuilders.matchQuery("name", name);
+        QueryBuilder query = QueryBuilders.wildcardQuery("_id",toId(name) + "*");
         List<WorkflowDef> result = findAll(indexName, typeName, query, WorkflowDef.class);
 
         logger.debug("getAllVersions: result={}", toJson(result));
@@ -232,21 +212,20 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
     @Override
     @SuppressWarnings("unchecked")
-    public void addEventHandler(EventHandler eventHandler) {
-        logger.debug("addEventHandler: eventHandler={}", toJson(eventHandler));
-        Preconditions.checkNotNull(eventHandler.getName(), "Missing Name");
+    public void addEventHandler(EventHandler handler) {
+        logger.debug("addEventHandler: eventHandler={}", toJson(handler));
+        Preconditions.checkNotNull(handler.getName(), "Missing Name");
 
-        EventHandler existing = getEventHandler(eventHandler.getName());
+        EventHandler existing = getEventHandler(handler.getName());
         if(existing != null) {
-            throw new ApplicationException(ApplicationException.Code.CONFLICT, "EventHandler with name " + eventHandler.getName() + " already exists!");
+            throw new ApplicationException(ApplicationException.Code.CONFLICT, "EventHandler with name " + handler.getName() + " already exists!");
         }
 
         String indexName = toIndexName(EVENT_HANDLERS);
         String typeName = toTypeName(EVENT_HANDLERS);
+        String id = toId(handler.getName());
 
-        ensureIndexExists(indexName);
-
-        client.prepareIndex(indexName, typeName, eventHandler.getName()).setSource(toMap(eventHandler)) .get();
+        insert(indexName, typeName,id, toMap(handler));
 
         logger.debug("addEventHandler: done");
     }
@@ -263,10 +242,9 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         String indexName = toIndexName(EVENT_HANDLERS);
         String typeName = toTypeName(EVENT_HANDLERS);
+        String id = toId(eventHandler.getName());
 
-        ensureIndexExists(indexName);
-
-        client.prepareUpdate(indexName, typeName, eventHandler.getName()).setDoc(toMap(eventHandler)).get();
+        update(indexName, typeName, id, toMap(eventHandler));
 
         logger.debug("updateEventHandler: done");
     }
@@ -282,10 +260,9 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         String indexName = toIndexName(EVENT_HANDLERS);
         String typeName = toTypeName(EVENT_HANDLERS);
+        String id = toId(name);
 
-        ensureIndexExists(indexName);
-
-        client.prepareDelete(indexName, typeName, name).get();
+        delete(indexName, typeName, id);
 
         logger.debug("removeEventHandlerStatus: done");
     }
@@ -295,8 +272,6 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         logger.debug("getEventHandlers");
         String indexName = toIndexName(EVENT_HANDLERS);
         String typeName = toTypeName(EVENT_HANDLERS);
-
-        ensureIndexExists(indexName);
 
         return findAll(indexName, typeName, EventHandler.class);
     }
@@ -324,29 +299,21 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
+        String id = toId(name, String.valueOf(version));
 
-        ensureIndexExists(indexName);
+        WorkflowDef workflowDef = findOne(indexName, typeName, id, WorkflowDef.class);
 
-        GetResponse record = client.prepareGet(indexName, typeName, name + NAMESPACE_SEP + version).get();
-        if (!record.isExists()) {
-            return null;
-        }
-
-        return convert(record.getSource(), WorkflowDef.class);
+        logger.debug("getByVersion: result={}", toJson(workflowDef));
+        return workflowDef;
     }
 
     private EventHandler getEventHandler(String name) {
         logger.debug("getEventHandler: name={}", name);
         String indexName = toIndexName(EVENT_HANDLERS);
         String typeName = toTypeName(EVENT_HANDLERS);
+        String id = toId(name);
 
-        ensureIndexExists(indexName);
-
-        GetResponse response = client.prepareGet(indexName, typeName, name).get();
-        if (!response.isExists()) {
-            return null;
-        }
-        EventHandler handler = convert(response.getSource(), EventHandler.class);;
+        EventHandler handler = findOne(indexName, typeName, id, EventHandler.class);
 
         logger.debug("getEventHandler: result={}", toJson(handler));
         return handler;
@@ -359,14 +326,9 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         String indexName = toIndexName(TASK_DEFS);
         String typeName = toTypeName(TASK_DEFS);
+        String id = toId(def.getName());
+        upsert(indexName, typeName, id, toMap(def));
 
-        ensureIndexExists(indexName);
-
-        client.prepareUpdate(indexName, typeName, def.getName())
-                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .setDocAsUpsert(true)
-                .setDoc(toMap(def))
-                .get();
         refreshTaskDefs();
         logger.debug("insertOrUpdate: done {}", def.getName());
         return def.getName();
@@ -379,15 +341,8 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
-
-        ensureIndexExists(indexName);
-
-        String id = def.getName() + NAMESPACE_SEP + String.valueOf(def.getVersion());
-        client.prepareUpdate(indexName, typeName, id)
-                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .setDocAsUpsert(true)
-                .setDoc(toMap(def))
-                .get();
+        String id = toId(def.getName(), String.valueOf(def.getVersion()));
+        upsert(indexName, typeName, id, toMap(def));
 
         logger.debug("insertOrUpdate: done");
     }
