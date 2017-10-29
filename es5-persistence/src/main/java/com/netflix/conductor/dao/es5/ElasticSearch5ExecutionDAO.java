@@ -338,8 +338,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         QueryBuilder query = QueryBuilders.matchQuery("workflowId", workflowId);
         List<HashMap> wraps = findAll(toIndexName(WORKFLOW_TO_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
-        List<Task> tasks = taskIds.stream().map(this::getTask).collect(Collectors.toList());
-        logger.debug("getTasksForWorkflow: result={}", tasks);
+        List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
+        logger.debug("getTasksForWorkflow: result={}", toJson(tasks));
 
         return tasks;
     }
@@ -463,7 +463,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         return workflows;
     }
 
-    @Override // TODO Implement
+    @Override
     public long getPendingWorkflowCount(String workflowName) {
         logger.debug("getPendingWorkflowCount: workflowName={}", workflowName);
 
@@ -493,7 +493,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         return result;
     }
 
-    @Override // TODO Implement
+    @Override
     public List<Workflow> getWorkflowsByType(String workflowName, Long startTime, Long endTime) {
         logger.debug("getWorkflowsByType: workflowName={}, startTime={}, endTime={}", workflowName, startTime, endTime);
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
@@ -541,22 +541,67 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         return workflows;
     }
 
-    @Override // TODO Implement
+    @Override
     public boolean addEventExecution(EventExecution ee) {
         logger.debug("addEventExecution: ee={}", toJson(ee));
-        return false;
+        try {
+            String indexName = toIndexName(EVENT_EXECUTION);
+            String typeName = toTypeName(ee.getName(), ee.getEvent(), ee.getMessageId());
+
+            if (insert(indexName, typeName, ee.getId(), toMap(ee))) {
+                indexer.add(ee);
+                return true;
+            }
+
+            logger.debug("addEventExecution: done");
+            return false;
+        } catch (Exception ex) {
+            logger.debug("addEventExecution: failed with {}", ex.getMessage());
+            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
+        }
     }
 
-    @Override // TODO Implement
+    @Override
     public void updateEventExecution(EventExecution ee) {
         logger.debug("updateEventExecution: ee={}", toJson(ee));
+        try {
+            String indexName = toIndexName(EVENT_EXECUTION);
+            String typeName = toTypeName(ee.getName(), ee.getEvent(), ee.getMessageId());
+
+            upsert(indexName, typeName, ee.getId(), toMap(ee));
+
+            indexer.add(ee);
+            logger.debug("updateEventExecution: done", typeName);
+        } catch (Exception ex) {
+            logger.debug("updateEventExecution: failed with {}", ex.getMessage());
+            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
+        }
     }
 
-    @Override // TODO Implement
+    @Override
     public List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max) {
         logger.debug("getEventExecutions: eventHandlerName={}, eventName={}, messageId={}, max={}",
                 eventHandlerName, eventName, messageId, max);
-        return Collections.emptyList();
+        try {
+            String indexName = toIndexName(EVENT_EXECUTION);
+            String typeName = toTypeName(eventHandlerName, eventName, messageId);
+
+            List<EventExecution> executions = new LinkedList<>();
+            for (int i = 0; i < max; i++) {
+                String id = messageId + "_" + i;
+                EventExecution ee = findOne(indexName, typeName, id, EventExecution.class);
+                if (ee == null) {
+                    break;
+                }
+                executions.add(ee);
+            }
+
+            logger.debug("getEventExecutions: result={}", toJson(executions));
+            return executions;
+        } catch (Exception ex) {
+            logger.debug("getEventExecutions: failed with {}", ex.getMessage());
+            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
+        }
     }
 
     @Override

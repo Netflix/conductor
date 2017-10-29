@@ -27,6 +27,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
@@ -45,7 +46,7 @@ public class ElasticSearch5BaseDAO {
     private Set<String> indexCache = new ConcurrentSet<>();
     final static String NAMESPACE_SEP = ".";
     private Map<String, Object> defaultMapping;
-    protected ObjectMapper mapper;
+    private ObjectMapper mapper;
     protected Client client;
     private String context;
     private String prefix;
@@ -142,12 +143,18 @@ public class ElasticSearch5BaseDAO {
                 .get();
     }
 
-    void insert(String indexName, String typeName, String id, Object payload) {
+    boolean insert(String indexName, String typeName, String id, Object payload) {
         ensureIndexExists(indexName);
-        client.prepareIndex(indexName, typeName, id)
-                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .setSource(toMap(payload))
-                .get();
+        try {
+            client.prepareIndex(indexName, typeName, id)
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .setSource(toMap(payload))
+                    .setCreate(true)
+                    .get();
+            return true;
+        } catch (VersionConflictEngineException ex) {
+            return false;
+        }
     }
 
     <T> T findOne(String indexName, String typeName, String id, Class<T> clazz) {
@@ -244,18 +251,12 @@ public class ElasticSearch5BaseDAO {
         return result;
     }
 
-    Map wrap(Object value) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("payload", value);
-        return map;
-    }
-
-    Object unwrap(Map map) {
-        return map.get("payload");
-    }
-
     Map<String, ?> toMap(Object value) {
         return mapper.convertValue(value, new TypeReference<Map<String, ?>>() {});
+    }
+
+    <T> T convert(Map map, Class<T> clazz) {
+        return mapper.convertValue(map, clazz);
     }
 
     <T> T convert(String json, Class<T> clazz) {
@@ -264,9 +265,6 @@ public class ElasticSearch5BaseDAO {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-    <T> T convert(Map map, Class<T> clazz) {
-        return mapper.convertValue(map, clazz);
     }
 
     String toJson(Object value) {
