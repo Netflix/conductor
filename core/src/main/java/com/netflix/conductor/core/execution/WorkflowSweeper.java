@@ -106,7 +106,7 @@ public class WorkflowSweeper {
                     boolean done = executor.decide(workflowId);
                     if (!done) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("Setting unack timeout {} secs for workflow {}", workflowId, config.getSweepFrequency());
+                            logger.debug("Setting unack timeout {} secs for workflow {}", config.getSweepFrequency(), workflowId);
                         }
                         queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
                     } else {
