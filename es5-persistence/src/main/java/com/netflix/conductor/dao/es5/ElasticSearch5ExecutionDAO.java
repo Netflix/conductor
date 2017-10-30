@@ -81,7 +81,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override
     public List<Task> getPendingTasksByWorkflow(String taskName, String workflowId) {
-        logger.debug("getPendingTasksByWorkflow: taskName={}, workflowId={}", taskName, workflowId);
+        if (logger.isDebugEnabled())
+            logger.debug("getPendingTasksByWorkflow: taskName={}, workflowId={}", taskName, workflowId);
         List<Task> tasks = new LinkedList<>();
 
         List<Task> pendingTasks = getPendingTasksForTaskType(taskName);
@@ -96,7 +97,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override
     public List<Task> getTasks(String taskDefName, String startKey, int count) {
-        logger.debug("getTasks: taskDefName={}, startKey={}, count={}", taskDefName, startKey, count);
+        if (logger.isDebugEnabled())
+            logger.debug("getTasks: taskDefName={}, startKey={}, count={}", taskDefName, startKey, count);
         List<Task> tasks = new LinkedList<>();
 
         List<Task> pendingTasks = getPendingTasksForTaskType(taskDefName);
@@ -119,7 +121,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override
     public List<Task> createTasks(List<Task> tasks) {
-        logger.debug("createTasks: tasks={}", toJson(tasks));
+        if (logger.isDebugEnabled())
+            logger.debug("createTasks: tasks={}", toJson(tasks));
         List<Task> created = new LinkedList<>();
 
         for (Task task : tasks) {
@@ -137,7 +140,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             String id = toId(task.getWorkflowInstanceId(), taskKey);
 
             if (exists(indexName, typeName, id)) {
-                logger.debug("Task already scheduled, skipping the run " + task.getTaskId() + ", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
+                if (logger.isDebugEnabled())
+                    logger.debug("Task already scheduled, skipping the run " + task.getTaskId() + ", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
                 continue;
             }
             // SCHEDULED_TASKS
@@ -167,7 +171,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override
     public void updateTask(Task task) {
-        logger.debug("updateTask: task={}", toJson(task));
+        if (logger.isDebugEnabled())
+            logger.debug("updateTask: task={}", toJson(task));
         task.setUpdateTime(System.currentTimeMillis());
         if (task.getStatus() != null && task.getStatus().isTerminal()) {
             task.setEndTime(System.currentTimeMillis());
@@ -192,7 +197,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         }
 
         String id = toId(task.getTaskId());
-        insert(toIndexName(TASK), toTypeName(TASK), id, toMap(task));
+        upsert(toIndexName(TASK), toTypeName(TASK), id, toMap(task));
         if (task.getStatus() != null && task.getStatus().isTerminal()) {
             id = toId(task.getTaskDefName(), task.getTaskId());
             delete(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), id);
@@ -203,25 +208,30 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override
     public boolean exceedsInProgressLimit(Task task) {
-        logger.debug("exceedsInProgressLimit: task={}", toJson(task));
+        if (logger.isDebugEnabled())
+            logger.debug("exceedsInProgressLimit: task={}", toJson(task));
         TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
         if (taskDef == null) {
             return false;
         }
         int limit = taskDef.concurrencyLimit();
-        logger.debug("exceedsInProgressLimit: limit={}", limit);
+        if (logger.isDebugEnabled())
+            logger.debug("exceedsInProgressLimit: limit={}", limit);
         if (limit <= 0) {
             return false;
         }
 
         long current = getInProgressTaskCount(task.getTaskDefName());
-        logger.debug("exceedsInProgressLimit: current={}", current);
+        if (logger.isDebugEnabled())
+            logger.debug("exceedsInProgressLimit: current={}", current);
         if (current >= limit) {
-            logger.debug("exceedsInProgressLimit: task rate limited");
+            if (logger.isDebugEnabled())
+                logger.debug("exceedsInProgressLimit: task rate limited");
             Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
             return true;
         }
-        logger.debug("exceedsInProgressLimit: after checking");
+        if (logger.isDebugEnabled())
+            logger.debug("exceedsInProgressLimit: after checking");
 
         String indexName = toIndexName(TASK_LIMIT_BUCKET);
         String typeName = toTypeName(TASK_LIMIT_BUCKET);
@@ -233,11 +243,13 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
                 "taskDefName", task.getTaskDefName());
 
         insert(indexName, typeName, id, payload);
-        logger.debug("exceedsInProgressLimit: after insert");
+        if (logger.isDebugEnabled())
+            logger.debug("exceedsInProgressLimit: after insert");
 
         QueryBuilder query = QueryBuilders.matchQuery("_id", toId(task.getTaskDefName()) + "*");
         List<HashMap> wraps = findAll(indexName, query, limit, HashMap.class);
-        logger.debug("exceedsInProgressLimit: wraps={}", wraps);
+        if (logger.isDebugEnabled())
+            logger.debug("exceedsInProgressLimit: wraps={}", wraps);
 
         List<String> ids = wraps.stream()
                 .filter(map -> {
@@ -246,7 +258,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
                 })
                 .map(map -> (String) map.get("taskId")).collect(Collectors.toList());
 
-        logger.debug("exceedsInProgressLimit: ids={}", ids);
+        if (logger.isDebugEnabled())
+            logger.debug("exceedsInProgressLimit: ids={}", ids);
 
         boolean rateLimited = !ids.contains(task.getTaskId());
         if (rateLimited) {
@@ -260,19 +273,22 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
         }
 
-        logger.debug("exceedsInProgressLimit: result={}", rateLimited);
+        if (logger.isDebugEnabled())
+            logger.debug("exceedsInProgressLimit: result={}", rateLimited);
         return rateLimited;
     }
 
     @Override
     public void addTaskExecLog(List<TaskExecLog> log) {
-        logger.debug("addTaskExecLog: log={}", toJson(log));
+        if (logger.isDebugEnabled())
+            logger.debug("addTaskExecLog: log={}", toJson(log));
         indexer.add(log);
     }
 
     @Override
     public void updateTasks(List<Task> tasks) {
-        logger.debug("updateTasks: tasks={}", toJson(tasks));
+        if (logger.isDebugEnabled())
+            logger.debug("updateTasks: tasks={}", toJson(tasks));
         for (Task task : tasks) {
             updateTask(task);
         }
@@ -280,7 +296,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
     @Override
     public void removeTask(String taskId) {
-        logger.debug("removeTask: taskId={}", taskId);
+        if (logger.isDebugEnabled())
+            logger.debug("removeTask: taskId={}", taskId);
         Task task = getTask(taskId);
         if (task == null) {
             logger.warn("No such Task by id {}", taskId);
@@ -294,77 +311,89 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         delete(toIndexName(TASKS_IN_PROGRESS_STATUS), toTypeName(TASKS_IN_PROGRESS_STATUS), toId(task.getTaskDefName(), taskId));
         delete(toIndexName(TASK), toTypeName(TASK), toId(taskId));
         delete(toIndexName(TASK_LIMIT_BUCKET), toTypeName(TASK_LIMIT_BUCKET), toId(task.getTaskDefName(), taskId));
-        logger.debug("removeTask: done");
+        if (logger.isDebugEnabled())
+            logger.debug("removeTask: done");
     }
 
     @Override
     public Task getTask(String taskId) {
-        logger.debug("getTask: taskId={}", taskId);
+        if (logger.isDebugEnabled())
+            logger.debug("getTask: taskId={}", taskId);
         Preconditions.checkNotNull(taskId, "taskId name cannot be null");
 
         QueryBuilder idQuery = QueryBuilders.idsQuery().addIds(toId(taskId));
         Task task = findOne(toIndexName(TASK), idQuery, Task.class);
 
-        logger.debug("getTask: result={}", toJson(task));
+        if (logger.isDebugEnabled())
+            logger.debug("getTask: result={}", toJson(task));
         return task;
     }
 
     @Override
     public List<Task> getTasks(List<String> taskIds) {
-        logger.debug("getTasks: taskIds={}", taskIds);
+        if (logger.isDebugEnabled())
+            logger.debug("getTasks: taskIds={}", taskIds);
 
         IdsQueryBuilder idsQuery = QueryBuilders.idsQuery();
         taskIds.forEach(id -> idsQuery.addIds(toId(id)));
 
         List<Task> tasks = findAll(toIndexName(TASK), idsQuery, Task.class);
 
-        logger.debug("getTasks: result={}", toJson(tasks));
+        if (logger.isDebugEnabled())
+            logger.debug("getTasks: result={}", toJson(tasks));
         return tasks;
     }
 
     @Override
     public List<Task> getPendingTasksForTaskType(String taskDefName) {
-        logger.debug("getPendingTasksForTaskType: taskDefName={}", taskDefName);
+        if (logger.isDebugEnabled())
+            logger.debug("getPendingTasksForTaskType: taskDefName={}", taskDefName);
         Preconditions.checkNotNull(taskDefName, "task def name cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
         List<Task> tasks = findAll(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), query, Task.class);
 
-        logger.debug("getPendingTasksForTaskType: result={}", toJson(tasks));
+        if (logger.isDebugEnabled())
+            logger.debug("getPendingTasksForTaskType: result={}", toJson(tasks));
         return tasks;
     }
 
     @Override
     public List<Task> getTasksForWorkflow(String workflowId) {
-        logger.debug("getTasksForWorkflow: workflowId={}", workflowId);
+        if (logger.isDebugEnabled())
+            logger.debug("getTasksForWorkflow: workflowId={}", workflowId);
         Preconditions.checkNotNull(workflowId, "workflowId cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowId) + "*");
         List<HashMap> wraps = findAll(toIndexName(WORKFLOW_TO_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
-        logger.debug("getTasksForWorkflow: result={}", toJson(tasks));
+        if (logger.isDebugEnabled())
+            logger.debug("getTasksForWorkflow: result={}", toJson(tasks));
 
         return tasks;
     }
 
     @Override
     public String createWorkflow(Workflow workflow) {
-        logger.debug("createWorkflow: workflow={}", toJson(workflow));
+        if (logger.isDebugEnabled())
+            logger.debug("createWorkflow: workflow={}", toJson(workflow));
         workflow.setCreateTime(System.currentTimeMillis());
         return insertOrUpdateWorkflow(workflow, false);
     }
 
     @Override
     public String updateWorkflow(Workflow workflow) {
-        logger.debug("updateWorkflow: workflow={}", toJson(workflow));
+        if (logger.isDebugEnabled())
+            logger.debug("updateWorkflow: workflow={}", toJson(workflow));
         workflow.setUpdateTime(System.currentTimeMillis());
         return insertOrUpdateWorkflow(workflow, true);
     }
 
     @Override
     public void removeWorkflow(String workflowId) {
-        logger.debug("removeWorkflow: workflowId={}", workflowId);
+        if (logger.isDebugEnabled())
+            logger.debug("removeWorkflow: workflowId={}", workflowId);
         try {
 
             Workflow wf = getWorkflow(workflowId, true);
@@ -381,28 +410,34 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
                 removeTask(task.getTaskId());
             }
         } catch (Exception ex) {
-            logger.debug("removeWorkflow: failed for {} with {}", workflowId, ex.getMessage(), ex);
+            if (logger.isDebugEnabled())
+                logger.debug("removeWorkflow: failed for {} with {}", workflowId, ex.getMessage(), ex);
             throw new ApplicationException(ex.getMessage(), ex);
         }
-        logger.debug("removeWorkflow: done");
+        if (logger.isDebugEnabled())
+            logger.debug("removeWorkflow: done");
     }
 
     @Override
     public void removeFromPendingWorkflow(String workflowType, String workflowId) {
-        logger.debug("removeFromPendingWorkflow: workflowType={}, workflowId={}", workflowType, workflowId);
+        if (logger.isDebugEnabled())
+            logger.debug("removeFromPendingWorkflow: workflowType={}, workflowId={}", workflowType, workflowId);
         delete(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), toId(workflowType, workflowId));
-        logger.debug("removeFromPendingWorkflow: done");
+        if (logger.isDebugEnabled())
+            logger.debug("removeFromPendingWorkflow: done");
     }
 
     @Override
     public Workflow getWorkflow(String workflowId) {
-        logger.debug("getWorkflow: workflowId={}", workflowId);
+        if (logger.isDebugEnabled())
+            logger.debug("getWorkflow: workflowId={}", workflowId);
         return getWorkflow(workflowId, true);
     }
 
     @Override
     public Workflow getWorkflow(String workflowId, boolean includeTasks) {
-        logger.debug("getWorkflow: workflowId={}, includeTasks={}", workflowId, includeTasks);
+        if (logger.isDebugEnabled())
+            logger.debug("getWorkflow: workflowId={}, includeTasks={}", workflowId, includeTasks);
 
         QueryBuilder query = QueryBuilders.idsQuery().addIds(toId(workflowId));
         Workflow workflow = findOne(toIndexName(WORKFLOW), query, Workflow.class);
@@ -413,7 +448,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
                 workflow.setTasks(tasks);
             }
 
-            logger.debug("getWorkflow: result(1)={}", toJson(workflow));
+            if (logger.isDebugEnabled())
+                logger.debug("getWorkflow: result(1)={}", toJson(workflow));
             return workflow;
         }
 
@@ -427,26 +463,30 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             workflow.getTasks().clear();
         }
 
-        logger.debug("getWorkflow: result(2)={}", toJson(workflow));
+        if (logger.isDebugEnabled())
+            logger.debug("getWorkflow: result(2)={}", toJson(workflow));
         return workflow;
     }
 
     @Override
     public List<String> getRunningWorkflowIds(String workflowName) {
-        logger.debug("getRunningWorkflowIds: workflowName={}", workflowName);
+        if (logger.isDebugEnabled())
+            logger.debug("getRunningWorkflowIds: workflowName={}", workflowName);
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
         List<HashMap> wraps = findAll(toIndexName(PENDING_WORKFLOWS), query, HashMap.class);
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
-        logger.debug("getRunningWorkflowIds: result={}", workflowIds);
+        if (logger.isDebugEnabled())
+            logger.debug("getRunningWorkflowIds: result={}", workflowIds);
 
         return new ArrayList<>(workflowIds);
     }
 
     @Override
     public List<Workflow> getPendingWorkflowsByType(String workflowName) {
-        logger.debug("getPendingWorkflowsByType: workflowName={}", workflowName);
+        if (logger.isDebugEnabled())
+            logger.debug("getPendingWorkflowsByType: workflowName={}", workflowName);
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         List<Workflow> workflows = new LinkedList<Workflow>();
         List<String> wfIds = getRunningWorkflowIds(workflowName);
@@ -454,13 +494,15 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             workflows.add(getWorkflow(wfId));
         }
 
-        logger.debug("getPendingWorkflowsByType: result={}", toJson(workflows));
+        if (logger.isDebugEnabled())
+            logger.debug("getPendingWorkflowsByType: result={}", toJson(workflows));
         return workflows;
     }
 
     @Override
     public long getPendingWorkflowCount(String workflowName) {
-        logger.debug("getPendingWorkflowCount: workflowName={}", workflowName);
+        if (logger.isDebugEnabled())
+            logger.debug("getPendingWorkflowCount: workflowName={}", workflowName);
 
         String indexName = toIndexName(PENDING_WORKFLOWS);
         ensureIndexExists(indexName);
@@ -468,14 +510,16 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
         SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(0).get();
         long result = response.getHits().getTotalHits();
-        logger.debug("getPendingWorkflowCount: result={}", result);
+        if (logger.isDebugEnabled())
+            logger.debug("getPendingWorkflowCount: result={}", result);
 
         return result;
     }
 
     @Override
     public long getInProgressTaskCount(String taskDefName) {
-        logger.debug("getInProgressTaskCount: taskDefName={}", taskDefName);
+        if (logger.isDebugEnabled())
+            logger.debug("getInProgressTaskCount: taskDefName={}", taskDefName);
 
         String indexName = toIndexName(TASKS_IN_PROGRESS_STATUS);
         ensureIndexExists(indexName);
@@ -483,14 +527,16 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
         SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(0).get();
         long result = response.getHits().getTotalHits();
-        logger.debug("getInProgressTaskCount: result={}", result);
+        if (logger.isDebugEnabled())
+            logger.debug("getInProgressTaskCount: result={}", result);
 
         return result;
     }
 
     @Override
     public List<Workflow> getWorkflowsByType(String workflowName, Long startTime, Long endTime) {
-        logger.debug("getWorkflowsByType: workflowName={}, startTime={}, endTime={}", workflowName, startTime, endTime);
+        if (logger.isDebugEnabled())
+            logger.debug("getWorkflowsByType: workflowName={}, startTime={}, endTime={}", workflowName, startTime, endTime);
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         Preconditions.checkNotNull(startTime, "startTime cannot be null");
         Preconditions.checkNotNull(endTime, "endTime cannot be null");
@@ -514,13 +560,15 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             });
         });
 
-        logger.debug("getWorkflowsByType: result={}", toJson(workflows));
+        if (logger.isDebugEnabled())
+            logger.debug("getWorkflowsByType: result={}", toJson(workflows));
         return workflows;
     }
 
     @Override
     public List<Workflow> getWorkflowsByCorrelationId(String correlationId) {
-        logger.debug("getWorkflowsByCorrelationId: correlationId={}", correlationId);
+        if (logger.isDebugEnabled())
+            logger.debug("getWorkflowsByCorrelationId: correlationId={}", correlationId);
 
         Preconditions.checkNotNull(correlationId, "correlationId cannot be null");
 
@@ -529,13 +577,15 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
         List<Workflow> workflows = workflowIds.stream().map(this::getWorkflow).collect(Collectors.toList());
 
-        logger.debug("getWorkflowsByCorrelationId: result={}", toJson(workflows));
+        if (logger.isDebugEnabled())
+            logger.debug("getWorkflowsByCorrelationId: result={}", toJson(workflows));
         return workflows;
     }
 
     @Override
     public boolean addEventExecution(EventExecution ee) {
-        logger.debug("addEventExecution: ee={}", toJson(ee));
+        if (logger.isDebugEnabled())
+            logger.debug("addEventExecution: ee={}", toJson(ee));
         try {
             String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
@@ -544,34 +594,40 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
                 return true;
             }
 
-            logger.debug("addEventExecution: done");
+            if (logger.isDebugEnabled())
+                logger.debug("addEventExecution: done");
             return false;
         } catch (Exception ex) {
-            logger.debug("addEventExecution: failed with {}", ex.getMessage());
+            if (logger.isDebugEnabled())
+                logger.debug("addEventExecution: failed with {}", ex.getMessage());
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
     @Override
     public void updateEventExecution(EventExecution ee) {
-        logger.debug("updateEventExecution: ee={}", toJson(ee));
+        if (logger.isDebugEnabled())
+            logger.debug("updateEventExecution: ee={}", toJson(ee));
         try {
             String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
             upsert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee));
 
             indexer.add(ee);
-            logger.debug("updateEventExecution: done");
+            if (logger.isDebugEnabled())
+                logger.debug("updateEventExecution: done");
         } catch (Exception ex) {
-            logger.debug("updateEventExecution: failed with {}", ex.getMessage());
+            if (logger.isDebugEnabled())
+                logger.debug("updateEventExecution: failed with {}", ex.getMessage());
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
     @Override
     public List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max) {
-        logger.debug("getEventExecutions: eventHandlerName={}, eventName={}, messageId={}, max={}",
-                eventHandlerName, eventName, messageId, max);
+        if (logger.isDebugEnabled())
+            logger.debug("getEventExecutions: eventHandlerName={}, eventName={}, messageId={}, max={}",
+                    eventHandlerName, eventName, messageId, max);
         try {
             List<EventExecution> executions = new LinkedList<>();
             for (int i = 0; i < max; i++) {
@@ -583,23 +639,27 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
                 executions.add(ee);
             }
 
-            logger.debug("getEventExecutions: result={}", toJson(executions));
+            if (logger.isDebugEnabled())
+                logger.debug("getEventExecutions: result={}", toJson(executions));
             return executions;
         } catch (Exception ex) {
-            logger.debug("getEventExecutions: failed with {}", ex.getMessage());
+            if (logger.isDebugEnabled())
+                logger.debug("getEventExecutions: failed with {}", ex.getMessage());
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
     @Override
     public void addMessage(String queue, Message msg) {
-        logger.debug("addMessage: queue={}, msg={}", queue, toJson(msg));
+        if (logger.isDebugEnabled())
+            logger.debug("addMessage: queue={}, msg={}", queue, toJson(msg));
         indexer.addMessage(queue, msg);
     }
 
     @Override
     public void updateLastPoll(String queueName, String domain, String workerId) {
-        logger.debug("updateLastPoll: queueName={}, domain={}, workerId={}", queueName, domain, workerId);
+        if (logger.isDebugEnabled())
+            logger.debug("updateLastPoll: queueName={}, domain={}, workerId={}", queueName, domain, workerId);
         Preconditions.checkNotNull(queueName, "queueName name cannot be null");
         PollData pollData = new PollData(queueName, domain, workerId, System.currentTimeMillis());
 
@@ -608,12 +668,14 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
         upsert(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, toMap(pollData));
 
-        logger.debug("updateLastPoll: done");
+        if (logger.isDebugEnabled())
+            logger.debug("updateLastPoll: done");
     }
 
     @Override
     public PollData getPollData(String queueName, String domain) {
-        logger.debug("getPollData: queueName={}, domain={}", queueName, domain);
+        if (logger.isDebugEnabled())
+            logger.debug("getPollData: queueName={}, domain={}", queueName, domain);
         Preconditions.checkNotNull(queueName, "queueName name cannot be null");
 
         String field = (domain == null) ? "DEFAULT" : domain;
@@ -621,24 +683,28 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
         PollData pollData = findOne(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, PollData.class);
 
-        logger.debug("getPollData: result={}", toJson(pollData));
+        if (logger.isDebugEnabled())
+            logger.debug("getPollData: result={}", toJson(pollData));
         return null;
     }
 
     @Override
     public List<PollData> getPollData(String queueName) {
-        logger.debug("getPollData: queueName={}", queueName);
+        if (logger.isDebugEnabled())
+            logger.debug("getPollData: queueName={}", queueName);
         Preconditions.checkNotNull(queueName, "queueName name cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(queueName) + "*");
         List<PollData> pollData = findAll(toIndexName(POLL_DATA), query, PollData.class);
 
-        logger.debug("getPollData: result={}", toJson(pollData));
+        if (logger.isDebugEnabled())
+            logger.debug("getPollData: result={}", toJson(pollData));
         return pollData;
     }
 
     private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
-        logger.debug("insertOrUpdateWorkflow: update={}, workflow={}", update, toJson(workflow));
+        if (logger.isDebugEnabled())
+            logger.debug("insertOrUpdateWorkflow: update={}, workflow={}", update, toJson(workflow));
         Preconditions.checkNotNull(workflow, "workflow object cannot be null");
 
         if (workflow.getStatus().isTerminal()) {
@@ -684,7 +750,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         workflow.setTasks(tasks);
         indexer.index(workflow);
 
-        logger.debug("insertOrUpdateWorkflow: done={}", workflow.getWorkflowId());
+        if (logger.isDebugEnabled())
+            logger.debug("insertOrUpdateWorkflow: done={}", workflow.getWorkflowId());
         return workflow.getWorkflowId();
     }
 
@@ -699,7 +766,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
     }
 
     private static List<String> dateStrBetweenDates(Long startdatems, Long enddatems) {
-        logger.debug("dateStrBetweenDates: startdatems={}, enddatems={}", startdatems, enddatems);
+        if (logger.isDebugEnabled())
+            logger.debug("dateStrBetweenDates: startdatems={}, enddatems={}", startdatems, enddatems);
         List<String> dates = new ArrayList<String>();
         Calendar calendar = new GregorianCalendar();
         Date startdate = new Date(startdatems);
@@ -711,7 +779,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             calendar.add(Calendar.DATE, 1);
         }
 
-        logger.debug("dateStrBetweenDates: result={}", dates);
+        if (logger.isDebugEnabled())
+            logger.debug("dateStrBetweenDates: result={}", dates);
         return dates;
     }
 }

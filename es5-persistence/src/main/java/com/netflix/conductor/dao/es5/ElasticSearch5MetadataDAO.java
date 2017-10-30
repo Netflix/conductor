@@ -63,25 +63,29 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
     @Override
     public String createTaskDef(TaskDef taskDef) {
-        logger.debug("createTaskDef: taskDef={}", toJson(taskDef));
+        if (logger.isDebugEnabled())
+            logger.debug("createTaskDef: taskDef={}", toJson(taskDef));
         taskDef.setCreateTime(System.currentTimeMillis());
         return insertOrUpdate(taskDef);
     }
 
     @Override
     public String updateTaskDef(TaskDef taskDef) {
-        logger.debug("updateTaskDef: taskDef={}", toJson(taskDef));
+        if (logger.isDebugEnabled())
+            logger.debug("updateTaskDef: taskDef={}", toJson(taskDef));
         taskDef.setUpdateTime(System.currentTimeMillis());
         return insertOrUpdate(taskDef);
     }
 
     @Override
     public TaskDef getTaskDef(String name) {
-        logger.debug("getTaskDef: name={}", name);
+        if (logger.isDebugEnabled())
+            logger.debug("getTaskDef: name={}", name);
         Preconditions.checkNotNull(name, "TaskDef name cannot be null");
         TaskDef taskDef = taskDefCache.get(name);
-        if(taskDef != null) {
-            logger.debug("getTaskDef: found in cache={}", toJson(taskDef));
+        if (taskDef != null) {
+            if (logger.isDebugEnabled())
+                logger.debug("getTaskDef: found in cache={}", toJson(taskDef));
             return taskDef;
         }
 
@@ -90,14 +94,16 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         String id = toId(name);
 
         taskDef = findOne(indexName, typeName, id, TaskDef.class);
-        logger.debug("getTaskDef: result={}", toJson(taskDef));
+        if (logger.isDebugEnabled())
+            logger.debug("getTaskDef: result={}", toJson(taskDef));
 
         return taskDef;
     }
 
     @Override
     public List<TaskDef> getAllTaskDefs() {
-        logger.debug("getAllTaskDefs");
+        if (logger.isDebugEnabled())
+            logger.debug("getAllTaskDefs");
 
         String indexName = toIndexName(TASK_DEFS);
         String typeName = toTypeName(TASK_DEFS);
@@ -107,7 +113,8 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
     @Override
     public void removeTaskDef(String name) {
-        logger.debug("removeTaskDef: name={}", name);
+        if (logger.isDebugEnabled())
+            logger.debug("removeTaskDef: name={}", name);
 
         Preconditions.checkNotNull(name, "TaskDef name cannot be null");
         String indexName = toIndexName(TASK_DEFS);
@@ -116,12 +123,14 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         delete(indexName, typeName, id);
 
-        logger.debug("removeTaskDef: done");
+        if (logger.isDebugEnabled())
+            logger.debug("removeTaskDef: done");
     }
 
     @Override
     public void create(WorkflowDef workflowDef) {
-        logger.debug("create: workflowDef={}", toJson(workflowDef));
+        if (logger.isDebugEnabled())
+            logger.debug("create: workflowDef={}", toJson(workflowDef));
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
         String id = toId(workflowDef.getName(), String.valueOf(workflowDef.getVersion()));
@@ -134,52 +143,61 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
     @Override
     public void update(WorkflowDef workflowDef) {
-        logger.debug("update: workflowDef={}", toJson(workflowDef));
+        if (logger.isDebugEnabled())
+            logger.debug("update: workflowDef={}", toJson(workflowDef));
         workflowDef.setUpdateTime(System.currentTimeMillis());
         insertOrUpdate(workflowDef);
     }
 
     @Override
     public WorkflowDef getLatest(String name) {
-        logger.debug("getLatest: name={}", name);
+        if (logger.isDebugEnabled())
+            logger.debug("getLatest: name={}", name);
         Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
 
         List<WorkflowDef> items = getAllVersions(name);
-        logger.debug("getLatest: items={}", toJson(items));
+        if (logger.isDebugEnabled())
+            logger.debug("getLatest: items={}", toJson(items));
         if (items.isEmpty()) {
             return null;
         }
 
         items.sort(Comparator.comparingInt(WorkflowDef::getVersion).reversed());
         WorkflowDef workflowDef = items.get(0);
-        logger.debug("getLatest: result={}", toJson(workflowDef));
+        if (logger.isDebugEnabled())
+            logger.debug("getLatest: result={}", toJson(workflowDef));
 
         return workflowDef;
     }
 
     @Override
     public WorkflowDef get(String name, int version) {
-        logger.debug("get: name={}, version={}", name, version);
+        if (logger.isDebugEnabled())
+            logger.debug("get: name={}, version={}", name, version);
         return getByVersion(name, String.valueOf(version));
     }
 
     @Override
     public List<String> findAll() {
-        logger.debug("findAll");
+        if (logger.isDebugEnabled())
+            logger.debug("findAll");
         List<WorkflowDef> items = getAll();
-        logger.debug("findAll: items={}", toJson(items));
+        if (logger.isDebugEnabled())
+            logger.debug("findAll: items={}", toJson(items));
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<String> result = items.stream().map(WorkflowDef::getName).collect(Collectors.toList());
-        logger.debug("findAll: result={}", toJson(result));
+        if (logger.isDebugEnabled())
+            logger.debug("findAll: result={}", toJson(result));
         return result;
     }
 
     @Override
     public List<WorkflowDef> getAll() {
-        logger.debug("getAll");
+        if (logger.isDebugEnabled())
+            logger.debug("getAll");
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
 
@@ -188,40 +206,45 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
     @Override
     public List<WorkflowDef> getAllLatest() {
-        logger.debug("getAllLatest");
+        if (logger.isDebugEnabled())
+            logger.debug("getAllLatest");
         List<String> names = findAll();
         if (names.isEmpty()) {
             return Collections.emptyList();
         }
 
         List<WorkflowDef> result = names.stream().map(this::getLatest).collect(Collectors.toList());
-        logger.debug("getAllLatest: result={}", toJson(result));
+        if (logger.isDebugEnabled())
+            logger.debug("getAllLatest: result={}", toJson(result));
         return result;
     }
 
     @Override
     public List<WorkflowDef> getAllVersions(String name) {
-        logger.debug("getAllVersions: name={}", name);
+        if (logger.isDebugEnabled())
+            logger.debug("getAllVersions: name={}", name);
         Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
 
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id",toId(name) + "*");
+        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(name) + "*");
         List<WorkflowDef> result = findAll(indexName, typeName, query, WorkflowDef.class);
 
-        logger.debug("getAllVersions: result={}", toJson(result));
+        if (logger.isDebugEnabled())
+            logger.debug("getAllVersions: result={}", toJson(result));
         return result;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void addEventHandler(EventHandler handler) {
-        logger.debug("addEventHandler: eventHandler={}", toJson(handler));
+        if (logger.isDebugEnabled())
+            logger.debug("addEventHandler: eventHandler={}", toJson(handler));
         Preconditions.checkNotNull(handler.getName(), "Missing Name");
 
         EventHandler existing = getEventHandler(handler.getName());
-        if(existing != null) {
+        if (existing != null) {
             throw new ApplicationException(ApplicationException.Code.CONFLICT, "EventHandler with name " + handler.getName() + " already exists!");
         }
 
@@ -229,18 +252,20 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         String typeName = toTypeName(EVENT_HANDLERS);
         String id = toId(handler.getName());
 
-        insert(indexName, typeName,id, toMap(handler));
+        insert(indexName, typeName, id, toMap(handler));
 
-        logger.debug("addEventHandler: done");
+        if (logger.isDebugEnabled())
+            logger.debug("addEventHandler: done");
     }
 
     @Override
     public void updateEventHandler(EventHandler eventHandler) {
-        logger.debug("updateEventHandler: eventHandler={}", toJson(eventHandler));
+        if (logger.isDebugEnabled())
+            logger.debug("updateEventHandler: eventHandler={}", toJson(eventHandler));
         Preconditions.checkNotNull(eventHandler.getName(), "Missing Name");
 
         EventHandler existing = getEventHandler(eventHandler.getName());
-        if(existing == null) {
+        if (existing == null) {
             throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
         }
 
@@ -250,15 +275,17 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         update(indexName, typeName, id, toMap(eventHandler));
 
-        logger.debug("updateEventHandler: done");
+        if (logger.isDebugEnabled())
+            logger.debug("updateEventHandler: done");
     }
 
     @Override
     public void removeEventHandlerStatus(String name) {
-        logger.debug("removeEventHandlerStatus: name={}", name);
+        if (logger.isDebugEnabled())
+            logger.debug("removeEventHandlerStatus: name={}", name);
 
         EventHandler existing = getEventHandler(name);
-        if(existing == null) {
+        if (existing == null) {
             throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
         }
 
@@ -268,12 +295,14 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         delete(indexName, typeName, id);
 
-        logger.debug("removeEventHandlerStatus: done");
+        if (logger.isDebugEnabled())
+            logger.debug("removeEventHandlerStatus: done");
     }
 
     @Override
     public List<EventHandler> getEventHandlers() {
-        logger.debug("getEventHandlers");
+        if (logger.isDebugEnabled())
+            logger.debug("getEventHandlers");
         String indexName = toIndexName(EVENT_HANDLERS);
         String typeName = toTypeName(EVENT_HANDLERS);
 
@@ -282,23 +311,27 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
     @Override
     public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
-        logger.debug("getEventHandlersForEvent: event={}, activeOnly={}", event, activeOnly);
+        if (logger.isDebugEnabled())
+            logger.debug("getEventHandlersForEvent: event={}, activeOnly={}", event, activeOnly);
 
         List<EventHandler> handlers = getEventHandlers();
-        logger.debug("getEventHandlersForEvent: found={}", toJson(handlers));
+        if (logger.isDebugEnabled())
+            logger.debug("getEventHandlersForEvent: found={}", toJson(handlers));
         if (handlers.isEmpty()) {
             return Collections.emptyList();
         }
 
         handlers = handlers.stream().filter(eh -> eh.getEvent().equals(event) && (!activeOnly || eh.isActive()))
                 .collect(Collectors.toList());
-        logger.debug("getEventHandlersForEvent: result={}", toJson(handlers));
+        if (logger.isDebugEnabled())
+            logger.debug("getEventHandlersForEvent: result={}", toJson(handlers));
 
         return handlers;
     }
 
     private WorkflowDef getByVersion(String name, String version) {
-        logger.debug("getByVersion: name={}, version={}", name, version);
+        if (logger.isDebugEnabled())
+            logger.debug("getByVersion: name={}, version={}", name, version);
         Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
 
         String indexName = toIndexName(WORKFLOW_DEFS);
@@ -307,24 +340,28 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
         WorkflowDef workflowDef = findOne(indexName, typeName, id, WorkflowDef.class);
 
-        logger.debug("getByVersion: result={}", toJson(workflowDef));
+        if (logger.isDebugEnabled())
+            logger.debug("getByVersion: result={}", toJson(workflowDef));
         return workflowDef;
     }
 
     private EventHandler getEventHandler(String name) {
-        logger.debug("getEventHandler: name={}", name);
+        if (logger.isDebugEnabled())
+            logger.debug("getEventHandler: name={}", name);
         String indexName = toIndexName(EVENT_HANDLERS);
         String typeName = toTypeName(EVENT_HANDLERS);
         String id = toId(name);
 
         EventHandler handler = findOne(indexName, typeName, id, EventHandler.class);
 
-        logger.debug("getEventHandler: result={}", toJson(handler));
+        if (logger.isDebugEnabled())
+            logger.debug("getEventHandler: result={}", toJson(handler));
         return handler;
     }
 
     private String insertOrUpdate(TaskDef def) {
-        logger.debug("insertOrUpdate: taskDef={}", toJson(def));
+        if (logger.isDebugEnabled())
+            logger.debug("insertOrUpdate: taskDef={}", toJson(def));
         Preconditions.checkNotNull(def, "TaskDef object cannot be null");
         Preconditions.checkNotNull(def.getName(), "TaskDef name cannot be null");
 
@@ -334,12 +371,14 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         upsert(indexName, typeName, id, toMap(def));
 
         refreshTaskDefs();
-        logger.debug("insertOrUpdate: done {}", def.getName());
+        if (logger.isDebugEnabled())
+            logger.debug("insertOrUpdate: done {}", def.getName());
         return def.getName();
     }
 
     private void insertOrUpdate(WorkflowDef def) {
-        logger.debug("insertOrUpdate: workflowDef={}", toJson(def));
+        if (logger.isDebugEnabled())
+            logger.debug("insertOrUpdate: workflowDef={}", toJson(def));
         Preconditions.checkNotNull(def, "WorkflowDef object cannot be null");
         Preconditions.checkNotNull(def.getName(), "WorkflowDef name cannot be null");
 
@@ -348,17 +387,20 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
         String id = toId(def.getName(), String.valueOf(def.getVersion()));
         upsert(indexName, typeName, id, toMap(def));
 
-        logger.debug("insertOrUpdate: done");
+        if (logger.isDebugEnabled())
+            logger.debug("insertOrUpdate: done");
     }
 
     private void refreshTaskDefs() {
-        logger.debug("refreshTaskDefs");
+        if (logger.isDebugEnabled())
+            logger.debug("refreshTaskDefs");
 
         Map<String, TaskDef> map = new HashMap<>();
         getAllTaskDefs().forEach(taskDef -> map.put(taskDef.getName(), taskDef));
         this.taskDefCache = map;
 
-        logger.debug("refreshTaskDefs: task defs={}", map);
+        if (logger.isDebugEnabled())
+            logger.debug("refreshTaskDefs: task defs={}", map);
     }
 
 }
