@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.core.utils.WaitUtils;
 import com.netflix.conductor.dao.es5.es.EmbeddedElasticSearch;
 import com.netflix.conductor.redis.utils.JedisMock;
 import com.netflix.dyno.connectionpool.Host;
@@ -148,23 +147,13 @@ public class ConductorServer {
 				}
 			}).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
 
-			JedisCommands jedisClient = new DynoJedisClient.Builder()
-				.withHostSupplier(hs)
-				.withApplicationName(cc.getAppId())
-				.withDynomiteClusterName(dynoClusterName)
-				.withCPConfig(cp)
-				.build();
+			jedis = new DynoJedisClient.Builder()
+					.withHostSupplier(hs)
+					.withApplicationName(cc.getAppId())
+					.withDynomiteClusterName(dynoClusterName)
+					.withCPConfig(cp)
+					.build();
 
-			int connectAttempts = cc.getIntProperty("workflow.dynomite.connection.attempts", 60);
-			int connectSleepSecs = cc.getIntProperty("workflow.dynomite.connection.sleep.seconds", 1);
-
-			WaitUtils.wait("dynomite", connectAttempts, connectSleepSecs, () -> {
-				// In response, the echo should return the 'ping'
-				String response = jedisClient.echo("ping");
-				return "ping".equalsIgnoreCase(response);
-			});
-
-			jedis = jedisClient;
 			logger.info("Starting conductor server using dynomite cluster " + dynoClusterName);
 			break;
 			
