@@ -60,7 +60,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
     private final static String TASK = "TASK";
     private final static String WORKFLOW = "WORKFLOW";
     private final static String PENDING_WORKFLOWS = "PENDING_WORKFLOWS";
-    private final static String WORKFLOW_DEF_TO_WORKFLOWS = "DEF_TO_WORKFLOW";
+    private final static String WORKFLOW_DEF_TO_WORKFLOWS = "WORKFLOW_DEF_TO_WORKFLOWS";
     private final static String CORR_ID_TO_WORKFLOWS = "CORRID_TO_WORKFLOW";
     private final static String POLL_DATA = "POLL_DATA";
     private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
@@ -103,7 +103,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
         List<Task> pendingTasks = getPendingTasksForTaskType(taskDefName);
         boolean startKeyFound = startKey == null;
-        int foundCount = 0;
+        int foundcount = 0;
         for (Task pendingTask : pendingTasks) {
             if (!startKeyFound) {
                 if (pendingTask.getTaskId().equals(startKey)) {
@@ -111,9 +111,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
                     continue;
                 }
             }
-            if (startKeyFound && foundCount < count) {
+            if (startKeyFound && foundcount < count) {
                 tasks.add(pendingTask);
-                foundCount++;
+                foundcount++;
             }
         }
         return tasks;
@@ -139,15 +139,19 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             String taskKey = task.getReferenceTaskName() + String.valueOf(task.getRetryCount());
             String id = toId(task.getWorkflowInstanceId(), taskKey);
 
-            if (exists(indexName, typeName, id)) {
-                if (logger.isDebugEnabled())
-                    logger.debug("Task already scheduled, skipping the run " + task.getTaskId() + ", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
-                continue;
-            }
             // SCHEDULED_TASKS
             Map payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
                     "taskRefName", task.getReferenceTaskName(),
                     "taskId", task.getTaskId());
+
+            if (exists(indexName, typeName, id)) {
+                if (logger.isDebugEnabled())
+                    logger.debug("Task already scheduled, skipping the run " + task.getTaskId() + ", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
+
+                // But we need to update data (original code using hset)
+                upsert(indexName, typeName, id, payload);
+                continue;
+            }
             insert(indexName, typeName, id, payload);
 
             // WORKFLOW_TO_TASKS
@@ -247,7 +251,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             logger.debug("exceedsInProgressLimit: after insert");
 
         QueryBuilder query = QueryBuilders.matchQuery("_id", toId(task.getTaskDefName()) + "*");
-        List<HashMap> wraps = findAll(indexName, query, limit, HashMap.class);
+        List<HashMap> wraps = findAll(indexName, typeName, query, limit, HashMap.class);
         if (logger.isDebugEnabled())
             logger.debug("exceedsInProgressLimit: wraps={}", wraps);
 
@@ -321,8 +325,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             logger.debug("getTask: taskId={}", taskId);
         Preconditions.checkNotNull(taskId, "taskId name cannot be null");
 
-        QueryBuilder idQuery = QueryBuilders.idsQuery().addIds(toId(taskId));
-        Task task = findOne(toIndexName(TASK), idQuery, Task.class);
+        Task task = findOne(toIndexName(TASK), toTypeName(TASK), toId(taskId), Task.class);
 
         if (logger.isDebugEnabled())
             logger.debug("getTask: result={}", toJson(task));
@@ -337,7 +340,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         IdsQueryBuilder idsQuery = QueryBuilders.idsQuery();
         taskIds.forEach(id -> idsQuery.addIds(toId(id)));
 
-        List<Task> tasks = findAll(toIndexName(TASK), idsQuery, Task.class);
+        List<Task> tasks = findAll(toIndexName(TASK), toTypeName(TASK), idsQuery, Task.class);
 
         if (logger.isDebugEnabled())
             logger.debug("getTasks: result={}", toJson(tasks));
@@ -365,7 +368,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         Preconditions.checkNotNull(workflowId, "workflowId cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowId) + "*");
-        List<HashMap> wraps = findAll(toIndexName(WORKFLOW_TO_TASKS), query, HashMap.class);
+        List<HashMap> wraps = findAll(toIndexName(WORKFLOW_TO_TASKS), toTypeName(WORKFLOW_TO_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
         if (logger.isDebugEnabled())
@@ -439,8 +442,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         if (logger.isDebugEnabled())
             logger.debug("getWorkflow: workflowId={}, includeTasks={}", workflowId, includeTasks);
 
-        QueryBuilder query = QueryBuilders.idsQuery().addIds(toId(workflowId));
-        Workflow workflow = findOne(toIndexName(WORKFLOW), query, Workflow.class);
+        Workflow workflow = findOne(toIndexName(WORKFLOW), toTypeName(WORKFLOW), toId(workflowId), Workflow.class);
         if (workflow != null) {
             if (includeTasks) {
                 List<Task> tasks = getTasksForWorkflow(workflowId);
@@ -475,7 +477,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
-        List<HashMap> wraps = findAll(toIndexName(PENDING_WORKFLOWS), query, HashMap.class);
+        List<HashMap> wraps = findAll(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), query, HashMap.class);
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
         if (logger.isDebugEnabled())
             logger.debug("getRunningWorkflowIds: result={}", workflowIds);
@@ -546,7 +548,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         List<String> dateStrs = dateStrBetweenDates(startTime, endTime);
         dateStrs.forEach(dateStr -> {
             QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName, dateStr) + "*");
-            List<HashMap> wraps = findAll(toIndexName(WORKFLOW_DEF_TO_WORKFLOWS), query, HashMap.class);
+            List<HashMap> wraps = findAll(toIndexName(WORKFLOW_DEF_TO_WORKFLOWS), toTypeName(WORKFLOW_DEF_TO_WORKFLOWS), query, HashMap.class);
             Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
             workflowIds.forEach(wfId -> {
                 try {
@@ -573,7 +575,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         Preconditions.checkNotNull(correlationId, "correlationId cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(correlationId) + "*");
-        List<HashMap> wraps = findAll(toIndexName(CORR_ID_TO_WORKFLOWS), query, HashMap.class);
+        List<HashMap> wraps = findAll(toIndexName(CORR_ID_TO_WORKFLOWS), toTypeName(CORR_ID_TO_WORKFLOWS), query, HashMap.class);
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
         List<Workflow> workflows = workflowIds.stream().map(this::getWorkflow).collect(Collectors.toList());
 
@@ -695,7 +697,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         Preconditions.checkNotNull(queueName, "queueName name cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(queueName) + "*");
-        List<PollData> pollData = findAll(toIndexName(POLL_DATA), query, PollData.class);
+        List<PollData> pollData = findAll(toIndexName(POLL_DATA), toTypeName(POLL_DATA), query, PollData.class);
 
         if (logger.isDebugEnabled())
             logger.debug("getPollData: result={}", toJson(pollData));

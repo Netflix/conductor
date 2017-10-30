@@ -169,7 +169,9 @@ public class ElasticSearch5BaseDAO {
     void delete(String indexName, String typeName, String id) {
         ensureIndexExists(indexName);
         try {
-            client.prepareDelete(indexName, typeName, id).get();
+            client.prepareDelete(indexName, typeName, id)
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .get();
         } catch (Exception ex) {
             logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
             throw ex;
@@ -234,14 +236,6 @@ public class ElasticSearch5BaseDAO {
         }
     }
 
-    <T> T findOne(String indexName, QueryBuilder query, Class<T> clazz) {
-        List<T> items = findAll(indexName, query, clazz);
-        if (items == null || items.isEmpty()) {
-            return null;
-        }
-        return items.get(0);
-    }
-
     <T> List<T> findAll(String indexName, String typeName, Class<T> clazz) {
         if (logger.isDebugEnabled())
             logger.debug("findAll: index={}, type={}, clazz={}", indexName, typeName, clazz);
@@ -269,34 +263,6 @@ public class ElasticSearch5BaseDAO {
             return result;
         } catch (Exception ex) {
             logger.error("findAll: failed for {}/{}/{} with {}", indexName, typeName, clazz, ex.getMessage(), ex);
-            throw ex;
-        }
-    }
-
-    <T> List<T> findAll(String indexName, QueryBuilder query, Class<T> clazz) {
-        if (logger.isDebugEnabled())
-            logger.debug("findAll: index={}, query={}, clazz={}", indexName, query, clazz);
-
-        // This type of the search fails if no such index
-        ensureIndexExists(indexName);
-        try {
-            SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(0).get();
-            int size = (int) response.getHits().getTotalHits();
-            if (logger.isDebugEnabled())
-                logger.debug("findAll: found={}", size);
-            if (size == 0) {
-                return Collections.emptyList();
-            }
-
-            response = client.prepareSearch(indexName).setQuery(query).setSize(size).get();
-            List<T> result = Arrays.stream(response.getHits().getHits())
-                    .map(item -> convert(item.getSource(), clazz))
-                    .collect(Collectors.toList());
-            if (logger.isDebugEnabled())
-                logger.debug("findAll: result={}", toJson(result));
-            return result;
-        } catch (Exception ex) {
-            logger.error("findAll: failed for {}/{}/{} with {}", indexName, query, clazz, ex.getMessage(), ex);
             throw ex;
         }
     }
@@ -329,14 +295,14 @@ public class ElasticSearch5BaseDAO {
         }
     }
 
-    <T> List<T> findAll(String indexName, QueryBuilder query, int size, Class<T> clazz) {
+    <T> List<T> findAll(String indexName, String typeName, QueryBuilder query, int size, Class<T> clazz) {
         if (logger.isDebugEnabled())
             logger.debug("findAll: index={}, query={}, clazz={}", indexName, query, clazz);
 
         // This type of the search fails if no such index
         ensureIndexExists(indexName);
         try {
-            SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(size).get();
+            SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size).get();
             List<T> result = Arrays.stream(response.getHits().getHits())
                     .map(item -> convert(item.getSource(), clazz))
                     .collect(Collectors.toList());
