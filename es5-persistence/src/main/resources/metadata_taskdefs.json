@@ -1,0 +1,39 @@
+{
+  "taskdefs": {
+    "properties": {
+      "createTime": {
+        "type": "long"
+      },
+      "description": {
+        "type": "text"
+      },
+      "name": {
+        "type": "text"
+      },
+      "responseTimeoutSeconds": {
+        "type": "long"
+      },
+      "retryCount": {
+        "type": "long"
+      },
+      "retryDelaySeconds": {
+        "type": "long"
+      },
+      "retryLogic": {
+        "type": "text"
+      },
+      "timeoutPolicy": {
+        "type": "text"
+      },
+      "timeoutSeconds": {
+        "type": "long"
+      },
+      "inputTemplate": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false,
+        "include_in_all": false
+      }
+    }
+  }
+}

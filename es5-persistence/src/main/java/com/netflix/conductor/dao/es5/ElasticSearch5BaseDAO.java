@@ -29,7 +29,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +43,8 @@ import java.util.stream.Collectors;
 public class ElasticSearch5BaseDAO {
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5BaseDAO.class);
     private Set<String> indexCache = new ConcurrentSet<>();
-    final static String NAMESPACE_SEP = ".";
-    private Map<String, Object> defaultMapping;
+    private final static String NAMESPACE_SEP = ".";
+    private final static String DEFAULT = "_default_";
     private ObjectMapper mapper;
     protected Client client;
     private String context;
@@ -59,16 +58,9 @@ public class ElasticSearch5BaseDAO {
 
         prefix = config.getProperty("workflow.namespace.prefix", "conductor");
         stack = config.getStack();
-
-        try {
-            InputStream stream = getClass().getResourceAsStream("/default_mapping.json");
-            defaultMapping = mapper.readValue(stream, new TypeReference<Map<String, Object>>() {});
-        } catch (IOException e) {
-            logger.error("Unable to load default_mapping.json");
-        }
     }
 
-    String toIndexName(String ... nsValues) {
+    String toIndexName(String... nsValues) {
         StringBuilder builder = new StringBuilder(prefix).append(NAMESPACE_SEP).append(context).append(NAMESPACE_SEP);
         if (StringUtils.isNotEmpty(stack)) {
             builder.append(stack).append(NAMESPACE_SEP);
@@ -82,7 +74,7 @@ public class ElasticSearch5BaseDAO {
         return builder.toString().toLowerCase();
     }
 
-    String toId(String ... nsValues) {
+    String toId(String... nsValues) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < nsValues.length; i++) {
             builder.append(nsValues[i]);
@@ -94,7 +86,7 @@ public class ElasticSearch5BaseDAO {
         return builder.toString().toLowerCase();
     }
 
-    String toTypeName(String ... nsValues) {
+    String toTypeName(String... nsValues) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < nsValues.length; i++) {
             builder.append(nsValues[i]);
@@ -116,42 +108,99 @@ public class ElasticSearch5BaseDAO {
             indexCache.add(indexName);
         } catch (IndexNotFoundException notFound) {
             try {
-                client.admin().indices().prepareCreate(indexName).addMapping("_default_", defaultMapping).get();
+                client.admin().indices().prepareCreate(indexName).get();
                 indexCache.add(indexName);
             } catch (ResourceAlreadyExistsException ignore) {
                 indexCache.add(indexName);
             } catch (Exception ex) {
-                logger.error("ensureIndexExists: Failed for " + indexName + " with " + ex.getMessage(), ex);
+                logger.error("ensureIndexExists: failed for {} with {}", indexName, ex.getMessage(), ex);
+            }
+        }
+    }
+
+    void ensureIndexExists(String indexName, String typeName, String... suffix) {
+        if (indexCache.contains(indexName)) {
+            return;
+        }
+        try {
+            client.admin().indices().prepareGetIndex().addIndices(indexName).get();
+            indexCache.add(indexName);
+        } catch (IndexNotFoundException notFound) {
+            try {
+                String resourceName = null;
+                if (suffix.length > 0) {
+                    resourceName = "/" + context + "_" + suffix[0] + ".json";
+                } else {
+                    resourceName = "/" + context + "_" + typeName + ".json";
+                }
+
+                InputStream stream = getClass().getResourceAsStream(resourceName);
+                Map<String, Object> source = mapper.readValue(stream, new TypeReference<Map<String, Object>>() {
+                });
+
+                // Means need to replace by type name
+                if (source.containsKey(DEFAULT)) {
+                    Object object = source.get(DEFAULT);
+                    source.put(typeName, object);
+                    source.remove(DEFAULT);
+                }
+
+                client.admin().indices().prepareCreate(indexName).addMapping(typeName, source).get();
+                indexCache.add(indexName);
+            } catch (ResourceAlreadyExistsException ignore) {
+                indexCache.add(indexName);
+            } catch (Exception ex) {
+                logger.error("ensureIndexExists: failed for {}/{} with {}", indexName, typeName, ex.getMessage(), ex);
             }
         }
     }
 
     boolean exists(String indexName, String typeName, String id) {
         ensureIndexExists(indexName);
-        GetResponse record = client.prepareGet(indexName, typeName, id).get();
-        return record.isExists();
+        try {
+            GetResponse record = client.prepareGet(indexName, typeName, id).get();
+            return record.isExists();
+        } catch (Exception ex) {
+            logger.error("exists: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     void delete(String indexName, String typeName, String id) {
         ensureIndexExists(indexName);
-        client.prepareDelete(indexName, typeName, id).get();
+        try {
+            client.prepareDelete(indexName, typeName, id).get();
+        } catch (Exception ex) {
+            logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     void upsert(String indexName, String typeName, String id, Object payload) {
         ensureIndexExists(indexName);
-        client.prepareUpdate(indexName, typeName, id)
-                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .setDocAsUpsert(true)
-                .setDoc(toMap(payload))
-                .get();
+        try {
+            client.prepareUpdate(indexName, typeName, id)
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .setDocAsUpsert(true)
+                    .setDoc(toMap(payload))
+                    .get();
+        } catch (Exception ex) {
+            logger.error("upsert: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+            throw ex;
+        }
     }
 
     void update(String indexName, String typeName, String id, Object payload) {
         ensureIndexExists(indexName);
-        client.prepareUpdate(indexName, typeName, id)
-                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .setDoc(toMap(payload))
-                .get();
+        try {
+            client.prepareUpdate(indexName, typeName, id)
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .setDoc(toMap(payload))
+                    .get();
+        } catch (Exception ex) {
+            logger.error("update: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+            throw ex;
+        }
     }
 
     boolean insert(String indexName, String typeName, String id, Object payload) {
@@ -165,17 +214,24 @@ public class ElasticSearch5BaseDAO {
             return true;
         } catch (VersionConflictEngineException ex) {
             return false;
+        } catch (Exception ex) {
+            logger.error("insert: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+            throw ex;
         }
     }
 
     <T> T findOne(String indexName, String typeName, String id, Class<T> clazz) {
         ensureIndexExists(indexName);
-        GetResponse record = client.prepareGet(indexName, typeName, id).get();
-        if (record.isExists()) {
-            return convert(record.getSource(), clazz);
+        try {
+            GetResponse record = client.prepareGet(indexName, typeName, id).get();
+            if (record.isExists()) {
+                return convert(record.getSource(), clazz);
+            }
+            return null;
+        } catch (Exception ex) {
+            logger.error("findOne: failed for {}/{}/{}/{} with {}", indexName, typeName, id, clazz, ex.getMessage(), ex);
+            throw ex;
         }
-
-        return null;
     }
 
     <T> T findOne(String indexName, QueryBuilder query, Class<T> clazz) {
@@ -191,22 +247,27 @@ public class ElasticSearch5BaseDAO {
 
         // This type of the search fails if no such index
         ensureIndexExists(indexName);
-        SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
+        try {
+            SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
 
-        int size = (int) response.getHits().getTotalHits();
-        logger.debug("findAll: found={}", size);
-        if (size == 0) {
-            return Collections.emptyList();
+            int size = (int) response.getHits().getTotalHits();
+            logger.debug("findAll: found={}", size);
+            if (size == 0) {
+                return Collections.emptyList();
+            }
+
+            response = client.prepareSearch(indexName).setTypes(typeName).setSize(size).get();
+
+            List<T> result = Arrays.stream(response.getHits().getHits())
+                    .map(hit -> convert(hit.getSource(), clazz))
+                    .collect(Collectors.toList());
+
+            logger.debug("findAll: result={}", toJson(result));
+            return result;
+        } catch (Exception ex) {
+            logger.error("findAll: failed for {}/{}/{} with {}", indexName, typeName, clazz, ex.getMessage(), ex);
+            throw ex;
         }
-
-        response = client.prepareSearch(indexName).setTypes(typeName).setSize(size).get();
-
-        List<T> result = Arrays.stream(response.getHits().getHits())
-                .map(hit -> convert(hit.getSource(), clazz))
-                .collect(Collectors.toList());
-
-        logger.debug("findAll: result={}", toJson(result));
-        return result;
     }
 
     <T> List<T> findAll(String indexName, QueryBuilder query, Class<T> clazz) {
@@ -214,19 +275,24 @@ public class ElasticSearch5BaseDAO {
 
         // This type of the search fails if no such index
         ensureIndexExists(indexName);
-        SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(0).get();
-        int size = (int) response.getHits().getTotalHits();
-        logger.debug("findAll: found={}", size);
-        if (size == 0) {
-            return Collections.emptyList();
-        }
+        try {
+            SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(0).get();
+            int size = (int) response.getHits().getTotalHits();
+            logger.debug("findAll: found={}", size);
+            if (size == 0) {
+                return Collections.emptyList();
+            }
 
-        response = client.prepareSearch(indexName).setQuery(query).setSize(size).get();
-        List<T> result = Arrays.stream(response.getHits().getHits())
-                .map(item -> convert(item.getSource(), clazz))
-                .collect(Collectors.toList());
-        logger.debug("findAll: result={}", toJson(result));
-        return result;
+            response = client.prepareSearch(indexName).setQuery(query).setSize(size).get();
+            List<T> result = Arrays.stream(response.getHits().getHits())
+                    .map(item -> convert(item.getSource(), clazz))
+                    .collect(Collectors.toList());
+            logger.debug("findAll: result={}", toJson(result));
+            return result;
+        } catch (Exception ex) {
+            logger.error("findAll: failed for {}/{}/{} with {}", indexName, query, clazz, ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     <T> List<T> findAll(String indexName, String typeName, QueryBuilder query, Class<T> clazz) {
@@ -234,39 +300,50 @@ public class ElasticSearch5BaseDAO {
 
         // This type of the search fails if no such index
         ensureIndexExists(indexName);
-        SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0).get();
-        int size = (int) response.getHits().getTotalHits();
-        logger.debug("findAll: found={}", size);
-        if (size == 0) {
-            return Collections.emptyList();
-        }
+        try {
+            SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0).get();
+            int size = (int) response.getHits().getTotalHits();
+            logger.debug("findAll: found={}", size);
+            if (size == 0) {
+                return Collections.emptyList();
+            }
 
-        response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size).get();
-        List<T> result = Arrays.stream(response.getHits().getHits())
-                .map(item -> convert(item.getSource(), clazz))
-                .collect(Collectors.toList());
-        logger.debug("findAll: result={}", toJson(result));
-        return result;
+            response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size).get();
+            List<T> result = Arrays.stream(response.getHits().getHits())
+                    .map(item -> convert(item.getSource(), clazz))
+                    .collect(Collectors.toList());
+            logger.debug("findAll: result={}", toJson(result));
+            return result;
+        } catch (Exception ex) {
+            logger.error("findAll: failed for {}/{}/{}/{} with {}", indexName, typeName, query, clazz, ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
-    List<String> findIds(String indexName, QueryBuilder query, int size) {
-        logger.debug("findIds: index={}, query={}, size={}", indexName, query, size);
+    <T> List<T> findAll(String indexName, QueryBuilder query, int size, Class<T> clazz) {
+        logger.debug("findAll: index={}, query={}, clazz={}", indexName, query, clazz);
 
         // This type of the search fails if no such index
         ensureIndexExists(indexName);
-        SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(size).get();
-        List<String> result = Arrays.stream(response.getHits().getHits())
-                .map(SearchHit::getId)
-                .collect(Collectors.toList());
-        logger.debug("findIds: result={}", toJson(result));
-        return result;
+        try {
+            SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(size).get();
+            List<T> result = Arrays.stream(response.getHits().getHits())
+                    .map(item -> convert(item.getSource(), clazz))
+                    .collect(Collectors.toList());
+            logger.debug("findAll: result={}", toJson(result));
+            return result;
+        } catch (Exception ex) {
+            logger.error("findAll: failed for {}/{}/{} with {}", indexName, query, clazz, ex.getMessage(), ex);
+            throw ex;
+        }
     }
 
     Map<String, ?> toMap(Object value) {
-        return mapper.convertValue(value, new TypeReference<Map<String, ?>>() {});
+        return mapper.convertValue(value, new TypeReference<Map<String, ?>>() {
+        });
     }
 
-    <T> T convert(Map map, Class<T> clazz) {
+    private <T> T convert(Map map, Class<T> clazz) {
         return mapper.convertValue(map, clazz);
     }
 

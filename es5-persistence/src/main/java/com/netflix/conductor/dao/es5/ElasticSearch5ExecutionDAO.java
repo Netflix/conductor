@@ -73,6 +73,10 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         super(client, config, mapper, "runtime");
         this.indexer = indexer;
         this.metadata = metadata;
+
+        ensureIndexExists(toIndexName(TASK), toTypeName(TASK));
+        ensureIndexExists(toIndexName(WORKFLOW), toTypeName(WORKFLOW));
+        ensureIndexExists(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION));
     }
 
     @Override
@@ -90,26 +94,24 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         return tasks;
     }
 
-    @Override // TODO Review the code below!
+    @Override
     public List<Task> getTasks(String taskDefName, String startKey, int count) {
         logger.debug("getTasks: taskDefName={}, startKey={}, count={}", taskDefName, startKey, count);
         List<Task> tasks = new LinkedList<>();
 
         List<Task> pendingTasks = getPendingTasksForTaskType(taskDefName);
-        boolean startKeyFound = (startKey == null) ? true : false;
-        int foundcount = 0;
-        for (int i = 0; i < pendingTasks.size(); i++) {
+        boolean startKeyFound = startKey == null;
+        int foundCount = 0;
+        for (Task pendingTask : pendingTasks) {
             if (!startKeyFound) {
-                if (pendingTasks.get(i).getTaskId().equals(startKey)) {
+                if (pendingTask.getTaskId().equals(startKey)) {
                     startKeyFound = true;
-                    if (startKey != null) {
-                        continue;
-                    }
+                    continue;
                 }
             }
-            if (startKeyFound && foundcount < count) {
-                tasks.add(pendingTasks.get(i));
-                foundcount++;
+            if (startKeyFound && foundCount < count) {
+                tasks.add(pendingTask);
+                foundCount++;
             }
         }
         return tasks;
@@ -131,7 +133,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
             String indexName = toIndexName(SCHEDULED_TASKS);
             String typeName = toTypeName(SCHEDULED_TASKS);
-            String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
+            String taskKey = task.getReferenceTaskName() + String.valueOf(task.getRetryCount());
             String id = toId(task.getWorkflowInstanceId(), taskKey);
 
             if (exists(indexName, typeName, id)) {
@@ -199,7 +201,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         indexer.index(task);
     }
 
-    @Override // TODO Review and complete
+    @Override
     public boolean exceedsInProgressLimit(Task task) {
         logger.debug("exceedsInProgressLimit: task={}", toJson(task));
         TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
@@ -207,17 +209,19 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
             return false;
         }
         int limit = taskDef.concurrencyLimit();
+        logger.debug("exceedsInProgressLimit: limit={}", limit);
         if (limit <= 0) {
             return false;
         }
-        logger.debug("exceedsInProgressLimit: after checking 1");
 
         long current = getInProgressTaskCount(task.getTaskDefName());
+        logger.debug("exceedsInProgressLimit: current={}", current);
         if (current >= limit) {
+            logger.debug("exceedsInProgressLimit: task rate limited");
             Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
             return true;
         }
-        logger.debug("exceedsInProgressLimit: after checking 2");
+        logger.debug("exceedsInProgressLimit: after checking");
 
         String indexName = toIndexName(TASK_LIMIT_BUCKET);
         String typeName = toTypeName(TASK_LIMIT_BUCKET);
@@ -232,17 +236,18 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         logger.debug("exceedsInProgressLimit: after insert");
 
         QueryBuilder query = QueryBuilders.matchQuery("_id", toId(task.getTaskDefName()) + "*");
-        List<String> ids = findAll(indexName, query, HashMap.class).stream()
+        List<HashMap> wraps = findAll(indexName, query, limit, HashMap.class);
+        logger.debug("exceedsInProgressLimit: wraps={}", wraps);
+
+        List<String> ids = wraps.stream()
                 .filter(map -> {
-                    Long temp = (Long)map.get("score");
+                    Long temp = (Long) map.get("score");
                     return temp >= 0 && temp <= (score + 1);
                 })
-                .map(map -> (String)map.get("taskId")).limit(limit).collect(Collectors.toList());
+                .map(map -> (String) map.get("taskId")).collect(Collectors.toList());
 
-        // TODO Apply sort ? Check zrangeByScore result
         logger.debug("exceedsInProgressLimit: ids={}", ids);
 
-        // TODO Review this logic in the original DAO! Does it work at all ?
         boolean rateLimited = !ids.contains(task.getTaskId());
         if (rateLimited) {
             logger.info("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
@@ -645,7 +650,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
         String id = toId(workflow.getWorkflowId());
 
         // Store the workflow object
-        upsert(toIndexName(WORKFLOW), toTypeName(WORKFLOW), id, workflow);
+        upsert(toIndexName(WORKFLOW), toTypeName(WORKFLOW), id, toMap(workflow));
 
         if (!update) {
             id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());

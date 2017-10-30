@@ -51,6 +51,10 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
     public ElasticSearch5MetadataDAO(Client client, Configuration config, ObjectMapper mapper) {
         super(client, config, mapper, "metadata");
 
+        ensureIndexExists(toIndexName(TASK_DEFS), toTypeName(TASK_DEFS));
+        ensureIndexExists(toIndexName(WORKFLOW_DEFS), toTypeName(WORKFLOW_DEFS));
+        ensureIndexExists(toIndexName(EVENT_HANDLERS), toTypeName(EVENT_HANDLERS));
+
         refreshTaskDefs();
         int cacheRefreshTime = config.getIntProperty("conductor.taskdef.cache.refresh.time.seconds", 60);
         Executors.newSingleThreadScheduledExecutor()

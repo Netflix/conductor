@@ -1,0 +1,26 @@
+{
+  "_default_": {
+    "properties": {
+      "createdOn": {
+        "type": "long"
+      },
+      "deliverOn": {
+        "type": "long"
+      },
+      "offsetSeconds": {
+        "type": "long"
+      },
+      "popped": {
+        "type": "boolean"
+      },
+      "poppedOn": {
+        "type": "long"
+      },
+      "payload": {
+        "type": "text",
+        "index": "not_analyzed",
+        "include_in_all": false
+      }
+    }
+  }
+}

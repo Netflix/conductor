@@ -22,6 +22,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.QueueDAO;
+import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -50,6 +51,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements QueueDAO {
 	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5QueueDAO.class);
+	private static final String ALL = "all";
 	private String baseName;
 
 	@Inject
@@ -61,21 +63,21 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	@Override
 	public void push(String queueName, String id, long offsetTimeInSecond) {
 		logger.debug("push: " + queueName + ", id=" + id + ", offsetTimeInSecond=" + offsetTimeInSecond);
-		ensureIndexExists(toIndexName(queueName));
+		ensureIndexExists(toIndexName(queueName), toTypeName(queueName), ALL);
 		pushMessage(queueName, id, null, offsetTimeInSecond);
 	}
 
 	@Override
 	public void push(String queueName, List<Message> messages) {
-		logger.debug("push: " + queueName + ", messages=" + messages);
-		ensureIndexExists(toIndexName(queueName));
+		logger.debug("push: " + queueName + ", messages=" + toJson(messages));
+		ensureIndexExists(toIndexName(queueName), toTypeName(queueName), ALL);
 		messages.forEach(message -> pushMessage(queueName, message.getId(), message.getPayload(), 0));
 	}
 
 	@Override
 	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
 		logger.debug("pushIfNotExists: " + queueName + ", id=" + id + ", offsetTimeInSecond=" + offsetTimeInSecond);
-		ensureIndexExists(toIndexName(queueName));
+		ensureIndexExists(toIndexName(queueName), toTypeName(queueName), ALL);
 		if (existsMessage(queueName, id)) {
 			return false;
 		}
@@ -90,7 +92,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
 
-		ensureIndexExists(indexName);
+		ensureIndexExists(indexName, typeName, ALL);
 
 		// Read ids. For each: read object, try to lock - if success - add to ids
 		long start = System.currentTimeMillis();
@@ -141,7 +143,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	@Override
 	public List<Message> pollMessages(String queueName, int count, int timeout) {
 		logger.debug("pollMessages: " + queueName + ", count=" + count + ", timeout=" + timeout);
-		ensureIndexExists(toIndexName(queueName));
+		ensureIndexExists(toIndexName(queueName), toTypeName(queueName), ALL);
 		List<String> ids = pop(queueName, count, timeout);
 		List<Message> messages = readMessages(queueName, ids);
 
@@ -161,7 +163,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
 
-		ensureIndexExists(indexName);
+		ensureIndexExists(indexName, typeName, ALL);
 
 		Long total = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get().getHits().getTotalHits();
 		return total.intValue();
@@ -170,7 +172,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	@Override
 	public boolean ack(String queueName, String id) {
 		logger.debug("ack: " + queueName + ", id=" + id);
-		ensureIndexExists(toIndexName(queueName));
+		ensureIndexExists(toIndexName(queueName), toTypeName(queueName), ALL);
 		if (!existsMessage(queueName, id)) {
 			return false;
 		}
@@ -185,7 +187,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
 
-		ensureIndexExists(indexName);
+		ensureIndexExists(indexName, typeName, ALL);
 
 		GetResponse record = findMessage(queueName, id);
 		if (!record.isExists()) {
@@ -220,7 +222,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	public void flush(String queueName) {
 		logger.debug("flush: " + queueName);
 		String indexName = toIndexName(queueName);
-		ensureIndexExists(indexName);
+		ensureIndexExists(indexName, toTypeName(queueName), ALL);
 		DeleteByQueryAction.INSTANCE.newRequestBuilder(client).source(indexName).get();
 	}
 
@@ -285,7 +287,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
 
-		ensureIndexExists(indexName);
+		ensureIndexExists(indexName, typeName, ALL);
 
 		TermQueryBuilder poppedFilter = QueryBuilders.termQuery ("popped", true);
 		RangeQueryBuilder deliverOnFilter = QueryBuilders.rangeQuery("deliverOn").lte(System.currentTimeMillis());
@@ -332,6 +334,11 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	private void pushMessage(String queueName, String id, String payload, long offsetTimeInSecond) {
 		String indexName = toIndexName(queueName);
 		String typeName = toTypeName(queueName);
+
+		if (StringUtils.isNotEmpty(payload)) {
+			System.out.println("payload = " + payload);
+		}
+
 		GetResponse record = findMessage(queueName, id);
 		if (!record.isExists()) {
 			try {
