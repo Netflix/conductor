@@ -178,7 +178,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 					logger.debug("Task already scheduled, skipping the run " + task.getTaskId() + ", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
 
 				// But we need to update data (original code using hset)
-				upsert(indexName, typeName, id, payload);
+				upsertWithRetry(indexName, typeName, id, payload);
 				continue;
 			}
 			insert(indexName, typeName, id, payload);
@@ -230,7 +230,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		}
 
 		String id = toId(task.getTaskId());
-		upsert(toIndexName(TASK), toTypeName(TASK), id, toMap(task));
+		upsertWithRetry(toIndexName(TASK), toTypeName(TASK), id, toMap(task));
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			id = toId(task.getTaskDefName(), task.getTaskId());
 			delete(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), id);
@@ -642,7 +642,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		try {
 			String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
-			upsert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee));
+			upsertWithRetry(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee));
 
 			indexer.add(ee);
 			if (logger.isDebugEnabled())
@@ -697,7 +697,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String field = (domain == null) ? "DEFAULT" : domain;
 		String id = toId(queueName, field);
 
-		upsert(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, toMap(pollData));
+		upsertWithRetry(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, toMap(pollData));
 
 		if (logger.isDebugEnabled())
 			logger.debug("updateLastPoll: done");
@@ -747,7 +747,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String id = toId(workflow.getWorkflowId());
 
 		// Store the workflow object
-		upsert(toIndexName(WORKFLOW), toTypeName(WORKFLOW), id, toMap(workflow));
+		upsertWithRetry(toIndexName(WORKFLOW), toTypeName(WORKFLOW), id, toMap(workflow));
 
 		if (!update) {
 			id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
