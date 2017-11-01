@@ -112,15 +112,16 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public List<Task> getPendingTasksByWorkflow(String taskName, String workflowId) {
 		if (logger.isDebugEnabled())
 			logger.debug("getPendingTasksByWorkflow: taskName={}, workflowId={}", taskName, workflowId);
-		List<Task> tasks = new LinkedList<>();
 
-		List<Task> pendingTasks = getPendingTasksForTaskType(taskName);
-		pendingTasks.forEach(pendingTask -> {
-			if (pendingTask.getWorkflowInstanceId().equals(workflowId)) {
-				tasks.add(pendingTask);
-			}
-		});
+		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskName) + "*");
+		List<HashMap> wraps = findAll(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), query, HashMap.class);
+		Set<String> taskIds = wraps.stream().filter(map -> workflowId.equals(map.get("workflowId")))
+				.map(map -> (String) map.get("taskId"))
+				.collect(Collectors.toSet());
+		List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
 
+		if (logger.isDebugEnabled())
+			logger.debug("getPendingTasksByWorkflow: result={}", toJson(tasks));
 		return tasks;
 	}
 
@@ -132,7 +133,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 		List<Task> pendingTasks = getPendingTasksForTaskType(taskDefName);
 		boolean startKeyFound = startKey == null;
-		int foundcount = 0;
+		int foundCount = 0;
 		for (Task pendingTask : pendingTasks) {
 			if (!startKeyFound) {
 				if (pendingTask.getTaskId().equals(startKey)) {
@@ -140,9 +141,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 					continue;
 				}
 			}
-			if (startKeyFound && foundcount < count) {
+			if (startKeyFound && foundCount < count) {
 				tasks.add(pendingTask);
-				foundcount++;
+				foundCount++;
 			}
 		}
 		return tasks;
@@ -178,22 +179,22 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 					logger.debug("Task already scheduled, skipping the run " + task.getTaskId() + ", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
 
 				// But we need to update data (original code using hset)
-				upsertWithRetry(indexName, typeName, id, payload);
+				upsert(indexName, typeName, id, payload);
 				continue;
 			}
-			insert(indexName, typeName, id, payload);
+			upsert(indexName, typeName, id, payload);
 
 			// WORKFLOW_TO_TASKS
 			id = toId(task.getWorkflowInstanceId(), task.getTaskId());
 			payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(), "taskId", task.getTaskId());
-			insert(toIndexName(WORKFLOW_TO_TASKS), toTypeName(WORKFLOW_TO_TASKS), id, payload);
+			upsert(toIndexName(WORKFLOW_TO_TASKS), toTypeName(WORKFLOW_TO_TASKS), id, payload);
 
 			// IN_PROGRESS_TASKS
 			id = toId(task.getTaskDefName(), task.getTaskId());
 			payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
 					"taskDefName", task.getTaskDefName(),
 					"taskId", task.getTaskId());
-			insert(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), id, payload);
+			upsert(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), id, payload);
 
 			updateTask(task);
 			created.add(task);
@@ -222,7 +223,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 				Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
 						"taskDefName", task.getTaskDefName(),
 						"taskId", task.getTaskId());
-				insert(indexName, typeName, id, payload);
+				upsert(indexName, typeName, id, payload);
 			} else {
 				delete(indexName, typeName, id);
 				delete(toIndexName(TASK_LIMIT_BUCKET), toTypeName(TASK_LIMIT_BUCKET), id);
@@ -230,7 +231,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		}
 
 		String id = toId(task.getTaskId());
-		upsertWithRetry(toIndexName(TASK), toTypeName(TASK), id, toMap(task));
+		upsert(toIndexName(TASK), toTypeName(TASK), id, toMap(task));
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			id = toId(task.getTaskDefName(), task.getTaskId());
 			delete(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), id);
@@ -454,7 +455,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public void removeFromPendingWorkflow(String workflowType, String workflowId) {
 		if (logger.isDebugEnabled())
 			logger.debug("removeFromPendingWorkflow: workflowType={}, workflowId={}", workflowType, workflowId);
+
 		delete(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), toId(workflowType, workflowId));
+
 		if (logger.isDebugEnabled())
 			logger.debug("removeFromPendingWorkflow: done");
 	}
@@ -553,10 +556,11 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 			logger.debug("getInProgressTaskCount: taskDefName={}", taskDefName);
 
 		String indexName = toIndexName(TASKS_IN_PROGRESS_STATUS);
+		String typeName = toTypeName(TASKS_IN_PROGRESS_STATUS);
 		ensureIndexExists(indexName);
 
 		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
-		SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(0).get();
+		SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0).get();
 		long result = response.getHits().getTotalHits();
 		if (logger.isDebugEnabled())
 			logger.debug("getInProgressTaskCount: result={}", result);
@@ -642,7 +646,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		try {
 			String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
-			upsertWithRetry(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee));
+			upsert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee));
 
 			indexer.add(ee);
 			if (logger.isDebugEnabled())
@@ -697,7 +701,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String field = (domain == null) ? "DEFAULT" : domain;
 		String id = toId(queueName, field);
 
-		upsertWithRetry(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, toMap(pollData));
+		upsert(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, toMap(pollData));
 
 		if (logger.isDebugEnabled())
 			logger.debug("updateLastPoll: done");
@@ -747,7 +751,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String id = toId(workflow.getWorkflowId());
 
 		// Store the workflow object
-		upsertWithRetry(toIndexName(WORKFLOW), toTypeName(WORKFLOW), id, toMap(workflow));
+		upsert(toIndexName(WORKFLOW), toTypeName(WORKFLOW), id, toMap(workflow));
 
 		if (!update) {
 			id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
@@ -756,7 +760,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 			Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
 					"workflowType", workflow.getWorkflowType(),
 					"dateStr", dateStr(workflow.getCreateTime()));
-			insert(toIndexName(WORKFLOW_DEF_TO_WORKFLOWS), toTypeName(WORKFLOW_DEF_TO_WORKFLOWS), id, payload);
+			upsert(toIndexName(WORKFLOW_DEF_TO_WORKFLOWS), toTypeName(WORKFLOW_DEF_TO_WORKFLOWS), id, payload);
 
 			// Add to list of workflows for a correlationId
 			if (workflow.getCorrelationId() != null) {
@@ -764,7 +768,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 				payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
 						"correlationId", workflow.getCorrelationId());
-				insert(toIndexName(CORR_ID_TO_WORKFLOWS), toTypeName(CORR_ID_TO_WORKFLOWS), id, payload);
+				upsert(toIndexName(CORR_ID_TO_WORKFLOWS), toTypeName(CORR_ID_TO_WORKFLOWS), id, payload);
 			}
 		}
 
@@ -775,7 +779,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		} else {
 			Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
 					"workflowType", workflow.getWorkflowType());
-			insert(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), id, payload);
+			upsert(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), id, payload);
 		}
 
 		workflow.setTasks(tasks);

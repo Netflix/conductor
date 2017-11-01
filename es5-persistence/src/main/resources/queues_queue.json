@@ -1,20 +1,14 @@
 {
   "_default_": {
     "properties": {
-      "createdOn": {
-        "type": "long"
-      },
       "deliverOn": {
         "type": "long"
       },
-      "offsetSeconds": {
+      "unackOn": {
         "type": "long"
       },
       "popped": {
         "type": "boolean"
-      },
-      "poppedOn": {
-        "type": "long"
       },
       "payload": {
         "type": "text",

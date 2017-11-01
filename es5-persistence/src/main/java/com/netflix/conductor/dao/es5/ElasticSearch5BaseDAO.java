@@ -18,7 +18,7 @@ package com.netflix.conductor.dao.es5;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.common.collect.ObjectArrays;
 import com.netflix.conductor.core.config.Configuration;
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang.StringUtils;
@@ -28,7 +28,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.IndexNotFoundException;
-import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -74,6 +72,11 @@ public class ElasticSearch5BaseDAO {
 			}
 		}
 		return builder.toString().toLowerCase();
+	}
+
+	String toUnackIndexName(String... nsValues) {
+		String[] values = ObjectArrays.concat("unack", nsValues);
+		return toIndexName(values);
 	}
 
 	String toId(String... nsValues) {
@@ -176,6 +179,7 @@ public class ElasticSearch5BaseDAO {
 					.get();
 		} catch (Exception ex) {
 			logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
+			throw ex;
 		}
 	}
 
@@ -189,26 +193,7 @@ public class ElasticSearch5BaseDAO {
 					.get();
 		} catch (Exception ex) {
 			logger.error("upsert: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-		}
-	}
-
-	void upsertWithRetry(String indexName, String typeName, String id, Map<String, ?> payload) {
-		ensureIndexExists(indexName);
-		int retry = 3;
-		while (retry > 0) {
-			try {
-				client.prepareUpdate(indexName, typeName, id)
-						.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-						.setDocAsUpsert(true)
-						.setDoc(payload)
-						.get();
-				return;
-			} catch (Exception e) {
-				retry--;
-				if (retry > 0) {
-					Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
-				}
-			}
+			throw ex;
 		}
 	}
 
@@ -221,6 +206,7 @@ public class ElasticSearch5BaseDAO {
 					.get();
 		} catch (Exception ex) {
 			logger.error("update: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+			throw ex;
 		}
 	}
 
@@ -233,11 +219,21 @@ public class ElasticSearch5BaseDAO {
 					.setCreate(true)
 					.get();
 			return true;
-		} catch (VersionConflictEngineException ex) {
-			return false;
+//		} catch (VersionConflictEngineException ex) {
+//			return false;
 		} catch (Exception ex) {
 			logger.error("insert: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-			return false;
+			throw ex;
+		}
+	}
+
+	GetResponse findOne(String indexName, String typeName, String id) {
+		ensureIndexExists(indexName);
+		try {
+			return client.prepareGet(indexName, typeName, id).get();
+		} catch (Exception ex) {
+			logger.error("findOne: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
+			throw ex;
 		}
 	}
 
@@ -263,15 +259,14 @@ public class ElasticSearch5BaseDAO {
 		ensureIndexExists(indexName);
 		try {
 			SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
-
-			int size = (int) response.getHits().getTotalHits();
+			Long size = response.getHits().getTotalHits();
 			if (logger.isDebugEnabled())
 				logger.debug("findAll: found={}", size);
 			if (size == 0) {
 				return Collections.emptyList();
 			}
 
-			response = client.prepareSearch(indexName).setTypes(typeName).setSize(size).get();
+			response = client.prepareSearch(indexName).setTypes(typeName).setSize(size.intValue()).get();
 
 			List<T> result = Arrays.stream(response.getHits().getHits())
 					.map(hit -> convert(hit.getSource(), clazz))
@@ -294,14 +289,14 @@ public class ElasticSearch5BaseDAO {
 		ensureIndexExists(indexName);
 		try {
 			SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0).get();
-			int size = (int) response.getHits().getTotalHits();
+			Long size = response.getHits().getTotalHits();
 			if (logger.isDebugEnabled())
 				logger.debug("findAll: found={}", size);
 			if (size == 0) {
 				return Collections.emptyList();
 			}
 
-			response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size).get();
+			response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size.intValue()).get();
 			List<T> result = Arrays.stream(response.getHits().getHits())
 					.map(item -> convert(item.getSource(), clazz))
 					.collect(Collectors.toList());
