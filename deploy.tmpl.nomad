@@ -111,7 +111,7 @@ job "conductor" {
       env {
         STACK = "<TLD>" // Important for redis key
         environment = "<TLD>"
-
+        trigger="1"
         // Database settings
         db = "redis"
         workflow_dynomite_cluster_name = "${NOMAD_JOB_NAME}"
