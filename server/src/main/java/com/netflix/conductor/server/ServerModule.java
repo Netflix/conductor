@@ -80,7 +80,6 @@ public class ServerModule extends AbstractModule {
 		this.region = config.getRegion();
 		this.localRack = config.getAvailabilityZone();
 		this.db = db;
-		System.out.println("jedis = " + jedis);
 	}
 
 	@Override
