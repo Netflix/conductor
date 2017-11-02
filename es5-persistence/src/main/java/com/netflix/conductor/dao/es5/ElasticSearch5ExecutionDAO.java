@@ -17,7 +17,6 @@ package com.netflix.conductor.dao.es5;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.netflix.conductor.common.metadata.events.EventExecution;
@@ -100,7 +99,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public List<Task> getTasks(String taskDefName, String startKey, int count) {
 		if (logger.isDebugEnabled())
 			logger.debug("getTasks: taskDefName={}, startKey={}, count={}", taskDefName, startKey, count);
-		List<Task> tasks = new LinkedList<>();
+		List<Task> tasks = Lists.newLinkedList();
 
 		List<Task> pendingTasks = getPendingTasksForTaskType(taskDefName);
 		boolean startKeyFound = startKey == null;
@@ -184,37 +183,37 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public boolean exceedsInProgressLimit(Task task) {
 		if (logger.isDebugEnabled())
 			logger.debug("exceedsInProgressLimit: task={}", toJson(task));
+
 		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
 		if (taskDef == null) {
 			return false;
 		}
 		int limit = taskDef.concurrencyLimit();
-		if (logger.isDebugEnabled())
-			logger.debug("exceedsInProgressLimit: limit={}", limit);
 		if (limit <= 0) {
 			return false;
 		}
 
 		long current = getInProgressTaskCount(task.getTaskDefName());
-		if (logger.isDebugEnabled())
-			logger.debug("exceedsInProgressLimit: current={}", current);
 		if (current >= limit) {
 			if (logger.isDebugEnabled())
-				logger.debug("exceedsInProgressLimit: task rate limited");
+				logger.debug("exceedsInProgressLimit: task rate limited. current={}, limit={}", current, limit);
 			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
 			return true;
 		}
-		if (logger.isDebugEnabled())
-			logger.debug("exceedsInProgressLimit: after checking");
 
 		String indexName = toIndexName(IN_PROGRESS_TASKS);
 		String typeName = toTypeName(IN_PROGRESS_TASKS);
 		QueryBuilder query = QueryBuilders.matchQuery("_id", toId(task.getTaskDefName()) + "*");
 		List<HashMap> wraps = findAll(indexName, typeName, query, limit, HashMap.class);
 		Set<String> ids = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
-
 		if (logger.isDebugEnabled())
 			logger.debug("exceedsInProgressLimit: ids={}", ids);
+
+		if (ids.isEmpty()) {
+			if (logger.isDebugEnabled())
+				logger.debug("exceedsInProgressLimit: Task execution not limited for {}", task.getTaskDefName());
+			return false;
+		}
 
 		boolean rateLimited = !ids.contains(task.getTaskId());
 		if (rateLimited) {
@@ -314,9 +313,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		List<HashMap> wraps = findAll(toIndexName(WORKFLOW_TO_TASKS), toTypeName(WORKFLOW_TO_TASKS), query, HashMap.class);
 		Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
 		List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
+
 		if (logger.isDebugEnabled())
 			logger.debug("getTasksForWorkflow: result={}", toJson(tasks));
-
 		return tasks;
 	}
 
@@ -424,10 +423,10 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		List<HashMap> wraps = findAll(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), query, HashMap.class);
 		Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId"))
 				.filter(Objects::nonNull).collect(Collectors.toSet());
+
 		if (logger.isDebugEnabled())
 			logger.debug("getRunningWorkflowIds: result={}", workflowIds);
-
-		return ImmutableList.copyOf(workflowIds);
+		return Lists.newArrayList(workflowIds);
 	}
 
 	@Override
@@ -437,7 +436,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 
 		List<String> wfIds = getRunningWorkflowIds(workflowName);
-		List<Workflow> workflows = wfIds.stream().map(this::getWorkflow).filter(Objects::nonNull).collect(Collectors.toList());
+		List<Workflow> workflows = wfIds.stream().map(this::getWorkflow).filter(Objects::nonNull)
+				.collect(Collectors.toList());
 
 		if (logger.isDebugEnabled())
 			logger.debug("getPendingWorkflowsByType: result={}", toJson(workflows));
@@ -455,9 +455,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
 		SearchResponse response = client.prepareSearch(indexName).setQuery(query).setSize(0).get();
 		long result = response.getHits().getTotalHits();
+
 		if (logger.isDebugEnabled())
 			logger.debug("getPendingWorkflowCount: result={}", result);
-
 		return result;
 	}
 
@@ -473,9 +473,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
 		SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0).get();
 		long result = response.getHits().getTotalHits();
+
 		if (logger.isDebugEnabled())
 			logger.debug("getInProgressTaskCount: result={}", result);
-
 		return result;
 	}
 
@@ -488,7 +488,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		Preconditions.checkNotNull(startTime, "startTime cannot be null");
 		Preconditions.checkNotNull(endTime, "endTime cannot be null");
 
-		List<Workflow> workflows = new LinkedList<Workflow>();
+		List<Workflow> workflows = Lists.newLinkedList();
 
 		List<String> dateStrs = dateStrBetweenDates(startTime, endTime);
 		dateStrs.forEach(dateStr -> {
@@ -538,11 +538,14 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 			if (insert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee))) {
 				indexer.add(ee);
+
+				if (logger.isDebugEnabled())
+					logger.debug("addEventExecution: true");
 				return true;
 			}
 
 			if (logger.isDebugEnabled())
-				logger.debug("addEventExecution: done");
+				logger.debug("addEventExecution: false");
 			return false;
 		} catch (Exception ex) {
 			if (logger.isDebugEnabled())
@@ -576,7 +579,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 			logger.debug("getEventExecutions: eventHandlerName={}, eventName={}, messageId={}, max={}",
 					eventHandlerName, eventName, messageId, max);
 		try {
-			List<EventExecution> executions = new LinkedList<>();
+			List<EventExecution> executions = Lists.newLinkedList();
 			for (int i = 0; i < max; i++) {
 				String id = toId(eventHandlerName, eventName, messageId, messageId + "_" + i);
 				EventExecution ee = findOne(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, EventExecution.class);
@@ -600,6 +603,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public void addMessage(String queue, Message msg) {
 		if (logger.isDebugEnabled())
 			logger.debug("addMessage: queue={}, msg={}", queue, toJson(msg));
+
 		indexer.addMessage(queue, msg);
 	}
 
@@ -607,6 +611,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public void updateLastPoll(String queueName, String domain, String workerId) {
 		if (logger.isDebugEnabled())
 			logger.debug("updateLastPoll: queueName={}, domain={}, workerId={}", queueName, domain, workerId);
+
 		Preconditions.checkNotNull(queueName, "queueName name cannot be null");
 		PollData pollData = new PollData(queueName, domain, workerId, System.currentTimeMillis());
 
@@ -623,6 +628,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public PollData getPollData(String queueName, String domain) {
 		if (logger.isDebugEnabled())
 			logger.debug("getPollData: queueName={}, domain={}", queueName, domain);
+
 		Preconditions.checkNotNull(queueName, "queueName name cannot be null");
 
 		String field = (domain == null) ? "DEFAULT" : domain;
@@ -632,7 +638,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 		if (logger.isDebugEnabled())
 			logger.debug("getPollData: result={}", toJson(pollData));
-		return null;
+		return pollData;
 	}
 
 	@Override
@@ -653,7 +659,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		if (logger.isDebugEnabled())
 			logger.debug("dateStrBetweenDates: startdatems={}, enddatems={}", startdatems, enddatems);
 
-		List<String> dates = new ArrayList<String>();
+		List<String> dates = Lists.newArrayList();
 		Calendar calendar = new GregorianCalendar();
 		Date startdate = new Date(startdatems);
 		Date enddate = new Date(enddatems);
@@ -667,16 +673,6 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		if (logger.isDebugEnabled())
 			logger.debug("dateStrBetweenDates: result={}", dates);
 		return dates;
-	}
-
-	private String dateStr(Long timeInMs) {
-		Date date = new Date(timeInMs);
-		return dateStr(date);
-	}
-
-	private String dateStr(Date date) {
-		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-		return format.format(date);
 	}
 
 	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
@@ -717,11 +713,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String id = toId(task.getTaskId());
 		Map<String, ?> payload = toMap(task);
 
-		if (exists(indexName, typeName, id)) {
-			update(indexName, typeName, id, payload);
-		} else {
-			insert(indexName, typeName, id, payload);
-		}
+		upsert(indexName, typeName, id, payload);
 	}
 
 	private void deleteTask(Task task) {
@@ -761,7 +753,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String typeName = toTypeName(WORKFLOW_TO_TASKS);
 		String id = toId(task.getWorkflowInstanceId(), task.getTaskId());
 
-		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(), "taskId", task.getTaskId());
+		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
+				"taskId", task.getTaskId());
 		insert(indexName, typeName, id, payload);
 	}
 
@@ -865,5 +858,15 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 	private void deletePendingWorkflow(Workflow workflow) {
 		deletePendingWorkflow(workflow.getWorkflowType(), workflow.getWorkflowId());
+	}
+
+	private String dateStr(Long timeInMs) {
+		Date date = new Date(timeInMs);
+		return dateStr(date);
+	}
+
+	private String dateStr(Date date) {
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+		return format.format(date);
 	}
 }
