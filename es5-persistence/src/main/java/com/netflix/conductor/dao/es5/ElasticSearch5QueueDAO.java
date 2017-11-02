@@ -38,6 +38,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.filter.InternalFilter;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,14 +55,15 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	private static final ConcurrentSet<String> queues = new ConcurrentSet<>();
 	private static final int unackScheduleInMS = 60_000;
 	private static final int unackTime = 60_000;
-	private static final int stalePeriod = 60_000;
 	private static final String QUEUE = "queue";
+	private final int stalePeriod;
 	private String baseName;
 
 	@Inject
 	public ElasticSearch5QueueDAO(Client client, Configuration config, ObjectMapper mapper) {
 		super(client, config, mapper, "queues");
 		this.baseName = toIndexName();
+		this.stalePeriod = config.getIntProperty("workflow.elasticsearch.stale.period.seconds", 60) * 1000;
 
 		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::processUnacks, unackScheduleInMS, unackScheduleInMS, TimeUnit.MILLISECONDS);
 	}
@@ -133,7 +135,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 				for (SearchHit record : response.getHits().getHits()) {
 					try {
 						if (logger.isDebugEnabled())
-							logger.debug("pop (" + session + "): attempt for " + queueName + ", id=" + record.getId());
+							logger.debug("pop ({}): attempt for {}/{}", session, queueName, record.getId());
 						Map<String, Object> map = new HashMap<>();
 						map.put("popped", true);
 						map.put("unackOn", System.currentTimeMillis() + unackTime);
@@ -353,18 +355,38 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 			String typeName = toTypeName(queueName);
 
 			QueryBuilder popped = QueryBuilders.termQuery("popped", true);
-			QueryBuilder unackOn = QueryBuilders.rangeQuery("unackOn").lte(System.currentTimeMillis() + stalePeriod);
+			QueryBuilder unackOn = QueryBuilders.rangeQuery("unackOn").lte(System.currentTimeMillis());
 			QueryBuilder query = QueryBuilders.boolQuery().must(popped).must(unackOn);
 
 			// Find the suitable records
 			SearchResponse response = client.prepareSearch(indexName)
 					.setTypes(typeName)
-					.setQuery(query)
 					.setVersion(true)
+					.setQuery(query)
+					.setSize(100)
 					.get();
+
+			if (logger.isDebugEnabled())
+				logger.debug("processUnacks: found {} for {}", response.getHits().totalHits, queueName);
 
 			// Walk over all of them and update back to un-popped
 			for (SearchHit record : response.getHits().getHits()) {
+				Long recUnackOn = (Long)record.getSource().get("unackOn");
+
+				if (logger.isDebugEnabled())
+					logger.debug("processUnacks: {} has unackOn {} for {}", record.getId(),
+							ISODateTimeFormat.dateTime().withZoneUTC().print(recUnackOn), queueName);
+
+				// The record must: unackOn + stalePeriod < system time
+				boolean staleRecord = ((recUnackOn + stalePeriod) <= System.currentTimeMillis());
+				if (!staleRecord) {
+					if (logger.isDebugEnabled())
+						logger.debug("processUnacks: {} is not stale for {}", record.getId(), queueName);
+					continue;
+				}
+				if (logger.isDebugEnabled())
+					logger.debug("processUnacks: {} is STALE for {}", record.getId(), queueName);
+
 				try {
 					Map<String, Object> map = new HashMap<>();
 					map.put("popped", false);
@@ -373,6 +395,8 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 							.setVersion(record.getVersion())
 							.setDoc(map)
 							.get();
+					if (logger.isDebugEnabled())
+						logger.debug("processUnacks: success {} for {}", record.getId(), queueName);
 				} catch (VersionConflictEngineException ignore) {
 				} catch (DocumentMissingException ignore) {
 					if (logger.isDebugEnabled())
@@ -443,6 +467,6 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	}
 
 	private void processUnacks() {
-		//queues.forEach(this::processUnacks);
+		queues.forEach(this::processUnacks);
 	}
 }
