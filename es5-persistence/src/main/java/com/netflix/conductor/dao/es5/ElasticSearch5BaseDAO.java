@@ -28,6 +28,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -177,9 +178,9 @@ public class ElasticSearch5BaseDAO {
 			client.prepareDelete(indexName, typeName, id)
 					.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
 					.get();
+		} catch (VersionConflictEngineException ignore) {
 		} catch (Exception ex) {
 			logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
-			throw ex;
 		}
 	}
 
@@ -191,9 +192,9 @@ public class ElasticSearch5BaseDAO {
 					.setDocAsUpsert(true)
 					.setDoc(payload)
 					.get();
+		} catch (VersionConflictEngineException ignore) {
 		} catch (Exception ex) {
 			logger.error("upsert: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-			throw ex;
 		}
 	}
 
@@ -204,9 +205,9 @@ public class ElasticSearch5BaseDAO {
 					.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
 					.setDoc(payload)
 					.get();
+		} catch (VersionConflictEngineException ignore) {
 		} catch (Exception ex) {
 			logger.error("update: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-			throw ex;
 		}
 	}
 
@@ -219,11 +220,11 @@ public class ElasticSearch5BaseDAO {
 					.setCreate(true)
 					.get();
 			return true;
-//		} catch (VersionConflictEngineException ex) {
-//			return false;
+		} catch (VersionConflictEngineException ex) {
+			return false;
 		} catch (Exception ex) {
 			logger.error("insert: failed for {}/{}/{} with {}\n{}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-			throw ex;
+			return false;
 		}
 	}
 

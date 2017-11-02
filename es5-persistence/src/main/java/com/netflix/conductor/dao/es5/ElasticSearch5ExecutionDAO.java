@@ -17,7 +17,9 @@ package com.netflix.conductor.dao.es5;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -52,9 +54,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	private static final String ARCHIVED_FIELD = "archived";
 	private static final String RAW_JSON_FIELD = "rawJSON";
 	// Keys Families
-	private static final String TASK_LIMIT_BUCKET = "TASK_LIMIT_BUCKET";
 	private final static String IN_PROGRESS_TASKS = "IN_PROGRESS_TASKS";
-	private final static String TASKS_IN_PROGRESS_STATUS = "TASKS_IN_PROGRESS_STATUS";
 	private final static String WORKFLOW_TO_TASKS = "WORKFLOW_TO_TASKS";
 	private final static String SCHEDULED_TASKS = "SCHEDULED_TASKS";
 	private final static String TASK = "TASK";
@@ -77,35 +77,6 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		ensureIndexExists(toIndexName(TASK), toTypeName(TASK));
 		ensureIndexExists(toIndexName(WORKFLOW), toTypeName(WORKFLOW));
 		ensureIndexExists(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION));
-	}
-
-	private static String dateStr(Long timeInMs) {
-		Date date = new Date(timeInMs);
-		return dateStr(date);
-	}
-
-	private static String dateStr(Date date) {
-		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-		return format.format(date);
-	}
-
-	private static List<String> dateStrBetweenDates(Long startdatems, Long enddatems) {
-		if (logger.isDebugEnabled())
-			logger.debug("dateStrBetweenDates: startdatems={}, enddatems={}", startdatems, enddatems);
-		List<String> dates = new ArrayList<String>();
-		Calendar calendar = new GregorianCalendar();
-		Date startdate = new Date(startdatems);
-		Date enddate = new Date(enddatems);
-		calendar.setTime(startdate);
-		while (calendar.getTime().before(enddate) || calendar.getTime().equals(enddate)) {
-			Date result = calendar.getTime();
-			dates.add(dateStr(result));
-			calendar.add(Calendar.DATE, 1);
-		}
-
-		if (logger.isDebugEnabled())
-			logger.debug("dateStrBetweenDates: result={}", dates);
-		return dates;
 	}
 
 	@Override
@@ -153,7 +124,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public List<Task> createTasks(List<Task> tasks) {
 		if (logger.isDebugEnabled())
 			logger.debug("createTasks: tasks={}", toJson(tasks));
-		List<Task> created = new LinkedList<>();
+		List<Task> created = Lists.newLinkedList();
 
 		for (Task task : tasks) {
 
@@ -164,39 +135,18 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 			task.setScheduledTime(System.currentTimeMillis());
 
-			String indexName = toIndexName(SCHEDULED_TASKS);
-			String typeName = toTypeName(SCHEDULED_TASKS);
-			String taskKey = task.getReferenceTaskName() + String.valueOf(task.getRetryCount());
-			String id = toId(task.getWorkflowInstanceId(), taskKey);
-
-			// SCHEDULED_TASKS
-			Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
-					"taskRefName", task.getReferenceTaskName(),
-					"taskId", task.getTaskId());
-
-			if (exists(indexName, typeName, id)) {
+			boolean scheduledTaskAdded = addScheduledTask(task);
+			if (!scheduledTaskAdded) {
+				String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
 				if (logger.isDebugEnabled())
 					logger.debug("Task already scheduled, skipping the run " + task.getTaskId() + ", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
-
-				// But we need to update data (original code using hset)
-				upsert(indexName, typeName, id, payload);
 				continue;
 			}
-			upsert(indexName, typeName, id, payload);
-
-			// WORKFLOW_TO_TASKS
-			id = toId(task.getWorkflowInstanceId(), task.getTaskId());
-			payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(), "taskId", task.getTaskId());
-			upsert(toIndexName(WORKFLOW_TO_TASKS), toTypeName(WORKFLOW_TO_TASKS), id, payload);
-
-			// IN_PROGRESS_TASKS
-			id = toId(task.getTaskDefName(), task.getTaskId());
-			payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
-					"taskDefName", task.getTaskDefName(),
-					"taskId", task.getTaskId());
-			upsert(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), id, payload);
-
+			insertOrUpdateTask(task);
+			addTaskToWorkflowMapping(task);
+			addTaskInProgress(task);
 			updateTask(task);
+
 			created.add(task);
 		}
 
@@ -215,32 +165,22 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
 
 		if (taskDef != null && taskDef.concurrencyLimit() > 0) {
-			String indexName = toIndexName(TASKS_IN_PROGRESS_STATUS);
-			String typeName = toTypeName(TASKS_IN_PROGRESS_STATUS);
-			String id = toId(task.getTaskDefName(), task.getTaskId());
-
 			if (task.getStatus() != null && task.getStatus().equals(Task.Status.IN_PROGRESS)) {
-				Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
-						"taskDefName", task.getTaskDefName(),
-						"taskId", task.getTaskId());
-				upsert(indexName, typeName, id, payload);
+				addTaskInProgress(task);
 			} else {
-				delete(indexName, typeName, id);
-				delete(toIndexName(TASK_LIMIT_BUCKET), toTypeName(TASK_LIMIT_BUCKET), id);
+				deleteTaskInProgress(task);
 			}
 		}
 
-		String id = toId(task.getTaskId());
-		upsert(toIndexName(TASK), toTypeName(TASK), id, toMap(task));
+		insertOrUpdateTask(task);
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
-			id = toId(task.getTaskDefName(), task.getTaskId());
-			delete(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), id);
+			deleteTaskInProgress(task);
 		}
 
 		indexer.index(task);
 	}
 
-	@Override //TODO Verify how it works
+	@Override
 	public boolean exceedsInProgressLimit(Task task) {
 		if (logger.isDebugEnabled())
 			logger.debug("exceedsInProgressLimit: task={}", toJson(task));
@@ -267,30 +207,11 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		if (logger.isDebugEnabled())
 			logger.debug("exceedsInProgressLimit: after checking");
 
-		String indexName = toIndexName(TASK_LIMIT_BUCKET);
-		String typeName = toTypeName(TASK_LIMIT_BUCKET);
-		String id = toId(task.getTaskDefName(), task.getTaskId());
-
-		double score = System.currentTimeMillis();
-
-		Map<String, Object> payload = ImmutableMap.of("score", score, "taskId", task.getTaskId(),
-				"taskDefName", task.getTaskDefName());
-
-		insert(indexName, typeName, id, payload);
-		if (logger.isDebugEnabled())
-			logger.debug("exceedsInProgressLimit: after insert");
-
+		String indexName = toIndexName(IN_PROGRESS_TASKS);
+		String typeName = toTypeName(IN_PROGRESS_TASKS);
 		QueryBuilder query = QueryBuilders.matchQuery("_id", toId(task.getTaskDefName()) + "*");
 		List<HashMap> wraps = findAll(indexName, typeName, query, limit, HashMap.class);
-		if (logger.isDebugEnabled())
-			logger.debug("exceedsInProgressLimit: wraps={}", wraps);
-
-		List<String> ids = wraps.stream()
-				.filter(map -> {
-					Long temp = (Long) map.get("score");
-					return temp >= 0 && temp <= (score + 1);
-				})
-				.map(map -> (String) map.get("taskId")).collect(Collectors.toList());
+		Set<String> ids = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
 
 		if (logger.isDebugEnabled())
 			logger.debug("exceedsInProgressLimit: ids={}", ids);
@@ -298,12 +219,6 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		boolean rateLimited = !ids.contains(task.getTaskId());
 		if (rateLimited) {
 			logger.info("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
-			String indexName2 = toIndexName(TASKS_IN_PROGRESS_STATUS);
-			String typeName2 = toTypeName(TASKS_IN_PROGRESS_STATUS);
-
-			ids.stream().filter(id1 -> !exists(indexName2, typeName2, toId(task.getTaskDefName(), id1)))
-					.forEach(id2 -> delete(indexName2, typeName2, toId(task.getTaskDefName(), id2)));
-
 			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
 		}
 
@@ -337,14 +252,10 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 			logger.warn("No such Task by id {}", taskId);
 			return;
 		}
-		String taskKey = task.getReferenceTaskName() + String.valueOf(task.getRetryCount());
-
-		delete(toIndexName(SCHEDULED_TASKS), toTypeName(SCHEDULED_TASKS), toId(task.getWorkflowInstanceId(), taskKey));
-		delete(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), toId(task.getTaskDefName(), taskId));
-		delete(toIndexName(WORKFLOW_TO_TASKS), toTypeName(WORKFLOW_TO_TASKS), toId(task.getWorkflowInstanceId(), taskId));
-		delete(toIndexName(TASKS_IN_PROGRESS_STATUS), toTypeName(TASKS_IN_PROGRESS_STATUS), toId(task.getTaskDefName(), taskId));
-		delete(toIndexName(TASK), toTypeName(TASK), toId(taskId));
-		delete(toIndexName(TASK_LIMIT_BUCKET), toTypeName(TASK_LIMIT_BUCKET), toId(task.getTaskDefName(), taskId));
+		deleteScheduledTask(task);
+		deleteTaskInProgress(task);
+		deleteTaskToWorkflowMapping(task);
+		deleteTask(task);
 		if (logger.isDebugEnabled())
 			logger.debug("removeTask: done");
 	}
@@ -384,7 +295,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		Preconditions.checkNotNull(taskDefName, "task def name cannot be null");
 
 		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
-		List<Task> tasks = findAll(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), query, Task.class);
+		List<HashMap> wraps = findAll(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), query, HashMap.class);
+		Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
+		List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
 
 		if (logger.isDebugEnabled())
 			logger.debug("getPendingTasksForTaskType: result={}", toJson(tasks));
@@ -433,11 +346,10 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 			//Add to elasticsearch
 			indexer.update(workflowId, new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD}, new Object[]{toJson(wf), true});
-			delete(toIndexName(WORKFLOW_DEF_TO_WORKFLOWS), toTypeName(WORKFLOW_DEF_TO_WORKFLOWS),
-					toId(wf.getWorkflowType(), dateStr(wf.getCreateTime()), wf.getWorkflowId()));
-			delete(toIndexName(CORR_ID_TO_WORKFLOWS), toTypeName(CORR_ID_TO_WORKFLOWS), toId(wf.getCorrelationId(), wf.getWorkflowId()));
-			delete(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), toId(wf.getWorkflowType(), wf.getWorkflowId()));
-			delete(toIndexName(WORKFLOW), toTypeName(WORKFLOW), toId(wf.getWorkflowId()));
+			deleteWorkflowDefToWorkflowMapping(wf);
+			deleteWorkflowToCorrIdMapping(wf);
+			deletePendingWorkflow(wf);
+			deleteWorkflow(wf);
 
 			for (Task task : wf.getTasks()) {
 				removeTask(task.getTaskId());
@@ -456,7 +368,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		if (logger.isDebugEnabled())
 			logger.debug("removeFromPendingWorkflow: workflowType={}, workflowId={}", workflowType, workflowId);
 
-		delete(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), toId(workflowType, workflowId));
+		deletePendingWorkflow(workflowType, workflowId);
 
 		if (logger.isDebugEnabled())
 			logger.debug("removeFromPendingWorkflow: done");
@@ -510,11 +422,12 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
 		List<HashMap> wraps = findAll(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), query, HashMap.class);
-		Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
+		Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId"))
+				.filter(Objects::nonNull).collect(Collectors.toSet());
 		if (logger.isDebugEnabled())
 			logger.debug("getRunningWorkflowIds: result={}", workflowIds);
 
-		return new ArrayList<>(workflowIds);
+		return ImmutableList.copyOf(workflowIds);
 	}
 
 	@Override
@@ -522,11 +435,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		if (logger.isDebugEnabled())
 			logger.debug("getPendingWorkflowsByType: workflowName={}", workflowName);
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-		List<Workflow> workflows = new LinkedList<Workflow>();
+
 		List<String> wfIds = getRunningWorkflowIds(workflowName);
-		for (String wfId : wfIds) {
-			workflows.add(getWorkflow(wfId));
-		}
+		List<Workflow> workflows = wfIds.stream().map(this::getWorkflow).filter(Objects::nonNull).collect(Collectors.toList());
 
 		if (logger.isDebugEnabled())
 			logger.debug("getPendingWorkflowsByType: result={}", toJson(workflows));
@@ -555,8 +466,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		if (logger.isDebugEnabled())
 			logger.debug("getInProgressTaskCount: taskDefName={}", taskDefName);
 
-		String indexName = toIndexName(TASKS_IN_PROGRESS_STATUS);
-		String typeName = toTypeName(TASKS_IN_PROGRESS_STATUS);
+		String indexName = toIndexName(IN_PROGRESS_TASKS);
+		String typeName = toTypeName(IN_PROGRESS_TASKS);
 		ensureIndexExists(indexName);
 
 		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
@@ -572,6 +483,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	public List<Workflow> getWorkflowsByType(String workflowName, Long startTime, Long endTime) {
 		if (logger.isDebugEnabled())
 			logger.debug("getWorkflowsByType: workflowName={}, startTime={}, endTime={}", workflowName, startTime, endTime);
+
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 		Preconditions.checkNotNull(startTime, "startTime cannot be null");
 		Preconditions.checkNotNull(endTime, "endTime cannot be null");
@@ -737,56 +649,221 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		return pollData;
 	}
 
-	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
+	private List<String> dateStrBetweenDates(Long startdatems, Long enddatems) {
 		if (logger.isDebugEnabled())
-			logger.debug("insertOrUpdateWorkflow: update={}, workflow={}", update, toJson(workflow));
+			logger.debug("dateStrBetweenDates: startdatems={}, enddatems={}", startdatems, enddatems);
+
+		List<String> dates = new ArrayList<String>();
+		Calendar calendar = new GregorianCalendar();
+		Date startdate = new Date(startdatems);
+		Date enddate = new Date(enddatems);
+		calendar.setTime(startdate);
+		while (calendar.getTime().before(enddate) || calendar.getTime().equals(enddate)) {
+			Date result = calendar.getTime();
+			dates.add(dateStr(result));
+			calendar.add(Calendar.DATE, 1);
+		}
+
+		if (logger.isDebugEnabled())
+			logger.debug("dateStrBetweenDates: result={}", dates);
+		return dates;
+	}
+
+	private String dateStr(Long timeInMs) {
+		Date date = new Date(timeInMs);
+		return dateStr(date);
+	}
+
+	private String dateStr(Date date) {
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+		return format.format(date);
+	}
+
+	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
 		Preconditions.checkNotNull(workflow, "workflow object cannot be null");
 
 		if (workflow.getStatus().isTerminal()) {
 			workflow.setEndTime(System.currentTimeMillis());
 		}
 		List<Task> tasks = workflow.getTasks();
-		workflow.setTasks(new LinkedList<>());
+		workflow.setTasks(Lists.newLinkedList());
 
-		String id = toId(workflow.getWorkflowId());
-
-		// Store the workflow object
-		upsert(toIndexName(WORKFLOW), toTypeName(WORKFLOW), id, toMap(workflow));
-
-		if (!update) {
-			id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
-
-			// Add to list of workflows for a workflowdef
-			Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
-					"workflowType", workflow.getWorkflowType(),
-					"dateStr", dateStr(workflow.getCreateTime()));
-			upsert(toIndexName(WORKFLOW_DEF_TO_WORKFLOWS), toTypeName(WORKFLOW_DEF_TO_WORKFLOWS), id, payload);
-
-			// Add to list of workflows for a correlationId
+		if (update) {
+			updateWorkflowInternal(workflow);
+		} else {
+			addWorkflowInternal(workflow);
+			addWorkflowDefToWorkflowMapping(workflow);
 			if (workflow.getCorrelationId() != null) {
-				id = toId(workflow.getCorrelationId(), workflow.getWorkflowId());
-
-				payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
-						"correlationId", workflow.getCorrelationId());
-				upsert(toIndexName(CORR_ID_TO_WORKFLOWS), toTypeName(CORR_ID_TO_WORKFLOWS), id, payload);
+				addWorkflowToCorrIdMapping(workflow);
 			}
 		}
 
 		// Add or remove from the pending workflows
-		id = toId(workflow.getWorkflowType(), workflow.getWorkflowId());
 		if (workflow.getStatus().isTerminal()) {
-			delete(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), id);
+			deletePendingWorkflow(workflow);
 		} else {
-			Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
-					"workflowType", workflow.getWorkflowType());
-			upsert(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), id, payload);
+			addPendingWorkflow(workflow);
 		}
 
 		workflow.setTasks(tasks);
 		indexer.index(workflow);
 
-		if (logger.isDebugEnabled())
-			logger.debug("insertOrUpdateWorkflow: done={}", workflow.getWorkflowId());
 		return workflow.getWorkflowId();
+	}
+
+	private void insertOrUpdateTask(Task task) {
+		String indexName = toIndexName(TASK);
+		String typeName = toTypeName(TASK);
+		String id = toId(task.getTaskId());
+		Map<String, ?> payload = toMap(task);
+
+		if (exists(indexName, typeName, id)) {
+			update(indexName, typeName, id, payload);
+		} else {
+			insert(indexName, typeName, id, payload);
+		}
+	}
+
+	private void deleteTask(Task task) {
+		String indexName = toIndexName(TASK);
+		String typeName = toTypeName(TASK);
+		String id = toId(task.getTaskId());
+		delete(indexName, typeName, id);
+	}
+
+	private boolean addScheduledTask(Task task) {
+		String indexName = toIndexName(SCHEDULED_TASKS);
+		String typeName = toTypeName(SCHEDULED_TASKS);
+		String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
+		String id = toId(task.getWorkflowInstanceId(), taskKey); // Do not add taskId here!!!
+
+		boolean exists = exists(indexName, typeName, id);
+		if (!exists) {
+			Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
+					"taskRefName", task.getReferenceTaskName(),
+					"taskId", task.getTaskId());
+
+			return insert(indexName, typeName, id, payload);
+		}
+		return false;
+	}
+
+	private void deleteScheduledTask(Task task) {
+		String indexName = toIndexName(SCHEDULED_TASKS);
+		String typeName = toTypeName(SCHEDULED_TASKS);
+		String taskKey = task.getReferenceTaskName() + String.valueOf(task.getRetryCount());
+		String id = toId(task.getWorkflowInstanceId(), taskKey);
+		delete(indexName, typeName, id);
+	}
+
+	private void addTaskToWorkflowMapping(Task task) {
+		String indexName = toIndexName(WORKFLOW_TO_TASKS);
+		String typeName = toTypeName(WORKFLOW_TO_TASKS);
+		String id = toId(task.getWorkflowInstanceId(), task.getTaskId());
+
+		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(), "taskId", task.getTaskId());
+		insert(indexName, typeName, id, payload);
+	}
+
+	private void deleteTaskToWorkflowMapping(Task task) {
+		String indexName = toIndexName(WORKFLOW_TO_TASKS);
+		String typeName = toTypeName(WORKFLOW_TO_TASKS);
+		String id = toId(task.getWorkflowInstanceId(), task.getTaskId());
+		delete(indexName, typeName, id);
+	}
+
+	private void addTaskInProgress(Task task) {
+		String indexName = toIndexName(IN_PROGRESS_TASKS);
+		String typeName = toTypeName(IN_PROGRESS_TASKS);
+		String id = toId(task.getTaskDefName(), task.getTaskId());
+
+		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
+				"taskDefName", task.getTaskDefName(),
+				"taskId", task.getTaskId());
+		insert(indexName, typeName, id, payload);
+	}
+
+	private void deleteTaskInProgress(Task task) {
+		String indexName = toIndexName(IN_PROGRESS_TASKS);
+		String typeName = toTypeName(IN_PROGRESS_TASKS);
+		String id = toId(task.getTaskDefName(), task.getTaskId());
+		delete(indexName, typeName, id);
+	}
+
+	private void addWorkflowInternal(Workflow workflow) {
+		String indexName = toIndexName(WORKFLOW);
+		String typeName = toTypeName(WORKFLOW);
+		String id = toId(workflow.getWorkflowId());
+		insert(indexName, typeName, id, toMap(workflow));
+	}
+
+	private void updateWorkflowInternal(Workflow workflow) {
+		String indexName = toIndexName(WORKFLOW);
+		String typeName = toTypeName(WORKFLOW);
+		String id = toId(workflow.getWorkflowId());
+		update(indexName, typeName, id, toMap(workflow));
+	}
+
+	private void deleteWorkflow(Workflow workflow) {
+		String indexName = toIndexName(WORKFLOW);
+		String typeName = toTypeName(WORKFLOW);
+		String id = toId(workflow.getWorkflowId());
+		delete(indexName, typeName, id);
+	}
+
+	private void addWorkflowDefToWorkflowMapping(Workflow workflow) {
+		String indexName = toIndexName(WORKFLOW_DEF_TO_WORKFLOWS);
+		String typeName = toTypeName(WORKFLOW_DEF_TO_WORKFLOWS);
+		String id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
+
+		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
+				"workflowType", workflow.getWorkflowType(),
+				"dateStr", dateStr(workflow.getCreateTime()));
+		insert(indexName, typeName, id, payload);
+	}
+
+	private void deleteWorkflowDefToWorkflowMapping(Workflow workflow) {
+		String indexName = toIndexName(WORKFLOW_DEF_TO_WORKFLOWS);
+		String typeName = toTypeName(WORKFLOW_DEF_TO_WORKFLOWS);
+		String id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
+		delete(indexName, typeName, id);
+	}
+
+	private void addWorkflowToCorrIdMapping(Workflow workflow) {
+		String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
+		String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
+		String id = toId(workflow.getCorrelationId(), workflow.getWorkflowId());
+
+		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
+				"correlationId", workflow.getCorrelationId());
+		insert(indexName, typeName, id, payload);
+	}
+
+	private void deleteWorkflowToCorrIdMapping(Workflow workflow) {
+		String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
+		String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
+		String id = toId(workflow.getCorrelationId(), workflow.getWorkflowId());
+		delete(indexName, typeName, id);
+	}
+
+	private void addPendingWorkflow(Workflow workflow) {
+		String indexName = toIndexName(PENDING_WORKFLOWS);
+		String typeName = toTypeName(PENDING_WORKFLOWS);
+		String id = toId(workflow.getWorkflowType(), workflow.getWorkflowId());
+
+		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
+				"workflowType", workflow.getWorkflowType());
+		insert(indexName, typeName, id, payload);
+	}
+
+	private void deletePendingWorkflow(String workflowType, String workflowId) {
+		String indexName = toIndexName(PENDING_WORKFLOWS);
+		String typeName = toTypeName(PENDING_WORKFLOWS);
+		String id = toId(workflowType, workflowId);
+		delete(indexName, typeName, id);
+	}
+
+	private void deletePendingWorkflow(Workflow workflow) {
+		deletePendingWorkflow(workflow.getWorkflowType(), workflow.getWorkflowId());
 	}
 }

@@ -57,6 +57,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.get.GetField;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -347,6 +348,8 @@ public class ElasticSearch5DAO implements IndexDAO {
 				client.update(request).actionGet();
 				return;
 
+			} catch (VersionConflictEngineException ignore) {
+				return; // Data already exists
 			} catch (Exception e) {
 				Monitors.error(className, "index");
 				log.error("Indexing failed for {}, {}: {}", request.index(), request.type(), e.getMessage(), e);
