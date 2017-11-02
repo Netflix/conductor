@@ -28,8 +28,10 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,7 +180,7 @@ public class ElasticSearch5BaseDAO {
 			client.prepareDelete(indexName, typeName, id)
 					.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
 					.get();
-		} catch (VersionConflictEngineException ignore) {
+		} catch (DocumentMissingException ignore) {
 		} catch (Exception ex) {
 			logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
 		}
@@ -248,6 +250,36 @@ public class ElasticSearch5BaseDAO {
 			return null;
 		} catch (Exception ex) {
 			logger.error("findOne: failed for {}/{}/{}/{} with {}", indexName, typeName, id, clazz, ex.getMessage(), ex);
+			throw ex;
+		}
+	}
+
+	List<String> findIds(String indexName, String typeName) {
+		if (logger.isDebugEnabled())
+			logger.debug("findIds: index={}, type={}", indexName, typeName);
+
+		// This type of the search fails if no such index
+		ensureIndexExists(indexName);
+		try {
+			SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
+			Long size = response.getHits().getTotalHits();
+			if (logger.isDebugEnabled())
+				logger.debug("findAll: found={}", size);
+			if (size == 0) {
+				return Collections.emptyList();
+			}
+
+			response = client.prepareSearch(indexName).setTypes(typeName).setSize(size.intValue()).get();
+
+			List<String> result = Arrays.stream(response.getHits().getHits())
+					.map(SearchHit::getId)
+					.collect(Collectors.toList());
+
+			if (logger.isDebugEnabled())
+				logger.debug("findIds: result={}", toJson(result));
+			return result;
+		} catch (Exception ex) {
+			logger.error("findIds: failed for {}/{} with {}", indexName, typeName, ex.getMessage(), ex);
 			throw ex;
 		}
 	}
