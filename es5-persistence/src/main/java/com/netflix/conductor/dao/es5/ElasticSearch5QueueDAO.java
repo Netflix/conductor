@@ -148,7 +148,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 						foundIds.add(record.getId());
 						if (logger.isDebugEnabled())
 							logger.debug("pop ({}): success for {}/{}", session, queueName, record.getId());
-					} catch (DocumentMissingException ignore) { //TODO Investigate this !
+					} catch (DocumentMissingException ignore) { //TODO Investigate this!
 						if (logger.isDebugEnabled())
 							logger.debug("pop ({}): got document missing for {}/{}", session, queueName, record.getId());
 					} catch (VersionConflictEngineException ignore) {
@@ -355,7 +355,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 			String typeName = toTypeName(queueName);
 
 			QueryBuilder popped = QueryBuilders.termQuery("popped", true);
-			QueryBuilder unackOn = QueryBuilders.rangeQuery("unackOn").lte(System.currentTimeMillis());
+			QueryBuilder unackOn = QueryBuilders.rangeQuery("unackOn").lte(System.currentTimeMillis() - stalePeriod);
 			QueryBuilder query = QueryBuilders.boolQuery().must(popped).must(unackOn);
 
 			// Find the suitable records
@@ -363,7 +363,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 					.setTypes(typeName)
 					.setVersion(true)
 					.setQuery(query)
-					.setSize(100)
+					.setSize(100) // Batch size
 					.get();
 
 			if (logger.isDebugEnabled())
@@ -371,21 +371,12 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 
 			// Walk over all of them and update back to un-popped
 			for (SearchHit record : response.getHits().getHits()) {
-				Long recUnackOn = (Long)record.getSource().get("unackOn");
 
-				if (logger.isDebugEnabled())
-					logger.debug("processUnacks: {} has unackOn {} for {}", record.getId(),
-							ISODateTimeFormat.dateTime().withZoneUTC().print(recUnackOn), queueName);
-
-				// The record must: unackOn + stalePeriod < system time
-				boolean staleRecord = ((recUnackOn + stalePeriod) <= System.currentTimeMillis());
-				if (!staleRecord) {
-					if (logger.isDebugEnabled())
-						logger.debug("processUnacks: {} is not stale for {}", record.getId(), queueName);
-					continue;
+				if (logger.isDebugEnabled()) {
+					Long recUnackOn = (Long)record.getSource().get("unackOn");
+					logger.debug("processUnacks: stale unack {} for {}/{}",
+							ISODateTimeFormat.dateTime().withZoneUTC().print(recUnackOn), queueName, record.getId());
 				}
-				if (logger.isDebugEnabled())
-					logger.debug("processUnacks: {} is STALE for {}", record.getId(), queueName);
 
 				try {
 					Map<String, Object> map = new HashMap<>();
