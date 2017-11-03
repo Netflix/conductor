@@ -25,6 +25,7 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.MediaType;
@@ -155,7 +156,12 @@ public class ConductorServer {
 			cp.setSocketTimeout(0);
 			cp.setConnectTimeout(0);
 			cp.setMaxConnsPerHost(cc.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
-			
+		
+                        Set<Host> hosts = new HashSet<Host>(dynoHosts);
+                        logger.info("Getting Custom Map ", customTokenMapSupplier.getTokens(hosts));
+                        logger.info("Getting host1 Map ", customTokenMapSupplier.getTokenForHost(dynoHosts.get(0),hosts));	
+                        logger.info("Getting host2 Map ", customTokenMapSupplier.getTokenForHost(dynoHosts.get(1),hosts));
+                        logger.info("Getting host3 Map ", customTokenMapSupplier.getTokenForHost(dynoHosts.get(2),hosts));
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
