@@ -216,12 +216,13 @@ public class WorkflowResource {
 		executor.terminateWorkflow(workflowId, reason);
 	}
 
-	@DELETE
+	@POST
 	@Path("/{workflowId}/cancel")
 	@ApiOperation("Cancel workflow execution")
-	@Consumes(MediaType.WILDCARD)
-	public void cancel(@PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
-		executor.cancelWorkflow(workflowId, reason);
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+	public void cancel(@PathParam("workflowId") String workflowId,Map<String, Object> input) throws Exception {
+		executor.cancelWorkflow(workflowId);
 	}
 	
 	@ApiOperation(value="Search for workflows based in payload and other parameters", notes="use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC.  If order is not specified, defaults to ASC")

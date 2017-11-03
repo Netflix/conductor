@@ -335,26 +335,21 @@ public class WorkflowExecutor {
 	}
 
 
-	public void cancelWorkflow(String workflowId, String reason) throws Exception {
+	public void cancelWorkflow(String workflowId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
-		workflow.setStatus(WorkflowStatus.CANCEL);
-		cancelWorkflow(workflow, reason, null);
+		workflow.setStatus(WorkflowStatus.CANCELLED);
+		cancelWorkflow(workflow);
 	}
 
-	public void cancelWorkflow(Workflow workflow, String reason, String cancelWorkflow) throws Exception {
-		cancelWorkflow(workflow, reason, cancelWorkflow, null);
-	}
-
-	public void cancelWorkflow(Workflow workflow, String reason, String cancelWorkflow, Task failedTask) throws Exception {
+	public void cancelWorkflow(Workflow workflow) throws Exception {
 
 		if (!workflow.getStatus().isTerminal()) {
-			workflow.setStatus(WorkflowStatus.CANCEL);
+			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
 
 		String workflowId = workflow.getWorkflowId();
-		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
-		logger.error("Workflow is cancelled.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
+		logger.error("Workflow is cancelled.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
 		List<Task> tasks = workflow.getTasks();
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {
@@ -378,6 +373,8 @@ public class WorkflowExecutor {
 			decide(parent.getWorkflowId());
 		}
 
+		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+		String cancelWorkflow = def.getCancelWorkflow();
 		if (!StringUtils.isBlank(cancelWorkflow)) {
 			// Backward compatible by default
 			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
@@ -390,29 +387,16 @@ public class WorkflowExecutor {
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());
 			input.put("workflowVersion", workflow.getVersion());
-			input.put("reason", reason);
-			input.put("failureStatus", workflow.getStatus().toString());
-			if (failedTask != null) {
-				Map<String, Object> map = new HashMap<>();
-				map.put("taskId", failedTask.getTaskId());
-				map.put("input", failedTask.getInputData());
-				map.put("output", failedTask.getOutputData());
-				map.put("retryCount", failedTask.getRetryCount());
-				map.put("referenceName", failedTask.getReferenceTaskName());
-				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
-				input.put("failedTask", map);
-				logger.error("Cancel in task execution.workflowid="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion());
-			}
 
 			try {
 
-				WorkflowDef latestFailureWorkflow = metadata.getLatest(cancelWorkflow);
-				String failureWFId = startWorkflow(cancelWorkflow, latestFailureWorkflow.getVersion(), input, workflowId, null, null, null);
-				workflow.getOutput().put("conductor.failure_workflow", failureWFId);
+				WorkflowDef latestCancelWorkflow = metadata.getLatest(cancelWorkflow);
+				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input, workflowId, null, null, null);
+				workflow.getOutput().put("conductor.cancel_workflow", cancelWFId);
 
 			} catch (Exception e) {
 				logger.error("Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
-				workflow.getOutput().put("conductor.failure_workflow", "Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
+				workflow.getOutput().put("conductor.cancel_workflow", "Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
 				Monitors.recordWorkflowStartError(cancelWorkflow);
 			}
 		}
@@ -465,6 +449,7 @@ public class WorkflowExecutor {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
 			decide(parent.getWorkflowId());
 		}
+
 
 		if (!StringUtils.isBlank(failureWorkflow)) {
 			// Backward compatible by default
