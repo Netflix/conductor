@@ -47,8 +47,10 @@ import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.Host.Status;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
+import com.netflix.dyno.connectionpool.ConnectionPoolConfiguration;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
+import com.netflix.dyno.connectionpool.impl.lb.AbstractTokenMapSupplier;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.sun.jersey.api.client.Client;
 
@@ -75,6 +77,24 @@ public class ConductorServer {
 	private ConductorConfig cc;
 	
 	private DB db;
+        final String json = "[{\"token\":\"4294967295\",\"hostname\":\"gemini0\",\"zone\":\"us-east-1a\"}\"," +
+                              "\"{\"token\":\"4294967295\",\"hostname\":\"gemini1\",\"zone\":\"us-east-1b\"},\"" +
+                              "\"{\"token\":\"4294967295\",\"hostname\":\"gemini2\",\"zone\":\"us-east-1c\"}]\"";
+
+        private TokenMapSupplier customTokenMapSupplier = new AbstractTokenMapSupplier() {
+
+        @Override
+        public String getTopologyJsonPayload(Set<Host> hosts) {
+              logger.info("First method called");
+              return json;
+        }
+
+        @Override
+        public String getTopologyJsonPayload(String hostname) {
+             logger.info("Second method called");
+             return json;
+       }
+      };
 	
 	public ConductorServer(ConductorConfig cc) {
 		this.cc = cc;
@@ -129,22 +149,9 @@ public class ConductorServer {
 		switch(db) {
 		case redis:		
 		case dynomite:
-			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(new TokenMapSupplier() {
-				
-				HostToken token = new HostToken(1L, dynoHosts.get(0));
-				
-				@Override
-				public List<HostToken> getTokens(Set<Host> activeHosts) {
-					return Arrays.asList(token);
-				}
-				
-				@Override
-				public HostToken getTokenForHost(Host host, Set<Host> activeHosts) {
-					return token;
-				}
-				
-				
-			}).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
+			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(customTokenMapSupplier).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
+                        cp.setLoadBalancingStrategy(ConnectionPoolConfiguration.LoadBalancingStrategy.RoundRobin);			
+                        logger.info("Setting up Connection Pool with Token map " + customTokenMapSupplier);			
 			cp.setSocketTimeout(0);
 			cp.setConnectTimeout(0);
 			cp.setMaxConnsPerHost(cc.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
