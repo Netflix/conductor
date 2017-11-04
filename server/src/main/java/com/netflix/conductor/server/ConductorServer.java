@@ -26,6 +26,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.MediaType;
@@ -78,24 +82,36 @@ public class ConductorServer {
 	private ConductorConfig cc;
 	
 	private DB db;
-        final String json = "[{\"token\":\"4294967295\",\"hostname\":\"gemini0\",\"zone\":\"us-east-1a\"}\"," +
-                              "\"{\"token\":\"4294967295\",\"hostname\":\"gemini1\",\"zone\":\"us-east-1b\"},\"" +
-                              "\"{\"token\":\"4294967295\",\"hostname\":\"gemini2\",\"zone\":\"us-east-1c\"}]\"";
 
-        private TokenMapSupplier customTokenMapSupplier = new AbstractTokenMapSupplier() {
+        private TokenMapSupplier getTokenMapSupplier() {
+            Host host1 = new Host("gemini0.default.svc.cluster.local", 8102, "us-east-1a", Status.Up);
+	    Host host2 = new Host("gemini1.default.svc.cluster.local", 8102, "us-east-1b", Status.Up);
+	    Host host3 = new Host("gemini2.default.svc.cluster.local", 8102, "us-east-1c", Status.Up);
+            Map<Host, HostToken> tokenMap = new HashMap<Host, HostToken>();
 
-        @Override
-        public String getTopologyJsonPayload(Set<Host> hosts) {
-              logger.info("First method called");
-              return json;
+            tokenMap.put(host1, new HostToken(4294967295L, host1));
+            tokenMap.put(host2, new HostToken(4294967295L, host2));
+            tokenMap.put(host3, new HostToken(4294967295L, host3));
+
+            return new TokenMapSupplier() {
+              @Override
+               public List<HostToken> getTokens(Set<Host> activeHosts) {
+                  return new ArrayList<HostToken>(tokenMap.values());
+               }
+               @Override
+               public HostToken getTokenForHost(Host host, Set<Host> activeHosts) {
+                      Set<Map.Entry<Host, HostToken>> set = tokenMap.entrySet();
+                      Iterator iterator = set.iterator();
+                      while(iterator.hasNext()) {
+                         Map.Entry mentry = (Map.Entry)iterator.next();
+                         if (((Host)mentry.getKey()).getHostName().equals(host.getHostName())) {
+                               return (HostToken) mentry.getValue();
+                         } 
+                      } 
+                      return null;                
+                }
+             };
         }
-
-        @Override
-        public String getTopologyJsonPayload(String hostname) {
-             logger.info("Second method called");
-             return json;
-       }
-      };
 	
 	public ConductorServer(ConductorConfig cc) {
 		this.cc = cc;
@@ -150,18 +166,16 @@ public class ConductorServer {
 		switch(db) {
 		case redis:		
 		case dynomite:
-			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(customTokenMapSupplier).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
+			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(getTokenMapSupplier()).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
                         cp.setLoadBalancingStrategy(ConnectionPoolConfiguration.LoadBalancingStrategy.RoundRobin);			
-                        logger.info("Setting up Connection Pool with Token map " + customTokenMapSupplier);			
 			cp.setSocketTimeout(0);
 			cp.setConnectTimeout(0);
 			cp.setMaxConnsPerHost(cc.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
 		
                         Set<Host> hosts = new HashSet<Host>(dynoHosts);
-                        logger.info("Getting Custom Map ", customTokenMapSupplier.getTokens(hosts));
-                        logger.info("Getting host1 Map ", customTokenMapSupplier.getTokenForHost(dynoHosts.get(0),hosts));	
-                        logger.info("Getting host2 Map ", customTokenMapSupplier.getTokenForHost(dynoHosts.get(1),hosts));
-                        logger.info("Getting host3 Map ", customTokenMapSupplier.getTokenForHost(dynoHosts.get(2),hosts));
+                        logger.info("Getting host1 Map " + getTokenMapSupplier().getTokenForHost(dynoHosts.get(0),hosts).getToken());
+                        logger.info("Getting host2 Map " + getTokenMapSupplier().getTokenForHost(dynoHosts.get(1),hosts).getToken());
+                        logger.info("Getting host3 Map " + getTokenMapSupplier().getTokenForHost(dynoHosts.get(2),hosts).getToken());
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
