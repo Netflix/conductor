@@ -55,7 +55,6 @@ import com.netflix.dyno.connectionpool.TokenMapSupplier;
 import com.netflix.dyno.connectionpool.ConnectionPoolConfiguration;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
-import com.netflix.dyno.connectionpool.impl.lb.AbstractTokenMapSupplier;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.sun.jersey.api.client.Client;
 
@@ -83,15 +82,13 @@ public class ConductorServer {
 	
 	private DB db;
 
-        private TokenMapSupplier getTokenMapSupplier() {
-            Host host1 = new Host("gemini0.default.svc.cluster.local", 8102, "us-east-1a", Status.Up);
-	    Host host2 = new Host("gemini1.default.svc.cluster.local", 8102, "us-east-1b", Status.Up);
-	    Host host3 = new Host("gemini2.default.svc.cluster.local", 8102, "us-east-1c", Status.Up);
+        private TokenMapSupplier getTokenMapSupplier(List<Host> dynoHosts) {
             Map<Host, HostToken> tokenMap = new HashMap<Host, HostToken>();
 
-            tokenMap.put(host1, new HostToken(4294967295L, host1));
-            tokenMap.put(host2, new HostToken(4294967295L, host2));
-            tokenMap.put(host3, new HostToken(4294967295L, host3));
+	    for (int i = 0; i < dynoHosts.size(); i++) {
+                 Host host = dynoHosts.get(i);
+                 tokenMap.put(host, new HostToken(4294967295L, host));
+	    }
 
             return new TokenMapSupplier() {
               @Override
@@ -166,16 +163,10 @@ public class ConductorServer {
 		switch(db) {
 		case redis:		
 		case dynomite:
-			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(getTokenMapSupplier()).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
- //                       cp.setLoadBalancingStrategy(ConnectionPoolConfiguration.LoadBalancingStrategy.RoundRobin);			
-//			cp.setSocketTimeout(0);
-//			cp.setConnectTimeout(0);
+			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(getTokenMapSupplier(dynoHosts)).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
 			cp.setMaxConnsPerHost(cc.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
 		
                         Set<Host> hosts = new HashSet<Host>(dynoHosts);
-                        logger.info("Getting host1 Map " + getTokenMapSupplier().getTokenForHost(dynoHosts.get(0),hosts).getToken());
-                        logger.info("Getting host2 Map " + getTokenMapSupplier().getTokenForHost(dynoHosts.get(1),hosts).getToken());
-                        logger.info("Getting host3 Map " + getTokenMapSupplier().getTokenForHost(dynoHosts.get(2),hosts).getToken());
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
