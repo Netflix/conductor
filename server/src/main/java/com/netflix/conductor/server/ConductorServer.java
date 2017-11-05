@@ -82,6 +82,9 @@ public class ConductorServer {
 	
 	private DB db;
 
+        // Create a TokenMapSupplier using the Dyno hosts provided in config file
+        // Currently the entire token space is allocated to every host, meaning each host is an
+        // exact replica of the data set. 
         private TokenMapSupplier getTokenMapSupplier(List<Host> dynoHosts) {
             Map<Host, HostToken> tokenMap = new HashMap<Host, HostToken>();
 
@@ -165,8 +168,6 @@ public class ConductorServer {
 		case dynomite:
 			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(getTokenMapSupplier(dynoHosts)).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
 			cp.setMaxConnsPerHost(cc.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
-		
-                        Set<Host> hosts = new HashSet<Host>(dynoHosts);
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
