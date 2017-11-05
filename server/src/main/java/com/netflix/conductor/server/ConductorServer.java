@@ -167,9 +167,9 @@ public class ConductorServer {
 		case redis:		
 		case dynomite:
 			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(getTokenMapSupplier()).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
-                        cp.setLoadBalancingStrategy(ConnectionPoolConfiguration.LoadBalancingStrategy.RoundRobin);			
-			cp.setSocketTimeout(0);
-			cp.setConnectTimeout(0);
+ //                       cp.setLoadBalancingStrategy(ConnectionPoolConfiguration.LoadBalancingStrategy.RoundRobin);			
+//			cp.setSocketTimeout(0);
+//			cp.setConnectTimeout(0);
 			cp.setMaxConnsPerHost(cc.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
 		
                         Set<Host> hosts = new HashSet<Host>(dynoHosts);
