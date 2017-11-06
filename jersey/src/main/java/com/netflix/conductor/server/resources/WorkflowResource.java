@@ -219,11 +219,11 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/cancel")
 	@ApiOperation("Cancel workflow execution")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-	public void cancel(@PathParam("workflowId") String workflowId,Map<String, Object> input) throws Exception {
-		executor.cancelWorkflow(workflowId);
+	@Produces({ MediaType.TEXT_PLAIN })
+	public String cancel(@PathParam("workflowId") String workflowId,Map<String, Object> input) throws Exception {
+		return executor.cancelWorkflow(workflowId,input);
 	}
+
 	
 	@ApiOperation(value="Search for workflows based in payload and other parameters", notes="use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC.  If order is not specified, defaults to ASC")
 	@GET

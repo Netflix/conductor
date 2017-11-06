@@ -335,13 +335,13 @@ public class WorkflowExecutor {
 	}
 
 
-	public void cancelWorkflow(String workflowId) throws Exception {
+	public String cancelWorkflow(String workflowId,Map<String, Object> inputbody) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		workflow.setStatus(WorkflowStatus.CANCELLED);
-		cancelWorkflow(workflow);
+		return cancelWorkflow(workflow,inputbody);
 	}
 
-	public void cancelWorkflow(Workflow workflow) throws Exception {
+	public String cancelWorkflow(Workflow workflow,Map<String, Object> inputbody) throws Exception {
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
@@ -364,6 +364,7 @@ public class WorkflowExecutor {
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+
 		}
 
 		// If the following lines, for some reason fails, the sweep will take
@@ -405,6 +406,7 @@ public class WorkflowExecutor {
 
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
+		return workflowId;
 	}
 
 	public void terminateWorkflow(String workflowId, String reason) throws Exception {
