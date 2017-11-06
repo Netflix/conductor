@@ -19,10 +19,6 @@
 package com.netflix.conductor.contribs.http;
 
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -31,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -43,7 +40,6 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.sun.jersey.oauth.client.OAuthClientFilter;
 import com.sun.jersey.oauth.signature.OAuthParameters;
 import com.sun.jersey.oauth.signature.OAuthSecrets;
-import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,8 +112,8 @@ public class HttpTask extends WorkflowSystemTask {
                 DNSLookup lookup = new DNSLookup();
                 DNSLookup.DNSResponses responses = lookup.lookupService(input.getServiceDiscoveryQuery());
                 if (responses != null) {
-                    String address = responses.getResponses()[0].address;
-                    int port = responses.getResponses()[0].port;
+                    String address = responses.getResponses()[0].getAddress();
+                    int port = responses.getResponses()[0].getPort();
                     url = "http://" + address + ":" + port;
                 }
             }

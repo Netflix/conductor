@@ -91,7 +91,7 @@ public class ConductorServer {
 			System.exit(1);
 		}
 
-		if (!db.equals(DB.memory)) {
+		if((db.equals(DB.dynomite) || db.equals(DB.redis))) {
 			String hosts = cc.getProperty("workflow.dynomite.cluster.hosts", null);
 			if (hosts == null) {
 				System.err.println("Missing dynomite/redis hosts.  Ensure 'workflow.dynomite.cluster.hosts' has been set in the supplied configuration.");
@@ -109,7 +109,7 @@ public class ConductorServer {
 				dynoHosts.add(dynoHost);
 			}
 
-		} else {
+		} else if (db.equals(DB.memory)) {
 			//Create a single shard host supplier
 			Host dynoHost = new Host("localhost", 0, cc.getAvailabilityZone(), Status.Up);
 			dynoHosts.add(dynoHost);
