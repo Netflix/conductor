@@ -141,7 +141,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	private void updateIndexName(Configuration config) {
-		this.logIndexPrefix = config.getProperty("workflow.elasticsearch.tasklog.index.name", "task_log");
+		this.logIndexPrefix = config.getProperty("workflow.elasticsearch.tasklog.index.name", "conductor_task_log");
 		this.logIndexName = this.logIndexPrefix + "_" + sdf.format(new Date());
 
 		try {
