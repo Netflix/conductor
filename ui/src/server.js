@@ -1,7 +1,6 @@
 import 'babel-polyfill';
 import express from 'express';
 import React from 'react';
-import ReactDOM from 'react-dom/server';
 import Bunyan from 'bunyan';
 
 let log = Bunyan.createLogger({src : true, name: 'Conductor UI'});
