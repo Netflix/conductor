@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
@@ -119,11 +120,12 @@ public class Elasticsearch5Module extends AbstractModule {
 
 		// Start the dns service monitor only when dns service specified
 		if (StringUtils.isNotEmpty(dnsService)) {
-			int monitorDelay = config.getIntProperty("workflow.elasticsearch.monitor.delay", 60);
+			int clusterSize = config.getIntProperty("workflow.elasticsearch.cluster.size", 3);
+			int monitorDelay = config.getIntProperty("workflow.elasticsearch.monitor.delay", 30);
 			int monitorPeriod = config.getIntProperty("workflow.elasticsearch.monitor.period.seconds", 3);
 			try {
 				Executors.newScheduledThreadPool(1)
-						.scheduleAtFixedRate(() -> monitor(tc, dnsService), monitorDelay, monitorPeriod, TimeUnit.SECONDS);
+						.scheduleAtFixedRate(() -> monitor(tc, dnsService, clusterSize), monitorDelay, monitorPeriod, TimeUnit.SECONDS);
 			} catch (Exception e) {
 				log.error("Unable to start elasticsearch service monitor: {}", e.getMessage(), e);
 			}
@@ -155,19 +157,11 @@ public class Elasticsearch5Module extends AbstractModule {
 		return addressList;
 	}
 
-	private void monitor(TransportClient transport, String dnsService) {
+	private void monitor(TransportClient transport, String dnsService, Integer clusterSize) {
 		try {
 			List<TransportAddress> current = transport.transportAddresses();
 			List<TransportAddress> resolved = lookupNodes(dnsService);
 			log.debug("Current nodes=" + current + ", resolved nodes=" + resolved);
-
-			// Remove from the current configuration if not found in resolved
-			current.forEach(node -> {
-				if (!resolved.contains(node)) {
-					log.info("Excluding node {} from the elasticsearch cluster", node);
-					transport.removeTransportAddress(node);
-				}
-			});
 
 			// Add new to the configuration
 			resolved.forEach(node -> {
@@ -176,6 +170,24 @@ public class Elasticsearch5Module extends AbstractModule {
 					transport.addTransportAddress(node);
 				}
 			});
+
+			ClusterHealthResponse response = transport.admin().cluster().prepareHealth().execute().get();
+			log.debug("Cluster status " + response.getStatus());
+
+			// Remove old nodes only when cluster reached the green status and
+			// the number of current instances is equal to the desired cluster size.
+			// Using clusterSize prevents excluding alive nodes due to dns lookup issue (missing nodes in response)
+			boolean isHealthOkay = ClusterHealthStatus.GREEN.equals(response.getStatus());
+			boolean isClusterSizeOkay = resolved.size() == clusterSize;
+			if (isHealthOkay && isClusterSizeOkay) {
+				current.forEach(node -> {
+					if (!resolved.contains(node)) {
+						log.info("Excluding node {} from the elasticsearch cluster", node);
+						transport.removeTransportAddress(node);
+					}
+				});
+			}
+
 		} catch (Exception ex) {
 			log.error("Monitor failed with " + ex.getMessage(), ex);
 		}
