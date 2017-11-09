@@ -19,7 +19,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ObjectArrays;
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.config.Configuration;
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang.StringUtils;
@@ -39,9 +38,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -187,7 +183,6 @@ public class ElasticSearch5BaseDAO {
 		} catch (DocumentMissingException ignore) {
 		} catch (Exception ex) {
 			logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
-			throw ex;
 		}
 	}
 
@@ -202,7 +197,6 @@ public class ElasticSearch5BaseDAO {
 		} catch (VersionConflictEngineException ignore) {
 		} catch (Exception ex) {
 			logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-			throw ex;
 		}
 	}
 
@@ -216,7 +210,6 @@ public class ElasticSearch5BaseDAO {
 		} catch (VersionConflictEngineException ignore) {
 		} catch (Exception ex) {
 			logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-			throw ex;
 		}
 	}
 
@@ -233,43 +226,8 @@ public class ElasticSearch5BaseDAO {
 			return false;
 		} catch (Exception ex) {
 			logger.error("insert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-			throw ex;
+			return false;
 		}
-	}
-
-	void doWithRetry(Consumer<Object> consumer) {
-		int retry = 3;
-		Exception cause = null;
-		while (retry > 0) {
-			try {
-				consumer.accept(null);
-				return;
-			} catch (Exception e) {
-				cause = e;
-				retry--;
-				if (retry > 0) {
-					Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
-				}
-			}
-		}
-		throw new RuntimeException("Unable to execute within 3 retries", cause);
-	}
-
-	boolean funcWithRetry(Function<?, Boolean> function) {
-		int retry = 3;
-		Exception cause = null;
-		while (retry > 0) {
-			try {
-				return function.apply(null);
-			} catch (Exception e) {
-				cause = e;
-				retry--;
-				if (retry > 0) {
-					Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
-				}
-			}
-		}
-		throw new RuntimeException("Unable to execute within 3 retries", cause);
 	}
 
 	GetResponse findOne(String indexName, String typeName, String id) {

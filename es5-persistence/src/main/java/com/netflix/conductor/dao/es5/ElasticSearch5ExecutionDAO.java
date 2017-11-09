@@ -536,7 +536,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		try {
 			String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
-			if (funcWithRetry(o -> insert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee)))) {
+			if (insert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee))) {
 				indexer.add(ee);
 
 				if (logger.isDebugEnabled())
@@ -561,7 +561,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		try {
 			String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
-			doWithRetry(o -> upsert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee)));
+			upsert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee));
 
 			indexer.add(ee);
 			if (logger.isDebugEnabled())
@@ -618,7 +618,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String field = (domain == null) ? "DEFAULT" : domain;
 		String id = toId(queueName, field);
 
-		doWithRetry(o -> upsert(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, toMap(pollData)));
+		upsert(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, toMap(pollData));
 
 		if (logger.isDebugEnabled())
 			logger.debug("updateLastPoll: done");
@@ -713,14 +713,14 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String id = toId(task.getTaskId());
 		Map<String, ?> payload = toMap(task);
 
-		doWithRetry(o -> upsert(indexName, typeName, id, payload));
+		upsert(indexName, typeName, id, payload);
 	}
 
 	private void deleteTask(Task task) {
 		String indexName = toIndexName(TASK);
 		String typeName = toTypeName(TASK);
 		String id = toId(task.getTaskId());
-		doWithRetry(o -> delete(indexName, typeName, id));
+		delete(indexName, typeName, id);
 	}
 
 	private boolean addScheduledTask(Task task) {
@@ -735,7 +735,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 					"taskRefName", task.getReferenceTaskName(),
 					"taskId", task.getTaskId());
 
-			return funcWithRetry(o -> insert(indexName, typeName, id, payload));
+			return insert(indexName, typeName, id, payload);
 		}
 		return false;
 	}
@@ -745,7 +745,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String typeName = toTypeName(SCHEDULED_TASKS);
 		String taskKey = task.getReferenceTaskName() + String.valueOf(task.getRetryCount());
 		String id = toId(task.getWorkflowInstanceId(), taskKey);
-		doWithRetry(o -> delete(indexName, typeName, id));
+		delete(indexName, typeName, id);
 	}
 
 	private void addTaskToWorkflowMapping(Task task) {
@@ -755,14 +755,14 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
 				"taskId", task.getTaskId());
-		doWithRetry(o -> insert(indexName, typeName, id, payload));
+		insert(indexName, typeName, id, payload);
 	}
 
 	private void deleteTaskToWorkflowMapping(Task task) {
 		String indexName = toIndexName(WORKFLOW_TO_TASKS);
 		String typeName = toTypeName(WORKFLOW_TO_TASKS);
 		String id = toId(task.getWorkflowInstanceId(), task.getTaskId());
-		doWithRetry(o -> delete(indexName, typeName, id));
+		delete(indexName, typeName, id);
 	}
 
 	private void addTaskInProgress(Task task) {
@@ -773,35 +773,35 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
 				"taskDefName", task.getTaskDefName(),
 				"taskId", task.getTaskId());
-		doWithRetry(o -> insert(indexName, typeName, id, payload));
+		insert(indexName, typeName, id, payload);
 	}
 
 	private void deleteTaskInProgress(Task task) {
 		String indexName = toIndexName(IN_PROGRESS_TASKS);
 		String typeName = toTypeName(IN_PROGRESS_TASKS);
 		String id = toId(task.getTaskDefName(), task.getTaskId());
-		doWithRetry(o -> delete(indexName, typeName, id));
+		delete(indexName, typeName, id);
 	}
 
 	private void addWorkflowInternal(Workflow workflow) {
 		String indexName = toIndexName(WORKFLOW);
 		String typeName = toTypeName(WORKFLOW);
 		String id = toId(workflow.getWorkflowId());
-		doWithRetry(o -> insert(indexName, typeName, id, toMap(workflow)));
+		insert(indexName, typeName, id, toMap(workflow));
 	}
 
 	private void updateWorkflowInternal(Workflow workflow) {
 		String indexName = toIndexName(WORKFLOW);
 		String typeName = toTypeName(WORKFLOW);
 		String id = toId(workflow.getWorkflowId());
-		doWithRetry(o -> update(indexName, typeName, id, toMap(workflow)));
+		update(indexName, typeName, id, toMap(workflow));
 	}
 
 	private void deleteWorkflow(Workflow workflow) {
 		String indexName = toIndexName(WORKFLOW);
 		String typeName = toTypeName(WORKFLOW);
 		String id = toId(workflow.getWorkflowId());
-		doWithRetry(o -> delete(indexName, typeName, id));
+		delete(indexName, typeName, id);
 	}
 
 	private void addWorkflowDefToWorkflowMapping(Workflow workflow) {
@@ -812,14 +812,14 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
 				"workflowType", workflow.getWorkflowType(),
 				"dateStr", dateStr(workflow.getCreateTime()));
-		doWithRetry(o -> insert(indexName, typeName, id, payload));
+		insert(indexName, typeName, id, payload);
 	}
 
 	private void deleteWorkflowDefToWorkflowMapping(Workflow workflow) {
 		String indexName = toIndexName(WORKFLOW_DEF_TO_WORKFLOWS);
 		String typeName = toTypeName(WORKFLOW_DEF_TO_WORKFLOWS);
 		String id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
-		doWithRetry(o -> delete(indexName, typeName, id));
+		delete(indexName, typeName, id);
 	}
 
 	private void addWorkflowToCorrIdMapping(Workflow workflow) {
@@ -829,14 +829,14 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
 				"correlationId", workflow.getCorrelationId());
-		doWithRetry(o -> insert(indexName, typeName, id, payload));
+		insert(indexName, typeName, id, payload);
 	}
 
 	private void deleteWorkflowToCorrIdMapping(Workflow workflow) {
 		String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
 		String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
 		String id = toId(workflow.getCorrelationId(), workflow.getWorkflowId());
-		doWithRetry(o -> delete(indexName, typeName, id));
+		delete(indexName, typeName, id);
 	}
 
 	private void addPendingWorkflow(Workflow workflow) {
@@ -846,14 +846,14 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
 				"workflowType", workflow.getWorkflowType());
-		doWithRetry(o -> insert(indexName, typeName, id, payload));
+		insert(indexName, typeName, id, payload);
 	}
 
 	private void deletePendingWorkflow(String workflowType, String workflowId) {
 		String indexName = toIndexName(PENDING_WORKFLOWS);
 		String typeName = toTypeName(PENDING_WORKFLOWS);
 		String id = toId(workflowType, workflowId);
-		doWithRetry(o -> delete(indexName, typeName, id));
+		delete(indexName, typeName, id);
 	}
 
 	private void deletePendingWorkflow(Workflow workflow) {
