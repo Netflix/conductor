@@ -1,478 +1,265 @@
 package com.netflix.conductor.contribs.http;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.EventQueues;
+import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.oauth.client.OAuthClientFilter;
-import com.sun.jersey.oauth.signature.OAuthParameters;
-import com.sun.jersey.oauth.signature.OAuthSecrets;
+import javax.inject.Inject;
+import java.util.*;
 
 /**
  * Created by pavanj on 6/22/17.
  */
-public class HttpWaitTask extends WorkflowSystemTask {
-
-   	public static final String REQUEST_PARAMETER_NAME = "http_request";
-	
-	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
-
+public class HttpWaitTask extends GenericHttpTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpWaitTask.class);
-	
-	public static final String NAME = "HTTPWAIT";
-	
-	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>(){};
-	
-	private TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>(){};
-	
-	protected ObjectMapper om = objectMapper();
+	private static final String HTTP_REQUEST_PARAM = "http_request";
+	private static final String EVENT_MESSAGES_PARAM = "event_messages";
+	private static final String URN_WORKFLOW_ID = "urn:deluxe:conductor:workflow";
+	private static final String URN_TASK_ID = "urn:deluxe:conductor:task";
+	private static final String PROPERTY_QUEUE = "conductor.http.wait.event.queue.name";
+	private static final TypeReference HASH_MAP_TYPE_REF = new TypeReference<HashMap<String, Object>>() { };
+	private WorkflowExecutor executor;
+	private ObservableQueue queue;
 
-	protected RestClientManagerHttpWait rcm;
-	
-	protected Configuration config;
-	
-	private String requestParameter;
-	
 	@Inject
-	public HttpWaitTask(RestClientManagerHttpWait rcm, Configuration config) {
-		this(NAME, rcm, config);
+	public HttpWaitTask(Configuration config, RestClientManager rcm, ObjectMapper om, WorkflowExecutor executor) {
+		super("HTTP_WAIT", config, rcm, om);
+		this.executor = executor;
+
+		String name = config.getProperty(PROPERTY_QUEUE, null);
+		logger.info("Event queue name is " + name);
+		if (name == null) {
+			throw new RuntimeException("No event status queue defined");
+		}
+
+		queue = EventQueues.getQueue(name, false);
+		if (queue == null) {
+			throw new RuntimeException("Unable to find queue by name " + name);
+		}
+
+		queue.observe().subscribe((Message msg) -> onMessage(queue, msg));
+		logger.info("Http Event Wait Task initialized ...");
 	}
-	
-	public HttpWaitTask(String name, RestClientManagerHttpWait rcm, Configuration config) {
-		super(name);
-		this.rcm = rcm;
-		this.config = config;
-		this.requestParameter = REQUEST_PARAMETER_NAME;
-		logger.info("HttpTask initialized...");
-	}
-	
+
 	@Override
+	@SuppressWarnings("unchecked")
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		System.out.println("taskid----------------------------------------------------------------"+task.getTaskId());
-		Object request = task.getInputData().get(requestParameter);
-		task.setWorkerId(config.getServerId());
-		if(request == null) {
-			String reason = MISSING_REQUEST;
-			task.setReasonForIncompletion(reason);
-			task.setStatus(Status.FAILED);
+		logger.info("http wait task starting workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
+
+		// Handle preTask action
+		processPreTask(task);
+
+		// send nomad command
+		Map<String, ?> request = (Map<String, ?>) task.getInputData().get(HTTP_REQUEST_PARAM);
+		if (request == null) {
+			task.setReasonForIncompletion("Missing HTTP request. Task input MUST have a '" + HTTP_REQUEST_PARAM + "' key with HttpWaitTask as value");
+			task.setStatus(Task.Status.FAILED);
 			return;
 		}
-		
+
+		String url = null;
 		Input input = om.convertValue(request, Input.class);
-		if(input.getUri() == null) {
-			String reason = "Missing HTTP URI.  See documentation for HttpTask for required input parameters";
-			task.setReasonForIncompletion(reason);
-			task.setStatus(Status.FAILED);
+		if (input.getServiceDiscoveryQuery() != null) {
+			url = lookup(input.getServiceDiscoveryQuery());
+		}
+
+		if (input.getUri() == null) {
+			task.setReasonForIncompletion("Missing HTTP URI. See documentation for HttpTask for required input parameters");
+			task.setStatus(Task.Status.FAILED);
+			return;
+		} else {
+			if (url != null) {
+				input.setUri(url + input.getUri());
+			}
+		}
+
+		if (input.getMethod() == null) {
+			task.setReasonForIncompletion("No HTTP method specified");
+			task.setStatus(Task.Status.FAILED);
 			return;
 		}
-		
-		if(input.getMethod() == null) {
-			String reason = "No HTTP method specified";
-			task.setReasonForIncompletion(reason);
-			task.setStatus(Status.FAILED);
-			return;
-		}
-		
-		if(input.getTaskId()!=null)
-		{
-		if(input.getTaskId().equalsIgnoreCase("true"))
-		{
-		  
-		  if(input.getBody()!=null)
-		  {
-		  
-	      int index = input.getBody().toString().indexOf("}");
-		   if(input.getBody().toString()=="{}")
-		   {
-			 input.setBody("{taskid="+task.getTaskId()+"}");
-		   }
-		   else
-		   {
-           input.setBody(input.getBody().toString().substring(0, index) + ", taskid="+task.getTaskId() + input.getBody().toString().substring(index));
-		   }
-	      }
-		  else
-		  {
-			
-			input.setBody("{taskid="+task.getTaskId()+"}");
-		  }
-	    }
-	  }
-	  
-	   if(input.getCurtimestamp()!=null)
-		{
-		if(input.getCurtimestamp().equalsIgnoreCase("true"))
-		{
-		 
-		 
-		  if(input.getBody()!=null)
-		  {
-		
-	      int index = input.getBody().toString().indexOf("}");
-		   if(input.getBody().toString()=="{}")
-		   {
-			 input.setBody("{Curtimestamp="+System.currentTimeMillis()+"}");
-		   }
-		   else
-		   {
-           input.setBody(input.getBody().toString().substring(0, index) + ", Curtimestamp="+System.currentTimeMillis() + input.getBody().toString().substring(index));
-		   }
-	      }
-		  else
-		  {
-			
-			input.setBody("{Curtimestamp="+System.currentTimeMillis()+"}");
-		  }
-	    }
-	  }
-		System.out.println(input.getBody());
+
 		try {
-			
-			HttpResponse response = httpCall(input);
-			logger.info("response {}, {}", response.statusCode, response.body);
-			if(response.statusCode > 199 && response.statusCode < 300) {
-				
-				task.setStatus(Status.IN_PROGRESS);
+			HttpResponse response = new HttpResponse();
+			logger.info("http wait task started.workflowId=" + workflow.getWorkflowId()
+					+ ",CorrelationId=" + workflow.getCorrelationId()
+					+ ",taskId=" + task.getTaskId()
+					+ ",taskreference name=" + task.getReferenceTaskName() + ",request input=" + request);
+
+			if (input.getContentType() != null) {
+				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
+					Object bodyObjs = request.get("body");
+					String bodyJson = om.writeValueAsString(bodyObjs);
+					response = httpCallUrlEncoded(input, bodyJson);
+				} else {
+					response = httpCall(input);
+				}
 			} else {
-				if(response.body != null) {
+				response = httpCall(input);
+			}
+
+			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",response code=" + response.statusCode + ",response=" + response.body);
+			if (response.statusCode > 199 && response.statusCode < 300) {
+				task.setStatus(Task.Status.IN_PROGRESS);
+			} else {
+				if (response.body != null) {
 					task.setReasonForIncompletion(response.body.toString());
 				} else {
 					task.setReasonForIncompletion("No response from the remote service");
 				}
-				task.setStatus(Status.FAILED);
+				task.setStatus(Task.Status.FAILED);
 			}
-			if(response != null) {
-				task.getOutputData().put("response", response.asMap());
-			}
-			
-		}catch(Exception e) {
-			
-			logger.error(e.getMessage(), e);
-			task.setStatus(Status.FAILED);
-			task.setReasonForIncompletion(e.getMessage());
-			task.getOutputData().put("response", e.getMessage());
+			task.getOutputData().put("response", response.asMap());
+		} catch (Exception ex) {
+			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId()
+					+ ",correlationId=" + workflow.getCorrelationId()
+					+ ",taskId=" + task.getTaskId()
+					+ ",taskreference name=" + task.getReferenceTaskName() + " with " + ex.getMessage(), ex);
+			task.setStatus(Task.Status.FAILED);
+			task.setReasonForIncompletion(ex.getMessage());
+			task.getOutputData().put("response", ex.getMessage());
 		}
 	}
 
-	/**
-	 * 
-	 * @param input HTTP Request
-	 * @return Response of the http call
-	 * @throws Exception If there was an error making http call
-	 */
-	protected HttpResponse httpCall(Input input) throws Exception {
-		Client client = rcm.getClient(input);
-
-		if(input.oauthConsumerKey != null) {
-			logger.info("Configuring OAuth filter");
-			OAuthParameters params = new OAuthParameters().consumerKey(input.oauthConsumerKey).signatureMethod("HMAC-SHA1").version("1.0");
-			OAuthSecrets secrets = new OAuthSecrets().consumerSecret(input.oauthConsumerSecret);
-			client.addFilter(new OAuthClientFilter(client.getProviders(), params, secrets));
-		}
-
-		Builder builder = client.resource(input.uri).type(MediaType.APPLICATION_JSON);
-		if(input.body != null) {
-			builder.entity(input.body);
-		}
-		input.headers.entrySet().forEach(e -> {
-			builder.header(e.getKey(), e.getValue());
-		});
-		
-		HttpResponse response = new HttpResponse();
-		try {
-
-			ClientResponse cr = builder.accept(input.accept).method(input.method, ClientResponse.class);
-			if (cr.getStatus() != 204 && cr.hasEntity()) {
-				response.body = extractBody(cr);
-			}
-			response.statusCode = cr.getStatus();
-			response.headers = cr.getHeaders();
-			return response;
-
-		} catch(UniformInterfaceException ex) {
-			logger.error(ex.getMessage(), ex);
-			ClientResponse cr = ex.getResponse();
-			logger.error("Status Code: {}", cr.getStatus());
-			if(cr.getStatus() > 199 && cr.getStatus() < 300) {
-				
-				if(cr.getStatus() != 204 && cr.hasEntity()) {
-					response.body = extractBody(cr);
-				}
-				response.headers = cr.getHeaders();
-				response.statusCode = cr.getStatus();
-				return response;
-				
-			}else {
-				String reason = cr.getEntity(String.class);
-				logger.error(reason, ex);
-				throw new Exception(reason);
-			}
-		}
-	}
-
-	private Object extractBody(ClientResponse cr) {
-
-		String json = cr.getEntity(String.class);
-		logger.info(json);
-		
-		try {
-			
-			JsonNode node = om.readTree(json);
-			if (node.isArray()) {
-				return om.convertValue(node, listOfObj);
-			} else if (node.isObject()) {
-				return om.convertValue(node, mapOfObj);
-			} else if (node.isNumber()) {
-				return om.convertValue(node, Double.class);
-			} else {
-				return node.asText();
-			}
-
-		} catch (IOException jpe) {
-			logger.error(jpe.getMessage(), jpe);
-			return json;
-		}
-	}
-
-	@Override
-	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		return false;
-	}
-	
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		task.setStatus(Status.CANCELED);
+		task.setStatus(Task.Status.CANCELED);
 	}
-	
+
 	@Override
 	public boolean isAsync() {
 		return true;
 	}
-	
-	@Override
-	public int getRetryTimeInSecond() {
-		return 60;
+
+	private void onMessage(ObservableQueue queue, Message msg) {
+		String payload = null;
+		try {
+			payload = msg.getPayload();
+			logger.info("Received payload " + payload + " for " + queue.getURI());
+
+			Map<String, Object> event = om.readValue(payload, HASH_MAP_TYPE_REF);
+
+			String workflowId = getUrn(event, URN_WORKFLOW_ID);
+			if (StringUtils.isEmpty(workflowId)) {
+				throw new RuntimeException("No '" + URN_WORKFLOW_ID + "' value exists in the event");
+			}
+
+			String taskId = getUrn(event, URN_TASK_ID);
+			if (StringUtils.isEmpty(taskId)) {
+				throw new RuntimeException("No '" + URN_TASK_ID + "' value exists in the event");
+			}
+
+			Workflow workflow = executor.getWorkflow(workflowId, true);
+			if (workflow == null) {
+				throw new RuntimeException("No workflow found with id " + workflowId);
+			}
+
+			Task targetTask = workflow.getTasks().stream().filter(item -> taskId.equals(item.getTaskId()))
+					.findFirst().orElse(null);
+			if (targetTask == null) {
+				throw new RuntimeException("No task found with id " + taskId + " for workflow " + workflowId);
+			}
+
+			targetTask.getOutputData().put("event", event);
+
+			// TODO Handle status from mapping
+			targetTask.setStatus(Task.Status.COMPLETED);
+
+			// Let's update task
+			TaskResult taskResult = new TaskResult(targetTask);
+			executor.updateTask(taskResult);
+
+			// Handle postTask action
+			processPostTask(targetTask);
+
+		} catch (Exception ex) {
+			logger.error("Unable to process event: " + ex.getMessage() + " for payload " + payload, ex);
+		}
 	}
-	
-	private static ObjectMapper objectMapper() {
-	    final ObjectMapper om = new ObjectMapper();
-        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        om.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-        om.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-        om.setSerializationInclusion(Include.NON_NULL);
-        om.setSerializationInclusion(Include.NON_EMPTY);
-	    return om;
+
+	private void processPreTask(Task task) {
+		logger.info("http wait pre task action started. workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
+		Object object = task.getInputData().get(EVENT_MESSAGES_PARAM);
+		if (object == null) {
+			return;
+		}
+		TaskActions actions = om.convertValue(object, TaskActions.class);
+		if (actions.getPreTask() != null) {
+			processTaskAction(task, actions.getPreTask());
+		}
+		logger.info("http wait pre task action finished. workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
 	}
-	
-	public static class HttpResponse {
-		
-		public Object body;
-		
-		public MultivaluedMap<String, String> headers;
-		
-		public int statusCode;
 
-		@Override
-		public String toString() {
-			return "HttpResponse [body=" + body + ", headers=" + headers + ", statusCode=" + statusCode + "]";
+	private void processPostTask(Task task) {
+		logger.info("http wait post task action started. workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
+		Object object = task.getInputData().get(EVENT_MESSAGES_PARAM);
+		if (object == null) {
+			return;
 		}
-		
-		public Map<String, Object> asMap() {
-			
-			Map<String, Object> map = new HashMap<>();
-			map.put("body", body);
-			map.put("headers", headers);
-			map.put("statusCode", statusCode);
-			
-			return map;
+		TaskActions actions = om.convertValue(object, TaskActions.class);
+		if (actions.getPostTask() != null) {
+			processTaskAction(task, actions.getPostTask());
+		}
+		logger.info("http wait post task action finished. workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
+	}
+
+	private void processTaskAction(Task task, TaskActions.TaskAction action) {
+		logger.info("http wait task action " + action + " execution workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
+		if (action == null) {
+			return;
+		}
+		try {
+			if (StringUtils.isEmpty(action.getSink())) {
+				throw new RuntimeException("No 'sink' value provided");
+			}
+
+			String payload = om.writeValueAsString(action.getInputParameters());
+			ObservableQueue sink = EventQueues.getQueue(action.getSink(), false);
+			if (sink == null) {
+				throw new RuntimeException("Unable to find queue by name " + action.getSink());
+			}
+
+			Message message = new Message();
+			message.setPayload(payload);
+			message.setId(UUID.randomUUID().toString());
+			sink.publish(Collections.singletonList(message));
+		} catch (Exception ex) {
+			logger.error("http wait task action execution failed with " + ex.getMessage()
+					+ " for " + action + "  workflowId=" + task.getWorkflowInstanceId()
+					+ ",taskId=" + task.getTaskId()
+					+ ",taskreference name=" + task.getReferenceTaskName(), ex);
 		}
 	}
-	
-	public static class Input {
-		
-		private String method;	//PUT, POST, GET, DELETE, OPTIONS, HEAD
-		
-		private String vipAddress;
-		
-	    private String taskId;
-		
-		private String curtimestamp;
-		
-		private Map<String, Object> headers = new HashMap<>();
-		
-		private String uri;
-		
-		private Object body;
-		
-		private String accept = MediaType.APPLICATION_JSON;
-		
-		private String oauthConsumerKey;
 
-		private String oauthConsumerSecret;
-
-		/**
-		 * @return the method
-		 */
-		public String getMethod() {
-			return method;
+	private String getUrn(Map<String, Object> output, String key) {
+		Object urnObj = output.get("Urns");
+		if (urnObj == null) {
+			throw new RuntimeException("No 'Urns' object found in the event " + output);
 		}
 
-		/**
-		 * @param method the method to set
-		 */
-		public void setMethod(String method) {
-			this.method = method;
+		if (!(urnObj instanceof List)) {
+			throw new RuntimeException("Wrong 'Urns' type. Expected List, got " + urnObj.getClass().getSimpleName());
 		}
 
-		/**
-		 * @return the headers
-		 */
-		public Map<String, Object> getHeaders() {
-			return headers;
+		for (Object item : (List<?>) urnObj) {
+			if (item instanceof String) {
+				String temp = (String) item;
+				if (temp.startsWith(key)) {
+					return temp.replaceAll(key + ":", "");
+				}
+			}
 		}
 
-		/**
-		 * @param headers the headers to set
-		 */
-		public void setHeaders(Map<String, Object> headers) {
-			this.headers = headers;
-		}
-
-		/**
-		 * @return the body
-		 */
-		public Object getBody() {
-			return body;
-		}
-
-		/**
-		 * @param body the body to set
-		 */
-		public void setBody(Object body) {
-			this.body = body;
-		}
-
-		/**
-		 * @return the uri
-		 */
-		public String getUri() {
-			return uri;
-		}
-
-		/**
-		 * @param uri the uri to set
-		 */
-		public void setUri(String uri) {
-			this.uri = uri;
-		}
-
-		/**
-		 * @return the vipAddress
-		 */
-		public String getVipAddress() {
-			return vipAddress;
-		}
-
-		/**
-		 * @param vipAddress the vipAddress to set
-		 * 
-		 */
-		public void setVipAddress(String vipAddress) {
-			this.vipAddress = vipAddress;
-		}
-
-		/**
-		 * @return the accept
-		 */
-		public String getAccept() {
-			return accept;
-		}
-
-		/**
-		 * @param accept the accept to set
-		 * 
-		 */
-		public void setAccept(String accept) {
-			this.accept = accept;
-		}
-		
-		/**
-		 * @return the OAuth consumer Key
-		 */
-		public String getOauthConsumerKey() {
-			return oauthConsumerKey;
-		}
-
-		/**
-		 * @param oauthConsumerKey the OAuth consumer key to set
-		 */
-		public void setOauthConsumerKey(String oauthConsumerKey) {
-			this.oauthConsumerKey = oauthConsumerKey;
-		}
-
-		/**
-		 * @return the OAuth consumer secret
-		 */
-		public String getOauthConsumerSecret() {
-			return oauthConsumerSecret;
-		}
-
-		/**
-		 * @param oauthConsumerSecret the OAuth consumer secret to set
-		 */
-		public void setOauthConsumerSecret(String oauthConsumerSecret) {
-			this.oauthConsumerSecret = oauthConsumerSecret;
-		}
-		
-		/**
-		 * @return the vipAddress
-		 */
-		public String getTaskId() {
-			return taskId;
-		}
-
-		/**
-		 * @param vipAddress the vipAddress to set
-		 * 
-		 */
-		public void setTaskId(String taskId) {
-			this.taskId = taskId;
-		}
-		
-		public String getCurtimestamp() {
-			return curtimestamp;
-		}
-
-		/**
-		 * @param vipAddress the vipAddress to set
-		 * 
-		 */
-		public void setCurtimestamp(String curtimestamp) {
-			this.curtimestamp = curtimestamp;
-		}
+		return null;
 	}
 }
