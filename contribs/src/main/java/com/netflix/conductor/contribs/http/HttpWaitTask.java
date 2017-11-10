@@ -1,6 +1,7 @@
 package com.netflix.conductor.contribs.http;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
@@ -9,14 +10,14 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by pavanj on 6/22/17.
@@ -154,14 +155,14 @@ public class HttpWaitTask extends GenericHttpTask {
 			payload = msg.getPayload();
 			logger.info("Received payload " + payload + " for " + queue.getURI());
 
-			Map<String, Object> event = om.readValue(payload, HASH_MAP_TYPE_REF);
+			JsonNode root = om.readTree(payload);
 
-			String workflowId = getUrn(event, URN_WORKFLOW_ID);
+			String workflowId = getUrn(root, URN_WORKFLOW_ID);
 			if (StringUtils.isEmpty(workflowId)) {
 				throw new RuntimeException("No '" + URN_WORKFLOW_ID + "' value exists in the event");
 			}
 
-			String taskId = getUrn(event, URN_TASK_ID);
+			String taskId = getUrn(root, URN_TASK_ID);
 			if (StringUtils.isEmpty(taskId)) {
 				throw new RuntimeException("No '" + URN_TASK_ID + "' value exists in the event");
 			}
@@ -177,15 +178,26 @@ public class HttpWaitTask extends GenericHttpTask {
 				throw new RuntimeException("No task found with id " + taskId + " for workflow " + workflowId);
 			}
 
+			Map<String, Object> event = om.readValue(payload, HASH_MAP_TYPE_REF);
 			targetTask.getOutputData().put("event", event);
 
 			// TODO Handle status from mapping
-			Task.Status status = STATUS_MAP.get(getStatus(event));
-			targetTask.setStatus(status);
+			String statusName = root.path("Status").path("Name").asText();
+			Task.Status taskStatus = STATUS_MAP.get(statusName);
+			if (taskStatus == null) {
+				throw new RuntimeException("Unable to determine the task status based on " + statusName);
+			}
+			targetTask.setStatus(taskStatus);
+
+			// Set the reason if task failed. It should be provided in the event
+			if (Task.Status.FAILED.equals(taskStatus)) {
+				String statusReason = root.path("Status").path("Reason").asText();
+				targetTask.setReasonForIncompletion(statusReason);
+			}
 
 			// Create task update wrapper and reset timer if in-progress
 			TaskResult taskResult = new TaskResult(targetTask);
-			if (Task.Status.IN_PROGRESS.equals(status)) {
+			if (Task.Status.IN_PROGRESS.equals(taskStatus)) {
 				taskResult.setResetStartTime(true);
 			}
 
@@ -197,40 +209,16 @@ public class HttpWaitTask extends GenericHttpTask {
 		}
 	}
 
-	private String getUrn(Map<String, Object> output, String key) {
-		Object urnObj = output.get("Urns");
-		if (urnObj == null) {
-			throw new RuntimeException("No 'Urns' object found in the event " + output);
-		}
-
-		if (!(urnObj instanceof List)) {
-			throw new RuntimeException("Wrong 'Urns' type. Expected List, got " + urnObj.getClass().getSimpleName());
-		}
-
-		for (Object item : (List<?>) urnObj) {
-			if (item instanceof String) {
-				String temp = (String) item;
+	private String getUrn(JsonNode root, String key) {
+		JsonNode Urns = root.path("Urns");
+		if (Urns.isArray()) {
+			for (JsonNode node : Urns) {
+				String temp = node.asText();
 				if (temp.startsWith(key)) {
 					return temp.replaceAll(key + ":", "");
 				}
 			}
 		}
-
 		return null;
-	}
-
-	private String getStatus(Map<String, Object> input) {
-		ParametersUtils pu = new ParametersUtils();
-		pu.replace(input, "");
-
-		Object statusObj = input.get("Status");
-		if (statusObj == null) {
-			throw new RuntimeException("No 'Status' object found in the event " + input);
-		}
-		if (!(statusObj instanceof Map)) {
-			throw new RuntimeException("Wrong 'Status' type. Expected Map, got " + statusObj.getClass().getSimpleName());
-		}
-
-		return (String) ((Map) statusObj).get("Name");
 	}
 }
