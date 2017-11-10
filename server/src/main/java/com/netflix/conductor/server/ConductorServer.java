@@ -25,6 +25,10 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.MediaType;
@@ -47,6 +51,7 @@ import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.Host.Status;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
+import com.netflix.dyno.connectionpool.ConnectionPoolConfiguration;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
@@ -75,6 +80,37 @@ public class ConductorServer {
 	private ConductorConfig cc;
 	
 	private DB db;
+
+        // Create a TokenMapSupplier using the Dyno hosts provided in config file
+        // Currently the entire token space is allocated to every host, meaning each host is an
+        // exact replica of the data set. 
+        private TokenMapSupplier getTokenMapSupplier(List<Host> dynoHosts) {
+            Map<Host, HostToken> tokenMap = new HashMap<Host, HostToken>();
+
+	    for (int i = 0; i < dynoHosts.size(); i++) {
+                 Host host = dynoHosts.get(i);
+                 tokenMap.put(host, new HostToken(4294967295L, host));
+	    }
+
+            return new TokenMapSupplier() {
+              @Override
+               public List<HostToken> getTokens(Set<Host> activeHosts) {
+                  return new ArrayList<HostToken>(tokenMap.values());
+               }
+               @Override
+               public HostToken getTokenForHost(Host host, Set<Host> activeHosts) {
+                      Set<Map.Entry<Host, HostToken>> set = tokenMap.entrySet();
+                      Iterator iterator = set.iterator();
+                      while(iterator.hasNext()) {
+                         Map.Entry mentry = (Map.Entry)iterator.next();
+                         if (((Host)mentry.getKey()).getHostName().equals(host.getHostName())) {
+                               return (HostToken) mentry.getValue();
+                         } 
+                      } 
+                      return null;                
+                }
+             };
+        }
 	
 	public ConductorServer(ConductorConfig cc) {
 		this.cc = cc;
@@ -129,26 +165,9 @@ public class ConductorServer {
 		switch(db) {
 		case redis:		
 		case dynomite:
-			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(new TokenMapSupplier() {
-				
-				HostToken token = new HostToken(1L, dynoHosts.get(0));
-				
-				@Override
-				public List<HostToken> getTokens(Set<Host> activeHosts) {
-					return Arrays.asList(token);
-				}
-				
-				@Override
-				public HostToken getTokenForHost(Host host, Set<Host> activeHosts) {
-					return token;
-				}
-				
-				
-			}).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
-			cp.setSocketTimeout(0);
-			cp.setConnectTimeout(0);
+			ConnectionPoolConfigurationImpl cp = new ConnectionPoolConfigurationImpl(dynoClusterName).withTokenSupplier(getTokenMapSupplier(dynoHosts)).setLocalRack(cc.getAvailabilityZone()).setLocalDataCenter(cc.getRegion());
 			cp.setMaxConnsPerHost(cc.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
-			
+			cp.setLoadBalancingStrategy(ConnectionPoolConfiguration.LoadBalancingStrategy.RoundRobin);
 			jedis = new DynoJedisClient.Builder()
 				.withHostSupplier(hs)
 				.withApplicationName(cc.getAppId())
