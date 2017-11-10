@@ -9,6 +9,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -28,8 +29,17 @@ public class HttpWaitTask extends GenericHttpTask {
 	private static final String URN_TASK_ID = "urn:deluxe:conductor:task";
 	private static final String PROPERTY_QUEUE = "conductor.http.wait.event.queue.name";
 	private static final TypeReference HASH_MAP_TYPE_REF = new TypeReference<HashMap<String, Object>>() { };
+	private static final Map<String, Task.Status> STATUS_MAP = new HashMap<>();
 	private WorkflowExecutor executor;
 	private ObservableQueue queue;
+
+	static {
+		STATUS_MAP.put("failed", Task.Status.FAILED);
+		STATUS_MAP.put("pending", Task.Status.IN_PROGRESS);
+		STATUS_MAP.put("complete", Task.Status.COMPLETED);
+		STATUS_MAP.put("cancelled", Task.Status.FAILED);
+		STATUS_MAP.put("in-progress", Task.Status.IN_PROGRESS);
+	}
 
 	@Inject
 	public HttpWaitTask(Configuration config, RestClientManager rcm, ObjectMapper om, WorkflowExecutor executor) {
@@ -55,9 +65,6 @@ public class HttpWaitTask extends GenericHttpTask {
 	@SuppressWarnings("unchecked")
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
 		logger.info("http wait task starting workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
-
-		// Handle preTask action
-		processPreTask(task);
 
 		// send nomad command
 		Map<String, ?> request = (Map<String, ?>) task.getInputData().get(HTTP_REQUEST_PARAM);
@@ -173,71 +180,20 @@ public class HttpWaitTask extends GenericHttpTask {
 			targetTask.getOutputData().put("event", event);
 
 			// TODO Handle status from mapping
-			targetTask.setStatus(Task.Status.COMPLETED);
+			Task.Status status = STATUS_MAP.get(getStatus(event));
+			targetTask.setStatus(status);
+
+			// Create task update wrapper and reset timer if in-progress
+			TaskResult taskResult = new TaskResult(targetTask);
+			if (Task.Status.IN_PROGRESS.equals(status)) {
+				taskResult.setResetStartTime(true);
+			}
 
 			// Let's update task
-			TaskResult taskResult = new TaskResult(targetTask);
 			executor.updateTask(taskResult);
-
-			// Handle postTask action
-			processPostTask(targetTask);
 
 		} catch (Exception ex) {
 			logger.error("Unable to process event: " + ex.getMessage() + " for payload " + payload, ex);
-		}
-	}
-
-	private void processPreTask(Task task) {
-		logger.info("http wait pre task action started. workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
-		Object object = task.getInputData().get(EVENT_MESSAGES_PARAM);
-		if (object == null) {
-			return;
-		}
-		TaskActions actions = om.convertValue(object, TaskActions.class);
-		if (actions.getPreTask() != null) {
-			processTaskAction(task, actions.getPreTask());
-		}
-		logger.info("http wait pre task action finished. workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
-	}
-
-	private void processPostTask(Task task) {
-		logger.info("http wait post task action started. workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
-		Object object = task.getInputData().get(EVENT_MESSAGES_PARAM);
-		if (object == null) {
-			return;
-		}
-		TaskActions actions = om.convertValue(object, TaskActions.class);
-		if (actions.getPostTask() != null) {
-			processTaskAction(task, actions.getPostTask());
-		}
-		logger.info("http wait post task action finished. workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
-	}
-
-	private void processTaskAction(Task task, TaskActions.TaskAction action) {
-		logger.info("http wait task action " + action + " execution workflowId=" + task.getWorkflowInstanceId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
-		if (action == null) {
-			return;
-		}
-		try {
-			if (StringUtils.isEmpty(action.getSink())) {
-				throw new RuntimeException("No 'sink' value provided");
-			}
-
-			String payload = om.writeValueAsString(action.getInputParameters());
-			ObservableQueue sink = EventQueues.getQueue(action.getSink(), false);
-			if (sink == null) {
-				throw new RuntimeException("Unable to find queue by name " + action.getSink());
-			}
-
-			Message message = new Message();
-			message.setPayload(payload);
-			message.setId(UUID.randomUUID().toString());
-			sink.publish(Collections.singletonList(message));
-		} catch (Exception ex) {
-			logger.error("http wait task action execution failed with " + ex.getMessage()
-					+ " for " + action + "  workflowId=" + task.getWorkflowInstanceId()
-					+ ",taskId=" + task.getTaskId()
-					+ ",taskreference name=" + task.getReferenceTaskName(), ex);
 		}
 	}
 
@@ -261,5 +217,20 @@ public class HttpWaitTask extends GenericHttpTask {
 		}
 
 		return null;
+	}
+
+	private String getStatus(Map<String, Object> input) {
+		ParametersUtils pu = new ParametersUtils();
+		pu.replace(input, "");
+
+		Object statusObj = input.get("Status");
+		if (statusObj == null) {
+			throw new RuntimeException("No 'Status' object found in the event " + input);
+		}
+		if (!(statusObj instanceof Map)) {
+			throw new RuntimeException("Wrong 'Status' type. Expected Map, got " + statusObj.getClass().getSimpleName());
+		}
+
+		return (String) ((Map) statusObj).get("Name");
 	}
 }
