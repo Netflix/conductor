@@ -1,5 +1,5 @@
 {
-  "template": "conductor*",
+  "template": "*",
   "order": 0,
   "mappings": {
     "workflow": {
@@ -23,8 +23,8 @@
           "type": "text"
         },
         "rawJSON": {
-          "type": "keyword",
-          "index": false,
+          "type": "text",
+          "index": "not_analyzed",
           "include_in_all": false
         },
         "reasonForIncompletion": {

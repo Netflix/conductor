@@ -2,16 +2,14 @@ import { join } from 'path';
 import { Router } from 'express';
 import http from '../core/HttpClient';
 import moment from 'moment';
+import lookup from '../core/ApiLookup';
 
 const router = new Router();
-const baseURL = process.env.WF_SERVER;
-const baseURL2 = baseURL + 'workflow/';
-const baseURLMeta = baseURL + 'metadata/';
-const baseURLTask = baseURL + 'tasks/';
-
 
 router.get('/', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
 
     let freeText = [];
     if(req.query.freeText != '') {
@@ -44,6 +42,11 @@ router.get('/', async (req, res, next) => {
 
 router.get('/id/:workflowId', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+    const baseURLMeta = baseURL + 'metadata/';
+    const baseURLTask = baseURL + 'tasks/';
+
     let s = new Date().getTime();
     const result = await http.get(baseURL2 + req.params.workflowId + '?includeTasks=true');
     const meta = await http.get(baseURLMeta + 'workflow/' + result.workflowType + '?version=' + result.version);
@@ -88,14 +91,21 @@ router.get('/id/:workflowId', async (req, res, next) => {
 });
 router.delete('/terminate/:workflowId', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
     const result = await http.delete(baseURL2 + req.params.workflowId);
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
     next(err);
   }
 });
+
 router.post('/restart/:workflowId', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
     const result = await http.post(baseURL2 + req.params.workflowId + '/restart');
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
@@ -105,6 +115,9 @@ router.post('/restart/:workflowId', async (req, res, next) => {
 
 router.post('/retry/:workflowId', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
     const result = await http.post(baseURL2 + req.params.workflowId + '/retry');
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
@@ -114,6 +127,9 @@ router.post('/retry/:workflowId', async (req, res, next) => {
 
 router.post('/pause/:workflowId', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
     const result = await http.put(baseURL2 + req.params.workflowId + '/pause');
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
@@ -123,6 +139,9 @@ router.post('/pause/:workflowId', async (req, res, next) => {
 
 router.post('/resume/:workflowId', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
     const result = await http.put(baseURL2 + req.params.workflowId + '/resume');
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
@@ -133,6 +152,9 @@ router.post('/resume/:workflowId', async (req, res, next) => {
 //metadata
 router.get('/metadata/workflow/:name/:version', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURLMeta = baseURL + 'metadata/';
+
     const result = await http.get(baseURLMeta + 'workflow/' + req.params.name + '?version=' + req.params.version);
     res.status(200).send({result});
   } catch (err) {
@@ -141,6 +163,9 @@ router.get('/metadata/workflow/:name/:version', async (req, res, next) => {
 });
 router.get('/metadata/workflow', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURLMeta = baseURL + 'metadata/';
+
     const result = await http.get(baseURLMeta + 'workflow');
     res.status(200).send({result});
   } catch (err) {
@@ -149,6 +174,9 @@ router.get('/metadata/workflow', async (req, res, next) => {
 });
 router.get('/metadata/taskdef', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURLMeta = baseURL + 'metadata/';
+
     const result = await http.get(baseURLMeta + 'taskdefs');
     res.status(200).send({result});
   } catch (err) {
@@ -157,6 +185,9 @@ router.get('/metadata/taskdef', async (req, res, next) => {
 });
 router.get('/task/log/:taskId', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURLTask = baseURL + 'tasks/';
+
     const logs = await http.get(baseURLTask + req.params.taskId + '/log');
     res.status(200).send({logs});
   } catch (err) {
@@ -165,6 +196,9 @@ router.get('/task/log/:taskId', async (req, res, next) => {
 });
 router.get('/queue/data', async (req, res, next) => {
   try {
+    const baseURL = await lookup.lookup();
+    const baseURLTask = baseURL + 'tasks/';
+
     const sizes = await http.get(baseURLTask + 'queue/all');
     const polldata = await http.get(baseURLTask + 'queue/polldata/all');
     polldata.forEach(pd=>{

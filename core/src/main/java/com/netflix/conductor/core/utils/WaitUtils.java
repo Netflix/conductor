@@ -1,8 +1,10 @@
 package com.netflix.conductor.core.utils;
 
+import com.google.common.util.concurrent.Uninterruptibles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -16,7 +18,7 @@ public class WaitUtils {
      *
      * @param service  The service name. e.g. 'redis', 'elasticsearch'.
      * @param attempts The number of attempts to be performed before giving up.
-     * @param sleep    The number of seconds to wait until apple for the next attempt.
+     * @param sleep    The number of seconds to wait until apply for the next attempt.
      * @param supplier Function should return true if service is up, false if not or throw an exception.
      */
     public static void wait(String service, int attempts, int sleep, Supplier<Boolean> supplier) {
@@ -30,26 +32,18 @@ public class WaitUtils {
                 connected = supplier.get();
                 if (!connected) {
                     logger.warn("No success response from supplier. Sleep for a while. Attempts made {}", attemptsMade);
-                    try {
-                        Thread.sleep(sleep * 1000L);
-                    } catch (InterruptedException e) {
-                        logger.error("{} connection sleep got an error: {}", service, e.getMessage());
-                    }
+                    Uninterruptibles.sleepUninterruptibly(sleep, TimeUnit.SECONDS);
                 }
             } catch (Exception ex) {
-                logger.error("{} connection failed: {}. Sleep for a while. Attempts made {}",
+                logger.error("{} waiter failed: {}. Sleep for a while. Attempts made {}",
                         service, ex.getMessage(), attemptsMade, ex);
-                try {
-                    Thread.sleep(sleep * 1000L);
-                } catch (InterruptedException e) {
-                    logger.error("{} connection sleep got an error: {}", service, e.getMessage());
-                }
+                Uninterruptibles.sleepUninterruptibly(sleep, TimeUnit.SECONDS);
             }
         } while (!connected && attemptsMade < attempts);
 
         // Print give up
         if (!connected && attemptsMade >= attempts) {
-            logger.warn("No {} connection obtained during {} attempts. Giving up ...", service, attemptsMade);
+            logger.warn("No {} desired state obtained during {} attempts. Giving up ...", service, attemptsMade);
             System.exit(-1);
         }
     }

@@ -1,0 +1,20 @@
+{
+  "_default_": {
+    "properties": {
+      "deliverOn": {
+        "type": "long"
+      },
+      "unackOn": {
+        "type": "long"
+      },
+      "popped": {
+        "type": "boolean"
+      },
+      "payload": {
+        "type": "text",
+        "index": "not_analyzed",
+        "include_in_all": false
+      }
+    }
+  }
+}
