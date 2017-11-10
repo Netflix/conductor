@@ -46,6 +46,8 @@ public class WorkflowDef extends Auditable {
 	private Map<String, Object> outputParameters = new HashMap<>();
 
 	private String failureWorkflow;
+
+	private String cancelWorkflow;
 	
 	private int schemaVersion = 1;
 	
@@ -140,6 +142,20 @@ public class WorkflowDef extends Auditable {
 	 */
 	public void setFailureWorkflow(String failureWorkflow) {
 		this.failureWorkflow = failureWorkflow;
+	}
+
+	/**
+	 * @return the cancelWorkflow
+	 */
+	public String getCancelWorkflow() {
+		return cancelWorkflow;
+	}
+
+	/**
+	 * @param cancelWorkflow the cancelWorkflow to set
+	 */
+	public void setCancelWorkflow(String cancelWorkflow) {
+		this.cancelWorkflow = cancelWorkflow;
 	}
 
 	/**
