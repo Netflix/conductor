@@ -1,11 +1,13 @@
 package com.netflix.conductor.contribs.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventProcessor;
+import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.MetadataDAO;
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,18 +35,6 @@ public class HttpWaitTask extends GenericHttpTask {
 		this.processor = processor;
 		this.metadata = metadata;
 
-//		String name = config.getProperty(PROPERTY_QUEUE, null);
-//		logger.info("Event queue name is " + name);
-//		if (name == null) {
-//			throw new RuntimeException("No event status queue defined");
-//		}
-//
-//		queue = EventQueues.getQueue(name, false);
-//		if (queue == null) {
-//			throw new RuntimeException("Unable to find queue by name " + name);
-//		}
-//
-//		queue.observe().subscribe((Message msg) -> onMessage(queue, msg));
 		logger.info("Http Event Wait Task initialized ...");
 	}
 
@@ -135,7 +124,6 @@ public class HttpWaitTask extends GenericHttpTask {
 
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		// unregister event handler
 		unregisterEventHandler(task);
 		task.setStatus(Task.Status.CANCELED);
 	}
@@ -197,25 +185,29 @@ public class HttpWaitTask extends GenericHttpTask {
 			updateTask.setFailedReason((String) request.get("failedReason"));
 			updateTask.setStatuses((Map<String, String>) request.get("statuses"));
 			updateTask.setOutput((Map<String, Object>) request.get("output"));
+			Map<String, String> runtime = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
+					"taskId", task.getTaskId());
+			updateTask.setRuntime(runtime);
 
 			EventHandler.Action action = new EventHandler.Action();
 			action.setAction(EventHandler.Action.Type.update_task);
 			action.setUpdate_task(updateTask);
 
 			EventHandler handler = new EventHandler();
-			handler.setCondition("true"); // We don't have specific conditions for that
-			handler.setName("UPDATE_TASK." + task.getWorkflowInstanceId() + "." + task.getTaskId());
+			handler.setCondition("true"); // We don't have specific conditions for that?
+			handler.setName( "UPDATE_TASK." + task.getTaskId());
 			handler.setActive(true);
 			handler.setEvent(event);
 			handler.setActions(Collections.singletonList(action));
 
-			List<EventHandler> handlers = metadata.getEventHandlersForEvent(event, true);
-			if (handlers.isEmpty()) {
+			try {
 				metadata.addEventHandler(handler);
-			} else {
-				metadata.updateEventHandler(handler);
+			}catch (ApplicationException ex) {
+				if (ApplicationException.Code.CONFLICT.equals(ex.getCode())) {
+					metadata.updateEventHandler(handler);
+				}
 			}
-			processor.refresh(); // Force to start listener
+			processor.refresh(); // Start listener right away
 		} catch (Exception ex) {
 			task.setReasonForIncompletion("Unable to register event handler: " + ex.getMessage());
 			task.setStatus(Task.Status.FAILED);
@@ -228,7 +220,7 @@ public class HttpWaitTask extends GenericHttpTask {
 	@SuppressWarnings("unchecked")
 	private void unregisterEventHandler(Task task) {
 		try {
-			String name = "UPDATE_TASK." + task.getWorkflowInstanceId() + "." + task.getTaskId();
+			String name = "UPDATE_TASK." + task.getTaskId();
 			metadata.removeEventHandlerStatus(name);
 		} catch (Exception ex) {
 			logger.error("unregisterEventHandler: failed with " + ex.getMessage() + " for " + task, ex);

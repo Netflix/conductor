@@ -175,6 +175,15 @@ public class ActionProcessor {
 			if (StringUtils.isEmpty(taskId))
 				throw new RuntimeException("taskId evaluating is empty");
 
+			// Compare workflowId/taskId form the event and the runtime to prevent duplicate processing
+			Map<String, String> runtime = updateTask.getRuntime();
+			boolean workflowMatches = workflowId.equalsIgnoreCase(runtime.get("workflowId"));
+			boolean taskMatches = taskId.equalsIgnoreCase(runtime.get("taskId"));
+			if (!workflowMatches || !taskMatches) {
+				logger.debug("updateTask: workflow/task do not match. Skipping action " + updateTask + ", event " + payload);
+				return op;
+			}
+
 			String status = evaluate(updateTask.getStatus(), payload);
 			if (StringUtils.isEmpty(status))
 				throw new RuntimeException("status evaluating is empty");
@@ -240,7 +249,7 @@ public class ActionProcessor {
 			try {
 				// Remove event handler only on terminal task status
 				if (taskStatus.isTerminal()) {
-					metadata.removeEventHandlerStatus("UPDATE_TASK." + workflowId + "." + taskId);
+					metadata.removeEventHandlerStatus("UPDATE_TASK." + taskId);
 				}
 			} catch (Exception e) {
 				logger.error("updateTask: removeEventHandler failed with " + e.getMessage() + " for " + updateTask, e);
