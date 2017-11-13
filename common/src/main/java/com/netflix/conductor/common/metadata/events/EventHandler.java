@@ -121,7 +121,7 @@ public class EventHandler {
 
 	public static class Action {
 		
-		public enum Type { start_workflow, complete_task, fail_task }
+		public enum Type { start_workflow, complete_task, fail_task, progress_task }
 		
 		private Type action;
 		
@@ -130,6 +130,8 @@ public class EventHandler {
 		private TaskDetails complete_task;
 		
 		private TaskDetails fail_task;
+
+		private ProgressTask progress_task;
 		
 		private boolean expandInlineJSON;
 
@@ -192,7 +194,21 @@ public class EventHandler {
 		public void setFail_task(TaskDetails fail_task) {
 			this.fail_task = fail_task;
 		}
-		
+
+		/**
+		 * @return the progress task object
+		 */
+		public ProgressTask getProgress_task() {
+			return progress_task;
+		}
+
+		/**
+		 * @param progress_task the progress task object to set
+		 */
+		public void setProgress_task(ProgressTask progress_task) {
+			this.progress_task = progress_task;
+		}
+
 		/**
 		 * 
 		 * @param expandInlineJSON when set to true, the in-lined JSON strings are expanded to a full json document 
@@ -213,7 +229,7 @@ public class EventHandler {
 	public static class TaskDetails {
 		
 		private String workflowId;
-		
+
 		private String taskRefName;
 		
 		private Map<String, Object> output = new HashMap<>();
@@ -262,9 +278,9 @@ public class EventHandler {
 		public void setOutput(Map<String, Object> output) {
 			this.output = output;
 		}
-		
-		
-		
+
+
+
 	}
 	
 	public static class StartWorkflow {
@@ -340,5 +356,90 @@ public class EventHandler {
 		
 		
 	}
-	
+
+	public static class ProgressTask {
+
+		private String workflowId;
+
+		private String taskId;
+
+		private String status;
+
+		private boolean resetStartTime;
+
+		private String reasonForIncompletion;
+
+		private Map<String, String> mapping = new HashMap<>();
+
+		private Map<String, Object> output = new HashMap<>();
+
+		public String getWorkflowId() {
+			return workflowId;
+		}
+
+		public void setWorkflowId(String workflowId) {
+			this.workflowId = workflowId;
+		}
+
+		public Map<String, Object> getOutput() {
+			return output;
+		}
+
+		public void setOutput(Map<String, Object> output) {
+			this.output = output;
+		}
+
+		public String getTaskId() {
+			return taskId;
+		}
+
+		public void setTaskId(String taskId) {
+			this.taskId = taskId;
+		}
+
+		public boolean getResetStartTime() {
+			return resetStartTime;
+		}
+
+		public void setResetStartTime(boolean resetStartTime) {
+			this.resetStartTime = resetStartTime;
+		}
+
+		public String getStatus() {
+			return status;
+		}
+
+		public void setStatus(String status) {
+			this.status = status;
+		}
+
+		public Map<String, String> getMapping() {
+			return mapping;
+		}
+
+		public void setMapping(Map<String, String> mapping) {
+			this.mapping = mapping;
+		}
+
+		public String getReasonForIncompletion() {
+			return reasonForIncompletion;
+		}
+
+		public void setReasonForIncompletion(String reasonForIncompletion) {
+			this.reasonForIncompletion = reasonForIncompletion;
+		}
+
+		@Override
+		public String toString() {
+			return "ProgressTask{" +
+					"workflowId='" + workflowId + '\'' +
+					", taskId='" + taskId + '\'' +
+					", status='" + status + '\'' +
+					", resetStartTime=" + resetStartTime +
+					", reasonForIncompletion='" + reasonForIncompletion + '\'' +
+					", mapping=" + mapping +
+					", output=" + output +
+					'}';
+		}
+	}
 }

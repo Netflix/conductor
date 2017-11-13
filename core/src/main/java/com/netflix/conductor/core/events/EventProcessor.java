@@ -18,26 +18,6 @@
  */
 package com.netflix.conductor.core.events;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventExecution.Status;
@@ -48,6 +28,15 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren
@@ -69,7 +58,7 @@ public class EventProcessor {
 	private ExecutorService executors;
 	
 	private ObjectMapper om;
-	
+
 	@Inject
 	public EventProcessor(ExecutionService es, MetadataService ms, ActionProcessor ap, Configuration config, ObjectMapper om) {
 		this.es = es;
@@ -78,10 +67,13 @@ public class EventProcessor {
 		this.om = om;
 		
 		int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
+
+		// default 60 for backward compatibility
+		int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
 		if(executorThreadCount > 0) {
 			this.executors = Executors.newFixedThreadPool(executorThreadCount);
 			refresh();
-			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refresh(), 60, 60, TimeUnit.SECONDS);
+			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refresh(), 60, refreshPeriod, TimeUnit.SECONDS);
 		} else {
 			logger.warn("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
 		}
@@ -107,7 +99,7 @@ public class EventProcessor {
 		return queues;
 	}
 	
-	private void refresh() {
+	public void refresh() {
 		Set<String> events = ms.getEventHandlers().stream().map(eh -> eh.getEvent()).collect(Collectors.toSet());
 		List<ObservableQueue> created = new LinkedList<>();
 		events.stream().forEach(event -> queuesMap.computeIfAbsent(event, s -> {
@@ -221,5 +213,4 @@ public class EventProcessor {
 			}
 		});
 	}
-	
 }

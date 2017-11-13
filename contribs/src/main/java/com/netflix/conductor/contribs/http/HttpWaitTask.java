@@ -1,22 +1,19 @@
 package com.netflix.conductor.contribs.http;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.events.EventQueues;
-import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import org.apache.commons.lang.StringUtils;
+import com.netflix.conductor.dao.MetadataDAO;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -25,40 +22,29 @@ import java.util.Map;
 public class HttpWaitTask extends GenericHttpTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpWaitTask.class);
 	private static final String HTTP_REQUEST_PARAM = "http_request";
-	private static final String EVENT_MESSAGES_PARAM = "event_messages";
-	private static final String URN_WORKFLOW_ID = "urn:deluxe:conductor:workflow";
-	private static final String URN_TASK_ID = "urn:deluxe:conductor:task";
-	private static final String PROPERTY_QUEUE = "conductor.http.wait.event.queue.name";
-	private static final TypeReference HASH_MAP_TYPE_REF = new TypeReference<HashMap<String, Object>>() { };
-	private static final Map<String, Task.Status> STATUS_MAP = new HashMap<>();
-	private WorkflowExecutor executor;
-	private ObservableQueue queue;
-
-	static {
-		STATUS_MAP.put("failed", Task.Status.FAILED);
-		STATUS_MAP.put("pending", Task.Status.IN_PROGRESS);
-		STATUS_MAP.put("complete", Task.Status.COMPLETED);
-		STATUS_MAP.put("cancelled", Task.Status.FAILED);
-		STATUS_MAP.put("in-progress", Task.Status.IN_PROGRESS);
-	}
+	private static final String EVENT_WAIT_PARAM = "event_wait";
+	private EventProcessor processor;
+	private MetadataDAO metadata;
 
 	@Inject
-	public HttpWaitTask(Configuration config, RestClientManager rcm, ObjectMapper om, WorkflowExecutor executor) {
+	public HttpWaitTask(Configuration config, RestClientManager rcm,
+						ObjectMapper om, MetadataDAO metadata, EventProcessor processor) {
 		super("HTTP_WAIT", config, rcm, om);
-		this.executor = executor;
+		this.processor = processor;
+		this.metadata = metadata;
 
-		String name = config.getProperty(PROPERTY_QUEUE, null);
-		logger.info("Event queue name is " + name);
-		if (name == null) {
-			throw new RuntimeException("No event status queue defined");
-		}
-
-		queue = EventQueues.getQueue(name, false);
-		if (queue == null) {
-			throw new RuntimeException("Unable to find queue by name " + name);
-		}
-
-		queue.observe().subscribe((Message msg) -> onMessage(queue, msg));
+//		String name = config.getProperty(PROPERTY_QUEUE, null);
+//		logger.info("Event queue name is " + name);
+//		if (name == null) {
+//			throw new RuntimeException("No event status queue defined");
+//		}
+//
+//		queue = EventQueues.getQueue(name, false);
+//		if (queue == null) {
+//			throw new RuntimeException("Unable to find queue by name " + name);
+//		}
+//
+//		queue.observe().subscribe((Message msg) -> onMessage(queue, msg));
 		logger.info("Http Event Wait Task initialized ...");
 	}
 
@@ -70,7 +56,7 @@ public class HttpWaitTask extends GenericHttpTask {
 		// send nomad command
 		Map<String, ?> request = (Map<String, ?>) task.getInputData().get(HTTP_REQUEST_PARAM);
 		if (request == null) {
-			task.setReasonForIncompletion("Missing HTTP request. Task input MUST have a '" + HTTP_REQUEST_PARAM + "' key with HttpWaitTask as value");
+			task.setReasonForIncompletion("Missing http request parameter");
 			task.setStatus(Task.Status.FAILED);
 			return;
 		}
@@ -82,7 +68,7 @@ public class HttpWaitTask extends GenericHttpTask {
 		}
 
 		if (input.getUri() == null) {
-			task.setReasonForIncompletion("Missing HTTP URI. See documentation for HttpTask for required input parameters");
+			task.setReasonForIncompletion("Missing http uri");
 			task.setStatus(Task.Status.FAILED);
 			return;
 		} else {
@@ -92,13 +78,18 @@ public class HttpWaitTask extends GenericHttpTask {
 		}
 
 		if (input.getMethod() == null) {
-			task.setReasonForIncompletion("No HTTP method specified");
+			task.setReasonForIncompletion("Missing http method");
 			task.setStatus(Task.Status.FAILED);
 			return;
 		}
 
+		// register event handler first as we should be ready to accept message right away
+		if (!registerEventHandler(task)) {
+			return;
+		}
+
 		try {
-			HttpResponse response = new HttpResponse();
+			HttpResponse response;
 			logger.info("http wait task started.workflowId=" + workflow.getWorkflowId()
 					+ ",CorrelationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
@@ -120,6 +111,8 @@ public class HttpWaitTask extends GenericHttpTask {
 			if (response.statusCode > 199 && response.statusCode < 300) {
 				task.setStatus(Task.Status.IN_PROGRESS);
 			} else {
+				// unregister event handler if not success
+				unregisterEventHandler(task);
 				if (response.body != null) {
 					task.setReasonForIncompletion(response.body.toString());
 				} else {
@@ -129,6 +122,8 @@ public class HttpWaitTask extends GenericHttpTask {
 			}
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {
+			// unregister event handler if not success
+			unregisterEventHandler(task);
 			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
@@ -141,6 +136,8 @@ public class HttpWaitTask extends GenericHttpTask {
 
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+		// unregister event handler
+		unregisterEventHandler(task);
 		task.setStatus(Task.Status.CANCELED);
 	}
 
@@ -149,76 +146,90 @@ public class HttpWaitTask extends GenericHttpTask {
 		return true;
 	}
 
-	private void onMessage(ObservableQueue queue, Message msg) {
-		String payload = null;
+	@SuppressWarnings("unchecked")
+	private boolean registerEventHandler(Task task) {
 		try {
-			payload = msg.getPayload();
-			logger.info("Received payload " + payload + " for " + queue.getURI());
+			Map<String, Object> request = (Map<String, Object>) task.getInputData().get(EVENT_WAIT_PARAM);
+			if (request == null) {
+				task.setReasonForIncompletion("Missing '" + EVENT_WAIT_PARAM + "' request parameter");
+				task.setStatus(Task.Status.FAILED);
+				return false;
+			}
 
-			JsonNode root = om.readTree(payload);
+			String event = (String) request.get("event");
+			if (StringUtils.isEmpty(event)) {
+				task.setReasonForIncompletion("Missing 'event' in '" + EVENT_WAIT_PARAM + "' request parameter");
+				task.setStatus(Task.Status.FAILED);
+				return false;
+			}
 
-			String workflowId = getUrn(root, URN_WORKFLOW_ID);
+			String workflowId = (String) request.get("workflowId");
 			if (StringUtils.isEmpty(workflowId)) {
-				throw new RuntimeException("No '" + URN_WORKFLOW_ID + "' value exists in the event");
+				task.setReasonForIncompletion("Missing 'workflowId' in '" + EVENT_WAIT_PARAM + "' request parameter");
+				task.setStatus(Task.Status.FAILED);
+				return false;
 			}
 
-			String taskId = getUrn(root, URN_TASK_ID);
+			String taskId = (String) request.get("taskId");
 			if (StringUtils.isEmpty(taskId)) {
-				throw new RuntimeException("No '" + URN_TASK_ID + "' value exists in the event");
+				task.setReasonForIncompletion("Missing 'taskId' in '" + EVENT_WAIT_PARAM + "' request parameter");
+				task.setStatus(Task.Status.FAILED);
+				return false;
 			}
 
-			Workflow workflow = executor.getWorkflow(workflowId, true);
-			if (workflow == null) {
-				throw new RuntimeException("No workflow found with id " + workflowId);
+			String status = (String) request.get("status");
+			if (StringUtils.isEmpty(taskId)) {
+				task.setReasonForIncompletion("Missing 'status' in '" + EVENT_WAIT_PARAM + "' request parameter");
+				task.setStatus(Task.Status.FAILED);
+				return false;
 			}
 
-			Task targetTask = workflow.getTasks().stream().filter(item -> taskId.equals(item.getTaskId()))
-					.findFirst().orElse(null);
-			if (targetTask == null) {
-				throw new RuntimeException("No task found with id " + taskId + " for workflow " + workflowId);
+			Boolean resetStartTime = false;
+			if (request.containsKey("resetStartTime")) {
+				resetStartTime = (Boolean) request.get("resetStartTime");
 			}
 
-			Map<String, Object> event = om.readValue(payload, HASH_MAP_TYPE_REF);
-			targetTask.getOutputData().put("event", event);
+			Map<String, String> mapping = (Map<String, String>) request.get("mapping");
+			String reasonForIncompletion = (String) request.get("reasonForIncompletion");
 
-			// TODO Handle status from mapping
-			String statusName = root.path("Status").path("Name").asText();
-			Task.Status taskStatus = STATUS_MAP.get(statusName);
-			if (taskStatus == null) {
-				throw new RuntimeException("Unable to determine the task status based on " + statusName);
-			}
-			targetTask.setStatus(taskStatus);
+			EventHandler.ProgressTask progressTask = new EventHandler.ProgressTask();
+			progressTask.setWorkflowId(workflowId);
+			progressTask.setTaskId(taskId);
+			progressTask.setStatus(status);
+			progressTask.setResetStartTime(resetStartTime);
+			progressTask.setMapping(mapping);
+			progressTask.setReasonForIncompletion(reasonForIncompletion);
 
-			// Set the reason if task failed. It should be provided in the event
-			if (Task.Status.FAILED.equals(taskStatus)) {
-				String statusReason = root.path("Status").path("Reason").asText();
-				targetTask.setReasonForIncompletion(statusReason);
-			}
+			EventHandler.Action action = new EventHandler.Action();
+			action.setAction(EventHandler.Action.Type.progress_task);
+			action.setProgress_task(progressTask);
 
-			// Create task update wrapper and reset timer if in-progress
-			TaskResult taskResult = new TaskResult(targetTask);
-			if (Task.Status.IN_PROGRESS.equals(taskStatus)) {
-				taskResult.setResetStartTime(true);
-			}
+			EventHandler handler = new EventHandler();
+			handler.setCondition("true");
+			handler.setName("EVENT_WAIT." + task.getWorkflowInstanceId() + "." + task.getTaskId());
+			handler.setActive(true);
+			handler.setEvent(event);
+			handler.setActions(Collections.singletonList(action));
 
-			// Let's update task
-			executor.updateTask(taskResult);
-
+			metadata.addEventHandler(handler);
+			processor.refresh();
 		} catch (Exception ex) {
-			logger.error("Unable to process event: " + ex.getMessage() + " for payload " + payload, ex);
+			task.setReasonForIncompletion("Unable to register event handler: " + ex.getMessage());
+			task.setStatus(Task.Status.FAILED);
+			logger.error("registerEventHandler: failed with " + ex.getMessage() + " for " + task, ex);
+			return false;
+		}
+		return true;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void unregisterEventHandler(Task task) {
+		try {
+			String name = "EVENT_WAIT." + task.getWorkflowInstanceId() + "." + task.getTaskId();
+			metadata.removeEventHandlerStatus(name);
+		} catch (Exception ex) {
+			logger.error("unregisterEventHandler: failed with " + ex.getMessage() + " for " + task, ex);
 		}
 	}
 
-	private String getUrn(JsonNode root, String key) {
-		JsonNode Urns = root.path("Urns");
-		if (Urns.isArray()) {
-			for (JsonNode node : Urns) {
-				String temp = node.asText();
-				if (temp.startsWith(key)) {
-					return temp.replaceAll(key + ":", "");
-				}
-			}
-		}
-		return null;
-	}
 }
