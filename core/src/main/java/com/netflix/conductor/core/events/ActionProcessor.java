@@ -242,7 +242,8 @@ public class ActionProcessor {
 				if (taskStatus.isTerminal()) {
 					metadata.removeEventHandlerStatus("UPDATE_TASK." + workflowId + "." + taskId);
 				}
-			} catch (Exception ignore) {
+			} catch (Exception e) {
+				logger.error("updateTask: removeEventHandler failed with " + e.getMessage() + " for " + updateTask, e);
 			}
 		} catch (Exception e) {
 			logger.error("updateTask: failed with " + e.getMessage() + " for " + updateTask, e);
