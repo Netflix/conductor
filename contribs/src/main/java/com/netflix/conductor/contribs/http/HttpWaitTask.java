@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -111,8 +112,7 @@ public class HttpWaitTask extends GenericHttpTask {
 			if (response.statusCode > 199 && response.statusCode < 300) {
 				task.setStatus(Task.Status.IN_PROGRESS);
 			} else {
-				// unregister event handler if not success
-				unregisterEventHandler(task);
+				unregisterEventHandler(task); // unregister event handler if not success
 				if (response.body != null) {
 					task.setReasonForIncompletion(response.body.toString());
 				} else {
@@ -122,8 +122,7 @@ public class HttpWaitTask extends GenericHttpTask {
 			}
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {
-			// unregister event handler if not success
-			unregisterEventHandler(task);
+			unregisterEventHandler(task); // unregister event handler if not success
 			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
@@ -184,35 +183,39 @@ public class HttpWaitTask extends GenericHttpTask {
 				return false;
 			}
 
-			Boolean resetStartTime = false;
-			if (request.containsKey("resetStartTime")) {
-				resetStartTime = (Boolean) request.get("resetStartTime");
+			boolean resetStartTime = false;
+			Object tmpObject = request.get("resetStartTime");
+			if (tmpObject != null) {
+				resetStartTime = Boolean.parseBoolean(tmpObject.toString());
 			}
 
-			Map<String, String> mapping = (Map<String, String>) request.get("mapping");
-			String reasonForIncompletion = (String) request.get("reasonForIncompletion");
-
-			EventHandler.ProgressTask progressTask = new EventHandler.ProgressTask();
-			progressTask.setWorkflowId(workflowId);
-			progressTask.setTaskId(taskId);
-			progressTask.setStatus(status);
-			progressTask.setResetStartTime(resetStartTime);
-			progressTask.setMapping(mapping);
-			progressTask.setReasonForIncompletion(reasonForIncompletion);
+			EventHandler.UpdateTask updateTask = new EventHandler.UpdateTask();
+			updateTask.setWorkflowId(workflowId);
+			updateTask.setTaskId(taskId);
+			updateTask.setStatus(status);
+			updateTask.setResetStartTime(resetStartTime);
+			updateTask.setFailedReason((String) request.get("failedReason"));
+			updateTask.setStatuses((Map<String, String>) request.get("statuses"));
+			updateTask.setOutput((Map<String, Object>) request.get("output"));
 
 			EventHandler.Action action = new EventHandler.Action();
-			action.setAction(EventHandler.Action.Type.progress_task);
-			action.setProgress_task(progressTask);
+			action.setAction(EventHandler.Action.Type.update_task);
+			action.setUpdate_task(updateTask);
 
 			EventHandler handler = new EventHandler();
-			handler.setCondition("true");
-			handler.setName("EVENT_WAIT." + task.getWorkflowInstanceId() + "." + task.getTaskId());
+			handler.setCondition("true"); // We don't have specific conditions for that
+			handler.setName("UPDATE_TASK." + task.getWorkflowInstanceId() + "." + task.getTaskId());
 			handler.setActive(true);
 			handler.setEvent(event);
 			handler.setActions(Collections.singletonList(action));
 
-			metadata.addEventHandler(handler);
-			processor.refresh();
+			List<EventHandler> handlers = metadata.getEventHandlersForEvent(event, true);
+			if (handlers.isEmpty()) {
+				metadata.addEventHandler(handler);
+			} else {
+				metadata.updateEventHandler(handler);
+			}
+			processor.refresh(); // Force to start listener
 		} catch (Exception ex) {
 			task.setReasonForIncompletion("Unable to register event handler: " + ex.getMessage());
 			task.setStatus(Task.Status.FAILED);
@@ -225,7 +228,7 @@ public class HttpWaitTask extends GenericHttpTask {
 	@SuppressWarnings("unchecked")
 	private void unregisterEventHandler(Task task) {
 		try {
-			String name = "EVENT_WAIT." + task.getWorkflowInstanceId() + "." + task.getTaskId();
+			String name = "UPDATE_TASK." + task.getWorkflowInstanceId() + "." + task.getTaskId();
 			metadata.removeEventHandlerStatus(name);
 		} catch (Exception ex) {
 			logger.error("unregisterEventHandler: failed with " + ex.getMessage() + " for " + task, ex);

@@ -121,7 +121,7 @@ public class EventHandler {
 
 	public static class Action {
 		
-		public enum Type { start_workflow, complete_task, fail_task, progress_task }
+		public enum Type { start_workflow, complete_task, fail_task, update_task }
 		
 		private Type action;
 		
@@ -131,7 +131,7 @@ public class EventHandler {
 		
 		private TaskDetails fail_task;
 
-		private ProgressTask progress_task;
+		private UpdateTask update_task;
 		
 		private boolean expandInlineJSON;
 
@@ -198,15 +198,15 @@ public class EventHandler {
 		/**
 		 * @return the progress task object
 		 */
-		public ProgressTask getProgress_task() {
-			return progress_task;
+		public UpdateTask getUpdate_task() {
+			return update_task;
 		}
 
 		/**
-		 * @param progress_task the progress task object to set
+		 * @param update_task the progress task object to set
 		 */
-		public void setProgress_task(ProgressTask progress_task) {
-			this.progress_task = progress_task;
+		public void setUpdate_task(UpdateTask update_task) {
+			this.update_task = update_task;
 		}
 
 		/**
@@ -357,7 +357,7 @@ public class EventHandler {
 		
 	}
 
-	public static class ProgressTask {
+	public static class UpdateTask {
 
 		private String workflowId;
 
@@ -365,11 +365,11 @@ public class EventHandler {
 
 		private String status;
 
+		private String failedReason;
+
 		private boolean resetStartTime;
 
-		private String reasonForIncompletion;
-
-		private Map<String, String> mapping = new HashMap<>();
+		private Map<String, String> statuses = new HashMap<>();
 
 		private Map<String, Object> output = new HashMap<>();
 
@@ -413,31 +413,31 @@ public class EventHandler {
 			this.status = status;
 		}
 
-		public Map<String, String> getMapping() {
-			return mapping;
+		public Map<String, String> getStatuses() {
+			return statuses;
 		}
 
-		public void setMapping(Map<String, String> mapping) {
-			this.mapping = mapping;
+		public void setStatuses(Map<String, String> statuses) {
+			this.statuses = statuses;
 		}
 
-		public String getReasonForIncompletion() {
-			return reasonForIncompletion;
+		public String getFailedReason() {
+			return failedReason;
 		}
 
-		public void setReasonForIncompletion(String reasonForIncompletion) {
-			this.reasonForIncompletion = reasonForIncompletion;
+		public void setFailedReason(String failedReason) {
+			this.failedReason = failedReason;
 		}
 
 		@Override
 		public String toString() {
-			return "ProgressTask{" +
+			return "UpdateTask{" +
 					"workflowId='" + workflowId + '\'' +
 					", taskId='" + taskId + '\'' +
 					", status='" + status + '\'' +
 					", resetStartTime=" + resetStartTime +
-					", reasonForIncompletion='" + reasonForIncompletion + '\'' +
-					", mapping=" + mapping +
+					", failedReason='" + failedReason + '\'' +
+					", statuses=" + statuses +
 					", output=" + output +
 					'}';
 		}

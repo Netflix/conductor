@@ -25,7 +25,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
-import com.netflix.conductor.common.metadata.events.EventHandler.ProgressTask;
+import com.netflix.conductor.common.metadata.events.EventHandler.UpdateTask;
 import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
 import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -95,8 +95,8 @@ public class ActionProcessor {
 			case fail_task:
 				op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, event, messageId);
 				return op;
-			case progress_task:
-				op = progressTask(jsonObj, action.getProgress_task());
+			case update_task:
+				op = updateTask(jsonObj, action.getUpdate_task());
 				return op;
 			default:
 				break;
@@ -163,45 +163,45 @@ public class ActionProcessor {
 		return op;
 	}
 
-	private Map<String, Object> progressTask(Object payload, ProgressTask progressTask) throws Exception {
+	private Map<String, Object> updateTask(Object payload, UpdateTask updateTask) throws Exception {
 		Map<String, Object> op = new HashMap<>();
-		logger.info("progressTask: starting executing " + progressTask);
+		logger.info("updateTask: starting executing " + updateTask);
 		try {
-			String workflowId = evaluate(progressTask.getWorkflowId(), payload);
+			String workflowId = evaluate(updateTask.getWorkflowId(), payload);
 			if (StringUtils.isEmpty(workflowId))
 				throw new RuntimeException("workflowId evaluating is empty");
 
-			String taskId = evaluate(progressTask.getTaskId(), payload);
+			String taskId = evaluate(updateTask.getTaskId(), payload);
 			if (StringUtils.isEmpty(taskId))
 				throw new RuntimeException("taskId evaluating is empty");
 
-			String status = evaluate(progressTask.getStatus(), payload);
+			String status = evaluate(updateTask.getStatus(), payload);
 			if (StringUtils.isEmpty(status))
 				throw new RuntimeException("status evaluating is empty");
 
-			String reasonForIncompletion = null;
-			if (StringUtils.isNotEmpty(progressTask.getReasonForIncompletion())) {
-				reasonForIncompletion = evaluate(progressTask.getReasonForIncompletion(), payload);
-				if (StringUtils.isEmpty(reasonForIncompletion))
-					throw new RuntimeException("reasonForIncompletion evaluating is empty");
+			String failedReason = null;
+			if (StringUtils.isNotEmpty(updateTask.getFailedReason())) {
+				failedReason = evaluate(updateTask.getFailedReason(), payload);
+				if (StringUtils.isEmpty(failedReason))
+					throw new RuntimeException("failedReason evaluating is empty");
 			}
 
 			Function<String, Status> getTaskStatus = s -> {
 				try {
 					return Status.valueOf(s);
 				} catch (Exception ex) {
-					logger.error("progressTask: getTaskStatus failed with " + ex.getMessage());
+					logger.error("updateTask: getTaskStatus failed with " + ex.getMessage());
 					return null;
 				}
 			};
 
 			Status taskStatus;
 			// If no mapping - then task status taken from status
-			Map<String, String> mapping = progressTask.getMapping();
-			if (mapping == null || mapping.isEmpty()) {
+			Map<String, String> statuses = updateTask.getStatuses();
+			if (statuses == null || statuses.isEmpty()) {
 				taskStatus = getTaskStatus.apply(status.toUpperCase());
 			} else {
-				taskStatus = getTaskStatus.apply(mapping.get(status));
+				taskStatus = getTaskStatus.apply(statuses.get(status));
 			}
 			if (taskStatus == null)
 				throw new RuntimeException("Unable to determine task status");
@@ -215,17 +215,22 @@ public class ActionProcessor {
 			if (targetTask == null)
 				throw new RuntimeException("No task found with id " + taskId + " for workflow " + workflowId);
 
+			op.put("event", payload);
 			targetTask.getOutputData().put("event", payload);
+			if (updateTask.getOutput() != null) {
+				op.putAll(updateTask.getOutput());
+				targetTask.getOutputData().putAll(updateTask.getOutput());
+			}
 			targetTask.setStatus(taskStatus);
 
 			// Set the reason if task failed. It should be provided in the event
 			if (Task.Status.FAILED.equals(taskStatus)) {
-				targetTask.setReasonForIncompletion(reasonForIncompletion);
+				targetTask.setReasonForIncompletion(failedReason);
 			}
 
 			// Create task update wrapper and reset timer if in-progress
 			TaskResult taskResult = new TaskResult(targetTask);
-			if (Task.Status.IN_PROGRESS.equals(taskStatus) && progressTask.getResetStartTime()) {
+			if (Task.Status.IN_PROGRESS.equals(taskStatus) && updateTask.getResetStartTime()) {
 				taskResult.setResetStartTime(true);
 			}
 
@@ -235,12 +240,12 @@ public class ActionProcessor {
 			try {
 				// Remove event handler only on terminal task status
 				if (taskStatus.isTerminal()) {
-					metadata.removeEventHandlerStatus("EVENT_WAIT." + workflowId + "." + taskId);
+					metadata.removeEventHandlerStatus("UPDATE_TASK." + workflowId + "." + taskId);
 				}
 			} catch (Exception ignore) {
 			}
 		} catch (Exception e) {
-			logger.error("progressTask: failed with " + e.getMessage() + " for " + progressTask, e);
+			logger.error("updateTask: failed with " + e.getMessage() + " for " + updateTask, e);
 			op.put("error", e.getMessage());
 		}
 
