@@ -30,6 +30,7 @@ import com.netflix.conductor.contribs.http.RestClientManager;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -100,6 +101,7 @@ public class ServerModule extends AbstractModule {
 
 			DynoProxy proxy = new DynoProxy(dynoConn);
 			bind(DynoProxy.class).toInstance(proxy);
+			bind(WorkflowSweeper.class).asEagerSingleton();
 		}
 
 		install(new ElasticsearchModule());
