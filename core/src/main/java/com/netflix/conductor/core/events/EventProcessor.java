@@ -1,12 +1,12 @@
 /**
  * Copyright 2017 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.core.events;
 
@@ -46,17 +46,17 @@ import java.util.stream.Collectors;
 public class EventProcessor {
 
 	private static Logger logger = LoggerFactory.getLogger(EventProcessor.class);
-	
+
 	private MetadataService ms;
-	
+
 	private ExecutionService es;
-	
+
 	private ActionProcessor ap;
-	
+
 	private Map<String, ObservableQueue> queuesMap = new ConcurrentHashMap<>();
-	
+
 	private ExecutorService executors;
-	
+
 	private ObjectMapper om;
 
 	@Inject
@@ -65,12 +65,12 @@ public class EventProcessor {
 		this.ms = ms;
 		this.ap = ap;
 		this.om = om;
-		
+
 		int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
 
 		// default 60 for backward compatibility
 		int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
-		if(executorThreadCount > 0) {
+		if (executorThreadCount > 0) {
 			this.executors = Executors.newFixedThreadPool(executorThreadCount);
 			refresh();
 			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refresh(), 60, refreshPeriod, TimeUnit.SECONDS);
@@ -78,9 +78,9 @@ public class EventProcessor {
 			logger.warn("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return Returns a map of queues which are active.  Key is event name and value is queue URI
 	 */
 	public Map<String, String> getQueues() {
@@ -88,7 +88,7 @@ public class EventProcessor {
 		queuesMap.entrySet().stream().forEach(q -> queues.put(q.getKey(), q.getValue().getName()));
 		return queues;
 	}
-	
+
 	public Map<String, Map<String, Long>> getQueueSizes() {
 		Map<String, Map<String, Long>> queues = new HashMap<>();
 		queuesMap.entrySet().stream().forEach(q -> {
@@ -98,7 +98,7 @@ public class EventProcessor {
 		});
 		return queues;
 	}
-	
+
 	public void refresh() {
 		Set<String> events = ms.getEventHandlers().stream().map(eh -> eh.getEvent()).collect(Collectors.toSet());
 		List<ObservableQueue> created = new LinkedList<>();
@@ -107,43 +107,43 @@ public class EventProcessor {
 			created.add(q);
 			return q;
 		}));
-		if(!created.isEmpty()) {
-			created.stream().filter(q -> q != null).forEach(queue -> listen(queue));	
+		if (!created.isEmpty()) {
+			created.stream().filter(q -> q != null).forEach(queue -> listen(queue));
 		}
 	}
-	
+
 	private void listen(ObservableQueue queue) {
 		queue.observe().subscribe((Message msg) -> handle(queue, msg));
 	}
-	
+
 	private void handle(ObservableQueue queue, Message msg) {
-		
+
 		try {
-			
+
 			List<Future<Void>> futures = new LinkedList<>();
-			
+
 			String payload = msg.getPayload();
 			Object payloadObj = null;
-			if(payload != null) {
+			if (payload != null) {
 				try {
 					payloadObj = om.readValue(payload, Object.class);
-				}catch(Exception e) {
+				} catch (Exception e) {
 					payloadObj = payload;
 				}
 			}
-			
+
 			es.addMessage(queue.getName(), msg);
-			
+
 			String event = queue.getType() + ":" + queue.getName();
 			List<EventHandler> handlers = ms.getEventHandlersForEvent(event, true);
-			
-			for(EventHandler handler : handlers) {
-				
+
+			for (EventHandler handler : handlers) {
+
 				String condition = handler.getCondition();
 				logger.debug("condition: {}", condition);
-				if(!StringUtils.isEmpty(condition)) {
+				if (!StringUtils.isEmpty(condition)) {
 					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
-					if(!success) {
+					if (!success) {
 						logger.info("handler {} condition {} did not match payload {}", handler.getName(), condition, payloadObj);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
@@ -156,12 +156,12 @@ public class EventProcessor {
 						continue;
 					}
 				}
-				
+
 				int i = 0;
 				List<Action> actions = handler.getActions();
-				for(Action action : actions) {
+				for (Action action : actions) {
 					String id = msg.getId() + "_" + i++;
-					
+
 					EventExecution ee = new EventExecution(id, msg.getId());
 					ee.setCreated(System.currentTimeMillis());
 					ee.setEvent(handler.getEvent());
@@ -176,7 +176,7 @@ public class EventProcessor {
 					}
 				}
 			}
-			
+
 			for (Future<Void> future : futures) {
 				try {
 					future.get();
@@ -184,28 +184,28 @@ public class EventProcessor {
 					logger.error(e.getMessage(), e);
 				}
 			}
-			
+
 			queue.ack(Arrays.asList(msg));
-			
+
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 
 	private Future<Void> execute(EventExecution ee, Action action, String payload) {
-		return executors.submit(()->{
+		return executors.submit(() -> {
 			try {
-				
+
 				logger.debug("Executing {} with payload {}", action.getAction(), payload);
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
-				if(output != null) {
+				if (output != null) {
 					ee.getOutput().putAll(output);
 				}
 				ee.setStatus(Status.COMPLETED);
 				es.updateEventExecution(ee);
-				
+
 				return null;
-			}catch(Exception e) {
+			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());

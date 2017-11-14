@@ -20,6 +20,7 @@ package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
 import com.netflix.conductor.contribs.http.HttpTask;
+import com.netflix.conductor.contribs.http.HttpWaitTask;
 import com.netflix.conductor.contribs.http.RestClientManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public class HttpModule extends AbstractModule {
 	protected void configure() {
 		bind(RestClientManager.class).asEagerSingleton();
 		bind(HttpTask.class).asEagerSingleton();
+		bind(HttpWaitTask.class).asEagerSingleton();
 		logger.info("Http Module configured ...");
 	}
 }

@@ -1,9 +1,12 @@
 package com.netflix.conductor.contribs.http;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Input {
 
 	private String method;    //PUT, POST, GET, DELETE, OPTIONS, HEAD
@@ -25,6 +28,10 @@ public class Input {
 	private String oauthConsumerSecret;
 
 	private String serviceDiscoveryQuery;
+
+	private String taskId;
+
+	private String curtimestamp;
 
 	/**
 	 * @return the method
@@ -158,5 +165,33 @@ public class Input {
 
 	public String getServiceDiscoveryQuery() {
 		return serviceDiscoveryQuery;
+	}
+
+	/**
+	 * @return the task id
+	 */
+	public String getTaskId() {
+		return taskId;
+	}
+
+	/**
+	 * @param taskId the task id to set
+	 */
+	public void setTaskId(String taskId) {
+		this.taskId = taskId;
+	}
+
+	/**
+	 * @return the curtimestamp flag
+	 */
+	public String getCurtimestamp() {
+		return curtimestamp;
+	}
+
+	/**
+	 * @param curtimestamp the curtimestamp to set
+	 */
+	public void setCurtimestamp(String curtimestamp) {
+		this.curtimestamp = curtimestamp;
 	}
 }

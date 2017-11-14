@@ -1,7 +1,6 @@
 package com.netflix.conductor.contribs.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
@@ -10,6 +9,7 @@ import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.MetadataDAO;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class HttpWaitTask extends GenericHttpTask {
 			url = lookup(input.getServiceDiscoveryQuery());
 		}
 
-		if (input.getUri() == null) {
+		if (StringUtils.isEmpty(input.getUri())) {
 			task.setReasonForIncompletion("Missing http uri");
 			task.setStatus(Task.Status.FAILED);
 			return;
@@ -67,13 +67,39 @@ public class HttpWaitTask extends GenericHttpTask {
 			}
 		}
 
-		if (input.getMethod() == null) {
+		if (StringUtils.isEmpty(input.getMethod())) {
 			task.setReasonForIncompletion("Missing http method");
 			task.setStatus(Task.Status.FAILED);
 			return;
 		}
 
-		// register event handler first as we should be ready to accept message right away
+		if (BooleanUtils.toBoolean(input.getTaskId())) {
+			if (input.getBody() != null) {
+				int index = input.getBody().toString().indexOf("}");
+				if (input.getBody().toString().equals("{}")) {
+					input.setBody("{taskid=" + task.getTaskId() + "}");
+				} else {
+					input.setBody(input.getBody().toString().substring(0, index) + ", taskid=" + task.getTaskId() + input.getBody().toString().substring(index));
+				}
+			} else {
+				input.setBody("{taskid=" + task.getTaskId() + "}");
+			}
+		}
+
+		if (BooleanUtils.toBoolean(input.getCurtimestamp())) {
+			if (input.getBody() != null) {
+				int index = input.getBody().toString().indexOf("}");
+				if (input.getBody().toString().equals("{}")) {
+					input.setBody("{Curtimestamp=" + System.currentTimeMillis() + "}");
+				} else {
+					input.setBody(input.getBody().toString().substring(0, index) + ", Curtimestamp=" + System.currentTimeMillis() + input.getBody().toString().substring(index));
+				}
+			} else {
+				input.setBody("{Curtimestamp=" + System.currentTimeMillis() + "}");
+			}
+		}
+
+		// register event handler right away as we should be ready to accept message
 		if (!registerEventHandler(task)) {
 			return;
 		}
@@ -101,7 +127,6 @@ public class HttpWaitTask extends GenericHttpTask {
 			if (response.statusCode > 199 && response.statusCode < 300) {
 				task.setStatus(Task.Status.IN_PROGRESS);
 			} else {
-				unregisterEventHandler(task); // unregister event handler if not success
 				if (response.body != null) {
 					task.setReasonForIncompletion(response.body.toString());
 				} else {
@@ -111,7 +136,6 @@ public class HttpWaitTask extends GenericHttpTask {
 			}
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {
-			unregisterEventHandler(task); // unregister event handler if not success
 			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
@@ -124,7 +148,6 @@ public class HttpWaitTask extends GenericHttpTask {
 
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		unregisterEventHandler(task);
 		task.setStatus(Task.Status.CANCELED);
 	}
 
@@ -185,29 +208,25 @@ public class HttpWaitTask extends GenericHttpTask {
 			updateTask.setFailedReason((String) request.get("failedReason"));
 			updateTask.setStatuses((Map<String, String>) request.get("statuses"));
 			updateTask.setOutput((Map<String, Object>) request.get("output"));
-			Map<String, String> runtime = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
-					"taskId", task.getTaskId());
-			updateTask.setRuntime(runtime);
 
 			EventHandler.Action action = new EventHandler.Action();
 			action.setAction(EventHandler.Action.Type.update_task);
 			action.setUpdate_task(updateTask);
 
 			EventHandler handler = new EventHandler();
-			handler.setCondition("true"); // We don't have specific conditions for that?
-			handler.setName( "UPDATE_TASK." + task.getTaskId());
+			handler.setCondition("true"); // We don't have specific conditions for that
+			handler.setName(event);
 			handler.setActive(true);
 			handler.setEvent(event);
 			handler.setActions(Collections.singletonList(action));
 
 			try {
 				metadata.addEventHandler(handler);
-			}catch (ApplicationException ex) {
-				if (ApplicationException.Code.CONFLICT.equals(ex.getCode())) {
-					metadata.updateEventHandler(handler);
-				}
+			} catch (ApplicationException ignore) {
 			}
-			processor.refresh(); // Start listener right away
+
+			// Start listener right away
+			processor.refresh();
 		} catch (Exception ex) {
 			task.setReasonForIncompletion("Unable to register event handler: " + ex.getMessage());
 			task.setStatus(Task.Status.FAILED);
@@ -216,15 +235,4 @@ public class HttpWaitTask extends GenericHttpTask {
 		}
 		return true;
 	}
-
-	@SuppressWarnings("unchecked")
-	private void unregisterEventHandler(Task task) {
-		try {
-			String name = "UPDATE_TASK." + task.getTaskId();
-			metadata.removeEventHandlerStatus(name);
-		} catch (Exception ex) {
-			logger.error("unregisterEventHandler: failed with " + ex.getMessage() + " for " + task, ex);
-		}
-	}
-
 }

@@ -38,7 +38,7 @@ public class EventHandler {
 	private List<Action> actions = new LinkedList<>();
 	
 	private boolean active;
-	
+
 	public EventHandler() {
 		
 	}
@@ -117,7 +117,6 @@ public class EventHandler {
 	public void setActive(boolean active) {
 		this.active = active;
 	}
-
 
 	public static class Action {
 		
@@ -369,8 +368,6 @@ public class EventHandler {
 
 		private boolean resetStartTime;
 
-		private Map<String, String> runtime = new HashMap<>();
-
 		private Map<String, String> statuses = new HashMap<>();
 
 		private Map<String, Object> output = new HashMap<>();
@@ -431,14 +428,6 @@ public class EventHandler {
 			this.failedReason = failedReason;
 		}
 
-		public Map<String, String> getRuntime() {
-			return runtime;
-		}
-
-		public void setRuntime(Map<String, String> runtime) {
-			this.runtime = runtime;
-		}
-
 		@Override
 		public String toString() {
 			return "UpdateTask{" +
@@ -448,7 +437,6 @@ public class EventHandler {
 					", resetStartTime=" + resetStartTime +
 					", failedReason='" + failedReason + '\'' +
 					", statuses=" + statuses +
-					", runtime=" + runtime +
 					", output=" + output +
 					'}';
 		}

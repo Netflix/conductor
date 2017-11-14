@@ -18,16 +18,12 @@
  */
 package com.netflix.conductor.core.events;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
-import com.netflix.conductor.common.metadata.events.EventHandler.UpdateTask;
 import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
 import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
+import com.netflix.conductor.common.metadata.events.EventHandler.UpdateTask;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
@@ -36,19 +32,15 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.service.MetadataService;
-import net.thisptr.jackson.jq.JsonQuery;
-import net.thisptr.jackson.jq.exception.JsonQueryException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -68,8 +60,6 @@ public class ActionProcessor {
 	private static final ObjectMapper om = new ObjectMapper();
 
 	private ParametersUtils pu = new ParametersUtils();
-
-	private LoadingCache<String, JsonQuery> queryCache = createQueryCache();
 
 	@Inject
 	public ActionProcessor(WorkflowExecutor executor, MetadataService metadata) {
@@ -167,30 +157,21 @@ public class ActionProcessor {
 		Map<String, Object> op = new HashMap<>();
 		logger.info("updateTask: starting executing " + updateTask);
 		try {
-			String workflowId = evaluate(updateTask.getWorkflowId(), payload);
+			String workflowId = ScriptEvaluator.evalJq(updateTask.getWorkflowId(), payload);
 			if (StringUtils.isEmpty(workflowId))
 				throw new RuntimeException("workflowId evaluating is empty");
 
-			String taskId = evaluate(updateTask.getTaskId(), payload);
+			String taskId = ScriptEvaluator.evalJq(updateTask.getTaskId(), payload);
 			if (StringUtils.isEmpty(taskId))
 				throw new RuntimeException("taskId evaluating is empty");
 
-			// Compare workflowId/taskId form the event and the runtime to prevent duplicate processing
-			Map<String, String> runtime = updateTask.getRuntime();
-			boolean workflowMatches = workflowId.equalsIgnoreCase(runtime.get("workflowId"));
-			boolean taskMatches = taskId.equalsIgnoreCase(runtime.get("taskId"));
-			if (!workflowMatches || !taskMatches) {
-				logger.debug("updateTask: workflow/task do not match. Skipping action " + updateTask + ", event " + payload);
-				return op;
-			}
-
-			String status = evaluate(updateTask.getStatus(), payload);
+			String status = ScriptEvaluator.evalJq(updateTask.getStatus(), payload);
 			if (StringUtils.isEmpty(status))
 				throw new RuntimeException("status evaluating is empty");
 
 			String failedReason = null;
 			if (StringUtils.isNotEmpty(updateTask.getFailedReason())) {
-				failedReason = evaluate(updateTask.getFailedReason(), payload);
+				failedReason = ScriptEvaluator.evalJq(updateTask.getFailedReason(), payload);
 				if (StringUtils.isEmpty(failedReason))
 					throw new RuntimeException("failedReason evaluating is empty");
 			}
@@ -245,34 +226,12 @@ public class ActionProcessor {
 
 			// Let's update task
 			executor.updateTask(taskResult);
-
-			try {
-				// Remove event handler only on terminal task status
-				if (taskStatus.isTerminal()) {
-					metadata.removeEventHandlerStatus("UPDATE_TASK." + taskId);
-				}
-			} catch (Exception e) {
-				logger.error("updateTask: removeEventHandler failed with " + e.getMessage() + " for " + updateTask, e);
-			}
 		} catch (Exception e) {
 			logger.error("updateTask: failed with " + e.getMessage() + " for " + updateTask, e);
 			op.put("error", e.getMessage());
 		}
 
 		return op;
-	}
-
-	private String evaluate(String expression, Object payload) throws Exception {
-		JsonNode input = om.valueToTree(payload);
-		JsonQuery query = queryCache.get(expression);
-		List<JsonNode> result = query.apply(input);
-		if (result == null) {
-			return null;
-		} else if (result.isEmpty()) {
-			return null;
-		} else {
-			return result.get(0).asText();
-		}
 	}
 
 	private Object getJson(String jsonAsString) {
@@ -326,15 +285,5 @@ public class ActionProcessor {
 				expandList((List<Object>) value);
 			}
 		}
-	}
-
-	private LoadingCache<String, JsonQuery> createQueryCache() {
-		CacheLoader<String, JsonQuery> loader = new CacheLoader<String, JsonQuery>() {
-			@Override
-			public JsonQuery load(@Nonnull String query) throws JsonQueryException {
-				return JsonQuery.compile(query);
-			}
-		};
-		return CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(1000).build(loader);
 	}
 }
