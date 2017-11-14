@@ -86,7 +86,7 @@ public class ActionProcessor {
 				op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, event, messageId);
 				return op;
 			case update_task:
-				op = updateTask(jsonObj, action.getUpdate_task());
+				op = updateTask(action, jsonObj);
 				return op;
 			default:
 				break;
@@ -153,9 +153,9 @@ public class ActionProcessor {
 		return op;
 	}
 
-	private Map<String, Object> updateTask(Object payload, UpdateTask updateTask) throws Exception {
+	private Map<String, Object> updateTask(Action action, Object payload) throws Exception {
+		UpdateTask updateTask = action.getUpdate_task();
 		Map<String, Object> op = new HashMap<>();
-		logger.info("updateTask: starting executing " + updateTask);
 		try {
 			String workflowId = ScriptEvaluator.evalJq(updateTask.getWorkflowId(), payload);
 			if (StringUtils.isEmpty(workflowId))
@@ -227,8 +227,10 @@ public class ActionProcessor {
 			// Let's update task
 			executor.updateTask(taskResult);
 		} catch (Exception e) {
-			logger.error("updateTask: failed with " + e.getMessage() + " for " + updateTask, e);
+			logger.error("updateTask: failed with " + e.getMessage() + " action=" + updateTask + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
+			op.put("action", updateTask);
+			op.put("payload", payload);
 		}
 
 		return op;
