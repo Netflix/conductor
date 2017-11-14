@@ -165,7 +165,7 @@ job "conductor" {
       }
       driver = "docker"
       config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/consul-elasticsearch:0.2.0"
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/consul-elasticsearch:0.2.1"
         port_map {
           http = 9200
           tcp = 9300
