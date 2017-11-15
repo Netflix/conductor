@@ -18,12 +18,14 @@ package com.netflix.conductor.dao.es5;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ObjectArrays;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.config.Configuration;
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.ResourceAlreadyExistsException;
+import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
@@ -38,6 +40,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -77,11 +82,6 @@ public class ElasticSearch5BaseDAO {
 		return builder.toString().toLowerCase();
 	}
 
-	String toUnackIndexName(String... nsValues) {
-		String[] values = ObjectArrays.concat("unack", nsValues);
-		return toIndexName(values);
-	}
-
 	String toId(String... nsValues) {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < nsValues.length; i++) {
@@ -112,11 +112,11 @@ public class ElasticSearch5BaseDAO {
 			return;
 		}
 		try {
-			client.admin().indices().prepareGetIndex().addIndices(indexName).get();
+			doWithRetryNoisy(() -> client.admin().indices().prepareGetIndex().addIndices(indexName).get());
 			indexCache.add(indexName);
 		} catch (IndexNotFoundException notFound) {
 			try {
-				client.admin().indices().prepareCreate(indexName).get();
+				doWithRetryNoisy(() -> client.admin().indices().prepareCreate(indexName).get());
 				indexCache.add(indexName);
 			} catch (ResourceAlreadyExistsException ignore) {
 				indexCache.add(indexName);
@@ -126,12 +126,12 @@ public class ElasticSearch5BaseDAO {
 		}
 	}
 
-	void ensureIndexExists(String indexName, String typeName, String... suffix) {
+	void ensureIndexExists(String indexName, String typeName, String ... suffix) {
 		if (indexCache.contains(indexName)) {
 			return;
 		}
 		try {
-			client.admin().indices().prepareGetIndex().addIndices(indexName).get();
+			doWithRetryNoisy(() -> client.admin().indices().prepareGetIndex().addIndices(indexName).get());
 			indexCache.add(indexName);
 		} catch (IndexNotFoundException notFound) {
 			try {
@@ -153,7 +153,7 @@ public class ElasticSearch5BaseDAO {
 					source.remove(DEFAULT);
 				}
 
-				client.admin().indices().prepareCreate(indexName).addMapping(typeName, source).get();
+				doWithRetryNoisy(() -> client.admin().indices().prepareCreate(indexName).addMapping(typeName, source).get());
 				indexCache.add(indexName);
 			} catch (ResourceAlreadyExistsException ignore) {
 				indexCache.add(indexName);
@@ -176,64 +176,97 @@ public class ElasticSearch5BaseDAO {
 
 	void delete(String indexName, String typeName, String id) {
 		ensureIndexExists(indexName);
-		try {
-			client.prepareDelete(indexName, typeName, id)
-					.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-					.get();
-		} catch (DocumentMissingException ignore) {
-		} catch (Exception ex) {
-			logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
-		}
+		doWithRetry(() -> {
+			try {
+				client.prepareDelete(indexName, typeName, id)
+						.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+						.get();
+			} catch (DocumentMissingException ignore) {
+			} catch (Exception ex) {
+				logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
+			}
+		});
 	}
 
 	void upsert(String indexName, String typeName, String id, Map<String, ?> payload) {
 		ensureIndexExists(indexName);
-		try {
-			client.prepareUpdate(indexName, typeName, id)
-					.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-					.setDocAsUpsert(true)
-					.setDoc(payload)
-					.get();
-		} catch (VersionConflictEngineException ignore) {
-		} catch (Exception ex) {
-			logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-		}
+		doWithRetry(() -> {
+			try {
+				client.prepareUpdate(indexName, typeName, id)
+						.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+						.setDocAsUpsert(true)
+						.setDoc(payload)
+						.get();
+			} catch (VersionConflictEngineException ignore) {
+			} catch (Exception ex) {
+				logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+			}
+		});
 	}
 
 	void update(String indexName, String typeName, String id, Map<String, ?> payload) {
 		ensureIndexExists(indexName);
-		try {
-			client.prepareUpdate(indexName, typeName, id)
-					.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-					.setDoc(payload)
-					.get();
-		} catch (VersionConflictEngineException ignore) {
-		} catch (Exception ex) {
-			logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-		}
+		doWithRetryNoisy(() -> {
+			try {
+				client.prepareUpdate(indexName, typeName, id)
+						.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+						.setDoc(payload)
+						.get();
+			} catch (VersionConflictEngineException ignore) {
+			} catch (Exception ex) {
+				logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+			}
+		});
 	}
 
 	boolean insert(String indexName, String typeName, String id, Map<String, ?> payload) {
 		ensureIndexExists(indexName);
-		try {
-			client.prepareIndex(indexName, typeName, id)
-					.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-					.setSource(payload)
-					.setCreate(true)
-					.get();
-			return true;
-		} catch (VersionConflictEngineException ex) {
-			return false;
-		} catch (Exception ex) {
-			logger.error("insert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-			return false;
+		AtomicBoolean result = new AtomicBoolean();
+		doWithRetry(() -> {
+			try {
+				client.prepareIndex(indexName, typeName, id)
+						.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+						.setSource(payload)
+						.setCreate(true)
+						.get();
+				result.set(true);
+			} catch (VersionConflictEngineException ex) {
+				result.set(false);
+			} catch (Exception ex) {
+				logger.error("insert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+				result.set(false);
+				throw ex; // Repeat action
+			}
+		});
+		return result.get();
+	}
+
+	void doWithRetryNoisy(Runnable runnable) {
+		int retry = 3;
+		while (true) {
+			try {
+				runnable.run();
+				return;
+			} catch (Exception ex) {
+				retry--;
+				if (retry > 0) {
+					Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+				} else {
+					throw ex;
+				}
+			}
 		}
 	}
 
 	GetResponse findOne(String indexName, String typeName, String id) {
 		ensureIndexExists(indexName);
 		try {
-			return client.prepareGet(indexName, typeName, id).get();
+			GetRequestBuilder request = client.prepareGet(indexName, typeName, id);
+
+			AtomicReference<GetResponse> reference = new AtomicReference<>();
+			doWithRetryNoisy(() -> reference.set(request.get()));
+
+			return reference.get();
 		} catch (Exception ex) {
 			logger.error("findOne: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
 			throw ex;
@@ -243,7 +276,12 @@ public class ElasticSearch5BaseDAO {
 	<T> T findOne(String indexName, String typeName, String id, Class<T> clazz) {
 		ensureIndexExists(indexName);
 		try {
-			GetResponse record = client.prepareGet(indexName, typeName, id).get();
+			GetRequestBuilder request = client.prepareGet(indexName, typeName, id);
+
+			AtomicReference<GetResponse> reference = new AtomicReference<>();
+			doWithRetryNoisy(() -> reference.set(request.get()));
+
+			GetResponse record = reference.get();
 			if (record.isExists()) {
 				return convert(record.getSource(), clazz);
 			}
@@ -261,17 +299,22 @@ public class ElasticSearch5BaseDAO {
 		// This type of the search fails if no such index
 		ensureIndexExists(indexName);
 		try {
-			SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
-			Long size = response.getHits().getTotalHits();
+			SearchRequestBuilder request1 = client.prepareSearch(indexName).setTypes(typeName).setSize(0);
+
+			AtomicReference<SearchResponse> reference = new AtomicReference<>();
+			doWithRetryNoisy(() -> reference.set(request1.get()));
+
+			Long size = reference.get().getHits().getTotalHits();
 			if (logger.isDebugEnabled())
 				logger.debug("findAll: found={}", size);
 			if (size == 0) {
 				return Collections.emptyList();
 			}
 
-			response = client.prepareSearch(indexName).setTypes(typeName).setSize(size.intValue()).get();
+			SearchRequestBuilder request2 = client.prepareSearch(indexName).setTypes(typeName).setSize(size.intValue());
+			doWithRetryNoisy(() -> reference.set(request2.get()));
 
-			List<String> result = Arrays.stream(response.getHits().getHits())
+			List<String> result = Arrays.stream(reference.get().getHits().getHits())
 					.map(SearchHit::getId)
 					.collect(Collectors.toList());
 
@@ -291,17 +334,22 @@ public class ElasticSearch5BaseDAO {
 		// This type of the search fails if no such index
 		ensureIndexExists(indexName);
 		try {
-			SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setSize(0).get();
-			Long size = response.getHits().getTotalHits();
+			SearchRequestBuilder request1 = client.prepareSearch(indexName).setTypes(typeName).setSize(0);
+
+			AtomicReference<SearchResponse> reference = new AtomicReference<>();
+			doWithRetryNoisy(() -> reference.set(request1.get()));
+
+			Long size = reference.get().getHits().getTotalHits();
 			if (logger.isDebugEnabled())
 				logger.debug("findAll: found={}", size);
 			if (size == 0) {
 				return Collections.emptyList();
 			}
 
-			response = client.prepareSearch(indexName).setTypes(typeName).setSize(size.intValue()).get();
+			SearchRequestBuilder request2 = client.prepareSearch(indexName).setTypes(typeName).setSize(size.intValue());
+			doWithRetryNoisy(() -> reference.set(request2.get()));
 
-			List<T> result = Arrays.stream(response.getHits().getHits())
+			List<T> result = Arrays.stream(reference.get().getHits().getHits())
 					.map(hit -> convert(hit.getSource(), clazz))
 					.collect(Collectors.toList());
 
@@ -321,16 +369,22 @@ public class ElasticSearch5BaseDAO {
 		// This type of the search fails if no such index
 		ensureIndexExists(indexName);
 		try {
-			SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0).get();
-			Long size = response.getHits().getTotalHits();
+			SearchRequestBuilder request1 = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(0);
+
+			AtomicReference<SearchResponse> reference = new AtomicReference<>();
+			doWithRetryNoisy(() -> reference.set(request1.get()));
+
+			Long size = reference.get().getHits().getTotalHits();
 			if (logger.isDebugEnabled())
 				logger.debug("findAll: found={}", size);
 			if (size == 0) {
 				return Collections.emptyList();
 			}
 
-			response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size.intValue()).get();
-			List<T> result = Arrays.stream(response.getHits().getHits())
+			SearchRequestBuilder request2 = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size.intValue());
+			doWithRetryNoisy(() -> reference.set(request2.get()));
+
+			List<T> result = Arrays.stream(reference.get().getHits().getHits())
 					.map(item -> convert(item.getSource(), clazz))
 					.collect(Collectors.toList());
 			if (logger.isDebugEnabled())
@@ -349,8 +403,12 @@ public class ElasticSearch5BaseDAO {
 		// This type of the search fails if no such index
 		ensureIndexExists(indexName);
 		try {
-			SearchResponse response = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size).get();
-			List<T> result = Arrays.stream(response.getHits().getHits())
+			SearchRequestBuilder request = client.prepareSearch(indexName).setTypes(typeName).setQuery(query).setSize(size);
+
+			AtomicReference<SearchResponse> reference = new AtomicReference<>();
+			doWithRetryNoisy(() -> reference.set(request.get()));
+
+			List<T> result = Arrays.stream(reference.get().getHits().getHits())
 					.map(item -> convert(item.getSource(), clazz))
 					.collect(Collectors.toList());
 			if (logger.isDebugEnabled())
@@ -365,6 +423,13 @@ public class ElasticSearch5BaseDAO {
 	Map<String, ?> toMap(Object value) {
 		return mapper.convertValue(value, new TypeReference<Map<String, ?>>() {
 		});
+	}
+
+	private void doWithRetry(Runnable runnable) {
+		try {
+			doWithRetryNoisy(runnable);
+		} catch (Exception ignore) {
+		}
 	}
 
 	private <T> T convert(Map map, Class<T> clazz) {
