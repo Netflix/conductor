@@ -1,0 +1,10 @@
+dependencies {
+
+	compile project(':conductor-core')
+	compile 'redis.clients:jedis:2.8.1'
+	compile 'com.google.inject:guice:3.0'
+
+	//In memory redis for unit testing
+ 	testCompile 'org.rarefiedredis.redis:redis-java:0.0.17'
+
+}
