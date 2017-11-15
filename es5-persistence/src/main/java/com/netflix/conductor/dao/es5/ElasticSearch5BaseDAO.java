@@ -166,7 +166,7 @@ public class ElasticSearch5BaseDAO {
 	boolean exists(String indexName, String typeName, String id) {
 		ensureIndexExists(indexName);
 		try {
-			GetResponse record = client.prepareGet(indexName, typeName, id).get();
+			GetResponse record = findOne(indexName, typeName, id);
 			return record.isExists();
 		} catch (Exception ex) {
 			logger.error("exists: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
@@ -184,6 +184,7 @@ public class ElasticSearch5BaseDAO {
 			} catch (DocumentMissingException ignore) {
 			} catch (Exception ex) {
 				logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
+				throw ex; // Causes to repeat attempt
 			}
 		});
 	}
@@ -200,13 +201,14 @@ public class ElasticSearch5BaseDAO {
 			} catch (VersionConflictEngineException ignore) {
 			} catch (Exception ex) {
 				logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+				throw ex; // Causes to repeat attempt
 			}
 		});
 	}
 
 	void update(String indexName, String typeName, String id, Map<String, ?> payload) {
 		ensureIndexExists(indexName);
-		doWithRetryNoisy(() -> {
+		doWithRetry(() -> {
 			try {
 				client.prepareUpdate(indexName, typeName, id)
 						.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
@@ -215,13 +217,14 @@ public class ElasticSearch5BaseDAO {
 			} catch (VersionConflictEngineException ignore) {
 			} catch (Exception ex) {
 				logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+				throw ex; // Causes to repeat attempt
 			}
 		});
 	}
 
 	boolean insert(String indexName, String typeName, String id, Map<String, ?> payload) {
 		ensureIndexExists(indexName);
-		AtomicBoolean result = new AtomicBoolean();
+		AtomicBoolean result = new AtomicBoolean(false);
 		doWithRetry(() -> {
 			try {
 				client.prepareIndex(indexName, typeName, id)
@@ -230,12 +233,10 @@ public class ElasticSearch5BaseDAO {
 						.setCreate(true)
 						.get();
 				result.set(true);
-			} catch (VersionConflictEngineException ex) {
-				result.set(false);
+			} catch (VersionConflictEngineException ignore) {
 			} catch (Exception ex) {
 				logger.error("insert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-				result.set(false);
-				throw ex; // Repeat action
+				throw ex;  // Causes to repeat attempt
 			}
 		});
 		return result.get();
