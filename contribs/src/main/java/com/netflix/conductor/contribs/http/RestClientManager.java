@@ -18,9 +18,10 @@
  */
 package com.netflix.conductor.contribs.http;
 
-import com.sun.jersey.api.client.Client;
-
 import javax.inject.Singleton;
+
+import com.netflix.conductor.contribs.http.HttpTask.Input;
+import com.sun.jersey.api.client.Client;
 
 /**
  * @author Viren

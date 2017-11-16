@@ -6,10 +6,10 @@
         <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
     </filter>
 
-    <filter-statuses>
+    <filter-mapping>
         <filter-name>guiceFilter</filter-name>
         <url-pattern>/*</url-pattern>
-    </filter-statuses>
+    </filter-mapping>
 
     <listener>
         <listener-class>com.netflix.conductor.server.ServletContextListner</listener-class>
