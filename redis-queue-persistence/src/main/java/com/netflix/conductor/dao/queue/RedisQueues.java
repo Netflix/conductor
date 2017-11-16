@@ -41,9 +41,9 @@ public class RedisQueues implements Closeable {
      * @param unackTime	Time in millisecond within which a message needs to be acknowledged by the client, after which the message is re-queued.
      * @param unackHandlerIntervalInMS	Time in millisecond at which the un-acknowledgement processor runs
      */
-    public RedisQueues(JedisPool jedisPool,  String redisKeyPrefix, int unackTime,
+    public RedisQueues(JedisPool jedisPool,  String redisKeyPrefix, String shardName, int unackTime,
                        int unackHandlerIntervalInMS) {
-
+        this.shardName = shardName;
         this.pool = jedisPool;
         this.redisKeyPrefix = redisKeyPrefix;
         this.unackTime = unackTime;

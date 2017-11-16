@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,123 +34,127 @@ import redis.clients.jedis.JedisPool;
 @Singleton
 public class RedisQueueDAO implements QueueDAO {
 
-	private static Logger logger = LoggerFactory.getLogger(RedisQueueDAO.class);
+    private static Logger logger = LoggerFactory.getLogger(RedisQueueDAO.class);
 
-	private RedisQueues queues;
+    private RedisQueues queues;
 
-	private JedisPool connPool;
+    private JedisPool connPool;
 
 
-	private String domain;
+    private String domain;
+    private String shardName;
 
-	private Configuration config;
+    private Configuration config;
 
-	public RedisQueueDAO(JedisPool connPool,  Configuration config) {
-		this.connPool = connPool;
-		this.config = config;
-		init();
-	}
+    public RedisQueueDAO(JedisPool connPool,    Configuration config) {
+        this.domain = config.getProperty("workflow.dyno.keyspace.domain", null);
+        this.shardName = "test-shard";
+        this.connPool = connPool;
+        this.config = config;
+        init();
+    }
 
-	public void init() {
+    public void init() {
 
-		String rootNamespace = config.getProperty("workflow.namespace.queue.prefix", null);
-		String stack = config.getStack();
-		String prefix = rootNamespace + "." + stack;
-		if (domain != null) {
-			prefix = prefix + "." + domain;
-		}
-		queues = new RedisQueues(connPool, prefix, 60_000, 60_000);
-		logger.info("DynoQueueDAO initialized with prefix " + prefix + "!");
-	}
+        String rootNamespace = config.getProperty("workflow.namespace.queue.prefix", null);
+        String stack = config.getStack();
+        String prefix = rootNamespace + "." + stack;
+        if (domain != null) {
+            prefix = prefix + "." + domain;
+        }
+        queues = new RedisQueues(connPool, prefix, shardName, 60_000, 60_000);
+        logger.info("DynoQueueDAO initialized with prefix " + prefix + "!");
+    }
 
-	@Override
-	public void push(String queueName, String id, long offsetTimeInSecond) {
-		Message msg = new Message(id, null);
-		msg.setTimeout(offsetTimeInSecond, TimeUnit.SECONDS);
-		queues.get(queueName).push(Arrays.asList(msg));
-	}
+    @Override
+    public void push(String queueName, String id, long offsetTimeInSecond) {
+        Message msg = new Message(id, null);
+        msg.setTimeout(offsetTimeInSecond, TimeUnit.SECONDS);
+        queues.get(queueName).push(Arrays.asList(msg));
+    }
 
-	@Override
-	public void push(String queueName, List<com.netflix.conductor.core.events.queue.Message> messages) {
-		List<Message> msgs = messages.stream().map(msg -> new Message(msg.getId(), msg.getPayload())).collect(Collectors.toList());
-		queues.get(queueName).push(msgs);
-	}
-	
-	@Override
-	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
-		Queue queue = queues.get(queueName);
-		if (queue.get(id) != null) {
-			return false;
-		}
-		Message msg = new Message(id, null);
-		msg.setTimeout(offsetTimeInSecond, TimeUnit.SECONDS);
-		queue.push(Arrays.asList(msg));
-		return true;
-	}
+    @Override
+    public void push(String queueName, List<com.netflix.conductor.core.events.queue.Message> messages) {
+        List<Message> msgs = messages.stream().map(msg -> new Message(msg.getId(), msg.getPayload())).collect(Collectors.toList());
+        queues.get(queueName).push(msgs);
+    }
 
-	@Override
-	public List<String> pop(String queueName, int count, int timeout) {
-		List<Message> msg = queues.get(queueName).pop(count, timeout, TimeUnit.MILLISECONDS);
-		return msg.stream().map(m -> m.getId()).collect(Collectors.toList());
-	}
+    @Override
+    public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
+        Queue queue = queues.get(queueName);
+        if (queue.get(id) != null) {
+            return false;
+        }
+        Message msg = new Message(id, null);
+        msg.setTimeout(offsetTimeInSecond, TimeUnit.SECONDS);
+        queue.push(Arrays.asList(msg));
+        return true;
+    }
 
-	@Override
-	public List<com.netflix.conductor.core.events.queue.Message> pollMessages(String queueName, int count, int timeout) {
-		List<Message> msgs = queues.get(queueName).pop(count, timeout, TimeUnit.MILLISECONDS);
-		return msgs.stream().map(msg -> new com.netflix.conductor.core.events.queue.Message(msg.getId(), msg.getPayload(), null)).collect(Collectors.toList());
-	}
-	
-	@Override
-	public void remove(String queueName, String messageId) {
-		queues.get(queueName).remove(messageId);
-	}
+    @Override
+    public List<String> pop(String queueName, int count, int timeout) {
+        List<Message> msg = queues.get(queueName).pop(count, timeout, TimeUnit.MILLISECONDS);
+        return msg.stream().map(m -> m.getId()).collect(Collectors.toList());
+    }
 
-	@Override
-	public int getSize(String queueName) {
-		return (int) queues.get(queueName).size();
-	}
+    @Override
+    public List<com.netflix.conductor.core.events.queue.Message> pollMessages(String queueName, int count, int timeout) {
+        List<Message> msgs = queues.get(queueName).pop(count, timeout, TimeUnit.MILLISECONDS);
+        return msgs.stream().map(msg -> new com.netflix.conductor.core.events.queue.Message(msg.getId(), msg.getPayload(), null)).collect(Collectors.toList());
+    }
 
-	@Override
-	public boolean ack(String queueName, String messageId) {
-		return queues.get(queueName).ack(messageId);
+    @Override
+    public void remove(String queueName, String messageId) {
+        queues.get(queueName).remove(messageId);
+    }
 
-	}
-	
-	@Override
-	public boolean setUnackTimeout(String queueName, String messageId, long timeout) {
-		return queues.get(queueName).setUnackTimeout(messageId, timeout);
-	}
+    @Override
+    public int getSize(String queueName) {
+        return (int) queues.get(queueName).size();
+    }
 
-	@Override
-	public void flush(String queueName) {
-		Queue queue = queues.get(queueName);
-		if (queue != null) {
-			queue.clear();
-		}
-	}
+    @Override
+    public boolean ack(String queueName, String messageId) {
+        return queues.get(queueName).ack(messageId);
 
-	@Override
-	public Map<String, Long> queuesDetail() {
-		Map<String, Long> map = queues.queues().stream().collect(Collectors.toMap(queue -> queue.getName(), q -> q.size()));
-		return map;
-	}
+    }
 
-	@Override
-	public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose() {
-		Map<String, Map<String, Map<String, Long>>> map = queues.queues().stream()
-				.collect(Collectors.toMap(queue -> queue.getName(), q -> q.shardSizes()));
-		return map;
-	}
-	
-	public void processUnacks(String queueName) {
-		((RedisQueue)queues.get(queueName)).processUnacks();;
-	}
+    @Override
+    public boolean setUnackTimeout(String queueName, String messageId, long timeout) {
+        return queues.get(queueName).setUnackTimeout(messageId, timeout);
+    }
 
-	@Override
-	public boolean setOffsetTime(String queueName, String id, long offsetTimeInSecond) {
-		Queue queue = queues.get(queueName);
-		return queue.setTimeout(id, offsetTimeInSecond);
-		
-	}
+    @Override
+    public void flush(String queueName) {
+        Queue queue = queues.get(queueName);
+        if (queue != null) {
+            queue.clear();
+        }
+    }
+
+    @Override
+    public Map<String, Long> queuesDetail() {
+        Map<String, Long> map = queues.queues().stream().collect(Collectors.toMap(queue -> queue.getName(), q -> q.size()));
+        return map;
+    }
+
+    @Override
+    public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose() {
+        Map<String, Map<String, Map<String, Long>>> map = queues.queues().stream()
+                .collect(Collectors.toMap(queue -> queue.getName(), q -> q.shardSizes()));
+        return map;
+    }
+
+    public void processUnacks(String queueName) {
+        ((RedisQueue) queues.get(queueName)).processUnacks();
+        ;
+    }
+
+    @Override
+    public boolean setOffsetTime(String queueName, String id, long offsetTimeInSecond) {
+        Queue queue = queues.get(queueName);
+        return queue.setTimeout(id, offsetTimeInSecond);
+
+    }
 
 }
