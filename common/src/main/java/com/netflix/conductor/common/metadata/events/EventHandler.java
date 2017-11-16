@@ -38,7 +38,7 @@ public class EventHandler {
 	private List<Action> actions = new LinkedList<>();
 	
 	private boolean active;
-
+	
 	public EventHandler() {
 		
 	}
@@ -118,9 +118,10 @@ public class EventHandler {
 		this.active = active;
 	}
 
+
 	public static class Action {
 		
-		public enum Type { start_workflow, complete_task, fail_task, update_task }
+		public enum Type { start_workflow, complete_task, fail_task }
 		
 		private Type action;
 		
@@ -129,8 +130,6 @@ public class EventHandler {
 		private TaskDetails complete_task;
 		
 		private TaskDetails fail_task;
-
-		private UpdateTask update_task;
 		
 		private boolean expandInlineJSON;
 
@@ -193,21 +192,7 @@ public class EventHandler {
 		public void setFail_task(TaskDetails fail_task) {
 			this.fail_task = fail_task;
 		}
-
-		/**
-		 * @return the progress task object
-		 */
-		public UpdateTask getUpdate_task() {
-			return update_task;
-		}
-
-		/**
-		 * @param update_task the progress task object to set
-		 */
-		public void setUpdate_task(UpdateTask update_task) {
-			this.update_task = update_task;
-		}
-
+		
 		/**
 		 * 
 		 * @param expandInlineJSON when set to true, the in-lined JSON strings are expanded to a full json document 
@@ -228,7 +213,7 @@ public class EventHandler {
 	public static class TaskDetails {
 		
 		private String workflowId;
-
+		
 		private String taskRefName;
 		
 		private Map<String, Object> output = new HashMap<>();
@@ -277,9 +262,9 @@ public class EventHandler {
 		public void setOutput(Map<String, Object> output) {
 			this.output = output;
 		}
-
-
-
+		
+		
+		
 	}
 	
 	public static class StartWorkflow {
@@ -355,90 +340,5 @@ public class EventHandler {
 		
 		
 	}
-
-	public static class UpdateTask {
-
-		private String workflowId;
-
-		private String taskId;
-
-		private String status;
-
-		private String failedReason;
-
-		private boolean resetStartTime;
-
-		private Map<String, String> statuses = new HashMap<>();
-
-		private Map<String, Object> output = new HashMap<>();
-
-		public String getWorkflowId() {
-			return workflowId;
-		}
-
-		public void setWorkflowId(String workflowId) {
-			this.workflowId = workflowId;
-		}
-
-		public Map<String, Object> getOutput() {
-			return output;
-		}
-
-		public void setOutput(Map<String, Object> output) {
-			this.output = output;
-		}
-
-		public String getTaskId() {
-			return taskId;
-		}
-
-		public void setTaskId(String taskId) {
-			this.taskId = taskId;
-		}
-
-		public boolean getResetStartTime() {
-			return resetStartTime;
-		}
-
-		public void setResetStartTime(boolean resetStartTime) {
-			this.resetStartTime = resetStartTime;
-		}
-
-		public String getStatus() {
-			return status;
-		}
-
-		public void setStatus(String status) {
-			this.status = status;
-		}
-
-		public Map<String, String> getStatuses() {
-			return statuses;
-		}
-
-		public void setStatuses(Map<String, String> statuses) {
-			this.statuses = statuses;
-		}
-
-		public String getFailedReason() {
-			return failedReason;
-		}
-
-		public void setFailedReason(String failedReason) {
-			this.failedReason = failedReason;
-		}
-
-		@Override
-		public String toString() {
-			return "UpdateTask{" +
-					"workflowId='" + workflowId + '\'' +
-					", taskId='" + taskId + '\'' +
-					", status='" + status + '\'' +
-					", resetStartTime=" + resetStartTime +
-					", failedReason='" + failedReason + '\'' +
-					", statuses=" + statuses +
-					", output=" + output +
-					'}';
-		}
-	}
+	
 }

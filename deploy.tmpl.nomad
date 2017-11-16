@@ -118,8 +118,7 @@ job "conductor" {
 
         // NATS settings
         io_nats_client_url = "nats://events.service.<TLD>:4222"
-        conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule,com.netflix.conductor.contribs.HttpWaitModule"
-        conductor_http_wait_event_queue_name = "nats:deluxe.*.*.status:deluxe.conductor.queue.generic"
+        conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule"
 
         // Auth settings. TODO: Move client secret to VAULT!
         conductor_auth_url = "https://auth.dmlib.de/v1/tenant/deluxe/auth/token"

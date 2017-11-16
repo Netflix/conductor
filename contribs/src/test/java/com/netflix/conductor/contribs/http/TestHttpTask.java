@@ -18,30 +18,13 @@
  */
 package com.netflix.conductor.contribs.http;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.execution.DeciderService;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.dao.MetadataDAO;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -51,9 +34,32 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.contribs.http.HttpTask.Input;
+import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.DeciderService;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.MetadataDAO;
 
 /**
  * @author Viren
@@ -110,7 +116,7 @@ public class TestHttpTask {
 		RestClientManager rcm = new RestClientManager();
 		Configuration config = mock(Configuration.class);
 		when(config.getServerId()).thenReturn("test_server_id");
-		httpTask = new HttpTask(rcm, config, new ObjectMapper());
+		httpTask = new HttpTask(rcm, config);
 	}
 	
 	@Test
