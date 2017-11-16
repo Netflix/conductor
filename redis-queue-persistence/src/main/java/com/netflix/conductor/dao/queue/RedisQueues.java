@@ -19,9 +19,7 @@ import redis.clients.jedis.JedisPool;
  */
 public class RedisQueues implements Closeable {
 
-    private JedisCommands quorumConn;
 
-    private JedisCommands nonQuorumConn;
 
     private Set<String> allShards;
 
@@ -39,17 +37,14 @@ public class RedisQueues implements Closeable {
 
     /**
      *
-     * @param quorumConn Dyno connection with dc_quorum enabled
-     * @param nonQuorumConn	Dyno connection to local Redis
      * @param redisKeyPrefix	prefix applied to the Redis keys
      * @param unackTime	Time in millisecond within which a message needs to be acknowledged by the client, after which the message is re-queued.
      * @param unackHandlerIntervalInMS	Time in millisecond at which the un-acknowledgement processor runs
      */
-    public RedisQueues(JedisCommands quorumConn, JedisCommands nonQuorumConn, String redisKeyPrefix, int unackTime,
+    public RedisQueues(JedisPool jedisPool,  String redisKeyPrefix, int unackTime,
                        int unackHandlerIntervalInMS) {
 
-        this.quorumConn = quorumConn;
-        this.nonQuorumConn = nonQuorumConn;
+        this.pool = jedisPool;
         this.redisKeyPrefix = redisKeyPrefix;
         this.unackTime = unackTime;
         this.unackHandlerIntervalInMS = unackHandlerIntervalInMS;

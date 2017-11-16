@@ -28,10 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.dyno.queues.ShardSupplier;
-import com.netflix.dyno.queues.redis.RedisDynoQueue;
 
-import redis.clients.jedis.JedisCommands;
+import redis.clients.jedis.JedisPool;
 
 @Singleton
 public class RedisQueueDAO implements QueueDAO {
@@ -40,20 +38,15 @@ public class RedisQueueDAO implements QueueDAO {
 
 	private RedisQueues queues;
 
-	private JedisCommands dynoClient;
-	
-	private JedisCommands dynoClientRead;
+	private JedisPool connPool;
 
-	private ShardSupplier ss;
 
 	private String domain;
 
 	private Configuration config;
 
-	public RedisQueueDAO(JedisCommands dynoClient, JedisCommands dynoClientRead, ShardSupplier ss, Configuration config) {
-		this.dynoClient = dynoClient;
-		this.dynoClientRead = dynoClient;
-		this.ss = ss;
+	public RedisQueueDAO(JedisPool connPool,  Configuration config) {
+		this.connPool = connPool;
 		this.config = config;
 		init();
 	}
@@ -66,7 +59,7 @@ public class RedisQueueDAO implements QueueDAO {
 		if (domain != null) {
 			prefix = prefix + "." + domain;
 		}
-		queues = new RedisQueues(dynoClient, dynoClientRead, prefix, 60_000, 60_000);
+		queues = new RedisQueues(connPool, prefix, 60_000, 60_000);
 		logger.info("DynoQueueDAO initialized with prefix " + prefix + "!");
 	}
 
@@ -150,7 +143,7 @@ public class RedisQueueDAO implements QueueDAO {
 	}
 	
 	public void processUnacks(String queueName) {
-		((RedisDynoQueue)queues.get(queueName)).processUnacks();;
+		((RedisQueue)queues.get(queueName)).processUnacks();;
 	}
 
 	@Override
