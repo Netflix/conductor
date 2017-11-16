@@ -18,14 +18,9 @@
  */
 package com.netflix.conductor.common.metadata.workflow;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import com.netflix.conductor.common.metadata.Auditable;
+
+import java.util.*;
 
 /**
  * @author Viren
@@ -42,6 +37,8 @@ public class WorkflowDef extends Auditable {
 	private LinkedList<WorkflowTask> tasks = new LinkedList<WorkflowTask>();
 	
 	private List<String> inputParameters = new LinkedList<String>();
+
+	private Map<String, String> inputValidation = new HashMap<>();
 	
 	private Map<String, Object> outputParameters = new HashMap<>();
 
@@ -178,6 +175,21 @@ public class WorkflowDef extends Auditable {
 	 */
 	public void setSchemaVersion(int schemaVersion) {
 		this.schemaVersion = schemaVersion;
+	}
+
+
+	/**
+	 * @return The map describes input validation rules
+	 */
+	public Map<String, String> getInputValidation() {
+		return inputValidation;
+	}
+
+	/**
+	 * @param inputValidation the input validation rules map
+	 */
+	public void setInputValidation(Map<String, String> inputValidation) {
+		this.inputValidation = inputValidation;
 	}
 
 	public String key(){

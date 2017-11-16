@@ -18,28 +18,10 @@
  */
 package com.netflix.conductor.core.execution;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
 import com.netflix.conductor.common.run.Workflow;
@@ -49,12 +31,33 @@ import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
+import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Viren
  *
  */
 public class TestWorkflowExecutor {
+
+	TestConfiguration config = new TestConfiguration();
+	MetadataDAO metadata = mock(MetadataDAO.class);
+	ExecutionDAO edao = mock(ExecutionDAO.class);
+	QueueDAO queue = mock(QueueDAO.class);
+	ObjectMapper om = new ObjectMapper();
 
 	@Test
 	public void test() throws Exception {
@@ -91,12 +94,6 @@ public class TestWorkflowExecutor {
 		
 		Workflow workflow = new Workflow();
 		workflow.setWorkflowId("1");
-		
-		TestConfiguration config = new TestConfiguration();
-		MetadataDAO metadata = mock(MetadataDAO.class);
-		ExecutionDAO edao = mock(ExecutionDAO.class);
-		QueueDAO queue = mock(QueueDAO.class);
-		ObjectMapper om = new ObjectMapper();
 		
 		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, config);
 		List<Task> tasks = new LinkedList<>();
@@ -153,6 +150,70 @@ public class TestWorkflowExecutor {
 		assertFalse(httpTaskExecuted.get());
 		assertTrue(http2TaskExecuted.get());
 	}
-	
-	
+
+	@Test(expected = NullPointerException.class)
+	public void validationSuccess() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("validationSuccess");
+		def.setVersion(1);
+		def.setInputValidation(new HashMap<>());
+		def.getInputValidation().put("rule1", "$.constant == 'value'");
+
+		MetadataDAO metadata = mock(MetadataDAO.class);
+		when(metadata.get("validationSuccess", 1)).thenReturn(def);
+
+		Map<String, Object> input = new HashMap<>();
+		input.put("constant", "value");
+
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, config);
+		executor.startWorkflow("validationSuccess", 1, null, input);
+	}
+
+	@Test
+	public void validationFailure1() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("validationFailure1");
+		def.setVersion(1);
+		def.setInputValidation(new HashMap<>());
+		def.getInputValidation().put("rule2", "$.constant != undefined && $.constant == 'value'");
+
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+
+		MetadataDAO metadata = mock(MetadataDAO.class);
+		when(metadata.get("validationFailure1", 1)).thenReturn(def);
+
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, config);
+		try {
+			executor.startWorkflow("validationFailure1", 1, null, new HashMap<>());
+		} catch (ApplicationException ex) {
+			assertEquals(ApplicationException.Code.INVALID_INPUT, ex.getCode());
+			assertEquals("Input validation failed for 'rule2' rule", ex.getMessage());
+		}
+	}
+
+	@Test
+	public void validationFailure2() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("validationFailure2");
+		def.setVersion(1);
+		def.setInputValidation(new HashMap<>());
+		def.getInputValidation().put("rule3", "wrong syntax");
+
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+
+		MetadataDAO metadata = mock(MetadataDAO.class);
+		when(metadata.get("validationFailure2", 1)).thenReturn(def);
+
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, config);
+		try {
+			executor.startWorkflow("validationFailure2", 1, null, new HashMap<>());
+		} catch (ApplicationException ex) {
+			assertEquals(ApplicationException.Code.INVALID_INPUT, ex.getCode());
+			assertEquals("Input validation failed for 'rule3' rule: <eval>:1:6 Expected ; but found syntax\n" +
+					"wrong syntax\n" +
+					"      ^ in <eval> at line number 1 at column number 6", ex.getMessage());
+		}
+	}
 }
