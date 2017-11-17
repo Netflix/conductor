@@ -18,13 +18,13 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Viren
@@ -35,7 +35,11 @@ public class WorkflowSystemTask {
 	private static Map<String, WorkflowSystemTask> registry = new HashMap<>();
 	
 	private String name;
-	
+
+	public enum PrePostAction {
+		preTask, postTask
+	}
+
 	public WorkflowSystemTask(String name) {
 		this.name = name;
 		registry.put(name, this);
@@ -114,5 +118,4 @@ public class WorkflowSystemTask {
 	public static Collection<WorkflowSystemTask> all() {
 		return registry.values();
 	}
-	
 }
