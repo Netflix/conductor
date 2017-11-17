@@ -58,7 +58,6 @@ import java.util.stream.Collectors;
 /**
  * @author Viren Workflow services provider interface
  */
-@SuppressWarnings("ALL")
 @Trace
 public class WorkflowExecutor {
 
