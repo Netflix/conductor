@@ -86,7 +86,7 @@ public class ActionProcessor {
 				op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, event, messageId);
 				return op;
 			case update_task:
-				op = updateTask(action, jsonObj);
+				op = updateTask(action, jsonObj, event, messageId);
 				return op;
 			default:
 				break;
@@ -153,7 +153,7 @@ public class ActionProcessor {
 		return op;
 	}
 
-	private Map<String, Object> updateTask(Action action, Object payload) throws Exception {
+	private Map<String, Object> updateTask(Action action, Object payload, String event, String messageId) throws Exception {
 		UpdateTask updateTask = action.getUpdate_task();
 		Map<String, Object> op = new HashMap<>();
 		try {
@@ -205,8 +205,9 @@ public class ActionProcessor {
 			if (targetTask == null)
 				throw new RuntimeException("No task found with id " + taskId + " for workflow " + workflowId);
 
-			op.put("event", payload);
-			targetTask.getOutputData().put("event", payload);
+			targetTask.getOutputData().put("conductor.event.name", event);
+			targetTask.getOutputData().put("conductor.event.payload", payload);
+			targetTask.getOutputData().put("conductor.event.messageId", messageId);
 			if (updateTask.getOutput() != null) {
 				op.putAll(updateTask.getOutput());
 				targetTask.getOutputData().putAll(updateTask.getOutput());
@@ -226,11 +227,18 @@ public class ActionProcessor {
 
 			// Let's update task
 			executor.updateTask(taskResult);
+
+			// output data
+			op.put("conductor.event.name", event);
+			op.put("conductor.event.payload", payload);
+			op.put("conductor.event.messageId", messageId);
 		} catch (Exception e) {
 			logger.error("updateTask: failed with " + e.getMessage() + " action=" + updateTask + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
 			op.put("action", updateTask);
-			op.put("payload", payload);
+			op.put("conductor.event.name", event);
+			op.put("conductor.event.payload", payload);
+			op.put("conductor.event.messageId", messageId);
 		}
 
 		return op;
