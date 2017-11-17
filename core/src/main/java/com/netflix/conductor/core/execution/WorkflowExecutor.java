@@ -505,7 +505,6 @@ public class WorkflowExecutor {
 	}
 
 	public void updateTask(TaskResult result) throws Exception {
-		ObjectMapper mapper = new ObjectMapper();
 		if (result == null) {
 			logger.error("null task given for update..." + result);
 			throw new ApplicationException(Code.INVALID_INPUT, "Task object is null");
