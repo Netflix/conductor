@@ -196,12 +196,7 @@ public class ConductorServer {
 			throw new IllegalStateException("Server is already running");
 		}
 
-		try {
-			Guice.createInjector(sm);
-		} catch (Exception ex) {
-			logger.error("Unable to create module injector. " + ex.getMessage(), ex);
-			System.exit(-1);
-		}
+		Guice.createInjector(sm);
 
 		//Swagger
 		String resourceBasePath = Main.class.getResource("/swagger-ui").toExternalForm();
