@@ -34,10 +34,14 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.ScriptEvaluator;
+import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
+import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask.PrePostAction;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -368,6 +372,7 @@ public class WorkflowExecutor {
 					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
 				}
 				edao.updateTask(task);
+				applyTaskAction(task, PrePostAction.postTask);
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -447,6 +452,7 @@ public class WorkflowExecutor {
 					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
 				}
 				edao.updateTask(task);
+				applyTaskAction(task, PrePostAction.postTask);
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -523,6 +529,7 @@ public class WorkflowExecutor {
 			task.setReasonForIncompletion(result.getReasonForIncompletion());
 			task.setWorkerId(result.getWorkerId());
 			edao.updateTask(task);
+			applyTaskAction(task, PrePostAction.postTask);
 			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ", reason=" + wf.getReasonForIncompletion()+",correlationId="+wf.getCorrelationId();
 			logger.warn(msg);
 			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
@@ -564,13 +571,16 @@ public class WorkflowExecutor {
 
 			case COMPLETED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				applyTaskAction(task, PrePostAction.postTask);
 				break;
 
 			case CANCELED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				applyTaskAction(task, PrePostAction.postTask);
 				break;
 			case FAILED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				applyTaskAction(task, PrePostAction.postTask);
 				break;
 			case IN_PROGRESS:
 				// put it back in queue based in callbackAfterSeconds
@@ -759,11 +769,9 @@ public class WorkflowExecutor {
 
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int unackTimeout) {
-
-
 		try {
-
 			Task task = edao.getTask(taskId);
+
 			if(task.getStatus().isTerminal()) {
 				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
 				logger.warn("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
@@ -783,6 +791,7 @@ public class WorkflowExecutor {
 				logger.warn("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
 				if(!task.getStatus().isTerminal()) {
 					task.setStatus(Status.CANCELED);
+					applyTaskAction(task, PrePostAction.postTask);
 				}
 				edao.updateTask(task);
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -806,6 +815,7 @@ public class WorkflowExecutor {
 			switch (task.getStatus()) {
 
 				case SCHEDULED:
+					applyTaskAction(task, PrePostAction.preTask);
 					systemTask.start(workflow, task, this);
 					break;
 
@@ -906,9 +916,13 @@ public class WorkflowExecutor {
 			}
 			task.setStartTime(System.currentTimeMillis());
 			if(!stt.isAsync()) {
+				applyTaskAction(task, PrePostAction.preTask);
 				stt.start(workflow, task, this);
 				startedSystemTasks = true;
 				edao.updateTask(task);
+				if (task.getStatus().isTerminal()) {
+					applyTaskAction(task, PrePostAction.postTask);
+				}
 			} else {
 				toBeQueued.add(task);
 			}
@@ -947,6 +961,32 @@ public class WorkflowExecutor {
 		logger.error("Workflow failed. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",Reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName);
 	}
 
+	@SuppressWarnings("unchecked")
+	private void applyTaskAction(Task task, WorkflowSystemTask.PrePostAction action) throws Exception {
+		Object eventMessages = task.getInputData().get("event_messages");
+		if (eventMessages == null) {
+			return;
+		}
+
+		Map<String, Object> eventMsgMap = (Map<String, Object>) eventMessages;
+		if (eventMsgMap.containsKey(action.name())) {
+			Map<String, Object> actionMap = (Map<String, Object>) eventMsgMap.get(action.name());
+			ObjectMapper mapper = new ObjectMapper();
+
+			Message msg = new Message();
+			msg.setId(UUID.randomUUID().toString());
+
+			String payload = mapper.writeValueAsString(actionMap.get("inputParameters"));
+			msg.setPayload(payload);
+
+			String sink = (String) actionMap.get("sink");
+			ObservableQueue queue = EventQueues.getQueue(sink, false);
+			if (queue != null) {
+				queue.publish(Collections.singletonList(msg));
+			}
+		}
+	}
+
 	private void validateWorkflowInput(WorkflowDef workflowDef, Map<String, Object> payload) {
 		Map<String, String> rules = workflowDef.getInputValidation();
 
@@ -964,4 +1004,5 @@ public class WorkflowExecutor {
 			}
 		});
 	}
+
 }
