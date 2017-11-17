@@ -43,8 +43,7 @@ public class HttpWaitTask extends GenericHttpTask {
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
 		logger.info("http wait task starting workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
 
-		// send nomad command
-		Map<String, ?> request = (Map<String, ?>) task.getInputData().get(HTTP_REQUEST_PARAM);
+		Object request = (Map<String, ?>) task.getInputData().get(HTTP_REQUEST_PARAM);
 		if (request == null) {
 			task.setReasonForIncompletion("Missing http request parameter");
 			task.setStatus(Task.Status.FAILED);
@@ -113,7 +112,7 @@ public class HttpWaitTask extends GenericHttpTask {
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
-					Object bodyObjs = request.get("body");
+					Object bodyObjs = input.getBody();
 					String bodyJson = om.writeValueAsString(bodyObjs);
 					response = httpCallUrlEncoded(input, bodyJson);
 				} else {
