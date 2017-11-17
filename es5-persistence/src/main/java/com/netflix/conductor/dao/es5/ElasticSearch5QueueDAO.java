@@ -24,6 +24,7 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.QueueDAO;
 import io.netty.util.internal.ConcurrentSet;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
@@ -46,6 +47,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Oleksiy Lysak
@@ -124,31 +126,35 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 			while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
 
 				// Find the suitable records
-				SearchResponse response = client.prepareSearch(indexName)
+				SearchRequestBuilder request = client.prepareSearch(indexName)
 						.setTypes(typeName)
 						.setVersion(true)
 						.setQuery(query)
-						.setSize(count)
-						.get();
+						.setSize(count);
+
+				AtomicReference<SearchResponse> reference = new AtomicReference<>();
+				doWithRetryNoisy(() -> reference.set(request.get()));
 
 				// Walk over all of them and 'lock'
-				for (SearchHit record : response.getHits().getHits()) {
+				for (SearchHit record : reference.get().getHits().getHits()) {
 					try {
 						if (logger.isDebugEnabled())
 							logger.debug("pop ({}): attempt for {}/{}", session, queueName, record.getId());
 						Map<String, Object> map = new HashMap<>();
 						map.put("popped", true);
 						map.put("unackOn", System.currentTimeMillis() + unackTime);
-						client.prepareUpdate(indexName, typeName, record.getId())
+
+						doWithRetryNoisy(() -> client.prepareUpdate(indexName, typeName, record.getId())
 								.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
 								.setVersion(record.getVersion())
 								.setDoc(map)
-								.get();
+								.get());
+
 						// Add id to the final collection
 						foundIds.add(record.getId());
 						if (logger.isDebugEnabled())
 							logger.debug("pop ({}): success for {}/{}", session, queueName, record.getId());
-					} catch (DocumentMissingException ignore) { //TODO Investigate this!
+					} catch (DocumentMissingException ignore) {
 						if (logger.isDebugEnabled())
 							logger.debug("pop ({}): got document missing for {}/{}", session, queueName, record.getId());
 					} catch (VersionConflictEngineException ignore) {
@@ -251,11 +257,11 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 			Map<String, Object> map = new HashMap<>();
 			map.put("popped", true);
 			map.put("unackOn", System.currentTimeMillis() + unackTimeout);
-			client.prepareUpdate(toIndexName(queueName), toTypeName(queueName), record.getId())
+			doWithRetryNoisy(() -> client.prepareUpdate(toIndexName(queueName), toTypeName(queueName), record.getId())
 					.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
 					.setVersion(record.getVersion())
 					.setDoc(map)
-					.get();
+					.get());
 		} catch (VersionConflictEngineException ignore) {
 		} catch (Exception ex) {
 			logger.error("setUnackTimeout: failed for {}/{}/{} with {}", queueName, id, unackTimeout, ex.getMessage(), ex);
@@ -382,10 +388,9 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 					Map<String, Object> map = new HashMap<>();
 					map.put("popped", false);
 					map.put("deliverOn", System.currentTimeMillis());
-					client.prepareUpdate(indexName, typeName, record.getId())
+					doWithRetryNoisy(() -> client.prepareUpdate(indexName, typeName, record.getId())
 							.setVersion(record.getVersion())
-							.setDoc(map)
-							.get();
+							.setDoc(map).get());
 					if (logger.isDebugEnabled())
 						logger.debug("processUnacks: success {} for {}", record.getId(), queueName);
 				} catch (VersionConflictEngineException ignore) {
@@ -427,17 +432,20 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 		IdsQueryBuilder addIds = QueryBuilders.idsQuery();
 		addIds.ids().addAll(messageIds);
 
-		SearchResponse response = client.prepareSearch(toIndexName(queueName))
+		SearchRequestBuilder request = client.prepareSearch(toIndexName(queueName))
 				.setTypes(toTypeName(queueName))
 				.setSize(messageIds.size())
-				.setQuery(addIds)
-				.get();
-		if (response.getHits().totalHits != messageIds.size()) {
+				.setQuery(addIds);
+
+		AtomicReference<SearchResponse> reference = new AtomicReference<>();
+		doWithRetryNoisy(() -> reference.set(request.get()));
+
+		if (reference.get().getHits().totalHits != messageIds.size()) {
 			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, "readMessages: Could not read all messages for given ids: " + messageIds);
 		}
 
-		List<Message> messages = new ArrayList<>(response.getHits().getHits().length);
-		for (SearchHit hit : response.getHits().getHits()) {
+		List<Message> messages = new ArrayList<>(reference.get().getHits().getHits().length);
+		for (SearchHit hit : reference.get().getHits().getHits()) {
 			Message message = new Message();
 			message.setId(hit.getId());
 			message.setPayload((String) hit.getSource().get("payload"));

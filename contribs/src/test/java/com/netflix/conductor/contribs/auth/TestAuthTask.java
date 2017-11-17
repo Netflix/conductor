@@ -62,7 +62,7 @@ public class TestAuthTask {
 
 	@BeforeClass
 	public static void init() throws Exception {
-		server = new Server(7009);
+		server = new Server(7010);
 		ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS);
 		servletContextHandler.setHandler(new EchoHandler());
 		server.start();
@@ -84,7 +84,7 @@ public class TestAuthTask {
 		accessToken = Resources.toString(Resources.getResource("jwt.txt"), Charsets.UTF_8);
 
 		Configuration config = mock(Configuration.class);
-		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7009/auth/success");
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/success");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
 		authTask = new AuthTask(config);
@@ -284,7 +284,7 @@ public class TestAuthTask {
 	@Test
 	public void auth_error_no_data() throws Exception {
 		Configuration config = mock(Configuration.class);
-		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7009/auth/empty");
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/empty");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
 		AuthTask authTask = new AuthTask(config);
@@ -302,7 +302,7 @@ public class TestAuthTask {
 	@Test
 	public void auth_error_failed() throws Exception {
 		Configuration config = mock(Configuration.class);
-		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7009/auth/error");
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/error");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
 		AuthTask authTask = new AuthTask(config);
@@ -320,7 +320,7 @@ public class TestAuthTask {
 	@Test
 	public void auth_error_completed() throws Exception {
 		Configuration config = mock(Configuration.class);
-		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7009/auth/error");
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/error");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
 		authTask = new AuthTask(config);

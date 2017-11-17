@@ -35,12 +35,15 @@ import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueues;
+import com.netflix.conductor.core.events.ScriptEvaluator;
+import com.netflix.conductor.core.events.EventQueues;
+import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
-import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask.PrePostAction;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -115,6 +118,12 @@ public class WorkflowExecutor {
 			if (exists == null) {
 				throw new ApplicationException(Code.NOT_FOUND, "No such workflow defined. name=" + name + ", version=" + version);
 			}
+
+			// Input validation required
+			if (exists.getInputValidation() != null && !exists.getInputValidation().isEmpty()) {
+				validateWorkflowInput(exists, input);
+			}
+
 			Set<String> missingTaskDefs = exists.all().stream()
 					.filter(wft -> wft.getType().equals(WorkflowTask.Type.SIMPLE.name()))
 					.map(wft2 -> wft2.getName()).filter(task -> metadata.getTaskDef(task) == null)
@@ -566,6 +575,7 @@ public class WorkflowExecutor {
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 				applyTaskAction(task, PrePostAction.postTask);
 				break;
+
 			case CANCELED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 				applyTaskAction(task, PrePostAction.postTask);
@@ -954,7 +964,7 @@ public class WorkflowExecutor {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void applyTaskAction(Task task, PrePostAction action) throws Exception {
+	private void applyTaskAction(Task task, WorkflowSystemTask.PrePostAction action) throws Exception {
 		Object eventMessages = task.getInputData().get("event_messages");
 		if (eventMessages == null) {
 			return;
@@ -978,4 +988,23 @@ public class WorkflowExecutor {
 			}
 		}
 	}
+
+	private void validateWorkflowInput(WorkflowDef workflowDef, Map<String, Object> payload) {
+		Map<String, String> rules = workflowDef.getInputValidation();
+
+		rules.forEach((name, condition) -> {
+			boolean success = false;
+			String extra = "";
+			try {
+				success = ScriptEvaluator.evalBool(condition, payload);
+			} catch (Exception ex) {
+				extra = ": " + ex.getMessage();
+			}
+			if (!success) {
+				String message = "Input validation failed for '" + name + "' rule" + extra;
+				throw new ApplicationException(Code.INVALID_INPUT, message);
+			}
+		});
+	}
+
 }
