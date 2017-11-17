@@ -59,16 +59,12 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 	@SuppressWarnings("unchecked")
 	HttpResponse httpCallUrlEncoded(Input input, String body) throws Exception {
-		System.out.println("inside url");
-
 		Client client = Client.create();
 		MultivaluedMap formData = new MultivaluedMapImpl();
 		Map<String, String> bodyparam = new ObjectMapper().readValue(body, HashMap.class);
 		Iterator it = bodyparam.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry pair = (Map.Entry) it.next();
-			System.out.println(pair.getKey() + " = " + pair.getValue());
-
 			formData.add(pair.getKey(), pair.getValue());
 			it.remove();
 		}
@@ -99,8 +95,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 	 * @throws Exception If there was an error making http call
 	 */
 	HttpResponse httpCall(Input input) throws Exception {
-		System.out.println("inside normal");
-
 		Client client = rcm.getClient(input);
 
 		if (input.getOauthConsumerKey() != null) {
