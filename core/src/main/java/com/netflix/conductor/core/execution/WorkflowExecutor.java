@@ -584,9 +584,49 @@ public class WorkflowExecutor {
 
 			case CANCELED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				if(task.getInputData().containsKey("event_messages")) {
+					Object event_messages = task.getInputData().get("event_messages");
+					Map<String, String> eventmsgmap = new HashMap<String, String>();
+					String jsoneventmsg = mapper.writeValueAsString(event_messages);
+					eventmsgmap = mapper.readValue(jsoneventmsg, HashMap.class);
+					if(eventmsgmap.containsKey("postTask")) {
+						Object posttask = eventmsgmap.get("postTask");
+						String postmsg = new ObjectMapper().writeValueAsString(posttask);
+						Map<String, String> postmsgmap = new HashMap<String, String>();
+						postmsgmap = mapper.readValue(postmsg, HashMap.class);
+						List<Message> listmsg = new ArrayList<Message>();
+						Message msg = new Message();
+						msg.setId(UUID.randomUUID().toString());
+						String inputParameters = mapper.writeValueAsString(postmsgmap.get("inputParameters"));
+						msg.setPayload(inputParameters);
+						listmsg.add(msg);
+						ObservableQueue queuepublish = EventQueues.getQueue( mapper.writeValueAsString(postmsgmap.get("sink")), false);
+						queuepublish.publish(listmsg);
+					}
+				}
 				break;
 			case FAILED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				if(task.getInputData().containsKey("event_messages")) {
+					Object event_messages = task.getInputData().get("event_messages");
+					Map<String, String> eventmsgmap = new HashMap<String, String>();
+					String jsoneventmsg = mapper.writeValueAsString(event_messages);
+					eventmsgmap = mapper.readValue(jsoneventmsg, HashMap.class);
+					if(eventmsgmap.containsKey("postTask")) {
+						Object posttask = eventmsgmap.get("postTask");
+						String postmsg = new ObjectMapper().writeValueAsString(posttask);
+						Map<String, String> postmsgmap = new HashMap<String, String>();
+						postmsgmap = mapper.readValue(postmsg, HashMap.class);
+						List<Message> listmsg = new ArrayList<Message>();
+						Message msg = new Message();
+						msg.setId(UUID.randomUUID().toString());
+						String inputParameters = mapper.writeValueAsString(postmsgmap.get("inputParameters"));
+						msg.setPayload(inputParameters);
+						listmsg.add(msg);
+						ObservableQueue queuepublish = EventQueues.getQueue( mapper.writeValueAsString(postmsgmap.get("sink")), false);
+						queuepublish.publish(listmsg);
+					}
+				}
 				break;
 			case IN_PROGRESS:
 				// put it back in queue based in callbackAfterSeconds
@@ -776,29 +816,29 @@ public class WorkflowExecutor {
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int unackTimeout) {
 		try {
-			        Task task = edao.getTask(taskId);
-		        	ObjectMapper mapper = new ObjectMapper();
-					if(task.getInputData().containsKey("event_messages")) {
-						Object event_messages = task.getInputData().get("event_messages");
-						Map<String, String> eventmsgmap = new HashMap<String, String>();
-						String jsoneventmsg = mapper.writeValueAsString(event_messages);
-						eventmsgmap = mapper.readValue(jsoneventmsg, HashMap.class);
-						if(eventmsgmap.containsKey("preTask")) {
-						    Object pretask = eventmsgmap.get("preTask");
-							String premsg = new ObjectMapper().writeValueAsString(pretask);
-							Map<String, String> premsgmap = new HashMap<String, String>();
-							premsgmap = mapper.readValue(premsg, HashMap.class);
-							List<Message> listmsg = new ArrayList<Message>();
-							Message msg = new Message();
-							msg.setId(UUID.randomUUID().toString());
-							String inputParameters = mapper.writeValueAsString(premsgmap.get("inputParameters"));
-							msg.setPayload(inputParameters);
-							listmsg.add(msg);
-							ObservableQueue queuepublish = EventQueues.getQueue( mapper.writeValueAsString(premsgmap.get("sink")), false);
-							queuepublish.publish(listmsg);
-						}
+			Task task = edao.getTask(taskId);
+			ObjectMapper mapper = new ObjectMapper();
+			if(task.getInputData().containsKey("event_messages")) {
+				Object event_messages = task.getInputData().get("event_messages");
+				Map<String, String> eventmsgmap = new HashMap<String, String>();
+				String jsoneventmsg = mapper.writeValueAsString(event_messages);
+				eventmsgmap = mapper.readValue(jsoneventmsg, HashMap.class);
+				if(eventmsgmap.containsKey("preTask")) {
+					Object pretask = eventmsgmap.get("preTask");
+					String premsg = new ObjectMapper().writeValueAsString(pretask);
+					Map<String, String> premsgmap = new HashMap<String, String>();
+					premsgmap = mapper.readValue(premsg, HashMap.class);
+					List<Message> listmsg = new ArrayList<Message>();
+					Message msg = new Message();
+					msg.setId(UUID.randomUUID().toString());
+					String inputParameters = mapper.writeValueAsString(premsgmap.get("inputParameters"));
+					msg.setPayload(inputParameters);
+					listmsg.add(msg);
+					ObservableQueue queuepublish = EventQueues.getQueue( mapper.writeValueAsString(premsgmap.get("sink")), false);
+					queuepublish.publish(listmsg);
+				}
 
-					}
+			}
 
 			if(task.getStatus().isTerminal()) {
 				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
