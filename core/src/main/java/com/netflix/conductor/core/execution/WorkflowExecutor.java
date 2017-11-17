@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 /**
  * @author Viren Workflow services provider interface
  */
+@SuppressWarnings("ALL")
 @Trace
 public class WorkflowExecutor {
 
@@ -445,7 +446,7 @@ public class WorkflowExecutor {
 					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
 				}
 				edao.updateTask(task);
-				applyTaskAction(task, WorkflowSystemTask.PrePostAction.postTask);
+				applyTaskAction(task, PrePostAction.postTask);
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
