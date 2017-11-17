@@ -954,7 +954,7 @@ public class WorkflowExecutor {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void applyTaskAction(Task task, WorkflowSystemTask.PrePostAction action) throws Exception {
+	private void applyTaskAction(Task task, PrePostAction action) throws Exception {
 		Object eventMessages = task.getInputData().get("event_messages");
 		if (eventMessages == null) {
 			return;
