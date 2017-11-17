@@ -34,6 +34,7 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -111,6 +112,12 @@ public class WorkflowExecutor {
 			if (exists == null) {
 				throw new ApplicationException(Code.NOT_FOUND, "No such workflow defined. name=" + name + ", version=" + version);
 			}
+
+			// Input validation required
+			if (exists.getInputValidation() != null && !exists.getInputValidation().isEmpty()) {
+				validateWorkflowInput(exists, input);
+			}
+
 			Set<String> missingTaskDefs = exists.all().stream()
 					.filter(wft -> wft.getType().equals(WorkflowTask.Type.SIMPLE.name()))
 					.map(wft2 -> wft2.getName()).filter(task -> metadata.getTaskDef(task) == null)
@@ -940,5 +947,21 @@ public class WorkflowExecutor {
 		logger.error("Workflow failed. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",Reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName);
 	}
 
+	private void validateWorkflowInput(WorkflowDef workflowDef, Map<String, Object> payload) {
+		Map<String, String> rules = workflowDef.getInputValidation();
 
+		rules.forEach((name, condition) -> {
+			boolean success = false;
+			String extra = "";
+			try {
+				success = ScriptEvaluator.evalBool(condition, payload);
+			} catch (Exception ex) {
+				extra = ": " + ex.getMessage();
+			}
+			if (!success) {
+				String message = "Input validation failed for '" + name + "' rule" + extra;
+				throw new ApplicationException(Code.INVALID_INPUT, message);
+			}
+		});
+	}
 }
