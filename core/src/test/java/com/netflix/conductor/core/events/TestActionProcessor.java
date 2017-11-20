@@ -20,17 +20,22 @@ package com.netflix.conductor.core.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.service.MetadataService;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Viren
@@ -132,7 +137,7 @@ public class TestActionProcessor {
 	}
 
 	@Test
-	public void updateTask_no_status() throws Exception {
+	public void updateTask_evaluation_fail() throws Exception {
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
 		MetadataService metadata = mock(MetadataService.class);
 		ActionProcessor ap = new ActionProcessor(executor, metadata);
@@ -148,16 +153,72 @@ public class TestActionProcessor {
 		action.setUpdate_task(updateTask);
 
 		Map<String, Object> payload = new HashMap<>();
+
+		// workflowId evaluating is empty
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
+		assertEquals(action.getUpdate_task(), op.get("action"));
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("1", op.get("conductor.event.name"));
+		assertEquals("2", op.get("conductor.event.messageId"));
+		assertEquals("workflowId evaluating is empty", op.get("error"));
+
+		//taskId evaluating is empty
+		payload.put("workflowId", "1");
+		op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
+		assertEquals(action.getUpdate_task(), op.get("action"));
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("1", op.get("conductor.event.name"));
+		assertEquals("2", op.get("conductor.event.messageId"));
+		assertEquals("taskId evaluating is empty", op.get("error"));
+
+		//status evaluating is empty
 		payload.put("workflowId", "1");
 		payload.put("taskId", "2");
-
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "name", "messageId");
+		op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
+		assertEquals(action.getUpdate_task(), op.get("action"));
 		assertEquals(payload, op.get("conductor.event.payload"));
-		assertEquals(updateTask, op.get("action"));
-		assertEquals("name", op.get("conductor.event.name"));
-		assertEquals("messageId", op.get("conductor.event.messageId"));
+		assertEquals("1", op.get("conductor.event.name"));
+		assertEquals("2", op.get("conductor.event.messageId"));
+		assertEquals("status evaluating is empty", op.get("error"));
+
+		//failedReason evaluating is empty
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "completed");
+		action.getUpdate_task().setFailedReason(".failedReason");
+		op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
+		assertEquals(action.getUpdate_task(), op.get("action"));
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("1", op.get("conductor.event.name"));
+		assertEquals("2", op.get("conductor.event.messageId"));
+		assertEquals("failedReason evaluating is empty", op.get("error"));
+
+		//Unable to determine task status. 1
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "x");
+		payload.put("failedReason", "dummy");
+		action.getUpdate_task().setFailedReason(".failedReason");
+		op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
+		assertEquals(action.getUpdate_task(), op.get("action"));
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("1", op.get("conductor.event.name"));
+		assertEquals("2", op.get("conductor.event.messageId"));
 		assertEquals("Unable to determine task status", op.get("error"));
-		System.out.println("op = " + op);
+
+		//Unable to determine task status. 2
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "done");
+		payload.put("failedReason", "dummy");
+		action.getUpdate_task().setFailedReason(".failedReason");
+		action.getUpdate_task().getStatuses().put("done", "bad value");
+		op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
+		assertEquals(action.getUpdate_task(), op.get("action"));
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("1", op.get("conductor.event.name"));
+		assertEquals("2", op.get("conductor.event.messageId"));
+		assertEquals("Unable to determine task status", op.get("error"));
 	}
 
 	@Test
@@ -166,28 +227,19 @@ public class TestActionProcessor {
 		MetadataService metadata = mock(MetadataService.class);
 		ActionProcessor ap = new ActionProcessor(executor, metadata);
 
-		EventHandler.UpdateTask updateTask = new EventHandler.UpdateTask();
-		updateTask.setWorkflowId(".workflowId");
-		updateTask.setTaskId(".taskId");
-		updateTask.setStatus(".status");
-		updateTask.setResetStartTime(true);
-
-		EventHandler.Action action = new EventHandler.Action();
-		action.setAction(EventHandler.Action.Type.update_task);
-		action.setUpdate_task(updateTask);
+		EventHandler.Action action = newUpdateAction();
 
 		Map<String, Object> payload = new HashMap<>();
 		payload.put("workflowId", "1");
 		payload.put("taskId", "2");
 		payload.put("status", "completed");
 
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "name", "messageId");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
 		assertEquals(payload, op.get("conductor.event.payload"));
-		assertEquals(updateTask, op.get("action"));
-		assertEquals("name", op.get("conductor.event.name"));
-		assertEquals("messageId", op.get("conductor.event.messageId"));
+		assertEquals(action.getUpdate_task(), op.get("action"));
+		assertEquals("1", op.get("conductor.event.name"));
+		assertEquals("2", op.get("conductor.event.messageId"));
 		assertEquals("No workflow found with id 1", op.get("error"));
-		System.out.println("op = " + op);
 	}
 
 	@Test
@@ -201,6 +253,144 @@ public class TestActionProcessor {
 		MetadataService metadata = mock(MetadataService.class);
 		ActionProcessor ap = new ActionProcessor(executor, metadata);
 
+		EventHandler.Action action = newUpdateAction();
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "completed");
+
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals(action.getUpdate_task(), op.get("action"));
+		assertEquals("1", op.get("conductor.event.name"));
+		assertEquals("2", op.get("conductor.event.messageId"));
+		assertEquals("No task found with id 2 for workflow 1", op.get("error"));
+	}
+
+	@Test
+	public void updateTask_completed() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+
+		Task task = new Task();
+		task.setTaskId("2");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getWorkflow("1", true)).thenReturn(workflow);
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newUpdateAction();
+		action.getUpdate_task().getOutput().put("key", "value");
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "completed");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(1)).updateTask(captor.capture());
+
+		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
+		assertEquals("foo", captor.getValue().getOutputData().get("conductor.event.name"));
+		assertEquals("bar", captor.getValue().getOutputData().get("conductor.event.messageId"));
+		assertEquals("value", captor.getValue().getOutputData().get("key"));
+		assertEquals(TaskResult.Status.COMPLETED, captor.getValue().getStatus());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals("value", op.get("key"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+	}
+
+	@Test
+	public void updateTask_failed() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+
+		Task task = new Task();
+		task.setTaskId("2");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getWorkflow("1", true)).thenReturn(workflow);
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newUpdateAction();
+		action.getUpdate_task().setFailedReason(".failedReason");
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "failed");
+		payload.put("failedReason", "reason");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(1)).updateTask(captor.capture());
+
+		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
+		assertEquals("foo", captor.getValue().getOutputData().get("conductor.event.name"));
+		assertEquals("bar", captor.getValue().getOutputData().get("conductor.event.messageId"));
+		assertEquals(TaskResult.Status.FAILED, captor.getValue().getStatus());
+		assertEquals("reason", captor.getValue().getReasonForIncompletion());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+	}
+
+	@Test
+	public void updateTask_in_progress() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+
+		Task task = new Task();
+		task.setTaskId("2");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getWorkflow("1", true)).thenReturn(workflow);
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newUpdateAction();
+		action.getUpdate_task().setResetStartTime(true);
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "in_progress");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(1)).updateTask(captor.capture());
+
+		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
+		assertEquals("foo", captor.getValue().getOutputData().get("conductor.event.name"));
+		assertEquals("bar", captor.getValue().getOutputData().get("conductor.event.messageId"));
+		assertEquals(TaskResult.Status.IN_PROGRESS, captor.getValue().getStatus());
+		assertTrue(captor.getValue().isResetStartTime());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+	}
+
+	private EventHandler.Action newUpdateAction() {
 		EventHandler.UpdateTask updateTask = new EventHandler.UpdateTask();
 		updateTask.setWorkflowId(".workflowId");
 		updateTask.setTaskId(".taskId");
@@ -211,17 +401,6 @@ public class TestActionProcessor {
 		action.setAction(EventHandler.Action.Type.update_task);
 		action.setUpdate_task(updateTask);
 
-		Map<String, Object> payload = new HashMap<>();
-		payload.put("workflowId", "1");
-		payload.put("taskId", "2");
-		payload.put("status", "completed");
-
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "name", "messageId");
-		assertEquals(payload, op.get("conductor.event.payload"));
-		assertEquals(updateTask, op.get("action"));
-		assertEquals("name", op.get("conductor.event.name"));
-		assertEquals("messageId", op.get("conductor.event.messageId"));
-		assertEquals("No task found with id 2 for workflow 1", op.get("error"));
-		System.out.println("op = " + op);
+		return action;
 	}
 }
