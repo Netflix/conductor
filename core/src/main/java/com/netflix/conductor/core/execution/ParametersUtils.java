@@ -189,10 +189,6 @@ public class ParametersUtils {
 	}
 
 	private Object replaceVariables(String paramString, DocumentContext io, String taskId){
-		String espace = "###espace###:";
-		if (paramString.startsWith(espace)) {
-			return paramString.substring(espace.length());
-		}
 		String[] values = paramString.split("(?=\\$\\{)|(?<=\\})");
 		Object[] convertedValues = new Object[values.length];
 		for(int i=0; i < values.length; i++){
