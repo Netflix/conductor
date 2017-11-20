@@ -43,7 +43,7 @@ public class HttpWaitTask extends GenericHttpTask {
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
 		logger.info("http wait task starting workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
 
-		Object request = (Map<String, ?>) task.getInputData().get(HTTP_REQUEST_PARAM);
+		Object request = task.getInputData().get(HTTP_REQUEST_PARAM);
 		if (request == null) {
 			task.setReasonForIncompletion("Missing http request parameter");
 			task.setStatus(Task.Status.FAILED);

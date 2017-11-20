@@ -109,6 +109,7 @@ job "conductor" {
         // Workflow settings
         workflow_failure_expandInline   = "false"
         decider_sweep_frequency_seconds = "5"
+        workflow_event_processor_refresh_seconds = "5"
 
         // Elasticsearch settings
         workflow_elasticsearch_mode = "elasticsearch"
