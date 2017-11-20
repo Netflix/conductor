@@ -49,8 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -144,6 +143,15 @@ public class TestHttpWaitTask {
 		assertEquals(1, captor.getValue().getActions().size());
 		EventHandler.Action action = captor.getValue().getActions().get(0);
 		assertEquals(EventHandler.Action.Type.update_task, action.getAction());
+		EventHandler.UpdateTask update_task = action.getUpdate_task();
+		assertNotNull(update_task);
+		assertEquals(".workflowId", update_task.getWorkflowId());
+		assertEquals(".taskId", update_task.getTaskId());
+		assertEquals(".status", update_task.getStatus());
+		assertNull(update_task.getOutput());
+		assertNull(update_task.getStatuses());
+		assertNull(update_task.getFailedReason());
+		assertFalse(update_task.getResetStartTime());
 	}
 
 	private static class EchoHandler extends AbstractHandler {
