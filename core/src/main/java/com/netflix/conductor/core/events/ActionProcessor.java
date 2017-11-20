@@ -178,7 +178,7 @@ public class ActionProcessor {
 
 			Function<String, Status> getTaskStatus = s -> {
 				try {
-					return Status.valueOf(s);
+					return Status.valueOf(s.toUpperCase());
 				} catch (Exception ex) {
 					logger.error("updateTask: getTaskStatus failed with " + ex.getMessage());
 					return null;
@@ -189,7 +189,7 @@ public class ActionProcessor {
 			// If no mapping - then task status taken from status
 			Map<String, String> statuses = updateTask.getStatuses();
 			if (statuses == null || statuses.isEmpty()) {
-				taskStatus = getTaskStatus.apply(status.toUpperCase());
+				taskStatus = getTaskStatus.apply(status);
 			} else {
 				taskStatus = getTaskStatus.apply(statuses.get(status));
 			}

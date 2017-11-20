@@ -367,15 +367,16 @@ public class TestActionProcessor {
 
 		EventHandler.Action action = newUpdateAction();
 		action.getUpdate_task().setResetStartTime(true);
+		action.getUpdate_task().getStatuses().put("wip", "in_progress");
 
 		Map<String, Object> payload = new HashMap<>();
 		payload.put("workflowId", "1");
 		payload.put("taskId", "2");
-		payload.put("status", "in_progress");
+		payload.put("status", "wip");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
-		verify(executor, times(1)).updateTask(captor.capture());
+		verify(executor).updateTask(captor.capture());
 
 		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
 		assertEquals("foo", captor.getValue().getOutputData().get("conductor.event.name"));
