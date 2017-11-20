@@ -14,29 +14,30 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.core.events;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.execution.ParametersUtils;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.service.MetadataService;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.core.execution.ParametersUtils;
+import java.util.*;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Viren
  *
  */
 public class TestActionProcessor {
+	private ObjectMapper om = new ObjectMapper();
 
 	@Test
 	public void testAray() throws Exception {
@@ -49,19 +50,19 @@ public class TestActionProcessor {
 		map.put("name", "conductor");
 		map.put("version", 2);
 		list.add(map);
-		
+
 		int before = list.size();
 		ap.expand(list);
 		assertEquals(before, list.size());
-		
-		
+
+
 		Map<String, Object> input = new HashMap<>();
 		input.put("k1", "${$..externalId}");
 		input.put("k2", "${$[0].externalId[0].taskRefName}");
 		input.put("k3", "${__json_externalId.taskRefName}");
 		input.put("k4", "${$[0].name}");
 		input.put("k5", "${$[0].version}");
-		
+
 		Map<String, Object> replaced = pu.replace(input, list);
 		assertNotNull(replaced);
 		System.out.println(replaced);
@@ -71,27 +72,27 @@ public class TestActionProcessor {
 		assertEquals(replaced.get("k4"), "conductor");
 		assertEquals(replaced.get("k5"), 2);
 	}
-	
+
 	@Test
 	public void testMap() throws Exception {
 		ActionProcessor ap = new ActionProcessor(null, null);
 		ParametersUtils pu = new ParametersUtils();
 
-		
+
 		Map<String, Object> map = new HashMap<>();
 		map.put("externalId", "{\"taskRefName\":\"t001\",\"workflowId\":\"w002\"}");
 		map.put("name", "conductor");
 		map.put("version", 2);
 
 		ap.expand(map);
-		
-		
+
+
 		Map<String, Object> input = new HashMap<>();
 		input.put("k1", "${$.externalId}");
 		input.put("k2", "${externalId.taskRefName}");
 		input.put("k4", "${name}");
 		input.put("k5", "${version}");
-		
+
 		//Map<String, Object> replaced = pu.replace(input, new ObjectMapper().writeValueAsString(map));
 		Map<String, Object> replaced = pu.replace(input, map);
 		assertNotNull(replaced);
@@ -102,25 +103,25 @@ public class TestActionProcessor {
 		assertEquals("conductor", replaced.get("k4"));
 		assertEquals(2, replaced.get("k5"));
 	}
-	
+
 	@Test
 	public void testNoExpand() throws Exception {
 		ParametersUtils pu = new ParametersUtils();
 
-		
+
 		Map<String, Object> map = new HashMap<>();
 		map.put("name", "conductor");
 		map.put("version", 2);
 		map.put("externalId", "{\"taskRefName\":\"t001\",\"workflowId\":\"w002\"}");
-		
+
 		Map<String, Object> input = new HashMap<>();
 		input.put("k1", "${$.externalId}");
 		input.put("k4", "${name}");
 		input.put("k5", "${version}");
-		
+
 		ObjectMapper om = new ObjectMapper();
 		Object jsonObj = om.readValue(om.writeValueAsString(map), Object.class);
-		
+
 		Map<String, Object> replaced = pu.replace(input, jsonObj);
 		assertNotNull(replaced);
 		System.out.println("testNoExpand(): " + replaced);
@@ -129,5 +130,98 @@ public class TestActionProcessor {
 		assertEquals("conductor", replaced.get("k4"));
 		assertEquals(2, replaced.get("k5"));
 	}
-	
+
+	@Test
+	public void updateTask_no_status() throws Exception {
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.UpdateTask updateTask = new EventHandler.UpdateTask();
+		updateTask.setWorkflowId(".workflowId");
+		updateTask.setTaskId(".taskId");
+		updateTask.setStatus(".status");
+		updateTask.setResetStartTime(true);
+
+		EventHandler.Action action = new EventHandler.Action();
+		action.setAction(EventHandler.Action.Type.update_task);
+		action.setUpdate_task(updateTask);
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "name", "messageId");
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals(updateTask, op.get("action"));
+		assertEquals("name", op.get("conductor.event.name"));
+		assertEquals("messageId", op.get("conductor.event.messageId"));
+		assertEquals("Unable to determine task status", op.get("error"));
+		System.out.println("op = " + op);
+	}
+
+	@Test
+	public void updateTask_no_workflow() throws Exception {
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.UpdateTask updateTask = new EventHandler.UpdateTask();
+		updateTask.setWorkflowId(".workflowId");
+		updateTask.setTaskId(".taskId");
+		updateTask.setStatus(".status");
+		updateTask.setResetStartTime(true);
+
+		EventHandler.Action action = new EventHandler.Action();
+		action.setAction(EventHandler.Action.Type.update_task);
+		action.setUpdate_task(updateTask);
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "completed");
+
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "name", "messageId");
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals(updateTask, op.get("action"));
+		assertEquals("name", op.get("conductor.event.name"));
+		assertEquals("messageId", op.get("conductor.event.messageId"));
+		assertEquals("No workflow found with id 1", op.get("error"));
+		System.out.println("op = " + op);
+	}
+
+	@Test
+	public void updateTask_no_task() throws Exception {
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		when(executor.getWorkflow("1", true)).thenReturn(workflow);
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.UpdateTask updateTask = new EventHandler.UpdateTask();
+		updateTask.setWorkflowId(".workflowId");
+		updateTask.setTaskId(".taskId");
+		updateTask.setStatus(".status");
+		updateTask.setResetStartTime(true);
+
+		EventHandler.Action action = new EventHandler.Action();
+		action.setAction(EventHandler.Action.Type.update_task);
+		action.setUpdate_task(updateTask);
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("workflowId", "1");
+		payload.put("taskId", "2");
+		payload.put("status", "completed");
+
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "name", "messageId");
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals(updateTask, op.get("action"));
+		assertEquals("name", op.get("conductor.event.name"));
+		assertEquals("messageId", op.get("conductor.event.messageId"));
+		assertEquals("No task found with id 2 for workflow 1", op.get("error"));
+		System.out.println("op = " + op);
+	}
 }
