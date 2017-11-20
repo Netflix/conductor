@@ -20,10 +20,10 @@ package com.netflix.conductor.contribs.http;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.events.ActionProcessor;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -35,6 +35,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -50,8 +51,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Oleksiy Lysak
@@ -69,15 +69,14 @@ public class TestHttpWaitTask {
 	private WorkflowExecutor executor = mock(WorkflowExecutor.class);
 	private RestClientManager rcm = new RestClientManager();
 	private MetadataDAO metadata = mock(MetadataDAO.class);
-	private EventProcessor events = mock(EventProcessor.class);
-	private ActionProcessor actions = mock(ActionProcessor.class);
+	private EventProcessor processor = mock(EventProcessor.class);
 
 	private Workflow workflow = new Workflow();
 	private HttpWaitTask httpTask;
 
 	@BeforeClass
 	public static void init() throws Exception {
-		server = new Server(7009);
+		server = new Server(7011);
 		ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/", ServletContextHandler.SESSIONS);
 		servletContextHandler.setHandler(new EchoHandler());
 		server.start();
@@ -99,7 +98,7 @@ public class TestHttpWaitTask {
 		Configuration config = mock(Configuration.class);
 		when(config.getServerId()).thenReturn("test_server_id");
 
-		httpTask = new HttpWaitTask(config, rcm, new ObjectMapper(), metadata, events);
+		httpTask = new HttpWaitTask(config, rcm, new ObjectMapper(), metadata, processor);
 	}
 
 	@Test
@@ -107,7 +106,7 @@ public class TestHttpWaitTask {
 	public void testPost() throws Exception {
 		Task task = new Task();
 		Input input = new Input();
-		input.setUri("http://localhost:7009/post");
+		input.setUri("http://localhost:7011/post");
 		Map<String, Object> body = new HashMap<>();
 		body.put("input_key1", "value1");
 		body.put("input_key2", 45.3d);
@@ -123,6 +122,7 @@ public class TestHttpWaitTask {
 
 		task.getInputData().put("event_wait", event);
 
+		ArgumentCaptor<EventHandler> captor = ArgumentCaptor.forClass(EventHandler.class);
 		httpTask.start(workflow, task, executor);
 
 		assertEquals(Task.Status.IN_PROGRESS, task.getStatus());
@@ -135,6 +135,15 @@ public class TestHttpWaitTask {
 		Set<String> responseKeys = map.keySet();
 		inputKeys.containsAll(responseKeys);
 		responseKeys.containsAll(inputKeys);
+
+		verify(processor, times(1)).refresh();
+		verify(metadata, times(1)).addEventHandler(captor.capture());
+		assertEquals("conductor:test", captor.getValue().getName());
+		assertEquals("true", captor.getValue().getCondition());
+		assertTrue(captor.getValue().isActive());
+		assertEquals(1, captor.getValue().getActions().size());
+		EventHandler.Action action = captor.getValue().getActions().get(0);
+		assertEquals(EventHandler.Action.Type.update_task, action.getAction());
 	}
 
 	private static class EchoHandler extends AbstractHandler {
