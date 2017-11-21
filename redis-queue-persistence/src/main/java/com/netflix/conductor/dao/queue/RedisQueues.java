@@ -69,7 +69,9 @@ public class RedisQueues implements Closeable {
 //                    .withUnackTime(unackTime)
 //                    .withNonQuorumConn(nonQuorumConn)
 //                    .withQuorumConn(quorumConn);
-            queue = new RedisQueue(redisKeyPrefix, queueName, shardName, unackTime, pool);
+//            queue = new RedisQueue(redisKeyPrefix, queueName, shardName, unackTime, pool);
+            queue = new RedisQueue2(redisKeyPrefix, queueName, shardName).withQuorumConn(pool).withNonQuorumConn(pool).withUnackTime(unackTime);
+
             this.queues.put(key, queue);
         }
 
