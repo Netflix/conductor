@@ -154,7 +154,7 @@ public class RedisQueue implements Queue {
     private String messageStoreKey(String msgId) {
 //        Long hash = partitioner.hash(msgId);
 //        long bucket = hash % maxHashBuckets;
-        return messageStoreKeyPrefix  + "." + queueName;
+        return messageStoreKeyPrefix  + queueName;
     }
 
     private String unackShardKey(String messageId) {

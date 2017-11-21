@@ -131,14 +131,11 @@ public class ElasticSearchDAO implements IndexDAO {
         this.indexName = config.getProperty("workflow.elasticsearch.index.name", null);
         this.logIndexPrefix = config.getProperty("workflow.elasticsearch.tasklog.index.name", "task_log");
         String autoAddIndex = config.getProperty("workflow.elasticsearch.auto.index", "true");
-
         if (autoAddIndex.equals("true")) {
             try {
-
                 initIndex();
                 updateIndexName(config);
                 Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> updateIndexName(config), 0, 1, TimeUnit.HOURS);
-
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
