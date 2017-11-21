@@ -47,11 +47,17 @@ public class ElasticsearchModule extends AbstractModule {
 	public Client getClient(Configuration config) throws Exception {
 
 		String clusterAddress = config.getProperty("workflow.elasticsearch.url", "");
+		String clusterName = config.getProperty("workflow.elasticsearch.cluster.name", "");
 		if(clusterAddress.equals("")) {
 			log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
 		}
 
         Settings settings = Settings.builder().put("client.transport.ignore_cluster_name",true).put("client.transport.sniff", true).build();
+		if(!clusterName.equals("")){
+            settings = Settings.builder().put("cluster.name",clusterName).put("client.transport.sniff", true).build();
+        }
+
+
 
         TransportClient tc = new PreBuiltTransportClient(settings);
         String[] hosts = clusterAddress.split(",");
