@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.dao.es5.es.EmbeddedElasticSearch;
+import com.netflix.conductor.dao.esrest.es.EmbeddedElasticSearch;
 import com.netflix.conductor.redis.utils.JedisMock;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.Host.Status;

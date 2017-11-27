@@ -30,6 +30,7 @@ import com.netflix.conductor.contribs.http.RestClientManager;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -38,8 +39,8 @@ import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
-import com.netflix.conductor.dao.es5.index.ElasticSearchDAO;
-import com.netflix.conductor.dao.es5.index.ElasticsearchModule;
+import com.netflix.conductor.dao.esrest.index.ElasticSearchDAO;
+import com.netflix.conductor.dao.esrest.index.ElasticsearchModule;
 import com.netflix.conductor.dao.mysql.MySQLWorkflowModule;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.redis.DynoShardSupplier;
@@ -100,6 +101,8 @@ public class ServerModule extends AbstractModule {
 
 			DynoProxy proxy = new DynoProxy(dynoConn);
 			bind(DynoProxy.class).toInstance(proxy);
+			
+			bind(WorkflowSweeper.class).asEagerSingleton();
 		}
 
 		install(new ElasticsearchModule());
