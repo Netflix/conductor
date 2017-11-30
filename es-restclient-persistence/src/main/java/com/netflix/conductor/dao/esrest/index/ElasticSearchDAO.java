@@ -152,10 +152,6 @@ public class ElasticSearchDAO implements IndexDAO {
 		this.indexName = config.getProperty("workflow.elasticsearch.index.name", null);
 		
 		try {
-			for (int i = 0; i < 100; i++) {
-				log.info(i + "...");
-				Thread.sleep(1000);
-			}
 			initIndex();
 			updateIndexName(config);
 			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> updateIndexName(config), 0, 1, TimeUnit.HOURS);
