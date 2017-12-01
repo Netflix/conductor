@@ -172,8 +172,6 @@ public class ActionProcessor {
 			String failedReason = null;
 			if (StringUtils.isNotEmpty(updateTask.getFailedReason())) {
 				failedReason = ScriptEvaluator.evalJq(updateTask.getFailedReason(), payload);
-				if (StringUtils.isEmpty(failedReason))
-					throw new RuntimeException("failedReason evaluating is empty");
 			}
 
 			Function<String, Status> getTaskStatus = s -> {
