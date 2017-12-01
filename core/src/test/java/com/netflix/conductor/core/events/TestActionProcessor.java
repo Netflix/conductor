@@ -181,18 +181,6 @@ public class TestActionProcessor {
 		assertEquals("2", op.get("conductor.event.messageId"));
 		assertEquals("status evaluating is empty", op.get("error"));
 
-		//failedReason evaluating is empty
-		payload.put("workflowId", "1");
-		payload.put("taskId", "2");
-		payload.put("status", "completed");
-		action.getUpdate_task().setFailedReason(".failedReason");
-		op = ap.execute(action, om.writeValueAsString(payload), "1", "2");
-		assertEquals(action.getUpdate_task(), op.get("action"));
-		assertEquals(payload, op.get("conductor.event.payload"));
-		assertEquals("1", op.get("conductor.event.name"));
-		assertEquals("2", op.get("conductor.event.messageId"));
-		assertEquals("failedReason evaluating is empty", op.get("error"));
-
 		//Unable to determine task status. 1
 		payload.put("workflowId", "1");
 		payload.put("taskId", "2");
