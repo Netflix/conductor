@@ -320,7 +320,7 @@ public class ExecutionService {
 				return summary;
 				
 			} catch(Exception e) {
-				logger.error(e.getMessage(), e);
+				logger.error("Error searching for workflow: " + workflowId + ", " + e.getMessage());
 				return null;
 			}
 		}).filter(summary -> summary != null).collect(Collectors.toList());

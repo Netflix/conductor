@@ -101,7 +101,6 @@ public class ServerModule extends AbstractModule {
 
 			DynoProxy proxy = new DynoProxy(dynoConn);
 			bind(DynoProxy.class).toInstance(proxy);
-			
 			bind(WorkflowSweeper.class).asEagerSingleton();
 		}
 
