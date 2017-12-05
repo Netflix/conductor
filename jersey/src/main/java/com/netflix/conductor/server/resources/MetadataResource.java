@@ -18,26 +18,16 @@
  */
 package com.netflix.conductor.server.resources;
 
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.service.MetadataService;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 
 /**
@@ -122,5 +112,11 @@ public class MetadataResource {
 		service.unregisterTaskDef(taskType);
 	}
 
+	@DELETE
+	@Path("/workflow/{name}")
+	@ApiOperation("Remove a workflow definition")
+	public void unregisterWorkflow(@PathParam("name") String name, @QueryParam("version") Integer version){
+		service.unregisterWorkflow(name, version);
+	}
 	
 }

@@ -18,21 +18,25 @@
  */
 package com.netflix.conductor.service;
 
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import com.google.common.base.Preconditions;
+``import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.run.SearchResult;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.List;
 
 /**
  * @author Viren 
@@ -42,11 +46,17 @@ import com.netflix.conductor.dao.MetadataDAO;
 @Trace
 public class MetadataService {
 
+	private IndexDAO indexer;
 	private MetadataDAO metadata;
+	private WorkflowExecutor executor;
+	private ExecutionService service;
 
 	@Inject
-	public MetadataService(MetadataDAO metadata) {
+	public MetadataService(MetadataDAO metadata, IndexDAO indexDAO, ExecutionService service, WorkflowExecutor executor) {
 		this.metadata = metadata;
+		this.service = service;
+		this.executor = executor;
+		this.indexer = indexDAO;
 	}
 
 	/**
@@ -132,7 +142,60 @@ public class MetadataService {
 		}
 		return metadata.get(name, version);
 	}
-	
+
+	/**
+	 * Remove workflow definition
+	 *
+	 * @param name workflow name
+	 * @param version workflow version
+	 */
+	public void unregisterWorkflow(String name, Integer version) {
+		WorkflowDef def;
+		if (version == null) {
+			def = metadata.getLatest(name);
+		} else {
+			def = metadata.get(name, version);
+		}
+
+		if (def == null) {
+			throw new ApplicationException(Code.NOT_FOUND, "No such workflow by name " + name + " and version " + version);
+		}
+
+		String query = "workflowType IN (" + def.getName() + ") AND version IN (" + def.getVersion() + ")";
+
+		// Work in the batch mode
+		while (true) {
+			// Get the batch
+			SearchResult<WorkflowSummary> workflows = service.search(query, "*", 0, 100, null);
+			if (workflows.getTotalHits() <= 0) {
+				break;
+			}
+
+			// Process batch
+			workflows.getResults().forEach(workflow -> {
+				// Terminate workflow if it is running
+				if (Workflow.WorkflowStatus.RUNNING == workflow.getStatus()) {
+					try {
+						executor.terminateWorkflow(workflow.getWorkflowId(), "Metadata deleting requested");
+					} catch (Exception ignore) { }
+				}
+
+				// remove workflow
+				try {
+					service.removeWorkflow(workflow.getWorkflowId());
+				} catch (Exception ignore) { }
+
+				// remove from index
+				try {
+					indexer.remove(workflow.getWorkflowId());
+				} catch (Exception ignore) { }
+			});
+		}
+
+		// remove metadata
+		metadata.removeWorkflow(def);
+	}
+
 	/**
 	 * 
 	 * @param name Name of the workflow to retrieve
