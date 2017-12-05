@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -83,11 +82,12 @@ public abstract class NATSAbstractQueue  {
                 String payload = message.getPayload();
                 publish(subject, payload.getBytes());
                 logger.info(String.format("Published message to %s: %s", subject, payload));
-            } catch (IOException e) {
-                logger.error("Failed to publish message " + message, e);
+            } catch (Exception ex) {
+                logger.error("Failed to publish message " + message, ex);
+                throw new RuntimeException(ex);
             }
         });
     }
 
-    abstract void publish(String subject, byte[] data) throws IOException;
+    abstract void publish(String subject, byte[] data) throws Exception;
 }
