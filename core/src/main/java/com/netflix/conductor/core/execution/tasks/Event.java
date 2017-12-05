@@ -18,13 +18,6 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -35,6 +28,12 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Viren
@@ -69,9 +68,15 @@ public class Event extends WorkflowSystemTask {
 		
 		ObservableQueue queue = getQueue(workflow, task);
 		if(queue != null) {
-			queue.publish(Arrays.asList(message));
-			task.getOutputData().putAll(payload);
-			task.setStatus(Status.COMPLETED);
+			try {
+				queue.publish(Arrays.asList(message));
+				task.getOutputData().putAll(payload);
+				task.setStatus(Status.COMPLETED);
+			} catch (Exception ex) {
+				logger.error(ex.getMessage(), ex);
+				task.setStatus(Status.FAILED);
+				task.setReasonForIncompletion(ex.getMessage());
+			}
 		} else {
 			task.setReasonForIncompletion("No queue found to publish.");
 			logger.error("No queue found to publish.");
