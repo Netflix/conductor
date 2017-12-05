@@ -171,10 +171,24 @@ job "conductor" {
           http = 9200
           tcp = 9300
         }
-        volume_driver = "ebs"
-        volumes = [
-          "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}.<ENV_TYPE>:/usr/share/elasticsearch/data"
-        ]
+        # volume_options.driver_config.options.size is GiB
+        mounts = [
+          {
+            target = "/usr/share/elasticsearch/data"
+            source = "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}.<ENV_TYPE>"
+            readonly = false
+            volume_options {
+              no_copy = false
+              driver_config {
+                name = "ebs"
+                options = {
+                  type = "gp2"
+                  size = "16"
+                }
+              }
+            }
+          }
+        ]        
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
