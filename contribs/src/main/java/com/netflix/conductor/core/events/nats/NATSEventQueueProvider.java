@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NATSEventQueueProvider implements EventQueueProvider {
     private static Logger logger = LoggerFactory.getLogger(NATSEventQueueProvider.class);
     protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-    private Connection connection;
+    private ConnectionFactory factory;
 
     @Inject
     public NATSEventQueueProvider(Configuration config) {
@@ -64,13 +64,8 @@ public class NATSEventQueueProvider implements EventQueueProvider {
             props.put(key, config.getProperty(key, val));
         });
 
-        ConnectionFactory connectionFactory = new ConnectionFactory(props);
-        try {
-            connection = connectionFactory.createConnection();
-        } catch (Exception e) {
-            logger.error("Unable to create NATS Connection", e);
-            throw new RuntimeException(e);
-        }
+        // Init NATS API
+        factory = new ConnectionFactory(props);
 
         EventQueues.registerProvider(QueueType.nats, this);
         logger.info("NATS Event Queue Provider initialized...");
@@ -78,6 +73,16 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
+        Connection connection = openConnection();
         return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(connection, queueURI));
+    }
+
+    private Connection openConnection() {
+        try {
+            return factory.createConnection();
+        } catch (Exception e) {
+            logger.error("Unable to create NATS Connection", e);
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NATSStreamEventQueueProvider implements EventQueueProvider {
     private static Logger logger = LoggerFactory.getLogger(NATSStreamEventQueueProvider.class);
     protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-    private Connection connection;
+    private ConnectionFactory factory;
     private String durableName;
 
     @Inject
@@ -61,17 +61,10 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
                 ", durableName=" + durableName);
 
         // Init NATS Streaming API
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        connectionFactory.setClusterId(clusterId);
-        connectionFactory.setClientId(clientId);
-        connectionFactory.setNatsUrl(natsUrl);
-
-        try {
-            connection = connectionFactory.createConnection();
-        } catch (Exception e) {
-            logger.error("Unable to create NATS Streaming Connection", e);
-            throw new RuntimeException(e);
-        }
+        factory = new ConnectionFactory();
+        factory.setClusterId(clusterId);
+        factory.setClientId(clientId);
+        factory.setNatsUrl(natsUrl);
 
         EventQueues.registerProvider(QueueType.nats_stream, this);
         logger.info("NATS Stream Event Queue Provider initialized...");
@@ -79,6 +72,16 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
+        Connection connection = openConnection();
         return queues.computeIfAbsent(queueURI, q -> new NATSStreamObservableQueue(connection, queueURI, durableName));
+    }
+
+    private Connection openConnection() {
+        try {
+            return factory.createConnection();
+        } catch (Exception e) {
+            logger.error("Unable to create NATS Streaming Connection", e);
+            throw new RuntimeException(e);
+        }
     }
 }
