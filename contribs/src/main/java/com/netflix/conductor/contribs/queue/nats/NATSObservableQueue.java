@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -95,6 +94,9 @@ public class NATSObservableQueue extends NATSAbstractQueue implements Observable
 
     @Override
     public void publish(List<Message> messages) {
+        if (!connection.isConnected()) {
+            throw new RuntimeException("No nats server connection");
+        }
         super.publish(messages);
     }
 
@@ -108,7 +110,7 @@ public class NATSObservableQueue extends NATSAbstractQueue implements Observable
     }
 
     @Override
-    public void publish(String subject, byte[] data) throws IOException {
+    public void publish(String subject, byte[] data) throws Exception {
         connection.publish(subject, data);
     }
 }

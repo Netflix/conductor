@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -101,11 +100,14 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue implements Obse
 
     @Override
     public void publish(List<Message> messages) {
+        if (!connection.getNatsConnection().isConnected()) {
+            throw new RuntimeException("No nats_stream server connection");
+        }
         super.publish(messages);
     }
 
     @Override
-    public void publish(String subject, byte[] data) throws IOException {
+    public void publish(String subject, byte[] data) throws Exception {
         connection.publish(subject, data);
     }
 
