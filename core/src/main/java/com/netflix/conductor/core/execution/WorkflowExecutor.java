@@ -148,6 +148,10 @@ public class WorkflowExecutor {
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
 			edao.createWorkflow(wf);
+
+			// send wf start message
+			notifyWorkflowState(wf, WorkflowDef.PrePostState.start);
+
 			decide(workflowId);
 			logger.info("Workflow has started.Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()+",CorrelationId=" + wf.getCorrelationId()+",input="+wf.getInput());
 			return workflowId;
@@ -227,6 +231,10 @@ public class WorkflowExecutor {
 		}
 
 		edao.createWorkflow(wf);
+
+		// send wf start message
+		notifyWorkflowState(wf, WorkflowDef.PrePostState.start);
+
 		decide(workflowId);
 		return workflowId;
 	}
@@ -289,7 +297,6 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		decide(workflowId);
-
 	}
 
 	public List<Workflow> getStatusByCorrelationId(String workflowName, String correlationId, boolean includeClosed) throws Exception {
@@ -342,9 +349,12 @@ public class WorkflowExecutor {
 		}
 		Monitors.recordWorkflowCompletion(workflow.getWorkflowType(), workflow.getEndTime() - workflow.getStartTime());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+
+		// send wf end message
+		notifyWorkflowState(wf, WorkflowDef.PrePostState.end);
+
 		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
-
 
 	public String cancelWorkflow(String workflowId,Map<String, Object> inputbody) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
@@ -352,7 +362,7 @@ public class WorkflowExecutor {
 		return cancelWorkflow(workflow,inputbody);
 	}
 
-	public String cancelWorkflow(Workflow workflow,Map<String, Object> inputbody) throws Exception {
+	public String cancelWorkflow(Workflow workflow, Map<String, Object> inputbody) throws Exception {
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
@@ -372,11 +382,10 @@ public class WorkflowExecutor {
 					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
 				}
 				edao.updateTask(task);
-				applyTaskAction(task, PrePostAction.postTask);
+				notifyTaskState(task, PrePostAction.postTask);
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
-
 		}
 
 		// If the following lines, for some reason fails, the sweep will take
@@ -416,6 +425,9 @@ public class WorkflowExecutor {
 
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
+		// send wf end message
+		notifyWorkflowState(workflow, WorkflowDef.PrePostState.end);
+
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
 		return workflowId;
@@ -452,7 +464,7 @@ public class WorkflowExecutor {
 					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
 				}
 				edao.updateTask(task);
-				applyTaskAction(task, PrePostAction.postTask);
+				notifyTaskState(task, PrePostAction.postTask);
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -464,7 +476,6 @@ public class WorkflowExecutor {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
 			decide(parent.getWorkflowId());
 		}
-
 
 		if (!StringUtils.isBlank(failureWorkflow)) {
 			// Backward compatible by default
@@ -507,6 +518,9 @@ public class WorkflowExecutor {
 
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
+		// send wf end message
+		notifyWorkflowState(workflow, WorkflowDef.PrePostState.end);
+
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
 	}
@@ -529,7 +543,7 @@ public class WorkflowExecutor {
 			task.setReasonForIncompletion(result.getReasonForIncompletion());
 			task.setWorkerId(result.getWorkerId());
 			edao.updateTask(task);
-			applyTaskAction(task, PrePostAction.postTask);
+			notifyTaskState(task, PrePostAction.postTask);
 			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ", reason=" + wf.getReasonForIncompletion()+",correlationId="+wf.getCorrelationId();
 			logger.warn(msg);
 			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
@@ -571,16 +585,16 @@ public class WorkflowExecutor {
 
 			case COMPLETED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-				applyTaskAction(task, PrePostAction.postTask);
+				notifyTaskState(task, PrePostAction.postTask);
 				break;
 
 			case CANCELED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-				applyTaskAction(task, PrePostAction.postTask);
+				notifyTaskState(task, PrePostAction.postTask);
 				break;
 			case FAILED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-				applyTaskAction(task, PrePostAction.postTask);
+				notifyTaskState(task, PrePostAction.postTask);
 				break;
 			case IN_PROGRESS:
 				// put it back in queue based in callbackAfterSeconds
@@ -600,7 +614,6 @@ public class WorkflowExecutor {
 			Monitors.recordTaskExecutionTime(task.getTaskDefName(), duration, true, task.getStatus());
 			Monitors.recordTaskExecutionTime(task.getTaskDefName(), lastDuration, false, task.getStatus());
 		}
-
 	}
 
 	public List<Task> getTasks(String taskType, String startKey, int count) throws Exception {
@@ -791,7 +804,7 @@ public class WorkflowExecutor {
 				logger.warn("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
 				if(!task.getStatus().isTerminal()) {
 					task.setStatus(Status.CANCELED);
-					applyTaskAction(task, PrePostAction.postTask);
+					notifyTaskState(task, PrePostAction.postTask);
 				}
 				edao.updateTask(task);
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -815,7 +828,7 @@ public class WorkflowExecutor {
 			switch (task.getStatus()) {
 
 				case SCHEDULED:
-					applyTaskAction(task, PrePostAction.preTask);
+					notifyTaskState(task, PrePostAction.preTask);
 					systemTask.start(workflow, task, this);
 					break;
 
@@ -916,12 +929,12 @@ public class WorkflowExecutor {
 			}
 			task.setStartTime(System.currentTimeMillis());
 			if(!stt.isAsync()) {
-				applyTaskAction(task, PrePostAction.preTask);
+				notifyTaskState(task, PrePostAction.preTask);
 				stt.start(workflow, task, this);
 				startedSystemTasks = true;
 				edao.updateTask(task);
 				if (task.getStatus().isTerminal()) {
-					applyTaskAction(task, PrePostAction.postTask);
+					notifyTaskState(task, PrePostAction.postTask);
 				}
 			} else {
 				toBeQueued.add(task);
@@ -962,29 +975,59 @@ public class WorkflowExecutor {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void applyTaskAction(Task task, WorkflowSystemTask.PrePostAction action) throws Exception {
-		Object eventMessages = task.getInputData().get("event_messages");
-		if (eventMessages == null) {
+	private void notifyTaskState(Task task, WorkflowSystemTask.PrePostAction action) {
+		try {
+			Object object = task.getInputData().get("event_messages");
+			if (object == null) {
+				return;
+			}
+
+			Map<String, Object> map = (Map<String, Object>)object;
+			if (map.containsKey(action.name())) {
+				sendMessage(map, action.name());
+			}
+		} catch (Exception ex) {
+			logger.error("Unable to execute task action " + action.name() + ", failed with " + ex.getMessage(), ex);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void notifyWorkflowState(Workflow workflow, WorkflowDef.PrePostState state) {
+		try {
+			WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+
+			Map<String, Object> map = workflowDef.getEventMessages();
+			if (map == null) {
+				return;
+			}
+
+			if (map.containsKey(state.name())) {
+				sendMessage(map, state.name());
+			}
+		} catch (Exception ex) {
+			logger.error("Unable to execute workflow action " + state.name() + ", failed with " + ex.getMessage(), ex);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void sendMessage(Map<String, Object> map, String name) throws Exception {
+		Map<String, Object> actionMap = (Map<String, Object>) map.get(name);
+		ObjectMapper mapper = new ObjectMapper();
+
+		Message msg = new Message();
+		msg.setId(UUID.randomUUID().toString());
+
+		String payload = mapper.writeValueAsString(actionMap.get("inputParameters"));
+		msg.setPayload(payload);
+
+		String sink = (String) actionMap.get("sink");
+		ObservableQueue queue = EventQueues.getQueue(sink, false);
+		if (queue == null) {
+			logger.error("sendMessage. No queue found for " + sink);
 			return;
 		}
 
-		Map<String, Object> eventMsgMap = (Map<String, Object>) eventMessages;
-		if (eventMsgMap.containsKey(action.name())) {
-			Map<String, Object> actionMap = (Map<String, Object>) eventMsgMap.get(action.name());
-			ObjectMapper mapper = new ObjectMapper();
-
-			Message msg = new Message();
-			msg.setId(UUID.randomUUID().toString());
-
-			String payload = mapper.writeValueAsString(actionMap.get("inputParameters"));
-			msg.setPayload(payload);
-
-			String sink = (String) actionMap.get("sink");
-			ObservableQueue queue = EventQueues.getQueue(sink, false);
-			if (queue != null) {
-				queue.publish(Collections.singletonList(msg));
-			}
-		}
+		queue.publish(Collections.singletonList(msg));
 	}
 
 	private void validateWorkflowInput(WorkflowDef workflowDef, Map<String, Object> payload) {

@@ -15,13 +15,13 @@
  */
 package com.netflix.conductor.common.run;
 
+import com.netflix.conductor.common.metadata.Auditable;
+import com.netflix.conductor.common.metadata.tasks.Task;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import com.netflix.conductor.common.metadata.Auditable;
-import com.netflix.conductor.common.metadata.tasks.Task;
 
 
 public class Workflow extends Auditable{
