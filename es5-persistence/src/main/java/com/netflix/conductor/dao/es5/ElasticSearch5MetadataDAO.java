@@ -367,7 +367,12 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 		String indexName = toIndexName(TASK_DEFS);
 		String typeName = toTypeName(TASK_DEFS);
 		String id = toId(def.getName());
-		upsert(indexName, typeName, id, toMap(def));
+
+		if (exists(indexName, typeName, id)) {
+			update(indexName, typeName, id, toMap(def));
+		} else {
+			insert(indexName, typeName, id, toMap(def));
+		}
 
 		refreshTaskDefs();
 		if (logger.isDebugEnabled())
@@ -384,7 +389,12 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 		String indexName = toIndexName(WORKFLOW_DEFS);
 		String typeName = toTypeName(WORKFLOW_DEFS);
 		String id = toId(def.getName(), String.valueOf(def.getVersion()));
-		upsert(indexName, typeName, id, toMap(def));
+
+		if (exists(indexName, typeName, id)) {
+			update(indexName, typeName, id, toMap(def));
+		} else {
+			insert(indexName, typeName, id, toMap(def));
+		}
 
 		if (logger.isDebugEnabled())
 			logger.debug("insertOrUpdate: done");

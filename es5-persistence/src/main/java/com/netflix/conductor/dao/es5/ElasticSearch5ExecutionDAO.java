@@ -713,7 +713,11 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		String id = toId(task.getTaskId());
 		Map<String, ?> payload = toMap(task);
 
-		upsert(indexName, typeName, id, payload);
+		if (exists(indexName, typeName, id)) {
+			update(indexName, typeName, id, payload);
+		} else {
+			insert(indexName, typeName, id, payload);
+		}
 	}
 
 	private void deleteTask(Task task) {

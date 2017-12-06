@@ -210,9 +210,12 @@ public class ElasticSearch5BaseDAO {
 		ensureIndexExists(indexName);
 		doWithRetry(() -> {
 			try {
-				client.prepareUpdate(indexName, typeName, id)
+				client.prepareIndex()
 						.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-						.setDoc(payload)
+						.setIndex(indexName)
+						.setType(typeName)
+						.setId(id)
+						.setSource(payload)
 						.get();
 			} catch (VersionConflictEngineException ignore) {
 			} catch (Exception ex) {
