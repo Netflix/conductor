@@ -255,6 +255,10 @@ public class WorkflowExecutor {
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		edao.updateWorkflow(workflow);
+
+		// send wf start message
+		notifyWorkflowState(workflow, WorkflowDef.PrePostState.start);
+
 		decide(workflowId);
 	}
 
@@ -994,9 +998,11 @@ public class WorkflowExecutor {
 	@SuppressWarnings("unchecked")
 	private void notifyWorkflowState(Workflow workflow, WorkflowDef.PrePostState state) {
 		try {
+			ParametersUtils pu = new ParametersUtils();
 			WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
 
-			Map<String, Object> map = workflowDef.getEventMessages();
+			Map<String, Object> map = pu.getTaskInputV2(workflowDef.getEventMessages(), workflow, null, null);
+
 			if (map == null) {
 				return;
 			}
