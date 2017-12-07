@@ -80,7 +80,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
     }
 
     private void monitor() {
-        if (conn != null && conn.getNatsConnection().isConnected()) {
+        if (conn != null && conn.getNatsConnection() != null && conn.getNatsConnection().isConnected()) {
             return;
         }
         logger.error("Monitor invoked for " + queueURI);
@@ -88,7 +88,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
         try {
             if (subs != null) {
                 try {
-                    subs.close();
+                    subs.close(true);
                     subs = null;
                 } catch (Exception ex) {
                     logger.error("Monitor subs.close failed with " + ex.getMessage() + " for " + queueURI, ex);
@@ -97,6 +97,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 
             if (conn != null) {
                 try {
+                    conn.close();
                     conn.close();
                     conn = null;
                 } catch (Exception ex) {
@@ -119,7 +120,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
     }
 
     private void ensureConnected() {
-        if (conn == null || !conn.getNatsConnection().isConnected()) {
+        if (conn == null || conn.getNatsConnection() == null || !conn.getNatsConnection().isConnected()) {
             throw new RuntimeException("No nats streaming connection");
         }
     }
