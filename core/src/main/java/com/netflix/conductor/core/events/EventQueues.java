@@ -63,7 +63,6 @@ public class EventQueues {
 		QueueType type = QueueType.valueOf(typeVal);
 		EventQueueProvider provider = providers.get(type);
 		if(provider != null) {
-			logger.info("Event queue provider class is " + provider.getClass().getName());
 			try {
 				return provider.getQueue(queueURI);
 			} catch(Exception e) {
@@ -74,7 +73,6 @@ public class EventQueues {
 			}
 		}
 
-		logger.warn("Event queue provider not found for " + typeVal);
 		return null;
 	}
 }
