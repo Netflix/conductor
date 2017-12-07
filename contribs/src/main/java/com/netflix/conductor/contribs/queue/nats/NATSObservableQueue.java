@@ -43,18 +43,14 @@ public class NATSObservableQueue extends NATSAbstractQueue {
         super(queueURI, EventQueues.QueueType.nats);
         this.fact = factory;
 
-        // Init instance regardless of the exception it might throw
         try {
             this.conn = openConnection();
-
-            // Start maintenance with delay
-            Executors.newScheduledThreadPool(1)
-                    .scheduleAtFixedRate(this::maintain, 30_000, 500, TimeUnit.MILLISECONDS);
         } catch (Exception ignore) {
-            // Start maintenance immediately
-            Executors.newScheduledThreadPool(1)
-                    .scheduleAtFixedRate(this::maintain, 0, 500, TimeUnit.MILLISECONDS);
         }
+
+        // Start monitor
+        Executors.newScheduledThreadPool(1)
+                .scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
     }
 
     private Connection openConnection() {
@@ -72,11 +68,11 @@ public class NATSObservableQueue extends NATSAbstractQueue {
         }
     }
 
-    private void maintain() {
+    private void monitor() {
         if (conn != null && conn.isConnected()) {
             return;
         }
-        logger.error("Maintenance invoked for " + queueURI);
+        logger.error("Monitor invoked for " + queueURI);
         mu.lock();
         try {
             if (conn != null) {
@@ -94,7 +90,7 @@ public class NATSObservableQueue extends NATSAbstractQueue {
                 subscribe();
             }
         } catch (Exception ex) {
-            logger.error("Maintenance failed with " + ex.getMessage() + " for " + queueURI, ex);
+            logger.error("Monitor failed with " + ex.getMessage() + " for " + queueURI, ex);
         } finally {
             mu.unlock();
         }
