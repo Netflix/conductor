@@ -23,6 +23,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import io.nats.client.AsyncSubscription;
 import io.nats.client.Connection;
+import io.nats.client.ConnectionFactory;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,10 @@ import rx.Observable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Oleksiy Lysak
@@ -37,37 +42,103 @@ import java.util.List;
  */
 public class NATSObservableQueue extends NATSAbstractQueue implements ObservableQueue {
     private static Logger logger = LoggerFactory.getLogger(NATSObservableQueue.class);
-    private Connection connection;
-    private AsyncSubscription subscription;
+    private final Lock mu = new ReentrantLock();
+    private AsyncSubscription subs;
+    private ConnectionFactory fact;
+    private Connection conn;
 
-    public NATSObservableQueue(Connection connection, String queueURI) {
+    public NATSObservableQueue(ConnectionFactory factory, String queueURI) {
         super(queueURI);
-        this.connection = connection;
+        this.fact = factory;
+
+        // Init connection regardless of the exception
+        try {
+            this.conn = openConnection();
+
+            // Start maintenance with delay
+            Executors.newScheduledThreadPool(1)
+                    .scheduleAtFixedRate(this::maintain, 30_000, 500, TimeUnit.MILLISECONDS);
+        } catch (Exception ignore) {
+            // Start maintenance immediately
+            Executors.newScheduledThreadPool(1)
+                    .scheduleAtFixedRate(this::maintain, 0, 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private Connection openConnection() {
+        try {
+            Connection conn = fact.createConnection();
+            logger.info("Successfully connected for " + queueURI);
+
+            conn.setReconnectedCallback((event) -> logger.warn("onReconnect. Reconnected back for " + queueURI));
+            conn.setDisconnectedCallback((event -> logger.warn("onDisconnect. Disconnected for " + queueURI)));
+
+            return conn;
+        } catch (Exception e) {
+            logger.error("Unable to establish nats connection for " + queueURI, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void maintain() {
+        if (conn != null && conn.isConnected()) {
+            return;
+        }
+        logger.error("Maintenance invoked for " + queueURI);
+        try {
+            if (conn != null) {
+                // That will also close all subscriptions assigned to this connection
+                conn.close();
+                conn = null;
+            }
+
+            // Connect
+            conn = openConnection();
+
+            // Re-initiated subscription if existed
+            if (observable) {
+                subs = null;
+                subscribe();
+            }
+        } catch (Exception ex) {
+            logger.error("Maintenance failed with " + ex.getMessage() + " for " + queueURI, ex);
+        }
+    }
+
+    private void ensureConnected() {
+        if (conn == null || !conn.isConnected()) {
+            throw new RuntimeException("No nats connection");
+        }
+    }
+
+    private void subscribe() {
+        // do nothing if already subscribed
+        if (subs != null) {
+            return;
+        }
+
+        try {
+            ensureConnected();
+
+            // Create subject/queue subscription if the queue has been provided
+            if (StringUtils.isNotEmpty(queue)) {
+                logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
+                subs = conn.subscribe(subject, queue, natMsg -> onMessage(natMsg.getSubject(), natMsg.getData()));
+            } else {
+                logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
+                subs = conn.subscribe(subject, natMsg -> onMessage(natMsg.getSubject(), natMsg.getData()));
+            }
+        } catch (Exception ex) {
+            logger.error("Start subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
+        }
     }
 
     @Override
     public Observable<Message> observe() {
-        logger.info("Observe invoked for queueURI=" + queueURI);
-        if (subscription == null) {
-            try {
-                // Create subject/queue subscription if the queue has been provided
-                if (StringUtils.isNotEmpty(queue)) {
-                    logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-                    subscription = connection.subscribe(subject, queue, natMsg -> {
-                        handleOnMessage(subject, natMsg.getData(), natMsg.toString());
-                    });
-                } else {
-                    logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-                    subscription = connection.subscribe(subject, natMsg -> {
-                        handleOnMessage(subject, natMsg.getData(), natMsg.toString());
-                    });
-                }
-            } catch (Exception e) {
-                String error = "Unable to start subscription for queueURI=" + queueURI;
-                logger.error(error, e);
-                throw new RuntimeException(error);
-            }
-        }
+        logger.info("Observe invoked for queueURI " + queueURI);
+        observable = true;
+
+        subscribe();
 
         return getOnSubscribe();
     }
@@ -94,9 +165,7 @@ public class NATSObservableQueue extends NATSAbstractQueue implements Observable
 
     @Override
     public void publish(List<Message> messages) {
-        if (!connection.isConnected()) {
-            throw new RuntimeException("No nats server connection");
-        }
+        ensureConnected();
         super.publish(messages);
     }
 
@@ -111,6 +180,6 @@ public class NATSObservableQueue extends NATSAbstractQueue implements Observable
 
     @Override
     public void publish(String subject, byte[] data) throws Exception {
-        connection.publish(subject, data);
+        conn.publish(subject, data);
     }
 }

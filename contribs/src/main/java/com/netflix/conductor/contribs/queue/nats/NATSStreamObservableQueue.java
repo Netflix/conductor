@@ -21,9 +21,10 @@ package com.netflix.conductor.contribs.queue.nats;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.stan.Connection;
-import io.nats.stan.Subscription;
-import io.nats.stan.SubscriptionOptions;
+import io.nats.streaming.StreamingConnection;
+import io.nats.streaming.StreamingConnectionFactory;
+import io.nats.streaming.Subscription;
+import io.nats.streaming.SubscriptionOptions;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,35 +39,44 @@ import java.util.List;
  */
 public class NATSStreamObservableQueue extends NATSAbstractQueue implements ObservableQueue {
     private static Logger logger = LoggerFactory.getLogger(NATSStreamObservableQueue.class);
-    private Connection connection;
+    private StreamingConnectionFactory factory;
+    private StreamingConnection connection;
     private Subscription subscription;
     private String durableName;
 
-    public NATSStreamObservableQueue(Connection connection, String queueURI, String durableName) {
+    public NATSStreamObservableQueue(StreamingConnectionFactory factory, String queueURI, String durableName) {
         super(queueURI);
-        this.connection = connection;
+        this.factory = factory;
         this.durableName = durableName;
+        this.connection = openConnection();
+    }
+
+    private StreamingConnection openConnection() {
+        try {
+            return factory.createConnection();
+        } catch (Exception e) {
+            logger.error("Unable to establish NATS Streaming Connection for " + queueURI, e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Observable<Message> observe() {
-        logger.info("Observe invoked for queueURI=" + queueURI);
+        logger.info("Observe invoked for queueURI " + queueURI);
         if (subscription == null) {
             try {
                 SubscriptionOptions subscriptionOptions = new SubscriptionOptions
-                        .Builder().setDurableName(durableName).build();
+                        .Builder().durableName(durableName).build();
 
                 // Create subject/queue subscription if the queue has been provided
                 if (StringUtils.isNotEmpty(queue)) {
                     logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-                    subscription = connection.subscribe(subject, queue, natMsg -> {
-                        handleOnMessage(subject, natMsg.getData(), natMsg.toString());
-                    }, subscriptionOptions);
+                    subscription = connection.subscribe(subject, queue,
+                            natMsg -> onMessage(subject, natMsg.getData()), subscriptionOptions);
                 } else {
                     logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-                    subscription = connection.subscribe(subject, natMsg -> {
-                        handleOnMessage(subject, natMsg.getData(), natMsg.toString());
-                    }, subscriptionOptions);
+                    subscription = connection.subscribe(subject,
+                            natMsg -> onMessage(subject, natMsg.getData()), subscriptionOptions);
                 }
             } catch (Exception e) {
                 String error = "Unable to start subscription for queueURI=" + queueURI;

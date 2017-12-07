@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Oleksiy Lysak
@@ -36,6 +37,10 @@ import java.util.concurrent.TimeUnit;
 public abstract class NATSAbstractQueue  {
     private static Logger logger = LoggerFactory.getLogger(NATSAbstractQueue.class);
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
+
+    // Indicates that observe was called (Event Handler) and we must to re-initiate subscription upon reconnection
+    boolean observable;
+
     String queueURI;
     String subject;
     String queue;
@@ -59,20 +64,36 @@ public abstract class NATSAbstractQueue  {
             interval.flatMap((Long x) -> {
                 List<Message> available = new LinkedList<>();
                 messages.drainTo(available);
+
+                if (!available.isEmpty()) {
+                    AtomicInteger count = new AtomicInteger(0);
+                    StringBuilder buffer = new StringBuilder();
+                    available.forEach(msg -> {
+                        buffer.append(msg.getId()).append("=").append(msg.getPayload());
+                        count.incrementAndGet();
+
+                        if (count.get() < available.size()) {
+                            buffer.append(",");
+                        }
+                    });
+
+                    logger.info(String.format("Messages from %s to conductor are %s ", subject, buffer.toString()));
+                }
+
                 return Observable.from(available);
             }).subscribe(subscriber::onNext, subscriber::onError);
         };
         return Observable.create(subscribe);
     }
 
-    void handleOnMessage(String subject, byte[] data, String trace) {
+    void onMessage(String subject, byte[] data) {
         String payload = new String(data);
+        logger.info(String.format("Received message for %s: %s", subject, payload));
 
         Message dstMsg = new Message();
         dstMsg.setId(NUID.nextGlobal());
         dstMsg.setPayload(payload);
 
-        logger.info(String.format("Received message for %s: %s", subject, payload));
         messages.add(dstMsg);
     }
 
@@ -83,7 +104,7 @@ public abstract class NATSAbstractQueue  {
                 publish(subject, payload.getBytes());
                 logger.info(String.format("Published message to %s: %s", subject, payload));
             } catch (Exception ex) {
-                logger.error("Failed to publish message " + message, ex);
+                logger.error("Failed to publish message " + message + " to " + subject, ex);
                 throw new RuntimeException(ex);
             }
         });

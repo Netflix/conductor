@@ -24,8 +24,7 @@ import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.stan.Connection;
-import io.nats.stan.ConnectionFactory;
+import io.nats.streaming.StreamingConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NATSStreamEventQueueProvider implements EventQueueProvider {
     private static Logger logger = LoggerFactory.getLogger(NATSStreamEventQueueProvider.class);
     protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-    private ConnectionFactory factory;
+    private StreamingConnectionFactory factory;
     private String durableName;
 
     @Inject
@@ -61,7 +60,7 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
                 ", durableName=" + durableName);
 
         // Init NATS Streaming API
-        factory = new ConnectionFactory();
+        factory = new StreamingConnectionFactory();
         factory.setClusterId(clusterId);
         factory.setClientId(clientId);
         factory.setNatsUrl(natsUrl);
@@ -72,16 +71,6 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
-        Connection connection = openConnection();
-        return queues.computeIfAbsent(queueURI, q -> new NATSStreamObservableQueue(connection, queueURI, durableName));
-    }
-
-    private Connection openConnection() {
-        try {
-            return factory.createConnection();
-        } catch (Exception e) {
-            logger.error("Unable to create NATS Streaming Connection", e);
-            throw new RuntimeException(e);
-        }
+        return queues.computeIfAbsent(queueURI, q -> new NATSStreamObservableQueue(factory, queueURI, durableName));
     }
 }

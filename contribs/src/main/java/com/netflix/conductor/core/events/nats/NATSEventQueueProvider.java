@@ -24,7 +24,6 @@ import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.client.Connection;
 import io.nats.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,16 +72,6 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
-        Connection connection = openConnection();
-        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(connection, queueURI));
-    }
-
-    private Connection openConnection() {
-        try {
-            return factory.createConnection();
-        } catch (Exception e) {
-            logger.error("Unable to create NATS Connection", e);
-            throw new RuntimeException(e);
-        }
+        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(factory, queueURI));
     }
 }
