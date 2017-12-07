@@ -27,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -41,9 +42,14 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
     private Subscription subs;
     private String durableName;
 
-    public NATSStreamObservableQueue(StreamingConnectionFactory factory, String queueURI, String durableName) {
+    public NATSStreamObservableQueue(String clusterId, String natsUrl, String durableName, String queueURI) {
         super(queueURI, EventQueues.QueueType.nats_stream);
-        this.fact = factory;
+
+        // Init NATS Streaming API
+        this.fact = new StreamingConnectionFactory();
+        this.fact.setClusterId(clusterId);
+        this.fact.setClientId(UUID.randomUUID().toString());
+        this.fact.setNatsUrl(natsUrl);
         this.durableName = durableName;
 
         try {
@@ -81,13 +87,21 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
         mu.lock();
         try {
             if (subs != null) {
-                subs.close();
-                subs = null;
+                try {
+                    subs.close();
+                    subs = null;
+                } catch (Exception ex) {
+                    logger.error("Monitor subs.close failed with " + ex.getMessage() + " for " + queueURI, ex);
+                }
             }
 
             if (conn != null) {
-                conn.close();
-                conn = null;
+                try {
+                    conn.close();
+                    conn = null;
+                } catch (Exception ex) {
+                    logger.error("Monitor conn.close failed with " + ex.getMessage() + " for " + queueURI, ex);
+                }
             }
 
             // Connect
