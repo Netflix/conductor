@@ -89,20 +89,19 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
             if (subs != null) {
                 try {
                     subs.close(true);
-                    subs = null;
                 } catch (Exception ex) {
                     logger.error("Monitor subs.close failed with " + ex.getMessage() + " for " + queueURI, ex);
                 }
+                subs = null;
             }
 
             if (conn != null) {
                 try {
                     conn.close();
-                    conn.close();
-                    conn = null;
                 } catch (Exception ex) {
                     logger.error("Monitor conn.close failed with " + ex.getMessage() + " for " + queueURI, ex);
                 }
+                conn = null;
             }
 
             // Connect
