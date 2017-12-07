@@ -24,6 +24,7 @@ import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import io.nats.client.Nats;
 import io.nats.streaming.StreamingConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,7 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
         // Get NATS Streaming options
         String clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
         String clientId = config.getProperty("io.nats.streaming.clientId", UUID.randomUUID().toString());
-        String natsUrl = config.getProperty("io.nats.streaming.url", "nats://localhost:4222");
+        String natsUrl = config.getProperty("io.nats.streaming.url", Nats.DEFAULT_URL);
         durableName = config.getProperty("io.nats.streaming.durableName", null);
 
         logger.info("NATS Streaming clusterId=" + clusterId +
