@@ -90,7 +90,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
             mu.unlock();
         }
 
-        Observable.OnSubscribe<Message> action = subscriber -> {
+        Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
             Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
             interval.flatMap((Long x) -> {
                 List<Message> available = new LinkedList<>();
@@ -108,13 +108,13 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
                         }
                     });
 
-                    logger.info(String.format("Batch from %s to conductor are %s ", subject, buffer.toString()));
+                    logger.info(String.format("Batch from %s to conductor is %s", subject, buffer.toString()));
                 }
 
                 return Observable.from(available);
             }).subscribe(subscriber::onNext, subscriber::onError);
         };
-        return Observable.create(action);
+        return Observable.create(onSubscribe);
     }
 
     @Override
@@ -154,7 +154,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
                 publish(subject, payload.getBytes());
                 logger.info(String.format("Published message to %s: %s", subject, payload));
             } catch (Exception ex) {
-                logger.error("Failed to publish message " + message + " to " + subject, ex);
+                logger.error("Failed to publish message " + message.getPayload() + " to " + subject, ex);
                 throw new RuntimeException(ex);
             }
         });

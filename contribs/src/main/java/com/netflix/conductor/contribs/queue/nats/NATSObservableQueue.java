@@ -118,12 +118,12 @@ public class NATSObservableQueue extends NATSAbstractQueue {
             // Create subject/queue subscription if the queue has been provided
             if (StringUtils.isNotEmpty(queue)) {
                 logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-                subs = conn.subscribe(subject, queue, natMsg -> onMessage(natMsg.getSubject(), natMsg.getData()));
+                subs = conn.subscribe(subject, queue, msg -> onMessage(msg.getSubject(), msg.getData()));
             } else {
                 logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-                subs = conn.subscribe(subject, natMsg -> onMessage(natMsg.getSubject(), natMsg.getData()));
+                subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()));
             }
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             logger.error("Start subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
         }
     }

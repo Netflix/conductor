@@ -93,12 +93,12 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
                 conn.close();
                 conn = null;
             }
+
             // Connect
             conn = openConnection();
 
             // Re-initiated subscription if existed
             if (observable) {
-                subs = null;
                 subscribe();
             }
         } catch (Exception ex) {
@@ -121,23 +121,21 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
         }
 
         try {
+            ensureConnected();
+
             SubscriptionOptions subscriptionOptions = new SubscriptionOptions
                     .Builder().durableName(durableName).build();
 
             // Create subject/queue subscription if the queue has been provided
             if (StringUtils.isNotEmpty(queue)) {
                 logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-                subs = conn.subscribe(subject, queue,
-                        natMsg -> onMessage(subject, natMsg.getData()), subscriptionOptions);
+                subs = conn.subscribe(subject, queue, msg -> onMessage(subject, msg.getData()), subscriptionOptions);
             } else {
                 logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-                subs = conn.subscribe(subject,
-                        natMsg -> onMessage(subject, natMsg.getData()), subscriptionOptions);
+                subs = conn.subscribe(subject, msg -> onMessage(subject, msg.getData()), subscriptionOptions);
             }
-        } catch (Exception e) {
-            String error = "Unable to start subscription for queueURI=" + queueURI;
-            logger.error(error, e);
-            throw new RuntimeException(error);
+        } catch (Throwable ex) {
+            logger.error("Start subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
         }
     }
 
