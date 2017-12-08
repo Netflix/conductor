@@ -41,20 +41,12 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 
 	public NATSStreamObservableQueue(String clusterId, String natsUrl, String durableName, String queueURI) {
 		super(queueURI, EventQueues.QueueType.nats_stream);
-
-		// Init NATS Streaming API
 		this.fact = new StreamingConnectionFactory();
 		this.fact.setClusterId(clusterId);
 		this.fact.setClientId(UUID.randomUUID().toString());
 		this.fact.setNatsUrl(natsUrl);
 		this.durableName = durableName;
-
-		try {
-			connect();
-		} catch (Exception ignore) {
-		}
-
-		startMonitor();
+		open();
 	}
 
 	@Override
@@ -102,7 +94,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 				subs = conn.subscribe(subject, msg -> onMessage(subject, msg.getData()), subscriptionOptions);
 			}
 		} catch (Throwable ex) {
-			logger.error("Start subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
+			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
 		}
 	}
 

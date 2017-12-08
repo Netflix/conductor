@@ -51,7 +51,8 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	String queue;
 
 	// Indicates that observe was called (Event Handler) and we must to re-initiate subscription upon reconnection
-	boolean observable;
+	private boolean observable;
+	private boolean isOpened;
 
 	NATSAbstractQueue(String queueURI, EventQueues.QueueType queueType) {
 		this.queueURI = queueURI;
@@ -172,6 +173,33 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 			}
 			closeSubs();
 			closeConn();
+			isOpened = false;
+		} finally {
+			mu.unlock();
+		}
+	}
+
+	public void open() {
+		// do nothing if not closed
+		if (isOpened) {
+			return;
+		}
+
+		mu.lock();
+		try {
+			try {
+				connect();
+
+				// Re-initiated subscription if existed
+				if (observable) {
+					subscribe();
+				}
+			} catch (Exception ignore) {
+			}
+
+			execs = Executors.newScheduledThreadPool(1);
+			execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
+			isOpened = true;
 		} finally {
 			mu.unlock();
 		}
@@ -202,15 +230,14 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 		}
 	}
 
+	public boolean isClosed() {
+		return !isOpened;
+	}
+
 	void ensureConnected() {
 		if (!isConnected()) {
 			throw new RuntimeException("No nats connection");
 		}
-	}
-
-	void startMonitor() {
-		execs = Executors.newScheduledThreadPool(1);
-		execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
 	}
 
 	abstract void connect();

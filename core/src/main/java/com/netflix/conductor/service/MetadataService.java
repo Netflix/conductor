@@ -163,6 +163,11 @@ public class MetadataService {
 	 */
 	public void addEventHandler(EventHandler eventHandler) {
 		validateEvent(eventHandler);
+		EventHandler existing = getEventHandler(eventHandler.getName());
+		if (existing != null) {
+			throw new ApplicationException(ApplicationException.Code.CONFLICT, "EventHandler with name " + eventHandler.getName() + " already exists!");
+		}
+		validateQueue(eventHandler);
 		metadata.addEventHandler(eventHandler);
 	}
 
@@ -172,10 +177,14 @@ public class MetadataService {
 	 */
 	public void updateEventHandler(EventHandler eventHandler) {
 		validateEvent(eventHandler);
-		EventHandler old = getEventHandler(eventHandler.getName());
+		EventHandler existing = getEventHandler(eventHandler.getName());
+		if (existing == null) {
+			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
+		}
+		validateQueue(eventHandler);
 		// if event name was updated - close the old
-		if ((old != null) && !(old.getEvent().equalsIgnoreCase(eventHandler.getEvent()))) {
-			closeEventQueue(old.getEvent());
+		if (!(existing.getEvent().equalsIgnoreCase(eventHandler.getEvent()))) {
+			closeEventQueue(existing.getEvent());
 		}
 		metadata.updateEventHandler(eventHandler);
 	}
@@ -185,10 +194,11 @@ public class MetadataService {
 	 * @param name Removes the event handler from the system
 	 */
 	public void removeEventHandlerStatus(String name) {
-		EventHandler handler = getEventHandler(name);
-		if (handler != null) {
-			closeEventQueue(handler.getEvent());
+		EventHandler existing = getEventHandler(name);
+		if (existing == null) {
+			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
 		}
+		closeEventQueue(existing.getEvent());
 		metadata.removeEventHandlerStatus(name);
 	}
 
@@ -209,17 +219,31 @@ public class MetadataService {
 	public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
 		return metadata.getEventHandlersForEvent(event, activeOnly);
 	}
-	
+
+	/**
+	 * This method just validates required fields
+	 *
+	 * @param eh Event handler definition
+	 */
 	private void validateEvent(EventHandler eh) {
 		Preconditions.checkNotNull(eh.getName(), "Missing event handler name");
 		Preconditions.checkNotNull(eh.getEvent(), "Missing event location");
 		Preconditions.checkNotNull(eh.getActions().isEmpty(), "No actions specified.  Please specify at-least one action");
+	}
+
+	/**
+	 * This method was created to divide event handler validation logic and the queue validation.
+	 * We do not want to register queue in the EventQueues if metadata throw some
+	 *
+	 * @param eh Event handler definition
+	 */
+	private void validateQueue(EventHandler eh) {
 		String event = eh.getEvent();
 		EventQueues.getQueue(event, true);
 	}
 
 	private EventHandler getEventHandler(String name) {
-		return metadata.getEventHandlers().stream()
+		return getEventHandlers().stream()
 				.filter(eh -> eh.getName().equalsIgnoreCase(name))
 				.findFirst().orElse(null);
 	}
@@ -227,7 +251,6 @@ public class MetadataService {
 	private void closeEventQueue(String event) {
 		ObservableQueue queue = EventQueues.getQueue(event, true);
 		if (queue != null) {
-			EventQueues.removeQueue(event);
 			queue.close();
 		}
 	}

@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class NATSEventQueueProvider implements EventQueueProvider {
 	private static Logger logger = LoggerFactory.getLogger(NATSEventQueueProvider.class);
-	protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
+	protected Map<String, NATSObservableQueue> queues = new ConcurrentHashMap<>();
 	private ConnectionFactory factory;
 
 	@Inject
@@ -71,11 +71,10 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
-		return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(factory, queueURI));
-	}
-
-	@Override
-	public void remove(String queueURI) {
-		queues.remove(queueURI);
+		NATSObservableQueue queue = queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(factory, queueURI));
+		if (queue.isClosed()) {
+			queue.open();
+		}
+		return queue;
 	}
 }

@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class NATSStreamEventQueueProvider implements EventQueueProvider {
 	private static Logger logger = LoggerFactory.getLogger(NATSStreamEventQueueProvider.class);
-	protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
+	protected Map<String, NATSStreamObservableQueue> queues = new ConcurrentHashMap<>();
 	private String durableName;
 	private String clusterId;
 	private String natsUrl;
@@ -62,11 +62,10 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
-		return queues.computeIfAbsent(queueURI, q -> new NATSStreamObservableQueue(clusterId, natsUrl, durableName, queueURI));
-	}
-
-	@Override
-	public void remove(String queueURI) {
-		queues.remove(queueURI);
+		NATSStreamObservableQueue queue = queues.computeIfAbsent(queueURI, q -> new NATSStreamObservableQueue(clusterId, natsUrl, durableName, queueURI));
+		if (queue.isClosed()) {
+			queue.open();
+		}
+		return queue;
 	}
 }

@@ -38,13 +38,7 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 	public NATSObservableQueue(ConnectionFactory factory, String queueURI) {
 		super(queueURI, EventQueues.QueueType.nats);
 		this.fact = factory;
-
-		try {
-			connect();
-		} catch (Exception ignore) {
-		}
-
-		startMonitor();
+		open();
 	}
 
 	@Override
@@ -87,7 +81,7 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 				subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()));
 			}
 		} catch (Throwable ex) {
-			logger.error("Start subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
+			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
 		}
 	}
 
