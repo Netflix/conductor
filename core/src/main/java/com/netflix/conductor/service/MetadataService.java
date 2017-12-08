@@ -233,7 +233,7 @@ public class MetadataService {
 
 	/**
 	 * This method was created to divide event handler validation logic and the queue validation.
-	 * We do not want to register queue in the EventQueues if metadata throw some
+	 * We do not want to register queue in the EventQueues if existence logic fails
 	 *
 	 * @param eh Event handler definition
 	 */
