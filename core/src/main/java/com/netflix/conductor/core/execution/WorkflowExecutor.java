@@ -984,7 +984,7 @@ public class WorkflowExecutor {
 	@SuppressWarnings("unchecked")
 	private void notifyTaskStatus(Task task, StartEndState state) {
 		try {
-			Object object = task.getInputData().get("event_messages");
+			Object object = task.getInputData().get("eventMessages");
 			if (object == null) {
 				return;
 			}
