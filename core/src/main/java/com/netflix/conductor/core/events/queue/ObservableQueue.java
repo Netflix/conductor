@@ -18,9 +18,9 @@
  */
 package com.netflix.conductor.core.events.queue;
 
-import java.util.List;
-
 import rx.Observable;
+
+import java.util.List;
 
 /**
  * @author Viren
@@ -77,5 +77,10 @@ public interface ObservableQueue {
 	 * @return Size of the queue - no. messages pending.  Note: Depending upon the implementation, this can be an approximation
 	 */
 	public long size();
-	
+
+	/**
+	 *  Used to close queue instance prior to remove from queues
+	 */
+	default  void close() { }
+
 }

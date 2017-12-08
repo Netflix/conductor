@@ -1,12 +1,12 @@
 /**
  * Copyright 2017 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.core.events;
 
@@ -33,46 +33,65 @@ import java.util.stream.Collectors;
  * Static holders for internal event queues
  */
 public class EventQueues {
-	
+
 	private static Logger logger = LoggerFactory.getLogger(EventQueues.class);
-	
+
 	private static ParametersUtils pu = new ParametersUtils();
-	
+
 	public enum QueueType {
 		sqs, conductor, nats, nats_stream
 	}
-	
+
 	private static Map<QueueType, EventQueueProvider> providers = new HashMap<>();
 
 	private EventQueues() {
-		
+
 	}
 
 	public static void registerProvider(QueueType type, EventQueueProvider provider) {
 		providers.put(type, provider);
 	}
-	
+
 	public static List<String> providers() {
 		return providers.values().stream().map(p -> p.getClass().getName()).collect(Collectors.toList());
 	}
-	
+
 	public static ObservableQueue getQueue(String eventt, boolean throwException) {
 		String event = pu.replace(eventt).toString();
 		String typeVal = event.substring(0, event.indexOf(':'));
 		String queueURI = event.substring(event.indexOf(':') + 1);
 		QueueType type = QueueType.valueOf(typeVal);
 		EventQueueProvider provider = providers.get(type);
-		if(provider != null) {
-			try {
-				return provider.getQueue(queueURI);
-			} catch(Exception e) {
-				logger.error(e.getMessage(), e);
-				if(throwException) {
-					throw e;
-				}
+		if (provider == null) {
+			throw new RuntimeException("No queue provider found for event " + eventt);
+		}
+
+		try {
+			ObservableQueue queue = provider.getQueue(queueURI);
+			if (queue == null) {
+				throw new RuntimeException("No queue found in provider " + type.name() + " for event " + eventt);
+			}
+
+			return queue;
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			if (throwException) {
+				throw e;
 			}
 		}
 
 		return null;
+	}
+
+	public static void removeQueue(String eventt) {
+		String event = pu.replace(eventt).toString();
+		String typeVal = event.substring(0, event.indexOf(':'));
+		String queueURI = event.substring(event.indexOf(':') + 1);
+		QueueType type = QueueType.valueOf(typeVal);
+		EventQueueProvider provider = providers.get(type);
+		if (provider == null) {
+			throw new RuntimeException("No queue provider found for event " + eventt);
+		}
+		provider.remove(queueURI);
 	}
 }

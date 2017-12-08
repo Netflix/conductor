@@ -35,34 +35,38 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Oleksiy Lysak
- *
  */
 @Singleton
 public class NATSStreamEventQueueProvider implements EventQueueProvider {
-    private static Logger logger = LoggerFactory.getLogger(NATSStreamEventQueueProvider.class);
-    protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-    private String durableName;
-    private String clusterId;
-    private String natsUrl;
+	private static Logger logger = LoggerFactory.getLogger(NATSStreamEventQueueProvider.class);
+	protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
+	private String durableName;
+	private String clusterId;
+	private String natsUrl;
 
-    @Inject
-    public NATSStreamEventQueueProvider(Configuration config) {
-        logger.info("NATS Stream Event Queue Provider init");
+	@Inject
+	public NATSStreamEventQueueProvider(Configuration config) {
+		logger.info("NATS Stream Event Queue Provider init");
 
-        // Get NATS Streaming options
-        clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
-        durableName = config.getProperty("io.nats.streaming.durableName", null);
-        natsUrl = config.getProperty("io.nats.streaming.url", Nats.DEFAULT_URL);
+		// Get NATS Streaming options
+		clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
+		durableName = config.getProperty("io.nats.streaming.durableName", null);
+		natsUrl = config.getProperty("io.nats.streaming.url", Nats.DEFAULT_URL);
 
-        logger.info("NATS Streaming clusterId=" + clusterId +
-                ", natsUrl=" + natsUrl + ", durableName=" + durableName);
+		logger.info("NATS Streaming clusterId=" + clusterId +
+				", natsUrl=" + natsUrl + ", durableName=" + durableName);
 
-        EventQueues.registerProvider(QueueType.nats_stream, this);
-        logger.info("NATS Stream Event Queue Provider initialized...");
-    }
+		EventQueues.registerProvider(QueueType.nats_stream, this);
+		logger.info("NATS Stream Event Queue Provider initialized...");
+	}
 
-    @Override
-    public ObservableQueue getQueue(String queueURI) {
-        return queues.computeIfAbsent(queueURI, q -> new NATSStreamObservableQueue(clusterId, natsUrl, durableName, queueURI));
-    }
+	@Override
+	public ObservableQueue getQueue(String queueURI) {
+		return queues.computeIfAbsent(queueURI, q -> new NATSStreamObservableQueue(clusterId, natsUrl, durableName, queueURI));
+	}
+
+	@Override
+	public void remove(String queueURI) {
+		queues.remove(queueURI);
+	}
 }

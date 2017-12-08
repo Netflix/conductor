@@ -18,11 +18,6 @@
  */
 package com.netflix.conductor.service;
 
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -30,9 +25,14 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.events.EventQueues;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.MetadataDAO;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.List;
 
 /**
  * @author Viren 
@@ -172,6 +172,11 @@ public class MetadataService {
 	 */
 	public void updateEventHandler(EventHandler eventHandler) {
 		validateEvent(eventHandler);
+		EventHandler old = getEventHandler(eventHandler.getName());
+		// if event name was updated - close the old
+		if ((old != null) && !(old.getEvent().equalsIgnoreCase(eventHandler.getEvent()))) {
+			closeEventQueue(old.getEvent());
+		}
 		metadata.updateEventHandler(eventHandler);
 	}
 	
@@ -180,6 +185,10 @@ public class MetadataService {
 	 * @param name Removes the event handler from the system
 	 */
 	public void removeEventHandlerStatus(String name) {
+		EventHandler handler = getEventHandler(name);
+		if (handler != null) {
+			closeEventQueue(handler.getEvent());
+		}
 		metadata.removeEventHandlerStatus(name);
 	}
 
@@ -207,5 +216,19 @@ public class MetadataService {
 		Preconditions.checkNotNull(eh.getActions().isEmpty(), "No actions specified.  Please specify at-least one action");
 		String event = eh.getEvent();
 		EventQueues.getQueue(event, true);
+	}
+
+	private EventHandler getEventHandler(String name) {
+		return metadata.getEventHandlers().stream()
+				.filter(eh -> eh.getName().equalsIgnoreCase(name))
+				.findFirst().orElse(null);
+	}
+
+	private void closeEventQueue(String event) {
+		ObservableQueue queue = EventQueues.getQueue(event, true);
+		if (queue != null) {
+			EventQueues.removeQueue(event);
+			queue.close();
+		}
 	}
 }
