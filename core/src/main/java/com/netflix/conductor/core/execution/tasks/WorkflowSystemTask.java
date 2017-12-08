@@ -36,7 +36,7 @@ public class WorkflowSystemTask {
 	
 	private String name;
 
-	public enum PrePostAction {
+	public enum PrePostState {
 		preTask, postTask
 	}
 
