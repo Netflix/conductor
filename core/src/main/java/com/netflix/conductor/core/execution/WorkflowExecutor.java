@@ -41,7 +41,6 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
-import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask.PrePostState;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -61,6 +60,10 @@ import java.util.stream.Collectors;
  */
 @Trace
 public class WorkflowExecutor {
+
+	public enum StartEndState {
+		start, end
+	}
 
 	private static Logger logger = LoggerFactory.getLogger(WorkflowExecutor.class);
 
@@ -150,7 +153,7 @@ public class WorkflowExecutor {
 			edao.createWorkflow(wf);
 
 			// send wf start message
-			notifyWorkflowStatus(wf, WorkflowDef.PrePostState.start);
+			notifyWorkflowStatus(wf, StartEndState.start);
 
 			decide(workflowId);
 			logger.info("Workflow has started.Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()+",CorrelationId=" + wf.getCorrelationId()+",input="+wf.getInput());
@@ -233,7 +236,7 @@ public class WorkflowExecutor {
 		edao.createWorkflow(wf);
 
 		// send wf start message
-		notifyWorkflowStatus(wf, WorkflowDef.PrePostState.start);
+		notifyWorkflowStatus(wf, StartEndState.start);
 
 		decide(workflowId);
 		return workflowId;
@@ -257,7 +260,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		// send wf start message
-		notifyWorkflowStatus(workflow, WorkflowDef.PrePostState.start);
+		notifyWorkflowStatus(workflow, StartEndState.start);
 
 		decide(workflowId);
 	}
@@ -355,7 +358,7 @@ public class WorkflowExecutor {
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
 		// send wf end message
-		notifyWorkflowStatus(wf, WorkflowDef.PrePostState.end);
+		notifyWorkflowStatus(wf, StartEndState.end);
 
 		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
@@ -386,7 +389,7 @@ public class WorkflowExecutor {
 					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
 				}
 				edao.updateTask(task);
-				notifyTaskStatus(task, PrePostState.postTask);
+				notifyTaskStatus(task, StartEndState.end);
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -430,7 +433,7 @@ public class WorkflowExecutor {
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
 		// send wf end message
-		notifyWorkflowStatus(workflow, WorkflowDef.PrePostState.end);
+		notifyWorkflowStatus(workflow, StartEndState.end);
 
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
@@ -468,7 +471,7 @@ public class WorkflowExecutor {
 					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
 				}
 				edao.updateTask(task);
-				notifyTaskStatus(task, PrePostState.postTask);
+				notifyTaskStatus(task, StartEndState.end);
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -523,7 +526,7 @@ public class WorkflowExecutor {
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
 		// send wf end message
-		notifyWorkflowStatus(workflow, WorkflowDef.PrePostState.end);
+		notifyWorkflowStatus(workflow, StartEndState.end);
 
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
@@ -547,7 +550,7 @@ public class WorkflowExecutor {
 			task.setReasonForIncompletion(result.getReasonForIncompletion());
 			task.setWorkerId(result.getWorkerId());
 			edao.updateTask(task);
-			notifyTaskStatus(task, PrePostState.postTask);
+			notifyTaskStatus(task, StartEndState.end);
 			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ", reason=" + wf.getReasonForIncompletion()+",correlationId="+wf.getCorrelationId();
 			logger.warn(msg);
 			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
@@ -589,16 +592,16 @@ public class WorkflowExecutor {
 
 			case COMPLETED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-				notifyTaskStatus(task, PrePostState.postTask);
+				notifyTaskStatus(task, StartEndState.end);
 				break;
 
 			case CANCELED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-				notifyTaskStatus(task, PrePostState.postTask);
+				notifyTaskStatus(task, StartEndState.end);
 				break;
 			case FAILED:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-				notifyTaskStatus(task, PrePostState.postTask);
+				notifyTaskStatus(task, StartEndState.end);
 				break;
 			case IN_PROGRESS:
 				// put it back in queue based in callbackAfterSeconds
@@ -808,7 +811,7 @@ public class WorkflowExecutor {
 				logger.warn("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
 				if(!task.getStatus().isTerminal()) {
 					task.setStatus(Status.CANCELED);
-					notifyTaskStatus(task, PrePostState.postTask);
+					notifyTaskStatus(task, StartEndState.end);
 				}
 				edao.updateTask(task);
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -832,7 +835,7 @@ public class WorkflowExecutor {
 			switch (task.getStatus()) {
 
 				case SCHEDULED:
-					notifyTaskStatus(task, PrePostState.preTask);
+					notifyTaskStatus(task, StartEndState.start);
 					systemTask.start(workflow, task, this);
 					break;
 
@@ -933,12 +936,12 @@ public class WorkflowExecutor {
 			}
 			task.setStartTime(System.currentTimeMillis());
 			if(!stt.isAsync()) {
-				notifyTaskStatus(task, PrePostState.preTask);
+				notifyTaskStatus(task, StartEndState.start);
 				stt.start(workflow, task, this);
 				startedSystemTasks = true;
 				edao.updateTask(task);
 				if (task.getStatus().isTerminal()) {
-					notifyTaskStatus(task, PrePostState.postTask);
+					notifyTaskStatus(task, StartEndState.end);
 				}
 			} else {
 				toBeQueued.add(task);
@@ -979,7 +982,7 @@ public class WorkflowExecutor {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void notifyTaskStatus(Task task, PrePostState action) {
+	private void notifyTaskStatus(Task task, StartEndState state) {
 		try {
 			Object object = task.getInputData().get("event_messages");
 			if (object == null) {
@@ -987,16 +990,16 @@ public class WorkflowExecutor {
 			}
 
 			Map<String, Object> map = (Map<String, Object>)object;
-			if (map.containsKey(action.name())) {
-				sendMessage(map, action.name());
+			if (map.containsKey(state.name())) {
+				sendMessage(map, state.name());
 			}
 		} catch (Exception ex) {
-			logger.error("Unable to notify task status " + action.name() + ", failed with " + ex.getMessage(), ex);
+			logger.error("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private void notifyWorkflowStatus(Workflow workflow, WorkflowDef.PrePostState state) {
+	private void notifyWorkflowStatus(Workflow workflow, StartEndState state) {
 		try {
 			ParametersUtils pu = new ParametersUtils();
 			WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
@@ -1053,5 +1056,4 @@ public class WorkflowExecutor {
 			}
 		});
 	}
-
 }

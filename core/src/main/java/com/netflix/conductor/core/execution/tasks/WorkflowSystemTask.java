@@ -36,10 +36,6 @@ public class WorkflowSystemTask {
 	
 	private String name;
 
-	public enum PrePostState {
-		preTask, postTask
-	}
-
 	public WorkflowSystemTask(String name) {
 		this.name = name;
 		registry.put(name, this);

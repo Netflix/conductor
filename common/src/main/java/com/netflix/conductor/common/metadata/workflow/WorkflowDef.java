@@ -28,10 +28,6 @@ import java.util.*;
  */
 public class WorkflowDef extends Auditable {
 
-	public enum PrePostState {
-		start, end
-	}
-
 	private String name;
 	
 	private String description;
