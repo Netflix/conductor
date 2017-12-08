@@ -93,7 +93,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 				logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
 				subs = conn.subscribe(subject, msg -> onMessage(subject, msg.getData()), subscriptionOptions);
 			}
-		} catch (Throwable ex) {
+		} catch (Exception ex) {
 			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
 		}
 	}
