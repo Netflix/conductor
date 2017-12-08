@@ -479,7 +479,7 @@ public class DeciderService {
 			    	String reason = "Invalid task specified.  Cannot find task by name " + taskToSchedule.getName() + " in the task definitions";
 			    	throw new TerminateWorkflow(reason);
 			    }
-				input = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, taskDef);
+				input = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, taskDef, taskToSchedule);
 				task = SystemTask.userDefined(workflow, taskId, taskToSchedule, input, taskDef, retryCount);
 				tasks.add(task);
 				break;				
@@ -518,7 +518,7 @@ public class DeciderService {
 				break;
 			case EVENT:				
 				taskToSchedule.getInputParameters().put("sink", taskToSchedule.getSink());
-				Map<String, Object> eventTaskInput = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, null);
+				Map<String, Object> eventTaskInput = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, null, taskToSchedule);
 				String sink = (String)eventTaskInput.get("sink");				
 				Task eventTask = SystemTask.eventTask(workflow, taskId, taskToSchedule, eventTaskInput, sink);
 				tasks.add(eventTask);
@@ -672,8 +672,8 @@ public class DeciderService {
 		}
 
 	}
-	
-	
+
+
 	public static class DeciderOutcome {
 		
 		List<Task> tasksToBeScheduled = new LinkedList<>();

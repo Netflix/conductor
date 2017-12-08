@@ -24,7 +24,6 @@ import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.client.Connection;
 import io.nats.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NATSEventQueueProvider implements EventQueueProvider {
     private static Logger logger = LoggerFactory.getLogger(NATSEventQueueProvider.class);
     protected Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-    private Connection connection;
+    private ConnectionFactory factory;
 
     @Inject
     public NATSEventQueueProvider(Configuration config) {
@@ -64,13 +63,8 @@ public class NATSEventQueueProvider implements EventQueueProvider {
             props.put(key, config.getProperty(key, val));
         });
 
-        ConnectionFactory connectionFactory = new ConnectionFactory(props);
-        try {
-            connection = connectionFactory.createConnection();
-        } catch (Exception e) {
-            logger.error("Unable to create NATS Connection", e);
-            throw new RuntimeException(e);
-        }
+        // Init NATS API
+        factory = new ConnectionFactory(props);
 
         EventQueues.registerProvider(QueueType.nats, this);
         logger.info("NATS Event Queue Provider initialized...");
@@ -78,6 +72,6 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
     @Override
     public ObservableQueue getQueue(String queueURI) {
-        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(connection, queueURI));
+        return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(factory, queueURI));
     }
 }

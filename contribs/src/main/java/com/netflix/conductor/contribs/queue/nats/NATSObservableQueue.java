@@ -19,96 +19,114 @@
 package com.netflix.conductor.contribs.queue.nats;
 
 import com.netflix.conductor.core.events.EventQueues;
-import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.client.AsyncSubscription;
 import io.nats.client.Connection;
+import io.nats.client.ConnectionFactory;
+import io.nats.client.Subscription;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Oleksiy Lysak
  *
  */
-public class NATSObservableQueue extends NATSAbstractQueue implements ObservableQueue {
+public class NATSObservableQueue extends NATSAbstractQueue {
     private static Logger logger = LoggerFactory.getLogger(NATSObservableQueue.class);
-    private Connection connection;
-    private AsyncSubscription subscription;
+    private ConnectionFactory fact;
+    private Subscription subs;
+    private Connection conn;
 
-    public NATSObservableQueue(Connection connection, String queueURI) {
-        super(queueURI);
-        this.connection = connection;
-    }
+    public NATSObservableQueue(ConnectionFactory factory, String queueURI) {
+        super(queueURI, EventQueues.QueueType.nats);
+        this.fact = factory;
 
-    @Override
-    public Observable<Message> observe() {
-        logger.info("Observe invoked for queueURI=" + queueURI);
-        if (subscription == null) {
-            try {
-                // Create subject/queue subscription if the queue has been provided
-                if (StringUtils.isNotEmpty(queue)) {
-                    logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-                    subscription = connection.subscribe(subject, queue, natMsg -> {
-                        handleOnMessage(subject, natMsg.getData(), natMsg.toString());
-                    });
-                } else {
-                    logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-                    subscription = connection.subscribe(subject, natMsg -> {
-                        handleOnMessage(subject, natMsg.getData(), natMsg.toString());
-                    });
-                }
-            } catch (Exception e) {
-                String error = "Unable to start subscription for queueURI=" + queueURI;
-                logger.error(error, e);
-                throw new RuntimeException(error);
-            }
+        try {
+            this.conn = openConnection();
+        } catch (Exception ignore) {
         }
 
-        return getOnSubscribe();
+        // Start monitor
+        Executors.newScheduledThreadPool(1)
+                .scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
+    }
+
+    private Connection openConnection() {
+        try {
+            Connection temp = fact.createConnection();
+            logger.info("Successfully connected for " + queueURI);
+
+            temp.setReconnectedCallback((event) -> logger.warn("onReconnect. Reconnected back for " + queueURI));
+            temp.setDisconnectedCallback((event -> logger.warn("onDisconnect. Disconnected for " + queueURI)));
+
+            return temp;
+        } catch (Exception e) {
+            logger.error("Unable to establish nats connection for " + queueURI, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void monitor() {
+        if (conn != null && conn.isConnected()) {
+            return;
+        }
+        logger.error("Monitor invoked for " + queueURI);
+        mu.lock();
+        try {
+            if (conn != null) {
+                // That will also close all subscriptions assigned to this connection
+                conn.close();
+                conn = null;
+            }
+
+            // Connect
+            conn = openConnection();
+
+            // Re-initiated subscription if existed
+            if (observable) {
+                subs = null;
+                subscribe();
+            }
+        } catch (Exception ex) {
+            logger.error("Monitor failed with " + ex.getMessage() + " for " + queueURI, ex);
+        } finally {
+            mu.unlock();
+        }
+    }
+
+    private void ensureConnected() {
+        if (conn == null || !conn.isConnected()) {
+            throw new RuntimeException("No nats connection");
+        }
+    }
+
+    void subscribe() {
+        // do nothing if already subscribed
+        if (subs != null) {
+            return;
+        }
+
+        try {
+            ensureConnected();
+
+            // Create subject/queue subscription if the queue has been provided
+            if (StringUtils.isNotEmpty(queue)) {
+                logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
+                subs = conn.subscribe(subject, queue, msg -> onMessage(msg.getSubject(), msg.getData()));
+            } else {
+                logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
+                subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()));
+            }
+        } catch (Throwable ex) {
+            logger.error("Start subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
+        }
     }
 
     @Override
-    public String getType() {
-        return EventQueues.QueueType.nats.name();
-    }
-
-    @Override
-    public String getName() {
-        return queueURI;
-    }
-
-    @Override
-    public String getURI() {
-        return queueURI;
-    }
-
-    @Override
-    public List<String> ack(List<Message> messages) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public void publish(List<Message> messages) {
-        super.publish(messages);
-    }
-
-    @Override
-    public void setUnackTimeout(Message message, long unackTimeout) {
-    }
-
-    @Override
-    public long size() {
-        return messages.size();
-    }
-
-    @Override
-    public void publish(String subject, byte[] data) throws IOException {
-        connection.publish(subject, data);
+    public void publish(String subject, byte[] data) throws Exception {
+        ensureConnected();
+        conn.publish(subject, data);
     }
 }

@@ -23,6 +23,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -57,8 +58,8 @@ public class ParametersUtils {
 	public ParametersUtils() {
 
 	}
-	
-	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef) {
+
+	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef, WorkflowTask workflowTask) {
 		Map<String, Object> inputParams = null;
 		if(input != null) {
 			inputParams = clone(input);
@@ -88,6 +89,12 @@ public class ParametersUtils {
 		wf.put("schemaVersion", workflow.getSchemaVersion());
 		
 		inputMap.put("workflow", wf);
+
+		if (workflowTask != null) {
+			Map<String, Object> taskIO = new HashMap<>();
+			taskIO.put("taskReferenceName", workflowTask.getTaskReferenceName());
+			inputMap.put("task", taskIO);
+		}
 		
 		workflow.getTasks().stream().map(Task::getReferenceTaskName).map(taskRefName -> workflow.getTaskByRefName(taskRefName)).forEach(task -> {
 			Map<String, Object> taskIO = new HashMap<>();
@@ -116,6 +123,10 @@ public class ParametersUtils {
 		DocumentContext io = JsonPath.parse(inputMap, option);
 		Map<String, Object> replaced = replace(inputParams, io, taskId);
 		return replaced;
+	}
+
+	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef) {
+		return getTaskInputV2(input, workflow, taskId, taskDef, null);
 	}
 
 	//deep clone using json - POJO
