@@ -38,8 +38,10 @@ public class WorkflowDef extends Auditable {
 	
 	private List<String> inputParameters = new LinkedList<String>();
 
+	private Map<String, Object> eventMessages = new HashMap<>();
+
 	private Map<String, String> inputValidation = new HashMap<>();
-	
+
 	private Map<String, Object> outputParameters = new HashMap<>();
 
 	private String failureWorkflow;
@@ -190,6 +192,20 @@ public class WorkflowDef extends Auditable {
 	 */
 	public void setInputValidation(Map<String, String> inputValidation) {
 		this.inputValidation = inputValidation;
+	}
+
+	/**
+	 * @return The map describes event messages to be sent for start/finish
+	 */
+	public Map<String, Object> getEventMessages() {
+		return eventMessages;
+	}
+
+	/**
+	 * @param eventMessages The map describes event messages to be sent for start/finish
+	 */
+	public void setEventMessages(Map<String, Object> eventMessages) {
+		this.eventMessages = eventMessages;
 	}
 
 	public String key(){
