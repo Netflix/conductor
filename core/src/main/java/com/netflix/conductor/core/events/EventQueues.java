@@ -62,20 +62,14 @@ public class EventQueues {
 		String queueURI = event.substring(event.indexOf(':') + 1);
 		QueueType type = QueueType.valueOf(typeVal);
 		EventQueueProvider provider = providers.get(type);
-		if (provider == null) {
-			throw new RuntimeException("No queue provider found for event " + eventt);
-		}
-
-		try {
-			ObservableQueue queue = provider.getQueue(queueURI);
-			if (queue == null) {
-				throw new RuntimeException("No queue found in provider " + type.name() + " for event " + eventt);
-			}
-			return queue;
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			if (throwException) {
-				throw e;
+		if (provider != null) {
+			try {
+				return provider.getQueue(queueURI);
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
+				if (throwException) {
+					throw e;
+				}
 			}
 		}
 
