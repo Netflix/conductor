@@ -73,7 +73,7 @@ public class EventProcessor {
 		if (executorThreadCount > 0) {
 			this.executors = Executors.newFixedThreadPool(executorThreadCount);
 			refresh();
-			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refresh(), 60, refreshPeriod, TimeUnit.SECONDS);
+			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, 60, refreshPeriod, TimeUnit.SECONDS);
 		} else {
 			logger.warn("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
 		}
@@ -100,16 +100,26 @@ public class EventProcessor {
 	}
 
 	public void refresh() {
-		Set<String> events = ms.getEventHandlers().stream().map(eh -> eh.getEvent()).collect(Collectors.toSet());
+		Set<String> events = ms.getEventHandlers().stream().map(EventHandler::getEvent).collect(Collectors.toSet());
 		List<ObservableQueue> created = new LinkedList<>();
-		events.stream().forEach(event -> queuesMap.computeIfAbsent(event, s -> {
+		events.forEach(event -> queuesMap.computeIfAbsent(event, s -> {
 			ObservableQueue q = EventQueues.getQueue(event, false);
 			created.add(q);
 			return q;
 		}));
 		if (!created.isEmpty()) {
-			created.stream().filter(q -> q != null).forEach(queue -> listen(queue));
+			created.stream().filter(Objects::nonNull).forEach(this::listen);
 		}
+		// close which exists in queuesMap but does not exist in db (events)
+		List<String> remove = new LinkedList<>();
+		queuesMap.entrySet().stream().filter(entry -> !events.contains(entry.getKey())).forEach(entry -> {
+			remove.add(entry.getKey());
+			ObservableQueue queue = entry.getValue();
+			if (queue != null) {
+				queue.close();
+			}
+		});
+		queuesMap.entrySet().removeIf(entry -> remove.contains(entry.getKey()));
 	}
 
 	private void listen(ObservableQueue queue) {
