@@ -240,15 +240,18 @@ public class ElasticSearchDAO implements IndexDAO {
 	
 
 	@Override
-	public void add(List<TaskExecLog> logs) {
+	public void add(List<TaskExecLog> taskExecLogs) {
+		if (taskExecLogs.isEmpty()) {
+			return;
+        }
 		int retry = 3;
 		while(retry > 0) {
 			try {
 				
 				BulkRequestBuilder brb = client.prepareBulk();
-				for(TaskExecLog log : logs) {
+				for(TaskExecLog taskExecLog : taskExecLogs) {
 					IndexRequest request = new IndexRequest(logIndexName, LOG_DOC_TYPE);
-					request.source(om.writeValueAsBytes(log), XContentType.JSON);
+					request.source(om.writeValueAsBytes(taskExecLog), XContentType.JSON);
 					brb.add(request);
 				}
 				BulkResponse response = brb.execute().actionGet();
