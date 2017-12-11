@@ -18,11 +18,6 @@
  */
 package com.netflix.conductor.service;
 
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -30,9 +25,14 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.events.EventQueues;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.MetadataDAO;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.List;
 
 /**
  * @author Viren 
@@ -163,6 +163,11 @@ public class MetadataService {
 	 */
 	public void addEventHandler(EventHandler eventHandler) {
 		validateEvent(eventHandler);
+		EventHandler existing = getEventHandler(eventHandler.getName());
+		if (existing != null) {
+			throw new ApplicationException(ApplicationException.Code.CONFLICT, "EventHandler with name " + eventHandler.getName() + " already exists!");
+		}
+		validateQueue(eventHandler);
 		metadata.addEventHandler(eventHandler);
 	}
 
@@ -172,6 +177,15 @@ public class MetadataService {
 	 */
 	public void updateEventHandler(EventHandler eventHandler) {
 		validateEvent(eventHandler);
+		EventHandler existing = getEventHandler(eventHandler.getName());
+		if (existing == null) {
+			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
+		}
+		validateQueue(eventHandler);
+		// if event name was updated - close the old
+		if (!(existing.getEvent().equalsIgnoreCase(eventHandler.getEvent()))) {
+			closeEventQueue(existing.getEvent());
+		}
 		metadata.updateEventHandler(eventHandler);
 	}
 	
@@ -180,6 +194,11 @@ public class MetadataService {
 	 * @param name Removes the event handler from the system
 	 */
 	public void removeEventHandlerStatus(String name) {
+		EventHandler existing = getEventHandler(name);
+		if (existing == null) {
+			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
+		}
+		closeEventQueue(existing.getEvent());
 		metadata.removeEventHandlerStatus(name);
 	}
 
@@ -200,12 +219,39 @@ public class MetadataService {
 	public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
 		return metadata.getEventHandlersForEvent(event, activeOnly);
 	}
-	
+
+	/**
+	 * This method just validates required fields
+	 *
+	 * @param eh Event handler definition
+	 */
 	private void validateEvent(EventHandler eh) {
 		Preconditions.checkNotNull(eh.getName(), "Missing event handler name");
 		Preconditions.checkNotNull(eh.getEvent(), "Missing event location");
 		Preconditions.checkNotNull(eh.getActions().isEmpty(), "No actions specified.  Please specify at-least one action");
+	}
+
+	/**
+	 * This method was created to divide event handler validation logic and the queue validation.
+	 * We do not want to register queue in the EventQueues if existence logic fails
+	 *
+	 * @param eh Event handler definition
+	 */
+	private void validateQueue(EventHandler eh) {
 		String event = eh.getEvent();
 		EventQueues.getQueue(event, true);
+	}
+
+	private EventHandler getEventHandler(String name) {
+		return getEventHandlers().stream()
+				.filter(eh -> eh.getName().equalsIgnoreCase(name))
+				.findFirst().orElse(null);
+	}
+
+	private void closeEventQueue(String event) {
+		ObservableQueue queue = EventQueues.getQueue(event, true);
+		if (queue != null) {
+			queue.close();
+		}
 	}
 }

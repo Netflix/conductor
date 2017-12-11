@@ -26,107 +26,92 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 /**
  * @author Oleksiy Lysak
- *
  */
 public class NATSObservableQueue extends NATSAbstractQueue {
-    private static Logger logger = LoggerFactory.getLogger(NATSObservableQueue.class);
-    private ConnectionFactory fact;
-    private Subscription subs;
-    private Connection conn;
+	private static Logger logger = LoggerFactory.getLogger(NATSObservableQueue.class);
+	private ConnectionFactory fact;
+	private Subscription subs;
+	private Connection conn;
 
-    public NATSObservableQueue(ConnectionFactory factory, String queueURI) {
-        super(queueURI, EventQueues.QueueType.nats);
-        this.fact = factory;
+	public NATSObservableQueue(ConnectionFactory factory, String queueURI) {
+		super(queueURI, EventQueues.QueueType.nats);
+		this.fact = factory;
+		open();
+	}
 
-        try {
-            this.conn = openConnection();
-        } catch (Exception ignore) {
-        }
+	@Override
+	public boolean isConnected() {
+		return (conn != null && conn.isConnected());
+	}
 
-        // Start monitor
-        Executors.newScheduledThreadPool(1)
-                .scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
-    }
+	@Override
+	public void connect() {
+		try {
+			Connection temp = fact.createConnection();
+			logger.info("Successfully connected for " + queueURI);
 
-    private Connection openConnection() {
-        try {
-            Connection temp = fact.createConnection();
-            logger.info("Successfully connected for " + queueURI);
+			temp.setReconnectedCallback((event) -> logger.warn("onReconnect. Reconnected back for " + queueURI));
+			temp.setDisconnectedCallback((event -> logger.warn("onDisconnect. Disconnected for " + queueURI)));
 
-            temp.setReconnectedCallback((event) -> logger.warn("onReconnect. Reconnected back for " + queueURI));
-            temp.setDisconnectedCallback((event -> logger.warn("onDisconnect. Disconnected for " + queueURI)));
+			conn = temp;
+		} catch (Exception e) {
+			logger.error("Unable to establish nats connection for " + queueURI, e);
+			throw new RuntimeException(e);
+		}
+	}
 
-            return temp;
-        } catch (Exception e) {
-            logger.error("Unable to establish nats connection for " + queueURI, e);
-            throw new RuntimeException(e);
-        }
-    }
+	@Override
+	public void subscribe() {
+		// do nothing if already subscribed
+		if (subs != null) {
+			return;
+		}
 
-    private void monitor() {
-        if (conn != null && conn.isConnected()) {
-            return;
-        }
-        logger.error("Monitor invoked for " + queueURI);
-        mu.lock();
-        try {
-            if (conn != null) {
-                // That will also close all subscriptions assigned to this connection
-                conn.close();
-                conn = null;
-            }
+		try {
+			ensureConnected();
 
-            // Connect
-            conn = openConnection();
+			// Create subject/queue subscription if the queue has been provided
+			if (StringUtils.isNotEmpty(queue)) {
+				logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
+				subs = conn.subscribe(subject, queue, msg -> onMessage(msg.getSubject(), msg.getData()));
+			} else {
+				logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
+				subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()));
+			}
+		} catch (Exception ex) {
+			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
+		}
+	}
 
-            // Re-initiated subscription if existed
-            if (observable) {
-                subs = null;
-                subscribe();
-            }
-        } catch (Exception ex) {
-            logger.error("Monitor failed with " + ex.getMessage() + " for " + queueURI, ex);
-        } finally {
-            mu.unlock();
-        }
-    }
+	@Override
+	public void publish(String subject, byte[] data) throws Exception {
+		ensureConnected();
+		conn.publish(subject, data);
+	}
 
-    private void ensureConnected() {
-        if (conn == null || !conn.isConnected()) {
-            throw new RuntimeException("No nats connection");
-        }
-    }
+	@Override
+	public void closeSubs() {
+		if (subs != null) {
+			try {
+				subs.close();
+			} catch (Exception ex) {
+				logger.error("closeSubs failed with " + ex.getMessage() + " for " + queueURI, ex);
+			}
+			subs = null;
+		}
+	}
 
-    void subscribe() {
-        // do nothing if already subscribed
-        if (subs != null) {
-            return;
-        }
-
-        try {
-            ensureConnected();
-
-            // Create subject/queue subscription if the queue has been provided
-            if (StringUtils.isNotEmpty(queue)) {
-                logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-                subs = conn.subscribe(subject, queue, msg -> onMessage(msg.getSubject(), msg.getData()));
-            } else {
-                logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-                subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()));
-            }
-        } catch (Throwable ex) {
-            logger.error("Start subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
-        }
-    }
-
-    @Override
-    public void publish(String subject, byte[] data) throws Exception {
-        ensureConnected();
-        conn.publish(subject, data);
-    }
+	@Override
+	public void closeConn() {
+		if (conn != null) {
+			try {
+				conn.close();
+			} catch (Exception ex) {
+				logger.error("closeConn failed with " + ex.getMessage() + " for " + queueURI, ex);
+			}
+			conn = null;
+		}
+	}
 }
