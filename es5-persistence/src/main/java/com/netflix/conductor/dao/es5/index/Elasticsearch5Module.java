@@ -172,7 +172,10 @@ public class Elasticsearch5Module extends AbstractModule {
 			});
 
 			ClusterHealthResponse response = transport.admin().cluster().prepareHealth().execute().get();
-			log.debug("Cluster status " + response.getStatus());
+			log.debug("Cluster health " + response.getStatus());
+			if (response.getStatus() != ClusterHealthStatus.GREEN) {
+				log.error("Monitor. Elasticsearch cluster status is " + response.getStatus());
+			}
 
 			// Remove old nodes only when cluster reached the green status and
 			// the number of current instances is equal to the desired cluster size.
