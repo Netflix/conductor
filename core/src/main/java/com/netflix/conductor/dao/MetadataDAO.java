@@ -18,11 +18,11 @@
  */
 package com.netflix.conductor.dao;
 
-import java.util.List;
-
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+
+import java.util.List;
 
 /**
  * @author Viren
@@ -80,6 +80,13 @@ public interface MetadataDAO {
 	 * 
 	 */
 	public abstract void update(WorkflowDef def);
+
+	/**
+	 *
+	 * @param def workflow definition
+	 */
+	public default void removeWorkflow(WorkflowDef def) {
+	}
 
 	/**
 	 * 

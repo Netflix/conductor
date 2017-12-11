@@ -149,6 +149,19 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 	}
 
 	@Override
+	public void removeWorkflow(WorkflowDef workflowDef) {
+		if (logger.isDebugEnabled())
+			logger.debug("removeWorkflow: workflowDef={}", toJson(workflowDef));
+		String indexName = toIndexName(WORKFLOW_DEFS);
+		String typeName = toTypeName(WORKFLOW_DEFS);
+		String id = toId(workflowDef.getName(), String.valueOf(workflowDef.getVersion()));
+		delete(indexName, typeName, id);
+
+		if (logger.isDebugEnabled())
+			logger.debug("removeWorkflow: done");
+	}
+
+	@Override
 	public WorkflowDef getLatest(String name) {
 		if (logger.isDebugEnabled())
 			logger.debug("getLatest: name={}", name);
@@ -335,7 +348,7 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 
 		String indexName = toIndexName(WORKFLOW_DEFS);
 		String typeName = toTypeName(WORKFLOW_DEFS);
-		String id = toId(name, String.valueOf(version));
+		String id = toId(name, version);
 
 		WorkflowDef workflowDef = findOne(indexName, typeName, id, WorkflowDef.class);
 

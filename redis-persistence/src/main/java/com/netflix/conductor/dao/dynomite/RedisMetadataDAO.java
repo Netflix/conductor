@@ -15,19 +15,6 @@
  */
 package com.netflix.conductor.dao.dynomite;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
@@ -39,6 +26,12 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.MetadataDAO;
+
+import javax.inject.Inject;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Singleton
 @Trace
@@ -151,6 +144,11 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	public void update(WorkflowDef def) {
 		def.setUpdateTime(System.currentTimeMillis());
 		_createOrUpdate(def);
+	}
+
+	@Override
+	public void removeWorkflow(WorkflowDef def) {
+		_remove(def);
 	}
 
 	@Override
@@ -328,19 +326,36 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 		// First set the workflow def
 		dynoClient.hset(nsKey(WORKFLOW_DEF, def.getName()), String.valueOf(def.getVersion()), toJson(def));
 
+		updateLatest(def.getName());
+	}
+
+	private void _remove(WorkflowDef def) {
+		Preconditions.checkNotNull(def, "WorkflowDef object cannot be null");
+		Preconditions.checkNotNull(def.getName(), "WorkflowDef name cannot be null");
+
+		dynoClient.hdel(nsKey(WORKFLOW_DEF, def.getName()), String.valueOf(def.getVersion()));
+		dynoClient.hdel(nsKey(WORKFLOW_DEF, def.getName()), LATEST); // Latest will be updated shortly
+
+		updateLatest(def.getName());
+	}
+
+	private void updateLatest(String name) {
 		// If it is getting created then make sure the latest field is updated
 		// and WORKFLOW_DEF_NAMES is updated
 		List<Integer> versions = new ArrayList<Integer>();
-		dynoClient.hkeys(nsKey(WORKFLOW_DEF, def.getName())).forEach(key -> {
+		dynoClient.hkeys(nsKey(WORKFLOW_DEF, name)).forEach(key -> {
 			if (!key.equals(LATEST)) {
 				versions.add(Integer.valueOf(key));
 			}
 		});
+		if (versions.isEmpty()) {
+			dynoClient.srem(nsKey(WORKFLOW_DEF_NAMES), name);
+			return;
+		}
 		Collections.sort(versions);
 		String latestKey = versions.get(versions.size() - 1).toString();
-		String latestdata = dynoClient.hget(nsKey(WORKFLOW_DEF, def.getName()), latestKey);
-		dynoClient.hset(nsKey(WORKFLOW_DEF, def.getName()), LATEST, latestdata);
-		dynoClient.sadd(nsKey(WORKFLOW_DEF_NAMES), def.getName());
-
+		String latestdata = dynoClient.hget(nsKey(WORKFLOW_DEF, name), latestKey);
+		dynoClient.hset(nsKey(WORKFLOW_DEF, name), LATEST, latestdata);
+		dynoClient.sadd(nsKey(WORKFLOW_DEF_NAMES), name);
 	}
 }
