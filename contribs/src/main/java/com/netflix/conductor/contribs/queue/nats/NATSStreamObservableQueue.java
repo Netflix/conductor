@@ -26,6 +26,7 @@ import io.nats.streaming.SubscriptionOptions;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.util.UUID;
 
@@ -67,6 +68,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 
 			conn = temp;
 		} catch (Exception e) {
+			MDC.put("notify", "true");
 			logger.error("Unable to establish nats streaming connection for " + queueURI, e);
 			throw new RuntimeException(e);
 		}
@@ -94,6 +96,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 				subs = conn.subscribe(subject, msg -> onMessage(subject, msg.getData()), subscriptionOptions);
 			}
 		} catch (Exception ex) {
+			MDC.put("notify", "true");
 			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
 		}
 	}
