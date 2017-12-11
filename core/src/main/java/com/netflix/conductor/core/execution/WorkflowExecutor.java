@@ -811,10 +811,10 @@ public class WorkflowExecutor {
 				logger.warn("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
 				if(!task.getStatus().isTerminal()) {
 					task.setStatus(Status.CANCELED);
-					notifyTaskStatus(task, StartEndState.end);
 				}
 				edao.updateTask(task);
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				notifyTaskStatus(task, StartEndState.end);
 				return;
 			}
 
@@ -984,15 +984,15 @@ public class WorkflowExecutor {
 	@SuppressWarnings("unchecked")
 	private void notifyTaskStatus(Task task, StartEndState state) {
 		try {
-			Object object = task.getInputData().get("eventMessages");
-			if (object == null) {
+			Map<String, Object> eventMap = task.getWorkflowTask().getEventMessages();
+			if (eventMap == null || !eventMap.containsKey(state.name())) {
 				return;
 			}
 
-			Map<String, Object> map = (Map<String, Object>)object;
-			if (map.containsKey(state.name())) {
-				sendMessage(map, state.name());
-			}
+			ParametersUtils pu = new ParametersUtils();
+			Workflow workflow = edao.getWorkflow(task.getWorkflowInstanceId());
+			Map<String, Object> map = pu.getTaskInputV2(eventMap, workflow, task.getTaskId(), null);
+			sendMessage(map, state.name());
 		} catch (Exception ex) {
 			logger.error("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 		}
@@ -1001,18 +1001,15 @@ public class WorkflowExecutor {
 	@SuppressWarnings("unchecked")
 	private void notifyWorkflowStatus(Workflow workflow, StartEndState state) {
 		try {
-			ParametersUtils pu = new ParametersUtils();
 			WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
-
-			Map<String, Object> map = pu.getTaskInputV2(workflowDef.getEventMessages(), workflow, null, null);
-
-			if (map == null) {
+			Map<String, Object> eventMap = workflowDef.getEventMessages();
+			if (eventMap == null || !eventMap.containsKey(state.name())) {
 				return;
 			}
 
-			if (map.containsKey(state.name())) {
-				sendMessage(map, state.name());
-			}
+			ParametersUtils pu = new ParametersUtils();
+			Map<String, Object> map = pu.getTaskInputV2(eventMap, workflow, null, null);
+			sendMessage(map, state.name());
 		} catch (Exception ex) {
 			logger.error("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 		}
