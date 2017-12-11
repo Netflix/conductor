@@ -64,6 +64,8 @@ public class WorkflowTask {
 	//Value: mapping of the parameter from another task (e.g. task1.someOutputParameterAsFileName)
 	private Map<String, Object> inputParameters = new HashMap<String, Object>();
 
+	private Map<String, Object> eventMessages = new HashMap<>();
+
 	private String type = Type.SIMPLE.name();
 
 	private String dynamicTaskNameParam;
@@ -139,7 +141,21 @@ public class WorkflowTask {
 	public void setInputParameters(Map<String, Object> inputParameters) {
 		this.inputParameters = inputParameters;
 	}
-	
+
+	/**
+	 * @return the eventMessages
+	 */
+	public Map<String, Object> getEventMessages() {
+		return eventMessages;
+	}
+
+	/**
+	 * @param eventMessages the eventMessages to set
+	 */
+	public void setEventMessages(Map<String, Object> eventMessages) {
+		this.eventMessages = eventMessages;
+	}
+
 	/**
 	 * @return the type
 	 */

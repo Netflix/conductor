@@ -92,37 +92,51 @@ public class ParametersUtils {
 
 		if (workflowTask != null) {
 			Map<String, Object> taskIO = new HashMap<>();
-			taskIO.put("taskReferenceName", workflowTask.getTaskReferenceName());
+			taskIO.put("referenceTaskName", workflowTask.getTaskReferenceName());
 			inputMap.put("task", taskIO);
+		}
+
+		if (taskId != null) {
+			Optional<Task> task = workflow.getTasks().stream()
+					.filter(item -> item.getTaskId().equalsIgnoreCase(taskId)).findFirst();
+			if (task.isPresent()) {
+				Map<String, Object> taskIO = createTaskIO(task.get());
+				inputMap.put("task", taskIO);
+			}
 		}
 		
 		workflow.getTasks().stream().map(Task::getReferenceTaskName).map(taskRefName -> workflow.getTaskByRefName(taskRefName)).forEach(task -> {
-			Map<String, Object> taskIO = new HashMap<>();
-			taskIO.put("input", task.getInputData());
-			taskIO.put("output", task.getOutputData());
-			taskIO.put("taskType", task.getTaskType());
-			if(task.getStatus() != null) {
-				taskIO.put("status", task.getStatus().toString());
-			}
-			taskIO.put("referenceTaskName", task.getReferenceTaskName());
-			taskIO.put("retryCount", task.getRetryCount());
-			taskIO.put("correlationId", task.getCorrelationId());
-			taskIO.put("pollCount", task.getPollCount());
-			taskIO.put("taskDefName", task.getTaskDefName());
-			taskIO.put("scheduledTime", task.getScheduledTime());
-			taskIO.put("startTime", task.getStartTime());
-			taskIO.put("endTime", task.getEndTime());
-			taskIO.put("workflowInstanceId", task.getWorkflowInstanceId());
-			taskIO.put("taskId", task.getTaskId());
-			taskIO.put("reasonForIncompletion", task.getReasonForIncompletion());
-			taskIO.put("callbackAfterSeconds", task.getCallbackAfterSeconds());
-			taskIO.put("workerId", task.getWorkerId());
+			Map<String, Object> taskIO = createTaskIO(task);
 			inputMap.put(task.getReferenceTaskName(), taskIO);
 		});
 		Configuration option = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
 		DocumentContext io = JsonPath.parse(inputMap, option);
 		Map<String, Object> replaced = replace(inputParams, io, taskId);
 		return replaced;
+	}
+
+	private Map<String, Object> createTaskIO(Task task) {
+		Map<String, Object> taskIO = new HashMap<>();
+		taskIO.put("input", task.getInputData());
+		taskIO.put("output", task.getOutputData());
+		taskIO.put("taskType", task.getTaskType());
+		if(task.getStatus() != null) {
+			taskIO.put("status", task.getStatus().toString());
+		}
+		taskIO.put("referenceTaskName", task.getReferenceTaskName());
+		taskIO.put("retryCount", task.getRetryCount());
+		taskIO.put("correlationId", task.getCorrelationId());
+		taskIO.put("pollCount", task.getPollCount());
+		taskIO.put("taskDefName", task.getTaskDefName());
+		taskIO.put("scheduledTime", task.getScheduledTime());
+		taskIO.put("startTime", task.getStartTime());
+		taskIO.put("endTime", task.getEndTime());
+		taskIO.put("workflowInstanceId", task.getWorkflowInstanceId());
+		taskIO.put("taskId", task.getTaskId());
+		taskIO.put("reasonForIncompletion", task.getReasonForIncompletion());
+		taskIO.put("callbackAfterSeconds", task.getCallbackAfterSeconds());
+		taskIO.put("workerId", task.getWorkerId());
+		return taskIO;
 	}
 
 	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef) {
