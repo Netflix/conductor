@@ -99,7 +99,6 @@ job "conductor" {
         }
       }
       env {
-
         TLD   = "<TLD>"
         STACK = "<ENV_TYPE>"
 
