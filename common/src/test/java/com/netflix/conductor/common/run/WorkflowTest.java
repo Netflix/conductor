@@ -16,7 +16,7 @@ public class WorkflowTest {
         Workflow workflow = new Workflow();
         List<Task> allFailedTasks = Arrays.asList(createTask("Foo", Task.Status.FAILED), createTask("Bar", Task.Status.FAILED));
         workflow.setTasks(allFailedTasks);
-        assertEquals(workflow.getFailedTaskId(),"Foo");
+        assertEquals(workflow.getFailedTaskId(),"Foo,Bar");
     }
 
     @Test
@@ -32,12 +32,12 @@ public class WorkflowTest {
         Workflow workflow = new Workflow();
         List<Task> allFailedTasks = Arrays.asList(createTask("Foo", Task.Status.IN_PROGRESS), createTask("Bar", Task.Status.COMPLETED));
         workflow.setTasks(allFailedTasks);
-        assertNull(workflow.getFailedTaskId());
+        assertEquals("", workflow.getFailedTaskId());
     }
 
     private Task createTask(String taskName, Task.Status taskStatus) {
         Task task1 = new Task();
-        task1.setTaskId(taskName);
+        task1.setReferenceTaskName(taskName);
         task1.setStatus(taskStatus);
         return task1;
     }

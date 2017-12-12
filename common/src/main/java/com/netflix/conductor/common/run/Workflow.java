@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -75,7 +76,7 @@ public class Workflow extends Auditable{
 	
 	private String reasonForIncompletion;
 
-	private String failedTaskId;
+	private String failedTaskId = "";
 	
 	private int schemaVersion;
 	
@@ -155,12 +156,11 @@ public class Workflow extends Auditable{
 	 */
 	public void setTasks(List<Task> tasks) {
 		this.tasks = tasks;
-		if (Objects.nonNull(tasks)) {
+		if (tasks != null) {
 			this.failedTaskId = tasks.stream()
 					.filter(task -> Task.Status.FAILED.equals(task.getStatus()))
-					.findFirst()
-					.map(Task::getTaskId)
-					.orElse(null);
+					.map(Task::getReferenceTaskName)
+					.collect(Collectors.joining(","));
 		}
 	}
 
