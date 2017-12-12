@@ -218,6 +218,7 @@ job "conductor" {
           timeout  = "3s"
         }
       }
+      
       service {
         name = "${JOB}-${TASK}-tcp"
         port = "tcp"
