@@ -200,7 +200,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 			}
 
 			execs = Executors.newScheduledThreadPool(1);
-			execs.scheduleWithFixedDelay(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
+			execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
 			isOpened = true;
 		} finally {
 			mu.unlock();
