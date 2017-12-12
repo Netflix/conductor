@@ -194,7 +194,8 @@ public class Elasticsearch5Module extends AbstractModule {
 			}
 
 		} catch (Exception ex) {
-			log.error("Monitor failed with " + ex.getMessage(), ex);
+			MDC.put("notify", "true");
+			log.error("Elasticsearch monitor failed with " + ex.getMessage(), ex);
 		}
 	}
 
