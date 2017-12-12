@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -72,6 +74,8 @@ public class Workflow extends Auditable{
 	private String reRunFromWorkflowId;
 	
 	private String reasonForIncompletion;
+
+	private String failedTaskId;
 	
 	private int schemaVersion;
 	
@@ -142,13 +146,24 @@ public class Workflow extends Auditable{
 	public List<Task> getTasks() {
 		return tasks;
 	}
+
 	/**
-	 * @param tasks the tasks to set
+	 * This method sets the list of tasks that belong to the workflow and also updates the
+	 * {@link #failedTaskId} in case of any task that has a status of {@link com.netflix.conductor.common.metadata.tasks.Task.Status#FAILED}
+	 *
+	 * @param tasks: The list of the tasks that belong to the workflow
 	 */
 	public void setTasks(List<Task> tasks) {
 		this.tasks = tasks;
+		if (Objects.nonNull(tasks)) {
+			this.failedTaskId = tasks.stream()
+					.filter(task -> Task.Status.FAILED.equals(task.getStatus()))
+					.findFirst()
+					.map(Task::getTaskId)
+					.orElse(null);
+		}
 	}
-	
+
 	/**
 	 * @return the input
 	 */
@@ -247,7 +262,15 @@ public class Workflow extends Auditable{
 	public void setReasonForIncompletion(String reasonForIncompletion) {
 		this.reasonForIncompletion = reasonForIncompletion;
 	}
-	
+
+	/**
+	 *
+	 * @return
+	 */
+	public String getFailedTaskId() {
+		return failedTaskId;
+	}
+
 	/**
 	 * @return the parentWorkflowId
 	 */
