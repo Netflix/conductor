@@ -13,5 +13,6 @@ site
 ui/.settings
 .settings
 dump.rdb
-.idea
+.idea/
 out/
+conductor.iml
