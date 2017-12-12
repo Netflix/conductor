@@ -118,7 +118,7 @@ job "conductor" {
         workflow_elasticsearch_initial_sleep_seconds = "30"
 
         // NATS settings
-        io_nats_client_url = "nats://events.service.<TLD>:4222"
+        io_nats_client_url = "nats://conductor-nats.service.owf-dev:4223"
         conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule"
 
         // Auth settings. TODO: Move client secret to VAULT!
