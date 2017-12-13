@@ -26,7 +26,6 @@ import io.nats.streaming.SubscriptionOptions;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import java.util.UUID;
 
@@ -68,7 +67,6 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 
 			conn = temp;
 		} catch (Exception e) {
-			MDC.put("notify", "true");
 			logger.error("Unable to establish nats streaming connection for " + queueURI, e);
 			throw new RuntimeException(e);
 		}
@@ -90,13 +88,12 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 			// Create subject/queue subscription if the queue has been provided
 			if (StringUtils.isNotEmpty(queue)) {
 				logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-				subs = conn.subscribe(subject, queue, msg -> onMessage(msg.getSubject(), msg.getData()), subscriptionOptions);
+				subs = conn.subscribe(subject, queue, msg -> onMessage(subject, msg.getData()), subscriptionOptions);
 			} else {
 				logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-				subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()), subscriptionOptions);
+				subs = conn.subscribe(subject, msg -> onMessage(subject, msg.getData()), subscriptionOptions);
 			}
 		} catch (Exception ex) {
-			MDC.put("notify", "true");
 			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
 		}
 	}

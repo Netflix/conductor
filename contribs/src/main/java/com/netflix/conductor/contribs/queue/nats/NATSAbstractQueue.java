@@ -24,7 +24,6 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 import io.nats.client.NUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import rx.Observable;
 
 import java.util.Collections;
@@ -157,7 +156,6 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 				publish(subject, payload.getBytes());
 				logger.info(String.format("Published message to %s: %s", subject, payload));
 			} catch (Exception ex) {
-				MDC.put("notify", "true");
 				logger.error("Failed to publish message " + message.getPayload() + " to " + subject, ex);
 				throw new RuntimeException(ex);
 			}
@@ -226,7 +224,6 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 				subscribe();
 			}
 		} catch (Exception ex) {
-			MDC.put("notify", "true");
 			logger.error("Monitor failed with " + ex.getMessage() + " for " + queueURI, ex);
 		} finally {
 			mu.unlock();

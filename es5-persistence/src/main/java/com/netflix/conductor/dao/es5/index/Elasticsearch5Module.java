@@ -36,7 +36,6 @@ import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import javax.inject.Singleton;
 import java.net.InetAddress;
@@ -175,8 +174,7 @@ public class Elasticsearch5Module extends AbstractModule {
 			ClusterHealthResponse response = transport.admin().cluster().prepareHealth().execute().get();
 			log.debug("Cluster health " + response.getStatus());
 			if (response.getStatus() != ClusterHealthStatus.GREEN) {
-				MDC.put("notify", "true");
-				log.error("Elasticsearch cluster status is not GREEN. Current is " + response.getStatus());
+				log.error("Monitor. Elasticsearch cluster status is " + response.getStatus());
 			}
 
 			// Remove old nodes only when cluster reached the green status and
@@ -194,8 +192,7 @@ public class Elasticsearch5Module extends AbstractModule {
 			}
 
 		} catch (Exception ex) {
-			MDC.put("notify", "true");
-			log.error("Elasticsearch monitor failed with " + ex.getMessage(), ex);
+			log.error("Monitor failed with " + ex.getMessage(), ex);
 		}
 	}
 
