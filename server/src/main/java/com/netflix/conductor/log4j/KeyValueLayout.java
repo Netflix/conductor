@@ -5,84 +5,78 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.slf4j.MDC;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class KeyValueLayout extends Layout {
-	private DateTimeFormatter dateTime = ISODateTimeFormat.dateTime().withZoneUTC();
-	private String hostname;
-	private String fromhost;
+    private DateTimeFormatter dateTime = ISODateTimeFormat.dateTime().withZoneUTC();
+    private String hostname;
+    private String fromhost;
 
-	public KeyValueLayout() {
-		hostname = getHostName();
-		fromhost = getHostIp();
-	}
+    public KeyValueLayout() {
+        hostname = getHostName();
+        fromhost = getHostIp();
+    }
 
-	@Override
-	public String format(LoggingEvent event) {
-		boolean notify = Boolean.parseBoolean(MDC.get("notify"));
-		StringBuilder buf = new StringBuilder();
-		if (notify) {
-			MDC.remove("notify");
-			buf.append("notify=true").append(" ");
-		}
-		buf.append("timestamp=").append(timestamp()).append(" ");
-		buf.append("service=conductor").append(" ");
-		buf.append("hostname=").append(hostname).append(" ");
-		buf.append("fromhost=").append(fromhost).append(" ");
-		buf.append("log-level=").append(event.getLevel().toString().toLowerCase()).append(" ");
-		buf.append("severity=").append(event.getLevel().toString().toLowerCase()).append(" ");
-		buf.append("logger=").append(event.getLoggerName().toLowerCase()).append(" ");
-		buf.append("text=").append("\"").append(normalizeMessage(event.getMessage())).append("\"");
-		buf.append("\n");
-		return buf.toString();
-	}
+    @Override
+    public String format(LoggingEvent event) {
+        StringBuilder buf = new StringBuilder();
+        buf.append("timestamp=").append(timestamp()).append(" ");
+        buf.append("service=").append("conductor").append(" ");
+        buf.append("hostname=").append(hostname).append(" ");
+        buf.append("fromhost=").append(fromhost).append(" ");
+        buf.append("log-level=").append(event.getLevel().toString().toLowerCase()).append(" ");
+        buf.append("severity=").append(event.getLevel().toString().toLowerCase()).append(" ");
+        buf.append("logger=").append(event.getLoggerName().toLowerCase()).append(" ");
+        buf.append("text=").append("\"").append(normalizeMessage(event.getMessage())).append("\"");
+        buf.append("\n");
+        return buf.toString();
+    }
 
-	private String normalizeMessage(Object message) {
-		String response = "";
-		if (message != null) {
-			response = message.toString();
-			if (response.contains("\n")) {
-				response = response.replace("\n", "");
-			}
-			if (response.contains("\"")) {
-				response = response.replace("\"", "'");
-			}
-		}
+    private String normalizeMessage(Object message) {
+        String response = "";
+        if (message != null) {
+            response = message.toString();
+            if (response.contains("\n")) {
+                response = response.replace("\n", "");
+            }
+            if (response.contains("\"")) {
+                response = response.replace("\"", "'");
+            }
+        }
 
-		return response;
-	}
+        return response;
+    }
 
-	private String timestamp() {
-		return dateTime.print(new DateTime());
-	}
+    private String timestamp() {
+        return dateTime.print(new DateTime());
+    }
 
-	private String getHostName() {
-		try {
-			return InetAddress.getLocalHost().getHostName();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			return "unknown";
-		}
-	}
+    private String getHostName() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            return "unknown";
+        }
+    }
 
-	private String getHostIp() {
-		try {
-			return InetAddress.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			return "unknown";
-		}
-	}
+    private String getHostIp() {
+        try {
+            return InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            return "unknown";
+        }
+    }
 
-	@Override
-	public boolean ignoresThrowable() {
-		return true;
-	}
+    @Override
+    public boolean ignoresThrowable() {
+        return true;
+    }
 
-	@Override
-	public void activateOptions() {
-	}
+    @Override
+    public void activateOptions() {
+    }
 }

@@ -25,7 +25,6 @@ import io.nats.client.Subscription;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 /**
  * @author Oleksiy Lysak
@@ -58,7 +57,6 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 
 			conn = temp;
 		} catch (Exception e) {
-			MDC.put("notify", "true");
 			logger.error("Unable to establish nats connection for " + queueURI, e);
 			throw new RuntimeException(e);
 		}
@@ -83,7 +81,6 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 				subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()));
 			}
 		} catch (Exception ex) {
-			MDC.put("notify", "true");
 			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
 		}
 	}
