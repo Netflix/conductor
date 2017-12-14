@@ -9,6 +9,7 @@ build:
 artifacts:
   publish:
   - master
+  - v${APP_VERSION}
   registry: 583623634344.dkr.ecr.us-west-2.amazonaws.com
   images:
   - name: conductor
