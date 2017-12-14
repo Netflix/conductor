@@ -228,6 +228,7 @@ job "conductor" {
           timeout  = "3s"
         }
       }
+      
       resources {
         cpu    = 256  # MHz
         memory = 2048 # MB
