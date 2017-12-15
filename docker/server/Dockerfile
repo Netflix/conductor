@@ -17,4 +17,6 @@ COPY ./server/build/libs/conductor-server-*-all.jar /app/libs
 RUN chmod +x /app/startup.sh
 
 EXPOSE 8080
+
 CMD [ "/app/startup.sh" ]
+ENTRYPOINT [ "/bin/sh"]

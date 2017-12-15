@@ -10,4 +10,4 @@ COPY . /conductor
 WORKDIR /conductor
 
 # Build the server on run
-ENTRYPOINT ./gradlew build -x test 
+ENTRYPOINT ./gradlew build -x test

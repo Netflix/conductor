@@ -3,20 +3,11 @@ version: '2'
 services:
   conductor-server:
     environment:
-      - db=dynomite
-      - workflow_dynomite_cluster_hosts=dyno1:8102:us-east-1c
-      - workflow_dynomite_cluster_name=dyno1
-      - workflow_namespace_prefix=conductor
-      - workflow_namespace_queue_prefix=conductor_queues
-      - queues_dynomite_threads=10
-      - queues_dynomite_nonQuorum_port=22122
-      - workflow_elasticsearch_url=es:9300
-      - workflow_elasticsearch_index_name=conductor
-      - loadSample=true
+      - CONFIG_PROP=config.properties
     image: conductor:server
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: docker/server/Dockerfile
     ports:
       - 8080:8080
     links:
@@ -28,8 +19,8 @@ services:
       - WF_SERVER=http://conductor-server:8080/api/
     image: conductor:ui
     build:
-      context: ./ui
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: docker/ui/Dockerfile
     ports:
       - 5000:5000
     links:
