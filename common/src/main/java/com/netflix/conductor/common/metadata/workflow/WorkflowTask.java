@@ -157,7 +157,7 @@ public class WorkflowTask {
 	public void setInputParameters(Map<String, Object> inputParameters) {
 		this.inputParameters = inputParameters;
 	}
-
+	
 	/**
 	 * @return the eventMessages
 	 */
@@ -390,7 +390,7 @@ public class WorkflowTask {
 	public void setOptional(Boolean optional) {
 		this.optional = optional;
 	}
-
+	
 	/**
 	 *
 	 * @return workflow name to be started once the task timed out
