@@ -328,7 +328,9 @@ public class HttpTask extends WorkflowSystemTask {
 		 * @param headers the headers to set
 		 */
 		public void setHeaders(Map<String, Object> headers) {
-			this.headers = headers;
+		 	for (String key : headers.keySet()) {
+		            this.headers.put(key.toLowerCase(),headers.get(key));
+		  	}
 		}
 
 		/**
