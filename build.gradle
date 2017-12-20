@@ -1,10 +1,14 @@
 buildscript {
-	
-	repositories {
+
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
         jcenter()
     }
-    
+
     dependencies {
+        // See https://github.com/nebula-plugins/gradle-extra-configurations-plugin
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
         classpath 'org.apache.ant:ant:1.9.7'
     }
@@ -32,27 +36,30 @@ subprojects {
     targetCompatibility = 1.8
 
     repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
         jcenter()
     }
 
     dependencies {
-    	testCompile 'junit:junit-dep:4.10'
-    	testCompile 'org.mockito:mockito-all:1.10.0'
+        testCompile 'junit:junit-dep:4.10'
+        testCompile 'org.mockito:mockito-all:1.10.0'
     }
 
     group = "com.netflix.${githubProjectName}"
-    
-    tasks.withType(Test)  {
+
+    tasks.withType(Test) {
         maxParallelForks = 100
     }
-    
+
     license {
-		excludes(['**/*.txt', '**/*.conf', '**/*.properties', '**/*.json', '**/swagger-ui/*'])
-	}
-	
-	task licenseFormatTests (type:nl.javadude.gradle.plugins.license.License) {
-    	source = fileTree(dir: "src/test").include("**/*")
-	}
-	licenseFormat.dependsOn licenseFormatTests
+        excludes(['**/*.txt', '**/*.conf', '**/*.properties', '**/*.json', '**/swagger-ui/*'])
+    }
+
+    task licenseFormatTests(type: nl.javadude.gradle.plugins.license.License) {
+        source = fileTree(dir: "src/test").include("**/*")
+    }
+    licenseFormat.dependsOn licenseFormatTests
 
 }

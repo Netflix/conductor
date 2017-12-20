@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,26 +17,29 @@ package com.netflix.conductor.common.metadata.workflow;
 
 import java.util.Map;
 
+/**
+ * POJO to encapsulate input and output for a task to be <b>skipped</b>.
+ */
 public class SkipTaskRequest {
-	private Map<String, Object> taskInput;
-	
-	private Map<String, Object> taskOutput;
+    private Map<String, Object> taskInput;
 
-	public Map<String, Object> getTaskInput() {
-		return taskInput;
-	}
+    private Map<String, Object> taskOutput;
 
-	public void setTaskInput(Map<String, Object> taskInput) {
-		this.taskInput = taskInput;
-	}
+    public Map<String, Object> getTaskInput() {
+        return taskInput;
+    }
 
-	public Map<String, Object> getTaskOutput() {
-		return taskOutput;
-	}
+    public void setTaskInput(Map<String, Object> taskInput) {
+        this.taskInput = taskInput;
+    }
 
-	public void setTaskOutput(Map<String, Object> taskOutput) {
-		this.taskOutput = taskOutput;
-	}
-	
-	
+    public Map<String, Object> getTaskOutput() {
+        return taskOutput;
+    }
+
+    public void setTaskOutput(Map<String, Object> taskOutput) {
+        this.taskOutput = taskOutput;
+    }
+
+
 }
