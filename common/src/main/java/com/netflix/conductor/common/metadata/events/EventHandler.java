@@ -118,6 +118,7 @@ public class EventHandler {
 		this.active = active;
 	}
 
+
 	public static class Action {
 		
 		public enum Type { start_workflow, complete_task, fail_task, update_task }
@@ -129,7 +130,7 @@ public class EventHandler {
 		private TaskDetails complete_task;
 		
 		private TaskDetails fail_task;
-
+		
 		private UpdateTask update_task;
 		
 		private boolean expandInlineJSON;
@@ -193,7 +194,7 @@ public class EventHandler {
 		public void setFail_task(TaskDetails fail_task) {
 			this.fail_task = fail_task;
 		}
-
+		
 		/**
 		 * @return the progress task object
 		 */

@@ -574,7 +574,7 @@ public class WorkflowTask {
 		return null;
 		
 	}
-
+	
 	@Override
 	public String toString() {
 		return name + "/" + taskReferenceName;
