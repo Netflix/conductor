@@ -370,7 +370,7 @@ public class DeciderService {
 		Monitors.recordTaskTimeout(task.getTaskDefName());
 		
 		switch (taskType.getTimeoutPolicy()) {
-		case ALERT_ONLY:
+		case ALERT_ONLY:						
 			return;
 		case RETRY:
 			task.setStatus(Status.TIMED_OUT);
@@ -676,8 +676,8 @@ public class DeciderService {
 		}
 
 	}
-
-
+	
+	
 	public static class DeciderOutcome {
 		
 		List<Task> tasksToBeScheduled = new LinkedList<>();

@@ -18,22 +18,6 @@
  */
 package com.netflix.conductor.core.execution;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -50,6 +34,10 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.EventQueues;
+import com.netflix.conductor.core.events.ScriptEvaluator;
+import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -59,12 +47,23 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren Workflow services provider interface
  */
 @Trace
 public class WorkflowExecutor {
+
+	public enum StartEndState {
+		start, end
+	}
 
 	private static Logger logger = LoggerFactory.getLogger(WorkflowExecutor.class);
 
@@ -120,10 +119,16 @@ public class WorkflowExecutor {
 			if (exists == null) {
 				throw new ApplicationException(Code.NOT_FOUND, "No such workflow defined. name=" + name + ", version=" + version);
 			}
+
+			// Input validation required
+			if (exists.getInputValidation() != null && !exists.getInputValidation().isEmpty()) {
+				validateWorkflowInput(exists, input);
+			}
+
 			Set<String> missingTaskDefs = exists.all().stream()
-													.filter(wft -> wft.getType().equals(WorkflowTask.Type.SIMPLE.name()))
-													.map(wft2 -> wft2.getName()).filter(task -> metadata.getTaskDef(task) == null)
-													.collect(Collectors.toSet());
+					.filter(wft -> wft.getType().equals(WorkflowTask.Type.SIMPLE.name()))
+					.map(wft2 -> wft2.getName()).filter(task -> metadata.getTaskDef(task) == null)
+					.collect(Collectors.toSet());
 			if(!missingTaskDefs.isEmpty()) {
 				throw new ApplicationException(Code.INVALID_INPUT, "Cannot find the task definitions for the following tasks used in workflow: " + missingTaskDefs);
 			}
@@ -146,7 +151,12 @@ public class WorkflowExecutor {
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
 			edao.createWorkflow(wf);
+
+			// send wf start message
+			notifyWorkflowStatus(wf, StartEndState.start);
+
 			decide(workflowId);
+			logger.info("Workflow has started.Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()+",CorrelationId=" + wf.getCorrelationId()+",input="+wf.getInput());
 			return workflowId;
 			
 		}catch (Exception e) {
@@ -167,6 +177,7 @@ public class WorkflowExecutor {
 	public void rewind(String workflowId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
+			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
 			throw new ApplicationException(Code.CONFLICT, "Workflow is still running.  status=" + workflow.getStatus());
 		}
 
@@ -179,15 +190,21 @@ public class WorkflowExecutor {
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		edao.updateWorkflow(workflow);
+
+		// send wf start message
+		notifyWorkflowStatus(workflow, StartEndState.start);
+
 		decide(workflowId);
 	}
 
 	public void retry(String workflowId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
+			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
 			throw new ApplicationException(Code.CONFLICT, "Workflow is still running.  status=" + workflow.getStatus());
 		}
 		if (workflow.getTasks().isEmpty()) {
+			logger.error("Workflow has not started yet.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
 			throw new ApplicationException(Code.CONFLICT, "Workflow has not started yet");
 		}
 		
@@ -282,12 +299,13 @@ public class WorkflowExecutor {
 
 		if (workflow.getStatus().equals(WorkflowStatus.COMPLETED)) {
 			edao.removeFromPendingWorkflow(workflow.getWorkflowType(), workflow.getWorkflowId());
-			logger.info("Workflow has already been completed.  Current status=" + workflow.getStatus() + ", workflowId=" + wf.getWorkflowId());
+			logger.info("Workflow has already been completed.  Current status=" + workflow.getStatus() + ", workflowId=" + wf.getWorkflowId()+",CorrelationId=" + wf.getCorrelationId());
 			return;
 		}
 
 		if (workflow.getStatus().isTerminal()) {
 			String msg = "Workflow has already been completed.  Current status " + workflow.getStatus();
+			logger.error("Workflow has already been completed.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
 			throw new ApplicationException(Code.CONFLICT, msg);
 		}
 
@@ -303,24 +321,28 @@ public class WorkflowExecutor {
 		}
 		Monitors.recordWorkflowCompletion(workflow.getWorkflowType(), workflow.getEndTime() - workflow.getStartTime(), wf.getOwnerApp());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+
+		// send wf end message
+		notifyWorkflowStatus(wf, StartEndState.end);
+
+		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
 
-	public void terminateWorkflow(String workflowId, String reason) throws Exception {
+	public String cancelWorkflow(String workflowId,Map<String, Object> inputbody) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
-		workflow.setStatus(WorkflowStatus.TERMINATED);
-		terminateWorkflow(workflow, reason, null);
+		workflow.setStatus(WorkflowStatus.CANCELLED);
+		return cancelWorkflow(workflow,inputbody);
 	}
-	
-	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow) throws Exception {
+
+	public String cancelWorkflow(Workflow workflow, Map<String, Object> inputbody) throws Exception {
 
 		if (!workflow.getStatus().isTerminal()) {
-			workflow.setStatus(WorkflowStatus.TERMINATED);
+			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
-		
-		String workflowId = workflow.getWorkflowId();
-		workflow.setReasonForIncompletion(reason);
-		edao.updateWorkflow(workflow);
 
+		String workflowId = workflow.getWorkflowId();
+		edao.updateWorkflow(workflow);
+		logger.error("Workflow is cancelled.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
 		List<Task> tasks = workflow.getTasks();
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {
@@ -332,6 +354,89 @@ public class WorkflowExecutor {
 					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
 				}
 				edao.updateTask(task);
+				notifyTaskStatus(task, StartEndState.end);
+			}
+			// And remove from the task queue if they were there
+			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+		}
+
+		// If the following lines, for some reason fails, the sweep will take
+		// care of this again!
+		if (workflow.getParentWorkflowId() != null) {
+			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
+			decide(parent.getWorkflowId());
+		}
+
+		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+		String cancelWorkflow = def.getCancelWorkflow();
+		if (!StringUtils.isBlank(cancelWorkflow)) {
+			// Backward compatible by default
+			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
+			Map<String, Object> input = new HashMap<>();
+			if (expandInline) {
+				input.putAll(workflow.getInput());
+			} else {
+				input.put("workflowInput", workflow.getInput());
+			}
+			input.put("workflowId", workflowId);
+			input.put("workflowType", workflow.getWorkflowType());
+			input.put("workflowVersion", workflow.getVersion());
+
+			try {
+
+				WorkflowDef latestCancelWorkflow = metadata.getLatest(cancelWorkflow);
+				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input, workflowId, null, null, null);
+				workflow.getOutput().put("conductor.cancel_workflow", cancelWFId);
+
+			} catch (Exception e) {
+				logger.error("Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
+				workflow.getOutput().put("conductor.cancel_workflow", "Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
+				Monitors.recordWorkflowStartError(cancelWorkflow, workflow.getOwnerApp());
+			}
+		}
+
+		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+
+		// send wf end message
+		notifyWorkflowStatus(workflow, StartEndState.end);
+
+		// Send to atlas
+		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus(), WorkflowContext.get().getClientApp());
+		return workflowId;
+	}
+
+	public void terminateWorkflow(String workflowId, String reason) throws Exception {
+		Workflow workflow = edao.getWorkflow(workflowId, true);
+		workflow.setStatus(WorkflowStatus.TERMINATED);
+		terminateWorkflow(workflow, reason, null);
+	}
+	
+	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow) throws Exception {
+		terminateWorkflow(workflow, reason, failureWorkflow, null);
+	}
+
+	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow, Task failedTask) throws Exception {
+
+		if (!workflow.getStatus().isTerminal()) {
+			workflow.setStatus(WorkflowStatus.TERMINATED);
+		}
+		
+		String workflowId = workflow.getWorkflowId();
+		workflow.setReasonForIncompletion(reason);
+		edao.updateWorkflow(workflow);
+		logger.error("Workflow is terminated.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
+		List<Task> tasks = workflow.getTasks();
+		for (Task task : tasks) {
+			if (!task.getStatus().isTerminal()) {
+				// Cancel the ones which are not completed yet....
+				task.setStatus(Status.CANCELED);
+				if (SystemTaskType.is(task.getTaskType())) {
+					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
+					stt.cancel(workflow, task, this);
+					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
+				}
+				edao.updateTask(task);
+				notifyTaskStatus(task, StartEndState.end);
 			}
 			// And remove from the task queue if they were there
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -345,11 +450,30 @@ public class WorkflowExecutor {
 		}
 
 		if (!StringUtils.isBlank(failureWorkflow)) {
+			// Backward compatible by default
+			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
 			Map<String, Object> input = new HashMap<>();
-			input.putAll(workflow.getInput());
+			if (expandInline) {
+				input.putAll(workflow.getInput());
+			} else {
+				input.put("workflowInput", workflow.getInput());
+			}
 			input.put("workflowId", workflowId);
+			input.put("workflowType", workflow.getWorkflowType());
+			input.put("workflowVersion", workflow.getVersion());
 			input.put("reason", reason);
 			input.put("failureStatus", workflow.getStatus().toString());
+			if (failedTask != null) {
+				Map<String, Object> map = new HashMap<>();
+				map.put("taskId", failedTask.getTaskId());
+				map.put("input", failedTask.getInputData());
+				map.put("output", failedTask.getOutputData());
+				map.put("retryCount", failedTask.getRetryCount());
+				map.put("referenceName", failedTask.getReferenceTaskName());
+				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
+				input.put("failedTask", map);
+				logger.error("Error in task execution.workflowid="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion());
+			}
 
 			try {
 				
@@ -358,7 +482,7 @@ public class WorkflowExecutor {
 				workflow.getOutput().put("conductor.failure_workflow", failureWFId);
 				
 			} catch (Exception e) {
-				logger.error("Failed to start error workflow", e);
+				logger.error("Error workflow " + failureWorkflow + " failed to start.  reason: " + e.getMessage());
 				workflow.getOutput().put("conductor.failure_workflow", "Error workflow " + failureWorkflow + " failed to start.  reason: " + e.getMessage());
 				Monitors.recordWorkflowStartError(failureWorkflow, WorkflowContext.get().getClientApp());
 			}
@@ -367,6 +491,9 @@ public class WorkflowExecutor {
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 		edao.removeFromPendingWorkflow(workflow.getWorkflowType(), workflow.getWorkflowId());
 		
+		// send wf end message
+		notifyWorkflowStatus(workflow, StartEndState.end);
+
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus(), workflow.getOwnerApp());
 	}	
@@ -390,7 +517,8 @@ public class WorkflowExecutor {
 			task.setReasonForIncompletion(result.getReasonForIncompletion());
 			task.setWorkerId(result.getWorkerId());
 			edao.updateTask(task);
-			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ", reason=" + wf.getReasonForIncompletion();
+			notifyTaskStatus(task, StartEndState.end);
+			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ", reason=" + wf.getReasonForIncompletion()+",correlationId="+wf.getCorrelationId();
 			logger.info(msg);
 			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
 			return;
@@ -399,7 +527,7 @@ public class WorkflowExecutor {
 		if (task.getStatus().isTerminal()) {
 			// Task was already updated....
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-			String msg = "Task is already completed as " + task.getStatus() + "@" + task.getEndTime() + ", workflow status=" + wf.getStatus() + ", workflowId=" + wf.getWorkflowId() + ", taskId=" + task.getTaskId();
+			String msg = "Task is already completed as " + task.getStatus() + "@" + task.getEndTime() + ", workflow status=" + wf.getStatus() + ", workflowId=" + wf.getWorkflowId() + ", taskId=" + task.getTaskId()+",correlationId="+wf.getCorrelationId();
 			logger.info(msg);
 			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), task.getStatus());
 			return;
@@ -413,6 +541,14 @@ public class WorkflowExecutor {
 
 		if (task.getStatus().isTerminal()) {
 			task.setEndTime(System.currentTimeMillis());
+		} else {
+			if (result.isResetStartTime()) {
+				task.setStartTime(System.currentTimeMillis());
+				// We must reset endtime only when it is set
+				if (task.getEndTime() > 0) {
+					task.setEndTime(System.currentTimeMillis());
+				}
+			}
 		}
 		edao.updateTask(task);
 
@@ -421,24 +557,27 @@ public class WorkflowExecutor {
 
 		switch (task.getStatus()) {
 
-		case COMPLETED:
-			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-			break;
+			case COMPLETED:
+				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				notifyTaskStatus(task, StartEndState.end);
+				break;
 
-		case CANCELED:
-			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-			break;
-		case FAILED:
-			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
-			break;
-		case IN_PROGRESS:
-			// put it back in queue based in callbackAfterSeconds
-			long callBack = result.getCallbackAfterSeconds();
-			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());			
-			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), callBack); // Milliseconds
-			break;
-		default:
-			break;
+			case CANCELED:
+				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				notifyTaskStatus(task, StartEndState.end);
+				break;
+			case FAILED:
+				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				notifyTaskStatus(task, StartEndState.end);
+				break;
+			case IN_PROGRESS:
+				// put it back in queue based in callbackAfterSeconds
+				long callBack = result.getCallbackAfterSeconds();
+				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				queue.push(QueueUtils.getQueueName(task), task.getTaskId(), callBack); // Milliseconds
+				break;
+			default:
+				break;
 		}
 		
 		decide(workflowId);
@@ -511,12 +650,25 @@ public class WorkflowExecutor {
 				queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());	
 			}
 
+			if (outcome.startWorkflow != null) {
+				DeciderService.StartWorkflowParams startWorkflow = outcome.startWorkflow;
+				String workflowName = startWorkflow.name;
+				int workflowVersion;
+				if (startWorkflow.version == null) {
+					WorkflowDef subFlowDef = metadata.getLatest(workflowName);
+					workflowVersion = subFlowDef.getVersion();
+				} else {
+					workflowVersion = startWorkflow.version;
+				}
+				startWorkflow(workflowName, workflowVersion, startWorkflow.params, null, workflow.getWorkflowId(), null,null);
+			}
+
 			if(stateChanged) {				
 				decide(workflowId);
 			}
 			
 		} catch (TerminateWorkflow tw) {
-			logger.debug(tw.getMessage(), tw);
+			logger.error("Error in workflow execution:"+tw.getMessage(), tw);
 			terminate(def, workflow, tw);
 			return true;
 		}
@@ -527,18 +679,19 @@ public class WorkflowExecutor {
 		WorkflowStatus status = WorkflowStatus.PAUSED;
 		Workflow workflow = edao.getWorkflow(workflowId, false);
 		if(workflow.getStatus().isTerminal()){
-        	throw new ApplicationException(Code.CONFLICT, "Workflow id " + workflowId + " has ended, status cannot be updated.");
-        }
+			throw new ApplicationException(Code.CONFLICT, "Workflow id " + workflowId + " has ended, status cannot be updated.");
+		}
 		if (workflow.getStatus().equals(status)) {
-        	return;		//Already paused!
-        }
-        workflow.setStatus(status);
-        edao.updateWorkflow(workflow);
+			return;		//Already paused!
+		}
+		workflow.setStatus(status);
+		edao.updateWorkflow(workflow);
 	}
 
 	public void resumeWorkflow(String workflowId) throws Exception{
 		Workflow workflow = edao.getWorkflow(workflowId, false);
 		if(!workflow.getStatus().equals(WorkflowStatus.PAUSED)){
+			logger.error("Workflow is not is not PAUSED so cannot resume. Current status=" + workflow.getStatus() + ", workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId());
 			throw new IllegalStateException("The workflow " + workflowId + " is not is not PAUSED so cannot resume");
 		}
 		workflow.setStatus(WorkflowStatus.RUNNING);
@@ -553,6 +706,7 @@ public class WorkflowExecutor {
 		// If the wf is not running then cannot skip any task
 		if(!wf.getStatus().equals(WorkflowStatus.RUNNING)){
 			String errorMsg = String.format("The workflow %s is not running so the task referenced by %s cannot be skipped", workflowId, taskReferenceName);
+			logger.error(errorMsg);
 			throw new IllegalStateException(errorMsg);
 		}
 		// Check if the reference name is as per the workflowdef
@@ -560,29 +714,31 @@ public class WorkflowExecutor {
 		WorkflowTask wft = wfd.getTaskByRefName(taskReferenceName);
 		if(wft == null){
 			String errorMsg = String.format("The task referenced by %s does not exist in the WorkflowDef %s", taskReferenceName, wf.getWorkflowType());
+			logger.error(errorMsg);
 			throw new IllegalStateException(errorMsg);				
 		}
 		// If the task is already started the again it cannot be skipped
 		wf.getTasks().forEach(task -> {
 			if(task.getReferenceTaskName().equals(taskReferenceName)){
 				String errorMsg = String.format("The task referenced %s has already been processed, cannot be skipped", taskReferenceName);
+				logger.error(errorMsg);
 				throw new IllegalStateException(errorMsg);				
 			}
 		});
 		// Now create a "SKIPPED" task for this workflow
 		Task theTask = new Task();
-	    theTask.setTaskId(IDGenerator.generate());
-	    theTask.setReferenceTaskName(taskReferenceName);
-	    theTask.setWorkflowInstanceId(workflowId);
-	    theTask.setStatus(Status.SKIPPED);
-	    theTask.setTaskType(wft.getName());
-	    theTask.setCorrelationId(wf.getCorrelationId());
-	    if(skipTaskRequest != null){
-		    theTask.setInputData(skipTaskRequest.getTaskInput());
-		    theTask.setOutputData(skipTaskRequest.getTaskOutput());
-	    }
-	    edao.createTasks(Arrays.asList(theTask));
-	    decide(workflowId);
+		theTask.setTaskId(IDGenerator.generate());
+		theTask.setReferenceTaskName(taskReferenceName);
+		theTask.setWorkflowInstanceId(workflowId);
+		theTask.setStatus(Status.SKIPPED);
+		theTask.setTaskType(wft.getName());
+		theTask.setCorrelationId(wf.getCorrelationId());
+		if(skipTaskRequest != null){
+			theTask.setInputData(skipTaskRequest.getTaskInput());
+			theTask.setOutputData(skipTaskRequest.getTaskOutput());
+		}
+		edao.createTasks(Arrays.asList(theTask));
+		decide(workflowId);
 	}
 	
 	public Workflow getWorkflow(String workflowId, boolean includeTasks) {
@@ -628,6 +784,7 @@ public class WorkflowExecutor {
 				}
 				edao.updateTask(task);
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				notifyTaskStatus(task, StartEndState.end);
 				return;
 			}
 			
@@ -648,6 +805,7 @@ public class WorkflowExecutor {
 			switch (task.getStatus()) {
 			
 				case SCHEDULED:
+					notifyTaskStatus(task, StartEndState.start);
 					systemTask.start(workflow, task, this);					
 					break;
 					
@@ -757,9 +915,13 @@ public class WorkflowExecutor {
 			}
 			task.setStartTime(System.currentTimeMillis());
 			if(!stt.isAsync()) {
+				notifyTaskStatus(task, StartEndState.start);
 				stt.start(workflow, task, this);
 				startedSystemTasks = true;
 				edao.updateTask(task);
+				if (task.getStatus().isTerminal()) {
+					notifyTaskStatus(task, StartEndState.end);
+				}
 			} else {
 				toBeQueued.add(task);
 			}
@@ -791,7 +953,11 @@ public class WorkflowExecutor {
 		if(tw.task != null){
 			edao.updateTask(tw.task);
 		}
-		terminateWorkflow(workflow, tw.getMessage(), failureWorkflow);
+		terminateWorkflow(workflow, tw.getMessage(), failureWorkflow, tw.task);
+
+		String taskId = (tw.task != null ? tw.task.getTaskId() : null);
+		String taskRefName = (tw.task != null ? tw.task.getReferenceTaskName() : null);
+		logger.error("Workflow failed. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",Reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName);
 	}
 	
 	private boolean rerunWF(String workflowId, String taskId, Map<String, Object> taskInput, 
@@ -814,6 +980,9 @@ public class WorkflowExecutor {
 			}
 
 			edao.updateWorkflow(workflow);
+
+			// send wf start message
+			notifyWorkflowStatus(workflow, StartEndState.start);
 			
 			decide(workflowId);
 			return true;
@@ -869,6 +1038,9 @@ public class WorkflowExecutor {
 			}
 
 			edao.updateWorkflow(workflow);
+
+			// send wf start message
+			notifyWorkflowStatus(workflow, StartEndState.start);
 			
 			decide(workflowId);
 			return true;
@@ -877,4 +1049,76 @@ public class WorkflowExecutor {
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
+	private void notifyTaskStatus(Task task, StartEndState state) {
+		try {
+			Map<String, Object> eventMap = task.getWorkflowTask().getEventMessages();
+			if (eventMap == null || !eventMap.containsKey(state.name())) {
+				return;
+			}
+
+			ParametersUtils pu = new ParametersUtils();
+			Workflow workflow = edao.getWorkflow(task.getWorkflowInstanceId());
+			Map<String, Object> map = pu.getTaskInputV2(eventMap, workflow, task.getTaskId(), null);
+			sendMessage(map, state.name());
+		} catch (Exception ex) {
+			logger.error("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void notifyWorkflowStatus(Workflow workflow, StartEndState state) {
+		try {
+			WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+			Map<String, Object> eventMap = workflowDef.getEventMessages();
+			if (eventMap == null || !eventMap.containsKey(state.name())) {
+				return;
+			}
+
+			ParametersUtils pu = new ParametersUtils();
+			Map<String, Object> map = pu.getTaskInputV2(eventMap, workflow, null, null);
+			sendMessage(map, state.name());
+		} catch (Exception ex) {
+			logger.error("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void sendMessage(Map<String, Object> map, String name) throws Exception {
+		Map<String, Object> actionMap = (Map<String, Object>) map.get(name);
+		ObjectMapper mapper = new ObjectMapper();
+
+		Message msg = new Message();
+		msg.setId(UUID.randomUUID().toString());
+
+		String payload = mapper.writeValueAsString(actionMap.get("inputParameters"));
+		msg.setPayload(payload);
+
+		String sink = (String) actionMap.get("sink");
+		ObservableQueue queue = EventQueues.getQueue(sink, false);
+		if (queue == null) {
+			logger.error("sendMessage. No queue found for " + sink);
+			return;
+		}
+
+		queue.publish(Collections.singletonList(msg));
+	}
+
+	private void validateWorkflowInput(WorkflowDef workflowDef, Map<String, Object> payload) {
+		Map<String, String> rules = workflowDef.getInputValidation();
+
+		rules.forEach((name, condition) -> {
+			boolean success = false;
+			String extra = "";
+			try {
+				success = ScriptEvaluator.evalBool(condition, payload);
+			} catch (Exception ex) {
+				extra = ": " + ex.getMessage();
+			}
+			if (!success) {
+				String message = "Input validation failed for '" + name + "' rule" + extra;
+				throw new ApplicationException(Code.INVALID_INPUT, message);
+			}
+		});
+	}
 }

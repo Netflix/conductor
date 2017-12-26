@@ -18,26 +18,22 @@
  */
 package com.netflix.conductor.metrics;
 
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.servo.monitor.BasicStopwatch;
+import com.netflix.servo.monitor.Stopwatch;
+import com.netflix.spectator.api.*;
+import com.netflix.spectator.api.histogram.PercentileTimer;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
-import com.netflix.servo.monitor.BasicStopwatch;
-import com.netflix.servo.monitor.Stopwatch;
-import com.netflix.spectator.api.Counter;
-import com.netflix.spectator.api.Id;
-import com.netflix.spectator.api.Registry;
-import com.netflix.spectator.api.Spectator;
-import com.netflix.spectator.api.Timer;
-import com.netflix.spectator.api.histogram.PercentileTimer;
-
 /**
- * @author Viren 
+ * @author Viren
  *
  */
 public class Monitors {
