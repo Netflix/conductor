@@ -42,20 +42,20 @@ public class HttpTask extends GenericHttpTask {
 	public static final String REQUEST_PARAMETER_NAME = "http_request";
 	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
-	
+
 	@Inject
 	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om) {
 		super(NAME, config, rcm, om);
 		logger.info("HttpTask initialized...");
 	}
-	
+
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
 		String url = null;
 		Input input = om.convertValue(request, Input.class);
-		
+
 		if (request == null) {
 			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
@@ -65,7 +65,7 @@ public class HttpTask extends GenericHttpTask {
 				url = lookup(input.getServiceDiscoveryQuery());
 			}
 		}
-		
+
 		if (input.getUri() == null) {
 			task.setReasonForIncompletion("Missing HTTP URI. See documentation for HttpTask for required input parameters");
 			task.setStatus(Status.FAILED);
@@ -75,13 +75,13 @@ public class HttpTask extends GenericHttpTask {
 				input.setUri(url + input.getUri());
 			}
 		}
-		
+
 		if (input.getMethod() == null) {
 			task.setReasonForIncompletion("No HTTP method specified");
 			task.setStatus(Status.FAILED);
 			return;
 		}
-		
+
 		try {
 			HttpResponse response = new HttpResponse();
 			logger.info("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",request input=" + request);
@@ -90,19 +90,19 @@ public class HttpTask extends GenericHttpTask {
 					String json = new ObjectMapper().writeValueAsString(task.getInputData());
 					JSONObject obj = new JSONObject(json);
 					JSONObject getSth = obj.getJSONObject("http_request");
-					
+
 					Object main_body = getSth.get("body");
 					String body = main_body.toString();
-					
+
 					response = httpCallUrlEncoded(input, body);
-					
+
 				} else {
 					response = httpCall(input);
 				}
 			} else {
 				response = httpCall(input);
 			}
-			
+
 			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",response code=" + response.statusCode + ",response=" + response.body);
 			if (response.statusCode > 199 && response.statusCode < 300) {
 				task.setStatus(Status.COMPLETED);
@@ -117,7 +117,7 @@ public class HttpTask extends GenericHttpTask {
 			if (response != null) {
 				task.getOutputData().put("response", response.asMap());
 			}
-			
+
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			task.setStatus(Status.FAILED);
@@ -125,25 +125,25 @@ public class HttpTask extends GenericHttpTask {
 			task.getOutputData().put("response", e.getMessage());
 		}
 	}
-	
+
 	@Override
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
 		return false;
 	}
-	
+
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
 		task.setStatus(Status.CANCELED);
 	}
-	
+
 	@Override
 	public boolean isAsync() {
 		return true;
 	}
-	
+
 	@Override
 	public int getRetryTimeInSecond() {
 		return 60;
 	}
-	
+
 }
