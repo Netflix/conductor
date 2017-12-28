@@ -99,7 +99,7 @@ public class EventProcessor {
 		return queues;
 	}
 	
-	private void refresh() {
+	public void refresh() {
 		Set<String> events = ms.getEventHandlers().stream().map(EventHandler::getEvent).collect(Collectors.toSet());
 		List<ObservableQueue> created = new LinkedList<>();
 		events.forEach(event -> queuesMap.computeIfAbsent(event, s -> {
