@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements MetadataDAO {
-	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5MetadataDAO.class);
+public class ElasticSearchMetadataDAO extends ElasticSearchBaseDAO implements MetadataDAO {
+	private static final Logger logger = LoggerFactory.getLogger(ElasticSearchMetadataDAO.class);
 	// Keys Families
 	private final static String TASK_DEFS = "TASK_DEFS";
 	private final static String WORKFLOW_DEFS = "WORKFLOW_DEFS";
@@ -47,7 +47,7 @@ public class ElasticSearch5MetadataDAO extends ElasticSearch5BaseDAO implements 
 	private Map<String, TaskDef> taskDefCache = new HashMap<>();
 
 	@Inject
-	public ElasticSearch5MetadataDAO(Client client, Configuration config, ObjectMapper mapper) {
+	public ElasticSearchMetadataDAO(Client client, Configuration config, ObjectMapper mapper) {
 		super(client, config, mapper, "metadata");
 
 		ensureIndexExists(toIndexName(TASK_DEFS), toTypeName(TASK_DEFS));

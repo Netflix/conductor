@@ -5,12 +5,12 @@ buildscript {
 }
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '1.2.3'
+	id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
 configurations.all {
     resolutionStrategy {
-        force 'com.fasterxml.jackson.core:jackson-core:2.7.5'
+		force 'com.fasterxml.jackson.core:jackson-core:2.7.5'
     }
 }
 
@@ -18,6 +18,7 @@ apply plugin: 'war'
 apply plugin: "org.akhikhl.gretty"
 
 dependencies {
+ 
 	//Conductor
 	compile project(':conductor-core')
 	compile project(':conductor-jersey')
@@ -30,7 +31,7 @@ dependencies {
 	compile 'org.eclipse.jetty:jetty-servlet:9.3.9.+'
 	
 	//Guice
-	compile 'com.sun.jersey.contribs:jersey-guice:1.19.+'
+	compile 'com.sun.jersey.contribs:jersey-guice:1.19.+'	
 	compile 'com.google.inject:guice:4.+'
 	compile 'com.google.inject.extensions:guice-servlet:4.1.+'
 	

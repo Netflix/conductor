@@ -18,52 +18,6 @@
  */
 package com.netflix.conductor.dao.es5.index;
 
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.ResourceAlreadyExistsException;
-import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.IndexNotFoundException;
-import org.elasticsearch.index.get.GetField;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.sort.SortOrder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.annotations.Trace;
@@ -82,6 +36,45 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.dao.es5.index.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.ResourceAlreadyExistsException;
+import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
+import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
+import org.elasticsearch.index.get.GetField;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.sort.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Viren
@@ -128,7 +121,12 @@ public class ElasticSearchDAO implements IndexDAO {
 	public ElasticSearchDAO(Client client, Configuration config, ObjectMapper om) {
 		this.om = om;
 		this.client = client;
-		this.indexName = config.getProperty("workflow.elasticsearch.index.name", null);
+		String rootIndexName = config.getProperty("workflow.elasticsearch.index.name", "conductor");
+		String taskLogPrefix = config.getProperty("workflow.elasticsearch.tasklog.index.name", "task_log");
+
+		String stack = config.getStack();
+		this.indexName = rootIndexName + ".executions." + stack;
+		this.logIndexPrefix = rootIndexName + "." + taskLogPrefix + "." + stack;
 		
 		try {
 			
@@ -142,8 +140,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	private void updateIndexName(Configuration config) {
-		this.logIndexPrefix = config.getProperty("workflow.elasticsearch.tasklog.index.name", "task_log");
-		this.logIndexName = this.logIndexPrefix + "_" + sdf.format(new Date());
+		this.logIndexName = logIndexPrefix + "_" + sdf.format(new Date());
 
 		try {
 			client.admin().indices().prepareGetIndex().addIndices(logIndexName).execute().actionGet();
@@ -164,14 +161,30 @@ public class ElasticSearchDAO implements IndexDAO {
 	private void initIndex() throws Exception {
 
 		//0. Add the index template
-		GetIndexTemplatesResponse result = client.admin().indices().prepareGetTemplates("wfe_template").execute().actionGet();
-		if(result.getIndexTemplates().isEmpty()) {
-			log.info("Creating the index template 'wfe_template'");
-			InputStream stream = ElasticSearchDAO.class.getResourceAsStream("/template.json");
+		GetIndexTemplatesResponse result = client.admin().indices().prepareGetTemplates(indexName).execute().actionGet();
+		if (result.getIndexTemplates().isEmpty()) {
+			log.info("Creating the index template 'conductor_template'");
+			InputStream stream = ElasticSearchDAO.class.getResourceAsStream("/conductor_template.json");
+			byte[] templateSource = IOUtils.toByteArray(stream);
+
+			try {
+				PutIndexTemplateRequestBuilder builder = client.admin().indices().preparePutTemplate(indexName);
+				builder.setSource(templateSource, XContentType.JSON).setTemplate(indexName + "*").execute().actionGet();
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+
+		//1. Add the task log template
+		result = client.admin().indices().prepareGetTemplates(logIndexPrefix).execute().actionGet();
+		if (result.getIndexTemplates().isEmpty()) {
+			log.info("Creating the index template 'task_log_template'");
+			InputStream stream = ElasticSearchDAO.class.getResourceAsStream("/task_log_template.json");
 			byte[] templateSource = IOUtils.toByteArray(stream);
 			
 			try {
-				client.admin().indices().preparePutTemplate("wfe_template").setSource(templateSource, XContentType.JSON).execute().actionGet();
+				PutIndexTemplateRequestBuilder builder = client.admin().indices().preparePutTemplate(logIndexPrefix);
+				builder.setSource(templateSource, XContentType.JSON).setTemplate(logIndexPrefix + "*").execute().actionGet();
 			}catch(Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -180,23 +193,10 @@ public class ElasticSearchDAO implements IndexDAO {
 		//1. Create the required index
 		try {
 			client.admin().indices().prepareGetIndex().addIndices(indexName).execute().actionGet();
-		}catch(IndexNotFoundException infe) {
+		} catch (IndexNotFoundException infe) {
 			try {
 				client.admin().indices().prepareCreate(indexName).execute().actionGet();
-			}catch(ResourceAlreadyExistsException done) {}
-		}
-				
-		//2. Mapping for the workflow document type
-		GetMappingsResponse response = client.admin().indices().prepareGetMappings(indexName).addTypes(WORKFLOW_DOC_TYPE).execute().actionGet();
-		if(response.mappings().isEmpty()) {
-			log.info("Adding the workflow type mappings");
-			InputStream stream = ElasticSearchDAO.class.getResourceAsStream("/wfe_type.json");
-			byte[] bytes = IOUtils.toByteArray(stream);
-			String source = new String(bytes);
-			try {
-				client.admin().indices().preparePutMapping(indexName).setType(WORKFLOW_DOC_TYPE).setSource(source).execute().actionGet();
-			}catch(Exception e) {
-				log.error(e.getMessage(), e);
+			} catch (ResourceAlreadyExistsException done) {
 			}
 		}
 	}
@@ -241,6 +241,10 @@ public class ElasticSearchDAO implements IndexDAO {
 
 	@Override
 	public void add(List<TaskExecLog> logs) {
+		if (logs == null || logs.isEmpty()) {
+			return;
+		}
+
 		int retry = 3;
 		while(retry > 0) {
 			try {
@@ -280,7 +284,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery("*");
 			BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
 
-			final SearchRequestBuilder srb = client.prepareSearch(indexName).setQuery(fq).setTypes(TASK_DOC_TYPE);
+			final SearchRequestBuilder srb = client.prepareSearch(logIndexPrefix + "*").setQuery(fq).setTypes(TASK_DOC_TYPE);
 			SearchResponse response = srb.execute().actionGet();
 			SearchHit[] hits = response.getHits().getHits();
 			List<TaskExecLog> logs = new ArrayList<>(hits.length);
@@ -355,9 +359,11 @@ public class ElasticSearchDAO implements IndexDAO {
 				client.update(request).actionGet();
 				return;
 				
+			} catch (VersionConflictEngineException ignore) {
+				return; // Data already exists
 			}catch(Exception e) {
 				Monitors.error(className, "index");
-				log.error("Indexing failed for {}, {}", request.index(), request.type(), e.getMessage());
+				log.error("Indexing failed for {}, {}: {}", request.index(), request.type(), e.getMessage(), e);
 				retry--;
 				if(retry > 0) {
 					Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);

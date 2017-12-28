@@ -18,25 +18,6 @@
  */
 package com.netflix.conductor.server;
 
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.DispatcherType;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.servlet.GuiceFilter;
@@ -51,10 +32,21 @@ import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.sun.jersey.api.client.Client;
-
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisCommands;
+
+import javax.servlet.DispatcherType;
+import javax.ws.rs.core.MediaType;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * @author Viren
@@ -64,8 +56,12 @@ public class ConductorServer {
 
 	private static Logger logger = LoggerFactory.getLogger(ConductorServer.class);
 	
-	private enum DB {
-		redis, dynomite, memory, redis_cluster
+	public enum DB {
+		redis, dynomite, memory, redis_cluster, elasticsearch
+	}
+	
+	private enum SearchMode {
+		elasticsearch, memory
 	}
 	
 	private ServerModule sm;
@@ -75,6 +71,8 @@ public class ConductorServer {
 	private ConductorConfig cc;
 	
 	private DB db;
+	
+	private SearchMode mode;
 	
 	public ConductorServer(ConductorConfig cc) {
 		this.cc = cc;
@@ -89,9 +87,17 @@ public class ConductorServer {
 			System.exit(1);
 		}
 		
-		if(!db.equals(DB.memory)) {
+		String esMode = cc.getProperty("workflow.elasticsearch.mode", "memory");
+		try {
+			mode = SearchMode.valueOf(esMode);
+		} catch (IllegalArgumentException ie) {
+			logger.error("Invalid setting for workflow.elasticsearch.mode: " + esMode + ", supported values are: elasticsearch, memory");
+			System.exit(1);
+		}
+		
+		if (db.equals(DB.dynomite) || db.equals(DB.redis)) {
 			String hosts = cc.getProperty("workflow.dynomite.cluster.hosts", null);
-			if(hosts == null) {
+			if (hosts == null) {
 				System.err.println("Missing dynomite/redis hosts.  Ensure 'workflow.dynomite.cluster.hosts' has been set in the supplied configuration.");
 				logger.error("Missing dynomite/redis hosts.  Ensure 'workflow.dynomite.cluster.hosts' has been set in the supplied configuration.");
 				System.exit(1);
@@ -107,7 +113,7 @@ public class ConductorServer {
 				dynoHosts.add(dynoHost);
 			}
 				
-		}else {
+		} else if (db.equals(DB.memory)) {
 			//Create a single shard host supplier
 			Host dynoHost = new Host("localhost", 0, cc.getAvailabilityZone(), Status.Up);
 			dynoHosts.add(dynoHost);
@@ -155,24 +161,12 @@ public class ConductorServer {
 				.withCPConfig(cp)
 				.build();
 			
-			logger.info("Starting conductor server using dynomite/redis cluster " + dynoClusterName);
+			logger.info("Starting conductor server using dynomite cluster " + dynoClusterName);
 			
 			break;
 			
 		case memory:
 			jedis = new JedisMock();
-			try {
-				EmbeddedElasticSearch.start();
-				if(System.getProperty("workflow.elasticsearch.url") == null) {
-					System.setProperty("workflow.elasticsearch.url", "localhost:9300");
-				}
-				if(System.getProperty("workflow.elasticsearch.index.name") == null) {
-					System.setProperty("workflow.elasticsearch.index.name", "conductor");
-				}
-			} catch (Exception e) {
-				logger.error("Error starting embedded elasticsearch.  Search functionality will be impacted: " + e.getMessage(), e);
-			}
-			logger.info("Starting conductor server using in memory data store");
 			break;
 
 		case redis_cluster:
@@ -185,7 +179,27 @@ public class ConductorServer {
 			break;
 		}
 		
-		this.sm = new ServerModule(jedis, hs, cc);
+		switch (mode) {
+			case memory:
+				logger.info("Starting embedded elasticsearch");
+				try {
+					EmbeddedElasticSearch.start();
+					if (cc.getProperty("workflow.elasticsearch.url", null) == null) {
+						System.setProperty("workflow.elasticsearch.url", "localhost:9300");
+					}
+					if (cc.getProperty("workflow.elasticsearch.index.name", null) == null) {
+						System.setProperty("workflow.elasticsearch.index.name", "conductor");
+					}
+				} catch (Exception e) {
+					logger.error("Error starting embedded elasticsearch.  Search functionality will be impacted: " + e.getMessage(), e);
+				}
+				break;
+			case elasticsearch:
+				logger.info("Starting conductor server using dedicated elasticsearch");
+				break;
+		}
+		
+		this.sm = new ServerModule(jedis, hs, cc, db);
 	}
 	
 	public ServerModule getGuiceModule() {
@@ -198,7 +212,12 @@ public class ConductorServer {
 			throw new IllegalStateException("Server is already running");
 		}
 		
-		Guice.createInjector(sm);
+		try {
+			Guice.createInjector(sm);
+		} catch (Exception ex) {
+			logger.error("Error creating Guice injector " + ex.getMessage(), ex);
+			System.exit(-1);
+		}
 
 		//Swagger
 		String resourceBasePath = Main.class.getResource("/swagger-ui").toExternalForm();
@@ -218,7 +237,7 @@ public class ConductorServer {
 		server.start();
 		System.out.println("Started server on http://localhost:" + port + "/");
 		try {
-			boolean create = Boolean.getBoolean("loadSample");
+			boolean create = Boolean.parseBoolean(cc.getProperty("loadSample", "false"));
 			if(create) {
 				System.out.println("Creating kitchensink workflow");
 				createKitchenSink(port);

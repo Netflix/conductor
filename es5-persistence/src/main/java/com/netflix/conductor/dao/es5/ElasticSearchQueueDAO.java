@@ -52,8 +52,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements QueueDAO {
-	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5QueueDAO.class);
+public class ElasticSearchQueueDAO extends ElasticSearchBaseDAO implements QueueDAO {
+	private static final Logger logger = LoggerFactory.getLogger(ElasticSearchQueueDAO.class);
 	private static final ConcurrentSet<String> queues = new ConcurrentSet<>();
 	private static final int unackScheduleInMS = 60_000;
 	private static final int unackTime = 60_000;
@@ -62,7 +62,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	private String baseName;
 
 	@Inject
-	public ElasticSearch5QueueDAO(Client client, Configuration config, ObjectMapper mapper) {
+	public ElasticSearchQueueDAO(Client client, Configuration config, ObjectMapper mapper) {
 		super(client, config, mapper, "queues");
 		this.baseName = toIndexName();
 		this.stalePeriod = config.getIntProperty("workflow.elasticsearch.stale.period.seconds", 60) * 1000;

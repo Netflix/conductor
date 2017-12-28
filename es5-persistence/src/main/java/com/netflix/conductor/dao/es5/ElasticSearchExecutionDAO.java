@@ -48,8 +48,8 @@ import java.util.stream.Collectors;
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements ExecutionDAO {
-	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5ExecutionDAO.class);
+public class ElasticSearchExecutionDAO extends ElasticSearchBaseDAO implements ExecutionDAO {
+	private static final Logger logger = LoggerFactory.getLogger(ElasticSearchExecutionDAO.class);
 	private static final String ARCHIVED_FIELD = "archived";
 	private static final String RAW_JSON_FIELD = "rawJSON";
 	// Keys Families
@@ -68,7 +68,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	private IndexDAO indexer;
 
 	@Inject
-	public ElasticSearch5ExecutionDAO(Client client, Configuration config, ObjectMapper mapper, IndexDAO indexer, MetadataDAO metadata) {
+	public ElasticSearchExecutionDAO(Client client, Configuration config, ObjectMapper mapper, IndexDAO indexer, MetadataDAO metadata) {
 		super(client, config, mapper, "runtime");
 		this.indexer = indexer;
 		this.metadata = metadata;

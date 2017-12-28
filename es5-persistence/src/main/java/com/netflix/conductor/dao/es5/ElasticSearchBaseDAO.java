@@ -48,8 +48,8 @@ import java.util.stream.Collectors;
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch5BaseDAO {
-	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5BaseDAO.class);
+public class ElasticSearchBaseDAO {
+	private static final Logger logger = LoggerFactory.getLogger(ElasticSearchBaseDAO.class);
 	private final static String NAMESPACE_SEP = ".";
 	private final static String DEFAULT = "_default_";
 	protected Client client;
@@ -59,7 +59,7 @@ public class ElasticSearch5BaseDAO {
 	private String prefix;
 	private String stack;
 
-	ElasticSearch5BaseDAO(Client client, Configuration config, ObjectMapper mapper, String context) {
+	ElasticSearchBaseDAO(Client client, Configuration config, ObjectMapper mapper, String context) {
 		this.client = client;
 		this.mapper = mapper;
 		this.context = context;
