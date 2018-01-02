@@ -142,11 +142,10 @@ public class ElasticsearchModule extends AbstractModule {
 		List<TransportAddress> addressList = new ArrayList<>(responses.getResponses().length);
 		for (DNSLookup.DNSResponse response : responses.getResponses()) {
 			
-			String address = response.getAddress();
 			String name = response.getHostName();
 			Integer port = response.getPort();
 			try {
-				InetAddress inetAddress = InetAddress.getByName(address);
+				InetAddress inetAddress = InetAddress.getByName(name);
 				addressList.add(new InetSocketTransportAddress(inetAddress, port));
 			} catch (UnknownHostException ex) {
 				throw new RuntimeException(ex);
