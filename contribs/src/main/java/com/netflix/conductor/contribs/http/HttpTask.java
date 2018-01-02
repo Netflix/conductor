@@ -83,7 +83,7 @@ public class HttpTask extends GenericHttpTask {
 		}
 
 		try {
-			HttpResponse response = new HttpResponse();
+			HttpResponse response;
 			logger.info("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",request input=" + request);
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
