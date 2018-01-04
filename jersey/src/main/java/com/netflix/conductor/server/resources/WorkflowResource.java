@@ -18,25 +18,7 @@
  */
 package com.netflix.conductor.server.resources;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
@@ -46,13 +28,21 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import java.util.*;
 
 
 /**
@@ -85,12 +75,14 @@ public class WorkflowResource {
 	@POST
 	@Produces({ MediaType.TEXT_PLAIN })
 	@ApiOperation("Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain")
-	public String startWorkflow (StartWorkflowRequest request) throws Exception {
+	public String startWorkflow (StartWorkflowRequest request, @Context HttpHeaders headers) throws Exception {
 		WorkflowDef def = metadata.getWorkflowDef(request.getName(), request.getVersion());
 		if(def == null){
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + request.getName() + ", version=" + request.getVersion());
 		}
-		return executor.startWorkflow(def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain());
+
+		Map<String, Object> map = convert(headers.getRequestHeaders());
+		return executor.startWorkflow(def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), map);
 	}
 	
 	@POST
@@ -98,14 +90,16 @@ public class WorkflowResource {
 	@Produces({ MediaType.TEXT_PLAIN })
 	@ApiOperation("Start a new workflow.  Returns the ID of the workflow instance that can be later used for tracking")
 	public String startWorkflow (
-			@PathParam("name") String name, @QueryParam("version") Integer version, 
-			@QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
-		
+			@PathParam("name") String name, @QueryParam("version") Integer version,
+			@QueryParam("correlationId") String correlationId, Map<String, Object> input,
+			@Context HttpHeaders headers) throws Exception {
 		WorkflowDef def = metadata.getWorkflowDef(name, version);
 		if(def == null){
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + name + ", version=" + version);
 		}
-		return executor.startWorkflow(def.getName(), def.getVersion(), correlationId, input, null);
+
+		Map<String, Object> map = convert(headers.getRequestHeaders());
+		return executor.startWorkflow(def.getName(), def.getVersion(), correlationId, input, null, null, map);
 	}
 	
 	@GET
@@ -250,5 +244,11 @@ public class WorkflowResource {
 			list = Arrays.asList(sortStr.split("\\|"));
 		}
 		return list;
+	}
+
+	private Map<String, Object> convert(MultivaluedMap<String, String> input) {
+		Map<String, Object> map = new HashMap<>();
+		input.forEach(map::put);
+		return map;
 	}
 }
