@@ -411,7 +411,10 @@ public class ElasticSearchDAO implements IndexDAO {
 	@Override
 	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
 		try {
-                        log.error("Search workflow strings FreeText" + freeText + " Query " + query);
+                        String query_mod;
+                        query_mod = "(" + query + ")AND(archived!=\"true\")";
+
+                        log.error("Search workflow strings FreeText" + freeText + " Query " + query + " Querymod " + query_mod);
 			return search(query, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
 			
 		} catch (ParserException e) {
