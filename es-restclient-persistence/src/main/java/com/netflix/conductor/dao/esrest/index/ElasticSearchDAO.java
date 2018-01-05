@@ -412,9 +412,8 @@ public class ElasticSearchDAO implements IndexDAO {
 	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
 		try {
                         String query_mod;
+                        // Append the query to check for non archived flows
                         query_mod = "(" + query + ")AND(archived!=\"true\")";
-
-                        log.error("Search workflow strings FreeText" + freeText + " Query " + query + " Querymod " + query_mod);
 			return search(query_mod, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
 			
 		} catch (ParserException e) {
@@ -455,7 +454,7 @@ public class ElasticSearchDAO implements IndexDAO {
                         DeleteRequest req = new DeleteRequest(indexName, TASK_DOC_TYPE, taskId);
                         DeleteResponse response = client.getHighLevelClient().delete(req);
                         log.error("Remove Task return " + response.getResult());
-                        if (response.getResult() == DocWriteResponse.Result.DELETED) {
+                        if (response.getResult() != DocWriteResponse.Result.DELETED) {
                                 log.error("Index removal failed - document not found by id " + taskId);
                         }
                 } catch (Throwable e) {
