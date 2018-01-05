@@ -437,17 +437,32 @@ public class ElasticSearchDAO implements IndexDAO {
 	public void remove(String workflowId) {
 		try {
 
-			DeleteRequest req = new DeleteRequest(indexName, TASK_DOC_TYPE, workflowId);
+			DeleteRequest req = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
 			DeleteResponse response = client.getHighLevelClient().delete(req);
 			if (response.getResult() == DocWriteResponse.Result.DELETED) {
 				log.error("Index removal failed - document not found by id " + workflowId);
 			}
-                        log.error("Calling remove task from ES by id " + workflowId);
 		} catch (Throwable e) {
 			log.error("Index removal failed failed {}", e.getMessage(), e);
 			Monitors.error(className, "remove");
 		}
 	}
+
+        @Override
+        public void removeTask(String taskId) {
+                try {
+
+                        DeleteRequest req = new DeleteRequest(indexName, TASK_DOC_TYPE, taskId);
+                        DeleteResponse response = client.getHighLevelClient().delete(req);
+                        log.error("Remove Task return " + response.getResult());
+                        if (response.getResult() == DocWriteResponse.Result.DELETED) {
+                                log.error("Index removal failed - document not found by id " + taskId);
+                        }
+                } catch (Throwable e) {
+                        log.error("Index removal failed failed {}", e.getMessage(), e);
+                        Monitors.error(className, "remove");
+                }
+        }
 	
 	// TESTED
 	@Override
