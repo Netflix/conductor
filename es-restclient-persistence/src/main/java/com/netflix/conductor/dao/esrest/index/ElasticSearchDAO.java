@@ -411,6 +411,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	@Override
 	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
 		try {
+                        log.error("Search workflow strings ", freeText)
 			return search(query, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
 			
 		} catch (ParserException e) {
@@ -438,6 +439,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			if (response.getResult() == DocWriteResponse.Result.DELETED) {
 				log.error("Index removal failed - document not found by id " + workflowId);
 			}
+                        log.error("Calling remove task from ES by id " + workflowId);
 		} catch (Throwable e) {
 			log.error("Index removal failed failed {}", e.getMessage(), e);
 			Monitors.error(className, "remove");
