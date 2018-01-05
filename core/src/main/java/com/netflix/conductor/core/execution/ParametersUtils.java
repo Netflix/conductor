@@ -58,7 +58,7 @@ public class ParametersUtils {
 	public ParametersUtils() {
 
 	}
-
+	
 	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef, WorkflowTask workflowTask) {
 		Map<String, Object> inputParams = null;
 		if(input != null) {
@@ -69,9 +69,9 @@ public class ParametersUtils {
 		if(taskDef != null && taskDef.getInputTemplate() != null) {
 			inputParams.putAll(clone(taskDef.getInputTemplate()));
 		}
-
+		
 		Map<String, Map<String, Object>> inputMap = new HashMap<>();
-
+		
 		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
 		Map<String, Object> wf = new HashMap<>();
 		wf.put("input", workflow.getInput());
@@ -226,11 +226,11 @@ public class ParametersUtils {
 					if(sysValue != null){
 						convertedValues[i] = sysValue;
 					}
-
+					
 				} else {
 					convertedValues[i] = io.read(paramPath);
 				}
-
+			
 			}
 		}
 		
@@ -252,7 +252,7 @@ public class ParametersUtils {
 		}
 		return retObj;
 	}
-
+	
 	private String getSystemParametersValue(String sysParam, String taskId){
 		if("CPEWF_TASK_ID".equals(sysParam)) {
 			return taskId;
@@ -288,5 +288,6 @@ public class ParametersUtils {
 		String value = Optional.ofNullable(System.getProperty(test)).orElse(Optional.ofNullable(System.getenv(test)).orElse(null));
 		return value != null;
 	}
+
 	
 }

@@ -303,7 +303,8 @@ public class DeciderService {
 		
 	}
 
-	private Task retry(TaskDef taskDef, WorkflowTask workflowTask, Task task, Workflow workflow) throws TerminateWorkflow {
+	@VisibleForTesting
+	Task retry(TaskDef taskDef, WorkflowTask workflowTask, Task task, Workflow workflow) throws TerminateWorkflow {
 
 		int retryCount = task.getRetryCount();
 		if (!task.getStatus().isRetriable() || SystemTaskType.isBuiltIn(task.getTaskType()) || taskDef == null || taskDef.getRetryCount() <= retryCount) {
@@ -369,7 +370,7 @@ public class DeciderService {
 		Monitors.recordTaskTimeout(task.getTaskDefName());
 		
 		switch (taskType.getTimeoutPolicy()) {
-		case ALERT_ONLY:
+		case ALERT_ONLY:						
 			return;
 		case RETRY:
 			task.setStatus(Status.TIMED_OUT);
@@ -560,6 +561,9 @@ public class DeciderService {
 			Map<String, Object> input = getTaskInput(taskToSchedule.getInputParameters(), workflow, null, null);
 			Object paramValue = input.get(paramName);
 			DynamicForkJoinTaskList dynForkTasks0 = om.convertValue(paramValue, DynamicForkJoinTaskList.class);
+			if(dynForkTasks0 == null) {
+				throw new TerminateWorkflow("Dynamic tasks could not be created.  The value of " + paramName + " from task's input " + input + " has no dynamic tasks to be scheduled");
+			}
 			for( DynamicForkJoinTask dt : dynForkTasks0.getDynamicTasks()) {
 				WorkflowTask wft = new WorkflowTask();
 				wft.setTaskReferenceName(dt.getReferenceName());
@@ -672,8 +676,8 @@ public class DeciderService {
 		}
 
 	}
-
-
+	
+	
 	public static class DeciderOutcome {
 		
 		List<Task> tasksToBeScheduled = new LinkedList<>();
