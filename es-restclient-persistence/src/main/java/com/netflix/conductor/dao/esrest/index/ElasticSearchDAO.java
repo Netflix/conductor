@@ -411,7 +411,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	@Override
 	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
 		try {
-                        log.error("Search workflow strings ", freeText)
+                        log.error("Search workflow strings ", freeText);
 			return search(query, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
 			
 		} catch (ParserException e) {
