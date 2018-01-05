@@ -415,7 +415,7 @@ public class ElasticSearchDAO implements IndexDAO {
                         query_mod = "(" + query + ")AND(archived!=\"true\")";
 
                         log.error("Search workflow strings FreeText" + freeText + " Query " + query + " Querymod " + query_mod);
-			return search(query, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
+			return search(query_mod, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
 			
 		} catch (ParserException e) {
 			throw new ApplicationException(Code.BACKEND_ERROR, e.getMessage(), e);
