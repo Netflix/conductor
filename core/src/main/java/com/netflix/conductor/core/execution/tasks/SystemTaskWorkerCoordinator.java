@@ -59,7 +59,11 @@ public class SystemTaskWorkerCoordinator {
 	
 	private int workerQueueSize;
 	
+	//Number of items to poll for
 	private int pollCount;
+	
+	//Interval in ms at which the polling is done
+	private int pollInterval;
 	
 	private LinkedBlockingQueue<Runnable> workerQueue;
 	
@@ -79,8 +83,9 @@ public class SystemTaskWorkerCoordinator {
 		this.executor = executor;
 		this.config = config;
 		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
-		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 5);
-		this.pollCount = config.getIntProperty("workflow.system.task.worker.poll.count", 5);
+		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 10);
+		this.pollCount = config.getIntProperty("workflow.system.task.worker.poll.count", 10);
+		this.pollInterval = config.getIntProperty("workflow.system.task.worker.poll.interval", 50);
 		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
 		this.workerQueue = new LinkedBlockingQueue<Runnable>(workerQueueSize);
 		if(threadCount > 0) {
@@ -117,7 +122,7 @@ public class SystemTaskWorkerCoordinator {
 	}
 	
 	private void listen(WorkflowSystemTask systemTask) {
-		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, 500, TimeUnit.MILLISECONDS);
+		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, pollInterval, TimeUnit.MILLISECONDS);
 		logger.info("Started listening {}", systemTask.getName());
 	}
 
@@ -128,15 +133,18 @@ public class SystemTaskWorkerCoordinator {
 				logger.warn("System Task Worker is DISABLED.  Not polling.");
 				return;
 			}
-			
-			if(workerQueue.size() >= workerQueueSize) {
-				logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
-				return;
+
+			// get the remaining capacity of worker queue to prevent queue full exception
+			int realPollCount = Math.min(workerQueue.remainingCapacity(), pollCount);
+			if (realPollCount <= 0) {				
+                logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
+                return;
 			}
-			
+
 			String name = systemTask.getName();
-			List<String> polled = taskQueues.pop(name, pollCount, 200);
+			List<String> polled = taskQueues.pop(name, realPollCount, 200);
 			Monitors.recordTaskPoll(name);
+			Monitors.recordTaskPoll(className);
 			logger.debug("Polling for {}, got {}", name, polled.size());
 			for(String task : polled) {
 				try {

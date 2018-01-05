@@ -192,7 +192,7 @@ public class TaskResult {
 		this.logs.add(new TaskExecLog(log));
 		return this;
 	}
-
+	
 	/**
 	 *
 	 * @return Whether we reset the start/end time during status update
