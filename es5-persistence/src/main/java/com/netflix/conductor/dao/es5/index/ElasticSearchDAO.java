@@ -396,7 +396,7 @@ public class ElasticSearchDAO implements IndexDAO {
 
 			DeleteRequest req = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
 			DeleteResponse response = client.delete(req).actionGet();
-			if (response.getResult() == DocWriteResponse.Result.DELETED) {
+			if (response.getResult() != DocWriteResponse.Result.DELETED) {
 				log.error("Index removal failed - document not found by id " + workflowId);
 			}
 		} catch (Throwable e) {
@@ -410,7 +410,7 @@ public class ElasticSearchDAO implements IndexDAO {
 
                         DeleteRequest req = new DeleteRequest(indexName, TASK_DOC_TYPE, taskId);
                         DeleteResponse response = client.delete(req).actionGet();
-                        if (response.getResult() == DocWriteResponse.Result.DELETED) {
+                        if (response.getResult() != DocWriteResponse.Result.DELETED) {
                                 log.error("Index removal failed - document not found by id " + taskId);
                         }
                 } catch (Throwable e) {
