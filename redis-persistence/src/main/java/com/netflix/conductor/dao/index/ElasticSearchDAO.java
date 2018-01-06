@@ -408,6 +408,21 @@ public class ElasticSearchDAO implements IndexDAO {
 			Monitors.error(className, "remove");
 		}
 	}
+
+        @Override
+        public void removeTask(String taskId) {
+                try {
+
+                        DeleteRequest req = new DeleteRequest(indexName, TASK_DOC_TYPE, taskId);
+                        DeleteResponse response = client.delete(req).actionGet();
+                        if (!response.isFound()) {
+                                log.error("Index removal failed - document not found by id " + taskId);
+                        }
+                } catch (Throwable e) {
+                        log.error("Index removal failed failed {}", e.getMessage(), e);
+                        Monitors.error(className, "removeTask");
+                }
+        }
 	
 	@Override
 	public void update(String workflowInstanceId, String[] keys, Object[] values) {

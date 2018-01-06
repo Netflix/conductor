@@ -73,6 +73,13 @@ public interface IndexDAO {
 	 */
 	public void remove(String workflowId);
 
+        /**
+         * Remove the task index
+         * @param taskId Task to be removed
+         */
+        public void removeTask(String taskId);
+
+
 	/**
 	 * Updates the index
 	 * @param workflowInstanceId id of the workflow
