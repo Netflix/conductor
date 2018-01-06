@@ -453,7 +453,6 @@ public class ElasticSearchDAO implements IndexDAO {
 
                         DeleteRequest req = new DeleteRequest(indexName, TASK_DOC_TYPE, taskId);
                         DeleteResponse response = client.getHighLevelClient().delete(req);
-                        log.error("Remove Task return " + response.getResult());
                         if (response.getResult() != DocWriteResponse.Result.DELETED) {
                                 log.error("Index removal failed - document not found by id " + taskId);
                         }
