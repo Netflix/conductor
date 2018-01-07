@@ -115,7 +115,7 @@ public class TestWorkflowExecutor {
 		wait.setTaskReferenceName("wait");
 		
 		Task task1 = SystemTask.userDefined(workflow, IDGenerator.generate(), taskToSchedule, new HashMap<>(), null, 0);
-		Task task2 = SystemTask.waitTask(workflow, IDGenerator.generate(), taskToSchedule, new HashMap<>());
+		Task task2 = SystemTask.waitTask(workflow, IDGenerator.generate(), wait, new HashMap<>());
 		Task task3 = SystemTask.userDefined(workflow, IDGenerator.generate(), taskToSchedule2, new HashMap<>(), null, 0);
 		
 		tasks.add(task1);
