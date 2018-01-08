@@ -54,6 +54,10 @@ public class MockIndexDAO implements IndexDAO {
 	}
 	
 	@Override
+	public void removeTask(String taskId) {
+	}
+
+	@Override
 	public void update(String workflowInstanceId, String[] key, Object[] value) {
 		
 	}
