@@ -70,6 +70,8 @@ public class TaskSummary {
 	private String taskId;
 	
     private String referenceTaskName;
+    
+	private int retryCount;
 
 	public TaskSummary(Task task) {
 		
@@ -90,6 +92,7 @@ public class TaskSummary {
 		this.status = task.getStatus();
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
+		this.retryCount = task.getRetryCount();
 		if (task.getInputData() != null) {
 			this.input = task.getInputData().toString();
 		}
@@ -355,5 +358,19 @@ public class TaskSummary {
 	 */
 	public void setReferenceTaskName(String referenceTaskName) {
 		this.referenceTaskName = referenceTaskName;
+	}
+	
+	/**
+	 * @return the retryCount
+	 */
+	public int getRetryCount() {
+		return retryCount;
+	}
+
+	/**
+	 * @param retryCount the retryCount to set
+	 */
+	public void setRetryCount(int retryCount) {
+		this.retryCount = retryCount;
 	}
 }
