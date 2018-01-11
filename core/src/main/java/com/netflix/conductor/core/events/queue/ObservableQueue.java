@@ -77,7 +77,7 @@ public interface ObservableQueue {
 	 * @return Size of the queue - no. messages pending.  Note: Depending upon the implementation, this can be an approximation
 	 */
 	public long size();
-	
+
 	/**
 	 *  Used to close queue instance prior to remove from queues
 	 */

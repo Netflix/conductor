@@ -134,10 +134,8 @@ A dynamic fork is same as FORK_JOIN task.  Except that the list of tasks to be f
 
 ```json
 {
-  "inputParameters": {
-     "dynamicTasks": "${taskA.output.dynamicTasksJSON}",
-     "dynamicTasksInput": "${taskA.output.dynamicTasksInputJSON}"
-  }
+  "dynamicTasks": "${taskA.output.dynamicTasksJSON}",
+  "dynamicTasksInput": "${taskA.output.dynamicTasksInputJSON}",
   "type": "FORK_JOIN_DYNAMIC",
   "dynamicForkTasksParam": "dynamicTasks",
   "dynamicForkTasksInputParamName": "dynamicTasksInput"

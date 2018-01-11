@@ -12,7 +12,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-from __future__ import print_function, absolute_import
+from __future__ import print_function
 import sys
 import time
 import subprocess
@@ -25,7 +25,7 @@ hostname = socket.gethostname()
 
 class ConductorWorker:
     def __init__(self, server_url, thread_count, polling_interval):
-        wfcMgr = WFClientMgr(server_url)
+        wfcMgr = conductor.conductor.WFClientMgr(server_url)
         self.workflowClient = wfcMgr.workflowClient
         self.taskClient = wfcMgr.taskClient
         self.thread_count = thread_count
@@ -42,8 +42,6 @@ class ConductorWorker:
             self.taskClient.updateTask(task)
         except Exception as err:
             print('Error executing task: ' + str(err))
-            task['status'] = 'FAILED'
-            self.taskClient.updateTask(task)
 
     def poll_and_execute(self, taskType, exec_function):
         while True:
@@ -55,12 +53,11 @@ class ConductorWorker:
     def start(self, taskType, exec_function, wait):
         print('Polling for task ' + taskType + ' at a ' + str(self.polling_interval) + ' ms interval with ' + str(self.thread_count) + ' threads for task execution, with worker id as ' + hostname)
         for x in range(0, int(self.thread_count)):
-            thread = Thread(target=self.poll_and_execute, args=(taskType, exec_function, ))
-            thread.daemon = True
+            thread = Thread(target = self.poll_and_execute, args = (taskType, exec_function, ))
             thread.start()
-        if wait:
+        if(wait):
             while 1:
-                time.sleep(1)
+                pass
 
 def exc(taskType, inputData, startTime, retryCount, status, callbackAfterSeconds, pollCount):
     print('Executing the function')

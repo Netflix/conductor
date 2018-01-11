@@ -70,21 +70,23 @@ class GenericHttpTask extends WorkflowSystemTask {
 		}
 		WebResource webResource = client.resource(input.getUri());
 
-		ClientResponse cr = webResource
+		ClientResponse response = webResource
 				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
 				.post(ClientResponse.class, formData);
 
-		if (cr.getStatus() != 201 && cr.getStatus() != 200) {
+		if (response.getStatus() != 201 && response.getStatus() != 200) {
 			throw new RuntimeException("Failed : HTTP error code : "
-					+ cr.getStatus() + cr.getEntity(String.class));
+					+ response.getStatus() + response.getEntity(String.class));
+
+
 		}
-		HttpResponse response = new HttpResponse();
-		
-		response.body = extractBody(cr);
-		response.statusCode = cr.getStatus();
-		response.headers = cr.getHeaders();
-		response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
-		return response;
+		HttpResponse responsehttp = new HttpResponse();
+
+		responsehttp.body = extractBody(response);
+		responsehttp.statusCode = response.getStatus();
+		responsehttp.headers = response.getHeaders();
+		return responsehttp;
+
 	}
 
 	/**
@@ -118,7 +120,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 				response.body = extractBody(cr);
 			}
 			response.statusCode = cr.getStatus();
-			response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
 			response.headers = cr.getHeaders();
 			return response;
 		} catch (UniformInterfaceException ex) {
@@ -131,7 +132,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 				}
 				response.headers = cr.getHeaders();
 				response.statusCode = cr.getStatus();
-				response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
 				return response;
 			} else {
 				String reason = cr.getEntity(String.class);

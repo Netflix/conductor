@@ -18,15 +18,21 @@
  */
 package com.netflix.conductor.server;
 
-import com.google.inject.AbstractModule;
-import com.netflix.conductor.core.config.Configuration;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.*;
+import com.google.inject.AbstractModule;
+import com.netflix.conductor.core.config.Configuration;
 
 /**
  * @author Viren
@@ -98,6 +104,7 @@ public class ConductorConfig implements Configuration {
 
 	@Override
 	public String getProperty(String key, String defaultValue) {
+
 		String val = null;
 		try{
 			val = System.getenv(key.replace('.','_'));

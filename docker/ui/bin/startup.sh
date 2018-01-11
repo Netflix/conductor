@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # startup.sh - startup script for the UI docker image
 
 echo "Starting Conductor UI"
@@ -12,4 +12,5 @@ if [ -z "$WF_SERVER" ];
     echo "using Conductor API server from '$WF_SERVER'"
 fi
 
+# Run server.js in the foreground, sending messages to stdout
 node server.js
