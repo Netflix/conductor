@@ -134,7 +134,7 @@ public class TestEvent {
 		assertEquals("sqs", queue.getType());
 		assertEquals(sink, task.getOutputData().get("event_produced"));
 		System.out.println(task.getOutputData().get("event_produced"));
-		
+
 		sink = "nats:nats_value";
 		task.getInputData().put("sink", sink);
 		queue = event.getQueue(workflow, task);

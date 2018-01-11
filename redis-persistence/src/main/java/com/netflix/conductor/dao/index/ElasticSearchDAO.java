@@ -78,8 +78,8 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.index.query.parser.Expression;
-import com.netflix.conductor.dao.index.query.parser.ParserException;
+import com.netflix.conductor.dao.es5.index.query.parser.Expression;
+import com.netflix.conductor.dao.es5.index.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
 
 /**
@@ -375,19 +375,7 @@ public class ElasticSearchDAO implements IndexDAO {
 
 		try {
 			
-			return search(query, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
-			
-		} catch (ParserException e) {
-			throw new ApplicationException(Code.BACKEND_ERROR, e.getMessage(), e);
-		}
-	}
-	
-	@Override
-	public SearchResult<String> searchTasks(String query, String freeText, int start, int count, List<String> sort) {
-
-		try {
-			
-			return search(query, start, count, sort, freeText, TASK_DOC_TYPE);
+			return search(query, start, count, sort, freeText);
 			
 		} catch (ParserException e) {
 			throw new ApplicationException(Code.BACKEND_ERROR, e.getMessage(), e);
@@ -446,7 +434,7 @@ public class ElasticSearchDAO implements IndexDAO {
 		return null;
 	}
 	
-	private SearchResult<String> search(String structuredQuery, int start, int size, List<String> sortOptions, String freeTextQuery, String docType) throws ParserException {
+	private SearchResult<String> search(String structuredQuery, int start, int size, List<String> sortOptions, String freeTextQuery) throws ParserException {
 		QueryBuilder qf = QueryBuilders.matchAllQuery();
 		if(StringUtils.isNotEmpty(structuredQuery)) {
 			Expression expression = Expression.fromString(structuredQuery);
@@ -456,7 +444,7 @@ public class ElasticSearchDAO implements IndexDAO {
 		BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(qf);
 		QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(freeTextQuery);
 		BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
-		final SearchRequestBuilder srb = client.prepareSearch(indexName).setQuery(fq).setTypes(docType).setNoFields().setFrom(start).setSize(size);
+		final SearchRequestBuilder srb = client.prepareSearch(indexName).setQuery(fq).setTypes(WORKFLOW_DOC_TYPE).setNoFields().setFrom(start).setSize(size);
 		if(sortOptions != null){
 			sortOptions.forEach(sortOption -> {
 				SortOrder order = SortOrder.ASC;

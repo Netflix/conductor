@@ -35,7 +35,7 @@ public class WorkflowSystemTask {
 	private static Map<String, WorkflowSystemTask> registry = new HashMap<>();
 	
 	private String name;
-	
+
 	public WorkflowSystemTask(String name) {
 		this.name = name;
 		registry.put(name, this);
@@ -114,5 +114,4 @@ public class WorkflowSystemTask {
 	public static Collection<WorkflowSystemTask> all() {
 		return registry.values();
 	}
-	
 }

@@ -59,9 +59,7 @@ public class WorkflowTask {
 	private String name;
 	
 	private String taskReferenceName;
-
-	private String description;
-
+	
 	//Key: Name of the input parameter.  MUST be one of the keys defined in TaskDef (e.g. fileName)
 	//Value: mapping of the parameter from another task (e.g. task1.someOutputParameterAsFileName)
 	private Map<String, Object> inputParameters = new HashMap<String, Object>();
@@ -131,20 +129,6 @@ public class WorkflowTask {
 	}
 
 	/**
-	 * @return the description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * @param description the description to set
-	 */
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	/**
 	 * @return the inputParameters
 	 */
 	public Map<String, Object> getInputParameters() {
@@ -157,7 +141,7 @@ public class WorkflowTask {
 	public void setInputParameters(Map<String, Object> inputParameters) {
 		this.inputParameters = inputParameters;
 	}
-	
+
 	/**
 	 * @return the eventMessages
 	 */
@@ -390,7 +374,7 @@ public class WorkflowTask {
 	public void setOptional(Boolean optional) {
 		this.optional = optional;
 	}
-	
+
 	/**
 	 *
 	 * @return workflow name to be started once the task timed out
@@ -574,7 +558,7 @@ public class WorkflowTask {
 		return null;
 		
 	}
-	
+
 	@Override
 	public String toString() {
 		return name + "/" + taskReferenceName;

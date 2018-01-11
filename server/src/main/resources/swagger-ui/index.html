@@ -38,7 +38,7 @@
           if (url && url.length > 1) {
               url = decodeURIComponent(url[1]);
           } else {
-              url = "localhost:8080";
+              url = window.location.host;
           }
 
           hljs.configure({

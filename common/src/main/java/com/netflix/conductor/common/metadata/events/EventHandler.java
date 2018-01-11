@@ -38,7 +38,7 @@ public class EventHandler {
 	private List<Action> actions = new LinkedList<>();
 	
 	private boolean active;
-	
+
 	public EventHandler() {
 		
 	}
@@ -118,7 +118,6 @@ public class EventHandler {
 		this.active = active;
 	}
 
-
 	public static class Action {
 		
 		public enum Type { start_workflow, complete_task, fail_task, update_task }
@@ -130,7 +129,7 @@ public class EventHandler {
 		private TaskDetails complete_task;
 		
 		private TaskDetails fail_task;
-		
+
 		private UpdateTask update_task;
 		
 		private boolean expandInlineJSON;
@@ -194,7 +193,7 @@ public class EventHandler {
 		public void setFail_task(TaskDetails fail_task) {
 			this.fail_task = fail_task;
 		}
-		
+
 		/**
 		 * @return the progress task object
 		 */
@@ -229,7 +228,7 @@ public class EventHandler {
 	public static class TaskDetails {
 		
 		private String workflowId;
-		
+
 		private String taskRefName;
 		
 		private Map<String, Object> output = new HashMap<>();
@@ -278,9 +277,9 @@ public class EventHandler {
 		public void setOutput(Map<String, Object> output) {
 			this.output = output;
 		}
-		
-		
-		
+
+
+
 	}
 	
 	public static class StartWorkflow {
@@ -356,7 +355,7 @@ public class EventHandler {
 		
 		
 	}
-	
+
 	public static class UpdateTask {
 
 		private String workflowId;

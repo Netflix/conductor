@@ -39,4 +39,3 @@ RUN cd /app/ui \
 EXPOSE 5000
 
 CMD [ "/app/startup.sh" ]
-ENTRYPOINT ["/bin/sh"]

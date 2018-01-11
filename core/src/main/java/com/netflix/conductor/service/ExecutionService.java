@@ -38,7 +38,6 @@ import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
-import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.config.Configuration;
@@ -176,9 +175,9 @@ public class ExecutionService {
 
 	public boolean ackTaskRecieved(String taskId, String consumerId) throws Exception {
 		Task task = getTask(taskId);
+		String queueName = QueueUtils.getQueueName(task);
 
 		if (task != null) {
-			String queueName = QueueUtils.getQueueName(task);
 			if(task.getResponseTimeoutSeconds() > 0) {
 				logger.debug("Adding task " + queueName + "/" + taskId + " to be requeued if no response received " + task.getResponseTimeoutSeconds());
 				return queue.setUnackTimeout(queueName, task.getTaskId(), 1000 * task.getResponseTimeoutSeconds());		//Value is in millisecond
@@ -327,27 +326,6 @@ public class ExecutionService {
 		int missing = result.getResults().size() - workflows.size();
 		long totalHits = result.getTotalHits() - missing;
 		SearchResult<WorkflowSummary> sr = new SearchResult<>(totalHits, workflows);
-		
-		return sr;
-	}
-	
-	public SearchResult<TaskSummary> searchTasks(String query, String freeText, int start, int size, List<String> sortOptions) {
-		
-		SearchResult<String> result = indexer.searchTasks(query, freeText, start, size, sortOptions);
-		List<TaskSummary> workflows = result.getResults().stream().parallel().map(taskId -> {
-			try {
-				
-				TaskSummary summary = new TaskSummary(edao.getTask(taskId));
-				return summary;
-				
-			} catch(Exception e) {
-				logger.error(e.getMessage(), e);
-				return null;
-			}
-		}).filter(summary -> summary != null).collect(Collectors.toList());
-		int missing = result.getResults().size() - workflows.size();
-		long totalHits = result.getTotalHits() - missing;
-		SearchResult<TaskSummary> sr = new SearchResult<>(totalHits, workflows);
 		
 		return sr;
 	}

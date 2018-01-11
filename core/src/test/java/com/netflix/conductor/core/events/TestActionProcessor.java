@@ -55,19 +55,19 @@ public class TestActionProcessor {
 		map.put("name", "conductor");
 		map.put("version", 2);
 		list.add(map);
-		
+
 		int before = list.size();
 		ap.expand(list);
 		assertEquals(before, list.size());
-		
-		
+
+
 		Map<String, Object> input = new HashMap<>();
 		input.put("k1", "${$..externalId}");
 		input.put("k2", "${$[0].externalId[0].taskRefName}");
 		input.put("k3", "${__json_externalId.taskRefName}");
 		input.put("k4", "${$[0].name}");
 		input.put("k5", "${$[0].version}");
-		
+
 		Map<String, Object> replaced = pu.replace(input, list);
 		assertNotNull(replaced);
 		System.out.println(replaced);
@@ -77,27 +77,27 @@ public class TestActionProcessor {
 		assertEquals(replaced.get("k4"), "conductor");
 		assertEquals(replaced.get("k5"), 2);
 	}
-	
+
 	@Test
 	public void testMap() throws Exception {
 		ActionProcessor ap = new ActionProcessor(null, null);
 		ParametersUtils pu = new ParametersUtils();
 
-		
+
 		Map<String, Object> map = new HashMap<>();
 		map.put("externalId", "{\"taskRefName\":\"t001\",\"workflowId\":\"w002\"}");
 		map.put("name", "conductor");
 		map.put("version", 2);
 
 		ap.expand(map);
-		
-		
+
+
 		Map<String, Object> input = new HashMap<>();
 		input.put("k1", "${$.externalId}");
 		input.put("k2", "${externalId.taskRefName}");
 		input.put("k4", "${name}");
 		input.put("k5", "${version}");
-		
+
 		//Map<String, Object> replaced = pu.replace(input, new ObjectMapper().writeValueAsString(map));
 		Map<String, Object> replaced = pu.replace(input, map);
 		assertNotNull(replaced);
@@ -108,25 +108,25 @@ public class TestActionProcessor {
 		assertEquals("conductor", replaced.get("k4"));
 		assertEquals(2, replaced.get("k5"));
 	}
-	
+
 	@Test
 	public void testNoExpand() throws Exception {
 		ParametersUtils pu = new ParametersUtils();
 
-		
+
 		Map<String, Object> map = new HashMap<>();
 		map.put("name", "conductor");
 		map.put("version", 2);
 		map.put("externalId", "{\"taskRefName\":\"t001\",\"workflowId\":\"w002\"}");
-		
+
 		Map<String, Object> input = new HashMap<>();
 		input.put("k1", "${$.externalId}");
 		input.put("k4", "${name}");
 		input.put("k5", "${version}");
-		
+
 		ObjectMapper om = new ObjectMapper();
 		Object jsonObj = om.readValue(om.writeValueAsString(map), Object.class);
-		
+
 		Map<String, Object> replaced = pu.replace(input, jsonObj);
 		assertNotNull(replaced);
 		System.out.println("testNoExpand(): " + replaced);
@@ -135,7 +135,7 @@ public class TestActionProcessor {
 		assertEquals("conductor", replaced.get("k4"));
 		assertEquals(2, replaced.get("k5"));
 	}
-	
+
 	@Test
 	public void updateTask_evaluation_fail() throws Exception {
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);

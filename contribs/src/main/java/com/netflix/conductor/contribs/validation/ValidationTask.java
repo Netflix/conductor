@@ -115,11 +115,8 @@ public class ValidationTask extends WorkflowSystemTask {
         if (overallReason == null) {
             overallReason = "Payload validation failed";
         }
-
-        // Set the overall reason to the output map only when status is not true
-        if (!overallStatus.get()) {
-			taskOutput.put("overallReason", overallReason);
-		}
+        // Set the overall reason to the output map
+        taskOutput.put("overallReason", overallReason);
 
         // If overall status is false and we need to fail whole workflow
         if (!overallStatus.get() && failOnFalse) {
