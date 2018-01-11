@@ -94,28 +94,20 @@ public class WorkflowExecutor {
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
 		return startWorkflow(name, version, correlationId, input, null);
 	}
-
+	
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event) throws Exception {
 		return startWorkflow(name, version, input, correlationId, null, null, event);
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, null, null, event, taskToDomain, Collections.emptyMap());
+		return startWorkflow(name, version, input, correlationId, null, null, event, taskToDomain);
 	}
-
-	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
-		return startWorkflow(name, version, input, correlationId, null, null, event, taskToDomain, headers);
-	}
-
+	
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, null, Collections.emptyMap());
+		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, null);
 	}
-
+	
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, Collections.emptyMap());
-	}
-
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
 		
 		try {
 			
@@ -158,7 +150,6 @@ public class WorkflowExecutor {
 			wf.setUpdateTime(null);
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
-			wf.setHeaders(headers);
 			edao.createWorkflow(wf);
 
 			// send wf start message
