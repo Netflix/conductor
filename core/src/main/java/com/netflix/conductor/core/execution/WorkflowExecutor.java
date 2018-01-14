@@ -511,10 +511,7 @@ public class WorkflowExecutor {
 			List<Task> tasksToBeScheduled = outcome.tasksToBeScheduled;
 			setTaskDomains(tasksToBeScheduled, workflow);
 			List<Task> tasksToBeUpdated = outcome.tasksToBeUpdated;
-			boolean stateChanged = false;
-			if(!workflow.getTasks().contains(tasksToBeScheduled)){
 				workflow.getTasks().addAll(tasksToBeScheduled);
-			}
 			for(Task task : tasksToBeScheduled) {
 				if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
