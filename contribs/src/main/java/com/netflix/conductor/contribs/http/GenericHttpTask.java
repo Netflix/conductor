@@ -119,7 +119,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 			builder.header(e.getKey(), e.getValue());
 		});
 
-		// Attach Deluxe Owf Correlation header
+		// Attach Deluxe Owf Correlation header and update workflow to save new sequence
 		if (input.isCorrelation()) {
 			setCorrelation(builder, workflow);
 			executor.updateWorkflow(workflow);
