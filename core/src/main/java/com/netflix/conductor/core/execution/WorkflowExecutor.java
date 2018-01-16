@@ -896,6 +896,10 @@ public class WorkflowExecutor {
 		}
 	}
 
+	public void updateWorkflow(Workflow workflow) {
+		edao.updateWorkflow(workflow);
+	}
+
 	private String getActiveDomain(String taskType, String[] domains){
 		// The domain list has to be ordered.
 		// In sequence check if any worker has polled for last 30 seconds, if so that is the Active domain

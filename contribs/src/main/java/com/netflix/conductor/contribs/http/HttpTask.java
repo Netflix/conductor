@@ -103,10 +103,10 @@ public class HttpTask extends GenericHttpTask {
 					response = httpCallUrlEncoded(input, body);
 
 				} else {
-					response = httpCall(input, workflow);
+					response = httpCall(input, workflow, executor);
 				}
 			} else {
-				response = httpCall(input, workflow);
+				response = httpCall(input, workflow, executor);
 			}
 
 			Object responseConditions;

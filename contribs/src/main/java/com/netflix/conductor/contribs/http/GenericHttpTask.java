@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -98,7 +99,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	 * @return Response of the http call
 	 * @throws Exception If there was an error making http call
 	 */
-	HttpResponse httpCall(Input input, Workflow workflow) throws Exception {
+	HttpResponse httpCall(Input input, Workflow workflow, WorkflowExecutor executor) throws Exception {
 		Client client = rcm.getClient(input);
 
 		if (input.getOauthConsumerKey() != null) {
@@ -118,9 +119,10 @@ class GenericHttpTask extends WorkflowSystemTask {
 			builder.header(e.getKey(), e.getValue());
 		});
 
-		// Increment and attach Deluxe Owf Correlation header
+		// Attach Deluxe Owf Correlation header
 		if (input.isCorrelation()) {
 			setCorrelation(builder, workflow);
+			executor.updateWorkflow(workflow);
 		}
 
 		HttpResponse response = new HttpResponse();
@@ -186,9 +188,12 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 		Map<String, Object> header = (Map<String, Object>)workflow.getHeaders().get(DELUXE_OWF_CORRELATION);
 		int sequence = (int)header.get(SEQUENCE_NO);
-		sequence++;
-		header.put(SEQUENCE_NO, sequence);
+		header.put(SEQUENCE_NO, sequence + 1);
 
-		builder.header(DELUXE_OWF_CORRELATION, om.writeValueAsString(header));
+		String json = om.writeValueAsString(header);
+		logger.info("Setting " + DELUXE_OWF_CORRELATION + " header with " + json);
+
+		// Set the header with json value
+		builder.header(DELUXE_OWF_CORRELATION, json);
 	}
 }
