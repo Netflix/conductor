@@ -55,8 +55,7 @@ public class HttpTask extends GenericHttpTask {
 
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		Map<String, Object> taskInput = task.getInputData();
-		Map<String, Object> taskOutput = task.getOutputData();
+
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
 		String url = null;
@@ -109,77 +108,32 @@ public class HttpTask extends GenericHttpTask {
 				response = httpCall(input);
 			}
 
-			Object responseConditions;
-			Output output=new Output();
-			String overallReason="";
-			Map<String, String> conditionsObj = new HashMap<String, String>();
-			if(task.getInputData().get(RESPONSE_PARAMETER_NAME)!=null) {
-				responseConditions = task.getInputData().get(RESPONSE_PARAMETER_NAME);
-				output = om.convertValue(responseConditions, Output.class);
-				conditionsObj = output.getConditions();
-				overallReason = output.getReasonParameter();
-			}
-			// http task validation
-			// Default is true. Will be set to false upon some condition fails
-			AtomicBoolean overallStatus = new AtomicBoolean(true);
-			Object payloadObj = response.asMap();
-			if (conditionsObj != null) {
-				// Go over all conditions and evaluate them
-				conditionsObj.forEach((name, condition) -> {
-					try {
-						Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
-						logger.debug("Evaluation resulted in " + success + " for " + name + "=" + condition);
+			if (response.statusCode > 199 && response.statusCode < 300) {
 
-						// Failed ?
-						if (!success) {
-
-							// Add condition evaluation result into output map
-							addEvalResult(task, name, success);
-
-							// Set the over all status to false
-							overallStatus.set(false);
-						}
-					} catch (Exception ex) {
-						logger.error("Evaluation failed for " + name + "=" + condition, ex);
-
-						// Set the error message instead of false
-						addEvalResult(task, name, ex.getMessage());
-
-						// Set the over all status to false
-						overallStatus.set(false);
-					}
-				});
-
-			}
-
-			// If overall status is false and we need to fail whole workflow
-			if (!overallStatus.get()) {
+			// Check the http response validation
+				if (!checkHttpResponseValidation(task,response)) {
 				if (response != null) {
 					task.getOutputData().put("response", response.asMap());
 				}
-				overallReason = "Payload validation failed";
-				// Set the overall reason to the output map
-				taskOutput.put("overallReason", overallReason);
+				String overallReason = "Payload validation failed";
 				task.setReasonForIncompletion(overallReason);
 				task.setStatus(Status.FAILED);
-				// Set the overall status to the output map
-				taskOutput.put("overallStatus", overallStatus.get());
 			} else {
-				if (response.statusCode > 199 && response.statusCode < 300) {
-					task.setStatus(Status.COMPLETED);
-				} else {
-					if (response.body != null) {
-						task.setReasonForIncompletion(response.body.toString());
-					} else {
-						task.setReasonForIncompletion("No response from the remote service");
-					}
-					task.setStatus(Status.FAILED);
-				}
-				if (response != null) {
-					task.getOutputData().put("response", response.asMap());
-				}
+				task.setStatus(Status.COMPLETED);
 			}
 			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",response code=" + response.statusCode + ",response=" + response.body);
+			} else {
+				if (response.body != null) {
+					task.setReasonForIncompletion(response.body.toString());
+				} else {
+					task.setReasonForIncompletion("No response from the remote service");
+				}
+				task.setStatus(Status.FAILED);
+			}
+			if (response != null) {
+				task.getOutputData().put("response", response.asMap());
+			}
+
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -219,4 +173,47 @@ public class HttpTask extends GenericHttpTask {
 		conditions.put(condition, result);
 	}
 
+
+	private Boolean checkHttpResponseValidation(Task task,HttpResponse response)
+	{
+		AtomicBoolean overallStatus = new AtomicBoolean(true);
+		Object responseConditions;
+		Output output=new Output();
+		Map<String, String> conditionsObj = new HashMap<String, String>();
+		//Check http_response object is present or not
+		if (task.getInputData().get(RESPONSE_PARAMETER_NAME) == null) {   return overallStatus.get(); }
+		responseConditions = task.getInputData().get(RESPONSE_PARAMETER_NAME);
+		output = om.convertValue(responseConditions, Output.class);
+		//Check condition object is present or not
+		if (output.getConditions() == null || output.getConditions().isEmpty()) {  return overallStatus.get(); }
+		conditionsObj = output.getConditions();
+		Object payloadObj = response.asMap();
+		// Go over all conditions and evaluate them
+			conditionsObj.forEach((name, condition) -> {
+				try {
+					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
+					logger.debug("Evaluation resulted in " + success + " for " + name + "=" + condition);
+
+					// Failed ?
+					if (!success) {
+
+						// Add condition evaluation result into output map
+						addEvalResult(task, name, success);
+
+						// Set the over all status to false
+						overallStatus.set(false);
+					}
+				} catch (Exception ex) {
+					logger.error("Evaluation failed for " + name + "=" + condition, ex);
+
+					// Set the error message instead of false
+					addEvalResult(task, name, ex.getMessage());
+
+					// Set the over all status to false
+					overallStatus.set(false);
+				}
+			});
+
+		return overallStatus.get();
+	}
 }
