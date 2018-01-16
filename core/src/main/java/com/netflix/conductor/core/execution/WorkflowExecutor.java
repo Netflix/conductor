@@ -108,11 +108,11 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, null, null);
+		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, null, Collections.emptyMap());
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, null);
+		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, Collections.emptyMap());
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
