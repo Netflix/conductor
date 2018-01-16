@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.server.resources;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -35,8 +33,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Iterables;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
@@ -53,6 +57,11 @@ import com.netflix.conductor.service.MetadataService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringEscapeUtils;
+
+import static com.google.common.collect.Iterables.contains;
+import static com.google.common.collect.Iterables.isEmpty;
+import static com.google.common.collect.Iterables.limit;
 
 
 /**
@@ -65,15 +74,17 @@ import io.swagger.annotations.ApiOperation;
 @Consumes({MediaType.APPLICATION_JSON})
 @Singleton
 public class WorkflowResource {
-	
+
 	private WorkflowExecutor executor;
-	
+
 	private ExecutionService service;
-	
+
 	private MetadataService metadata;
-	
+
 	private int maxSearchSize;
-	
+
+	private ObjectMapper mapper = new ObjectMapper();
+
 	@Inject
 	public WorkflowResource(WorkflowExecutor executor, ExecutionService service, MetadataService metadata, Configuration config) {
 		this.executor = executor;
@@ -85,49 +96,51 @@ public class WorkflowResource {
 	@POST
 	@Produces({ MediaType.TEXT_PLAIN })
 	@ApiOperation("Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain")
-	public String startWorkflow (StartWorkflowRequest request) throws Exception {
+	public String startWorkflow (StartWorkflowRequest request, @Context HttpHeaders headers) throws Exception {
 		WorkflowDef def = metadata.getWorkflowDef(request.getName(), request.getVersion());
 		if(def == null){
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + request.getName() + ", version=" + request.getVersion());
 		}
-		return executor.startWorkflow(def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain());
+		Map<String, Object> map = convert(headers.getRequestHeaders());
+		return executor.startWorkflow(def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), map);
 	}
-	
+
 	@POST
 	@Path("/{name}")
 	@Produces({ MediaType.TEXT_PLAIN })
 	@ApiOperation("Start a new workflow.  Returns the ID of the workflow instance that can be later used for tracking")
-	public String startWorkflow (
-			@PathParam("name") String name, @QueryParam("version") Integer version, 
+	public String startWorkflow (@Context HttpHeaders headers,
+			@PathParam("name") String name, @QueryParam("version") Integer version,
 			@QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
-		
+
 		WorkflowDef def = metadata.getWorkflowDef(name, version);
 		if(def == null){
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + name + ", version=" + version);
 		}
-		return executor.startWorkflow(def.getName(), def.getVersion(), correlationId, input, null);
+		Map<String, Object> map = convert(headers.getRequestHeaders());
+		return executor.startWorkflow(def.getName(), def.getVersion(), correlationId, input, null, null, map);
 	}
-	
+
 	@GET
 	@Path("/{name}/correlated/{correlationId}")
 	@ApiOperation("Lists workflows for the given correlation id")
 	@Consumes(MediaType.WILDCARD)
-	public List<Workflow> getWorkflows(@PathParam("name") String name, @PathParam("correlationId") String correlationId, 
-				@QueryParam("includeClosed") @DefaultValue("false") boolean includeClosed, 
+	public List<Workflow> getWorkflows(@PathParam("name") String name, @PathParam("correlationId") String correlationId,
+				@QueryParam("includeClosed") @DefaultValue("false") boolean includeClosed,
 				@QueryParam("includeTasks") @DefaultValue("false") boolean includeTasks) throws Exception {
 			return service.getWorkflowInstances(name, correlationId, includeClosed, includeTasks);
 	}
-	
+
 	@GET
 	@Path("/{workflowId}")
 	@ApiOperation("Gets the workflow by workflow id")
 	@Consumes(MediaType.WILDCARD)
 	public Workflow getExecutionStatus(
-			@PathParam("workflowId") String workflowId, 
+			@PathParam("workflowId") String workflowId,
 			@QueryParam("includeTasks") @DefaultValue("true") boolean includeTasks) throws Exception {
 		return service.getExecutionStatus(workflowId, includeTasks);
 	}
-	
+
 	@DELETE
 	@Path("/{workflowId}/remove")
 	@ApiOperation("Removes the workflow from the system")
@@ -135,7 +148,7 @@ public class WorkflowResource {
 	public void delete(@PathParam("workflowId") String workflowId) throws Exception {
 		service.removeWorkflow(workflowId);
 	}
-	
+
 	@GET
 	@Path("/running/{name}")
 	@ApiOperation("Retrieve all the running workflows")
@@ -181,38 +194,38 @@ public class WorkflowResource {
 												SkipTaskRequest skipTaskRequest) throws Exception {
 		executor.skipTaskFromWorkflow(workflowId, taskReferenceName, skipTaskRequest);
 	}
-	
+
 	@POST
 	@Path("/{workflowId}/rerun")
 	@ApiOperation("Reruns the workflow from a specific task")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-	public String rerun(@PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {		
+	public String rerun(@PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
 		request.setReRunFromWorkflowId(workflowId);
 		return executor.rerun(request);
 	}
-	
+
 	@POST
 	@Path("/{workflowId}/restart")
 	@ApiOperation("Restarts a completed workflow")
 	@Consumes(MediaType.WILDCARD)
-	public void restart(@PathParam("workflowId") String workflowId) throws Exception {		
+	public void restart(@PathParam("workflowId") String workflowId) throws Exception {
 		executor.rewind(workflowId);
 	}
-	
+
 	@POST
 	@Path("/{workflowId}/retry")
 	@ApiOperation("Retries the last failed task")
 	@Consumes(MediaType.WILDCARD)
-	public void retry(@PathParam("workflowId") String workflowId) throws Exception {		
+	public void retry(@PathParam("workflowId") String workflowId) throws Exception {
 		executor.retry(workflowId);
 	}
-	
+
 	@DELETE
 	@Path("/{workflowId}")
 	@ApiOperation("Terminate workflow execution")
 	@Consumes(MediaType.WILDCARD)
-	public void terminate(@PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {		
+	public void terminate(@PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.terminateWorkflow(workflowId, reason);
 	}
 
@@ -224,7 +237,7 @@ public class WorkflowResource {
 		return executor.cancelWorkflow(workflowId,input);
 	}
 
-	
+
 	@ApiOperation(value="Search for workflows based in payload and other parameters", notes="use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC.  If order is not specified, defaults to ASC")
 	@GET
 	@Consumes(MediaType.WILDCARD)
@@ -250,5 +263,31 @@ public class WorkflowResource {
 			list = Arrays.asList(sortStr.split("\\|"));
 		}
 		return list;
+	}
+
+	private Map<String, Object> convert(MultivaluedMap<String, String> input) {
+		Map<String, Object> result = new HashMap<>();
+		input.forEach((key, strings) -> {
+			if (strings != null && !strings.isEmpty()) {
+				// If more than one element in the list - just add it as we do not parse it
+				if (strings.size() > 1) {
+					result.put(key, strings);
+				} else {
+					String value = strings.iterator().next();
+					if (value.startsWith("{") && value.endsWith("}")) {
+						String json = StringEscapeUtils.unescapeJson(value);
+						try {
+							Map<String, Object> map = mapper.readValue(json, new TypeReference<Map<String, Object>>(){});
+							result.put(key, map);
+						} catch (IOException e) {
+							throw new RuntimeException("Unable to parse json header " + key, e);
+						}
+					} else {
+						result.put(key, strings);
+					}
+				}
+			}
+		});
+		return result;
 	}
 }

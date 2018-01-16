@@ -1,8 +1,10 @@
 package com.netflix.conductor.contribs.http;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -28,6 +30,8 @@ import java.util.Map;
 
 class GenericHttpTask extends WorkflowSystemTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
+	private static final String DELUXE_OWF_CORRELATION = "Deluxe-Owf-Correlation";
+	private static final String SEQUENCE_NO = "sequence-no";
 
 	protected RestClientManager rcm;
 	protected Configuration config;
@@ -94,7 +98,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	 * @return Response of the http call
 	 * @throws Exception If there was an error making http call
 	 */
-	HttpResponse httpCall(Input input) throws Exception {
+	HttpResponse httpCall(Input input, Workflow workflow) throws Exception {
 		Client client = rcm.getClient(input);
 
 		if (input.getOauthConsumerKey() != null) {
@@ -109,9 +113,15 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (input.getBody() != null) {
 			builder.entity(input.getBody());
 		}
+
 		input.getHeaders().entrySet().forEach(e -> {
 			builder.header(e.getKey(), e.getValue());
 		});
+
+		// Increment and attach Deluxe Owf Correlation header
+		if (input.isCorrelation()) {
+			setCorrelation(builder, workflow);
+		}
 
 		HttpResponse response = new HttpResponse();
 		try {
@@ -160,5 +170,25 @@ class GenericHttpTask extends WorkflowSystemTask {
 			logger.error(jpe.getMessage(), jpe);
 			return json;
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void setCorrelation(WebResource.Builder builder, Workflow workflow) throws JsonProcessingException {
+		// Exit if no headers at all
+		if (workflow.getHeaders() == null) {
+			return;
+		}
+
+		// Exit if no required header
+		if (!workflow.getHeaders().containsKey(DELUXE_OWF_CORRELATION)) {
+			return;
+		}
+
+		Map<String, Object> header = (Map<String, Object>)workflow.getHeaders().get(DELUXE_OWF_CORRELATION);
+		int sequence = (int)header.get(SEQUENCE_NO);
+		sequence++;
+		header.put(SEQUENCE_NO, sequence);
+
+		builder.header(DELUXE_OWF_CORRELATION, om.writeValueAsString(header));
 	}
 }
