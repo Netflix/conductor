@@ -119,10 +119,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 			builder.header(e.getKey(), e.getValue());
 		});
 
-		// Attach Deluxe Owf Correlation header and update workflow to save new sequence
+		// Attach Deluxe Owf Correlation header
 		if (input.isCorrelation()) {
-			setCorrelation(builder, workflow);
-			executor.updateWorkflow(workflow);
+			setCorrelation(builder, workflow, executor);
 		}
 
 		HttpResponse response = new HttpResponse();
@@ -175,7 +174,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void setCorrelation(WebResource.Builder builder, Workflow workflow) throws JsonProcessingException {
+	private void setCorrelation(WebResource.Builder builder, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
 		// Exit if no headers at all
 		if (workflow.getHeaders() == null) {
 			return;
@@ -189,6 +188,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 		Map<String, Object> header = (Map<String, Object>)workflow.getHeaders().get(DELUXE_OWF_CORRELATION);
 		int sequence = (int)header.get(SEQUENCE_NO);
 		header.put(SEQUENCE_NO, sequence + 1);
+
+		// Update workflow to save new sequence no
+		executor.updateWorkflow(workflow);
 
 		String json = om.writeValueAsString(header);
 		logger.info("Setting " + DELUXE_OWF_CORRELATION + " header with " + json);
