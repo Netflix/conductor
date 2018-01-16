@@ -105,6 +105,7 @@ public class WorkflowSweeper {
 			Future<?> future = es.submit(() -> {
 				try {
 					
+			        logger.info("Running sweeper for workflow {}", workflowId);
 					WorkflowContext ctx = new WorkflowContext(config.getAppId());
 					WorkflowContext.set(ctx);
 					if(logger.isDebugEnabled()) {
