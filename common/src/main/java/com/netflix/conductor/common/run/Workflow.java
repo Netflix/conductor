@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-
 public class Workflow extends Auditable{
 	
 	public enum  WorkflowStatus {
@@ -79,7 +78,7 @@ public class Workflow extends Auditable{
 
 	private Map<String, String> taskToDomain = new HashMap<>();
 
-	private Map<String, Object> headers = new HashMap<>();
+	private Map<String, Object> context = new HashMap<>();
 
 	public Workflow(){
 		
@@ -304,12 +303,18 @@ public class Workflow extends Auditable{
 		this.event = event;
 	}
 
-	public Map<String, Object> getHeaders() {
-		return headers;
+	/**
+	 * @return Deluxe Owf Context holder
+	 */
+	public Map<String, Object> getContext() {
+		return context;
 	}
 
-	public void setHeaders(Map<String, Object> headers) {
-		this.headers = headers;
+	/**
+	 * @param context Deluxe Owf Context
+	 */
+	public void setContext(Map<String, Object> context) {
+		this.context = context;
 	}
 
 	@Override

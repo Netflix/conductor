@@ -48,6 +48,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
+import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -58,6 +59,8 @@ import com.netflix.conductor.service.MetadataService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.google.common.collect.Iterables.contains;
 import static com.google.common.collect.Iterables.isEmpty;
@@ -74,6 +77,7 @@ import static com.google.common.collect.Iterables.limit;
 @Consumes({MediaType.APPLICATION_JSON})
 @Singleton
 public class WorkflowResource {
+	private static Logger logger = LoggerFactory.getLogger(WorkflowResource.class);
 
 	private WorkflowExecutor executor;
 
@@ -101,8 +105,8 @@ public class WorkflowResource {
 		if(def == null){
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + request.getName() + ", version=" + request.getVersion());
 		}
-		Map<String, Object> map = convert(headers.getRequestHeaders());
-		return executor.startWorkflow(def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), map);
+		Correlator correlator = new Correlator(logger, headers);
+		return executor.startWorkflow(def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), correlator.getAsMap());
 	}
 
 	@POST
@@ -117,8 +121,8 @@ public class WorkflowResource {
 		if(def == null){
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + name + ", version=" + version);
 		}
-		Map<String, Object> map = convert(headers.getRequestHeaders());
-		return executor.startWorkflow(def.getName(), def.getVersion(), correlationId, input, null, null, map);
+		Correlator correlator = new Correlator(logger, headers);
+		return executor.startWorkflow(def.getName(), def.getVersion(), correlationId, input, null, null, correlator.getAsMap());
 	}
 
 	@GET
@@ -263,31 +267,5 @@ public class WorkflowResource {
 			list = Arrays.asList(sortStr.split("\\|"));
 		}
 		return list;
-	}
-
-	private Map<String, Object> convert(MultivaluedMap<String, String> input) {
-		Map<String, Object> result = new HashMap<>();
-		input.forEach((key, strings) -> {
-			if (strings != null && !strings.isEmpty()) {
-				// If more than one element in the list - just add it as we do not parse it
-				if (strings.size() > 1) {
-					result.put(key, strings);
-				} else {
-					String value = strings.iterator().next();
-					if (value.startsWith("{") && value.endsWith("}")) {
-						String json = StringEscapeUtils.unescapeJson(value);
-						try {
-							Map<String, Object> map = mapper.readValue(json, new TypeReference<Map<String, Object>>(){});
-							result.put(key, map);
-						} catch (IOException e) {
-							throw new RuntimeException("Unable to parse json header " + key, e);
-						}
-					} else {
-						result.put(key, strings);
-					}
-				}
-			}
-		});
-		return result;
 	}
 }

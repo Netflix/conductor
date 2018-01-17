@@ -76,7 +76,7 @@ public class ParametersUtils {
 		Map<String, Object> wf = new HashMap<>();
 		wf.put("input", workflow.getInput());
 		wf.put("output", workflow.getOutput());
-		wf.put("headers", workflow.getHeaders());
+		wf.put("context", workflow.getContext());
 		wf.put("status", workflow.getStatus());
 		wf.put("startTime", workflow.getStartTime());
 		wf.put("startTimeIso", fmt.print(workflow.getStartTime()));

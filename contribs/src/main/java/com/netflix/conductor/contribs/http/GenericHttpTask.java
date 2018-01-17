@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -175,27 +176,18 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 	@SuppressWarnings("unchecked")
 	private void setCorrelation(WebResource.Builder builder, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
-		// Exit if no headers at all
-		if (workflow.getHeaders() == null) {
+		// Exit if no context at all
+		if (workflow.getContext() == null) {
 			return;
 		}
 
-		// Exit if no required header
-		if (!workflow.getHeaders().containsKey(DELUXE_OWF_CORRELATION)) {
-			return;
-		}
+		Correlator correlator = new Correlator(logger, workflow.getContext());
+		correlator.updateSequenceNo();
+		correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflow.getWorkflowId());
+		correlator.attach(builder);
 
-		Map<String, Object> header = (Map<String, Object>)workflow.getHeaders().get(DELUXE_OWF_CORRELATION);
-		int sequence = (int)header.get(SEQUENCE_NO);
-		header.put(SEQUENCE_NO, sequence + 1);
-
-		// Update workflow to save new sequence no
+		// Update workflow to save new values
+		workflow.setContext(correlator.getAsMap());
 		executor.updateWorkflow(workflow);
-
-		String json = om.writeValueAsString(header);
-		logger.info("Setting " + DELUXE_OWF_CORRELATION + " header with " + json);
-
-		// Set the header with json value
-		builder.header(DELUXE_OWF_CORRELATION, json);
 	}
 }

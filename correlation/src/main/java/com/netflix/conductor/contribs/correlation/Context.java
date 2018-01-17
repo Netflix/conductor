@@ -1,16 +1,18 @@
 package com.netflix.conductor.contribs.correlation;
 
-import com.sun.jersey.api.core.*;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  * Created by beimforz on 12/21/17.
  */
 public class Context {
-
     private String version;
+
+    @JsonProperty("sequence-no")
     private int sequenceno;
+
     private List<String> urns;
 
     public Context(){
@@ -19,24 +21,7 @@ public class Context {
         this.urns = new ArrayList<>();
     }
 
-    public String print(HttpContext context){
-
-        String builder = "";
-        builder += "correlation-request-id=" + context.getSession().getId();
-        builder += "correlation-version=" + version;
-        builder += "correlation-sequence=" + sequenceno;
-        builder += "correlation-urns=\"";
-
-        for(String urn: getUrns()){
-            builder += urn + " ";
-        }
-
-        builder += "\"";
-
-        return builder;
-    }
-
-    public String getVersion() {
+	public String getVersion() {
         return version;
     }
 
