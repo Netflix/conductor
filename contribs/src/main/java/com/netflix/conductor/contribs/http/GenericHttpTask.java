@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.contribs.correlation.Context;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
@@ -32,8 +33,6 @@ import java.util.Map;
 
 class GenericHttpTask extends WorkflowSystemTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
-	private static final String DELUXE_OWF_CORRELATION = "Deluxe-Owf-Correlation";
-	private static final String SEQUENCE_NO = "sequence-no";
 
 	protected RestClientManager rcm;
 	protected Configuration config;
@@ -174,14 +173,17 @@ class GenericHttpTask extends WorkflowSystemTask {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void setCorrelation(WebResource.Builder builder, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
-		// Exit if no context at all
+
+		Correlator correlator;
 		if (workflow.getContext() == null) {
-			return;
+			Context context = new Context();
+			context.setSequenceno(0); // It will be increased when updateSequenceNo invoked
+			correlator = new Correlator(logger, context);
+		} else {
+			correlator = new Correlator(logger, workflow.getContext());
 		}
 
-		Correlator correlator = new Correlator(logger, workflow.getContext());
 		correlator.updateSequenceNo();
 		correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflow.getWorkflowId());
 		correlator.attach(builder);

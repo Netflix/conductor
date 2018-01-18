@@ -87,8 +87,6 @@ public class WorkflowResource {
 
 	private int maxSearchSize;
 
-	private ObjectMapper mapper = new ObjectMapper();
-
 	@Inject
 	public WorkflowResource(WorkflowExecutor executor, ExecutionService service, MetadataService metadata, Configuration config) {
 		this.executor = executor;

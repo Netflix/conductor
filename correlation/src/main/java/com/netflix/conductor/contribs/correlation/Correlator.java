@@ -3,7 +3,6 @@ package com.netflix.conductor.contribs.correlation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.core.execution.ApplicationException;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.http.client.methods.HttpGet;
 import org.json.JSONObject;
@@ -17,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
 /**
  * Created by beimforz on 12/21/17.
  */
@@ -27,6 +25,11 @@ public class Correlator implements ICorrelator {
 	private ObjectMapper mapper = new ObjectMapper();
 	private Context context;
 	private Logger logger;
+
+	public Correlator(Logger logger, Context context) {
+		this.logger = logger;
+		this.context = context;
+	}
 
 	public Correlator(Logger logger, HttpHeaders headers) {
 		this.logger = logger;
@@ -67,12 +70,16 @@ public class Correlator implements ICorrelator {
 	}
 
 	public void attach(HttpClient client) throws JsonProcessingException {
+		String json = mapper.writeValueAsString(context);
+		logger.info("Setting " + headerKey + " to " + json);
 		HttpGet get = new HttpGet(client.getProxyHostUsed());
-		get.addHeader(headerKey, mapper.writeValueAsString(context));
+		get.addHeader(headerKey, json);
 	}
 
 	public void attach(WebResource.Builder builder) throws JsonProcessingException {
-		builder.header(headerKey, mapper.writeValueAsString(context));
+		String json = mapper.writeValueAsString(context);
+		logger.info("Setting " + headerKey + " to " + json);
+		builder.header(headerKey, json);
 	}
 
 	public Context parseHeader(HttpHeaders headers) {
@@ -87,7 +94,7 @@ public class Correlator implements ICorrelator {
 						Context rawContext = mapper.readValue(value, Context.class);
 						contexts.add(rawContext);
 					} catch (Exception e) {
-						throw new ApplicationException(ApplicationException.Code.INVALID_INPUT, "Unable to parse " + headerKey + " header", e);
+						logger.error("Unable to parse " + headerKey + " header", e);
 					}
 				}
 			}
