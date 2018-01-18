@@ -106,10 +106,10 @@ public class HttpTask extends GenericHttpTask {
 					response = httpCallUrlEncoded(input, body);
 
 				} else {
-					response = httpCall(input);
+					response = httpCall(input, workflow, executor);
 				}
 			} else {
-				response = httpCall(input);
+				response = httpCall(input, workflow, executor);
 			}
 
 			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",response code=" + response.statusCode + ",response=" + response.body);

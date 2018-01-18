@@ -33,6 +33,8 @@ public class Input {
 
 	private String curtimestamp;
 
+	private boolean correlation;
+
 	/**
 	 * @return the method
 	 */
@@ -193,5 +195,19 @@ public class Input {
 	 */
 	public void setCurtimestamp(String curtimestamp) {
 		this.curtimestamp = curtimestamp;
+	}
+
+	/**
+	 * @return Deluxe Owf Correlation flag
+	 */
+	public boolean isCorrelation() {
+		return correlation;
+	}
+
+	/**
+	 * @param correlation whether Deluxe Owf Correlation required to be set
+	 */
+	public void setCorrelation(boolean correlation) {
+		this.correlation = correlation;
 	}
 }

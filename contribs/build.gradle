@@ -1,5 +1,6 @@
 dependencies {
-	
+
+    compile project(':conductor-correlation')
 	compile project(':conductor-common')
 	compile project(':conductor-core')
 
@@ -9,6 +10,7 @@ dependencies {
 	compile 'net.thisptr:jackson-jq:+'
 	compile 'com.auth0:java-jwt:3.2.0'
 
+	compile 'com.sun.jersey:jersey-bundle:1.18.+'
 	compile 'com.sun.jersey.contribs.jersey-oauth:oauth-client:1.19.+'
 	compile 'com.sun.jersey.contribs.jersey-oauth:oauth-signature:1.19.+'
 	compile group: 'org.json', name: 'json', version: '20141113'

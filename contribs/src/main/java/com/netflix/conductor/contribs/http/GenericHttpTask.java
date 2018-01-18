@@ -1,10 +1,15 @@
 package com.netflix.conductor.contribs.http;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.contribs.correlation.Context;
+import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -94,7 +99,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	 * @return Response of the http call
 	 * @throws Exception If there was an error making http call
 	 */
-	HttpResponse httpCall(Input input) throws Exception {
+	HttpResponse httpCall(Input input, Workflow workflow, WorkflowExecutor executor) throws Exception {
 		Client client = rcm.getClient(input);
 
 		if (input.getOauthConsumerKey() != null) {
@@ -109,9 +114,15 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (input.getBody() != null) {
 			builder.entity(input.getBody());
 		}
+
 		input.getHeaders().entrySet().forEach(e -> {
 			builder.header(e.getKey(), e.getValue());
 		});
+
+		// Attach Deluxe Owf Context header
+		if (input.isCorrelation()) {
+			setCorrelation(builder, workflow, executor);
+		}
 
 		HttpResponse response = new HttpResponse();
 		try {
@@ -160,5 +171,24 @@ class GenericHttpTask extends WorkflowSystemTask {
 			logger.error(jpe.getMessage(), jpe);
 			return json;
 		}
+	}
+
+	private void setCorrelation(WebResource.Builder builder, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
+
+		Correlator correlator;
+		if (workflow.getContext() == null) {
+			Context context = new Context();
+			correlator = new Correlator(logger, context);
+		} else {
+			correlator = new Correlator(logger, workflow.getContext());
+		}
+
+		correlator.updateSequenceNo();
+		correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflow.getWorkflowId());
+		correlator.attach(builder);
+
+		// Update workflow to save new values
+		workflow.setContext(correlator.getAsMap());
+		executor.updateWorkflow(workflow);
 	}
 }

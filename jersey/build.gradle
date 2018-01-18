@@ -1,5 +1,6 @@
 dependencies {
 
+	compile project(':conductor-correlation')
 	compile project(':conductor-common')
 	compile project(':conductor-core')
 	

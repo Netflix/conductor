@@ -100,14 +100,22 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, null, null, event, taskToDomain);
+		return startWorkflow(name, version, input, correlationId, null, null, event, taskToDomain, null);
+	}
+
+	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> context) throws Exception {
+		return startWorkflow(name, version, input, correlationId, null, null, event, taskToDomain, context);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, null);
+		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, null, null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain) throws Exception {
+		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, null);
+	}
+
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> context) throws Exception {
 
 		try {
 
@@ -150,6 +158,7 @@ public class WorkflowExecutor {
 			wf.setUpdateTime(null);
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
+			wf.setContext(context);
 			edao.createWorkflow(wf);
 
 			// send wf start message
@@ -242,7 +251,7 @@ public class WorkflowExecutor {
 		return workflowId;
 	}
 
-	public void rewind(String workflowId) throws Exception {
+	public void rewind(String workflowId, Map<String, Object> context) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
@@ -257,6 +266,7 @@ public class WorkflowExecutor {
 		workflow.setEndTime(0);
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
+		workflow.setContext(context);
 		edao.updateWorkflow(workflow);
 
 		// send wf start message
@@ -265,7 +275,7 @@ public class WorkflowExecutor {
 		decide(workflowId);
 	}
 
-	public void retry(String workflowId) throws Exception {
+	public void retry(String workflowId, Map<String, Object> context) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
@@ -301,6 +311,7 @@ public class WorkflowExecutor {
 		scheduleTask(workflow, Arrays.asList(retried));
 
 		workflow.setStatus(WorkflowStatus.RUNNING);
+		workflow.setContext(context);
 		edao.updateWorkflow(workflow);
 
 		decide(workflowId);
@@ -885,6 +896,10 @@ public class WorkflowExecutor {
 				});
 			}
 		}
+	}
+
+	public void updateWorkflow(Workflow workflow) {
+		edao.updateWorkflow(workflow);
 	}
 
 	private String getActiveDomain(String taskType, String[] domains){

@@ -8,14 +8,12 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Output {
-
-
-
 	private Map<String, String> conditions;
-
 	private String reasonParameter;
 
-
+	/**
+	 * @return the conditions map
+	 */
 	public Map<String, String> getConditions() {
 		return conditions;
 	}
