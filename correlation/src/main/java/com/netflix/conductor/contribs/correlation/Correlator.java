@@ -65,8 +65,7 @@ public class Correlator implements ICorrelator {
 		urns.add(urn);
 		context.setUrns(urns);
 
-		JSONObject json = new JSONObject(context);
-		logger.trace(json.toString());
+		logger.trace(context.print());
 	}
 
 	public void attach(HttpClient client) throws JsonProcessingException {

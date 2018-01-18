@@ -1,6 +1,7 @@
 package com.netflix.conductor.contribs.correlation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,40 +9,55 @@ import java.util.List;
  * Created by beimforz on 12/21/17.
  */
 public class Context {
-    private String version;
+	private String version;
 
-    @JsonProperty("sequence-no")
-    private int sequenceno;
+	@JsonProperty("sequence-no")
+	private int sequenceno;
 
-    private List<String> urns;
+	private List<String> urns;
 
-    public Context(){
-        this.version = "v1";
-        this.sequenceno = 0;
-        this.urns = new ArrayList<>();
-    }
+	public Context() {
+		this.version = "v1";
+		this.sequenceno = 0;
+		this.urns = new ArrayList<>();
+	}
+
+	public String print() {
+		String builder = "";
+		builder += "correlation-version=" + version;
+		builder += "correlation-sequence=" + sequenceno;
+		builder += "correlation-urns=\"";
+
+		for (String urn : getUrns()) {
+			builder += urn + " ";
+		}
+
+		builder += "\"";
+
+		return builder;
+	}
 
 	public String getVersion() {
-        return version;
-    }
+		return version;
+	}
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+	public void setVersion(String version) {
+		this.version = version;
+	}
 
-    public int getSequenceno() {
-        return sequenceno;
-    }
+	public int getSequenceno() {
+		return sequenceno;
+	}
 
-    public void setSequenceno(int sequenceno) {
-        this.sequenceno = sequenceno;
-    }
+	public void setSequenceno(int sequenceno) {
+		this.sequenceno = sequenceno;
+	}
 
-    public List<String> getUrns() {
-        return urns;
-    }
+	public List<String> getUrns() {
+		return urns;
+	}
 
-    public void setUrns(List<String> urns) {
-        this.urns = urns;
-    }
+	public void setUrns(List<String> urns) {
+		this.urns = urns;
+	}
 }
