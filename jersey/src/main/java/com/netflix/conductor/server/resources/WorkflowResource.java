@@ -211,16 +211,18 @@ public class WorkflowResource {
 	@Path("/{workflowId}/restart")
 	@ApiOperation("Restarts a completed workflow")
 	@Consumes(MediaType.WILDCARD)
-	public void restart(@PathParam("workflowId") String workflowId) throws Exception {
-		executor.rewind(workflowId);
+	public void restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		Correlator correlator = new Correlator(logger, headers);
+		executor.rewind(workflowId, correlator.getAsMap());
 	}
 
 	@POST
 	@Path("/{workflowId}/retry")
 	@ApiOperation("Retries the last failed task")
 	@Consumes(MediaType.WILDCARD)
-	public void retry(@PathParam("workflowId") String workflowId) throws Exception {
-		executor.retry(workflowId);
+	public void retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		Correlator correlator = new Correlator(logger, headers);
+		executor.retry(workflowId, correlator.getAsMap());
 	}
 
 	@DELETE

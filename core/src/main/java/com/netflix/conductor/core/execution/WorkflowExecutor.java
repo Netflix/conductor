@@ -251,7 +251,7 @@ public class WorkflowExecutor {
 		return workflowId;
 	}
 
-	public void rewind(String workflowId) throws Exception {
+	public void rewind(String workflowId, Map<String, Object> context) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
@@ -266,6 +266,7 @@ public class WorkflowExecutor {
 		workflow.setEndTime(0);
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
+		workflow.setContext(context);
 		edao.updateWorkflow(workflow);
 
 		// send wf start message
@@ -274,7 +275,7 @@ public class WorkflowExecutor {
 		decide(workflowId);
 	}
 
-	public void retry(String workflowId) throws Exception {
+	public void retry(String workflowId, Map<String, Object> context) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
@@ -310,6 +311,7 @@ public class WorkflowExecutor {
 		scheduleTask(workflow, Arrays.asList(retried));
 
 		workflow.setStatus(WorkflowStatus.RUNNING);
+		workflow.setContext(context);
 		edao.updateWorkflow(workflow);
 
 		decide(workflowId);
