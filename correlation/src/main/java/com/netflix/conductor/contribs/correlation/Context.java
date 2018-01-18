@@ -17,7 +17,7 @@ public class Context {
 
     public Context(){
         this.version = "v1";
-        this.sequenceno = 1;
+        this.sequenceno = 0;
         this.urns = new ArrayList<>();
     }
 

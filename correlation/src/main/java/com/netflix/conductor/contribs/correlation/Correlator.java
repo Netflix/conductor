@@ -109,7 +109,7 @@ public class Correlator implements ICorrelator {
 	public Context merge(ArrayList<Context> contexts) {
 		Context result = new Context();
 		for (Context context : contexts) {
-			result.setSequenceno(Math.max(result.getSequenceno(), context.getSequenceno() + 1));
+			result.setSequenceno(Math.max(result.getSequenceno(), context.getSequenceno()));
 			List<String> mergedList = result.getUrns();
 			mergedList.addAll(context.getUrns());
 			result.setUrns(mergedList.stream().distinct().collect(Collectors.toList()));

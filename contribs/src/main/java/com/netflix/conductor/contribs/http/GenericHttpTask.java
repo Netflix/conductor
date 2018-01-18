@@ -178,7 +178,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 		Correlator correlator;
 		if (workflow.getContext() == null) {
 			Context context = new Context();
-			context.setSequenceno(0); // It will be increased when updateSequenceNo invoked
 			correlator = new Correlator(logger, context);
 		} else {
 			correlator = new Correlator(logger, workflow.getContext());
