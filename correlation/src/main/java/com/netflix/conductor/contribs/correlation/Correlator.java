@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.http.client.methods.HttpGet;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import sun.net.www.http.HttpClient;
 
@@ -35,8 +34,7 @@ public class Correlator implements ICorrelator {
 		this.logger = logger;
 		this.context = parseHeader(headers);
 
-		JSONObject json = new JSONObject(context);
-		logger.trace(json.toString());
+		logger.info("Initial context is " + context.print());
 	}
 
 	public Correlator(Logger logger, Map<String, Object> context) {
@@ -65,7 +63,7 @@ public class Correlator implements ICorrelator {
 		urns.add(urn);
 		context.setUrns(urns);
 
-		logger.trace(context.print());
+		logger.info("Context after urn set is " + context.print());
 	}
 
 	public void attach(HttpClient client) throws JsonProcessingException {

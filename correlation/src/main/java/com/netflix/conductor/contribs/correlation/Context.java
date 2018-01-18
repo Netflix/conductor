@@ -25,8 +25,8 @@ public class Context {
 	public String print() {
 		String builder = "";
 		builder += "correlation-version=" + version;
-		builder += "correlation-sequence=" + sequenceno;
-		builder += "correlation-urns=\"";
+		builder += ", correlation-sequence=" + sequenceno;
+		builder += ", correlation-urns=\"";
 
 		for (String urn : getUrns()) {
 			builder += urn + " ";
