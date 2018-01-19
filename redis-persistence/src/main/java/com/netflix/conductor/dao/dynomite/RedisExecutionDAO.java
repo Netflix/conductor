@@ -313,7 +313,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		try {
 			
 			Workflow wf = getWorkflow(workflowId, true);
-                        String rawJson = om.writeValueAsString(wf).substring(0, MAX_RAW_JSON); 
+                        
+                        String rawJson = om.writeValueAsString(wf);
+                        if (rawJson.length() > MAX_RAW_JSON) {
+                            rawJson = rawJson.substring(0, MAX_RAW_JSON); 
+                        }
 			//Add to elasticsearch
 			indexer.update(workflowId, new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD}, new Object[]{rawJson, true});
 			
