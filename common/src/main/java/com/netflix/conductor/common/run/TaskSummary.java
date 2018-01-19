@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 
@@ -50,9 +52,7 @@ public class TaskSummary {
 	private String endTime;
 	
 	private Status status;
-	
-	private Map<String, Object> inputData;
-	
+		
 	private String reasonForIncompletion;
 	
 	private long executionTime;
@@ -83,7 +83,6 @@ public class TaskSummary {
     	this.taskType = task.getTaskType();
     	this.referenceTaskName = task.getReferenceTaskName();
 		this.workflowId = task.getWorkflowInstanceId();
-		this.inputData = task.getInputData();
 		this.correlationId = task.getCorrelationId();
 		this.scheduledTime = sdf.format(new Date(task.getScheduledTime()));
 		this.startTime = sdf.format(new Date(task.getStartTime()));
@@ -94,7 +93,12 @@ public class TaskSummary {
 		this.queueWaitTime = task.getQueueWaitTime();
 		this.retryCount = task.getRetryCount();
 		if (task.getInputData() != null) {
-			this.input = task.getInputData().toString();
+			ObjectMapper om = new ObjectMapper();
+			try {
+				this.input = om.writeValueAsString(task.getInputData());
+			} catch (Exception e) {
+				this.input = task.getInputData().toString();
+			}
 		}
 		
 		if (task.getOutputData() != null) {
@@ -207,21 +211,6 @@ public class TaskSummary {
 	 */
 	public void setStatus(Status status) {
 		this.status = status;
-	}
-	
-	/**
-	 * @return the inputData
-	 */
-	public Map<String, Object> getInputData() {
-		return inputData;
-	}
-	
-	/**
-	 * @param inputData the inputData to set
-	 * 
-	 */
-	public void setInputData(Map<String, Object> inputData) {
-		this.inputData = inputData;
 	}
 
 	/**
