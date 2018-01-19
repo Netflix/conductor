@@ -91,7 +91,7 @@ public class ServerModule extends AbstractModule {
 		} else {
 			String localDC = localRack;
 			localDC = localDC.replaceAll(region, "");
-			SingleShardSupplier ss = new SingleShardSupplier("custome");
+			SingleShardSupplier ss = new SingleShardSupplier("custom");
 			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
 
 			bind(MetadataDAO.class).to(RedisMetadataDAO.class);
