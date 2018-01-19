@@ -96,7 +96,7 @@ public class DynoQueueDAO implements QueueDAO {
 		}
 		
 		localDC = localDC.replaceAll(region, "");
-		this.ss = new SingleShardSupplier("x");
+		this.ss = new SingleShardSupplier("custom");
 		init();
 	}
 

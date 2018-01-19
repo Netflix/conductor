@@ -56,6 +56,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	
 	private static final String ARCHIVED_FIELD = "archived";
 	private static final String RAW_JSON_FIELD = "rawJSON";
+        private static final int MAX_RAW_JSON = 1024 * 32 - 10; // Based on string limit in Elastic Search 
 	// Keys Families
 	private static final String TASK_LIMIT_BUCKET = "TASK_LIMIT_BUCKET";
 	private final static String IN_PROGRESS_TASKS = "IN_PROGRESS_TASKS";
@@ -312,9 +313,9 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		try {
 			
 			Workflow wf = getWorkflow(workflowId, true);
-			
+                        String rawJson = om.writeValueAsString(wf).substring(0, MAX_RAW_JSON); 
 			//Add to elasticsearch
-			indexer.update(workflowId, new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD}, new Object[]{om.writeValueAsString(wf), true});
+			indexer.update(workflowId, new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD}, new Object[]{rawJson, true});
 			
 			// Remove from lists
 			String key = nsKey(WORKFLOW_DEF_TO_WORKFLOWS, wf.getWorkflowType(), dateStr(wf.getCreateTime()));
