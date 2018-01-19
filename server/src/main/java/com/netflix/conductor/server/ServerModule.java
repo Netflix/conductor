@@ -43,7 +43,7 @@ import com.netflix.conductor.dao.esrest.index.ElasticSearchDAO;
 import com.netflix.conductor.dao.esrest.index.ElasticsearchModule;
 import com.netflix.conductor.dao.mysql.MySQLWorkflowModule;
 import com.netflix.dyno.connectionpool.HostSupplier;
-import com.netflix.dyno.queues.redis.DynoShardSupplier;
+import com.netflix.dyno.queues.redis.SingleShardSupplier;
 
 import redis.clients.jedis.JedisCommands;
 
@@ -91,7 +91,7 @@ public class ServerModule extends AbstractModule {
 		} else {
 			String localDC = localRack;
 			localDC = localDC.replaceAll(region, "");
-			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
+			SingleShardSupplier ss = new SingleShardSupplier("custome");
 			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);
 
 			bind(MetadataDAO.class).to(RedisMetadataDAO.class);
