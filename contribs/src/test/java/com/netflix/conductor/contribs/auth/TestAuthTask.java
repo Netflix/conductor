@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
@@ -87,43 +88,7 @@ public class TestAuthTask {
 		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/success");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
-		authTask = new AuthTask(config);
-	}
-
-	@Test
-	public void no_conductor_auth_url() throws Exception {
-		Configuration config = mock(Configuration.class);
-		AuthTask authTask = new AuthTask(config);
-
-		Task task = new Task();
-		authTask.start(workflow, task, executor);
-		assertEquals(Task.Status.FAILED, task.getStatus());
-		assertEquals("Missing system property conductor.auth.url", task.getReasonForIncompletion());
-	}
-
-	@Test
-	public void no_conductor_auth_clientId() throws Exception {
-		Configuration config = mock(Configuration.class);
-		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost");
-		AuthTask authTask = new AuthTask(config);
-
-		Task task = new Task();
-		authTask.start(workflow, task, executor);
-		assertEquals(Task.Status.FAILED, task.getStatus());
-		assertEquals("Missing system property conductor.auth.clientId", task.getReasonForIncompletion());
-	}
-
-	@Test
-	public void no_conductor_auth_clientSecret() throws Exception {
-		Configuration config = mock(Configuration.class);
-		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost");
-		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("deluxe.conductor");
-		AuthTask authTask = new AuthTask(config);
-
-		Task task = new Task();
-		authTask.start(workflow, task, executor);
-		assertEquals(Task.Status.FAILED, task.getStatus());
-		assertEquals("Missing system property conductor.auth.clientSecret", task.getReasonForIncompletion());
+		authTask = new AuthTask(new AuthManager(config));
 	}
 
 	@Test
@@ -287,7 +252,7 @@ public class TestAuthTask {
 		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/empty");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
-		AuthTask authTask = new AuthTask(config);
+		AuthTask authTask = new AuthTask(new AuthManager(config));
 
 		Task task = new Task();
 		authTask.start(workflow, task, executor);
@@ -305,7 +270,7 @@ public class TestAuthTask {
 		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/error");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
-		AuthTask authTask = new AuthTask(config);
+		AuthTask authTask = new AuthTask(new AuthManager(config));
 
 		Task task = new Task();
 		authTask.start(workflow, task, executor);
@@ -323,7 +288,7 @@ public class TestAuthTask {
 		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/error");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
-		authTask = new AuthTask(config);
+		authTask = new AuthTask(new AuthManager(config));
 
 		Task task = new Task();
 		task.getInputData().put("failOnError", false);

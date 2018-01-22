@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.auth.AuthManager;
+import com.netflix.conductor.auth.AuthResponse;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.contribs.correlation.Context;
 import com.netflix.conductor.contribs.correlation.Correlator;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
@@ -37,6 +40,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	protected RestClientManager rcm;
 	protected Configuration config;
 	protected ObjectMapper om;
+	private AuthManager auth;
 
 	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
 	};
@@ -44,11 +48,12 @@ class GenericHttpTask extends WorkflowSystemTask {
 	private TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>() {
 	};
 
-	GenericHttpTask(String name, Configuration config, RestClientManager rcm, ObjectMapper om) {
+	GenericHttpTask(String name, Configuration config, RestClientManager rcm, ObjectMapper om, AuthManager auth) {
 		super(name);
 		this.config = config;
 		this.rcm = rcm;
 		this.om = om;
+		this.auth = auth;
 	}
 
 	String lookup(String service) {
@@ -124,6 +129,11 @@ class GenericHttpTask extends WorkflowSystemTask {
 			setCorrelation(builder, workflow, executor);
 		}
 
+		// Attach the Authorization header
+		if (input.isAuthorize()) {
+			setAuthorization(builder);
+		}
+
 		HttpResponse response = new HttpResponse();
 		try {
 			ClientResponse cr = builder.accept(input.getAccept()).method(input.getMethod(), ClientResponse.class);
@@ -192,5 +202,13 @@ class GenericHttpTask extends WorkflowSystemTask {
 		// Update workflow to save new values
 		workflow.getHeaders().put(Correlator.headerKey, correlator.getAsMap());
 		executor.updateWorkflow(workflow);
+	}
+
+	private void setAuthorization(WebResource.Builder builder) throws Exception {
+		AuthResponse response = auth.authorize();
+		String bearer = "Bearer " + response.getAccessToken();
+		logger.info("Setting " + HttpHeaders.AUTHORIZATION + " to " + bearer);
+
+		builder.header(HttpHeaders.AUTHORIZATION, bearer);
 	}
 }

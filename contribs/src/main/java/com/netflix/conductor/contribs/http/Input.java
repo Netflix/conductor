@@ -35,6 +35,8 @@ public class Input {
 
 	private boolean correlation;
 
+	private boolean authorize;
+
 	/**
 	 * @return the method
 	 */
@@ -198,16 +200,30 @@ public class Input {
 	}
 
 	/**
-	 * @return Deluxe Owf Correlation flag
+	 * @return Deluxe Owf Context flag
 	 */
 	public boolean isCorrelation() {
 		return correlation;
 	}
 
 	/**
-	 * @param correlation whether Deluxe Owf Correlation required to be set
+	 * @param correlation whether Deluxe Owf Context required to be set
 	 */
 	public void setCorrelation(boolean correlation) {
 		this.correlation = correlation;
+	}
+
+	/**
+	 * @return Authorization require flag
+	 */
+	public boolean isAuthorize() {
+		return authorize;
+	}
+
+	/**
+	 * @param authorize Authorization require flag
+	 */
+	public void setAuthorize(boolean authorize) {
+		this.authorize = authorize;
 	}
 }

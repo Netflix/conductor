@@ -1,6 +1,7 @@
 package com.netflix.conductor.contribs.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
@@ -30,8 +31,8 @@ public class HttpWaitTask extends GenericHttpTask {
 
 	@Inject
 	public HttpWaitTask(Configuration config, RestClientManager rcm,
-						ObjectMapper om, MetadataDAO metadata, EventProcessor processor) {
-		super("HTTP_WAIT", config, rcm, om);
+						ObjectMapper om, MetadataDAO metadata, EventProcessor processor, AuthManager auth) {
+		super("HTTP_WAIT", config, rcm, om, auth);
 		this.processor = processor;
 		this.metadata = metadata;
 

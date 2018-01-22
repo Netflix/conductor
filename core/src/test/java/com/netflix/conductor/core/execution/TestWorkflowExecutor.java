@@ -19,6 +19,7 @@
 package com.netflix.conductor.core.execution;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -58,6 +59,7 @@ public class TestWorkflowExecutor {
 	ExecutionDAO edao = mock(ExecutionDAO.class);
 	QueueDAO queue = mock(QueueDAO.class);
 	ObjectMapper om = new ObjectMapper();
+	AuthManager auth = mock(AuthManager.class);
 
 	@Test
 	public void test() throws Exception {
@@ -95,7 +97,7 @@ public class TestWorkflowExecutor {
 		Workflow workflow = new Workflow();
 		workflow.setWorkflowId("1");
 		
-		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, config);
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, auth, config);
 		List<Task> tasks = new LinkedList<>();
 		
 		WorkflowTask taskToSchedule = new WorkflowTask();
@@ -165,7 +167,7 @@ public class TestWorkflowExecutor {
 		Map<String, Object> input = new HashMap<>();
 		input.put("constant", "value");
 
-		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, config);
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, auth, config);
 		executor.startWorkflow("validationSuccess", 1, null, input);
 	}
 
@@ -183,7 +185,7 @@ public class TestWorkflowExecutor {
 		MetadataDAO metadata = mock(MetadataDAO.class);
 		when(metadata.get("validationFailure1", 1)).thenReturn(def);
 
-		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, config);
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, auth, config);
 		try {
 			executor.startWorkflow("validationFailure1", 1, null, new HashMap<>());
 		} catch (ApplicationException ex) {
@@ -206,7 +208,7 @@ public class TestWorkflowExecutor {
 		MetadataDAO metadata = mock(MetadataDAO.class);
 		when(metadata.get("validationFailure2", 1)).thenReturn(def);
 
-		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, config);
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, auth, config);
 		try {
 			executor.startWorkflow("validationFailure2", 1, null, new HashMap<>());
 		} catch (ApplicationException ex) {

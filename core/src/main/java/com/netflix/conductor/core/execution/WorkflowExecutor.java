@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
+import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
@@ -52,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.HttpHeaders;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,6 +62,7 @@ import java.util.stream.Collectors;
  */
 @Trace
 public class WorkflowExecutor {
+	private static final String BEARER = "Bearer ";
 
 	public enum StartEndState {
 		start, end
@@ -77,18 +80,24 @@ public class WorkflowExecutor {
 
 	private Configuration config;
 
+	private AuthManager auth;
+
 	public static final String deciderQueue = "_deciderQueue";
 
 	private int activeWorkerLastPollnSecs;
 
+	private boolean validateAuth;
+
 	@Inject
-	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ObjectMapper om, Configuration config) {
+	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ObjectMapper om, AuthManager auth, Configuration config) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
 		this.config = config;
+		this.auth = auth;
 		activeWorkerLastPollnSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
 		this.decider = new DeciderService(metadata, om);
+		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
@@ -131,6 +140,11 @@ public class WorkflowExecutor {
 			// Input validation required
 			if (exists.getInputValidation() != null && !exists.getInputValidation().isEmpty()) {
 				validateWorkflowInput(exists, input);
+			}
+
+			// Auth validation if requested and only when rules are defined in workflow
+			if (this.validateAuth && exists.getAuthValidation() != null) {
+				validateAuth(exists, headers);
 			}
 
 			Set<String> missingTaskDefs = exists.all().stream()
@@ -1067,5 +1081,32 @@ public class WorkflowExecutor {
 				throw new ApplicationException(Code.INVALID_INPUT, message);
 			}
 		});
+	}
+
+	private void validateAuth(WorkflowDef workflowDef, Map<String, Object> headers) {
+		// It gives us: Bearer token
+		String bearer = (String)headers.get(HttpHeaders.AUTHORIZATION);
+		if (StringUtils.isEmpty(bearer))
+			throw new ApplicationException(Code.INVALID_INPUT, "No " + HttpHeaders.AUTHORIZATION + " header provided");
+
+		// Checking bearer format
+		if (!bearer.startsWith(BEARER))
+			throw new ApplicationException(Code.INVALID_INPUT, "Invalid " + HttpHeaders.AUTHORIZATION + " header format");
+
+		// Get the access token
+		String token = bearer.substring(BEARER.length());
+
+		// Do a validation
+		Map<String, Object> failedList;
+		try {
+			failedList = auth.validate(token, workflowDef.getAuthValidation());
+		} catch (Exception ex) {
+			logger.error("An internal error occurred during auth validation: " + ex.getMessage(), ex);
+			throw new ApplicationException(Code.INTERNAL_ERROR, "An internal error occurred during auth validation");
+		}
+
+		if (!failedList.isEmpty()) {
+			throw new ApplicationException(Code.INVALID_INPUT, "Auth validation failed");
+		}
 	}
 }
