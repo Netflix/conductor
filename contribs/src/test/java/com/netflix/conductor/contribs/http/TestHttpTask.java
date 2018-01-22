@@ -20,6 +20,7 @@ package com.netflix.conductor.contribs.http;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -73,6 +74,8 @@ public class TestHttpTask {
 	private HttpTask httpTask;
 	
 	private WorkflowExecutor executor = mock(WorkflowExecutor.class);
+
+	private AuthManager authManager = mock(AuthManager.class);
 	
 	private Workflow workflow = new Workflow();
 	
@@ -110,7 +113,7 @@ public class TestHttpTask {
 		RestClientManager rcm = new RestClientManager();
 		Configuration config = mock(Configuration.class);
 		when(config.getServerId()).thenReturn("test_server_id");
-		httpTask = new HttpTask(rcm, config, new ObjectMapper());
+		httpTask = new HttpTask(rcm, config, new ObjectMapper(), authManager);
 	}
 	
 	@Test

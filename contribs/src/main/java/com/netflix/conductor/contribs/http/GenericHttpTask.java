@@ -206,9 +206,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 	private void setAuthorization(WebResource.Builder builder) throws Exception {
 		AuthResponse response = auth.authorize();
-		String bearer = "Bearer " + response.getAccessToken();
-		logger.info("Setting " + HttpHeaders.AUTHORIZATION + " to " + bearer);
-
-		builder.header(HttpHeaders.AUTHORIZATION, bearer);
+		logger.info("Setting " + HttpHeaders.AUTHORIZATION + " header");
+		builder.header(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
 	}
 }

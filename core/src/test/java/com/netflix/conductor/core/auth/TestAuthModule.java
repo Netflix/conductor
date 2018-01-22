@@ -33,6 +33,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -41,6 +42,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -87,41 +89,42 @@ public class TestAuthModule {
 		authManager = new AuthManager(config);
 	}
 
-//	@Test
-//	public void no_conductor_auth_url() throws Exception {
-//		Configuration config = mock(Configuration.class);
-//		AuthTask authTask = new AuthTask(new AuthManager(config));
-//
-//		Task task = new Task();
-//		authTask.start(workflow, task, executor);
-//		assertEquals(Task.Status.FAILED, task.getStatus());
-//		assertEquals("Missing system property conductor.auth.url", task.getReasonForIncompletion());
-//	}
-//
-//	@Test
-//	public void no_conductor_auth_clientId() throws Exception {
-//		Configuration config = mock(Configuration.class);
-//		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost");
-//		AuthTask authTask = new AuthTask(new AuthManager(config));
-//
-//		Task task = new Task();
-//		authTask.start(workflow, task, executor);
-//		assertEquals(Task.Status.FAILED, task.getStatus());
-//		assertEquals("Missing system property conductor.auth.clientId", task.getReasonForIncompletion());
-//	}
-//
-//	@Test
-//	public void no_conductor_auth_clientSecret() throws Exception {
-//		Configuration config = mock(Configuration.class);
-//		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost");
-//		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("deluxe.conductor");
-//		AuthTask authTask = new AuthTask(new AuthManager(config));
-//
-//		Task task = new Task();
-//		authTask.start(workflow, task, executor);
-//		assertEquals(Task.Status.FAILED, task.getStatus());
-//		assertEquals("Missing system property conductor.auth.clientSecret", task.getReasonForIncompletion());
-//	}
+	@Test(expected = IllegalArgumentException.class)
+	public void no_conductor_auth_url() throws Exception {
+		Configuration config = mock(Configuration.class);
+
+		try {
+			new AuthManager(config);
+		} catch (IllegalArgumentException ex) {
+			assertEquals(AuthManager.MISSING_PROPERTY + AuthManager.PROPERTY_URL, ex.getMessage());
+			throw ex;
+		}
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void no_conductor_auth_clientId() throws Exception {
+		Configuration config = mock(Configuration.class);
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7012/auth/success");
+		try {
+			new AuthManager(config);
+		} catch (IllegalArgumentException ex) {
+			assertEquals(AuthManager.MISSING_PROPERTY + AuthManager.PROPERTY_CLIENT, ex.getMessage());
+			throw ex;
+		}
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void no_conductor_auth_clientSecret() throws Exception {
+		Configuration config = mock(Configuration.class);
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7012/auth/success");
+		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		try {
+			new AuthManager(config);
+		} catch (IllegalArgumentException ex) {
+			assertEquals(AuthManager.MISSING_PROPERTY + AuthManager.PROPERTY_SECRET, ex.getMessage());
+			throw ex;
+		}
+	}
 
 	private static class EchoHandler extends AbstractHandler {
 

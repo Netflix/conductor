@@ -20,6 +20,7 @@ package com.netflix.conductor.contribs.http;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
@@ -69,6 +70,7 @@ public class TestHttpWaitTask {
 	private RestClientManager rcm = new RestClientManager();
 	private MetadataDAO metadata = mock(MetadataDAO.class);
 	private EventProcessor processor = mock(EventProcessor.class);
+	private AuthManager authManager = mock(AuthManager.class);
 
 	private Workflow workflow = new Workflow();
 	private HttpWaitTask httpTask;
@@ -97,7 +99,7 @@ public class TestHttpWaitTask {
 		Configuration config = mock(Configuration.class);
 		when(config.getServerId()).thenReturn("test_server_id");
 
-		httpTask = new HttpWaitTask(config, rcm, new ObjectMapper(), metadata, processor);
+		httpTask = new HttpWaitTask(config, rcm, new ObjectMapper(), metadata, processor, authManager);
 	}
 
 	@Test

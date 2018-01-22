@@ -31,11 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * @author Oleksiy Lysak
@@ -45,8 +41,8 @@ import static java.util.stream.Collectors.toList;
 public class AuthTask extends WorkflowSystemTask {
 	private static final Logger logger = LoggerFactory.getLogger(AuthTask.class);
 	private static final String PARAM_VALIDATE = "validate";
-	private static final String PARAM_ACCESS_TOKEN = "accessToken";
-	private static final String PARAM_VERIFY_LIST = "verifyList";
+	private static final String PARAM_TOKEN = "token";
+	private static final String PARAM_RULES = "rules";
 	private AuthManager manger;
 
 	@Inject
@@ -70,19 +66,20 @@ public class AuthTask extends WorkflowSystemTask {
 				return;
 			}
 			Map<String, Object> map = (Map<String, Object>) object;
-			if (!map.containsKey(PARAM_ACCESS_TOKEN)) {
-				fail(task, "No '" + PARAM_ACCESS_TOKEN + "' parameter provided in 'validate' object");
+			if (!map.containsKey(PARAM_TOKEN)) {
+				fail(task, "No '" + PARAM_TOKEN + "' parameter provided in 'validate' object");
 				return;
-			} else if (StringUtils.isEmpty(map.get(PARAM_ACCESS_TOKEN).toString())) {
-				fail(task, "Parameter '" + PARAM_ACCESS_TOKEN + "' is empty");
+			} else if (StringUtils.isEmpty(map.get(PARAM_TOKEN).toString())) {
+				fail(task, "Parameter '" + PARAM_TOKEN + "' is empty");
 				return;
 			}
 
-			if (!map.containsKey(PARAM_VERIFY_LIST)) {
-				fail(task, "No '" + PARAM_VERIFY_LIST + "' parameter provided in 'validate' object");
+			Object rules = map.get(PARAM_RULES);
+			if (rules == null) {
+				fail(task, "No '" + PARAM_RULES + "' parameter provided in 'validate' object");
 				return;
-			} else if (!(map.get(PARAM_VERIFY_LIST) instanceof List)) {
-				fail(task, "Invalid '" + PARAM_VERIFY_LIST + "' input parameter. It must be a list");
+			} else if (!(rules instanceof Map)) {
+				fail(task, "Invalid '" + PARAM_RULES + "' input parameter. It must be an object");
 				return;
 			}
 
@@ -100,25 +97,18 @@ public class AuthTask extends WorkflowSystemTask {
 	@SuppressWarnings("unchecked")
 	private void doValidate(Task task, boolean failOnError) {
 		Map<String, Object> validate = (Map<String, Object>) task.getInputData().get(PARAM_VALIDATE);
-		String token = (String) validate.get(PARAM_ACCESS_TOKEN);
+		String token = (String) validate.get(PARAM_TOKEN);
 
-		// TODO Do a proper rule format migration from `List<String>` to `Map<String, String>`
-		Map<String, String> rules = (Map<String, String>) validate.get(PARAM_VERIFY_LIST);
-		Map<String, Object> failedList = manger.validate(token, rules);
+		Map<String, String> rules = (Map<String, String>) validate.get(PARAM_RULES);
+		Map<String, Object> failed = manger.validate(token, rules);
 
-		task.getOutputData().put("success", failedList.isEmpty());
-		if (!failedList.isEmpty()) {
-			List<Map<Object, Object>> failedObjects = failedList.entrySet().stream().map(entry -> {
-				Map<Object, Object> failedItem = new HashMap<>();
-				failedItem.put("condition", entry.getKey());
-				failedItem.put("result", entry.getValue());
-				return failedItem;
-			}).collect(toList());
-			task.getOutputData().put("failedList", failedObjects);
+		task.getOutputData().put("success", failed.isEmpty());
+		if (!failed.isEmpty()) {
+			task.getOutputData().put("failed", failed);
 		}
 
 		// Fail task if any of the conditions failed and failOnError=true
-		if (!failedList.isEmpty() && failOnError) {
+		if (!failed.isEmpty() && failOnError) {
 			fail(task, "At least one of the verify conditions failed");
 		}
 	}

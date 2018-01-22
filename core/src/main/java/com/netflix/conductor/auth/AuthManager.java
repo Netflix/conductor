@@ -50,10 +50,10 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class AuthManager {
 	private static final Logger logger = LoggerFactory.getLogger(AuthManager.class);
-	private static final String MISSING_PROPERTY = "Missing system property: ";
-	private static final String PROPERTY_URL = "conductor.auth.url";
-	private static final String PROPERTY_CLIENT = "conductor.auth.clientId";
-	private static final String PROPERTY_SECRET = "conductor.auth.clientSecret";
+	public static final String MISSING_PROPERTY = "Missing system property: ";
+	public static final String PROPERTY_URL = "conductor.auth.url";
+	public static final String PROPERTY_CLIENT = "conductor.auth.clientId";
+	public static final String PROPERTY_SECRET = "conductor.auth.clientSecret";
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final String clientSecret;
 	private final String clientId;
@@ -111,9 +111,9 @@ public class AuthManager {
 		Map<String, Object> payload = decode(token);
 		JsonNode input = mapper.valueToTree(payload);
 
-		Map<String, Object> failedList = new HashMap<>();
-
 		LoadingCache<String, JsonQuery> queryCache = createQueryCache();
+
+		Map<String, Object> failed = new HashMap<>();
 		rules.forEach((rule, condition) -> {
 			try {
 				JsonQuery query = queryCache.get(condition);
@@ -124,16 +124,16 @@ public class AuthManager {
 					boolean success = Boolean.parseBoolean(result.iterator().next().toString());
 					if (!success) {
 						logger.info("Verify failed for " + rule + " rule");
-						failedList.put(rule, false);
+						failed.put(rule, false);
 					}
 				}
 			} catch (Exception ex) {
 				logger.error("Verify failed for " + rule + " with " + ex.getMessage(), ex);
-				failedList.put(rule, ex.getMessage());
+				failed.put(rule, ex.getMessage());
 			}
 		});
 
-		return failedList;
+		return failed;
 	}
 
 	public Map<String, Object> decode(String token) {

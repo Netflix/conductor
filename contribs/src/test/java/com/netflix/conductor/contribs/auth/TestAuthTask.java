@@ -41,7 +41,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -104,34 +105,34 @@ public class TestAuthTask {
 	}
 
 	@Test
-	public void validate_no_accessToken() throws Exception {
+	public void validate_no_token() throws Exception {
 		Task task = new Task();
 		Map<String, Object> inputData = task.getInputData();
 		inputData.put("validate", new HashMap<>());
 
 		authTask.start(workflow, task, executor);
 		assertEquals(Task.Status.FAILED, task.getStatus());
-		assertEquals("No 'accessToken' parameter provided in 'validate' object", task.getReasonForIncompletion());
+		assertEquals("No 'token' parameter provided in 'validate' object", task.getReasonForIncompletion());
 	}
 
 	@Test
-	public void validate_no_verifyList() throws Exception {
+	public void validate_no_rules() throws Exception {
 		Task task = new Task();
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", accessToken);
+		validate.put("token", accessToken);
 
 		Map<String, Object> inputData = task.getInputData();
 		inputData.put("validate", validate);
 
 		authTask.start(workflow, task, executor);
 		assertEquals(Task.Status.FAILED, task.getStatus());
-		assertEquals("No 'verifyList' parameter provided in 'validate' object", task.getReasonForIncompletion());
+		assertEquals("No 'rules' parameter provided in 'validate' object", task.getReasonForIncompletion());
 	}
 
 	@Test
 	public void validate_empty_accessToken() throws Exception {
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", "");
+		validate.put("token", "");
 
 		Task task = new Task();
 		Map<String, Object> inputData = task.getInputData();
@@ -139,14 +140,14 @@ public class TestAuthTask {
 
 		authTask.start(workflow, task, executor);
 		assertEquals(Task.Status.FAILED, task.getStatus());
-		assertEquals("Parameter 'accessToken' is empty", task.getReasonForIncompletion());
+		assertEquals("Parameter 'token' is empty", task.getReasonForIncompletion());
 	}
 
 	@Test
-	public void validate_wrong_verifyList() throws Exception {
+	public void validate_wrong_rules() throws Exception {
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", accessToken);
-		validate.put("verifyList", "wrong type");
+		validate.put("token", accessToken);
+		validate.put("rules", "wrong type");
 
 		Task task = new Task();
 		Map<String, Object> inputData = task.getInputData();
@@ -154,33 +155,42 @@ public class TestAuthTask {
 
 		authTask.start(workflow, task, executor);
 		assertEquals(Task.Status.FAILED, task.getStatus());
-		assertEquals("Invalid 'verifyList' input parameter. It must be a list", task.getReasonForIncompletion());
+		assertEquals("Invalid 'rules' input parameter. It must be an object", task.getReasonForIncompletion());
 	}
 
 	@Test
 	public void validate_success() throws Exception {
 		Task task = new Task();
+
+		Map<String, Object> rules = new HashMap<>();
+		rules.put("realm_access_roles",".realm_access.roles | contains([\"uma_authorization\"])");
+
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", accessToken);
-		validate.put("verifyList", Collections.singletonList(".realm_access.roles | contains([\"uma_authorization\"])"));
+		validate.put("token", accessToken);
+		validate.put("rules", rules);
 
 		Map<String, Object> inputData = task.getInputData();
 		inputData.put("validate", validate);
 
 		authTask.start(workflow, task, executor);
+		System.out.println("task.getOutputData() = " + task.getOutputData());
 		assertEquals(Task.Status.COMPLETED, task.getStatus());
 
 		Map<String, Object> outputData = task.getOutputData();
 		assertEquals(true, outputData.get("success"));
-		assertEquals(null, outputData.get("failedList"));
+		assertEquals(null, outputData.get("failed"));
 	}
 
 	@Test
 	public void validate_not_success_failed() throws Exception {
 		Task task = new Task();
+
+		Map<String, Object> rules = new HashMap<>();
+		rules.put("dummy_rule",".dummy.object");
+
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", accessToken);
-		validate.put("verifyList", Collections.singletonList(".dummy.object"));
+		validate.put("token", accessToken);
+		validate.put("rules", rules);
 
 		Map<String, Object> inputData = task.getInputData();
 		inputData.put("validate", validate);
@@ -190,26 +200,26 @@ public class TestAuthTask {
 
 		Map<String, Object> outputData = task.getOutputData();
 		assertEquals(false, outputData.get("success"));
-		List<Map<String, Object>> failedList = (List<Map<String, Object>>)outputData.get("failedList");
-		assertNotNull("No failedList", failedList);
-		assertEquals(1, failedList.size());
-		Iterator<Map.Entry<String, Object>> iterator = failedList.iterator().next().entrySet().iterator();
 
-		Map.Entry<String, Object> entry1 = iterator.next();
-		assertEquals("result", entry1.getKey());
-		assertEquals(false, entry1.getValue());
+		Map<String, Object> failed = (Map<String, Object>)outputData.get("failed");
+		assertNotNull("No failed", failed);
+		assertEquals(1, failed.size());
 
-		Map.Entry<String, Object> entry2 = iterator.next();
-		assertEquals("condition", entry2.getKey());
-		assertEquals(".dummy.object", entry2.getValue());
+		Map.Entry<String, Object> entry = failed.entrySet().iterator().next();
+		assertEquals("dummy_rule", entry.getKey());
+		assertEquals(false, entry.getValue());
 	}
 
 	@Test
 	public void validate_not_success_completed() throws Exception {
 		Task task = new Task();
+
+		Map<String, Object> rules = new HashMap<>();
+		rules.put("dummy_rule",".dummy.object");
+
 		Map<String, Object> validate = new HashMap<>();
-		validate.put("accessToken", accessToken);
-		validate.put("verifyList", Collections.singletonList(".dummy.object"));
+		validate.put("token", accessToken);
+		validate.put("rules", rules);
 
 		Map<String, Object> inputData = task.getInputData();
 		inputData.put("failOnError", false);
@@ -220,18 +230,14 @@ public class TestAuthTask {
 
 		Map<String, Object> outputData = task.getOutputData();
 		assertEquals(false, outputData.get("success"));
-		List<Map<String, Object>> failedList = (List<Map<String, Object>>)outputData.get("failedList");
-		assertNotNull("No failedList", failedList);
-		assertEquals(1, failedList.size());
-		Iterator<Map.Entry<String, Object>> iterator = failedList.iterator().next().entrySet().iterator();
 
-		Map.Entry<String, Object> entry1 = iterator.next();
-		assertEquals("result", entry1.getKey());
-		assertEquals(false, entry1.getValue());
+		Map<String, Object> failed = (Map<String, Object>)outputData.get("failed");
+		assertNotNull("No failed", failed);
+		assertEquals(1, failed.size());
 
-		Map.Entry<String, Object> entry2 = iterator.next();
-		assertEquals("condition", entry2.getKey());
-		assertEquals(".dummy.object", entry2.getValue());
+		Map.Entry<String, Object> entry = failed.entrySet().iterator().next();
+		assertEquals("dummy_rule", entry.getKey());
+		assertEquals(false, entry.getValue());
 	}
 
 	@Test
