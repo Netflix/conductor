@@ -173,14 +173,16 @@ class GenericHttpTask extends WorkflowSystemTask {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void setCorrelation(WebResource.Builder builder, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
 
 		Correlator correlator;
-		if (workflow.getContext() == null) {
-			Context context = new Context();
+		if (workflow.getHeaders() != null) {
+			Map<String, Object> context = (Map<String, Object>)workflow.getHeaders().get(Correlator.headerKey);
 			correlator = new Correlator(logger, context);
 		} else {
-			correlator = new Correlator(logger, workflow.getContext());
+			workflow.setHeaders(new HashMap<>());
+			correlator = new Correlator(logger, new Context());
 		}
 
 		correlator.updateSequenceNo();
@@ -188,7 +190,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		correlator.attach(builder);
 
 		// Update workflow to save new values
-		workflow.setContext(correlator.getAsMap());
+		workflow.getHeaders().put(Correlator.headerKey, correlator.getAsMap());
 		executor.updateWorkflow(workflow);
 	}
 }

@@ -103,8 +103,8 @@ public class WorkflowResource {
 		if(def == null){
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + request.getName() + ", version=" + request.getVersion());
 		}
-		Correlator correlator = new Correlator(logger, headers);
-		return executor.startWorkflow(def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), correlator.getAsMap());
+		Map<String, Object> map = convert(headers);
+		return executor.startWorkflow(def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), map);
 	}
 
 	@POST
@@ -119,8 +119,8 @@ public class WorkflowResource {
 		if(def == null){
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + name + ", version=" + version);
 		}
-		Correlator correlator = new Correlator(logger, headers);
-		return executor.startWorkflow(def.getName(), def.getVersion(), correlationId, input, null, null, correlator.getAsMap());
+		Map<String, Object> map = convert(headers);
+		return executor.startWorkflow(def.getName(), def.getVersion(), correlationId, input, null, null, map);
 	}
 
 	@GET
@@ -212,8 +212,8 @@ public class WorkflowResource {
 	@ApiOperation("Restarts a completed workflow")
 	@Consumes(MediaType.WILDCARD)
 	public void restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
-		Correlator correlator = new Correlator(logger, headers);
-		executor.rewind(workflowId, correlator.getAsMap());
+		Map<String, Object> map = convert(headers);
+		executor.rewind(workflowId, map);
 	}
 
 	@POST
@@ -221,8 +221,8 @@ public class WorkflowResource {
 	@ApiOperation("Retries the last failed task")
 	@Consumes(MediaType.WILDCARD)
 	public void retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
-		Correlator correlator = new Correlator(logger, headers);
-		executor.retry(workflowId, correlator.getAsMap());
+		Map<String, Object> map = convert(headers);
+		executor.retry(workflowId, map);
 	}
 
 	@DELETE
@@ -267,5 +267,37 @@ public class WorkflowResource {
 			list = Arrays.asList(sortStr.split("\\|"));
 		}
 		return list;
+	}
+
+	private Map<String, Object> convert(HttpHeaders headers) {
+		Map<String, Object> result = new HashMap<>();
+
+		ObjectMapper mapper = new ObjectMapper();
+		headers.getRequestHeaders().forEach((key, strings) -> {
+			if (strings != null && !strings.isEmpty()) {
+				// If more than one element in the list - just add it as we do not parse it
+				if (strings.size() > 1) {
+					result.put(key, strings);
+				} else {
+					String value = strings.iterator().next();
+					if (value.startsWith("{") && value.endsWith("}")) {
+						String json = StringEscapeUtils.unescapeJson(value);
+						try {
+							Map<String, Object> map = mapper.readValue(json, new TypeReference<Map<String, Object>>(){});
+							result.put(key, map);
+						} catch (IOException e) {
+							logger.error("Unable to parse json value " + value + " for " + key, e);
+						}
+					} else {
+						result.put(key, value);
+					}
+				}
+			}
+		});
+
+		Correlator correlator = new Correlator(logger, headers);
+		result.put(Correlator.headerKey, correlator.getAsMap());
+
+		return result;
 	}
 }

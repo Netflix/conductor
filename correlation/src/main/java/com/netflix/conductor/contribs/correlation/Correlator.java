@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * Created by beimforz on 12/21/17.
  */
 public class Correlator implements ICorrelator {
-	private final static String headerKey = "Deluxe-Owf-Context";
+	public final static String headerKey = "Deluxe-Owf-Context";
 
 	private ObjectMapper mapper = new ObjectMapper();
 	private Context context;
@@ -64,13 +64,6 @@ public class Correlator implements ICorrelator {
 		context.setUrns(urns);
 
 		logger.info("Context after urn set is " + context.print());
-	}
-
-	public void attach(HttpClient client) throws JsonProcessingException {
-		String json = mapper.writeValueAsString(context);
-		logger.info("Setting " + headerKey + " to " + json);
-		HttpGet get = new HttpGet(client.getProxyHostUsed());
-		get.addHeader(headerKey, json);
 	}
 
 	public void attach(WebResource.Builder builder) throws JsonProcessingException {

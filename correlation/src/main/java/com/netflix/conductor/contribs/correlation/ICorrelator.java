@@ -10,7 +10,5 @@ import sun.net.www.http.HttpClient;
 public interface ICorrelator {
     void addIdentifier(String urn);
 
-    void attach(HttpClient client) throws JsonProcessingException;
-
     void attach(WebResource.Builder builder) throws JsonProcessingException;
 }
