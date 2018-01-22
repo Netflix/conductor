@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.WebResource;
-import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
-import sun.net.www.http.HttpClient;
 
 import javax.ws.rs.core.HttpHeaders;
 import java.util.ArrayList;
