@@ -389,7 +389,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	
 	// TESTED
 	private void updateWithRetry(UpdateRequest request) {
-		int retry = 3;
+		int retry = 5;
 		while(retry > 0) {
 			try {
 				
@@ -401,7 +401,7 @@ public class ElasticSearchDAO implements IndexDAO {
 				log.error("Indexing failed for {}, {}, {}", request.index(), request.type(), e.getMessage());
 				retry--;
 				if(retry > 0) {
-					Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+					Uninterruptibles.sleepUninterruptibly(400, TimeUnit.MILLISECONDS);
 				}
 			}
 		}
@@ -434,32 +434,47 @@ public class ElasticSearchDAO implements IndexDAO {
 
 	@Override
 	public void remove(String workflowId) {
-		try {
-
-			DeleteRequest req = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
-			DeleteResponse response = client.getHighLevelClient().delete(req);
-			if (response.getResult() != DocWriteResponse.Result.DELETED) {
-				log.error("Index removal failed - document not found by id " + workflowId);
+		int retry = 5;
+		while(retry > 0) {
+			try {
+				DeleteRequest req = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
+				DeleteResponse response = client.getHighLevelClient().delete(req);
+				if (response.getResult() != DocWriteResponse.Result.DELETED) {
+					log.error("Index removal failed - document not found by id " + workflowId);
+				}
+				return;
+			} catch (Throwable e) {
+				log.error("Index removal failed failed {}", e.getMessage(), e);
+				Monitors.error(className, "remove");
+				retry--;
+				if(retry > 0) {
+					Uninterruptibles.sleepUninterruptibly(400, TimeUnit.MILLISECONDS);
+				}
 			}
-		} catch (Throwable e) {
-			log.error("Index removal failed failed {}", e.getMessage(), e);
-			Monitors.error(className, "remove");
 		}
 	}
 
         @Override
         public void removeTask(String taskId) {
-                try {
-
+    		int retry = 5;
+    		while(retry > 0) {
+    			try {
                         DeleteRequest req = new DeleteRequest(indexName, TASK_DOC_TYPE, taskId);
                         DeleteResponse response = client.getHighLevelClient().delete(req);
                         if (response.getResult() != DocWriteResponse.Result.DELETED) {
                                 log.error("Index removal failed - document not found by id " + taskId);
                         }
+        				return;
+
                 } catch (Throwable e) {
                         log.error("Index removal failed failed {}", e.getMessage(), e);
                         Monitors.error(className, "remove");
+        				retry--;
+        				if(retry > 0) {
+        					Uninterruptibles.sleepUninterruptibly(400, TimeUnit.MILLISECONDS);
+        				}
                 }
+    		}
         }
 	
 	// TESTED
