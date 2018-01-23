@@ -1,0 +1,52 @@
+{
+  "jti": "60ff111f-e3e9-4bdb-ba83-17ca21cd77da",
+  "exp": 1516623687,
+  "nbf": 0,
+  "iat": 1516622787,
+  "iss": "https://keycloak.dmlib.de/auth/realms/deluxe",
+  "aud": "deluxe.conductor",
+  "sub": "f7a34dcf-eb89-40a8-af66-de4881c5289a",
+  "typ": "Bearer",
+  "azp": "deluxe.conductor",
+  "auth_time": 0,
+  "session_state": "50cba374-1471-4b8d-9be8-92ab4626032e",
+  "acr": "1",
+  "client_session": "aa58cc18-52aa-4c24-8978-faea74128377",
+  "allowed-origins": [],
+  "realm_access": {
+    "roles": [
+      "auth-user",
+      "uma_authorization"
+    ]
+  },
+  "resource_access": {
+    "deluxe.keycloak": {
+      "roles": [
+        "deluxe.keycloak.admin"
+      ]
+    },
+    "deluxe.conductor": {
+      "roles": [
+        "deluxe.conductor.admin"
+      ]
+    },
+    "deluxe.auth": {
+      "roles": [
+        "deluxe.auth.admin"
+      ]
+    },
+    "account": {
+      "roles": [
+        "manage-account",
+        "manage-account-links",
+        "view-profile"
+      ]
+    }
+  },
+  "clientHost": "52.89.146.227",
+  "clientId": "deluxe.conductor",
+  "name": "",
+  "preferred_username": "service-account-deluxe.conductor",
+  "clientAddress": "52.89.146.227",
+  "email": "service-account-deluxe.conductor@placeholder.org"
+}

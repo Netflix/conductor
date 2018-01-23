@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.netflix.conductor.auth.AuthManager;
+import com.netflix.conductor.auth.AuthResponse;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -42,7 +43,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -124,6 +125,43 @@ public class TestAuthModule {
 			assertEquals(AuthManager.MISSING_PROPERTY + AuthManager.PROPERTY_SECRET, ex.getMessage());
 			throw ex;
 		}
+	}
+
+	@Test
+	public void auth_success() throws Exception {
+		AuthResponse authResponse = authManager.authorize();
+		assertNotNull(authResponse);
+		assertNull(authResponse.getError());
+		assertNull(authResponse.getErrorDescription());
+
+		assertNotNull("No accessToken", authResponse.getAccessToken());
+		assertNotNull("No refreshToken", authResponse.getRefreshToken());
+	}
+
+	@Test
+	public void auth_error_no_data() throws Exception {
+		Configuration config = mock(Configuration.class);
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7012/auth/empty");
+		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
+
+		AuthResponse authResponse = new AuthManager(config).authorize();
+		assertNotNull(authResponse);
+		assertEquals("no content", authResponse.getError());
+		assertEquals("server did not return body", authResponse.getErrorDescription());
+	}
+
+	@Test
+	public void auth_error_failed() throws Exception {
+		Configuration config = mock(Configuration.class);
+		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7012/auth/error");
+		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
+
+		AuthResponse authResponse = new AuthManager(config).authorize();
+		assertNotNull(authResponse);
+		assertEquals("invalid_request", authResponse.getError());
+		assertEquals("Invalid grant_type", authResponse.getErrorDescription());
 	}
 
 	private static class EchoHandler extends AbstractHandler {
