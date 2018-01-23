@@ -48,6 +48,7 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,7 +144,7 @@ public class WorkflowExecutor {
 			}
 
 			// Auth validation if requested and only when rules are defined in workflow
-			if (this.validateAuth && exists.getAuthValidation() != null) {
+			if (this.validateAuth && MapUtils.isNotEmpty(exists.getAuthValidation())) {
 				validateAuth(exists, headers);
 			}
 

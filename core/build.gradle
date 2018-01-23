@@ -12,7 +12,9 @@ dependencies {
 	compile 'dnsjava:dnsjava:2.1.8'
 	compile 'net.thisptr:jackson-jq:+'
     compile 'com.auth0:java-jwt:3.2.0'
+	compile 'commons-collections:commons-collections:3.2.2'
 
-    testCompile 'org.eclipse.jetty:jetty-server:9.3.9.+'
+
+	testCompile 'org.eclipse.jetty:jetty-server:9.3.9.+'
     testCompile 'org.eclipse.jetty:jetty-servlet:9.3.9.+'
 }
