@@ -18,33 +18,6 @@
  */
 package com.netflix.conductor.tests.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
-import org.apache.commons.lang.StringUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -54,11 +27,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskDef.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.TaskDef.TimeoutPolicy;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.netflix.conductor.common.metadata.workflow.DynamicForkJoinTaskList;
-import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
-import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.metadata.workflow.*;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
@@ -72,6 +41,21 @@ import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import com.netflix.conductor.tests.utils.TestRunner;
+import org.apache.commons.lang.StringUtils;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import javax.inject.Inject;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Viren
@@ -1061,7 +1045,7 @@ public class WorkflowServiceTest {
 		
 		boolean failed = false;
 		try{
-			provider.rewind(wfid);
+			provider.rewind(wfid, Collections.emptyMap());
 		}catch(ApplicationException ae){
 			failed = true;
 		}
@@ -2214,7 +2198,7 @@ public class WorkflowServiceTest {
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
 		
-		provider.retry(wfid);
+		provider.retry(wfid, Collections.emptyMap());
 		
 		es = ess.getExecutionStatus(wfid, true);
 		assertNotNull(es);
@@ -2277,7 +2261,7 @@ public class WorkflowServiceTest {
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
 		
-		provider.rewind(es.getWorkflowId());
+		provider.rewind(es.getWorkflowId(), Collections.emptyMap());
 		es = ess.getExecutionStatus(wfid, true);
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.RUNNING, es.getStatus());
