@@ -13,4 +13,8 @@ dependencies {
 	compile 'org.elasticsearch.client:elasticsearch-rest-high-level-client:5.6.0'
 	compile 'commons-io:commons-io:2.4'
 
+        //Dependencies for signing ES requests with AWS keys
+        compile 'com.amazonaws:aws-java-sdk-s3:1.11.228'
+        compile 'vc.inreach.aws:aws-signing-request-interceptor:0.0.20'
+        compile 'com.google.guava:guava:18.0'
 }
