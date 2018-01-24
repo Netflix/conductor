@@ -237,8 +237,8 @@ public class ElasticSearchDAO implements IndexDAO {
 	// TESTED
 	@Override
 	public void index(Workflow workflow) {
+		String id = workflow.getWorkflowId();
 		try {
-			String id = workflow.getWorkflowId();
 			WorkflowSummary summary = new WorkflowSummary(workflow);
 			byte[] doc = om.writeValueAsBytes(summary);
 			
@@ -249,15 +249,15 @@ public class ElasticSearchDAO implements IndexDAO {
 			updateWithRetry(req);
  			
 		} catch (Throwable e) {
-			log.error("Indexing failed {}", e.getMessage(), e);
+			log.error("Indexing failed for workflow: {}, {}", id, e.getMessage());
 		}
 	}
 	
 	//TESTED
 	@Override
 	public void index(Task task) {
+		String id = task.getTaskId();
 		try {
-			String id = task.getTaskId();
 			TaskSummary summary = new TaskSummary(task);
 			byte[] doc = om.writeValueAsBytes(summary);
 			
@@ -267,7 +267,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			updateWithRetry(req);
  			
 		} catch (Throwable e) {
-			log.error("Indexing failed {}", e.getMessage(), e);
+			log.error("Indexing failed for task: {}, {}", id, e.getMessage());
 		}
 	}
 	
@@ -398,7 +398,7 @@ public class ElasticSearchDAO implements IndexDAO {
 				
 			}catch(Exception e) {
 				Monitors.error(className, "index");
-				log.error("Indexing failed for {}, {}, {}", request.index(), request.type(), e.getMessage());
+				log.error("Indexing failed for {}, {}, {}, {}", request.index(), request.type(), request.id(), e.getMessage());
 				retry--;
 				if(retry > 0) {
 					Uninterruptibles.sleepUninterruptibly(400, TimeUnit.MILLISECONDS);
@@ -416,7 +416,7 @@ public class ElasticSearchDAO implements IndexDAO {
                         query_mod = "(" + query + ")AND(archived!=\"true\")";
 			return search(query_mod, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
 			
-		} catch (ParserException e) {
+		} catch (Exception e) {
 			throw new ApplicationException(Code.BACKEND_ERROR, e.getMessage(), e);
 		}
 	}
@@ -427,7 +427,7 @@ public class ElasticSearchDAO implements IndexDAO {
 		try {
 			return search(query, start, count, sort, freeText, TASK_DOC_TYPE);
 			
-		} catch (ParserException e) {
+		} catch (Exception e) {
 			throw new ApplicationException(Code.BACKEND_ERROR, e.getMessage(), e);
 		}
 	}
@@ -526,7 +526,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	// TESTED status="RUNNING"
-	private SearchResult<String> search(String structuredQuery, int start, int size, List<String> sortOptions, String freeTextQuery, String docType) throws ParserException {
+	private SearchResult<String> search(String structuredQuery, int start, int size, List<String> sortOptions, String freeTextQuery, String docType) throws Exception {
 		QueryBuilder qf = QueryBuilders.matchAllQuery();
 		if(StringUtils.isNotEmpty(structuredQuery)) {
 			Expression expression = Expression.fromString(structuredQuery);
@@ -566,8 +566,8 @@ public class ElasticSearchDAO implements IndexDAO {
 			return new SearchResult<String>(count, result);
 		} catch (Exception e) {
 			log.error("Error with search request");
-			log.error(e.getMessage(), e);
-			return new SearchResult<String>(0, null);
+			log.error(e.getMessage());
+			throw e;
 		}
 	}
 
