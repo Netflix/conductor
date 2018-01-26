@@ -87,7 +87,7 @@ public class ElasticsearchModule extends AbstractModule {
             if (isAwsEs) 
                     hostList.add(new HttpHost(hostname, hostport, "https"));
 	    else 
-		    hostList.add(new HttpHost(hostname, hostport));
+		    hostList.add(new HttpHost(hostname, hostport, "http"));
             log.info("Adding Host: " + hostname + ":" + hostport);
         }
         
