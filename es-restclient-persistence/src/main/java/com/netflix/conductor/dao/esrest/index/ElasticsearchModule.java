@@ -63,6 +63,13 @@ public class ElasticsearchModule extends AbstractModule {
 		if(clusterAddress.equals("")) {
 			log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
 		}
+        boolean isAwsEs = false; 
+        String awsEs = config.getProperty("workflow.elasticsearch.aws", "");
+        if(awsEs.equalsIgnoreCase("y")) {
+                log.info("workflow.elasticsearch.aws is enabled, requests will be signed with AWS keys.");
+                isAwsEs = true;
+        }
+
 
         String credentials = config.getProperty("elasticsearch.xpack.security.user", "");
         if(credentials.equals("")) {
@@ -77,7 +84,10 @@ public class ElasticsearchModule extends AbstractModule {
             String hostname = hostparts[0];
             int hostport = 9200;
             if (hostparts.length == 2) hostport = Integer.parseInt(hostparts[1]);
-            hostList.add(new HttpHost(hostname, hostport, "https"));
+            if (isAwsEs) 
+                    hostList.add(new HttpHost(hostname, hostport, "https"));
+	    else 
+		    hostList.add(new HttpHost(hostname, hostport));
             log.info("Adding Host: " + hostname + ":" + hostport);
         }
         
@@ -85,18 +95,22 @@ public class ElasticsearchModule extends AbstractModule {
         for (HttpHost h : test) {
         	log.info(h.toString());
         }
-        final Supplier<LocalDateTime> clock = () -> LocalDateTime.now(ZoneOffset.UTC);
-        DefaultAWSCredentialsProviderChain awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
-        final AWSSigner awsSigner = new AWSSigner(awsCredentialsProvider, region, SERVICE, clock);
-        final AWSSigningRequestInterceptor requestInterceptor = new AWSSigningRequestInterceptor(awsSigner);
-
-
-        RestClientBuilder lowLevelRestClientBuilder = RestClient.builder(hostList.toArray(new HttpHost[hostList.size()])).setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
-            @Override
-            public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
-                return httpClientBuilder.addInterceptorLast(requestInterceptor);
-            }
-        });
+        RestClientBuilder lowLevelRestClientBuilder;
+        if (isAwsEs) {
+                // Get the Default AWS Credential Provider and add a Request Interceptor for signing the requests with AWS keys
+                final Supplier<LocalDateTime> clock = () -> LocalDateTime.now(ZoneOffset.UTC);
+                DefaultAWSCredentialsProviderChain awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
+                final AWSSigner awsSigner = new AWSSigner(awsCredentialsProvider, region, SERVICE, clock);
+                final AWSSigningRequestInterceptor requestInterceptor = new AWSSigningRequestInterceptor(awsSigner);
+                lowLevelRestClientBuilder = RestClient.builder(hostList.toArray(new HttpHost[hostList.size()])).setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+                         @Override
+                              public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
+                                     return httpClientBuilder.addInterceptorLast(requestInterceptor);
+                              }
+                  });
+        } else {
+                lowLevelRestClientBuilder = RestClient.builder(hostList.toArray(new HttpHost[hostList.size()]));
+        }
         RestClient lowLevelRestClient = lowLevelRestClientBuilder.build();
 
         RestHighLevelClient restHighLevelClient = new RestHighLevelClient(lowLevelRestClient);
