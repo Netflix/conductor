@@ -14,6 +14,7 @@ buildscript {
 }
 plugins {
     id 'nebula.netflixoss' version '3.6.0'
+    id "io.spring.dependency-management" version "1.0.4.RELEASE"
 }
 
 // Establish version and status
@@ -30,6 +31,15 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'eclipse'
     apply plugin: 'project-report'
+    apply plugin: "io.spring.dependency-management"
+
+    dependencyManagement {
+      imports {
+        mavenBom 'com.amazonaws:aws-java-sdk-bom:1.11.269'
+        mavenBom 'vc.inreach.aws:aws-signing-request-interceptor:0.0.20'
+        mavenBom 'com.google.guava:guava:18.0'
+      }
+    }
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8

@@ -21,20 +21,27 @@ package com.netflix.conductor.dao.esrest.index;
 import java.util.List;
 import java.util.ArrayList;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import javax.inject.Singleton;
 
 import org.apache.http.HttpHost;
-
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.netflix.conductor.core.config.Configuration;
-
+import com.amazonaws.auth.AWS4Signer;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.google.common.base.*;
+import vc.inreach.aws.request.AWSSigner;
+import vc.inreach.aws.request.AWSSigningRequestInterceptor;
 
 /**
  * @author Viren
@@ -43,8 +50,10 @@ import com.netflix.conductor.core.config.Configuration;
 public class ElasticsearchModule extends AbstractModule {
 
 	private static Logger log = LoggerFactory.getLogger(ElasticsearchModule.class);
-    private static final String DEFAULT_USER = "elastic";
-    private static final String DEFAULT_PASSWORD = "changeme";
+        private static final String DEFAULT_USER = "elastic";
+        private static final String DEFAULT_PASSWORD = "changeme";
+        private static final String SERVICE = "es";
+        private static final String region = System.getenv("AWS_REGION");
 
 	@Provides
 	@Singleton
@@ -54,6 +63,13 @@ public class ElasticsearchModule extends AbstractModule {
 		if(clusterAddress.equals("")) {
 			log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
 		}
+        boolean isAwsEs = false; 
+        String awsEs = config.getProperty("workflow.elasticsearch.aws", "");
+        if(awsEs.equalsIgnoreCase("true")) {
+                log.info("workflow.elasticsearch.aws is enabled, requests will be signed with AWS keys.");
+                isAwsEs = true;
+        }
+
 
         String credentials = config.getProperty("elasticsearch.xpack.security.user", "");
         if(credentials.equals("")) {
@@ -68,7 +84,10 @@ public class ElasticsearchModule extends AbstractModule {
             String hostname = hostparts[0];
             int hostport = 9200;
             if (hostparts.length == 2) hostport = Integer.parseInt(hostparts[1]);
-            hostList.add(new HttpHost(hostname, hostport, "http"));
+            if (isAwsEs) 
+                    hostList.add(new HttpHost(hostname, hostport, "https"));
+	    else 
+		    hostList.add(new HttpHost(hostname, hostport, "http"));
             log.info("Adding Host: " + hostname + ":" + hostport);
         }
         
@@ -76,7 +95,24 @@ public class ElasticsearchModule extends AbstractModule {
         for (HttpHost h : test) {
         	log.info(h.toString());
         }
-        RestClient lowLevelRestClient = RestClient.builder(hostList.toArray(new HttpHost[hostList.size()])).build();
+        RestClientBuilder lowLevelRestClientBuilder;
+        if (isAwsEs) {
+                // Get the Default AWS Credential Provider and add a Request Interceptor for signing the requests with AWS keys
+                final Supplier<LocalDateTime> clock = () -> LocalDateTime.now(ZoneOffset.UTC);
+                DefaultAWSCredentialsProviderChain awsCredentialsProvider = new DefaultAWSCredentialsProviderChain();
+                final AWSSigner awsSigner = new AWSSigner(awsCredentialsProvider, region, SERVICE, clock);
+                final AWSSigningRequestInterceptor requestInterceptor = new AWSSigningRequestInterceptor(awsSigner);
+                lowLevelRestClientBuilder = RestClient.builder(hostList.toArray(new HttpHost[hostList.size()])).setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+                         @Override
+                              public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
+                                     return httpClientBuilder.addInterceptorLast(requestInterceptor);
+                              }
+                  });
+        } else {
+                lowLevelRestClientBuilder = RestClient.builder(hostList.toArray(new HttpHost[hostList.size()]));
+        }
+        RestClient lowLevelRestClient = lowLevelRestClientBuilder.build();
+
         RestHighLevelClient restHighLevelClient = new RestHighLevelClient(lowLevelRestClient);
         
         ElasticSearchRestClient client = new ElasticSearchRestClient(restHighLevelClient, lowLevelRestClient);
