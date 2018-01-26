@@ -88,6 +88,9 @@ job "conductor" {
         port_map {
           http = 8080
         }
+        volumes = [
+          "local/secrets/secrets.yml:/app/config/secrets.yml"
+        ]
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
@@ -139,6 +142,19 @@ job "conductor" {
           timeout  = "3s"
         }
       }
+
+      # Write secrets to the file that can be mounted as volume
+      template {
+        data = <<EOF
+        {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
+        {{ env "NOMAD_ALLOC_INDEX" }}
+        EOF
+              destination = "local/secrets/secrets.yml"
+              change_mode   = "signal"
+              change_signal = "SIGINT"
+      }
+
       resources {
         cpu    = 128  # MHz
         memory = 2048 # MB
