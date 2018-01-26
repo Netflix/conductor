@@ -65,7 +65,7 @@ public class ElasticsearchModule extends AbstractModule {
 		}
         boolean isAwsEs = false; 
         String awsEs = config.getProperty("workflow.elasticsearch.aws", "");
-        if(awsEs.equalsIgnoreCase("y")) {
+        if(awsEs.equalsIgnoreCase("true")) {
                 log.info("workflow.elasticsearch.aws is enabled, requests will be signed with AWS keys.");
                 isAwsEs = true;
         }
