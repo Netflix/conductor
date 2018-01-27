@@ -159,13 +159,14 @@ public class HttpTask extends WorkflowSystemTask {
 			OAuthSecrets secrets = new OAuthSecrets().consumerSecret(input.oauthConsumerSecret);
 			client.addFilter(new OAuthClientFilter(client.getProviders(), params, secrets));
 		}
-
-		Builder builder = client.resource(input.uri).type(MediaType.APPLICATION_JSON);
+		final String contentType = "content-type";
+		Builder builder = client.resource(input.uri).type((String) input.headers.getOrDefault(contentType, MediaType.APPLICATION_JSON));
 
 		if(input.body != null) {
 			builder.entity(input.body);
 		}
 		input.headers.entrySet().forEach(e -> {
+			if(!e.getKey().equals(contentType))
 			builder.header(e.getKey(), e.getValue());
 		});
 		
@@ -327,7 +328,9 @@ public class HttpTask extends WorkflowSystemTask {
 		 * @param headers the headers to set
 		 */
 		public void setHeaders(Map<String, Object> headers) {
-			this.headers = headers;
+		 	for (String key : headers.keySet()) {
+		            this.headers.put(key.toLowerCase(),headers.get(key));
+		  	}
 		}
 
 		/**
