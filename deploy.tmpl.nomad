@@ -81,6 +81,13 @@ job "conductor" {
       attribute = "${attr.platform.aws.placement.availability-zone}"
     }
 
+    # vault declaration
+    vault {
+      change_mode = "noop"
+      env = false
+      policies = ["read-secrets"]
+    }
+
     task "server" {
       driver = "docker"
       config {
@@ -89,7 +96,7 @@ job "conductor" {
           http = 8080
         }
         volumes = [
-          "local/secrets/conductor/secrets.yml:/app/config/secrets.yml"
+          "local/secrets/conductor/secrets.properties:/app/config/secrets.properties"
         ]
         labels {
           service = "${NOMAD_JOB_NAME}"
@@ -150,7 +157,7 @@ job "conductor" {
         {{ end }}{{ end }}
         {{ env "NOMAD_ALLOC_INDEX" }}
         EOF
-              destination = "local/secrets/conductor/secrets.yml"
+              destination = "local/secrets/conductor/secrets.properties"
               change_mode   = "signal"
               change_signal = "SIGINT"
       }
