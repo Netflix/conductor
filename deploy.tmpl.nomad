@@ -89,7 +89,7 @@ job "conductor" {
           http = 8080
         }
         volumes = [
-          "local/secrets/secrets.yml:/app/config/secrets.yml"
+          "local/secrets/conductor/secrets.yml:/app/config/secrets.yml"
         ]
         labels {
           service = "${NOMAD_JOB_NAME}"
@@ -150,7 +150,7 @@ job "conductor" {
         {{ end }}{{ end }}
         {{ env "NOMAD_ALLOC_INDEX" }}
         EOF
-              destination = "local/secrets/secrets.yml"
+              destination = "local/secrets/conductor/secrets.yml"
               change_mode   = "signal"
               change_signal = "SIGINT"
       }
