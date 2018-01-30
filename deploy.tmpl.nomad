@@ -81,6 +81,13 @@ job "conductor" {
       attribute = "${attr.platform.aws.placement.availability-zone}"
     }
 
+    # vault declaration
+    vault {
+      change_mode = "noop"
+      env = false
+      policies = ["read-secrets"]
+    }
+
     task "server" {
       driver = "docker"
       config {
@@ -88,6 +95,9 @@ job "conductor" {
         port_map {
           http = 8080
         }
+        volumes = [
+          "local/secrets/conductor/secrets.properties:/app/config/secrets.properties"
+        ]
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
@@ -139,6 +149,19 @@ job "conductor" {
           timeout  = "3s"
         }
       }
+
+      # Write secrets to the file that can be mounted as volume
+      template {
+        data = <<EOF
+        {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
+        {{ env "NOMAD_ALLOC_INDEX" }}
+        EOF
+              destination = "local/secrets/conductor/secrets.properties"
+              change_mode   = "signal"
+              change_signal = "SIGINT"
+      }
+
       resources {
         cpu    = 128  # MHz
         memory = 2048 # MB
