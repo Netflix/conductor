@@ -16,6 +16,13 @@ if [ -z "$CONFIG_PROP" ];
     export config_file=/app/config/$CONFIG_PROP
 fi
 
+secrets=/app/config/secrets.properties
+if [ -f $secrets ]; then
+    echo Loading environments from $secrets
+    secrets=$(cat $secrets)
+    export $secrets
+fi
+
 # Log the configuration settings as defaults
 echo "Starting conductor server with the following defaults: $(cat $config_file | grep = | grep -v '#' | sed ':a;N;$!ba;s/\n/ /g')"
 
