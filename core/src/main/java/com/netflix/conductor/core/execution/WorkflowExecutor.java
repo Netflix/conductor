@@ -296,6 +296,14 @@ public class WorkflowExecutor {
 					"The last task has not failed!  I can only retry the last failed task.  Use restart if you want to attempt entire workflow execution again.");
 		}
 
+		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+        List<String> forbiddenTypes = workflowDef.getRetryForbidden();
+		if (!forbiddenTypes.isEmpty() && forbiddenTypes.contains(last.getTaskType())) {
+		    String message = String.format("The last task is %s! Retry is not allowed for such type of the %s",
+                    last.getReferenceTaskName(), last.getTaskType());
+			throw new ApplicationException(Code.CONFLICT, message);
+		}
+
 		// Below is the situation where currently when the task failure causes
 		// workflow to fail, the task's retried flag is not updated. This is to
 		// update for these old tasks.
