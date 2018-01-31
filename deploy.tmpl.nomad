@@ -152,9 +152,9 @@ job "conductor" {
         {{ end }}{{ end }}
         {{ env "NOMAD_ALLOC_INDEX" }}
         EOF
-              destination = "local/secrets/conductor/secrets.properties"
-              change_mode   = "signal"
-              change_signal = "SIGINT"
+        destination   = "local/secrets/conductor/secrets.properties"
+        change_mode   = "signal"
+        change_signal = "SIGINT"
       }
 
       resources {
