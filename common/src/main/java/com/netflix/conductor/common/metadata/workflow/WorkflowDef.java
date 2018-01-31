@@ -218,19 +218,19 @@ public class WorkflowDef extends Auditable {
 		return name + "." + version;
 	}
 
-    /**
-     * @return Forbidden task types for retry action
-     */
-    public List<String> getRetryForbidden() {
-        return retryForbidden;
-    }
+	/**
+	 * @return Forbidden task types for retry action
+	 */
+	public List<String> getRetryForbidden() {
+		return retryForbidden;
+	}
 
-    /**
-     * @param retryForbidden Forbidden task types for retry action
-     */
-    public void setRetryForbidden(List<String> retryForbidden) {
-        this.retryForbidden = retryForbidden;
-    }
+	/**
+	 * @param retryForbidden Forbidden task types for retry action
+	 */
+	public void setRetryForbidden(List<String> retryForbidden) {
+		this.retryForbidden = retryForbidden;
+	}
 
     public WorkflowTask getNextTask(String taskReferenceName){
 		Iterator<WorkflowTask> it = tasks.iterator();
