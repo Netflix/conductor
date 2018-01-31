@@ -19,7 +19,7 @@ fi
 secrets=/app/config/secrets.properties
 if [ -f $secrets ]; then
     echo Loading environments from $secrets
-    secrets=$(cat $secrets)
+    secrets=$(cat $secrets | grep =)
     export $secrets
 fi
 
