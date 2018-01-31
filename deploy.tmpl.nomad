@@ -150,7 +150,6 @@ job "conductor" {
         data = <<EOF
         {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
-        {{ env "NOMAD_ALLOC_INDEX" }}
         EOF
         destination   = "local/secrets/conductor/secrets.properties"
         change_mode   = "signal"
