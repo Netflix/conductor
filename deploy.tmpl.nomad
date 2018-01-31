@@ -96,7 +96,7 @@ job "conductor" {
           http = 8080
         }
         volumes = [
-          "local/secrets/conductor/secrets.properties:/app/config/secrets.properties"
+          "local/secrets/conductor.env:/app/config/secrets.env"
         ]
         labels {
           service = "${NOMAD_JOB_NAME}"
@@ -151,7 +151,7 @@ job "conductor" {
         {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
-        destination   = "local/secrets/conductor/secrets.properties"
+        destination   = "local/secrets/conductor.env"
         change_mode   = "signal"
         change_signal = "SIGINT"
       }
