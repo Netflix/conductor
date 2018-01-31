@@ -16,10 +16,10 @@ if [ -z "$CONFIG_PROP" ];
     export config_file=/app/config/$CONFIG_PROP
 fi
 
-secrets=/app/config/secrets.properties
+secrets=/app/config/secrets.env
 if [ -f $secrets ]; then
     echo Loading environments from $secrets
-    secrets=$(cat $secrets)
+    secrets=$(cat $secrets | grep =)
     export $secrets
 fi
 
