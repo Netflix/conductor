@@ -53,12 +53,8 @@ import static org.mockito.Mockito.when;
  */
 @SuppressWarnings("unchecked")
 public class TestAuthModule {
-	private WorkflowExecutor executor = mock(WorkflowExecutor.class);
-	private Workflow workflow = new Workflow();
 	private static Server server;
-	private static ObjectMapper om = new ObjectMapper();
 	private AuthManager authManager;
-	private String accessToken;
 
 	@BeforeClass
 	public static void init() throws Exception {
@@ -81,8 +77,6 @@ public class TestAuthModule {
 
 	@Before
 	public void setup() throws Exception {
-		accessToken = Resources.toString(Resources.getResource("jwt.txt"), Charsets.UTF_8);
-
 		Configuration config = mock(Configuration.class);
 		when(config.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7012/auth/success");
 		when(config.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
@@ -166,8 +160,6 @@ public class TestAuthModule {
 
 	private static class EchoHandler extends AbstractHandler {
 
-		private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String,Object>>() {};
-		
 		@Override
 		public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
 				throws IOException, ServletException {
