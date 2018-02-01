@@ -186,7 +186,7 @@ public class HttpTask extends GenericHttpTask {
 		}
 
 		// Check condition object is present or not
-		if (validate.getConditions().isEmpty()) {
+		if (validate.getConditions() == null || validate.getConditions().isEmpty()) {
 			return;
 		}
 
