@@ -178,9 +178,15 @@ public class HttpTask extends GenericHttpTask {
 			return;
 		}
 		Output output = om.convertValue(responseParam, Output.class);
+		Validate validate = output.getValidate();
+
+		// Check validate object is present or not
+		if (validate == null) {
+			return;
+		}
 
 		// Check condition object is present or not
-		if (output.getConditions() == null || output.getConditions().isEmpty()) {
+		if (validate.getConditions().isEmpty()) {
 			return;
 		}
 
@@ -189,7 +195,7 @@ public class HttpTask extends GenericHttpTask {
 
 		// Go over all conditions and evaluate them
 		AtomicBoolean overallStatus = new AtomicBoolean(true);
-		output.getConditions().forEach((name, condition) -> {
+		validate.getConditions().forEach((name, condition) -> {
 			try {
 				Boolean success = ScriptEvaluator.evalBool(condition, responseMap);
 				logger.debug("Evaluation resulted in " + success + " for " + name + "=" + condition);
@@ -217,8 +223,8 @@ public class HttpTask extends GenericHttpTask {
 		// If anything failed - fail the task
 		if (!overallStatus.get()) {
 			String overallReason = "Response validation failed";
-			if (StringUtils.isNotEmpty(output.getReasonParameter())) {
-				overallReason = output.getReasonParameter();
+			if (StringUtils.isNotEmpty(validate.getReason())) {
+				overallReason = validate.getReason();
 			}
 			task.setReasonForIncompletion(overallReason);
 			task.setStatus(Status.FAILED);

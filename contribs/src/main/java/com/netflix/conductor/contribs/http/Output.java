@@ -8,36 +8,13 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Output {
-	private Map<String, String> conditions;
-	private String reasonParameter;
+	private Validate validate;
 
-	/**
-	 * @return the conditions map
-	 */
-	public Map<String, String> getConditions() {
-		return conditions;
+	public Validate getValidate() {
+		return validate;
 	}
 
-	/**
-	 * @param conditions the method to set
-	 */
-	public void setConditions(Map<String, String> conditions) {
-		this.conditions = conditions;
+	public void setValidate(Validate validate) {
+		this.validate = validate;
 	}
-
-
-	/**
-	 * @return the reasonParameter
-	 */
-	public String getReasonParameter() {
-		return reasonParameter;
-	}
-
-	/**
-	 * @param reasonParameter the reasonParameter to set
-	 */
-	public void setReasonParameter(String reasonParameter) {
-		this.reasonParameter = reasonParameter;
-	}
-
 }
