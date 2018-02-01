@@ -51,6 +51,8 @@ public class WorkflowDef extends Auditable {
 	private String cancelWorkflow;
 	
 	private int schemaVersion = 1;
+
+	private List<String> retryForbidden = new LinkedList<String>();
 	
 	/**
 	 * @return the name
@@ -232,7 +234,21 @@ public class WorkflowDef extends Auditable {
 		return name + "." + version;
 	}
 
-	public WorkflowTask getNextTask(String taskReferenceName){
+	/**
+	 * @return Forbidden task types for retry action
+	 */
+	public List<String> getRetryForbidden() {
+		return retryForbidden;
+	}
+
+	/**
+	 * @param retryForbidden Forbidden task types for retry action
+	 */
+	public void setRetryForbidden(List<String> retryForbidden) {
+		this.retryForbidden = retryForbidden;
+	}
+
+    public WorkflowTask getNextTask(String taskReferenceName){
 		Iterator<WorkflowTask> it = tasks.iterator();
 		while(it.hasNext()){
 			 WorkflowTask task = it.next();
