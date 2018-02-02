@@ -20,10 +20,12 @@ package com.netflix.conductor.contribs.http;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -32,11 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import com.netflix.conductor.core.events.ScriptEvaluator;
 
 /**
  * @author Viren
@@ -52,8 +52,8 @@ public class HttpTask extends GenericHttpTask {
 	private static final String CONDITIONS_PARAMETER = "conditions";
 
 	@Inject
-	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om) {
-		super(NAME, config, rcm, om);
+	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager auth) {
+		super(NAME, config, rcm, om, auth);
 		logger.info("HttpTask initialized...");
 	}
 

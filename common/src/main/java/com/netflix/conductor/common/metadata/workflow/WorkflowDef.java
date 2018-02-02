@@ -44,6 +44,8 @@ public class WorkflowDef extends Auditable {
 
 	private Map<String, Object> outputParameters = new HashMap<>();
 
+	private Map<String, String> authValidation = new HashMap<>();
+
 	private String failureWorkflow;
 
 	private String cancelWorkflow;
@@ -208,6 +210,20 @@ public class WorkflowDef extends Auditable {
 	 */
 	public void setEventMessages(Map<String, Object> eventMessages) {
 		this.eventMessages = eventMessages;
+	}
+
+	/**
+	 * @return The auth validation rules
+	 */
+	public Map<String, String> getAuthValidation() {
+		return authValidation;
+	}
+
+	/**
+	 * @param authValidation Auth validation ruels
+	 */
+	public void setAuthValidation(Map<String, String> authValidation) {
+		this.authValidation = authValidation;
 	}
 
 	public String key(){
