@@ -71,7 +71,7 @@ public class DeciderService {
 		workflow.setSchemaVersion(def.getSchemaVersion());
 		
 		final List<Task> tasks = workflow.getTasks();
-		List<Task> executedTasks = tasks.stream().filter(t -> !t.getStatus().equals(Status.SKIPPED) && !t.getStatus().equals(Status.READY_FOR_RERUN)).collect(Collectors.toList());		
+		List<Task> executedTasks = tasks.stream().filter(t -> !t.getStatus().equals(Status.SKIPPED) && !t.getStatus().equals(Status.READY_FOR_RERUN)).collect(Collectors.toList());
 		List<Task> tasksToBeScheduled = new LinkedList<>();
 		if (executedTasks.isEmpty()) {
 			tasksToBeScheduled = startWorkflow(workflow, def);
@@ -81,7 +81,7 @@ public class DeciderService {
 	}
 	
 	private DeciderOutcome decide(final WorkflowDef def, final Workflow workflow, List<Task> preScheduledTasks) throws TerminateWorkflow {
-		
+
 		DeciderOutcome outcome = new DeciderOutcome();
 		
  		if (workflow.getStatus().equals(WorkflowStatus.PAUSED)) {
@@ -100,14 +100,14 @@ public class DeciderService {
 		Set<String> executedTaskRefNames = workflow.getTasks().stream()
 				.filter(t -> !t.getStatus().equals(Status.SKIPPED) && !t.getStatus().equals(Status.READY_FOR_RERUN))
 				.map(t -> t.getReferenceTaskName()).collect(Collectors.toSet());
-		
+
 		Map<String, Task> tasksToBeScheduled = new LinkedHashMap<>();
-		
+
 		preScheduledTasks.forEach(pst -> {
 			executedTaskRefNames.remove(pst.getReferenceTaskName());
 			tasksToBeScheduled.put(pst.getReferenceTaskName(), pst);
 		});
-		
+
 		for (Task task : pendingTasks) {
 
 			if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
@@ -150,11 +150,18 @@ public class DeciderService {
 
 						outcome.startWorkflow = startWorkflow;
 					}
-					Task rt = retry(taskDef, workflowTask, task, workflow);
-					tasksToBeScheduled.put(rt.getReferenceTaskName(), rt);
-					executedTaskRefNames.remove(rt.getReferenceTaskName());
-					outcome.tasksToBeUpdated.add(task);	
-				}				
+					if (SystemTaskType.isBuiltIn(task.getTaskType())) {
+						task.setStatus(Status.IN_PROGRESS);
+						task.setStartTime(System.currentTimeMillis());
+						task.setEndTime(0);
+						task.setRetried(false);
+					} else {
+						Task rt = retry(taskDef, workflowTask, task, workflow);
+						tasksToBeScheduled.put(rt.getReferenceTaskName(), rt);
+						executedTaskRefNames.remove(rt.getReferenceTaskName());
+					}
+					outcome.tasksToBeUpdated.add(task);
+				}
 			}
 
 			if (!task.isRetried() && task.getStatus().isTerminal()) {
@@ -323,7 +330,7 @@ public class DeciderService {
 				startDelay = taskDef.getRetryDelaySeconds() * (1 + task.getRetryCount());
 				break;
 		}
-		
+
 		task.setRetried(true);
 		
 		Task rescheduled = task.copy();
@@ -340,7 +347,7 @@ public class DeciderService {
 		if(workflowTask != null && workflow.getSchemaVersion() > 1) {
 			Map<String, Object> taskInput = pu.getTaskInputV2(workflowTask.getInputParameters(), workflow, rescheduled.getTaskId(), taskDef);
 			rescheduled.getInputData().putAll(taskInput);
-		}	
+		}
 		//for the schema version 1, we do not have to recompute the inputs
 		return rescheduled;
 
