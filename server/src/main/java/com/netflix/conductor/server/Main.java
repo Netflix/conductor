@@ -63,10 +63,15 @@ public class Main {
 			int mb = 1024*1024;
 			public void run() {
 
+				com.sun.management.OperatingSystemMXBean mxBean =
+						(com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+				double cpuLoad = mxBean.getProcessCpuLoad();
+
 				Runtime runtime = Runtime.getRuntime();
 				StringBuilder info = new StringBuilder();
-				info.append("Used memory=").append((runtime.totalMemory() - runtime.freeMemory()) / mb);
+				info.append("Used memory=").append((runtime.totalMemory() - runtime.freeMemory()) / mb).append("mb");
 				info.append(", free memory=").append(runtime.freeMemory() / mb).append("mb");
+				info.append(", cpu load=").append(String.format("%.2f", cpuLoad)).append("%");
 
 				logger.info("Caught shutdown signal. " + info.toString());
 			}
