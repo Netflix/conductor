@@ -19,9 +19,12 @@
 package com.netflix.conductor.server;
 
 import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 /**
@@ -29,6 +32,7 @@ import java.util.Properties;
  * Entry point for the server
  */
 public class Main {
+	private static Logger logger = LoggerFactory.getLogger(Main.class);
 	static {
 		// Workaround to send java util logging to log4j
 		java.util.logging.LogManager.getLogManager().reset();
@@ -55,6 +59,19 @@ public class Main {
 			PropertyConfigurator.configure(new FileInputStream(new File(args[1])));
 		}
 
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			int mb = 1024*1024;
+			public void run() {
+
+				Runtime runtime = Runtime.getRuntime();
+				StringBuilder info = new StringBuilder();
+				info.append("Used memory=").append((runtime.totalMemory() - runtime.freeMemory()) / mb);
+				info.append(", free memory=").append(runtime.freeMemory() / mb).append("mb");
+
+				logger.info("Caught shutdown signal. " + info.toString());
+			}
+		});
+
 		ConductorConfig config = new ConductorConfig();
 		ConductorServer server = new ConductorServer(config);
 		
@@ -64,10 +81,8 @@ public class Main {
 		System.out.println(" / __/ _ \\| '_ \\ / _` | | | |/ __| __/ _ \\| '__|");
 		System.out.println("| (_| (_) | | | | (_| | |_| | (__| || (_) | |   ");
 		System.out.println(" \\___\\___/|_| |_|\\__,_|\\__,_|\\___|\\__\\___/|_|   ");
-		System.out.println("\n\n\n");                                                
-		
+		System.out.println("\n\n\n");
+
 		server.start(config.getIntProperty("port", 8080), true);
-		
-		
 	}
 }
