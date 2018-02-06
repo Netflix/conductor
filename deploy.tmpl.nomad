@@ -90,7 +90,6 @@ job "conductor" {
 
     task "server" {
       driver = "docker"
-      kill_signal = "SIGINT"
       config {
         image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-server"
         port_map {
