@@ -331,6 +331,9 @@ public class WorkflowExecutor {
 		retried.setRetriedTaskId(last.getTaskId());
 		retried.setStatus(Status.SCHEDULED);
 		retried.setRetryCount(last.getRetryCount() + 1);
+		retried.setOutputData(new HashMap<>());
+		retried.setPollCount(0);
+		retried.setWorkerId(null);
 		scheduleTask(workflow, Arrays.asList(retried));
 
 		workflow.setStatus(WorkflowStatus.RUNNING);
