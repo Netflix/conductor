@@ -27,4 +27,4 @@ fi
 echo "Starting conductor server with the following defaults: $(cat $config_file | grep = | grep -v '#' | sed ':a;N;$!ba;s/\n/ /g')"
 
 # Run java in the foreground and stream messages directly to stdout
-exec java -jar conductor-server-*-all.jar $config_file
+java -jar conductor-server-*-all.jar $config_file
