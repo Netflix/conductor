@@ -150,16 +150,9 @@ public class DeciderService {
 
 						outcome.startWorkflow = startWorkflow;
 					}
-					if (SystemTaskType.isBuiltIn(task.getTaskType())) {
-						task.setStatus(Status.IN_PROGRESS);
-						task.setStartTime(System.currentTimeMillis());
-						task.setEndTime(0);
-						task.setRetried(false);
-					} else {
-						Task rt = retry(taskDef, workflowTask, task, workflow);
-						tasksToBeScheduled.put(rt.getReferenceTaskName(), rt);
-						executedTaskRefNames.remove(rt.getReferenceTaskName());
-					}
+					Task rt = retry(taskDef, workflowTask, task, workflow);
+					tasksToBeScheduled.put(rt.getReferenceTaskName(), rt);
+					executedTaskRefNames.remove(rt.getReferenceTaskName());
 					outcome.tasksToBeUpdated.add(task);
 				}
 			}
@@ -342,6 +335,7 @@ public class DeciderService {
 		rescheduled.setRetriedTaskId(task.getTaskId());
 		rescheduled.setStatus(Status.SCHEDULED);
 		rescheduled.setPollCount(0);
+		rescheduled.setWorkerId(null);
 		rescheduled.setInputData(new HashMap<>());
 		rescheduled.getInputData().putAll(task.getInputData());
 		if(workflowTask != null && workflow.getSchemaVersion() > 1) {
