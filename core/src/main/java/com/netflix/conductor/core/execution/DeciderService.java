@@ -337,6 +337,7 @@ public class DeciderService {
 		rescheduled.setPollCount(0);
 		rescheduled.setWorkerId(null);
 		rescheduled.setInputData(new HashMap<>());
+		rescheduled.setOutputData(new HashMap<>());
 		rescheduled.getInputData().putAll(task.getInputData());
 		if(workflowTask != null && workflow.getSchemaVersion() > 1) {
 			Map<String, Object> taskInput = pu.getTaskInputV2(workflowTask.getInputParameters(), workflow, rescheduled.getTaskId(), taskDef);
