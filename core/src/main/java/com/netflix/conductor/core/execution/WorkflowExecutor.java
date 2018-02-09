@@ -344,6 +344,9 @@ public class WorkflowExecutor {
 		List<Task> cancelledTasks = new ArrayList<Task>(cancelledMap.values());
 		logger.info("retry. Failed tasks " + failedTasks + ", cancelled tasks " + cancelledTasks);
 
+		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+		List<String> forbiddenTypes = workflowDef.getRetryForbidden();
+
 		// Additional checking
 		for (Task failedTask : failedTasks) {
 			if (!failedTask.getStatus().isTerminal()) {
@@ -355,8 +358,6 @@ public class WorkflowExecutor {
 						"The last task has not failed!  I can only retry the last failed task.  Use restart if you want to attempt entire workflow execution again.");
 			}
 
-			WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
-			List<String> forbiddenTypes = workflowDef.getRetryForbidden();
 			if (forbiddenTypes.contains(failedTask.getTaskType())) {
 				String message = String.format("The last task is %s! Retry is not allowed for such type of the task %s",
 						failedTask.getReferenceTaskName(), failedTask.getTaskType());
