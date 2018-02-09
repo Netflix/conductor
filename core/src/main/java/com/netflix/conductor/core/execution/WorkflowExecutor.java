@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -323,32 +324,45 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.CONFLICT, "Workflow has not started yet");
 		}
 
-		// First get the failed task and the cancelled task
-		Task failedTask  = null;
-		List<Task> cancelledTasks = new ArrayList<Task>();
-		for(Task t: workflow.getTasks()) {
-			if(t.getStatus().equals(Status.FAILED)){
-				failedTask = t;
-			} else if(t.getStatus().equals(Status.CANCELED)){
-				cancelledTasks.add(t);
-
+		// First get the failed tasks and the cancelled task
+		Map<String, Task> failedMap = new HashMap<>();
+		Map<String, Task> cancelledMap = new HashMap<>();
+		for (Task t : workflow.getTasks()) {
+			if (t.getStatus().equals(Status.FAILED)) {
+				// The failed join cannot be retried (that causes immediate workflow termination),
+				// hence we move it to cancelled list, eventually it gets IN_PROGRESS status back
+				if (t.getTaskType().equalsIgnoreCase(WorkflowTask.Type.JOIN.toString())) {
+					cancelledMap.put(t.getReferenceTaskName(), t);
+				} else {
+					failedMap.put(t.getReferenceTaskName(), t);
+				}
+			} else if (t.getStatus().equals(Status.CANCELED)) {
+				cancelledMap.put(t.getReferenceTaskName(), t);
 			}
-		};
-		if (failedTask != null && !failedTask.getStatus().isTerminal()) {
-			throw new ApplicationException(Code.CONFLICT,
-					"The last task is still not completed!  I can only retry the last failed task.  Use restart if you want to attempt entire workflow execution again.");
 		}
-		if (failedTask != null && failedTask.getStatus().isSuccessful()) {
-			throw new ApplicationException(Code.CONFLICT,
-					"The last task has not failed!  I can only retry the last failed task.  Use restart if you want to attempt entire workflow execution again.");
-		}
+		List<Task> failedTasks  = new ArrayList<Task>(failedMap.values());
+		List<Task> cancelledTasks = new ArrayList<Task>(cancelledMap.values());
+		logger.info("retry. Failed tasks " + failedTasks + ", cancelled tasks " + cancelledTasks);
 
 		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
 		List<String> forbiddenTypes = workflowDef.getRetryForbidden();
-		if (failedTask != null && forbiddenTypes.contains(failedTask.getTaskType())) {
-			String message = String.format("The last task is %s! Retry is not allowed for such type of the task %s",
-					failedTask.getReferenceTaskName(), failedTask.getTaskType());
-			throw new ApplicationException(Code.CONFLICT, message);
+
+		// Additional checking
+		for (Task failedTask : failedTasks) {
+			if (!failedTask.getStatus().isTerminal()) {
+				throw new ApplicationException(Code.CONFLICT,
+						"The last task is still not completed!  I can only retry the last failed task.  Use restart if you want to attempt entire workflow execution again.");
+			}
+			if (failedTask.getStatus().isSuccessful()) {
+				throw new ApplicationException(Code.CONFLICT,
+						"The last task has not failed!  I can only retry the last failed task.  Use restart if you want to attempt entire workflow execution again.");
+			}
+
+			if (forbiddenTypes.contains(failedTask.getTaskType())) {
+				String message = String.format("The last task is %s! Retry is not allowed for such type of the task %s",
+						failedTask.getReferenceTaskName(), failedTask.getTaskType());
+				throw new ApplicationException(Code.CONFLICT, message);
+			}
 		}
 
 		// Below is the situation where currently when the task failure causes
@@ -358,17 +372,23 @@ public class WorkflowExecutor {
 		update.forEach(task -> task.setRetried(true));
 		edao.updateTasks(update);
 
-		// Now reschedule the failed task
-		List<Task> rescheduledTasks = new ArrayList<>();
-		if (failedTask != null) {
-			Task retried = failedTask.copy();
+		// Just helper function to avoid duplicate code for failed/cancelled lists
+		final Function<Task, Task> cloneFunc = input -> {
+			Task retried = input.copy();
 			retried.setTaskId(IDGenerator.generate());
-			retried.setRetriedTaskId(failedTask.getTaskId());
+			retried.setRetriedTaskId(input.getTaskId());
 			retried.setStatus(Status.SCHEDULED);
-			retried.setRetryCount(failedTask.getRetryCount() + 1);
+			retried.setRetryCount(input.getRetryCount() + 1);
 			retried.setOutputData(new HashMap<>());
 			retried.setPollCount(0);
 			retried.setWorkerId(null);
+			return retried;
+		};
+
+		// Now reschedule the failed task
+		List<Task> rescheduledTasks = new ArrayList<>();
+		for (Task failedTask : failedTasks) {
+			Task retried = cloneFunc.apply(failedTask);
 			rescheduledTasks.add(retried);
 		}
 
@@ -379,14 +399,7 @@ public class WorkflowExecutor {
 				t.setRetried(false);
 				edao.updateTask(t);
 			} else {
-				Task copy = t.copy();
-				copy.setTaskId(IDGenerator.generate());
-				copy.setRetriedTaskId(t.getTaskId());
-				copy.setStatus(Status.SCHEDULED);
-				copy.setRetryCount(t.getRetryCount() + 1);
-				copy.setOutputData(new HashMap<>());
-				copy.setPollCount(0);
-				copy.setWorkerId(null);
+				Task copy = cloneFunc.apply(t);
 				rescheduledTasks.add(copy);
 			}
 		});
