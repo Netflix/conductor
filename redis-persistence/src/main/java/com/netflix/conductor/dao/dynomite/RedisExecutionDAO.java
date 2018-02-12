@@ -62,6 +62,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	private final static String TASKS_IN_PROGRESS_STATUS = "TASKS_IN_PROGRESS_STATUS";	//Tasks which are in IN_PROGRESS status.
 	private final static String WORKFLOW_TO_TASKS = "WORKFLOW_TO_TASKS";
 	private final static String SCHEDULED_TASKS = "SCHEDULED_TASKS";
+	private final static String ALL_TASK = "ALL_TASK";
 	private final static String TASK = "TASK";
 
 	private final static String WORKFLOW = "WORKFLOW";
@@ -122,6 +123,14 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	}
 
 	@Override
+	public List<Task> getTasks(String taskDefName) {
+		Preconditions.checkNotNull(taskDefName, "taskType cannot be null");
+
+		Set<String> taskIds = dynoClient.smembers(nsKey(ALL_TASK, taskDefName));
+		return getTasks(new ArrayList<>(taskIds));
+	}
+
+	@Override
 	public List<Task> createTasks(List<Task> tasks) {
 
 		List<Task> created = new LinkedList<Task>();
@@ -145,6 +154,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 			dynoClient.sadd(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
 			dynoClient.sadd(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
+			dynoClient.sadd(nsKey(ALL_TASK, task.getTaskDefName()), task.getTaskId());
 			updateTask(task);
 			created.add(task);
 		}
@@ -240,6 +250,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		dynoClient.hdel(nsKey(SCHEDULED_TASKS, task.getWorkflowInstanceId()), taskKey);
 		dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 		dynoClient.srem(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()), task.getTaskId());
+		dynoClient.srem(nsKey(ALL_TASK, task.getTaskDefName()), task.getTaskId());
 		dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
 		dynoClient.del(nsKey(TASK, task.getTaskId()));		
 		dynoClient.zrem(nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName()), task.getTaskId());		
