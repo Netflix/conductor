@@ -120,7 +120,7 @@ public class EventHandler {
 
 	public static class Action {
 		
-		public enum Type { start_workflow, complete_task, fail_task, update_task }
+		public enum Type { start_workflow, complete_task, fail_task, update_task, find_update }
 		
 		private Type action;
 		
@@ -131,7 +131,9 @@ public class EventHandler {
 		private TaskDetails fail_task;
 
 		private UpdateTask update_task;
-		
+
+		private FindUpdate find_update;
+
 		private boolean expandInlineJSON;
 
 		/**
@@ -206,6 +208,14 @@ public class EventHandler {
 		 */
 		public void setUpdate_task(UpdateTask update_task) {
 			this.update_task = update_task;
+		}
+
+		public FindUpdate getFind_update() {
+			return find_update;
+		}
+
+		public void setFind_update(FindUpdate find_update) {
+			this.find_update = find_update;
 		}
 
 		/**
@@ -438,6 +448,75 @@ public class EventHandler {
 					", failedReason='" + failedReason + '\'' +
 					", statuses=" + statuses +
 					", output=" + output +
+					'}';
+		}
+	}
+
+	public static class FindUpdate {
+		private String workflowName;
+		private String attribName;
+		private String attribValue;
+		private String status;
+		private String failedReason;
+		private Map<String, String> statuses = new HashMap<>();
+
+		public String getWorkflowName() {
+			return workflowName;
+		}
+
+		public void setWorkflowName(String workflowName) {
+			this.workflowName = workflowName;
+		}
+
+		public String getAttribName() {
+			return attribName;
+		}
+
+		public void setAttribName(String attribName) {
+			this.attribName = attribName;
+		}
+
+		public String getAttribValue() {
+			return attribValue;
+		}
+
+		public void setAttribValue(String attribValue) {
+			this.attribValue = attribValue;
+		}
+
+		public String getStatus() {
+			return status;
+		}
+
+		public void setStatus(String status) {
+			this.status = status;
+		}
+
+		public String getFailedReason() {
+			return failedReason;
+		}
+
+		public void setFailedReason(String failedReason) {
+			this.failedReason = failedReason;
+		}
+
+		public Map<String, String> getStatuses() {
+			return statuses;
+		}
+
+		public void setStatuses(Map<String, String> statuses) {
+			this.statuses = statuses;
+		}
+
+		@Override
+		public String toString() {
+			return "FindUpdate{" +
+					"workflowName='" + workflowName + '\'' +
+					", attribName='" + attribName + '\'' +
+					", attribValue='" + attribValue + '\'' +
+					", status='" + status + '\'' +
+					", statuses=" + statuses +
+					", failedReason='" + failedReason + '\'' +
 					'}';
 		}
 	}
