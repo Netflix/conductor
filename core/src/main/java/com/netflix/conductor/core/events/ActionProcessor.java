@@ -282,8 +282,8 @@ public class ActionProcessor {
 
 				// Go over all tasks in workflow
 				for (Task task : workflow.getTasks()) {
-					// Skip terminal tasks
-					if (task.getStatus().isTerminal()) {
+					// Skip not in progress tasks
+					if (!task.getStatus().equals(Status.IN_PROGRESS)) {
 						continue;
 					}
 
