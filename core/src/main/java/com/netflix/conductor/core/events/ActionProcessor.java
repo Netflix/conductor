@@ -20,10 +20,8 @@ package com.netflix.conductor.core.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.netflix.conductor.common.metadata.events.EventHandler.Action;
-import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
-import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
-import com.netflix.conductor.common.metadata.events.EventHandler.UpdateTask;
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.events.EventHandler.*;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
@@ -31,13 +29,16 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.service.MetadataService;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +88,9 @@ public class ActionProcessor {
 				return op;
 			case update_task:
 				op = updateTask(action, jsonObj, event, messageId);
+				return op;
+			case find_update:
+				op = find_update(action, jsonObj, event, messageId);
 				return op;
 			default:
 				break;
@@ -174,22 +178,12 @@ public class ActionProcessor {
 				failedReason = ScriptEvaluator.evalJq(updateTask.getFailedReason(), payload);
 			}
 
-			Function<String, Status> getTaskStatus = s -> {
-				try {
-					return Status.valueOf(s.toUpperCase());
-				} catch (Exception ex) {
-					logger.error("updateTask: getTaskStatus failed with " + ex.getMessage());
-					return null;
-				}
-			};
-
 			Status taskStatus;
-			// If no mapping - then task status taken from status
-			Map<String, String> statuses = updateTask.getStatuses();
-			if (statuses == null || statuses.isEmpty()) {
-				taskStatus = getTaskStatus.apply(status);
+			// If mapping exists - take the task status from mapping
+			if (MapUtils.isNotEmpty(updateTask.getStatuses())) {
+				taskStatus = getTaskStatus(updateTask.getStatuses().get(status));
 			} else {
-				taskStatus = getTaskStatus.apply(statuses.get(status));
+				taskStatus = getTaskStatus(status);
 			}
 			if (taskStatus == null)
 				throw new RuntimeException("Unable to determine task status");
@@ -231,7 +225,7 @@ public class ActionProcessor {
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
 		} catch (Exception e) {
-			logger.error("updateTask: failed with " + e.getMessage() + " action=" + updateTask + ", payload=" + payload, e);
+			logger.error("updateTask: failed with " + e.getMessage() + " for action=" + updateTask + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
 			op.put("action", updateTask);
 			op.put("conductor.event.name", event);
@@ -240,6 +234,121 @@ public class ActionProcessor {
 		}
 
 		return op;
+	}
+
+	private Map<String, Object> find_update(Action action, Object payload, String event, String messageId) {
+		FindUpdate findUpdate = action.getFind_update();
+		Map<String, Object> op = new HashMap<>();
+		try {
+			// Evaluating against the event handler payload. e.g assetId/uniqueuId in the event message
+			String attribValue = ScriptEvaluator.evalJq(findUpdate.getAttribValue(), payload);
+			if (StringUtils.isEmpty(attribValue))
+				throw new RuntimeException("attribValue evaluating is empty");
+
+			// Name of the workflow ot be looked for. Performance consideration.
+			String workflowName = findUpdate.getWorkflowName();
+			if (StringUtils.isEmpty(workflowName))
+				throw new RuntimeException("workflowName is empty");
+
+			// The wait task attribute name.
+			// That attribute must be in the task's inputParameters and referencing the workflow input.
+			String attribName = findUpdate.getAttribName();
+			if (StringUtils.isEmpty(attribName))
+				throw new RuntimeException("attribName is empty");
+
+			// Task status is completed by default. It either can be a constant or expression
+			Status taskStatus = Status.COMPLETED;
+			if (StringUtils.isNotEmpty(findUpdate.getStatus())) {
+				// Get an evaluating which might result in error or empty response
+				String status = ScriptEvaluator.evalJq(findUpdate.getStatus(), payload);
+				if (StringUtils.isEmpty(status))
+					throw new RuntimeException("status evaluating is empty");
+
+				// If mapping exists - take the task status from mapping
+				if (MapUtils.isNotEmpty(findUpdate.getStatuses())) {
+					status = findUpdate.getStatuses().get(status);
+					taskStatus = getTaskStatus(status);
+				} else {
+					taskStatus = getTaskStatus(status);
+				}
+			}
+
+			// Working with running workflows only.
+			for (Workflow workflow : executor.getRunningWorkflows(workflowName)) {
+				// Move on if workflow completed/failed hence no need to update
+				if (workflow.getStatus().isTerminal()) {
+					continue;
+				}
+
+				// Go over all tasks in workflow
+				for (Task task : workflow.getTasks()) {
+					// Skip not in progress tasks
+					if (!task.getStatus().equals(Status.IN_PROGRESS)) {
+						continue;
+					}
+
+					// Skip all except wait
+					if (!task.getTaskType().equalsIgnoreCase(Wait.NAME)) {
+						continue;
+					}
+
+					// Skip which does not have input attribute or attribute value is null
+					Map<String, Object> input = task.getInputData();
+					if (!input.containsKey(attribName) || input.get(attribName) == null) {
+						continue;
+					}
+
+					// Skip if values do not match
+					String value = input.get(attribName).toString();
+					if (!attribValue.equals(value)) {
+						continue;
+					}
+
+					// Otherwise update the task as we found it
+					logger.info("find_update. Updating task " + task + " in " + workflow.getWorkflowId() + " workflow");
+					task.getOutputData().put("conductor.event.name", event);
+					task.getOutputData().put("conductor.event.payload", payload);
+					task.getOutputData().put("conductor.event.messageId", messageId);
+					task.setStatus(taskStatus);
+
+					// Set the reason if task failed. It should be provided in the event
+					if (Task.Status.FAILED.equals(taskStatus)) {
+						String failedReason = null;
+						if (StringUtils.isNotEmpty(findUpdate.getFailedReason())) {
+							failedReason = ScriptEvaluator.evalJq(findUpdate.getFailedReason(), payload);
+						}
+						task.setReasonForIncompletion(failedReason);
+					}
+
+					// Create task update wrapper and update the task
+					TaskResult taskResult = new TaskResult(task);
+					executor.updateTask(taskResult);
+
+					// output data
+					op.put("conductor.event.name", event);
+					op.put("conductor.event.payload", payload);
+					op.put("conductor.event.messageId", messageId);
+				}
+			}
+		} catch (Exception e) {
+			logger.error("find_update: failed with " + e.getMessage() + " for action=" + findUpdate + ", payload=" + payload, e);
+			op.put("error", e.getMessage());
+			op.put("action", findUpdate);
+			op.put("conductor.event.name", event);
+			op.put("conductor.event.payload", payload);
+			op.put("conductor.event.messageId", messageId);
+		}
+
+		return op;
+	}
+
+	private Status getTaskStatus(String status) {
+		try {
+			return Status.valueOf(status.toUpperCase());
+		} catch (Exception ex) {
+			logger.error("getTaskStatus: failed with " + ex.getMessage() + " for " + status);
+		}
+		return null;
 	}
 
 	private Object getJson(String jsonAsString) {
