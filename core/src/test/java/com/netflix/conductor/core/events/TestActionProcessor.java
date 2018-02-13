@@ -25,14 +25,12 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.service.MetadataService;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -377,6 +375,476 @@ public class TestActionProcessor {
 		assertEquals("bar", op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_completed() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(1)).updateTask(captor.capture());
+
+		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
+		assertEquals("foo", captor.getValue().getOutputData().get("conductor.event.name"));
+		assertEquals("bar", captor.getValue().getOutputData().get("conductor.event.messageId"));
+		assertEquals(TaskResult.Status.COMPLETED, captor.getValue().getStatus());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_failed() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+		action.getFind_update().setStatus(".status");
+		action.getFind_update().getStatuses().put("failure", "FAILED");
+		action.getFind_update().setFailedReason(".reason");
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+		payload.put("status", "failure");
+		payload.put("reason", "exception message");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(1)).updateTask(captor.capture());
+
+		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
+		assertEquals("foo", captor.getValue().getOutputData().get("conductor.event.name"));
+		assertEquals("bar", captor.getValue().getOutputData().get("conductor.event.messageId"));
+		assertEquals(TaskResult.Status.FAILED, captor.getValue().getStatus());
+		assertEquals("exception message", captor.getValue().getReasonForIncompletion());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_no_workflowName() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+		action.getFind_update().setWorkflowName(null);
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals("workflowName is empty", op.get("error"));
+		assertEquals(action.getFind_update(), op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_no_attribName() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+		action.getFind_update().setAttribName(null);
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals("attribName is empty", op.get("error"));
+		assertEquals(action.getFind_update(), op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_no_attribValue() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+		action.getFind_update().setAttribValue(null);
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals("attribValue is empty", op.get("error"));
+		assertEquals(action.getFind_update(), op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_empty_attribValue() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+		action.getFind_update().setAttribValue(".FAKE");
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals("attribValue evaluating is empty", op.get("error"));
+		assertEquals(action.getFind_update(), op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_empty_status() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+		action.getFind_update().setStatus(".FAKE");
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals("status evaluating is empty", op.get("error"));
+		assertEquals(action.getFind_update(), op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_skip_wf() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.COMPLETED);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertNull(op.get("conductor.event.payload"));
+		assertNull(op.get("conductor.event.name"));
+		assertNull(op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+		assertTrue(op.isEmpty());
+	}
+
+	@Test
+	public void findUpdate_skip_task_status() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.COMPLETED);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertNull(op.get("conductor.event.payload"));
+		assertNull(op.get("conductor.event.name"));
+		assertNull(op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+		assertTrue(op.isEmpty());
+	}
+
+	@Test
+	public void findUpdate_skip_task_type() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType("FAKE");
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "1");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertNull(op.get("conductor.event.payload"));
+		assertNull(op.get("conductor.event.name"));
+		assertNull(op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+		assertTrue(op.isEmpty());
+	}
+
+	@Test
+	public void findUpdate_skip_task_no_input() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertNull(op.get("conductor.event.payload"));
+		assertNull(op.get("conductor.event.name"));
+		assertNull(op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+		assertTrue(op.isEmpty());
+	}
+
+	@Test
+	public void findUpdate_skip_task_input_do_not_match() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("assetId", "FAKE");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("assetId", "1");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertNull(op.get("conductor.event.payload"));
+		assertNull(op.get("conductor.event.name"));
+		assertNull(op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+		assertTrue(op.isEmpty());
+	}
+
+	private EventHandler.Action newFindUpdateAction() {
+		EventHandler.FindUpdate findUpdate = new EventHandler.FindUpdate();
+		findUpdate.setWorkflowName("junit");
+		findUpdate.setAttribName("assetId");
+		findUpdate.setAttribValue(".assetId");
+
+		EventHandler.Action action = new EventHandler.Action();
+		action.setAction(EventHandler.Action.Type.find_update);
+		action.setFind_update(findUpdate);
+
+		return action;
 	}
 
 	private EventHandler.Action newUpdateAction() {
