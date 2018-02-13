@@ -240,11 +240,6 @@ public class ActionProcessor {
 		FindUpdate findUpdate = action.getFind_update();
 		Map<String, Object> op = new HashMap<>();
 		try {
-			// Evaluating against the event handler payload. e.g assetId/uniqueuId in the event message
-			String attribValue = ScriptEvaluator.evalJq(findUpdate.getAttribValue(), payload);
-			if (StringUtils.isEmpty(attribValue))
-				throw new RuntimeException("attribValue evaluating is empty");
-
 			// Name of the workflow ot be looked for. Performance consideration.
 			String workflowName = findUpdate.getWorkflowName();
 			if (StringUtils.isEmpty(workflowName))
@@ -255,6 +250,15 @@ public class ActionProcessor {
 			String attribName = findUpdate.getAttribName();
 			if (StringUtils.isEmpty(attribName))
 				throw new RuntimeException("attribName is empty");
+
+			// Evaluating against the event handler payload. e.g assetId/uniqueuId in the event message
+			String attribValue = findUpdate.getAttribValue();
+			if (StringUtils.isEmpty(attribValue))
+				throw new RuntimeException("attribValue is empty");
+
+			attribValue = ScriptEvaluator.evalJq(attribValue, payload);
+			if (StringUtils.isEmpty(attribValue))
+				throw new RuntimeException("attribValue evaluating is empty");
 
 			// Task status is completed by default. It either can be a constant or expression
 			Status taskStatus = Status.COMPLETED;
