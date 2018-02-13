@@ -382,6 +382,8 @@ public class WorkflowExecutor {
 			retried.setOutputData(new HashMap<>());
 			retried.setPollCount(0);
 			retried.setWorkerId(null);
+			retried.setStartDelayInSeconds(0);
+			retried.setCallbackAfterSeconds(0);
 			return retried;
 		};
 
