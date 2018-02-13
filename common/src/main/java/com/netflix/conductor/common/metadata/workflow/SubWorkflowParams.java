@@ -28,6 +28,8 @@ public class SubWorkflowParams {
 	
 	private Object version;
 
+	private boolean failOnError = true;
+
 	/**
 	 * @return the name
 	 */
@@ -55,6 +57,18 @@ public class SubWorkflowParams {
 	public void setVersion(Object version) {
 		this.version = version;
 	}
-	
-	
+
+	/**
+	 * @return Fail the parent workflow upon sub-workflow failure
+	 */
+	public boolean isFailOnError() {
+		return failOnError;
+	}
+
+	/**
+	 * @param failOnError Fail the parent workflow upon sub-workflow failure
+	 */
+	public void setFailOnError(boolean failOnError) {
+		this.failOnError = failOnError;
+	}
 }
