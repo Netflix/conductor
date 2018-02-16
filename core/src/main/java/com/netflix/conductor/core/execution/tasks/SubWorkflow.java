@@ -94,8 +94,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else {
 			task.setStatus(Status.FAILED);
 			SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
-			if (param != null && !param.isFailOnError()) {
-				task.setStatus(Status.COMPLETED);
+			if (param != null && param.isStandbyOnFail()) {
+				task.setStatus(Status.IN_PROGRESS);
 			}
 		}
 		return true;

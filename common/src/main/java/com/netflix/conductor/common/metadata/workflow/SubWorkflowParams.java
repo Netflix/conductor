@@ -28,7 +28,7 @@ public class SubWorkflowParams {
 	
 	private Object version;
 
-	private boolean failOnError = true;
+	private boolean standbyOnFail;
 
 	/**
 	 * @return the name
@@ -61,14 +61,14 @@ public class SubWorkflowParams {
 	/**
 	 * @return Fail the parent workflow upon sub-workflow failure
 	 */
-	public boolean isFailOnError() {
-		return failOnError;
+	public boolean isStandbyOnFail() {
+		return standbyOnFail;
 	}
 
 	/**
-	 * @param failOnError Fail the parent workflow upon sub-workflow failure
+	 * @param standbyOnFail Fail the parent workflow upon sub-workflow failure
 	 */
-	public void setFailOnError(boolean failOnError) {
-		this.failOnError = failOnError;
+	public void setStandbyOnFail(boolean standbyOnFail) {
+		this.standbyOnFail = standbyOnFail;
 	}
 }

@@ -61,7 +61,7 @@ public class TestWorkflowTask {
 		assertNull(task.getSubWorkflowParam());
 
 		task.setSubWorkflowParam(new SubWorkflowParams());
-		assertTrue(task.getSubWorkflowParam().isFailOnError());
+		assertFalse(task.getSubWorkflowParam().isStandbyOnFail());
 	}
 
 }
