@@ -454,11 +454,10 @@ public class EventHandler {
 
 	public static class FindUpdate {
 		private String workflowName;
-		private String attribName;
-		private String attribValue;
 		private String status;
 		private String failedReason;
 		private Map<String, String> statuses = new HashMap<>();
+		private Map<String, String> inputParameters = new HashMap<>();
 
 		public String getWorkflowName() {
 			return workflowName;
@@ -466,22 +465,6 @@ public class EventHandler {
 
 		public void setWorkflowName(String workflowName) {
 			this.workflowName = workflowName;
-		}
-
-		public String getAttribName() {
-			return attribName;
-		}
-
-		public void setAttribName(String attribName) {
-			this.attribName = attribName;
-		}
-
-		public String getAttribValue() {
-			return attribValue;
-		}
-
-		public void setAttribValue(String attribValue) {
-			this.attribValue = attribValue;
 		}
 
 		public String getStatus() {
@@ -508,15 +491,22 @@ public class EventHandler {
 			this.statuses = statuses;
 		}
 
+		public Map<String, String> getInputParameters() {
+			return inputParameters;
+		}
+
+		public void setInputParameters(Map<String, String> inputParameters) {
+			this.inputParameters = inputParameters;
+		}
+
 		@Override
 		public String toString() {
 			return "FindUpdate{" +
 					"workflowName='" + workflowName + '\'' +
-					", attribName='" + attribName + '\'' +
-					", attribValue='" + attribValue + '\'' +
 					", status='" + status + '\'' +
 					", statuses=" + statuses +
 					", failedReason='" + failedReason + '\'' +
+					", inputParameters='" + inputParameters + '\'' +
 					'}';
 		}
 	}

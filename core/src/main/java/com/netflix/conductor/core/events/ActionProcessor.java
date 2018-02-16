@@ -38,11 +38,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren
@@ -245,20 +243,28 @@ public class ActionProcessor {
 			if (StringUtils.isEmpty(workflowName))
 				throw new RuntimeException("workflowName is empty");
 
-			// The wait task attribute name.
-			// That attribute must be in the task's inputParameters and referencing the workflow input.
-			String attribName = findUpdate.getAttribName();
-			if (StringUtils.isEmpty(attribName))
-				throw new RuntimeException("attribName is empty");
+			Map<String, String> inputParameters = findUpdate.getInputParameters();
+			if (MapUtils.isEmpty(inputParameters))
+				throw new RuntimeException("inputParameters is empty");
 
-			// Evaluating against the event handler payload. e.g assetId/uniqueuId in the event message
-			String attribValue = findUpdate.getAttribValue();
-			if (StringUtils.isEmpty(attribValue))
-				throw new RuntimeException("attribValue is empty");
+			// Convert map value field=expression to the map of field=value
+			inputParameters = inputParameters.entrySet().stream().map(entry -> {
+				String fieldName = entry.getKey();
+				String expression = entry.getValue();
+				if (StringUtils.isEmpty(expression))
+					throw new RuntimeException(fieldName + " expression is empty");
 
-			attribValue = ScriptEvaluator.evalJq(attribValue, payload);
-			if (StringUtils.isEmpty(attribValue))
-				throw new RuntimeException("attribValue evaluating is empty");
+				String fieldValue;
+				try {
+					fieldValue = ScriptEvaluator.evalJq(expression, payload);
+				} catch (Exception e) {
+					throw new RuntimeException(fieldName + " evaluating failed with " + e.getMessage(), e);
+				}
+				if (StringUtils.isEmpty(fieldValue))
+					throw new RuntimeException(fieldName + " evaluating is empty");
+
+				return new HashMap.SimpleEntry<>(fieldName, fieldValue);
+			}).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
 
 			// Task status is completed by default. It either can be a constant or expression
 			Status taskStatus = Status.COMPLETED;
@@ -296,15 +302,24 @@ public class ActionProcessor {
 						continue;
 					}
 
-					// Skip which does not have input attribute or attribute value is null
-					Map<String, Object> input = task.getInputData();
-					if (!input.containsKey(attribName) || input.get(attribName) == null) {
+					// Skip empty tasks
+					Map<String, Object> inputData = task.getInputData();
+					if (MapUtils.isEmpty(inputData)) {
+						continue;
+					}
+
+					// Skip task if it does not have ALL keys in the input parameters
+					boolean anyMissed = inputParameters.keySet().stream().anyMatch(item -> !inputData.containsKey(item));
+					if (anyMissed) {
 						continue;
 					}
 
 					// Skip if values do not match
-					String value = input.get(attribName).toString();
-					if (!attribValue.equals(value)) {
+					boolean anyNotEqual = inputParameters.entrySet().stream().anyMatch(entry -> {
+						String value = inputData.get(entry.getKey()).toString();
+						return !entry.getValue().equalsIgnoreCase(value);
+					});
+					if (anyNotEqual) {
 						continue;
 					}
 
