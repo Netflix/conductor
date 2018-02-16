@@ -59,14 +59,14 @@ public class SubWorkflowParams {
 	}
 
 	/**
-	 * @return Fail the parent workflow upon sub-workflow failure
+	 * @return Stand By the parent workflow upon sub-workflow failure
 	 */
 	public boolean isStandbyOnFail() {
 		return standbyOnFail;
 	}
 
 	/**
-	 * @param standbyOnFail Fail the parent workflow upon sub-workflow failure
+	 * @param standbyOnFail Stand By the parent workflow upon sub-workflow failure
 	 */
 	public void setStandbyOnFail(boolean standbyOnFail) {
 		this.standbyOnFail = standbyOnFail;
