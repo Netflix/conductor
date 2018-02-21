@@ -388,7 +388,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -400,7 +401,8 @@ public class TestActionProcessor {
 		EventHandler.Action action = newFindUpdateAction();
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -429,7 +431,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -444,7 +447,8 @@ public class TestActionProcessor {
 		action.getFind_update().setFailedReason(".reason");
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 		payload.put("status", "failure");
 		payload.put("reason", "exception message");
 
@@ -476,7 +480,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -489,7 +494,8 @@ public class TestActionProcessor {
 		action.getFind_update().setWorkflowName(null);
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -503,7 +509,7 @@ public class TestActionProcessor {
 	}
 
 	@Test
-	public void findUpdate_no_attribName() throws Exception {
+	public void findUpdate_empty_expression() throws Exception {
 		Workflow workflow = new Workflow();
 		workflow.setWorkflowId("1");
 		workflow.setWorkflowType("junit");
@@ -513,7 +519,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -523,10 +530,11 @@ public class TestActionProcessor {
 		ActionProcessor ap = new ActionProcessor(executor, metadata);
 
 		EventHandler.Action action = newFindUpdateAction();
-		action.getFind_update().setAttribName(null);
+		action.getFind_update().getInputParameters().put("versionId", null);
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -535,12 +543,12 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
-		assertEquals("attribName is empty", op.get("error"));
+		assertEquals("versionId expression is empty", op.get("error"));
 		assertEquals(action.getFind_update(), op.get("action"));
 	}
 
 	@Test
-	public void findUpdate_no_attribValue() throws Exception {
+	public void findUpdate_evaluating_empty() throws Exception {
 		Workflow workflow = new Workflow();
 		workflow.setWorkflowId("1");
 		workflow.setWorkflowType("junit");
@@ -550,7 +558,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -560,10 +569,11 @@ public class TestActionProcessor {
 		ActionProcessor ap = new ActionProcessor(executor, metadata);
 
 		EventHandler.Action action = newFindUpdateAction();
-		action.getFind_update().setAttribValue(null);
+		action.getFind_update().getInputParameters().put("versionId", ".FAKE");
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -572,12 +582,12 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
-		assertEquals("attribValue is empty", op.get("error"));
+		assertEquals("versionId evaluating is empty", op.get("error"));
 		assertEquals(action.getFind_update(), op.get("action"));
 	}
 
 	@Test
-	public void findUpdate_empty_attribValue() throws Exception {
+	public void findUpdate_evaluating_failed() throws Exception {
 		Workflow workflow = new Workflow();
 		workflow.setWorkflowId("1");
 		workflow.setWorkflowType("junit");
@@ -587,7 +597,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -597,10 +608,11 @@ public class TestActionProcessor {
 		ActionProcessor ap = new ActionProcessor(executor, metadata);
 
 		EventHandler.Action action = newFindUpdateAction();
-		action.getFind_update().setAttribValue(".FAKE");
+		action.getFind_update().getInputParameters().put("versionId", "WRONG");
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -609,7 +621,7 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
-		assertEquals("attribValue evaluating is empty", op.get("error"));
+		assertEquals("versionId evaluating failed with Function WRONG/0 does not exist", op.get("error"));
 		assertEquals(action.getFind_update(), op.get("action"));
 	}
 
@@ -624,7 +636,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -637,7 +650,8 @@ public class TestActionProcessor {
 		action.getFind_update().setStatus(".FAKE");
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -661,7 +675,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -673,7 +688,8 @@ public class TestActionProcessor {
 		EventHandler.Action action = newFindUpdateAction();
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -698,7 +714,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.COMPLETED);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -710,7 +727,8 @@ public class TestActionProcessor {
 		EventHandler.Action action = newFindUpdateAction();
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -735,7 +753,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType("FAKE");
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "1");
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -747,7 +766,8 @@ public class TestActionProcessor {
 		EventHandler.Action action = newFindUpdateAction();
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -783,7 +803,8 @@ public class TestActionProcessor {
 		EventHandler.Action action = newFindUpdateAction();
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -808,7 +829,8 @@ public class TestActionProcessor {
 		task.setTaskId("2");
 		task.setTaskType(Wait.NAME);
 		task.setStatus(Task.Status.IN_PROGRESS);
-		task.getInputData().put("assetId", "FAKE");
+		task.getInputData().put("featureId", "X");
+		task.getInputData().put("versionId", "X");
 		workflow.getTasks().add(task);
 
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
@@ -820,7 +842,46 @@ public class TestActionProcessor {
 		EventHandler.Action action = newFindUpdateAction();
 
 		Map<String, Object> payload = new HashMap<>();
-		payload.put("assetId", "1");
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(0)).updateTask(captor.capture());
+
+		assertNull(op.get("conductor.event.payload"));
+		assertNull(op.get("conductor.event.name"));
+		assertNull(op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+		assertTrue(op.isEmpty());
+	}
+
+	@Test
+	public void findUpdate_skip_task_input_partial_match() throws Exception {
+		Workflow workflow = new Workflow();
+		workflow.setWorkflowId("1");
+		workflow.setWorkflowType("junit");
+		workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("featureId", "f");
+		workflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+		EventHandler.Action action = newFindUpdateAction();
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
@@ -837,8 +898,8 @@ public class TestActionProcessor {
 	private EventHandler.Action newFindUpdateAction() {
 		EventHandler.FindUpdate findUpdate = new EventHandler.FindUpdate();
 		findUpdate.setWorkflowName("junit");
-		findUpdate.setAttribName("assetId");
-		findUpdate.setAttribValue(".assetId");
+		findUpdate.getInputParameters().put("featureId", ".featureId");
+		findUpdate.getInputParameters().put("versionId", ".versionId");
 
 		EventHandler.Action action = new EventHandler.Action();
 		action.setAction(EventHandler.Action.Type.find_update);
