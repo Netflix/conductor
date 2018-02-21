@@ -141,7 +141,16 @@ public class AuthManager {
 		Map<String, Claim> claims = decoded.getClaims();
 
 		Map<String, Object> payload = new HashMap<>();
-		claims.forEach((key, value) -> payload.put(key, value.asMap()));
+		claims.forEach((key, value) -> {
+			Map<String, Object> asMap = value.asMap();
+			if (value.isNull()) {
+				payload.put(key, null);
+			} else if (asMap != null) {
+				payload.put(key, asMap);
+			} else {
+				payload.put(key, value.asString());
+			}
+		});
 
 		return payload;
 	}
