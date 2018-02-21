@@ -20,6 +20,7 @@ package com.netflix.conductor.core.execution.tasks;
 
 import java.util.Map;
 
+import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		if(StringUtils.isEmpty(workflowId)) {
 			return false;
 		}
-		
+
 		Workflow subWorkflow = provider.getWorkflow(workflowId, false);
 		WorkflowStatus subWorkflowStatus = subWorkflow.getStatus();
 		if(!subWorkflowStatus.isTerminal()){
@@ -92,6 +93,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 			task.setStatus(Status.COMPLETED);
 		} else {
 			task.setStatus(Status.FAILED);
+			SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
+			if (param != null && param.isStandbyOnFail()) {
+				task.setStatus(Status.IN_PROGRESS);
+			}
 		}
 		return true;
 	}

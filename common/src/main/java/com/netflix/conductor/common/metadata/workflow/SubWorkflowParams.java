@@ -28,6 +28,8 @@ public class SubWorkflowParams {
 	
 	private Object version;
 
+	private boolean standbyOnFail;
+
 	/**
 	 * @return the name
 	 */
@@ -55,6 +57,18 @@ public class SubWorkflowParams {
 	public void setVersion(Object version) {
 		this.version = version;
 	}
-	
-	
+
+	/**
+	 * @return Stand By the parent workflow upon sub-workflow failure
+	 */
+	public boolean isStandbyOnFail() {
+		return standbyOnFail;
+	}
+
+	/**
+	 * @param standbyOnFail Stand By the parent workflow upon sub-workflow failure
+	 */
+	public void setStandbyOnFail(boolean standbyOnFail) {
+		this.standbyOnFail = standbyOnFail;
+	}
 }

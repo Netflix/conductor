@@ -21,6 +21,7 @@ package com.netflix.conductor.common.workflow;
 
 import static org.junit.Assert.*;
 
+import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import org.junit.Test;
 
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
@@ -53,4 +54,14 @@ public class TestWorkflowTask {
 		assertTrue(task.isOptional());
 		
 	}
+
+	@Test
+	public void testSubWorkflowParams() {
+		WorkflowTask task = new WorkflowTask();
+		assertNull(task.getSubWorkflowParam());
+
+		task.setSubWorkflowParam(new SubWorkflowParams());
+		assertFalse(task.getSubWorkflowParam().isStandbyOnFail());
+	}
+
 }
