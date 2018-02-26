@@ -116,7 +116,8 @@ job "conductor" {
         db = "elasticsearch"
 
         // Workflow settings
-        workflow_failure_expandInline   = "false"
+        workflow_auth_validate = "true"
+        workflow_failure_expandInline = "false"
         decider_sweep_frequency_seconds = "5"
         workflow_event_processor_refresh_seconds = "5"
 
