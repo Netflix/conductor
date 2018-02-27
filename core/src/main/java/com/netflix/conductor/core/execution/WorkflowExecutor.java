@@ -346,7 +346,7 @@ public class WorkflowExecutor {
         Monitors.recordWorkflowCompletion(workflow.getWorkflowType(), workflow.getEndTime() - workflow.getStartTime(), wf.getOwnerApp());
         queueDAO.remove(deciderQueue, workflow.getWorkflowId());    //remove from the sweep queue
       
-        executionDAO.removeWorkflow(workflow.getWorkflowId()); // Run-time data is deleted after the workflow is completed and history is stored in the ES
+        executionDAO.removeWorkflow(workflow.getWorkflowId() ,true); // Run-time data is deleted after the workflow is completed and history is stored in the ES
     }
 
     public void terminateWorkflow(String workflowId, String reason) throws Exception {
