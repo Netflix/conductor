@@ -254,7 +254,6 @@ job "conductor" {
           mbits = 4
           port "http" {}
           port "tcp" {}
-          
         }
       }
     } // end search task
