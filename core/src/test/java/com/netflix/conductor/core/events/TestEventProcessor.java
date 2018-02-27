@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,7 +43,6 @@ import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action.Type;
 import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.TestConfiguration;
@@ -74,9 +74,9 @@ public class TestEventProcessor {
 		when(queue.getName()).thenReturn(queueURI);
 		when(queue.getType()).thenReturn("sqs");
 		when(provider.getQueue(queueURI)).thenReturn(queue);
+		EventQueues.providers = new HashMap<>();
 		
-		
-		EventQueues.registerProvider(QueueType.sqs, provider);
+		EventQueues.providers.put("sqs", provider);
 		
 		EventHandler eh = new EventHandler();
 		eh.setName(UUID.randomUUID().toString());

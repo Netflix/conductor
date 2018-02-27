@@ -20,6 +20,7 @@ package com.netflix.conductor.server.resources;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -117,6 +118,21 @@ public class WorkflowResource {
 				@QueryParam("includeTasks") @DefaultValue("false") boolean includeTasks) throws Exception {
 			return service.getWorkflowInstances(name, correlationId, includeClosed, includeTasks);
 	}
+
+	@POST
+	@Path("/{name}/correlated")
+	@ApiOperation("Lists workflows for the given correlation id list")
+	@Consumes(MediaType.WILDCARD)
+	public Map<String, List<Workflow>> getWorkflows(@PathParam("name") String name, 
+				@QueryParam("includeClosed") @DefaultValue("false") boolean includeClosed, 
+				@QueryParam("includeTasks") @DefaultValue("false") boolean includeTasks, List<String> correlationIds) throws Exception {
+			Map<String, List<Workflow>> workflows = new HashMap<>();
+			for(String correlationId : correlationIds) {
+				List<Workflow> ws = service.getWorkflowInstances(name, correlationId, includeClosed, includeTasks);
+				workflows.put(correlationId, ws);
+			}
+			return workflows;
+	}
 	
 	@GET
 	@Path("/{workflowId}")
@@ -132,8 +148,9 @@ public class WorkflowResource {
 	@Path("/{workflowId}/remove")
 	@ApiOperation("Removes the workflow from the system")
 	@Consumes(MediaType.WILDCARD)
-	public void delete(@PathParam("workflowId") String workflowId) throws Exception {
-		service.removeWorkflow(workflowId);
+	public void delete(@PathParam("workflowId") String workflowId,
+	                   @QueryParam("archiveWorkflow") @DefaultValue("true") boolean archiveWorkflow) throws Exception {
+		service.removeWorkflow(workflowId, archiveWorkflow);
 	}
 	
 	@GET
