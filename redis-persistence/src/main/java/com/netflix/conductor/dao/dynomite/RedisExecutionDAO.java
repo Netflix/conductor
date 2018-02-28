@@ -378,7 +378,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by id: " + workflowId);
 		}
 		Workflow workflow = readValue(json, Workflow.class);
-
+		createTasks(workflow.getTasks());  //When Rerun,  Restore the status of the Tasks
 		if(!includeTasks) {
 			workflow.getTasks().clear();
 		}

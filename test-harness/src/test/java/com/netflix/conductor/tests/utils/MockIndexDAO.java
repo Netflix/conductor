@@ -40,7 +40,7 @@ public class MockIndexDAO implements IndexDAO {
 	@Override
 	public void index(Workflow workflow) {
 		try {
-			Map<String, Object> exist = workflowIndex.stream().findFirst().filter(wf -> wf.get("id").equals(workflow.getWorkflowId())).get();
+			Map<String, Object> exist = workflowIndex.stream().filter(stringObjectMap -> stringObjectMap.get("id").equals(workflow.getWorkflowId())).findFirst().get();
 			workflowIndex.remove(exist);
 		}catch (Exception e){}
 
@@ -66,7 +66,6 @@ public class MockIndexDAO implements IndexDAO {
 	
 	@Override
 	public void update(String workflowInstanceId, String[] keys, Object[] values) {
-		Map<String, Object> findById = workflowIndex.stream().findFirst().filter(wf -> wf.get("id").equals(workflowInstanceId)).get();
 
 		if(keys.length != values.length) {
 			throw new IllegalArgumentException("Number of keys and values should be same.");
@@ -78,13 +77,18 @@ public class MockIndexDAO implements IndexDAO {
 			Object value= values[i];
 			source.put(key, value);
 		}
-		findById.put("source", source);
 
-		System.out.println(workflowInstanceId);
+		try {
+			Map<String, Object> findById = workflowIndex.stream().filter(stringObjectMap -> stringObjectMap.get("id").equals(workflowInstanceId)).findFirst().get();
+			findById.put("source", source);
+		}catch (Exception e){
+			return;
+		}
+
 	}
 	@Override
 	public void index(Task task) {
-		
+		System.out.println(task);
 	}
 	
 	@Override
@@ -104,8 +108,8 @@ public class MockIndexDAO implements IndexDAO {
   
 	@Override
 	public String get(String workflowInstanceId, String key) {
-		Map<String, Object> findById = workflowIndex.stream().findFirst().filter(wf -> wf.get("id").equals(workflowInstanceId)).get();
 		try {
+			Map<String, Object> findById = workflowIndex.stream().filter(stringObjectMap -> stringObjectMap.get("id").equals(workflowInstanceId)).findFirst().get();
 			Map<String, Object> source = (Map<String, Object>)findById.get("source");
 			return source.get(key).toString();
 		}catch (Exception e){
