@@ -18,8 +18,8 @@
  */
 package com.netflix.conductor.tests.utils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.Predicate;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -35,8 +35,19 @@ import com.netflix.conductor.dao.IndexDAO;
  */
 public class MockIndexDAO implements IndexDAO {
 
+	private List<Map<String, Object>> workflowIndex = new ArrayList<>();
+
 	@Override
 	public void index(Workflow workflow) {
+		try {
+			Map<String, Object> exist = workflowIndex.stream().findFirst().filter(wf -> wf.get("id").equals(workflow.getWorkflowId())).get();
+			workflowIndex.remove(exist);
+		}catch (Exception e){}
+
+		Map<String, Object> newWorkflow = new HashMap<>();
+		newWorkflow.put("id", workflow.getWorkflowId());
+		newWorkflow.put("workflow", workflow);
+		workflowIndex.add(newWorkflow);
 	}
 
 	@Override
@@ -54,8 +65,22 @@ public class MockIndexDAO implements IndexDAO {
 	}
 	
 	@Override
-	public void update(String workflowInstanceId, String[] key, Object[] value) {
-		
+	public void update(String workflowInstanceId, String[] keys, Object[] values) {
+		Map<String, Object> findById = workflowIndex.stream().findFirst().filter(wf -> wf.get("id").equals(workflowInstanceId)).get();
+
+		if(keys.length != values.length) {
+			throw new IllegalArgumentException("Number of keys and values should be same.");
+		}
+
+		Map<String, Object> source = new HashMap<>();
+		for (int i = 0; i < keys.length; i++) {
+			String key = keys[i];
+			Object value= values[i];
+			source.put(key, value);
+		}
+		findById.put("source", source);
+
+		System.out.println(workflowInstanceId);
 	}
 	@Override
 	public void index(Task task) {
@@ -79,7 +104,13 @@ public class MockIndexDAO implements IndexDAO {
   
 	@Override
 	public String get(String workflowInstanceId, String key) {
-		return null;
+		Map<String, Object> findById = workflowIndex.stream().findFirst().filter(wf -> wf.get("id").equals(workflowInstanceId)).get();
+		try {
+			Map<String, Object> source = (Map<String, Object>)findById.get("source");
+			return source.get(key).toString();
+		}catch (Exception e){
+			return null;
+		}
 	}
 	
 	
