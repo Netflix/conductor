@@ -18,18 +18,17 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import java.util.Map;
-
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
+import java.util.Map;
 
 /**
  * @author Viren
@@ -38,9 +37,10 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
-	
+
+	private static final String RESTARTED = "restartCount";
 	public static final String NAME = "SUB_WORKFLOW";
-	
+
 	public SubWorkflow() {
 		super(NAME);
 	}
@@ -96,6 +96,20 @@ public class SubWorkflow extends WorkflowSystemTask {
 			SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
 			if (param != null && param.isStandbyOnFail()) {
 				task.setStatus(Status.IN_PROGRESS);
+				if (param.isRestartOnFail()) {
+					Integer restarted = (Integer)task.getOutputData().get(RESTARTED);
+					if (restarted == null) {
+						restarted = 0;
+					}
+					if (param.getRestartCount() >= 0 && restarted >= param.getRestartCount()) {
+						task.setStatus(Status.FAILED);
+						task.setReasonForIncompletion("Number of restart attempts reached configured value");
+					} else {
+						provider.rewind(workflowId, subWorkflow.getHeaders());
+						restarted++;
+						task.getOutputData().put(RESTARTED, restarted);
+					}
+				}
 			}
 		}
 		return true;
