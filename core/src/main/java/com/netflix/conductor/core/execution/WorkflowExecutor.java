@@ -361,7 +361,7 @@ public class WorkflowExecutor {
 			if (forbiddenTypes.contains(failedTask.getTaskType())) {
 				String message = String.format("The last task is %s! Retry is not allowed for such type of the task %s",
 						failedTask.getReferenceTaskName(), failedTask.getTaskType());
-				throw new ApplicationException(Code.CONFLICT, message);
+				throw new ApplicationException(Code.CONFLICT, "Unable to retry from this point.  Please restart.");
 			}
 		}
 
