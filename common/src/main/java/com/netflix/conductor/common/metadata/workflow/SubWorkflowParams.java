@@ -30,6 +30,9 @@ public class SubWorkflowParams {
 
 	private boolean standbyOnFail;
 
+	private boolean restartOnFail;
+
+	private int restartCount = -1; // -1 means an infinite number of restarts
 	/**
 	 * @return the name
 	 */
@@ -70,5 +73,33 @@ public class SubWorkflowParams {
 	 */
 	public void setStandbyOnFail(boolean standbyOnFail) {
 		this.standbyOnFail = standbyOnFail;
+	}
+
+	/**
+	 * @return Restart the sub-workflow upon failure
+	 */
+	public boolean isRestartOnFail() {
+		return restartOnFail;
+	}
+
+	/**
+	 * @param restartOnFail Restart the sub-workflow upon failure
+	 */
+	public void setRestartOnFail(boolean restartOnFail) {
+		this.restartOnFail = restartOnFail;
+	}
+
+	/**
+	 * @return  Number of restarts for the sub-workflow
+	 */
+	public int getRestartCount() {
+		return restartCount;
+	}
+
+	/**
+	 * @param restartCount  Number of restarts for the sub-workflow
+	 */
+	public void setRestartCount(int restartCount) {
+		this.restartCount = restartCount;
 	}
 }

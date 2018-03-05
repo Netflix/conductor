@@ -43,6 +43,7 @@ public class CoreModule extends AbstractModule {
 		bind(Wait.class).asEagerSingleton();
 		bind(Event.class).asEagerSingleton();
 		bind(Fail.class).asEagerSingleton();
+		bind(Output.class).asEagerSingleton();
 		bind(UpdateTask.class).asEagerSingleton();
 	}
 	
