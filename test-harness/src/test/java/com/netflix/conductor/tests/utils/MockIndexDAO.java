@@ -19,7 +19,6 @@
 package com.netflix.conductor.tests.utils;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
