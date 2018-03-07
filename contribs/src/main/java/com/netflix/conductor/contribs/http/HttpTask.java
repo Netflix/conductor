@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -116,12 +117,12 @@ public class HttpTask extends WorkflowSystemTask {
 			task.setStatus(Status.FAILED);
 			return;
 		}
-		
+
 		try {
 			
 			HttpResponse response = httpCall(input);
 			logger.info("response {}, {}", response.statusCode, response.body);
-			if(response.statusCode > 199 && response.statusCode < 300) {
+			if(response.statusCode > 199 && response.statusCode < 300 || input.getAllowedNonSuccessfulStatusCodes().contains(response.statusCode)) {
 				task.setStatus(Status.COMPLETED);
 			} else {
 				if(response.body != null) {
@@ -136,7 +137,7 @@ public class HttpTask extends WorkflowSystemTask {
 			}
 			
 		}catch(Exception e) {
-			
+
 			logger.error(e.getMessage(), e);
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(e.getMessage());
@@ -304,6 +305,8 @@ public class HttpTask extends WorkflowSystemTask {
 
 		private String oauthConsumerSecret;
 
+		private List<Integer> allowedNonSuccessfulStatusCodes = new ArrayList<>();
+
 		/**
 		 * @return the method
 		 */
@@ -430,6 +433,14 @@ public class HttpTask extends WorkflowSystemTask {
 		 */
 		public void setOauthConsumerSecret(String oauthConsumerSecret) {
 			this.oauthConsumerSecret = oauthConsumerSecret;
+		}
+
+		public List<Integer> getAllowedNonSuccessfulStatusCodes() {
+			return allowedNonSuccessfulStatusCodes;
+		}
+
+		public void setAllowedNonSuccessfulStatusCodes(List<Integer> allowedNonSuccessfulStatusCodes) {
+			this.allowedNonSuccessfulStatusCodes = allowedNonSuccessfulStatusCodes;
 		}
 	}
 }

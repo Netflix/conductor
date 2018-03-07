@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -339,6 +341,25 @@ public class TestHttpTask {
 		
 		assertEquals("Task output: " + task.getOutputData(), Status.COMPLETED, task.getStatus());
 	}
+
+	@Test
+	public void testTextGETUnsuccessFulStatusCode() throws Exception {
+		Task task = new Task();
+		Input input = new Input();
+		input.setUri("http://localhost:7009/404");
+		input.setMethod("GET");
+		List<Integer> allowedNonSuccessFulStatusCodes = new ArrayList<>();
+		allowedNonSuccessFulStatusCodes.add(404);
+		input.setAllowedNonSuccessfulStatusCodes(allowedNonSuccessFulStatusCodes);
+		task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+
+		httpTask.start(workflow, task, executor);
+		Map<String, Object> hr = (Map<String, Object>) task.getOutputData().get("response");
+		Object response = hr.get("body");
+		assertEquals(Task.Status.COMPLETED, task.getStatus());
+		assertEquals(TEXT_RESPONSE, response);
+		assertEquals(404, hr.get("statusCode"));
+	}
 	
 	private static class EchoHandler extends AbstractHandler {
 
@@ -397,6 +418,12 @@ public class TestHttpTask {
 				response.addHeader("Content-Type", "application/json");
 				PrintWriter writer = response.getWriter();
 				writer.print(objectMapper.writeValueAsString(params));
+				writer.flush();
+				writer.close();
+			}  else if (request.getMethod().equals("GET") && request.getRequestURI().equals("/404")) {
+				response.setStatus(404);
+				PrintWriter writer = response.getWriter();
+				writer.print(TEXT_RESPONSE);
 				writer.flush();
 				writer.close();
 			}
