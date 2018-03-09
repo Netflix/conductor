@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -100,7 +101,18 @@ public class AuthTask extends WorkflowSystemTask {
 		String token = (String) validate.get(PARAM_TOKEN);
 
 		Map<String, String> rules = (Map<String, String>) validate.get(PARAM_RULES);
-		Map<String, Object> failed = manger.validate(token, rules);
+
+		Map<String, Object> failed = Collections.emptyMap();
+		try {
+			failed = manger.validate(token, rules);
+		} catch (IllegalArgumentException ex) {
+			task.getOutputData().put("reason", ex.getMessage());
+			if (failOnError) {
+				task.getOutputData().put("success", false);
+				fail(task, ex.getMessage());
+				return;
+			}
+		}
 
 		task.getOutputData().put("success", failed.isEmpty());
 		if (!failed.isEmpty()) {

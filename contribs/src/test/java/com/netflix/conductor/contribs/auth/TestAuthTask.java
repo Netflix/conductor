@@ -29,11 +29,13 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -95,6 +97,126 @@ public class TestAuthTask {
 	}
 
 	@Test
+	public void validate_no_exp() throws Exception {
+		AuthManager manger = mock(AuthManager.class);
+		when(manger.validate(any(), any())).thenThrow(new IllegalArgumentException("Invalid token. No expiration claim present"));
+		AuthTask authTask = new AuthTask(manger);
+		String accessToken = JWT.create().withClaim("access", "foo").sign(Algorithm.none());
+
+		Task task = new Task();
+
+		Map<String, Object> rules = new HashMap<>();
+		rules.put("access",".access == \"foo\"");
+
+		Map<String, Object> validate = new HashMap<>();
+		validate.put("token", accessToken);
+		validate.put("rules", rules);
+
+		Map<String, Object> inputData = task.getInputData();
+		inputData.put("validate", validate);
+		inputData.put("failOnError", false);
+
+		authTask.start(workflow, task, executor);
+		assertEquals(Task.Status.COMPLETED, task.getStatus());
+
+		Map<String, Object> outputData = task.getOutputData();
+		assertEquals(true, outputData.get("success"));
+		assertEquals("Invalid token. No expiration claim present", outputData.get("reason"));
+		assertEquals(null, outputData.get("failed"));
+	}
+
+	@Test
+	public void validate_no_exp_fail() throws Exception {
+		AuthManager manger = mock(AuthManager.class);
+		when(manger.validate(any(), any())).thenThrow(new IllegalArgumentException("Invalid token. No expiration claim present"));
+		AuthTask authTask = new AuthTask(manger);
+		String accessToken = JWT.create().withClaim("access", "foo").sign(Algorithm.none());
+
+		Task task = new Task();
+
+		Map<String, Object> rules = new HashMap<>();
+		rules.put("access",".access == \"foo\"");
+
+		Map<String, Object> validate = new HashMap<>();
+		validate.put("token", accessToken);
+		validate.put("rules", rules);
+
+		Map<String, Object> inputData = task.getInputData();
+		inputData.put("validate", validate);
+
+		authTask.start(workflow, task, executor);
+		assertEquals(Task.Status.FAILED, task.getStatus());
+
+		Map<String, Object> outputData = task.getOutputData();
+		assertEquals(false, outputData.get("success"));
+		assertEquals("Invalid token. No expiration claim present", outputData.get("reason"));
+		assertEquals("Invalid token. No expiration claim present", task.getReasonForIncompletion());
+		assertEquals(null, outputData.get("failed"));
+	}
+
+	@Test
+	public void validate_expired() throws Exception {
+		AuthManager manger = mock(AuthManager.class);
+		when(manger.validate(any(), any())).thenThrow(new IllegalArgumentException("Invalid token. Token is expired"));
+		AuthTask authTask = new AuthTask(manger);
+		String accessToken = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() - 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
+
+		Task task = new Task();
+
+		Map<String, Object> rules = new HashMap<>();
+		rules.put("access",".access == \"foo\"");
+
+		Map<String, Object> validate = new HashMap<>();
+		validate.put("token", accessToken);
+		validate.put("rules", rules);
+
+		Map<String, Object> inputData = task.getInputData();
+		inputData.put("validate", validate);
+		inputData.put("failOnError", false);
+
+		authTask.start(workflow, task, executor);
+		assertEquals(Task.Status.COMPLETED, task.getStatus());
+
+		Map<String, Object> outputData = task.getOutputData();
+		assertEquals(true, outputData.get("success"));
+		assertEquals("Invalid token. Token is expired", outputData.get("reason"));
+		assertEquals(null, outputData.get("failed"));
+	}
+
+	@Test
+	public void validate_expired_fail() throws Exception {
+		AuthManager manger = mock(AuthManager.class);
+		when(manger.validate(any(), any())).thenThrow(new IllegalArgumentException("Invalid token. Token is expired"));
+		AuthTask authTask = new AuthTask(manger);
+		String accessToken = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() - 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
+
+		Task task = new Task();
+
+		Map<String, Object> rules = new HashMap<>();
+		rules.put("access",".access == \"foo\"");
+
+		Map<String, Object> validate = new HashMap<>();
+		validate.put("token", accessToken);
+		validate.put("rules", rules);
+
+		Map<String, Object> inputData = task.getInputData();
+		inputData.put("validate", validate);
+
+		authTask.start(workflow, task, executor);
+		assertEquals(Task.Status.FAILED, task.getStatus());
+
+		Map<String, Object> outputData = task.getOutputData();
+		assertEquals(false, outputData.get("success"));
+		assertEquals("Invalid token. Token is expired", outputData.get("reason"));
+		assertEquals("Invalid token. Token is expired", task.getReasonForIncompletion());
+		assertEquals(null, outputData.get("failed"));
+	}
+
+	@Test
 	public void validate_empty_accessToken() throws Exception {
 		AuthManager manger = mock(AuthManager.class);
 		AuthTask authTask = new AuthTask(manger);
@@ -138,7 +260,9 @@ public class TestAuthTask {
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("dummy");
 		AuthManager manger = new AuthManager(config);
 		AuthTask authTask = new AuthTask(manger);
-		String accessToken = JWT.create().withClaim("access", "foo").sign(Algorithm.none());
+		String accessToken = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() + 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
 
 		Task task = new Task();
 
@@ -168,7 +292,9 @@ public class TestAuthTask {
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("dummy");
 		AuthManager manger = new AuthManager(config);
 		AuthTask authTask = new AuthTask(manger);
-		String accessToken = JWT.create().withClaim("access", "foo").sign(Algorithm.none());
+		String accessToken = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() + 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
 
 		Task task = new Task();
 
@@ -205,7 +331,9 @@ public class TestAuthTask {
 		when(config.getProperty("conductor.auth.clientSecret", null)).thenReturn("dummy");
 		AuthManager manger = new AuthManager(config);
 		AuthTask authTask = new AuthTask(manger);
-		String accessToken = JWT.create().withClaim("access", "foo").sign(Algorithm.none());
+		String accessToken = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() + 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
 
 		Task task = new Task();
 
