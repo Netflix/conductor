@@ -91,13 +91,13 @@ public final class JerseyModule extends JerseyServletModule {
 		        res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
 		        res.addHeader("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization");
 
-				HttpServletRequest req = (HttpServletRequest) request;
-				String requestURI = req.getRequestURI();
-				if (requestURI.startsWith("/v1")) {
-					request.getRequestDispatcher("/api" + requestURI).forward(request,response);
-				} else {
-					chain.doFilter(request, response);
-				}
+		        HttpServletRequest req = (HttpServletRequest) request;
+		        String requestURI = req.getRequestURI();
+		        if (requestURI.startsWith("/v1")) {
+		            request.getRequestDispatcher("/api" + requestURI).forward(request,response);
+		        } else {
+		            chain.doFilter(request, response);
+		        }
 		    }
 			@Override
 			public void destroy() {}
