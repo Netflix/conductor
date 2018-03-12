@@ -64,7 +64,7 @@ public class InfoResource {
 	@ApiOperation(value = "Get the status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> status() {
-		return Collections.singletonMap("Version", fullVersion);
+		return Collections.singletonMap("version", fullVersion);
 	}
 
 	@GET
