@@ -15,19 +15,6 @@
  */
 package com.netflix.conductor.server;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.inject.Singleton;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletResponse;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +24,14 @@ import com.sun.jersey.api.core.PackagesResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
+
+import javax.inject.Singleton;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 
@@ -95,8 +90,14 @@ public final class JerseyModule extends JerseyServletModule {
 		        }
 		        res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
 		        res.addHeader("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization");
-		        
-		        chain.doFilter(request, response);
+
+				HttpServletRequest req = (HttpServletRequest) request;
+				String requestURI = req.getRequestURI();
+				if (requestURI.startsWith("/v1")) {
+					request.getRequestDispatcher("/api" + requestURI).forward(request,response);
+				} else {
+					chain.doFilter(request, response);
+				}
 		    }
 			@Override
 			public void destroy() {}
