@@ -30,7 +30,7 @@ import javax.inject.Singleton;
 @Singleton
 public class RestClientManager {
 
-	private Client defaultClient = new ApacheHttpClient4();
+	private Client defaultClient = ApacheHttpClient4.create();
 
 	public Client getClient(Input input) {
 		return defaultClient;
