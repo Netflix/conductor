@@ -89,7 +89,7 @@ public class SystemTask extends Task {
 		return st;
 	}	
 	
-	public static Task JoinTask(Workflow workflow, String taskId, WorkflowTask taskToSchedule, Map<String, Object> input){
+	public static Task joinTask(Workflow workflow, String taskId, WorkflowTask taskToSchedule, Map<String, Object> input){
 		SystemTask st = new SystemTask();
 		st.setTaskType(SystemTaskType.JOIN.name());
 		st.setTaskDefName(SystemTaskType.JOIN.name());

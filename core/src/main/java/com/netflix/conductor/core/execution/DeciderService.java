@@ -456,7 +456,7 @@ public class DeciderService {
 			case JOIN:
 				Map<String, Object> joinInput = new HashMap<String, Object>();
 				joinInput.put("joinOn", taskToSchedule.getJoinOn());
-				Task joinTask = SystemTask.JoinTask(workflow, taskId, taskToSchedule, joinInput);
+				Task joinTask = SystemTask.joinTask(workflow, taskId, taskToSchedule, joinInput);
 				tasks.add(joinTask);
 				break;
 			case FORK_JOIN_DYNAMIC:
@@ -590,7 +590,7 @@ public class DeciderService {
 		// Create Join task				
 		HashMap<String, Object> joinInput = new HashMap<String, Object>();
 		joinInput.put("joinOn", joinOnTaskRefs);
-		Task joinTask = SystemTask.JoinTask(workflow, IDGenerator.generate(), joinWorkflowTask, joinInput);
+		Task joinTask = SystemTask.joinTask(workflow, IDGenerator.generate(), joinWorkflowTask, joinInput);
 		return joinTask;
 	}
 	
