@@ -567,9 +567,6 @@ public class WorkflowExecutor {
             if (!tasksToBeRequeued.isEmpty()) {
                 addTaskToQueue(tasksToBeRequeued);
             }
-            if(workflow.getTasks()){
-
-            }
             if(!workflow.getTasks().contains(tasksToBeScheduled)){
                 workflow.getTasks().addAll(tasksToBeScheduled);
             }
