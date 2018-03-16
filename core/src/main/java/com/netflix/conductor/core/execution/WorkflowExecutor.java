@@ -488,7 +488,7 @@ public class WorkflowExecutor {
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is cancelled.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
-		List<Task> tasks = edao.getTasksForWorkflow(workflowId);
+		List<Task> tasks = workflow.getTasks();
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {
 				// Cancel the ones which are not completed yet....
@@ -570,7 +570,7 @@ public class WorkflowExecutor {
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is terminated.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
-		List<Task> tasks = edao.getTasksForWorkflow(workflowId);
+		List<Task> tasks = workflow.getTasks();
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {
 				// Cancel the ones which are not completed yet....
