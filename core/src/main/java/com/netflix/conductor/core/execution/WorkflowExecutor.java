@@ -475,19 +475,20 @@ public class WorkflowExecutor {
 	public String cancelWorkflow(String workflowId,Map<String, Object> inputbody) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		workflow.setStatus(WorkflowStatus.CANCELLED);
-		return cancelWorkflow(workflow,inputbody);
+		return cancelWorkflow(workflow, inputbody, null);
 	}
 
-	public String cancelWorkflow(Workflow workflow, Map<String, Object> inputbody) throws Exception {
+	public String cancelWorkflow(Workflow workflow, Map<String, Object> inputbody, String reason) throws Exception {
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
 
 		String workflowId = workflow.getWorkflowId();
+		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is cancelled.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
-		List<Task> tasks = workflow.getTasks();
+		List<Task> tasks = edao.getTasksForWorkflow(workflowId);
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {
 				// Cancel the ones which are not completed yet....
@@ -569,7 +570,7 @@ public class WorkflowExecutor {
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is terminated.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
-		List<Task> tasks = workflow.getTasks();
+		List<Task> tasks = edao.getTasksForWorkflow(workflowId);
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {
 				// Cancel the ones which are not completed yet....
