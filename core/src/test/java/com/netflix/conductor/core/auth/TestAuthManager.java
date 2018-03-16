@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -110,7 +111,9 @@ public class TestAuthManager {
 
 	@Test
 	public void validate() {
-		String token = JWT.create().withClaim("access", "foo").sign(Algorithm.none());
+		String token = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() + 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
 		AuthManager manager = new AuthManager(config);
 		Map<String, String> rules = new HashMap<>();
 		rules.put("success", ".access == \"foo\"");
@@ -119,7 +122,37 @@ public class TestAuthManager {
 		assertNotNull(validate);
 		assertEquals(1, validate.size());
 		assertEquals(false, validate.get("wrong"));
+	}
 
+	@Test
+	public void no_exp() {
+		String token = JWT.create()
+				.withClaim("access", "foo").sign(Algorithm.none());
+		AuthManager manager = new AuthManager(config);
+		Map<String, String> rules = new HashMap<>();
+		rules.put("success", ".access == \"foo\"");
+		rules.put("wrong", ".access == \"bar\"");
+		try {
+			manager.validate(token, rules);
+		} catch (Exception ex) {
+			assertEquals("Invalid token. No expiration claim present", ex.getMessage());
+		}
+	}
+
+	@Test
+	public void expired() {
+		String token = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() - 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
+		AuthManager manager = new AuthManager(config);
+		Map<String, String> rules = new HashMap<>();
+		rules.put("success", ".access == \"foo\"");
+		rules.put("wrong", ".access == \"bar\"");
+		try {
+			manager.validate(token, rules);
+		} catch (Exception ex) {
+			assertEquals("Invalid token. Token is expired", ex.getMessage());
+		}
 	}
 
 	private static class EchoHandler extends AbstractHandler {

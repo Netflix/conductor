@@ -1184,13 +1184,16 @@ public class WorkflowExecutor {
 		Map<String, Object> failedList;
 		try {
 			failedList = auth.validate(token, workflowDef.getAuthValidation());
+		} catch (IllegalArgumentException ex) {
+			logger.error("Auth validation failed with " + ex.getMessage(), ex);
+			throw new ApplicationException(Code.INTERNAL_ERROR, "Auth validation failed: " + ex.getMessage());
 		} catch (Exception ex) {
 			logger.error("An internal error occurred during auth validation: " + ex.getMessage(), ex);
 			throw new ApplicationException(Code.INTERNAL_ERROR, "An internal error occurred during auth validation");
 		}
 
 		if (!failedList.isEmpty()) {
-			throw new ApplicationException(Code.INVALID_INPUT, "Auth validation failed");
+			throw new ApplicationException(Code.INVALID_INPUT, "Auth validation failed: at least one of the verify conditions failed");
 		}
 	}
 }
