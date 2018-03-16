@@ -120,6 +120,13 @@ class GenericHttpTask extends WorkflowSystemTask {
 			builder.entity(input.getBody());
 		}
 
+		// Attach the Authorization header by adding entry to the input's headers
+		if (input.isAuthorize()) {
+			setAuthorization(input);
+		}
+
+		// Attach headers to the builder
+		logger.info("http task headers to be set " + input.getHeaders());
 		input.getHeaders().entrySet().forEach(e -> {
 			builder.header(e.getKey(), e.getValue());
 		});
@@ -127,11 +134,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 		// Attach Deluxe Owf Context header
 		if (input.isCorrelation()) {
 			setCorrelation(builder, workflow, executor);
-		}
-
-		// Attach the Authorization header
-		if (input.isAuthorize()) {
-			setAuthorization(builder);
 		}
 
 		HttpResponse response = new HttpResponse();
@@ -204,9 +206,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 		executor.updateWorkflow(workflow);
 	}
 
-	private void setAuthorization(WebResource.Builder builder) throws Exception {
+	private void setAuthorization(Input input) throws Exception {
 		AuthResponse response = auth.authorize();
-		logger.info("Setting " + HttpHeaders.AUTHORIZATION + " header");
-		builder.header(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
+		input.getHeaders().put(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
 	}
 }
