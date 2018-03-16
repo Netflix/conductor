@@ -19,6 +19,7 @@
 package com.netflix.conductor.contribs.http;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.client.apache4.ApacheHttpClient4;
 
 import javax.inject.Singleton;
 
@@ -29,8 +30,8 @@ import javax.inject.Singleton;
 @Singleton
 public class RestClientManager {
 
-	private Client defaultClient = Client.create();
-	
+	private Client defaultClient = ApacheHttpClient4.create();
+
 	public Client getClient(Input input) {
 		return defaultClient;
 	}
