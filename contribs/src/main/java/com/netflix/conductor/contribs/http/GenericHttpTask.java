@@ -125,16 +125,23 @@ class GenericHttpTask extends WorkflowSystemTask {
 			setAuthorization(input);
 		}
 
+		// Attach Deluxe Owf Context header
+		if (input.isCorrelation()) {
+			setCorrelation(input, workflow, executor);
+		}
+
 		// Attach headers to the builder
-		logger.info("http task headers to be set " + input.getHeaders());
 		input.getHeaders().entrySet().forEach(e -> {
 			builder.header(e.getKey(), e.getValue());
 		});
 
-		// Attach Deluxe Owf Context header
-		if (input.isCorrelation()) {
-			setCorrelation(builder, workflow, executor);
+		// Log the headers
+		Map<String, Object> headers = new HashMap<>(input.getHeaders());
+		// We need to mask auth header value
+		if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
+			headers.put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
 		}
+		logger.info("http task headers " + headers);
 
 		HttpResponse response = new HttpResponse();
 		try {
@@ -186,7 +193,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void setCorrelation(WebResource.Builder builder, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
+	private void setCorrelation(Input input, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
 
 		Correlator correlator;
 		if (workflow.getHeaders() != null) {
@@ -199,7 +206,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 		correlator.updateSequenceNo();
 		correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflow.getWorkflowId());
-		correlator.attach(builder);
+		correlator.attach(input.getHeaders());
 
 		// Update workflow to save new values
 		workflow.getHeaders().put(Correlator.headerKey, correlator.getAsMap());

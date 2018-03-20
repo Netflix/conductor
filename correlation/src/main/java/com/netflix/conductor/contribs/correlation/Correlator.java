@@ -3,7 +3,6 @@ package com.netflix.conductor.contribs.correlation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.WebResource;
 import org.slf4j.Logger;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -64,10 +63,9 @@ public class Correlator implements ICorrelator {
 		logger.info("Context after urn set is " + context.print());
 	}
 
-	public void attach(WebResource.Builder builder) throws JsonProcessingException {
+	public void attach(Map<String, Object> headers) throws JsonProcessingException {
 		String json = mapper.writeValueAsString(context);
-		logger.info("Setting " + headerKey + " to " + json);
-		builder.header(headerKey, json);
+		headers.put(headerKey, json);
 	}
 
 	public Context parseHeader(HttpHeaders headers) {
