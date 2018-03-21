@@ -472,7 +472,7 @@ public class WorkflowExecutor {
         if (Status.FAILED.equals(task.getStatus())) {
             workflowInstance.getFailedReferenceTaskNames().add(task.getReferenceTaskName());
             executionDAO.updateWorkflow(workflowInstance);
-            logger.debug("Task: {} has a FAILED status and the Workflow has been updated with failed task reference");
+            logger.debug("Task: {} has a FAILED status and the Workflow has been updated with failed task reference",task);
         }
 
         result.getLogs().forEach(tl -> tl.setTaskId(task.getTaskId()));
