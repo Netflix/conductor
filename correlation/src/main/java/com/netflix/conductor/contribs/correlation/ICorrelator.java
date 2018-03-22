@@ -1,7 +1,8 @@
 package com.netflix.conductor.contribs.correlation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sun.jersey.api.client.WebResource;
+
+import java.util.Map;
 
 /**
  * Created by beimforz on 12/21/17.
@@ -9,5 +10,5 @@ import com.sun.jersey.api.client.WebResource;
 public interface ICorrelator {
     void addIdentifier(String urn);
 
-    void attach(WebResource.Builder builder) throws JsonProcessingException;
+    void attach(Map<String, Object> headers) throws JsonProcessingException;
 }
