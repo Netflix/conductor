@@ -178,7 +178,7 @@ public class ParametersUtils {
 	private Map<String, Object> replace(Map<String, Object> input, DocumentContext io, String taskId) {
 		for (Entry<String, Object> e : input.entrySet()) {
 			Object value = e.getValue();
-			if (value instanceof String || value instanceof Number) {
+			if (value instanceof String) {
 				Object replaced = replaceVariables(value.toString(), io, taskId);
 				e.setValue(replaced);
 			} else if (value instanceof Map) {
