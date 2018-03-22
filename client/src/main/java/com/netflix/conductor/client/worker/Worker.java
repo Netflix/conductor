@@ -28,16 +28,20 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
  *
  */
 public interface Worker {
-		
-	public String getTaskDefName();
+
+	/**
+	 * Retrieve the name of the task definition the worker is currently working on.
+	 * @return the name of the task definition.
+	 */
+	String getTaskDefName();
 	
 	/**
 	 * Executes a task and returns the updated task.
 	 * @param task Task to be executed.
-	 * @return
+	 * @return the {@link TaskResult} object
 	 * If the task is not completed yet, return with the status as IN_PROGRESS. 
 	 */
-	public TaskResult execute(Task task);
+	TaskResult execute(Task task);
 	
 	/**
 	 * Callback used by the WorkflowTaskCoordinator before a task is acke'ed.  
@@ -45,7 +49,7 @@ public interface Worker {
 	 * @param task Task to be ack'ed before execution
 	 * @return True, if the task should be accepted and acknowledged.  execute() method is called ONLY when this method returns true.  Return false if the task cannot be accepted for whatever reason.  
 	 */
-	public default boolean preAck(Task task) {
+	default boolean preAck(Task task) {
 		return true;
 	}
 	
@@ -53,9 +57,8 @@ public interface Worker {
 	 * Called when the task coordinator fails to update the task to the server.
 	 * Client should store the task id (in a database) and retry the update later
 	 * @param task Task which cannot be updated back to the server.
-	 * 
 	 */
-	public default void onErrorUpdate(Task task){
+	default void onErrorUpdate(Task task){
 		
 	}
 
@@ -63,15 +66,15 @@ public interface Worker {
 	 * Override this method to pause the worker from polling. 
 	 * @return true if the worker is paused and no more tasks should be polled from server.
 	 */
-	public default boolean paused() {
+	default boolean paused() {
 		return PropertyFactory.getBoolean(getTaskDefName(), "paused", false);
 	}
 	
 	/**
-	 * 
-	 * @return returns NetflixConfiguration.getServerId().  Override this method to app specific rules
+	 *
+	 * @return returns the serverId. Override this method to app specific rules
 	 */
-	public default String getIdentity() {
+	default String getIdentity() {
 		String serverId;
 		try {
 			serverId = InetAddress.getLocalHost().getHostName();
@@ -88,7 +91,7 @@ public interface Worker {
 	 * 
 	 * @return Number of tasks to be polled for.
 	 */
-	public default int getPollCount() {
+	default int getPollCount() {
 		return PropertyFactory.getInteger(getTaskDefName(), "pollCount", 1);
 	}
 	
@@ -96,7 +99,7 @@ public interface Worker {
 	 * 
 	 * @return Interval in millisecond at which the server should be polled for worker tasks.
 	 */
-	public default int getPollingInterval() {
+	default int getPollingInterval() {
 		return PropertyFactory.getInteger(getTaskDefName(), "pollInterval", 1000);
 	}
 
@@ -105,11 +108,11 @@ public interface Worker {
 	 * @return Time to wait when making a poll to workflow server for tasks.  The client will wait for at-least specified seconds for task queue to be "filled".  
 	 * Use a higher number here as opposed to more frequent polls.  Helps reduce the excessive calls. 
 	 */
-	public default int getLongPollTimeoutInMS() {
+	default int getLongPollTimeoutInMS() {
 		return PropertyFactory.getInteger(getTaskDefName(), "longPollTimeout", 100);
 	}
 	
-	public static Worker create(String taskType, Function<Task, TaskResult> executor){
+	static Worker create(String taskType, Function<Task, TaskResult> executor){
 		return new Worker() {
 			
 			@Override

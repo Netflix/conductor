@@ -33,7 +33,7 @@ public class PropertyFactory {
 	
 	private DynamicProperty local;
 	
-	private static final String propertyPrefix = "conductor.worker";
+	private static final String PROPERTY_PREFIX = "conductor.worker";
 
 	private static ConcurrentHashMap<String, PropertyFactory> factories = new ConcurrentHashMap<>();
 	
@@ -96,7 +96,7 @@ public class PropertyFactory {
 	private static PropertyFactory get(String workerName, String property) {
 		String key = property + "." + workerName;
 		PropertyFactory pf = factories.computeIfAbsent(key, t-> {
-			return new PropertyFactory(propertyPrefix, property, workerName);
+			return new PropertyFactory(PROPERTY_PREFIX, property, workerName);
 		});
 		return pf;
 	}
