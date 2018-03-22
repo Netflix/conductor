@@ -42,8 +42,6 @@ public class HttpWaitTask extends GenericHttpTask {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		logger.info("http wait task starting workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName());
-
 		Object request = task.getInputData().get(HTTP_REQUEST_PARAM);
 		if (request == null) {
 			task.setReasonForIncompletion("Missing http request parameter");
@@ -109,7 +107,7 @@ public class HttpWaitTask extends GenericHttpTask {
 			logger.info("http wait task started.workflowId=" + workflow.getWorkflowId()
 					+ ",CorrelationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
-					+ ",taskreference name=" + task.getReferenceTaskName() + ",request input=" + request);
+					+ ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
@@ -123,7 +121,7 @@ public class HttpWaitTask extends GenericHttpTask {
 				response = httpCall(input, workflow, executor);
 			}
 
-			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",response code=" + response.statusCode + ",response=" + response.body);
+			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
 			if (response.statusCode > 199 && response.statusCode < 300) {
 				task.setStatus(Task.Status.IN_PROGRESS);
 			} else {
@@ -139,7 +137,7 @@ public class HttpWaitTask extends GenericHttpTask {
 			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
-					+ ",taskreference name=" + task.getReferenceTaskName() + " with " + ex.getMessage(), ex);
+					+ ",taskreference name=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
 			task.setStatus(Task.Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());
