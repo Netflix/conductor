@@ -80,6 +80,8 @@ public class Workflow extends Auditable{
 
 	private Map<String, Object> headers = new HashMap<>();
 
+	private List<String> parentWorkflowIds = new LinkedList<>();
+
 	public Workflow(){
 		
 	}
@@ -315,6 +317,14 @@ public class Workflow extends Auditable{
 	 */
 	public void setHeaders(Map<String, Object> headers) {
 		this.headers = headers;
+	}
+
+	public List<String> getParentWorkflowIds() {
+		return parentWorkflowIds;
+	}
+
+	public void setParentWorkflowIds(List<String> parentWorkflowIds) {
+		this.parentWorkflowIds = parentWorkflowIds;
 	}
 
 	@Override
