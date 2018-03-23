@@ -83,11 +83,15 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	private MetadataDAO metadataDA0;
 
+	private Boolean removeWorkflowWhenCompleted;
+
+
 	@Inject
 	public RedisExecutionDAO(DynoProxy dynoClient, ObjectMapper om, IndexDAO indexDAO, MetadataDAO metadataDA0, Configuration config) {
 		super(dynoClient, om, config);
 		this.indexDAO = indexDAO;
 		this.metadataDA0 = metadataDA0;
+		this.removeWorkflowWhenCompleted = Boolean.valueOf(config.getProperty("workflow.completed.remove", "false"));
 	}
 
 	@Override
@@ -378,6 +382,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by id: " + workflowId);
 		}
 		Workflow workflow = readValue(json, Workflow.class);
+
+		//When Rerun and workflow is completed,  Restore the status of the Tasks
+		if(removeWorkflowWhenCompleted && workflow.getStatus().isSuccessful() && workflow.getStatus().isTerminal()) {
+			createTasks(workflow.getTasks());
+		}
 
 		if(!includeTasks) {
 			workflow.getTasks().clear();
