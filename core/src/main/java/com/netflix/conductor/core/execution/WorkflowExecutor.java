@@ -430,7 +430,7 @@ public class WorkflowExecutor {
             // Workflow is in terminal state
             queueDAO.remove(taskQueueName, result.getTaskId());
 
-            logger.debug("Workflow: {} is in terminal state Task: {} removed from Queue: {} during update task", task, workflowInstance, taskQueueName);
+            logger.debug("Workflow: {} is in terminal state Task: {} removed from Queue: {} during update task", workflowInstance, task, taskQueueName);
 
             if (!task.getStatus().isTerminal()) {
                 task.setStatus(Status.COMPLETED);
