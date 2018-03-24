@@ -429,7 +429,9 @@ public class WorkflowExecutor {
         if (workflowInstance.getStatus().isTerminal()) {
             // Workflow is in terminal state
             queueDAO.remove(taskQueueName, result.getTaskId());
-            logger.debug("Workflow: {} is in terminal state Task: {} removed from Queue: {} during update task", task, workflowInstance, taskQueueName);
+
+            logger.debug("Workflow: {} is in terminal state Task: {} removed from Queue: {} during update task", workflowInstance, task, taskQueueName);
+
             if (!task.getStatus().isTerminal()) {
                 task.setStatus(Status.COMPLETED);
             }
@@ -472,6 +474,7 @@ public class WorkflowExecutor {
         if (Status.FAILED.equals(task.getStatus())) {
             workflowInstance.getFailedReferenceTaskNames().add(task.getReferenceTaskName());
             executionDAO.updateWorkflow(workflowInstance);
+
             logger.debug("Task: {} has a FAILED status and the Workflow has been updated with failed task reference", task);
         }
 
@@ -567,7 +570,9 @@ public class WorkflowExecutor {
             if (!tasksToBeRequeued.isEmpty()) {
                 addTaskToQueue(tasksToBeRequeued);
             }
-            workflow.getTasks().addAll(tasksToBeScheduled);
+            if(!workflow.getTasks().contains(tasksToBeScheduled)){
+                workflow.getTasks().addAll(tasksToBeScheduled);
+            }
 
             for (Task task : tasksToBeScheduled) {
                 if (isSystemTask.and(isNonTerminalTask).test(task)) {
