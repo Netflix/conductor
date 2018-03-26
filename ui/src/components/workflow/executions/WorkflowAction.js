@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 import { Button, ButtonGroup, OverlayTrigger, Popover, Panel, Input, Grid, Row, Col, Tooltip } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { terminateWorkflow, restartWorfklow, retryWorfklow, pauseWorfklow, resumeWorfklow, getWorkflowDetails } from '../../../actions/WorkflowActions';
+import { terminateWorkflow, cancelWorkflow, restartWorfklow, retryWorfklow, pauseWorfklow, resumeWorfklow, getWorkflowDetails } from '../../../actions/WorkflowActions';
 
 const WorkflowAction = React.createClass({
 
   getInitialState() {
     return {
       terminating: false,
+      cancelling: false,
       rerunning: false,
       restarting: false,
       retrying: false,
@@ -20,6 +21,11 @@ const WorkflowAction = React.createClass({
     const tt_term = (
       <Popover id="popover-trigger-hover-focus" title="Terminate Workflow">
         Terminate workflow execution.  All running tasks will be cancelled.
+      </Popover>
+    );
+    const tt_cancel = (
+      <Popover id="popover-trigger-hover-focus" title="Cancel Workflow">
+        Cancel workflow execution.  All running tasks will be cancelled.
       </Popover>
     );
     const tt_restart = (
@@ -43,6 +49,7 @@ const WorkflowAction = React.createClass({
       </Popover>
     );
     let terminating = this.props.terminating;
+    let cancelling = this.props.cancelling;
     let rerunning = this.state.rerunning;
     let restarting = this.props.restarting;
     let retrying = this.props.retrying;
@@ -58,6 +65,11 @@ const WorkflowAction = React.createClass({
               bsStyle="danger" bsSize="xsmall"  disabled={terminating}  onClick={!terminating ? this.terminate : null}> {terminating ? (<i className="fa fa-spinner fa-spin"></i>) : 'Terminate'}
             </Button>
           </OverlayTrigger>
+          <OverlayTrigger placement="bottom" overlay={tt_cancel}>
+            <Button
+              bsStyle="danger" bsSize="xsmall"  disabled={cancelling}  onClick={!cancelling ? this.cancel : null}> {cancelling ? (<i className="fa fa-spinner fa-spin"></i>) : 'Cancel'}
+            </Button>
+          </OverlayTrigger>
           <OverlayTrigger placement="bottom" overlay={tt_pause}>
             <Button
               bsStyle="warning" bsSize="xsmall"  disabled={pausing}  onClick={!pausing ? this.pause : null}> {pausing ? (<i className="fa fa-spinner fa-spin"></i>) : 'Pause'}
@@ -67,7 +79,7 @@ const WorkflowAction = React.createClass({
 
       );
 
-    }if(this.props.workflowStatus == 'COMPLETED'){
+    }if(this.props.workflowStatus == 'COMPLETED' || this.props.workflowStatus == 'CANCELLED'){
       return (
         <OverlayTrigger placement="bottom" overlay={tt_restart}>
         <Button
@@ -117,6 +129,10 @@ const WorkflowAction = React.createClass({
   terminate(){
     this.setState({terminating: true});
     this.props.dispatch(terminateWorkflow(this.props.workflowId));
+  },
+  cancel(){
+    this.setState({cancelling: true});
+    this.props.dispatch(cancelWorkflow(this.props.workflowId));
   },
   rerun(){
     this.setState({rerunning: true});

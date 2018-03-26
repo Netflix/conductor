@@ -6,6 +6,7 @@ const initialState = {
   fetching: false,
   refetch: false,
   terminating: false,
+  cancelling: false,
   restarting: false,
   retrying: false,
   terminated: {},
@@ -66,6 +67,21 @@ export default function workflows(state = initialState, action) {
         data:[],
         fetching: false,
         terminating: false,
+        refetch: true
+      };
+    case 'REQUESTED_CANCEL_WORKFLOW':
+      return {
+        ...state,
+        fetching: true,
+        cancelling: true
+      };
+    case 'RECEIVED_CANCEL_WORKFLOW':
+      return {
+        ...state,
+        error: false,
+        data:[],
+        fetching: false,
+        cancelling: false,
         refetch: true
       };
     case 'REQUESTED_RESTART_WORKFLOW':
@@ -230,6 +246,7 @@ export default function workflows(state = initialState, action) {
       fetching: false,
       restarting: false,
       terminating: false,
+      cancelling: false,
       retrying: false,
       pausing: false,
       resumign: false

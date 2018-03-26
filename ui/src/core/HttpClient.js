@@ -51,6 +51,25 @@ const HttpClient = {
       });
   }),
 
+  postPlain: (path, data) => new Promise((resolve, reject) => {
+    request
+      .post(path, data)
+      .set('Accept', 'text/plain')
+      .end((err, res) => {
+        if (err || !res.ok) {
+          console.error('Error on post! ' + res);
+          reject(err);
+        } else {
+          if(res.body){
+            resolve(res.body);
+          }else{
+            resolve(res);
+          }
+
+        }
+      });
+  }),
+
   put: (path, data) => new Promise((resolve, reject) => {
     request
       .put(path, data)

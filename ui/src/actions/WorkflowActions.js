@@ -1,6 +1,6 @@
 import http from '../core/HttpClient';
 
-export function searchWorkflows(query, search, hours, fullstr, start) {
+export function searchWorkflows(query, search, hours, fullstr, start, range) {
 
   return function (dispatch) {
     dispatch({
@@ -11,7 +11,7 @@ export function searchWorkflows(query, search, hours, fullstr, start) {
     if(fullstr && search != null && search.length > 0) {
       search = '"' + search + '"';
     }
-    return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search + '&start=' + start).then((data) => {
+    return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search + '&start=' + start + "&range=" + range).then((data) => {
       dispatch({
         type: 'RECEIVED_WORKFLOWS',
         data
@@ -58,6 +58,28 @@ export function terminateWorkflow(workflowId){
     return http.delete('/api/wfe/terminate/' + workflowId).then((data) => {
       dispatch({
         type: 'RECEIVED_TERMINATE_WORKFLOW',
+        workflowId
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
+
+export function cancelWorkflow(workflowId){
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_CANCEL_WORKFLOW',
+      workflowId
+    });
+
+
+    return http.post('/api/wfe/cancel/' + workflowId).then((data) => {
+      dispatch({
+        type: 'RECEIVED_CANCEL_WORKFLOW',
         workflowId
       });
     }).catch((e) => {

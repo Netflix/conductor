@@ -135,7 +135,7 @@ class WorkflowDetails extends Component {
       return wf.reasonForIncompletion;
     }
     function showFailure(){
-      if(wf.status == 'FAILED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT'){
+      if(wf.status == 'FAILED' || wf.status == 'CANCELLED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT'){
         return '';
       }
       return 'none';
@@ -144,7 +144,7 @@ class WorkflowDetails extends Component {
       <div className="ui-content">
       <h4>
         {wf.workflowType}/{wf.version}
-        <span className={(wf.status == 'FAILED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT') ? "red":"green"}>
+        <span className={(wf.status == 'FAILED' || wf.status == 'CANCELLED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT') ? "red":"green"}>
           {wf.status}
         </span>
         <span>
