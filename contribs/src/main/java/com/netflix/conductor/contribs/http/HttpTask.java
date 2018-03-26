@@ -117,7 +117,7 @@ public class HttpTask extends WorkflowSystemTask {
 			task.setStatus(Status.FAILED);
 			return;
 		}
-
+		
 		try {
 			
 			HttpResponse response = httpCall(input);
@@ -137,11 +137,10 @@ public class HttpTask extends WorkflowSystemTask {
 			}
 			
 		}catch(Exception e) {
-
-			logger.error(e.getMessage(), e);
+			logger.error(String.format("Failed to invoke http task - uri: %s, vipAddress: %s", input.getUri(), input.getVipAddress()), e);
 			task.setStatus(Status.FAILED);
-			task.setReasonForIncompletion(e.getMessage());
-			task.getOutputData().put("response", e.getMessage());
+			task.setReasonForIncompletion("Failed to invoke http task due to: " + e.toString());
+			task.getOutputData().put("response", e.toString());
 		}
 	}
 
@@ -183,11 +182,9 @@ public class HttpTask extends WorkflowSystemTask {
 			return response;
 
 		} catch(UniformInterfaceException ex) {
-			logger.error(ex.getMessage(), ex);
 			ClientResponse cr = ex.getResponse();
-			logger.error("Status Code: {}", cr.getStatus());
+			logger.error(String.format("Got unexpected http response - uri: %s, vipAddress: %s, status code: %s", input.getUri(), input.getVipAddress(), cr.getStatus()), ex);
 			if(cr.getStatus() > 199 && cr.getStatus() < 300) {
-				
 				if(cr.getStatus() != 204 && cr.hasEntity()) {
 					response.body = extractBody(cr);
 				}
@@ -195,7 +192,6 @@ public class HttpTask extends WorkflowSystemTask {
 				response.statusCode = cr.getStatus();
 				response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
 				return response;
-				
 			}else {
 				String reason = cr.getEntity(String.class);
 				logger.error(reason, ex);
