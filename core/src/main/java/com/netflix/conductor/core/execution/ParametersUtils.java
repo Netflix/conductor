@@ -82,6 +82,7 @@ public class ParametersUtils {
 		wf.put("startTimeIso", fmt.print(workflow.getStartTime()));
 		wf.put("workflowId", workflow.getWorkflowId());
 		wf.put("parentWorkflowId", workflow.getParentWorkflowId());
+		wf.put("parentWorkflowIds", workflow.getParentWorkflowIds());
 		wf.put("parentWorkflowTaskId", workflow.getParentWorkflowTaskId());
 		wf.put("workflowType", workflow.getWorkflowType());
 		wf.put("version", workflow.getVersion());

@@ -48,6 +48,7 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -111,22 +112,26 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, null, null, event, taskToDomain, null);
+		return startWorkflow(name, version, input, correlationId, null, null, null, event, taskToDomain, null);
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
-		return startWorkflow(name, version, input, correlationId, null, null, event, taskToDomain, headers);
+		return startWorkflow(name, version, input, correlationId, null, null, null, event, taskToDomain, headers);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, null, null);
+		return startWorkflow(name, version, input, correlationId, parentWorkflowId, null, parentWorkflowTaskId, event, null, null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, null);
+		return startWorkflow(name, version, input, correlationId, parentWorkflowId, null, parentWorkflowTaskId, event, taskToDomain, null);
 	}
 
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, List<String> parentWorkflowIds, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain) throws Exception {
+		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowIds, parentWorkflowTaskId, event, taskToDomain, null);
+	}
+
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, List<String> parentWorkflowIds, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
 
 		try {
 
@@ -167,6 +172,12 @@ public class WorkflowExecutor {
 			wf.setInput(input);
 			wf.setStatus(WorkflowStatus.RUNNING);
 			wf.setParentWorkflowId(parentWorkflowId);
+			if (CollectionUtils.isNotEmpty(parentWorkflowIds)) {
+				wf.getParentWorkflowIds().addAll(parentWorkflowIds);
+			}
+			if (StringUtils.isNotEmpty(parentWorkflowId)) {
+				wf.getParentWorkflowIds().add(parentWorkflowId);
+			}
 			wf.setParentWorkflowTaskId(parentWorkflowTaskId);
 			wf.setOwnerApp(WorkflowContext.get().getClientApp());
 			wf.setCreateTime(System.currentTimeMillis());
