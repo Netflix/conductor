@@ -60,6 +60,7 @@ public class Main {
 		System.out.println("Using config file" + propertyFile);
 		Properties props = new Properties(System.getProperties());
 		props.load(new FileInputStream(propertyFile));
+		props.putAll(System.getProperties());
 		System.setProperties(props);
 	}
 }
