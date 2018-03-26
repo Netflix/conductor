@@ -22,9 +22,49 @@ router.get('/', async (req, res, next) => {
     if(req.query.h != 'undefined' && req.query.h != ''){
       h = req.query.h;
     }
-    if(h != '-1'){
-      freeText.push('startTime:[now-' + h + 'h TO now]');
+
+    let range = req.query.range;
+
+    let from = null;
+    let end = null;
+    if (h != '-1') {
+      from = moment().subtract(h, 'hours');
+      end = moment();
+    } else if (range === 'All data') {
+      // do nothing
+    } else if (range === 'This year') {
+      from = moment().startOf('year');
+      end = moment().endOf('year');
+    } else if (range === 'Last quarter') {
+      from = moment().subtract(1, 'quarter').startOf('quarter');
+      end = moment().subtract(1, 'quarter').endOf('quarter');
+    } else if (range === 'This quarter') {
+      from = moment().startOf('quarter');
+      end = moment().endOf('quarter');
+    } else if (range === 'Last month') {
+      from = moment().subtract(1, 'month').startOf('month');
+      end = moment().subtract(1, 'month').endOf('month');
+    } else if (range === 'This month') {
+      from = moment().startOf('month');
+      end = moment().endOf('month');
+    } else if (range === 'Yesterday') {
+      from = moment().subtract(1, 'days').startOf('day');
+      end = moment().subtract(1, 'days').endOf('day');
+    } else if (range === 'Last 30 minutes') {
+      from = moment().subtract(30, 'minutes').startOf('minute');
+      end = moment();
+    } else if (range === 'Last 5 minutes') {
+      from = moment().subtract(5, 'minutes').startOf('minute');
+      end = moment();
+    } else { // Today is default
+      from = moment().startOf('day');
+      end = moment().endOf('day');
     }
+
+    if (from != null && end != null) {
+      freeText.push('startTime:[' + from.toISOString() + ' TO ' + end.toISOString() + ']');
+    }
+
     let start = 0;
     if(!isNaN(req.query.start)){
       start = req.query.start;
@@ -89,6 +129,7 @@ router.get('/id/:workflowId', async (req, res, next) => {
     next(err);
   }
 });
+
 router.delete('/terminate/:workflowId', async (req, res, next) => {
   try {
     const baseURL = await lookup.lookup();
@@ -97,6 +138,20 @@ router.delete('/terminate/:workflowId', async (req, res, next) => {
     const result = await http.delete(baseURL2 + req.params.workflowId);
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/cancel/:workflowId', async (req, res, next) => {
+  try {
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
+    const result = await http.postPlain(baseURL2 + req.params.workflowId + '/cancel', {});
+    console.log("result", result);
+    res.status(200).send({result: req.params.workflowId });
+  } catch (err) {
+    console.log("err", err);
     next(err);
   }
 });

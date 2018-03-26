@@ -25,6 +25,10 @@ const menuPaths = {
     href: '/workflow?status=TIMED_OUT&h=48',
     icon: 'fa-clock-o'
   },{
+    label: 'Cancelled',
+    href: '/workflow?status=CANCELLED&h=48',
+    icon: 'fa-times-circle'
+  },{
     label: 'Terminated',
     href: '/workflow?status=TERMINATED&h=48',
     icon: 'fa-ban'

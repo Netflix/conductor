@@ -6,10 +6,19 @@ import { connect } from 'react-redux';
 import { searchWorkflows, getWorkflowDefs } from '../../../actions/WorkflowActions';
 import WorkflowAction  from './WorkflowAction';
 import Typeahead from 'react-bootstrap-typeahead';
+import Select from 'react-select';
 
 const Workflow = React.createClass({
 
   getInitialState() {
+    let h = this.props.location.query.h;
+
+    let range = this.props.location.query.range;
+    if(range != null && range != '') {
+      range = range.split(',');
+    }else {
+      range = [];
+    }
 
     let workflowTypes = this.props.location.query.workflowTypes;
     if(workflowTypes != null && workflowTypes != '') {
@@ -34,10 +43,11 @@ const Workflow = React.createClass({
     }
 
     return {
+      range: range,
       search: search,
       workflowTypes: workflowTypes,
       status: status,
-      h: this.props.location.query.h,
+      h: h,
       workflows: [],
       update: true,
       fullstr: true,
@@ -73,13 +83,22 @@ const Workflow = React.createClass({
       status = [];
     }
 
+    let range = nextProps.location.query.range;
+    if(range != null && range != '') {
+      range = range.split(',');
+    }else {
+      range = [];
+    }
+
     let update = true;
     update = this.state.search != search;
     update = update || (this.state.h != h);
     update = update || (this.state.start != start);
     update = update || (this.state.status.join(',') != status.join(','));
+    update = update || (this.state.range.join(',') != range.join(','));
 
     this.setState({
+      range: range,
       search : search,
       h : h,
       update : update,
@@ -107,7 +126,8 @@ const Workflow = React.createClass({
     let workflowTypes = this.state.workflowTypes;
     let status = this.state.status;
     let start = this.state.start;
-    this.props.history.pushState(null, "/workflow?q=" + q + "&h=" + h + "&workflowTypes=" + workflowTypes + "&status=" + status + "&start=" + start);
+    let range = this.state.range;
+    this.props.history.pushState(null, "/workflow?q=" + q + "&h=" + h + "&workflowTypes=" + workflowTypes + "&status=" + status + "&start=" + start + "&range=" + range);
   },
   doDispatch() {
 
@@ -115,7 +135,6 @@ const Workflow = React.createClass({
     if(this.state.search != '') {
       search = this.state.search;
     }
-    let h = this.state.h;
     let query = [];
 
     if(this.state.workflowTypes.length > 0) {
@@ -124,7 +143,7 @@ const Workflow = React.createClass({
     if(this.state.status.length > 0) {
       query.push('status IN (' + this.state.status.join(',') + ') ');
     }
-    this.props.dispatch(searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start));
+    this.props.dispatch(searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start, this.state.range));
   },
   workflowTypeChange(workflowTypes) {
     this.state.update = true;
@@ -134,6 +153,16 @@ const Workflow = React.createClass({
   statusChange(status) {
     this.state.update = true;
     this.state.status = status;
+    this.refreshResults();
+  },
+  rangeChange(range) {
+    if (range != null && range.length > 0) {
+      let value = range[range.length - 1];
+      this.state.range = [value];
+    } else {
+      this.state.range = [];
+    }
+    this.state.update = true;
     this.refreshResults();
   },
   nextPage() {
@@ -188,7 +217,12 @@ const Workflow = React.createClass({
       max = start + found;
     }
     const workflowNames = this.state.workflows?this.state.workflows:[];
-    const statusList = ['RUNNING','COMPLETED','FAILED','TIMED_OUT','TERMINATED','PAUSED'];
+    const rangeList = ['All data','This year',
+      'Last quarter','This quarter',
+      'Last month','This month',
+      'Yesterday', 'Today',
+      'Last 30 minutes', 'Last 5 minutes'];
+    const statusList = ['RUNNING','COMPLETED','FAILED','TIMED_OUT','TERMINATED','PAUSED','CANCELLED'];
     function linkMaker(cell, row) {
       return <Link to={`/workflow/id/${cell}`}>{cell}</Link>;
     };
@@ -236,12 +270,16 @@ const Workflow = React.createClass({
           <Panel header="Filter Workflows (Press Enter to search)">
           <Grid fluid={true}>
             <Row className="show-grid">
-              <Col md={4}>
+              <Col md={2}>
+                <Typeahead ref="range" onChange={this.rangeChange} options={rangeList} placeholder="Today by default" selected={this.state.range} multiple={true} disabled={this.state.h}/>
+                &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Filter by date range</label>
+              </Col>
+              <Col md={3}>
                 <Input type="input" placeholder="Search" groupClassName="" ref="search" value={this.state.search} labelClassName="" onKeyPress={this.keyPress} onChange={this.searchChange}/>
                 &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Free Text Query</label>
                 &nbsp;&nbsp;<input type="checkbox" checked={this.state.fullstr} onChange={this.prefChange} ref="fullstr"/><label className="small nobold">&nbsp;Search for entire string</label>
                 </Col>
-              <Col md={4}>
+              <Col md={3}>
                 <Typeahead ref="workflowTypes" onChange={this.workflowTypeChange} options={workflowNames} placeholder="Filter by workflow type" multiple={true} selected={this.state.workflowTypes}/>
                 &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Filter by Workflow Type</label>
               </Col>
