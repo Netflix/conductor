@@ -79,7 +79,7 @@ const WorkflowAction = React.createClass({
 
       );
 
-    }if(this.props.workflowStatus == 'COMPLETED' || this.props.workflowStatus == 'CANCELED'){
+    }if(this.props.workflowStatus == 'COMPLETED' || this.props.workflowStatus == 'CANCELLED'){
       return (
         <OverlayTrigger placement="bottom" overlay={tt_restart}>
         <Button
