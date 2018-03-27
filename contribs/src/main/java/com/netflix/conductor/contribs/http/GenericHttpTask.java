@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.auth.AuthResponse;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.contribs.correlation.Context;
 import com.netflix.conductor.contribs.correlation.Correlator;
@@ -21,6 +23,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import com.sun.jersey.oauth.client.OAuthClientFilter;
 import com.sun.jersey.oauth.signature.OAuthParameters;
 import com.sun.jersey.oauth.signature.OAuthSecrets;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,11 +39,13 @@ import java.util.Map;
 
 class GenericHttpTask extends WorkflowSystemTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
+	static final String REQUEST_PARAMETER_NAME = "http_request";
+	static final String RESPONSE_PARAMETER_NAME = "http_response";
 
-	protected RestClientManager rcm;
 	protected Configuration config;
 	protected ObjectMapper om;
 	private AuthManager auth;
+	private RestClientManager rcm;
 
 	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
 	};
@@ -104,7 +109,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	 * @return Response of the http call
 	 * @throws Exception If there was an error making http call
 	 */
-	HttpResponse httpCall(Input input, Workflow workflow, WorkflowExecutor executor) throws Exception {
+	HttpResponse httpCall(Input input, Task task, Workflow workflow, WorkflowExecutor executor) throws Exception {
 		Client client = rcm.getClient(input);
 
 		if (input.getOauthConsumerKey() != null) {
@@ -142,6 +147,18 @@ class GenericHttpTask extends WorkflowSystemTask {
 			headers.put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
 		}
 		logger.info("http task headers " + headers);
+
+		// Store input headers back to the input request
+		if (MapUtils.isNotEmpty(input.getHeaders())) {
+
+			// Escaping the auth
+			if (input.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+				input.getHeaders().put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
+			}
+
+			task.getInputData().put(REQUEST_PARAMETER_NAME, input);
+			executor.updateTask(new TaskResult(task));
+		};
 
 		HttpResponse response = new HttpResponse();
 		try {

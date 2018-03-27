@@ -24,7 +24,6 @@ import java.util.Map;
  */
 public class HttpWaitTask extends GenericHttpTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpWaitTask.class);
-	private static final String HTTP_REQUEST_PARAM = "http_request";
 	private static final String EVENT_WAIT_PARAM = "event_wait";
 	private EventProcessor processor;
 	private MetadataDAO metadata;
@@ -42,7 +41,7 @@ public class HttpWaitTask extends GenericHttpTask {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		Object request = task.getInputData().get(HTTP_REQUEST_PARAM);
+		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		if (request == null) {
 			task.setReasonForIncompletion("Missing http request parameter");
 			task.setStatus(Task.Status.FAILED);
@@ -115,10 +114,10 @@ public class HttpWaitTask extends GenericHttpTask {
 					String bodyJson = om.writeValueAsString(bodyObjs);
 					response = httpCallUrlEncoded(input, bodyJson);
 				} else {
-					response = httpCall(input, workflow, executor);
+					response = httpCall(input, task, workflow, executor);
 				}
 			} else {
-				response = httpCall(input, workflow, executor);
+				response = httpCall(input, task, workflow, executor);
 			}
 
 			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);

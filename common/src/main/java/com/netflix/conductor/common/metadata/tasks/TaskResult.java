@@ -47,8 +47,10 @@ public class TaskResult {
 	
 	private Status status;
 
+	private Map<String, Object> inputData = new HashMap<>();
+
 	private Map<String, Object> outputData = new HashMap<>();
-	
+
 	private List<TaskExecLog> logs = new CopyOnWriteArrayList<>();
 
 	private boolean resetStartTime;
@@ -61,6 +63,7 @@ public class TaskResult {
 		this.status = Status.valueOf(task.getStatus().name());
 		this.workerId = task.getWorkerId();
 		this.outputData = task.getOutputData();
+		this.inputData = task.getInputData();
 	}
 
 	public TaskResult() {
@@ -208,6 +211,22 @@ public class TaskResult {
 	public void setResetStartTime(boolean resetStartTime) {
 		this.resetStartTime = resetStartTime;
 	}
+
+
+	/**
+	 * @return input data map
+	 */
+	public Map<String, Object> getInputData() {
+		return inputData;
+	}
+
+	/**
+	 * @param inputData map
+	 */
+	public void setInputData(Map<String, Object> inputData) {
+		this.inputData = inputData;
+	}
+
 
 	@Override
 	public String toString() {
