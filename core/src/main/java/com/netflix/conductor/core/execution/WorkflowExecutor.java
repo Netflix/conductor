@@ -692,6 +692,9 @@ public class WorkflowExecutor {
 		task.setReasonForIncompletion(result.getReasonForIncompletion());
 		task.setWorkerId(result.getWorkerId());
 		task.setCallbackAfterSeconds(result.getCallbackAfterSeconds());
+		if (MapUtils.isNotEmpty(result.getInputData())) {
+			task.setInputData(result.getInputData());
+		}
 
 		if (task.getStatus().isTerminal()) {
 			task.setEndTime(System.currentTimeMillis());

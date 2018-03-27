@@ -45,8 +45,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Singleton
 public class HttpTask extends GenericHttpTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
-	public static final String REQUEST_PARAMETER_NAME = "http_request";
-	public static final String RESPONSE_PARAMETER_NAME = "http_response";
 	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
@@ -106,10 +104,10 @@ public class HttpTask extends GenericHttpTask {
 					response = httpCallUrlEncoded(input, body);
 
 				} else {
-					response = httpCall(input, workflow, executor);
+					response = httpCall(input, task, workflow, executor);
 				}
 			} else {
-				response = httpCall(input, workflow, executor);
+				response = httpCall(input, task, workflow, executor);
 			}
 
 			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
