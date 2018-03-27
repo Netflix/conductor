@@ -1183,11 +1183,11 @@ public class WorkflowExecutor {
 		// It gives us: Bearer token
 		String bearer = (String)headers.get(HttpHeaders.AUTHORIZATION);
 		if (StringUtils.isEmpty(bearer))
-			throw new ApplicationException(Code.INVALID_INPUT, "No " + HttpHeaders.AUTHORIZATION + " header provided");
+			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
 
 		// Checking bearer format
 		if (!bearer.startsWith(BEARER))
-			throw new ApplicationException(Code.INVALID_INPUT, "Invalid " + HttpHeaders.AUTHORIZATION + " header format");
+			throw new ApplicationException(Code.UNAUTHORIZED, "Invalid " + HttpHeaders.AUTHORIZATION + " header format");
 
 		// Get the access token
 		String token = bearer.substring(BEARER.length());
@@ -1196,16 +1196,13 @@ public class WorkflowExecutor {
 		Map<String, Object> failedList;
 		try {
 			failedList = auth.validate(token, workflowDef.getAuthValidation());
-		} catch (IllegalArgumentException ex) {
-			logger.error("Auth validation failed with " + ex.getMessage(), ex);
-			throw new ApplicationException(Code.INTERNAL_ERROR, "Auth validation failed: " + ex.getMessage());
 		} catch (Exception ex) {
-			logger.error("An internal error occurred during auth validation: " + ex.getMessage(), ex);
-			throw new ApplicationException(Code.INTERNAL_ERROR, "An internal error occurred during auth validation");
+			logger.error("Auth validation failed with " + ex.getMessage(), ex);
+			throw new ApplicationException(Code.UNAUTHORIZED, ex.getMessage());
 		}
 
 		if (!failedList.isEmpty()) {
-			throw new ApplicationException(Code.INVALID_INPUT, "Auth validation failed: at least one of the verify conditions failed");
+			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: at least one of the verify conditions failed");
 		}
 	}
 }
