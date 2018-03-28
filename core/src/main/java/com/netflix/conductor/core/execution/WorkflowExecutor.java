@@ -174,9 +174,15 @@ public class WorkflowExecutor {
 			wf.setParentWorkflowId(parentWorkflowId);
 			if (CollectionUtils.isNotEmpty(parentWorkflowIds)) {
 				wf.getParentWorkflowIds().addAll(parentWorkflowIds);
+			} else {
+				if (!wf.getParentWorkflowIds().contains(workflowId)) {
+					wf.getParentWorkflowIds().add(workflowId);
+				}
 			}
 			if (StringUtils.isNotEmpty(parentWorkflowId)) {
-				wf.getParentWorkflowIds().add(parentWorkflowId);
+				if (!wf.getParentWorkflowIds().contains(parentWorkflowId)) {
+					wf.getParentWorkflowIds().add(parentWorkflowId);
+				}
 			}
 			wf.setParentWorkflowTaskId(parentWorkflowTaskId);
 			wf.setOwnerApp(WorkflowContext.get().getClientApp());
