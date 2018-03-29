@@ -37,6 +37,7 @@ import java.util.Map;
 public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
+
 	private static final String RESTARTED = "restartCount";
 
 	public static final String NAME = "SUB_WORKFLOW";
