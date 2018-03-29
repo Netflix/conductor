@@ -37,9 +37,7 @@ import java.util.Map;
 public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
-
 	private static final String RESTARTED = "restartCount";
-
 	public static final String NAME = "SUB_WORKFLOW";
 
 	public SubWorkflow() {
@@ -111,7 +109,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 					task.setStatus(Status.FAILED);
 					task.setReasonForIncompletion("Number of restart attempts reached configured value");
 				} else {
-					logger.info("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
+					logger.info("Time to restart the sub-workflow " + workflowId);
 					restarted++;
 					task.getOutputData().put(RESTARTED, restarted);
 					provider.rewind(workflowId, subWorkflow.getHeaders());
