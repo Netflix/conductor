@@ -24,7 +24,6 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.client.apache4.ApacheHttpClient4;
 import com.sun.jersey.client.apache4.config.DefaultApacheHttpClient4Config;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -41,8 +40,8 @@ public class RestClientManager {
 	@Inject
 	@SuppressWarnings("deprecation")
 	public RestClientManager(Configuration config) {
-		// org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-		String className = PoolingHttpClientConnectionManager.class.getName();
+		// org.apache.http.impl.conn.PoolingClientConnectionManager
+		String className = PoolingClientConnectionManager.class.getName();
 
 		// Increase max total connection to 200
 		int maxTotal = config.getIntProperty( className + ".maxTotal", 200);
