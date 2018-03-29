@@ -37,7 +37,7 @@ import java.util.Map;
 public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
-
+	private static final String REACHED_LIMIT = "Number of restart attempts reached configured value";
 	private static final String RESTARTED = "restartCount";
 
 	public static final String NAME = "SUB_WORKFLOW";
@@ -46,8 +46,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 		super(NAME);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
+	@SuppressWarnings("unchecked")
 	public void start(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
 
 		Map<String, Object> input = task.getInputData();
@@ -94,21 +94,27 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else {
 			task.setStatus(Status.FAILED);
 			SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
-			if (param != null && param.isStandbyOnFail()) {
+			if (param.isStandbyOnFail()) {
 				task.setStatus(Status.IN_PROGRESS);
-				if (param.isRestartOnFail()) {
-					Integer restarted = (Integer) task.getOutputData().get(RESTARTED);
-					if (restarted == null) {
-						restarted = 0;
-					}
-					if (param.getRestartCount() >= 0 && restarted >= param.getRestartCount()) {
-						task.setStatus(Status.FAILED);
-						task.setReasonForIncompletion("Number of restart attempts reached configured value");
-					} else {
-						provider.rewind(workflowId, subWorkflow.getHeaders());
-						restarted++;
-						task.getOutputData().put(RESTARTED, restarted);
-					}
+
+				// No restart required - just exit and manual WF resolution has to be done
+				if (!param.isRestartOnFail()) {
+					logger.info("No restart required for the sub-workflow " + subWorkflow.getWorkflowId() + ". Manual resolution required");
+					return true;
+				}
+
+				Integer restarted = (Integer) task.getOutputData().get(RESTARTED);
+				if (restarted == null) {
+					restarted = 0;
+				}
+				if (param.getRestartCount() >= 0 && restarted >= param.getRestartCount()) {
+					task.setStatus(Status.FAILED);
+					task.setReasonForIncompletion(REACHED_LIMIT);
+				} else {
+					logger.info("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
+					restarted++;
+					task.getOutputData().put(RESTARTED, restarted);
+					provider.rewind(workflowId, subWorkflow.getHeaders());
 				}
 			}
 		}
@@ -140,7 +146,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 	
 	@Override
 	public boolean isAsync() {
-		return false;
+		return true;
 	}
 
 }
