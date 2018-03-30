@@ -24,6 +24,7 @@ import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
 	private static final String RESTARTED = "restartCount";
+	private static final String RESTART_ON = "restartOn";
 	public static final String NAME = "SUB_WORKFLOW";
 
 	public SubWorkflow() {
@@ -89,32 +91,58 @@ public class SubWorkflow extends WorkflowSystemTask {
 		}
 		if (subWorkflowStatus.isSuccessful()) {
 			task.setStatus(Status.COMPLETED);
-		} else {
+		} else if (subWorkflowStatus == WorkflowStatus.CANCELLED) {
 			task.setStatus(Status.FAILED);
-			task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
+			task.setReasonForIncompletion("Sub-workflow " + task.getReferenceTaskName() + " has been cancelled");
+		} else if (subWorkflowStatus == WorkflowStatus.TERMINATED) {
+			task.setStatus(Status.FAILED);
+			task.setReasonForIncompletion("Sub-workflow " + task.getReferenceTaskName() + " has been terminated");
+		} else {
 			SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
-			if (param.isStandbyOnFail()) {
-				task.setStatus(Status.IN_PROGRESS);
-				task.setReasonForIncompletion(null);
+			// Note: StandbyOnFail and RestartOnFail are Boolean objects and not primitives
+			if (BooleanUtils.isTrue(param.isStandbyOnFail())) {
 
-				// No restart required - just exit and manual WF resolution has to be done
-				if (!param.isRestartOnFail()) {
-					logger.info("No restart required for the sub-workflow " + subWorkflow.getWorkflowId() + ". Manual resolution required");
-					return true;
+				// No restart required for the sub-workflow
+				if (BooleanUtils.isNotTrue(param.isRestartOnFail())) {
+					return false;
 				}
 
+				// Get the # of restarts already made
 				Integer restarted = (Integer) task.getOutputData().get(RESTARTED);
 				if (restarted == null) {
 					restarted = 0;
 				}
-				if (param.getRestartCount() >= 0 && restarted >= param.getRestartCount()) {
+
+				Integer restartsAllowed = param.getRestartCount();
+				if (restartsAllowed != null && restartsAllowed >= 0 && restarted >= restartsAllowed) {
+					task.setStatus(Status.FAILED);
 					task.setReasonForIncompletion("Number of restart attempts reached configured value");
 				} else {
-					logger.info("Time to restart the sub-workflow " + workflowId);
-					restarted++;
-					task.getOutputData().put(RESTARTED, restarted);
-					provider.rewind(workflowId, subWorkflow.getHeaders());
+					Long restartOn = (Long)task.getOutputData().get(RESTART_ON);
+					if (restartOn == null) { // Schedule restart
+
+						// One second default delay if not specified
+						Long restartDelay = param.getRestartDelay();
+						if (restartDelay == null) {
+							restartDelay = 1000L;
+						}
+
+						restartOn = System.currentTimeMillis() + restartDelay;
+						task.getOutputData().put(RESTART_ON, restartOn);
+						logger.info("Scheduled restart for the sub-workflow " + subWorkflow.getWorkflowId());
+					} else if (restartOn <= System.currentTimeMillis()) {
+						logger.info("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
+						restarted++;
+						task.getOutputData().put(RESTARTED, restarted);
+						task.getOutputData().remove(RESTART_ON);
+						provider.rewind(workflowId, subWorkflow.getHeaders());
+					} else {
+						return false; // Do nothing as waiting for the RESTART_ON time
+					}
 				}
+			} else {
+				task.setStatus(Status.FAILED);
+				task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
 			}
 		}
 		if (task.getStatus() == Status.COMPLETED) {
@@ -145,7 +173,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 	
 	@Override
 	public boolean isAsync() {
-		return true;
+		return false;
 	}
 
 }
