@@ -38,6 +38,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
 	private static final String RESTARTED = "restartCount";
+	private static final String RESTART_ON = "restartOn";
 	public static final String NAME = "SUB_WORKFLOW";
 
 	public SubWorkflow() {
@@ -91,9 +92,11 @@ public class SubWorkflow extends WorkflowSystemTask {
 			task.setStatus(Status.COMPLETED);
 		} else {
 			task.setStatus(Status.FAILED);
+			task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
 			SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
 			if (param.isStandbyOnFail()) {
 				task.setStatus(Status.IN_PROGRESS);
+				task.setReasonForIncompletion(null);
 
 				// No restart required - just exit and manual WF resolution has to be done
 				if (!param.isRestartOnFail()) {
@@ -106,7 +109,6 @@ public class SubWorkflow extends WorkflowSystemTask {
 					restarted = 0;
 				}
 				if (param.getRestartCount() >= 0 && restarted >= param.getRestartCount()) {
-					task.setStatus(Status.FAILED);
 					task.setReasonForIncompletion("Number of restart attempts reached configured value");
 				} else {
 					logger.info("Time to restart the sub-workflow " + workflowId);
