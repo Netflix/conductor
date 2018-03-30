@@ -38,7 +38,6 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
 	private static final String RESTARTED = "restartCount";
-	private static final String RESTART_ON = "restartOn";
 	public static final String NAME = "SUB_WORKFLOW";
 
 	public SubWorkflow() {
