@@ -28,11 +28,13 @@ public class SubWorkflowParams {
 	
 	private Object version;
 
-	private boolean standbyOnFail;
+	private Boolean standbyOnFail;
 
-	private boolean restartOnFail;
+	private Boolean restartOnFail;
 
-	private int restartCount = -1; // -1 means an infinite number of restarts
+	private Integer restartCount;
+
+	private Long restartDelay;
 	/**
 	 * @return the name
 	 */
@@ -64,42 +66,56 @@ public class SubWorkflowParams {
 	/**
 	 * @return Stand By the parent workflow upon sub-workflow failure
 	 */
-	public boolean isStandbyOnFail() {
+	public Boolean isStandbyOnFail() {
 		return standbyOnFail;
 	}
 
 	/**
 	 * @param standbyOnFail Stand By the parent workflow upon sub-workflow failure
 	 */
-	public void setStandbyOnFail(boolean standbyOnFail) {
+	public void setStandbyOnFail(Boolean standbyOnFail) {
 		this.standbyOnFail = standbyOnFail;
 	}
 
 	/**
 	 * @return Restart the sub-workflow upon failure
 	 */
-	public boolean isRestartOnFail() {
+	public Boolean isRestartOnFail() {
 		return restartOnFail;
 	}
 
 	/**
 	 * @param restartOnFail Restart the sub-workflow upon failure
 	 */
-	public void setRestartOnFail(boolean restartOnFail) {
+	public void setRestartOnFail(Boolean restartOnFail) {
 		this.restartOnFail = restartOnFail;
 	}
 
 	/**
 	 * @return  Number of restarts for the sub-workflow
 	 */
-	public int getRestartCount() {
+	public Integer getRestartCount() {
 		return restartCount;
 	}
 
 	/**
 	 * @param restartCount  Number of restarts for the sub-workflow
 	 */
-	public void setRestartCount(int restartCount) {
+	public void setRestartCount(Integer restartCount) {
 		this.restartCount = restartCount;
+	}
+
+	/**
+	 * @return Restart delay for the sub-workflow
+	 */
+	public Long getRestartDelay() {
+		return restartDelay;
+	}
+
+	/**
+	 * @param restartDelay Restart delay for the sub-workflow
+	 */
+	public void setRestartDelay(Long restartDelay) {
+		this.restartDelay = restartDelay;
 	}
 }
