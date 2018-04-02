@@ -121,15 +121,23 @@ public class HttpWaitTask extends GenericHttpTask {
 			}
 
 			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
-			if (response.statusCode > 199 && response.statusCode < 300) {
-				task.setStatus(Task.Status.IN_PROGRESS);
-			} else {
+
+			// true - means status been handled, otherwise should apply the original logic
+			boolean handled = handleStatusMapping(task, response);
+			if (!handled) {
+				if (response.statusCode > 199 && response.statusCode < 300) {
+					task.setStatus(Task.Status.IN_PROGRESS);
+				} else {
+					task.setStatus(Task.Status.FAILED);
+				}
+			}
+			// Check the http response validation. It will overwrite the task status if needed
+			if (task.getStatus() != Task.Status.IN_PROGRESS) {
 				if (response.body != null) {
 					task.setReasonForIncompletion(response.body.toString());
 				} else {
 					task.setReasonForIncompletion("No response from the remote service");
 				}
-				task.setStatus(Task.Status.FAILED);
 			}
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {

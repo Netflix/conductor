@@ -46,13 +46,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -110,9 +109,10 @@ public class TestHttpTask {
 	
 	@Before
 	public void setup() {
-		RestClientManager rcm = new RestClientManager();
 		Configuration config = mock(Configuration.class);
 		when(config.getServerId()).thenReturn("test_server_id");
+		when(config.getIntProperty(anyString(), anyInt())).thenReturn(1);
+		RestClientManager rcm = new RestClientManager(config);
 		httpTask = new HttpTask(rcm, config, new ObjectMapper(), authManager);
 	}
 	
@@ -312,6 +312,33 @@ public class TestHttpTask {
 		
 		assertEquals("Task output: " + task.getOutputData(), Status.COMPLETED, task.getStatus());
 	}
+
+	@Test
+	public void testStatusMapping() throws Exception {
+
+		Task task = new Task();
+		Input input = new Input();
+		input.setUri("http://localhost:7009/bad_request");
+		Map<String, Object> body = new HashMap<>();
+		body.put("input_key1", "value1");
+		body.put("input_key2", 45.3d);
+		input.setBody(body);
+		input.setMethod("POST");
+		task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+		task.getInputData().put(HttpTask.STATUS_MAPPING_PARAMETER_NAME, Collections.singletonMap("400", "COMPLETED"));
+
+		httpTask.start(workflow, task, executor);
+		assertEquals(task.getReasonForIncompletion(), Task.Status.COMPLETED, task.getStatus());
+		Map<String, Object> hr = (Map<String, Object>) task.getOutputData().get("response");
+		Object response = hr.get("body");
+		assertEquals(Task.Status.COMPLETED, task.getStatus());
+		assertTrue("response is: " + response, response instanceof Map);
+		Map<String, Object> map = (Map<String, Object>) response;
+		Set<String> inputKeys = body.keySet();
+		Set<String> responseKeys = map.keySet();
+		inputKeys.containsAll(responseKeys);
+		responseKeys.containsAll(inputKeys);
+	}
 	
 	private static class EchoHandler extends AbstractHandler {
 
@@ -358,7 +385,19 @@ public class TestHttpTask {
 				Set<String> keys = input.keySet();
 				System.out.println(keys);
 				response.getWriter().close();
-				
+			} else if(request.getMethod().equals("POST") && request.getRequestURI().equals("/bad_request")) {
+				response.addHeader("Content-Type", "application/json");
+				response.setStatus(400);
+				BufferedReader reader = request.getReader();
+				Map<String, Object> input = om.readValue(reader, mapOfObj);
+				Set<String> keys = input.keySet();
+				for(String key : keys) {
+					input.put(key, key);
+				}
+				PrintWriter writer = response.getWriter();
+				writer.print(om.writeValueAsString(input));
+				writer.flush();
+				writer.close();
 			} else if(request.getMethod().equals("GET") && request.getRequestURI().equals("/numeric")) {
 				PrintWriter writer = response.getWriter();
 				writer.print(NUM_RESPONSE);
