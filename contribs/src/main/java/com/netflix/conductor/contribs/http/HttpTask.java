@@ -111,10 +111,18 @@ public class HttpTask extends GenericHttpTask {
 			}
 
 			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
-			if (response.statusCode > 199 && response.statusCode < 300) {
-				task.setStatus(Status.COMPLETED);
 
-				// Check the http response validation. It will overwrite the task status if needed
+			// true - means status been handled, otherwise should apply the original logic
+			boolean handled = handleStatusMapping(task, response);
+			if (!handled) {
+				if (response.statusCode > 199 && response.statusCode < 300) {
+					task.setStatus(Status.COMPLETED);
+				} else {
+					task.setStatus(Task.Status.FAILED);
+				}
+			}
+			// Check the http response validation. It will overwrite the task status if needed
+			if (task.getStatus() == Status.COMPLETED) {
 				checkHttpResponseValidation(task, response);
 			} else {
 				if (response.body != null) {
@@ -122,18 +130,16 @@ public class HttpTask extends GenericHttpTask {
 				} else {
 					task.setReasonForIncompletion("No response from the remote service");
 				}
-				task.setStatus(Status.FAILED);
 			}
-			if (response != null) {
-				task.getOutputData().put("response", response.asMap());
-			}
-
-
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			task.getOutputData().put("response", response.asMap());
+		} catch (Exception ex) {
+			logger.error("http task failed for workflowId=" + workflow.getWorkflowId()
+					+ ",correlationId=" + workflow.getCorrelationId()
+					+ ",taskId=" + task.getTaskId()
+					+ ",taskreference name=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
-			task.setReasonForIncompletion(e.getMessage());
-			task.getOutputData().put("response", e.getMessage());
+			task.setReasonForIncompletion(ex.getMessage());
+			task.getOutputData().put("response", ex.getMessage());
 		}
 	}
 

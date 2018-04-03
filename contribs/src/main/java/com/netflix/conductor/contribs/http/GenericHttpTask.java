@@ -41,6 +41,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
 	static final String REQUEST_PARAMETER_NAME = "http_request";
 	static final String RESPONSE_PARAMETER_NAME = "http_response";
+	static final String STATUS_MAPPING_PARAMETER_NAME = "status_mapping";
 
 	protected Configuration config;
 	protected ObjectMapper om;
@@ -233,5 +234,29 @@ class GenericHttpTask extends WorkflowSystemTask {
 	private void setAuthorization(Input input) throws Exception {
 		AuthResponse response = auth.authorize();
 		input.getHeaders().put(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
+	}
+
+	@SuppressWarnings("unchecked")
+	boolean handleStatusMapping(Task task, HttpResponse response) {
+		Object param = task.getInputData().get(STATUS_MAPPING_PARAMETER_NAME);
+		if (param == null) {
+			return false;
+		}
+		if (!(param instanceof Map)) {
+			throw new RuntimeException("The " + STATUS_MAPPING_PARAMETER_NAME + " is not an object");
+		}
+		Map<Integer, Task.Status> statusMapping = om.convertValue(param, new TypeReference<Map<Integer, Task.Status>>(){});
+		if (statusMapping.isEmpty()) {
+			System.out.println(" case2 ");
+			return false;
+		}
+
+		Task.Status taskStatus = statusMapping.get(response.statusCode);
+		if (taskStatus == null) {
+			return false;
+		}
+
+		task.setStatus(taskStatus);
+		return true;
 	}
 }
