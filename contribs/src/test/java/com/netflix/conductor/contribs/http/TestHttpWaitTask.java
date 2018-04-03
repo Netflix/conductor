@@ -67,7 +67,6 @@ public class TestHttpWaitTask {
 	private static ObjectMapper om = new ObjectMapper();
 
 	private WorkflowExecutor executor = mock(WorkflowExecutor.class);
-	private RestClientManager rcm = new RestClientManager();
 	private MetadataDAO metadata = mock(MetadataDAO.class);
 	private EventProcessor processor = mock(EventProcessor.class);
 	private AuthManager authManager = mock(AuthManager.class);
@@ -97,7 +96,9 @@ public class TestHttpWaitTask {
 	@Before
 	public void setup() {
 		Configuration config = mock(Configuration.class);
+		when(config.getIntProperty(anyString(), anyInt())).thenReturn(1);
 		when(config.getServerId()).thenReturn("test_server_id");
+		RestClientManager rcm = new RestClientManager(config);
 
 		httpTask = new HttpWaitTask(config, rcm, new ObjectMapper(), metadata, processor, authManager);
 	}
