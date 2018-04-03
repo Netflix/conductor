@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class Fail extends WorkflowSystemTask {
 	private static final String REASON_PARAMETER = "reason";
+	private static final String SUPPRESS_RESTART_PARAMETER = "suppressRestart";
 
 	public static final String NAME = "FAIL";
 
@@ -45,6 +46,10 @@ public class Fail extends WorkflowSystemTask {
 		}
 		task.setReasonForIncompletion(reason);
 		task.setStatus(Status.FAILED);
+
+		if (isSuppressRestart(task)) {
+			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
+		}
 	}
 
 	@Override
@@ -55,5 +60,15 @@ public class Fail extends WorkflowSystemTask {
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
 		task.setStatus(Status.CANCELED);
+	}
+
+	private boolean isSuppressRestart(Task task) {
+		Object obj = task.getInputData().get(SUPPRESS_RESTART_PARAMETER);
+		if (obj instanceof Boolean) {
+			return (boolean)obj;
+		} else if (obj instanceof String) {
+			return Boolean.parseBoolean((String)obj);
+		}
+		return false;
 	}
 }

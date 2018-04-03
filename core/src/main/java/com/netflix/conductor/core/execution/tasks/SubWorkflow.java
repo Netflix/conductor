@@ -38,6 +38,7 @@ import java.util.Map;
 public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
+	private static final String SUPPRESS_RESTART_PARAMETER = "suppressRestart";
 	private static final String RESTARTED = "restartCount";
 	private static final String RESTART_ON = "restartOn";
 	public static final String NAME = "SUB_WORKFLOW";
@@ -97,6 +98,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else if (subWorkflowStatus == WorkflowStatus.TERMINATED) {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion("Sub-workflow " + task.getReferenceTaskName() + " has been terminated");
+		} else if (isSuppressRestart(subWorkflow)) {
+			task.setStatus(Status.FAILED);
+			task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
+			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else {
 			SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
 			// Note: StandbyOnFail and RestartOnFail are Boolean objects and not primitives
@@ -173,6 +178,16 @@ public class SubWorkflow extends WorkflowSystemTask {
 	
 	@Override
 	public boolean isAsync() {
+		return false;
+	}
+
+	private boolean isSuppressRestart(Workflow subWorkflow) {
+		Object obj = subWorkflow.getOutput().get(SUPPRESS_RESTART_PARAMETER);
+		if (obj instanceof Boolean) {
+			return (boolean)obj;
+		} else if (obj instanceof String) {
+			return Boolean.parseBoolean((String)obj);
+		}
 		return false;
 	}
 
