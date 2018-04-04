@@ -39,8 +39,6 @@ public class Input {
 
 	private boolean followRedirects = true;
 
-	private boolean ignoreContent;
-
 	/**
 	 * @return the method
 	 */
