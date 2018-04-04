@@ -484,7 +484,7 @@ public class WorkflowExecutor {
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
 		// send wf end message
-		notifyWorkflowStatus(wf, StartEndState.end);
+		notifyWorkflowStatus(workflow, StartEndState.end);
 
 		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
