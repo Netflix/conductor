@@ -96,10 +96,8 @@ public class TestHttpWaitTask {
 	@Before
 	public void setup() {
 		Configuration config = mock(Configuration.class);
-		when(config.getIntProperty(anyString(), anyInt())).thenReturn(1);
 		when(config.getServerId()).thenReturn("test_server_id");
-		RestClientManager rcm = new RestClientManager(config);
-
+		RestClientManager rcm = new RestClientManager();
 		httpTask = new HttpWaitTask(config, rcm, new ObjectMapper(), metadata, processor, authManager);
 	}
 

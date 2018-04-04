@@ -50,8 +50,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -111,8 +109,7 @@ public class TestHttpTask {
 	public void setup() {
 		Configuration config = mock(Configuration.class);
 		when(config.getServerId()).thenReturn("test_server_id");
-		when(config.getIntProperty(anyString(), anyInt())).thenReturn(1);
-		RestClientManager rcm = new RestClientManager(config);
+		RestClientManager rcm = new RestClientManager();
 		httpTask = new HttpTask(rcm, config, new ObjectMapper(), authManager);
 	}
 	

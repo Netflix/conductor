@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -75,7 +76,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 	@SuppressWarnings("unchecked")
 	HttpResponse httpCallUrlEncoded(Input input, String body) throws Exception {
-		Client client = Client.create();
+		Client client = rcm.getClient(input);
 		MultivaluedMap formData = new MultivaluedMapImpl();
 		Map<String, String> bodyparam = new ObjectMapper().readValue(body, HashMap.class);
 		Iterator it = bodyparam.entrySet().iterator();
@@ -93,8 +94,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (response.getStatus() != 201 && response.getStatus() != 200) {
 			throw new RuntimeException("Failed : HTTP error code : "
 					+ response.getStatus() + response.getEntity(String.class));
-
-
 		}
 		HttpResponse responsehttp = new HttpResponse();
 
@@ -159,12 +158,13 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 			task.getInputData().put(REQUEST_PARAMETER_NAME, input);
 			executor.updateTask(new TaskResult(task));
-		};
+		}
 
 		HttpResponse response = new HttpResponse();
 		try {
 			ClientResponse cr = builder.accept(input.getAccept()).method(input.getMethod(), ClientResponse.class);
-			if (cr.getStatus() != 204 && cr.hasEntity()) {
+			Response.Status.Family family = cr.getStatusInfo().getFamily();
+			if (cr.getStatus() != 204 && cr.hasEntity() && !family.equals(Response.Status.Family.REDIRECTION)) {
 				response.body = extractBody(cr);
 			}
 			response.statusCode = cr.getStatus();
@@ -187,7 +187,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 				throw new Exception(reason);
 			}
 		}
-
 	}
 
 	private Object extractBody(ClientResponse cr) {
@@ -215,7 +214,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 		Correlator correlator;
 		if (workflow.getHeaders() != null) {
-			Map<String, Object> context = (Map<String, Object>)workflow.getHeaders().get(Correlator.headerKey);
+			Map<String, Object> context = (Map<String, Object>) workflow.getHeaders().get(Correlator.headerKey);
 			correlator = new Correlator(logger, context);
 		} else {
 			workflow.setHeaders(new HashMap<>());
@@ -245,9 +244,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (!(param instanceof Map)) {
 			throw new RuntimeException("The " + STATUS_MAPPING_PARAMETER_NAME + " is not an object");
 		}
-		Map<Integer, Task.Status> statusMapping = om.convertValue(param, new TypeReference<Map<Integer, Task.Status>>(){});
+		Map<Integer, Task.Status> statusMapping = om.convertValue(param, new TypeReference<Map<Integer, Task.Status>>() {
+		});
 		if (statusMapping.isEmpty()) {
-			System.out.println(" case2 ");
 			return false;
 		}
 
