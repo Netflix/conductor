@@ -37,6 +37,10 @@ public class Input {
 
 	private boolean authorize;
 
+	private boolean followRedirects = true;
+
+	private boolean ignoreContent;
+
 	/**
 	 * @return the method
 	 */
@@ -225,5 +229,19 @@ public class Input {
 	 */
 	public void setAuthorize(boolean authorize) {
 		this.authorize = authorize;
+	}
+
+	/**
+	 * @return Follow 30x redirects
+	 */
+	public boolean isFollowRedirects() {
+		return followRedirects;
+	}
+
+	/**
+	 * @param followRedirects Follow 30x redirects
+	 */
+	public void setFollowRedirects(boolean followRedirects) {
+		this.followRedirects = followRedirects;
 	}
 }
