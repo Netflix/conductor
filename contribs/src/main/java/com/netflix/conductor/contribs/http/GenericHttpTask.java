@@ -159,7 +159,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 			task.getInputData().put(REQUEST_PARAMETER_NAME, input);
 			executor.updateTask(new TaskResult(task));
 		}
-		;
 
 		HttpResponse response = new HttpResponse();
 		try {
@@ -188,7 +187,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 				throw new Exception(reason);
 			}
 		}
-
 	}
 
 	private Object extractBody(ClientResponse cr) {
