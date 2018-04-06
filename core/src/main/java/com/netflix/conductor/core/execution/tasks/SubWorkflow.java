@@ -95,9 +95,11 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else if (subWorkflowStatus == WorkflowStatus.CANCELLED) {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion("Sub-workflow " + task.getReferenceTaskName() + " has been cancelled");
+			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else if (subWorkflowStatus == WorkflowStatus.TERMINATED) {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion("Sub-workflow " + task.getReferenceTaskName() + " has been terminated");
+			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else if (isSuppressRestart(subWorkflow)) {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
