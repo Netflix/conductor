@@ -18,11 +18,13 @@
  */
 package com.netflix.conductor.common.run;
 
+import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.TimeZone;
-
-import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 
 /**
  * @author Viren
@@ -60,6 +62,8 @@ public class WorkflowSummary {
 	private long executionTime;
 	
 	private String event;
+
+	private List<String> parentWorkflowIds = new LinkedList<>();
 	
 	public WorkflowSummary() {
 		
@@ -90,6 +94,7 @@ public class WorkflowSummary {
 			this.executionTime = workflow.getEndTime() - workflow.getStartTime();
 		}
 		this.event = workflow.getEvent();
+		this.parentWorkflowIds = workflow.getParentWorkflowIds();
 	}
 
 	/**
@@ -192,5 +197,19 @@ public class WorkflowSummary {
 	 */
 	public void setEvent(String event) {
 		this.event = event;
+	}
+
+	/**
+	 * @return List of parent workflow ids
+	 */
+	public List<String> getParentWorkflowIds() {
+		return parentWorkflowIds;
+	}
+
+	/**
+	 * @param parentWorkflowIds List of parent workflow ids
+	 */
+	public void setParentWorkflowIds(List<String> parentWorkflowIds) {
+		this.parentWorkflowIds = parentWorkflowIds;
 	}
 }
