@@ -382,7 +382,6 @@ public class WorkflowExecutor {
         // If the following lines, for some reason fails, the sweep will take
         // care of this again!
         if (workflow.getParentWorkflowId() != null) {
-            Workflow parent = executionDAO.getWorkflow(workflow.getParentWorkflowId(), false);
             decide(parent.getWorkflowId());
         }
 
