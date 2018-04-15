@@ -242,16 +242,6 @@ public class WorkflowExecutor {
 
             }
         }
-        ;
-        if (failedTask != null && !failedTask.getStatus().isTerminal()) {
-            throw new ApplicationException(Code.CONFLICT,
-                    "The last task is still not completed!  I can only retry the last failed task.  Use restart if you want to attempt entire workflow execution again.");
-        }
-        if (failedTask != null && failedTask.getStatus().isSuccessful()) {
-            throw new ApplicationException(Code.CONFLICT,
-                    "The last task has not failed!  I can only retry the last failed task.  Use restart if you want to attempt entire workflow execution again.");
-        }
-
         // Below is the situation where currently when the task failure causes
         // workflow to fail, the task's retried flag is not updated. This is to
         // update for these old tasks.
