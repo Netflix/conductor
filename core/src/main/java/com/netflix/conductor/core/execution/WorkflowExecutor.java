@@ -242,6 +242,7 @@ public class WorkflowExecutor {
 
             }
         }
+
         // Below is the situation where currently when the task failure causes
         // workflow to fail, the task's retried flag is not updated. This is to
         // update for these old tasks.
