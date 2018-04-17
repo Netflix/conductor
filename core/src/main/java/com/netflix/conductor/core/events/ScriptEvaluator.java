@@ -66,7 +66,7 @@ public class ScriptEvaluator {
 
 	}
 
-	static String evalJq(String expression, Object payload) throws Exception {
+	public static String evalJq(String expression, Object payload) throws Exception {
 		JsonNode input = om.valueToTree(payload);
 		JsonQuery query = queryCache.get(expression);
 		List<JsonNode> result = query.apply(input);

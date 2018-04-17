@@ -20,7 +20,7 @@ package com.netflix.conductor.core.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.google.inject.Injector;
 import com.netflix.conductor.common.metadata.events.EventHandler.*;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
@@ -38,8 +38,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.*;
-import java.util.function.Function;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -60,10 +62,13 @@ public class ActionProcessor {
 
 	private ParametersUtils pu = new ParametersUtils();
 
+	private Injector injector;
+
 	@Inject
-	public ActionProcessor(WorkflowExecutor executor, MetadataService metadata) {
+	public ActionProcessor(WorkflowExecutor executor, MetadataService metadata, Injector injector) {
 		this.executor = executor;
 		this.metadata = metadata;
+		this.injector = injector;
 	}
 
 	public Map<String, Object> execute(Action action, String payload, String event, String messageId) throws Exception {
@@ -89,6 +94,9 @@ public class ActionProcessor {
 				return op;
 			case find_update:
 				op = find_update(action, jsonObj, event, messageId);
+				return op;
+			case java_action:
+				op = java_action(action, jsonObj, event, messageId);
 				return op;
 			default:
 				break;
@@ -353,6 +361,35 @@ public class ActionProcessor {
 			logger.error("find_update: failed with " + e.getMessage() + " for action=" + findUpdate + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
 			op.put("action", findUpdate);
+			op.put("conductor.event.name", event);
+			op.put("conductor.event.payload", payload);
+			op.put("conductor.event.messageId", messageId);
+		}
+
+		return op;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> java_action(Action action, Object payload, String event, String messageId) {
+		JavaAction params = action.getJava_action();
+		Map<String, Object> op = new HashMap<>();
+		try {
+			if (StringUtils.isEmpty(params.getClassName())) {
+				throw new RuntimeException("No className provided in the action");
+			}
+
+			Class clazz = Class.forName(params.getClassName());
+			Object object = injector.getInstance(clazz);
+			JavaEventAction instance = (JavaEventAction)object;
+			op = instance.handle(action, payload, event, messageId);
+
+			op.put("conductor.event.name", event);
+			op.put("conductor.event.payload", payload);
+			op.put("conductor.event.messageId", messageId);
+		} catch (Exception e) {
+			logger.error("javaAction: failed with " + e.getMessage() + " for action=" + params + ", payload=" + payload, e);
+			op.put("error", e.getMessage());
+			op.put("action", params);
 			op.put("conductor.event.name", event);
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
