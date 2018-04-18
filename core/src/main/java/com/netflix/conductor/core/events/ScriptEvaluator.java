@@ -18,6 +18,7 @@
  */
 package com.netflix.conductor.core.events;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
@@ -31,6 +32,7 @@ import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -74,6 +76,17 @@ public class ScriptEvaluator {
 			return null;
 		} else {
 			return result.get(0).textValue();
+		}
+	}
+
+	public static List<Object> evalJqAsList(String expression, Object payload) throws Exception {
+		JsonNode input = om.valueToTree(payload);
+		JsonQuery query = queryCache.get(expression);
+		List<JsonNode> result = query.apply(input);
+		if (result == null || result.isEmpty()) {
+			return Collections.emptyList();
+		} else {
+			return om.convertValue(result, new TypeReference<List<Object>>(){});
 		}
 	}
 

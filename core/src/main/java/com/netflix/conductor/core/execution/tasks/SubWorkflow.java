@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -153,7 +154,9 @@ public class SubWorkflow extends WorkflowSystemTask {
 			}
 		}
 		if (task.getStatus() == Status.COMPLETED) {
-			task.getOutputData().putAll(subWorkflow.getOutput());
+			Map<String, Object> output = new HashMap<>(subWorkflow.getOutput());
+			output.remove("subWorkflowId"); // We should remove subWorkflowId and not propagate back to parent task
+			task.getOutputData().putAll(output);
 		}
 		return true;
 	}
