@@ -69,16 +69,17 @@ public class AssetMonitor implements JavaEventAction {
 
 			// All deliverables are completed
 			if (deliverableJoin.getStatus() == Task.Status.COMPLETED) {
-				handleAllCompletedDeliverables(workflow, deliverableJoin, assetId);
+				handleAllCompleted(workflow, deliverableJoin, assetId);
 			} else if (deliverableJoin.getStatus() == Task.Status.IN_PROGRESS) {
-				handlePendingDeliverables(workflow, assetId);
+				// Some might be complened and some still running
+				handlePartiallyCompleted(workflow, assetId);
 			} else {
 				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + ", messageId=" + messageId);
 			}
 		}
 	}
 
-	private void handleAllCompletedDeliverables(Workflow workflow, Task task, String assetId) throws Exception {
+	private void handleAllCompleted(Workflow workflow, Task task, String assetId) throws Exception {
 		// Check asset id in the deliverable outputs
 		List<Object> assetIds = ScriptEvaluator.evalJqAsList(".[].input[].atlasData.id", task.getOutputData());
 
@@ -88,7 +89,7 @@ public class AssetMonitor implements JavaEventAction {
 		}
 	}
 
-	private void handlePendingDeliverables(Workflow workflow, String assetId) throws Exception {
+	private void handlePartiallyCompleted(Workflow workflow, String assetId) throws Exception {
 		// Get the list of completed deliverables.
 		List<Task> completed = workflow.getTasks().stream()
 				.filter(task -> task.getTaskType().equalsIgnoreCase(SubWorkflow.NAME))
@@ -116,102 +117,15 @@ public class AssetMonitor implements JavaEventAction {
 		}
 	}
 
-//	private void handlePendingDeliverables(Workflow workflow, ActionParameters params, Object payload, String event, String messageId) throws Exception {
-//		// Get the list of in-progress deliverables.
-//		List<Task> pending = workflow.getTasks().stream()
-//				.filter(task -> task.getTaskType().equalsIgnoreCase(SubWorkflow.NAME))
-//				.filter(task -> task.getReferenceTaskName().startsWith("deliverable"))
-//				.filter(task -> task.getStatus().equals(Task.Status.IN_PROGRESS))
-//				.collect(Collectors.toList());
-//
-//		// Go over the pending 'action.source_wait'
-//		// Find 'source_wait.atlas' sub-workflow task
-//		// if exists and in-progress, check the 'waitpending' task
-//		// update the task if in-progress
-//		for (Task task : pending) {
-//			String actionSubWorkflowId = (String) task.getOutputData().get("subWorkflowId");
-//			Workflow actionSubWorkflow = executor.getWorkflow(actionSubWorkflowId, true);
-//
-//			// Move on if 'action.source_wait' WF is not running
-//			if (actionSubWorkflow.getStatus() != Workflow.WorkflowStatus.RUNNING) {
-//				continue;
-//			}
-//
-//			// Find 'source_wait.atlas' sub-workflow task. Please note that it might not even scheduled
-//			Task sourceWaitTask = actionSubWorkflow.getTasks().stream()
-//					.filter(t -> t.getTaskType().equalsIgnoreCase(SubWorkflow.NAME))
-//					.filter(t -> t.getReferenceTaskName().equalsIgnoreCase("sourcewaitsubflow"))
-//					.filter(t -> t.getStatus().equals(Task.Status.IN_PROGRESS))
-//					.findFirst().orElse(null);
-//
-//			// Move on if no running task
-//			if (sourceWaitTask == null) {
-//				continue;
-//			}
-//
-//			// Delegate the waitpending update to the existing find_update action
-//			String subWorkflowName = (String) sourceWaitTask.getInputData().get("subWorkflowName");
-//			EventHandler.FindUpdate findUpdate = new EventHandler.FindUpdate();
-//			findUpdate.setWorkflowName(subWorkflowName);
-//			findUpdate.setStatus(params.getStatus());
-//			findUpdate.setStatuses(params.getStatuses());
-//			findUpdate.setFailedReason(params.getFailedReason());
-//			findUpdate.setInputParameters(params.getInputParameters());
-//			JavaEventAction javaEventAction = new FindUpdateAction(executor);
-//
-//			EventHandler.Action action = new EventHandler.Action();
-//			action.setAction(EventHandler.Action.Type.find_update);
-//			action.setFind_update(findUpdate);
-//
-//			javaEventAction.handle(action, payload, event, messageId);
-//		}
-//	}
-
 	public static class ActionParameters {
 		private String workflowName;
-//		private String status;
-//		private String failedReason;
-//		private Map<String, String> statuses = new HashMap<>();
-//		private Map<String, String> inputParameters = new HashMap<>();
 
-		public String getWorkflowName() {
+		String getWorkflowName() {
 			return workflowName;
 		}
 
 		public void setWorkflowName(String workflowName) {
 			this.workflowName = workflowName;
 		}
-
-//		public String getStatus() {
-//			return status;
-//		}
-//
-//		public void setStatus(String status) {
-//			this.status = status;
-//		}
-//
-//		public String getFailedReason() {
-//			return failedReason;
-//		}
-//
-//		public void setFailedReason(String failedReason) {
-//			this.failedReason = failedReason;
-//		}
-//
-//		public Map<String, String> getInputParameters() {
-//			return inputParameters;
-//		}
-//
-//		public void setInputParameters(Map<String, String> inputParameters) {
-//			this.inputParameters = inputParameters;
-//		}
-//
-//		public Map<String, String> getStatuses() {
-//			return statuses;
-//		}
-//
-//		public void setStatuses(Map<String, String> statuses) {
-//			this.statuses = statuses;
-//		}
 	}
 }
