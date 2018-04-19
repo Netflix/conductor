@@ -69,17 +69,17 @@ public class AssetMonitor implements JavaEventAction {
 
 			// All deliverables are completed
 			if (deliverableJoin.getStatus() == Task.Status.COMPLETED) {
-				handleAllCompleted(workflow, deliverableJoin, assetId);
+				checkForCancellation(workflow, deliverableJoin, assetId);
 			} else if (deliverableJoin.getStatus() == Task.Status.IN_PROGRESS) {
-				// Some might be complened and some still running
-				handlePartiallyCompleted(workflow, assetId);
+				// Some might be completed and some still running
+				checkForRestart(workflow, assetId);
 			} else {
 				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + ", messageId=" + messageId);
 			}
 		}
 	}
 
-	private void handleAllCompleted(Workflow workflow, Task task, String assetId) throws Exception {
+	private void checkForCancellation(Workflow workflow, Task task, String assetId) throws Exception {
 		// Check asset id in the deliverable outputs
 		List<Object> assetIds = ScriptEvaluator.evalJqAsList(".[].input[].atlasData.id", task.getOutputData());
 
@@ -89,7 +89,7 @@ public class AssetMonitor implements JavaEventAction {
 		}
 	}
 
-	private void handlePartiallyCompleted(Workflow workflow, String assetId) throws Exception {
+	private void checkForRestart(Workflow workflow, String assetId) throws Exception {
 		// Get the list of completed deliverables.
 		List<Task> completed = workflow.getTasks().stream()
 				.filter(task -> task.getTaskType().equalsIgnoreCase(SubWorkflow.NAME))
