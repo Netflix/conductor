@@ -695,12 +695,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -734,12 +734,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -773,12 +773,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -810,12 +810,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -849,12 +849,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -887,12 +887,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	private EventHandler.Action newFindUpdateAction() {
