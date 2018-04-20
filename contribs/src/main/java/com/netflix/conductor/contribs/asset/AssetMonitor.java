@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.JavaEventAction;
 import com.netflix.conductor.core.events.ScriptEvaluator;
+import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -15,9 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -38,10 +40,9 @@ public class AssetMonitor implements JavaEventAction {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
-		Map<String, Object> params = action.getJava_action().getInputParameters();
-		ActionParameters actionParameters = om.convertValue(params, ActionParameters.class);
+		ActionParameters params = om.convertValue(action.getJava_action().getInputParameters(), ActionParameters.class);
 
-		String workflowName = actionParameters.getWorkflowName();
+		String workflowName = params.getWorkflowName();
 		if (StringUtils.isEmpty(workflowName)) {
 			throw new RuntimeException("No workflow defined");
 		}
@@ -69,7 +70,7 @@ public class AssetMonitor implements JavaEventAction {
 
 			// All deliverables are completed
 			if (deliverableJoin.getStatus() == Task.Status.COMPLETED) {
-				checkForCancellation(workflow, deliverableJoin, assetId);
+				sendAlertMessage(workflow, deliverableJoin, assetId, params, payload);
 			} else if (deliverableJoin.getStatus() == Task.Status.IN_PROGRESS) {
 				// Some might be completed and some still running
 				checkForRestart(workflow, assetId);
@@ -79,13 +80,34 @@ public class AssetMonitor implements JavaEventAction {
 		}
 	}
 
-	private void checkForCancellation(Workflow workflow, Task task, String assetId) throws Exception {
+	@SuppressWarnings("unchecked")
+	private void sendAlertMessage(Workflow workflow, Task task, String assetId, ActionParameters params, Object payload) throws Exception {
 		// Check asset id in the deliverable outputs
 		List<Object> assetIds = ScriptEvaluator.evalJqAsList(".[].input[].atlasData.id", task.getOutputData());
 
 		// Cancel workflow "Invalidate Asset" if any of them has assetId in the params
 		if (assetIds != null && assetIds.contains(assetId)) {
-			executor.cancelWorkflow(workflow, Collections.emptyMap(), "Invalidate Asset");
+			ParametersUtils pu = new ParametersUtils();
+
+			String sink = params.getAlertMessage().getSink();
+
+			Map<String, Object> event = (Map<String, Object>)payload;
+			Map<String, Map<String, Object>> defaults = new HashMap<>();
+			defaults.put("event", event);
+
+			Map<String, Object> input = params.getAlertMessage().getInputParameters();
+			Map<String, Object> message = pu.getTaskInputV2(input, defaults, workflow, UUID.randomUUID().toString(), null, null);
+
+			Message msg = new Message();
+			msg.setId(UUID.randomUUID().toString());
+			msg.setPayload(om.writeValueAsString(message));
+
+			ObservableQueue queue = EventQueues.getQueue(sink, true);
+			if (queue == null) {
+				throw new RuntimeException("sendAlertMessage. No queue found for " + sink);
+			}
+
+			queue.publish(Collections.singletonList(msg));
 		}
 	}
 
@@ -119,6 +141,7 @@ public class AssetMonitor implements JavaEventAction {
 
 	public static class ActionParameters {
 		private String workflowName;
+		private AlertMessage alertMessage;
 
 		String getWorkflowName() {
 			return workflowName;
@@ -126,6 +149,35 @@ public class AssetMonitor implements JavaEventAction {
 
 		public void setWorkflowName(String workflowName) {
 			this.workflowName = workflowName;
+		}
+
+		public AlertMessage getAlertMessage() {
+			return alertMessage;
+		}
+
+		public void setAlertMessage(AlertMessage alertMessage) {
+			this.alertMessage = alertMessage;
+		}
+	}
+
+	public static class AlertMessage {
+		private String sink;
+		private Map<String, Object> inputParameters;
+
+		public String getSink() {
+			return sink;
+		}
+
+		public void setSink(String sink) {
+			this.sink = sink;
+		}
+
+		public Map<String, Object> getInputParameters() {
+			return inputParameters;
+		}
+
+		public void setInputParameters(Map<String, Object> inputParameters) {
+			this.inputParameters = inputParameters;
 		}
 	}
 }
