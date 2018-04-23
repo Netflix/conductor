@@ -12,10 +12,9 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class FindUpdateAction implements JavaEventAction {
 	private static Logger logger = LoggerFactory.getLogger(FindUpdateAction.class);
@@ -27,6 +26,11 @@ public class FindUpdateAction implements JavaEventAction {
 
 	@Override
 	public void handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
+		handleInternal(action, payload, event, messageId);
+	}
+
+	public List<String> handleInternal(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
+		List<String> output = new LinkedList<>();
 		EventHandler.FindUpdate findUpdate = action.getFind_update();
 
 		// Name of the workflow ot be looked for. Performance consideration.
@@ -39,23 +43,7 @@ public class FindUpdateAction implements JavaEventAction {
 			throw new RuntimeException("inputParameters is empty");
 
 		// Convert map value field=expression to the map of field=value
-		inputParameters = inputParameters.entrySet().stream().map(entry -> {
-			String fieldName = entry.getKey();
-			String expression = entry.getValue();
-			if (StringUtils.isEmpty(expression))
-				throw new RuntimeException(fieldName + " expression is empty");
-
-			String fieldValue;
-			try {
-				fieldValue = ScriptEvaluator.evalJq(expression, payload);
-			} catch (Exception e) {
-				throw new RuntimeException(fieldName + " evaluating failed with " + e.getMessage(), e);
-			}
-			if (StringUtils.isEmpty(fieldValue))
-				throw new RuntimeException(fieldName + " evaluating is empty");
-
-			return new HashMap.SimpleEntry<>(fieldName, fieldValue);
-		}).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+		inputParameters = ScriptEvaluator.evaluateMap(inputParameters, payload);
 
 		// Task status is completed by default. It either can be a constant or expression
 		Task.Status taskStatus = Task.Status.COMPLETED;
@@ -133,7 +121,10 @@ public class FindUpdateAction implements JavaEventAction {
 				// Create task update wrapper and update the task
 				TaskResult taskResult = new TaskResult(task);
 				executor.updateTask(taskResult);
+				output.add(workflow.getWorkflowId());
 			}
 		}
+
+		return output;
 	}
 }

@@ -505,22 +505,7 @@ public class WorkflowExecutor {
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is cancelled.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
-		List<Task> tasks = workflow.getTasks();
-		for (Task task : tasks) {
-			if (!task.getStatus().isTerminal()) {
-				// Cancel the ones which are not completed yet....
-				task.setStatus(Status.CANCELED);
-				if (SystemTaskType.is(task.getTaskType())) {
-					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-					stt.cancel(workflow, task, this);
-					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
-				}
-				edao.updateTask(task);
-				notifyTaskStatus(task, StartEndState.end);
-			}
-			// And remove from the task queue if they were there
-			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
-		}
+		cancelTasks(workflow, workflow.getTasks());
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -555,6 +540,34 @@ public class WorkflowExecutor {
 				workflow.getOutput().put("conductor.cancel_workflow", "Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
 				Monitors.recordWorkflowStartError(cancelWorkflow);
 			}
+		}
+
+		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+
+		// send wf end message
+		notifyWorkflowStatus(workflow, StartEndState.end);
+
+		// Send to atlas
+		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
+		return workflowId;
+	}
+
+	public String reset(Workflow workflow, String reason) throws Exception {
+		if (!workflow.getStatus().isTerminal()) {
+			workflow.setStatus(WorkflowStatus.RESET);
+		}
+
+		String workflowId = workflow.getWorkflowId();
+		workflow.setReasonForIncompletion(reason);
+		edao.updateWorkflow(workflow);
+		logger.error("Workflow has been reset.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
+		cancelTasks(workflow, workflow.getTasks());
+
+		// If the following lines, for some reason fails, the sweep will take
+		// care of this again!
+		if (workflow.getParentWorkflowId() != null) {
+			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
+			decide(parent.getWorkflowId());
 		}
 
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
@@ -1212,6 +1225,24 @@ public class WorkflowExecutor {
 
 		if (!failedList.isEmpty()) {
 			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: at least one of the verify conditions failed");
+		}
+	}
+
+	private void cancelTasks(Workflow workflow, List<Task> tasks) throws Exception {
+		for (Task task : tasks) {
+			if (!task.getStatus().isTerminal()) {
+				// Cancel the ones which are not completed yet....
+				task.setStatus(Status.CANCELED);
+				if (SystemTaskType.is(task.getTaskType())) {
+					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
+					stt.cancel(workflow, task, this);
+					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
+				}
+				edao.updateTask(task);
+				notifyTaskStatus(task, StartEndState.end);
+			}
+			// And remove from the task queue if they were there
+			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
 		}
 	}
 }

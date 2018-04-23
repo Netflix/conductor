@@ -26,7 +26,7 @@ import java.util.Map;
 public class Workflow extends Auditable{
 	
 	public enum  WorkflowStatus {
-		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false),CANCELLED(true, false), PAUSED(false, true);
+		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false), CANCELLED(true, false), PAUSED(false, true), RESET(true, false);
 		
 		private boolean terminal;
 		
