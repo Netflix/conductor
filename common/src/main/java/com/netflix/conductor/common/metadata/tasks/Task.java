@@ -15,10 +15,10 @@
  */
 package com.netflix.conductor.common.metadata.tasks;
 
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 
 public class Task {
 	
@@ -32,8 +32,9 @@ public class Task {
 		SCHEDULED(false, true, true), 
 		TIMED_OUT(true, false, true),
 		READY_FOR_RERUN(false, true, true),
-		SKIPPED(true, true, false);
-		
+		SKIPPED(true, true, false),
+		RESET(true, false, false);
+
 		private boolean terminal;
 		
 		private boolean successful;

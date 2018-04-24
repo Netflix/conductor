@@ -189,7 +189,7 @@ class Grapher extends Component {
               <i className="fa fa-close fa-1x close-btn" onClick={hideProps}></i>
               {this.state.selectedTask.taskType} ({this.state.selectedTask.status})
             </h4>
-            <div style={{color: '#ff0000', display: this.state.selectedTask.status == 'FAILED'?'':'none'}}>{this.state.selectedTask.reasonForIncompletion}</div>
+            <div style={{color: '#ff0000', display: this.state.selectedTask.status == 'FAILED' || this.state.selectedTask.status == 'RESET'?'':'none'}}>{this.state.selectedTask.reasonForIncompletion}</div>
             <Tabs defaultActiveKey={1}>
               <Tab eventKey={1} title="Summary">
                 <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}><tbody>

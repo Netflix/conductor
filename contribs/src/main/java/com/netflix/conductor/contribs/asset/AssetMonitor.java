@@ -212,8 +212,7 @@ public class AssetMonitor implements JavaEventAction {
 			// reset sub-workflow, it will be restarted automatically
 			if (actionSubWorkflow.getStatus().equals(Workflow.WorkflowStatus.RUNNING)) {
 				logger.info("Asset matches. Resetting sub-workflow " + actionSubWorkflowId);
-//				executor.rewind(workflow, "Reset by message " + messageId);
-				executor.rewind(actionSubWorkflowId, actionSubWorkflow.getHeaders());
+				executor.reset(actionSubWorkflowId, "Reset by message " + messageId);
 			} else {
 				logger.info("Asset matches. Restarting sub-workflow " + actionSubWorkflowId);
 				executor.rewind(actionSubWorkflowId, actionSubWorkflow.getHeaders());

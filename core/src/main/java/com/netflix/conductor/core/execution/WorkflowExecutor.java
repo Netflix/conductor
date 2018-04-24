@@ -552,12 +552,13 @@ public class WorkflowExecutor {
 		return workflowId;
 	}
 
-	public String reset(Workflow workflow, String reason) throws Exception {
+	public String reset(String workflowId, String reason) throws Exception {
+		Workflow workflow = edao.getWorkflow(workflowId, true);
+
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.RESET);
 		}
 
-		String workflowId = workflow.getWorkflowId();
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow has been reset.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
@@ -601,21 +602,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is terminated.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
 		List<Task> tasks = workflow.getTasks();
-		for (Task task : tasks) {
-			if (!task.getStatus().isTerminal()) {
-				// Cancel the ones which are not completed yet....
-				task.setStatus(Status.CANCELED);
-				if (SystemTaskType.is(task.getTaskType())) {
-					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-					stt.cancel(workflow, task, this);
-					//SystemTaskType.valueOf(task.getTaskType()).cancel(workflow, task, this);
-				}
-				edao.updateTask(task);
-				notifyTaskStatus(task, StartEndState.end);
-			}
-			// And remove from the task queue if they were there
-			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
-		}
+		cancelTasks(workflow, tasks);
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -743,6 +730,10 @@ public class WorkflowExecutor {
 				notifyTaskStatus(task, StartEndState.end);
 				break;
 			case FAILED:
+				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
+				notifyTaskStatus(task, StartEndState.end);
+				break;
+			case RESET:
 				queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 				notifyTaskStatus(task, StartEndState.end);
 				break;
