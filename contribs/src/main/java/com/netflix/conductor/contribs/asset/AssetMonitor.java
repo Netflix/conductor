@@ -116,7 +116,7 @@ public class AssetMonitor implements JavaEventAction {
 		// Check asset id in the deliverable outputs
 		List<Object> assetIds = ScriptEvaluator.evalJqAsList(".[].input[].atlasData.id", task.getOutputData());
 
-		// Cancel workflow "Invalidate Asset" if any of them has assetId in the params
+		// Send "Invalidate Asset" message if any of them has assetId in the params
 		if (assetIds != null && assetIds.contains(assetId)) {
 			ParametersUtils pu = new ParametersUtils();
 
