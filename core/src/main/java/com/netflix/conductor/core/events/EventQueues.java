@@ -18,18 +18,16 @@
  */
 package com.netflix.conductor.core.events;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.execution.ParametersUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.netflix.conductor.core.events.queue.ObservableQueue;
-import com.netflix.conductor.core.execution.ParametersUtils;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren
@@ -64,13 +62,13 @@ public class EventQueues {
 			try {
 				return provider.getQueue(queueURI);
 			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
+				logger.error("Unable to get event queue: ", e);
 				if (throwException) {
 					throw e;
 				}
 			}
 		} else {
-			throw new IllegalArgumentException("Unknown queue type " + type);
+			throw new IllegalArgumentException("Unknown queue type: " + type);
 		}
 		return null;
 
