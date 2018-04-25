@@ -294,7 +294,6 @@ public class WorkflowResource {
 				TypeReference<Map<String, Object>> mapType = new TypeReference<Map<String, Object>>() {
 				};
 				strings.forEach(value -> {
-					System.out.println("value = " + value);
 					if (StringUtils.isNotEmpty(value) && value.startsWith("{") && value.endsWith("}")) {
 						try {
 							String json = StringEscapeUtils.unescapeJson(value);
