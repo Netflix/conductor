@@ -102,6 +102,7 @@ public class WorkflowResource {
 			correlator.updateSequenceNo();
 			request.setCorrelationId(correlator.asCorrelationId());
 			map.remove(Correlator.headerKey);
+			builder.header(Correlator.headerKey, request.getCorrelationId());
 		}
 		executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), map);
 		return builder.build();
