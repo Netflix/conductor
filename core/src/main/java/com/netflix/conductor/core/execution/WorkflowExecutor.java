@@ -600,7 +600,7 @@ public class WorkflowExecutor {
 		String workflowId = workflow.getWorkflowId();
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
-		logger.error("Workflow is terminated.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
+		logger.error("Workflow is terminated/reset.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
 		List<Task> tasks = workflow.getTasks();
 		cancelTasks(workflow, tasks);
 
@@ -1116,7 +1116,7 @@ public class WorkflowExecutor {
 
 		String taskId = (tw.task != null ? tw.task.getTaskId() : null);
 		String taskRefName = (tw.task != null ? tw.task.getReferenceTaskName() : null);
-		logger.error("Workflow failed. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",Reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName);
+		logger.error("Workflow failed/reset. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",Reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName);
 	}
 
 	@SuppressWarnings("unchecked")
