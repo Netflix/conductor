@@ -110,29 +110,24 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, null, null, null, event, taskToDomain, null);
+		return startWorkflow(null, name, version, input, correlationId, null, null, null, event, taskToDomain, null);
 	}
 
-	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
-		return startWorkflow(name, version, input, correlationId, null, null, null, event, taskToDomain, headers);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, null, event, taskToDomain, headers);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, null, parentWorkflowTaskId, event, null, null);
-	}
-
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, null, parentWorkflowTaskId, event, taskToDomain, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, null, parentWorkflowTaskId, event, null, null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, List<String> parentWorkflowIds, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(name, version, input, correlationId, parentWorkflowId, parentWorkflowIds, parentWorkflowTaskId, event, taskToDomain, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowIds, parentWorkflowTaskId, event, taskToDomain, null);
 	}
 
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, List<String> parentWorkflowIds, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
+	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, List<String> parentWorkflowIds, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
 
 		try {
-			ObjectMapper oMapper = new ObjectMapper();
 			if(input == null){
 				throw new ApplicationException(Code.INVALID_INPUT, "NULL input passed when starting workflow");
 			}
@@ -159,22 +154,9 @@ public class WorkflowExecutor {
 			if(!missingTaskDefs.isEmpty()) {
 				throw new ApplicationException(Code.INVALID_INPUT, "Cannot find the task definitions for the following tasks used in workflow: " + missingTaskDefs);
 			}
-			String workflowId = IDGenerator.generate();
-
-			//Read header and set correlationid field
-			if(headers!=null) {
-				if(headers.containsKey("Deluxe-Owf-Context")) {
-					Object correlationHeader = headers.get("Deluxe-Owf-Context");
-					Map<String, Object> correlationHeadermap = oMapper.convertValue(correlationHeader, Map.class);
-					Object urn = correlationHeadermap.get("urns");
-					ArrayList urnArrayList = (ArrayList) urn;
-					Set<String> urnSet = new HashSet<String>(urnArrayList);
-					urnSet.add("urn:deluxe:conductor:workflow:" + workflowId);
-					correlationHeadermap.put("urns", urnSet);
-					correlationHeadermap.put("sequence-no", (Integer) correlationHeadermap.get("sequence-no") + 1);
-					correlationId = oMapper.writeValueAsString(correlationHeadermap);
-					headers.remove("Deluxe-Owf-Context");
-				}
+			// If no predefined workflowId - generate one
+			if (StringUtils.isEmpty(workflowId)) {
+				workflowId = IDGenerator.generate();
 			}
 
 			// Persist the Workflow

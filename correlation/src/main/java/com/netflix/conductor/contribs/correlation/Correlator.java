@@ -1,67 +1,48 @@
 package com.netflix.conductor.contribs.correlation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 
 import javax.ws.rs.core.HttpHeaders;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.stream.Collectors;
 
 /**
  * Created by beimforz on 12/21/17.
  */
 public class Correlator implements ICorrelator {
-	public final static String headerKey = "Deluxe-Owf-Context";
+	public static final String headerKey = "Deluxe-Owf-Context";
 
-	private ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = new ObjectMapper();
 	private Context context;
 	private Logger logger;
 
-	public Correlator(Logger logger, Context context) {
+	private Correlator(Logger logger) {
 		this.logger = logger;
-		this.context = context;
 	}
-	
+
 	public Correlator(Logger logger, String correlationId) {
-	   try
-		{
-		this.logger = logger;
-	    this.context = mapper.readValue(correlationId, new TypeReference<Context>(){});
-		}
-		catch(Exception ex)
-		{
-			logger.error(ex.getMessage());
-		}
+		this(logger);
+		this.context = parseCorrelationId(correlationId);
+		logger.info("Context from correlationId is " + context);
 	}
 
 	public Correlator(Logger logger, HttpHeaders headers) {
-		this.logger = logger;
+		this(logger);
 		this.context = parseHeader(headers);
-
-		logger.info("Initial context is " + context.print());
+		logger.info("Context from headers is " + context);
 	}
 
-	public Correlator(Logger logger, Map<String, Object> context) {
-		this.logger = logger;
-		this.context = mapper.convertValue(context, Context.class);
-	}
-
-	public Map<String, Object> getAsMap() {
-		return mapper.convertValue(context, new TypeReference<Map<String, Object>>() {
-		});
+	public String asCorrelationId() throws JsonProcessingException {
+		return mapper.writeValueAsString(context);
 	}
 
 	public void addIdentifier(String urn) {
 		if (urn == null) {
 			return;
 		}
-
 		urn = urn.trim().toLowerCase();
 		if (context == null) {
 			return;
@@ -69,58 +50,43 @@ public class Correlator implements ICorrelator {
 		if (context.getUrns().contains(urn)) {
 			return;
 		}
-		List<String> urns = context.getUrns();
-		urns.add(urn);
-		context.setUrns(urns);
-
-		logger.info("Context after urn set is " + context.print());
+		context.getUrns().add(urn);
+		logger.info("Context after urn set is " + context);
 	}
-	
+
 
 	public void attach(Map<String, Object> headers) throws JsonProcessingException {
 		String json = mapper.writeValueAsString(context);
 		headers.put(headerKey, json);
 	}
 
-	public Context parseHeader(HttpHeaders headers) {
-		Context result = new Context();
-		ArrayList<Context> contexts = new ArrayList<>();
-		Set<String> keys = headers.getRequestHeaders().keySet();
-		if (headers.getRequestHeader(headerKey) != null) {
-			for (String key : keys) {
-				if (key.equalsIgnoreCase(headerKey)) {
-					try {
-						String value = headers.getRequestHeaders().get(key).get(0);
-						Context rawContext = mapper.readValue(value, Context.class);
-						contexts.add(rawContext);
-					} catch (Exception e) {
-						logger.error("Unable to parse " + headerKey + " header", e);
-					}
-				}
+	private Context parseCorrelationId(String value) {
+		try {
+			return mapper.readValue(value, Context.class);
+		} catch (Exception e) {
+			logger.error("Unable to parse " + value + " from correlationId", e);
+		}
+		return new Context();
+	}
+
+	private Context parseHeader(HttpHeaders headers) {
+		List<String> values = headers.getRequestHeader(headerKey);
+		if (values != null && !values.isEmpty()) {
+			String value = values.get(0);
+			try {
+				String json = StringEscapeUtils.unescapeJson(value);
+				return mapper.readValue(json, Context.class);
+			} catch (Exception e) {
+				logger.error("Unable to parse " + value + " from " + headerKey + " header", e);
 			}
-			result = merge(contexts);
 		}
 
-		List<String> newValues = result.getUrns().stream().map(String::toLowerCase).distinct().collect(Collectors.toList());
-		result.setUrns(newValues);
-		return result;
+		return new Context();
 	}
 
-	public Context merge(ArrayList<Context> contexts) {
-		Context result = new Context();
-		for (Context context : contexts) {
-			result.setSequenceno(Math.max(result.getSequenceno(), context.getSequenceno()));
-			List<String> mergedList = result.getUrns();
-			mergedList.addAll(context.getUrns());
-			result.setUrns(mergedList.stream().distinct().collect(Collectors.toList()));
-		}
-		return result;
-	}
-
-	public Context updateSequenceNo() {
+	public void updateSequenceNo() {
 		int sequenceNo = context.getSequenceno();
 		sequenceNo++;
 		context.setSequenceno(sequenceNo);
-		return context;
 	}
 }
