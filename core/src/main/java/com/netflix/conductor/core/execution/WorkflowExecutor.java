@@ -561,7 +561,8 @@ public class WorkflowExecutor {
 			try {
 
 				WorkflowDef latestCancelWorkflow = metadata.getLatest(cancelWorkflow);
-				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input, workflowId, null, null, null);
+				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input, workflow.getCorrelationId(), workflow.getWorkflowId(), null, null);
+
 				workflow.getOutput().put("conductor.cancel_workflow", cancelWFId);
 
 			} catch (Exception e) {
@@ -654,7 +655,7 @@ public class WorkflowExecutor {
 			try {
 
 				WorkflowDef latestFailureWorkflow = metadata.getLatest(failureWorkflow);
-				String failureWFId = startWorkflow(failureWorkflow, latestFailureWorkflow.getVersion(), input, workflowId, null, null, null);
+				String failureWFId=startWorkflow(failureWorkflow, latestFailureWorkflow.getVersion(), input, workflow.getCorrelationId(), workflow.getWorkflowId(), null, null);
 				workflow.getOutput().put("conductor.failure_workflow", failureWFId);
 
 			} catch (Exception e) {
