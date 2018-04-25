@@ -211,23 +211,11 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 	@SuppressWarnings("unchecked")
 	private void setCorrelation(Input input, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
-
-		Correlator correlator;
-		if (workflow.getHeaders() != null) {
-			Map<String, Object> context = (Map<String, Object>) workflow.getHeaders().get(Correlator.headerKey);
-			correlator = new Correlator(logger, context);
-		} else {
-			workflow.setHeaders(new HashMap<>());
-			correlator = new Correlator(logger, new Context());
-		}
-
-		correlator.updateSequenceNo();
-		correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflow.getWorkflowId());
-		correlator.attach(input.getHeaders());
-
-		// Update workflow to save new values
-		workflow.getHeaders().put(Correlator.headerKey, correlator.getAsMap());
-		executor.updateWorkflow(workflow);
+			Correlator correlator;
+			if (workflow.getCorrelationId() != null) {
+				correlator = new Correlator(logger, workflow.getCorrelationId());
+				correlator.attach(input.getHeaders());
+			}
 	}
 
 	private void setAuthorization(Input input) throws Exception {

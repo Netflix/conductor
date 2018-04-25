@@ -53,13 +53,11 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 /**
  * @author Viren Workflow services provider interface
  */
@@ -134,7 +132,7 @@ public class WorkflowExecutor {
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, List<String> parentWorkflowIds, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
 
 		try {
-
+			ObjectMapper oMapper = new ObjectMapper();
 			if(input == null){
 				throw new ApplicationException(Code.INVALID_INPUT, "NULL input passed when starting workflow");
 			}
@@ -162,6 +160,22 @@ public class WorkflowExecutor {
 				throw new ApplicationException(Code.INVALID_INPUT, "Cannot find the task definitions for the following tasks used in workflow: " + missingTaskDefs);
 			}
 			String workflowId = IDGenerator.generate();
+
+			//Read header and set correlationid field
+			if(headers!=null) {
+				if(headers.containsKey("Deluxe-Owf-Context")) {
+					Object correlationHeader = headers.get("Deluxe-Owf-Context");
+					Map<String, Object> correlationHeadermap = oMapper.convertValue(correlationHeader, Map.class);
+					Object urn = correlationHeadermap.get("urns");
+					ArrayList urnArrayList = (ArrayList) urn;
+					Set<String> urnSet = new HashSet<String>(urnArrayList);
+					urnSet.add("urn:deluxe:conductor:workflow:" + workflowId);
+					correlationHeadermap.put("urns", urnSet);
+					correlationHeadermap.put("sequence-no", (Integer) correlationHeadermap.get("sequence-no") + 1);
+					correlationId = oMapper.writeValueAsString(correlationHeadermap);
+					headers.remove("Deluxe-Owf-Context");
+				}
+			}
 
 			// Persist the Workflow
 			Workflow wf = new Workflow();

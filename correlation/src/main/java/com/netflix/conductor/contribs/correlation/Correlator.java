@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +26,18 @@ public class Correlator implements ICorrelator {
 	public Correlator(Logger logger, Context context) {
 		this.logger = logger;
 		this.context = context;
+	}
+	
+	public Correlator(Logger logger, String correlationId) {
+	   try
+		{
+		this.logger = logger;
+	    this.context = mapper.readValue(correlationId, new TypeReference<Context>(){});
+		}
+		catch(Exception ex)
+		{
+			logger.error(ex.getMessage());
+		}
 	}
 
 	public Correlator(Logger logger, HttpHeaders headers) {
@@ -62,6 +75,7 @@ public class Correlator implements ICorrelator {
 
 		logger.info("Context after urn set is " + context.print());
 	}
+	
 
 	public void attach(Map<String, Object> headers) throws JsonProcessingException {
 		String json = mapper.writeValueAsString(context);
