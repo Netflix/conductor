@@ -131,7 +131,7 @@ job "conductor" {
         io_nats_client_url = "nats://events.service.<TLD>:4222"
 
         // Additional nats & asset modules
-        conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule,com.netflix.conductor.contribs.AssetModule"
+        conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule"
 
         // Exclude demo workflows
         loadSample = "false"
