@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class Fail extends WorkflowSystemTask {
 	private static final String REASON_PARAMETER = "reason";
+	private static final String STATUS_PARAMETER = "status";
 	private static final String SUPPRESS_RESTART_PARAMETER = "suppressRestart";
 
 	public static final String NAME = "FAIL";
@@ -44,8 +45,14 @@ public class Fail extends WorkflowSystemTask {
 		if (StringUtils.isEmpty(reason)) {
 			reason = "Missing '" + REASON_PARAMETER + "' in input parameters";
 		}
+		String status = (String)task.getInputData().get(STATUS_PARAMETER);
+
+		Status taskStatus = Status.FAILED;
+		if (StringUtils.isNotEmpty(status)) {
+			taskStatus = Status.valueOf(status);
+		}
 		task.setReasonForIncompletion(reason);
-		task.setStatus(Status.FAILED);
+		task.setStatus(taskStatus);
 
 		if (isSuppressRestart(task)) {
 			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);

@@ -222,7 +222,7 @@ const Workflow = React.createClass({
       'Last month','This month',
       'Yesterday', 'Today',
       'Last 30 minutes', 'Last 5 minutes'];
-    const statusList = ['RUNNING','COMPLETED','FAILED','TIMED_OUT','TERMINATED','PAUSED','CANCELLED'];
+    const statusList = ['RUNNING','COMPLETED','RESET','FAILED','TIMED_OUT','TERMINATED','PAUSED','CANCELLED'];
     function linkMaker(cell, row) {
       return <Link to={`/workflow/id/${cell}`}>{cell}</Link>;
     };

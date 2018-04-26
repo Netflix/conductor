@@ -120,7 +120,7 @@ public class EventHandler {
 
 	public static class Action {
 		
-		public enum Type { start_workflow, complete_task, fail_task, update_task, find_update }
+		public enum Type { start_workflow, complete_task, fail_task, update_task, find_update, java_action }
 		
 		private Type action;
 		
@@ -135,6 +135,8 @@ public class EventHandler {
 		private FindUpdate find_update;
 
 		private boolean expandInlineJSON;
+
+		private JavaAction java_action;
 
 		/**
 		 * @return the action
@@ -232,6 +234,14 @@ public class EventHandler {
 		 */
 		public boolean isExpandInlineJSON() {
 			return expandInlineJSON;
+		}
+
+		public JavaAction getJava_action() {
+			return java_action;
+		}
+
+		public void setJava_action(JavaAction java_action) {
+			this.java_action = java_action;
 		}
 	}
 	
@@ -508,6 +518,27 @@ public class EventHandler {
 					", failedReason='" + failedReason + '\'' +
 					", inputParameters='" + inputParameters + '\'' +
 					'}';
+		}
+	}
+
+	public static class JavaAction {
+		private String className;
+		private Map<String, Object> inputParameters;
+
+		public String getClassName() {
+			return className;
+		}
+
+		public void setClassName(String className) {
+			this.className = className;
+		}
+
+		public Map<String, Object> getInputParameters() {
+			return inputParameters;
+		}
+
+		public void setInputParameters(Map<String, Object> inputParameters) {
+			this.inputParameters = inputParameters;
 		}
 	}
 }

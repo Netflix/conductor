@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
+import org.apache.commons.collections.MapUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -59,7 +60,15 @@ public class ParametersUtils {
 
 	}
 
+	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef) {
+		return getTaskInputV2(input, null, workflow, taskId, taskDef, null);
+	}
+
 	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef, WorkflowTask workflowTask) {
+		return getTaskInputV2(input, null, workflow, taskId, taskDef, workflowTask);
+	}
+
+	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Map<String, Map<String, Object>> defaults, Workflow workflow, String taskId, TaskDef taskDef, WorkflowTask workflowTask) {
 		Map<String, Object> inputParams = null;
 		if(input != null) {
 			inputParams = clone(input);
@@ -91,6 +100,9 @@ public class ParametersUtils {
 		wf.put("schemaVersion", workflow.getSchemaVersion());
 		
 		inputMap.put("workflow", wf);
+		if (MapUtils.isNotEmpty(defaults)) {
+			inputMap.putAll(defaults);
+		}
 
 		if (workflowTask != null) {
 			Map<String, Object> taskIO = new HashMap<>();
@@ -139,10 +151,6 @@ public class ParametersUtils {
 		taskIO.put("callbackAfterSeconds", task.getCallbackAfterSeconds());
 		taskIO.put("workerId", task.getWorkerId());
 		return taskIO;
-	}
-
-	public Map<String, Object> getTaskInputV2(Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDef) {
-		return getTaskInputV2(input, workflow, taskId, taskDef, null);
 	}
 
 	//deep clone using json - POJO
