@@ -1,4 +1,5 @@
 dependencies {
     compile project(':conductor-core')
     compile 'org.json:json:20141113'
+    compile 'org.apache.commons:commons-lang3:3.2.1'
 }

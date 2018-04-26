@@ -9,7 +9,6 @@ import com.netflix.conductor.auth.AuthResponse;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.contribs.correlation.Context;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
@@ -132,7 +131,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 		// Attach Deluxe Owf Context header
 		if (input.isCorrelation()) {
-			setCorrelation(input, workflow, executor);
+			setCorrelation(input, workflow);
 		}
 
 		// Attach headers to the builder
@@ -210,24 +209,11 @@ class GenericHttpTask extends WorkflowSystemTask {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void setCorrelation(Input input, Workflow workflow, WorkflowExecutor executor) throws JsonProcessingException {
-
-		Correlator correlator;
-		if (workflow.getHeaders() != null) {
-			Map<String, Object> context = (Map<String, Object>) workflow.getHeaders().get(Correlator.headerKey);
-			correlator = new Correlator(logger, context);
-		} else {
-			workflow.setHeaders(new HashMap<>());
-			correlator = new Correlator(logger, new Context());
+	private void setCorrelation(Input input, Workflow workflow) throws JsonProcessingException {
+		if (workflow.getCorrelationId() != null) {
+			Correlator correlator = new Correlator(logger, workflow.getCorrelationId());
+			correlator.attach(input.getHeaders());
 		}
-
-		correlator.updateSequenceNo();
-		correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflow.getWorkflowId());
-		correlator.attach(input.getHeaders());
-
-		// Update workflow to save new values
-		workflow.getHeaders().put(Correlator.headerKey, correlator.getAsMap());
-		executor.updateWorkflow(workflow);
 	}
 
 	private void setAuthorization(Input input) throws Exception {
