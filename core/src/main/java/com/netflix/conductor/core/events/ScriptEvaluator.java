@@ -18,6 +18,7 @@
  */
 package com.netflix.conductor.core.events;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
@@ -25,14 +26,16 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
+import org.apache.commons.lang.StringUtils;
 
 import javax.annotation.Nonnull;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren
@@ -66,7 +69,7 @@ public class ScriptEvaluator {
 
 	}
 
-	static String evalJq(String expression, Object payload) throws Exception {
+	public static String evalJq(String expression, Object payload) throws Exception {
 		JsonNode input = om.valueToTree(payload);
 		JsonQuery query = queryCache.get(expression);
 		List<JsonNode> result = query.apply(input);
@@ -75,6 +78,37 @@ public class ScriptEvaluator {
 		} else {
 			return result.get(0).textValue();
 		}
+	}
+
+	public static List<Object> evalJqAsList(String expression, Object payload) throws Exception {
+		JsonNode input = om.valueToTree(payload);
+		JsonQuery query = queryCache.get(expression);
+		List<JsonNode> result = query.apply(input);
+		if (result == null || result.isEmpty()) {
+			return Collections.emptyList();
+		} else {
+			return om.convertValue(result, new TypeReference<List<Object>>(){});
+		}
+	}
+
+	public static Map<String, String> evaluateMap(Map<String, String> map, Object payload) {
+		return map.entrySet().stream().map(entry -> {
+			String fieldName = entry.getKey();
+			String expression = entry.getValue();
+			if (StringUtils.isEmpty(expression))
+				throw new RuntimeException(fieldName + " expression is empty");
+
+			String fieldValue;
+			try {
+				fieldValue = evalJq(expression, payload);
+			} catch (Exception e) {
+				throw new RuntimeException(fieldName + " evaluating failed with " + e.getMessage(), e);
+			}
+			if (StringUtils.isEmpty(fieldValue))
+				throw new RuntimeException(fieldName + " evaluating is empty");
+
+			return new HashMap.SimpleEntry<>(fieldName, fieldValue);
+		}).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
 	}
 
 	private static LoadingCache<String, JsonQuery> createQueryCache() {

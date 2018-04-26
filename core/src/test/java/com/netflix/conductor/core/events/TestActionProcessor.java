@@ -44,7 +44,7 @@ public class TestActionProcessor {
 
 	@Test
 	public void testAray() throws Exception {
-		ActionProcessor ap = new ActionProcessor(null, null);
+		ActionProcessor ap = new ActionProcessor(null, null, null);
 		ParametersUtils pu = new ParametersUtils();
 
 		List<Object> list = new LinkedList<>();
@@ -78,7 +78,7 @@ public class TestActionProcessor {
 
 	@Test
 	public void testMap() throws Exception {
-		ActionProcessor ap = new ActionProcessor(null, null);
+		ActionProcessor ap = new ActionProcessor(null, null, null);
 		ParametersUtils pu = new ParametersUtils();
 
 
@@ -138,7 +138,7 @@ public class TestActionProcessor {
 	public void updateTask_evaluation_fail() throws Exception {
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.UpdateTask updateTask = new EventHandler.UpdateTask();
 		updateTask.setWorkflowId(".workflowId");
@@ -211,7 +211,7 @@ public class TestActionProcessor {
 	public void updateTask_no_workflow() throws Exception {
 		WorkflowExecutor executor = mock(WorkflowExecutor.class);
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newUpdateAction();
 
@@ -237,7 +237,7 @@ public class TestActionProcessor {
 		when(executor.getWorkflow("1", true)).thenReturn(workflow);
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newUpdateAction();
 
@@ -267,7 +267,7 @@ public class TestActionProcessor {
 		when(executor.getWorkflow("1", true)).thenReturn(workflow);
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newUpdateAction();
 		action.getUpdate_task().getOutput().put("key", "value");
@@ -308,7 +308,7 @@ public class TestActionProcessor {
 		when(executor.getWorkflow("1", true)).thenReturn(workflow);
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newUpdateAction();
 		action.getUpdate_task().setFailedReason(".failedReason");
@@ -349,7 +349,7 @@ public class TestActionProcessor {
 		when(executor.getWorkflow("1", true)).thenReturn(workflow);
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newUpdateAction();
 		action.getUpdate_task().setResetStartTime(true);
@@ -396,7 +396,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 
@@ -439,7 +439,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 		action.getFind_update().setStatus(".status");
@@ -488,7 +488,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 		action.getFind_update().setWorkflowName(null);
@@ -527,7 +527,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 		action.getFind_update().getInputParameters().put("versionId", null);
@@ -566,7 +566,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 		action.getFind_update().getInputParameters().put("versionId", ".FAKE");
@@ -605,7 +605,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 		action.getFind_update().getInputParameters().put("versionId", "WRONG");
@@ -644,7 +644,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 		action.getFind_update().setStatus(".FAKE");
@@ -683,7 +683,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 
@@ -695,12 +695,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -722,7 +722,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 
@@ -734,12 +734,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -761,7 +761,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 
@@ -773,12 +773,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -798,7 +798,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 
@@ -810,12 +810,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -837,7 +837,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 
@@ -849,12 +849,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	@Test
@@ -875,7 +875,7 @@ public class TestActionProcessor {
 		when(executor.getRunningWorkflows("junit")).thenReturn(Collections.singletonList(workflow));
 
 		MetadataService metadata = mock(MetadataService.class);
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
 
@@ -887,12 +887,12 @@ public class TestActionProcessor {
 		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
 		verify(executor, times(0)).updateTask(captor.capture());
 
-		assertNull(op.get("conductor.event.payload"));
-		assertNull(op.get("conductor.event.name"));
-		assertNull(op.get("conductor.event.messageId"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
-		assertTrue(op.isEmpty());
+		assertNotNull(op.get("conductor.event.payload"));
+		assertNotNull(op.get("conductor.event.name"));
+		assertNotNull(op.get("conductor.event.messageId"));
+		assertEquals(3, op.size());
 	}
 
 	private EventHandler.Action newFindUpdateAction() {

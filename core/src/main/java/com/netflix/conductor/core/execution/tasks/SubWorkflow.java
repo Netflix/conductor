@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.core.execution.tasks;
 
@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -78,19 +79,24 @@ public class SubWorkflow extends WorkflowSystemTask {
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
 		String workflowId = (String) task.getOutputData().get("subWorkflowId");
 		if (workflowId == null) {
-			workflowId = (String) task.getInputData().get("subWorkflowId");	//Backward compatibility
+			workflowId = (String) task.getInputData().get("subWorkflowId");    //Backward compatibility
 		}
 
-		if(StringUtils.isEmpty(workflowId)) {
+		if (StringUtils.isEmpty(workflowId)) {
 			return false;
 		}
 
 		Workflow subWorkflow = provider.getWorkflow(workflowId, false);
 		WorkflowStatus subWorkflowStatus = subWorkflow.getStatus();
-		if(!subWorkflowStatus.isTerminal()){
+		if (!subWorkflowStatus.isTerminal()) {
 			return false;
 		}
-		if (subWorkflowStatus.isSuccessful()) {
+
+		SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
+		if (subWorkflowStatus == WorkflowStatus.RESET) {
+			logger.info("The sub-workflow " + subWorkflow.getWorkflowId() + " has been reset");
+			return handleRestart(subWorkflow, task, param, provider);
+		} else if (subWorkflowStatus.isSuccessful()) {
 			task.setStatus(Status.COMPLETED);
 		} else if (subWorkflowStatus == WorkflowStatus.CANCELLED) {
 			task.setStatus(Status.FAILED);
@@ -105,7 +111,6 @@ public class SubWorkflow extends WorkflowSystemTask {
 			task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
 			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else {
-			SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
 			// Note: StandbyOnFail and RestartOnFail are Boolean objects and not primitives
 			if (BooleanUtils.isTrue(param.isStandbyOnFail())) {
 
@@ -114,58 +119,29 @@ public class SubWorkflow extends WorkflowSystemTask {
 					return false;
 				}
 
-				// Get the # of restarts already made
-				Integer restarted = (Integer) task.getOutputData().get(RESTARTED);
-				if (restarted == null) {
-					restarted = 0;
-				}
+				return handleRestart(subWorkflow, task, param, provider);
 
-				Integer restartsAllowed = param.getRestartCount();
-				if (restartsAllowed != null && restartsAllowed >= 0 && restarted >= restartsAllowed) {
-					task.setStatus(Status.FAILED);
-					task.setReasonForIncompletion("Number of restart attempts reached configured value");
-				} else {
-					Long restartOn = (Long)task.getOutputData().get(RESTART_ON);
-					if (restartOn == null) { // Schedule restart
-
-						// One second default delay if not specified
-						Long restartDelay = param.getRestartDelay();
-						if (restartDelay == null) {
-							restartDelay = 1000L;
-						}
-
-						restartOn = System.currentTimeMillis() + restartDelay;
-						task.getOutputData().put(RESTART_ON, restartOn);
-						logger.info("Scheduled restart for the sub-workflow " + subWorkflow.getWorkflowId());
-					} else if (restartOn <= System.currentTimeMillis()) {
-						logger.info("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
-						restarted++;
-						task.getOutputData().put(RESTARTED, restarted);
-						task.getOutputData().remove(RESTART_ON);
-						provider.rewind(workflowId, subWorkflow.getHeaders());
-					} else {
-						return false; // Do nothing as waiting for the RESTART_ON time
-					}
-				}
 			} else {
 				task.setStatus(Status.FAILED);
 				task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
 			}
 		}
 		if (task.getStatus() == Status.COMPLETED) {
-			task.getOutputData().putAll(subWorkflow.getOutput());
+			Map<String, Object> output = new HashMap<>(subWorkflow.getOutput());
+			output.remove("subWorkflowId"); // We should remove subWorkflowId and not propagate back to parent task
+			task.getOutputData().putAll(output);
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
 		String workflowId = (String) task.getOutputData().get("subWorkflowId");
-		if(workflowId == null) {
-			workflowId = (String) task.getInputData().get("subWorkflowId");	//Backward compatibility
+		if (workflowId == null) {
+			workflowId = (String) task.getInputData().get("subWorkflowId");    //Backward compatibility
 		}
-		
-		if(StringUtils.isEmpty(workflowId)) {
+
+		if (StringUtils.isEmpty(workflowId)) {
 			return;
 		}
 		Workflow subWorkflow = provider.getWorkflow(workflowId, true);
@@ -177,7 +153,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 			provider.terminateWorkflow(subWorkflow, "Parent workflow has been terminated with status " + workflow.getStatus(), null);
 		}
 	}
-	
+
 	@Override
 	public boolean isAsync() {
 		return false;
@@ -186,11 +162,47 @@ public class SubWorkflow extends WorkflowSystemTask {
 	private boolean isSuppressRestart(Workflow subWorkflow) {
 		Object obj = subWorkflow.getOutput().get(SUPPRESS_RESTART_PARAMETER);
 		if (obj instanceof Boolean) {
-			return (boolean)obj;
+			return (boolean) obj;
 		} else if (obj instanceof String) {
-			return Boolean.parseBoolean((String)obj);
+			return Boolean.parseBoolean((String) obj);
 		}
 		return false;
+	}
+
+	private boolean handleRestart(Workflow subWorkflow, Task task, SubWorkflowParams param, WorkflowExecutor provider) throws Exception {
+		Integer restarted = (Integer) task.getOutputData().get(RESTARTED);
+		if (restarted == null) {
+			restarted = 0;
+		}
+
+		Integer restartsAllowed = param.getRestartCount();
+		if (restartsAllowed != null && restartsAllowed >= 0 && restarted >= restartsAllowed) {
+			task.setStatus(Status.FAILED);
+			task.setReasonForIncompletion("Number of restart attempts reached configured value");
+		} else {
+			Long restartOn = (Long) task.getOutputData().get(RESTART_ON);
+			if (restartOn == null) { // Schedule restart
+				logger.info("Scheduled restart for the sub-workflow " + subWorkflow.getWorkflowId());
+
+				// One second default delay if not specified
+				Long restartDelay = param.getRestartDelay();
+				if (restartDelay == null) {
+					restartDelay = 1000L;
+				}
+
+				restartOn = System.currentTimeMillis() + restartDelay;
+				task.getOutputData().put(RESTART_ON, restartOn);
+			} else if (restartOn <= System.currentTimeMillis()) {
+				logger.info("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
+				restarted++;
+				task.getOutputData().put(RESTARTED, restarted);
+				task.getOutputData().remove(RESTART_ON);
+				provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getHeaders());
+			} else {
+				return false; // Do nothing as waiting for the RESTART_ON time
+			}
+		}
+		return true;
 	}
 
 }

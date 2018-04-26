@@ -87,7 +87,7 @@ const WorkflowAction = React.createClass({
         </Button>
         </OverlayTrigger>
       );
-    }else if(this.props.workflowStatus == 'FAILED' || this.props.workflowStatus == 'TERMINATED'){
+    }else if(this.props.workflowStatus == 'FAILED' || this.props.workflowStatus == 'TERMINATED' || this.props.workflowStatus == 'RESET'){
       return (
         <ButtonGroup>
           <OverlayTrigger placement="bottom" overlay={tt_restart}>

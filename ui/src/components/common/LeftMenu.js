@@ -17,6 +17,10 @@ const menuPaths = {
     href: '/workflow?status=RUNNING',
     icon: 'fa-play-circle'
   },{
+    label: 'Reset',
+    href: '/workflow?status=RESET&h=48',
+    icon: 'fa-refresh'
+  },{
     label: 'Failed',
     href: '/workflow?status=FAILED&h=48',
     icon: 'fa-warning'

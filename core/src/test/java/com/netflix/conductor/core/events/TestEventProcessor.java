@@ -20,6 +20,7 @@ package com.netflix.conductor.core.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.inject.Injector;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action.Type;
@@ -113,7 +114,7 @@ public class TestEventProcessor {
 		def.setName(action.getStart_workflow().getName());
 		when(metadata.getWorkflowDef(any(), any())).thenReturn(def);
 		
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, mock(Injector.class));
 		
 		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper());
 		assertNotNull(ep.getQueues());
@@ -193,7 +194,7 @@ public class TestEventProcessor {
 		def.setName(action.getStart_workflow().getName());
 		when(metadata.getWorkflowDef(any(), any())).thenReturn(def);
 
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, mock(Injector.class));
 
 		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper());
 		assertNotNull(ep.getQueues());
@@ -272,7 +273,7 @@ public class TestEventProcessor {
 		def.setName(action.getStart_workflow().getName());
 		when(metadata.getWorkflowDef(any(), any())).thenReturn(def);
 
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, mock(Injector.class));
 
 		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper());
 		assertNotNull(ep.getQueues());
