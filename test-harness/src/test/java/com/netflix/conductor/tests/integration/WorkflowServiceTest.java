@@ -2198,7 +2198,7 @@ public class WorkflowServiceTest {
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
 		
-		provider.retry(wfid, Collections.emptyMap());
+		provider.retry(wfid, Collections.emptyMap(), null);
 		
 		es = ess.getExecutionStatus(wfid, true);
 		assertNotNull(es);
