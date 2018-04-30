@@ -6,7 +6,7 @@ dependencies {
 	compile 'com.google.inject:guice:4.0+'
 	compile 'com.netflix.spectator:spectator-api:0.40.0'
 	compile 'com.netflix.eureka:eureka-client:latest.release'
-	compile ('com.fasterxml.jackson.core:jackson-databind:2.7.5')
+	compile ('com.fasterxml.jackson.core:jackson-databind:2.7.5') {force=true}
 	compile ('com.fasterxml.jackson.core:jackson-core:2.7.5') {force=true}
 	compile 'com.jayway.jsonpath:json-path:2.2.0'
 	compile 'dnsjava:dnsjava:2.1.8'

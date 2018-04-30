@@ -53,6 +53,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.*;
@@ -1190,8 +1191,13 @@ public class WorkflowExecutor {
 	}
 
 	private void validateAuth(WorkflowDef workflowDef, Map<String, Object> headers) {
+		// Header valeus are wrapped as a list
+		List strings = (List)headers.get(HttpHeaders.AUTHORIZATION);
+		if (strings == null || strings.isEmpty())
+			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
+
 		// It gives us: Bearer token
-		String bearer = (String)headers.get(HttpHeaders.AUTHORIZATION);
+		String bearer = (String)strings.get(0);
 		if (StringUtils.isEmpty(bearer))
 			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
 
