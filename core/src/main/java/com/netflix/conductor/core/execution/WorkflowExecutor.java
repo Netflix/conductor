@@ -326,7 +326,7 @@ public class WorkflowExecutor {
 		decide(workflowId);
 	}
 
-	public void retry(String workflowId, Map<String, Object> headers) throws Exception {
+	public void retry(String workflowId, Map<String, Object> headers,String correlationId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
@@ -423,6 +423,9 @@ public class WorkflowExecutor {
 
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		workflow.setHeaders(headers);
+		if(StringUtils.isNotEmpty(correlationId)) {
+			workflow.setCorrelationId(correlationId);
+		}
 		edao.updateWorkflow(workflow);
 
 		decide(workflowId);
