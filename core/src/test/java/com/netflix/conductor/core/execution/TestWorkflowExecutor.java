@@ -18,6 +18,8 @@
  */
 package com.netflix.conductor.core.execution;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -26,6 +28,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.IDGenerator;
@@ -36,10 +39,8 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import javax.ws.rs.core.HttpHeaders;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -216,6 +217,135 @@ public class TestWorkflowExecutor {
 			assertEquals("Input validation failed for 'rule3' rule: <eval>:1:6 Expected ; but found syntax\n" +
 					"wrong syntax\n" +
 					"      ^ in <eval> at line number 1 at column number 6", ex.getMessage());
+		}
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void authValidationSuccess() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("validation");
+		def.setVersion(1);
+		def.getAuthValidation().put("rule1", ".access == \"foo\"");
+
+		MetadataDAO metadata = mock(MetadataDAO.class);
+		when(metadata.get("validation", 1)).thenReturn(def);
+
+		String token = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() + 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
+
+		Map<String, Object> headers = new HashMap<>();
+		headers.put(HttpHeaders.AUTHORIZATION, Collections.singletonList("Bearer " + token));
+
+		Configuration cfg = mock(Configuration.class);
+		when(cfg.getProperty("workflow.auth.validate", "false")).thenReturn("true");
+		when(cfg.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/success");
+		when(cfg.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		when(cfg.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
+
+		AuthManager manager = new AuthManager(cfg);
+
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, manager, cfg);
+		executor.startWorkflow(null, "validation", 1,  null, Collections.emptyMap(), null,null, headers);
+	}
+
+	@Test(expected = ApplicationException.class)
+	public void authValidationFailed() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("validation");
+		def.setVersion(1);
+		def.getAuthValidation().put("rule1", ".access == \"wrong\"");
+
+		MetadataDAO metadata = mock(MetadataDAO.class);
+		when(metadata.get("validation", 1)).thenReturn(def);
+
+		String token = JWT.create()
+				.withClaim("exp", new Date(System.currentTimeMillis() + 60_000))
+				.withClaim("access", "foo").sign(Algorithm.none());
+
+		Map<String, Object> headers = new HashMap<>();
+		headers.put(HttpHeaders.AUTHORIZATION, Collections.singletonList("Bearer " + token));
+
+		Configuration cfg = mock(Configuration.class);
+		when(cfg.getProperty("workflow.auth.validate", "false")).thenReturn("true");
+		when(cfg.getProperty("conductor.auth.url", null)).thenReturn("http://localhost:7010/auth/success");
+		when(cfg.getProperty("conductor.auth.clientId", null)).thenReturn("clientId");
+		when(cfg.getProperty("conductor.auth.clientSecret", null)).thenReturn("clientSecret");
+
+		AuthManager manager = new AuthManager(cfg);
+
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, manager, cfg);
+		executor.startWorkflow(null, "validation", 1,  null, Collections.emptyMap(), null,null, headers);
+	}
+
+	@Test
+	public void authValidationNoHeader() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("validation");
+		def.setVersion(1);
+		def.getAuthValidation().put("rule1", ".access == \"wrong\"");
+
+		MetadataDAO metadata = mock(MetadataDAO.class);
+		when(metadata.get("validation", 1)).thenReturn(def);
+
+		Map<String, Object> headers = new HashMap<>();
+
+		Configuration cfg = mock(Configuration.class);
+		when(cfg.getProperty("workflow.auth.validate", "false")).thenReturn("true");
+
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, auth, cfg);
+		try {
+			executor.startWorkflow(null, "validation", 1,  null, Collections.emptyMap(), null,null, headers);
+		} catch (Exception ex) {
+			assertEquals("No " + HttpHeaders.AUTHORIZATION + " header provided", ex.getMessage());
+		}
+	}
+
+	@Test
+	public void authValidationNoHeader2() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("validation");
+		def.setVersion(1);
+		def.getAuthValidation().put("rule1", ".access == \"wrong\"");
+
+		MetadataDAO metadata = mock(MetadataDAO.class);
+		when(metadata.get("validation", 1)).thenReturn(def);
+
+		Map<String, Object> headers = new HashMap<>();
+		headers.put(HttpHeaders.AUTHORIZATION, Collections.singletonList(""));
+
+		Configuration cfg = mock(Configuration.class);
+		when(cfg.getProperty("workflow.auth.validate", "false")).thenReturn("true");
+
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, auth, cfg);
+		try {
+			executor.startWorkflow(null, "validation", 1,  null, Collections.emptyMap(), null,null, headers);
+		} catch (Exception ex) {
+			assertEquals("No " + HttpHeaders.AUTHORIZATION + " header provided", ex.getMessage());
+		}
+	}
+
+	@Test
+	public void authValidationInvalidHeader() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("validation");
+		def.setVersion(1);
+		def.getAuthValidation().put("rule1", ".access == \"wrong\"");
+
+		MetadataDAO metadata = mock(MetadataDAO.class);
+		when(metadata.get("validation", 1)).thenReturn(def);
+
+		Map<String, Object> headers = new HashMap<>();
+		headers.put(HttpHeaders.AUTHORIZATION, Collections.singletonList("Bad start"));
+
+		Configuration cfg = mock(Configuration.class);
+		when(cfg.getProperty("workflow.auth.validate", "false")).thenReturn("true");
+
+		WorkflowExecutor executor = new WorkflowExecutor(metadata, edao, queue, om, auth, cfg);
+		try {
+			executor.startWorkflow(null, "validation", 1,  null, Collections.emptyMap(), null,null, headers);
+		} catch (Exception ex) {
+			assertEquals("Invalid " + HttpHeaders.AUTHORIZATION + " header format", ex.getMessage());
 		}
 	}
 }
