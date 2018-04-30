@@ -299,7 +299,7 @@ public class WorkflowExecutor {
 			decide(workflowId);
 			return true;
 		}
-
+		logger.info("Workflow rerun.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
 		return false;
 	}
 
@@ -427,6 +427,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		decide(workflowId);
+		logger.info("Workflow retry.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
 	}
 
 	public List<Workflow> getStatusByCorrelationId(String workflowName, String correlationId, boolean includeClosed) throws Exception {
@@ -547,6 +548,7 @@ public class WorkflowExecutor {
 
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
+		logger.info("Workflow has cancelled, workflowId=" + workflow.getWorkflowId()+",input="+workflow.getInput()+",CorrelationId="+workflow.getCorrelationId()+",output="+workflow.getOutput());
 		return workflowId;
 	}
 

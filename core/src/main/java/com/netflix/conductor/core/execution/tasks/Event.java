@@ -77,11 +77,13 @@ public class Event extends WorkflowSystemTask {
 				task.setStatus(Status.FAILED);
 				task.setReasonForIncompletion(ex.getMessage());
 			}
+			logger.info("Nats message published.Message="+message.getPayload()+",status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
 		} else {
 			task.setReasonForIncompletion("No queue found to publish.");
 			logger.error("No queue found to publish.");
 			task.setStatus(Status.FAILED);
 		}
+
 	}
 
 	@Override
