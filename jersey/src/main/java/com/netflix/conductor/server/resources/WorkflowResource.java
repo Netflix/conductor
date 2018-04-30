@@ -234,9 +234,22 @@ public class WorkflowResource {
 	@ApiOperation("Retries the last failed task")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
-	public void retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+	public Response retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		Map<String, Object> map = convert(headers);
-		executor.retry(workflowId, map);
+		Response.ResponseBuilder builder = Response.noContent();
+		if (headers.getRequestHeaders().containsKey(Correlator.headerKey)) {
+			Correlator correlator = new Correlator(logger, headers);
+			correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflowId);
+			correlator.updateSequenceNo();
+			map.remove(Correlator.headerKey);
+			executor.retry(workflowId, map,correlator.asCorrelationId());
+			builder.header(Correlator.headerKey, correlator.asCorrelationId());
+		}
+		else
+		{
+			executor.retry(workflowId, map,"");
+		}
+		return builder.build();
 	}
 
 	@DELETE
