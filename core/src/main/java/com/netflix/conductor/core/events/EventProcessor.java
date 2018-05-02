@@ -18,26 +18,6 @@
  */
 package com.netflix.conductor.core.events;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventExecution.Status;
@@ -48,6 +28,25 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren
@@ -66,7 +65,7 @@ public class EventProcessor {
 	
 	private Map<String, ObservableQueue> queuesMap = new ConcurrentHashMap<>();
 	
-	private ExecutorService executors;
+	private ExecutorService executorService;
 	
 	private ObjectMapper objectMapper;
 
@@ -81,7 +80,7 @@ public class EventProcessor {
 
 		int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
 		if(executorThreadCount > 0) {
-			this.executors = Executors.newFixedThreadPool(executorThreadCount);
+			this.executorService = Executors.newFixedThreadPool(executorThreadCount);
 			refresh();
 			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refresh(), 60, 60, TimeUnit.SECONDS);
 		} else {
@@ -91,34 +90,40 @@ public class EventProcessor {
 	
 	/**
 	 * 
-	 * @return Returns a map of queues which are active.  Key is event name and value is queue URI
+	 * @return Returns a map of queues which are active.
+	 * Key is event name and value is queue URI
 	 */
 	public Map<String, String> getQueues() {
 		Map<String, String> queues = new HashMap<>();
-		queuesMap.entrySet().stream().forEach(q -> queues.put(q.getKey(), q.getValue().getName()));
+		queuesMap.forEach((key, value) -> queues.put(key, value.getName()));
 		return queues;
 	}
-	
+
+	/**
+	 *
+	 * @return Returns a map of queues with its sizes.
+	 * Key is event name and value is a map of queue URI to queue size.
+	 */
 	public Map<String, Map<String, Long>> getQueueSizes() {
 		Map<String, Map<String, Long>> queues = new HashMap<>();
-		queuesMap.entrySet().stream().forEach(q -> {
+		queuesMap.forEach((key, value) -> {
 			Map<String, Long> size = new HashMap<>();
-			size.put(q.getValue().getName(), q.getValue().size());
-			queues.put(q.getKey(), size);
+			size.put(value.getName(), value.size());
+			queues.put(key, size);
 		});
 		return queues;
 	}
 	
 	private void refresh() {
-		Set<String> events = metadataService.getEventHandlers().stream().map(eh -> eh.getEvent()).collect(Collectors.toSet());
+		Set<String> events = metadataService.getEventHandlers().stream().map(EventHandler::getEvent).collect(Collectors.toSet());
 		List<ObservableQueue> created = new LinkedList<>();
-		events.stream().forEach(event -> queuesMap.computeIfAbsent(event, s -> {
+		events.forEach(event -> queuesMap.computeIfAbsent(event, s -> {
 			ObservableQueue q = EventQueues.getQueue(event, false);
 			created.add(q);
 			return q;
 		}));
 		if(!created.isEmpty()) {
-			created.stream().filter(q -> q != null).forEach(queue -> listen(queue));	
+			created.stream().filter(Objects::nonNull).forEach(this::listen);
 		}
 	}
 	
@@ -127,7 +132,6 @@ public class EventProcessor {
 	}
 	
 	private void handle(ObservableQueue queue, Message msg) {
-		
 		try {
 			
 			List<Future<Void>> futures = new LinkedList<>();
@@ -203,7 +207,7 @@ public class EventProcessor {
 	}
 
 	private Future<Void> execute(EventExecution ee, Action action, String payload) {
-		return executors.submit(()->{
+		return executorService.submit(()->{
 			try {
 				
 				logger.debug("Executing {} with payload {}", action.getAction(), payload);
@@ -223,5 +227,4 @@ public class EventProcessor {
 			}
 		});
 	}
-	
 }
