@@ -144,7 +144,10 @@ public class WorkflowExecutor {
 			}
 
 			// Auth validation if requested and only when rules are defined in workflow
-			if (this.validateAuth && MapUtils.isNotEmpty(exists.getAuthValidation())) {
+			// Do not validate auth if parent workflow passed as it is internal calls (event message, sub-workflow, cancel/timeout/failure workflow)
+			if (this.validateAuth
+					&& StringUtils.isEmpty(parentWorkflowId)
+					&& MapUtils.isNotEmpty(exists.getAuthValidation())) {
 				validateAuth(exists, headers);
 			}
 
