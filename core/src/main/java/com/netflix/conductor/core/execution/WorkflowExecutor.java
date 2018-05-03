@@ -208,10 +208,10 @@ public class WorkflowExecutor {
 		}
 	}
 
-	public String rerun(RerunWorkflowRequest request) throws Exception {
+	public String rerun(RerunWorkflowRequest request,String correlationId) throws Exception {
 		Preconditions.checkNotNull(request.getReRunFromWorkflowId(), "reRunFromWorkflowId is missing");
 		if(!rerunWF(request.getReRunFromWorkflowId(), request.getReRunFromTaskId(), request.getTaskInput(),
-				request.getWorkflowInput(), request.getCorrelationId())){
+				request.getWorkflowInput(), correlationId)){
 			throw new ApplicationException(Code.INVALID_INPUT, "Task " + request.getReRunFromTaskId() + " not found");
 		}
 		return request.getReRunFromWorkflowId();
@@ -229,7 +229,7 @@ public class WorkflowExecutor {
 			workflow.getTasks().forEach(t -> edao.removeTask(t.getTaskId()));
 			// Set workflow as RUNNING
 			workflow.setStatus(WorkflowStatus.RUNNING);
-			if(correlationId != null){
+			if(StringUtils.isNotEmpty(correlationId)){
 				workflow.setCorrelationId(correlationId);
 			}
 			if(workflowInput != null){
@@ -288,7 +288,7 @@ public class WorkflowExecutor {
 			}
 			// and workflow as RUNNING
 			workflow.setStatus(WorkflowStatus.RUNNING);
-			if(correlationId != null){
+			if(StringUtils.isNotEmpty(correlationId)){
 				workflow.setCorrelationId(correlationId);
 			}
 			if(workflowInput != null){
