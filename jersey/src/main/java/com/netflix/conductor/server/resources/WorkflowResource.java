@@ -213,10 +213,23 @@ public class WorkflowResource {
 	@ApiOperation("Reruns the workflow from a specific task")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-	public String rerun(@PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
+	@Produces({MediaType.TEXT_PLAIN})
+	public Response rerun(@Context HttpHeaders headers,@PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
 		request.setReRunFromWorkflowId(workflowId);
-		return executor.rerun(request);
+		Response.ResponseBuilder builder = Response.ok(workflowId);
+		Map<String, Object> map = convert(headers);
+		if (headers.getRequestHeaders().containsKey(Correlator.headerKey)) {
+			Correlator correlator = new Correlator(logger, headers);
+			correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflowId);
+			correlator.updateSequenceNo();
+			map.remove(Correlator.headerKey);
+			executor.rerun(request, correlator.asCorrelationId());
+			builder.header(Correlator.headerKey, correlator.asCorrelationId());
+		}
+		else {
+			  executor.rerun(request,"");
+		}
+		return builder.build();
 	}
 
 	@POST
