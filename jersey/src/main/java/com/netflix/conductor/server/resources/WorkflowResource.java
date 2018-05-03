@@ -185,8 +185,23 @@ public class WorkflowResource {
 	@ApiOperation("Pauses the workflow")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
-	public void pauseWorkflow(@PathParam("workflowId") String workflowId) throws Exception {
-		executor.pauseWorkflow(workflowId);
+	public Response pauseWorkflow(@Context HttpHeaders headers,@PathParam("workflowId") String workflowId) throws Exception {
+		Map<String, Object> map = convert(headers);
+		Response.ResponseBuilder builder = Response.noContent();
+		if (headers.getRequestHeaders().containsKey(Correlator.headerKey)) {
+			Correlator correlator = new Correlator(logger, headers);
+			correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflowId);
+			correlator.updateSequenceNo();
+			map.remove(Correlator.headerKey);
+			executor.pauseWorkflow(workflowId,correlator.asCorrelationId());
+			builder.header(Correlator.headerKey, correlator.asCorrelationId());
+		}
+		else
+		{
+			executor.pauseWorkflow(workflowId,"");
+		}
+		return builder.build();
+
 	}
 
 	@PUT
