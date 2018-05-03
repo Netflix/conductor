@@ -848,7 +848,7 @@ public class WorkflowExecutor {
 		return false;
 	}
 
-	public void pauseWorkflow(String workflowId) throws Exception {
+	public void pauseWorkflow(String workflowId,String correlationId) throws Exception {
 		WorkflowStatus status = WorkflowStatus.PAUSED;
 		Workflow workflow = edao.getWorkflow(workflowId, false);
 		if(workflow.getStatus().isTerminal()){
@@ -858,6 +858,9 @@ public class WorkflowExecutor {
 			return;		//Already paused!
 		}
 		workflow.setStatus(status);
+		if(StringUtils.isNotEmpty(correlationId)) {
+			workflow.setCorrelationId(correlationId);
+		}
 		edao.updateWorkflow(workflow);
 	}
 
