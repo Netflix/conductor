@@ -307,7 +307,7 @@ public class WorkflowExecutor {
 		return false;
 	}
 
-	public void rewind(String workflowId, Map<String, Object> headers) throws Exception {
+	public void rewind(String workflowId, Map<String, Object> headers,String correlationId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
@@ -323,6 +323,9 @@ public class WorkflowExecutor {
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		workflow.setHeaders(headers);
+		if(StringUtils.isNotEmpty(correlationId)) {
+			workflow.setCorrelationId(correlationId);
+		}
 		edao.updateWorkflow(workflow);
 
 		// send wf start message

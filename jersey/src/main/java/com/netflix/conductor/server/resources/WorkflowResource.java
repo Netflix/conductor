@@ -224,9 +224,21 @@ public class WorkflowResource {
 	@ApiOperation("Restarts a completed workflow")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
-	public void restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+	public Response restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		Map<String, Object> map = convert(headers);
-		executor.rewind(workflowId, map);
+		Response.ResponseBuilder builder = Response.noContent();
+		if (headers.getRequestHeaders().containsKey(Correlator.headerKey)) {
+			Correlator correlator = new Correlator(logger, headers);
+			correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflowId);
+			correlator.updateSequenceNo();
+			map.remove(Correlator.headerKey);
+			executor.rewind(workflowId, map,correlator.asCorrelationId());
+			builder.header(Correlator.headerKey, correlator.asCorrelationId());
+		}
+		else {
+			executor.rewind(workflowId, map,"");
+		}
+		return builder.build();
 	}
 
 	@POST
