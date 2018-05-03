@@ -864,13 +864,16 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 	}
 
-	public void resumeWorkflow(String workflowId) throws Exception{
+	public void resumeWorkflow(String workflowId,String correlationId) throws Exception{
 		Workflow workflow = edao.getWorkflow(workflowId, false);
 		if(!workflow.getStatus().equals(WorkflowStatus.PAUSED)){
 			logger.error("Workflow is not is not PAUSED so cannot resume. Current status=" + workflow.getStatus() + ", workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId());
 			throw new IllegalStateException("The workflow " + workflowId + " is not is not PAUSED so cannot resume");
 		}
 		workflow.setStatus(WorkflowStatus.RUNNING);
+		if(StringUtils.isNotEmpty(correlationId)) {
+			workflow.setCorrelationId(correlationId);
+		}
 		edao.updateWorkflow(workflow);
 		decide(workflowId);
 	}
