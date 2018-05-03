@@ -91,14 +91,14 @@ public class ParametersUtils {
 		wf.put("startTimeIso", fmt.print(workflow.getStartTime()));
 		wf.put("workflowId", workflow.getWorkflowId());
 		wf.put("parentWorkflowId", workflow.getParentWorkflowId());
-		wf.put("parentWorkflowIds", workflow.getParentWorkflowIds());
 		wf.put("parentWorkflowTaskId", workflow.getParentWorkflowTaskId());
 		wf.put("workflowType", workflow.getWorkflowType());
 		wf.put("version", workflow.getVersion());
 		wf.put("correlationId", workflow.getCorrelationId());
 		wf.put("reasonForIncompletion", workflow.getReasonForIncompletion());
 		wf.put("schemaVersion", workflow.getSchemaVersion());
-		
+		wf.put("workflowIds", workflow.getWorkflowIds());
+
 		inputMap.put("workflow", wf);
 		if (MapUtils.isNotEmpty(defaults)) {
 			inputMap.putAll(defaults);

@@ -18,10 +18,7 @@ package com.netflix.conductor.common.run;
 import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Workflow extends Auditable{
 	
@@ -80,7 +77,7 @@ public class Workflow extends Auditable{
 
 	private Map<String, Object> headers = new HashMap<>();
 
-	private List<String> parentWorkflowIds = new LinkedList<>();
+	private List<String> workflowIds = new ArrayList<>();
 
 	public Workflow(){
 		
@@ -319,12 +316,12 @@ public class Workflow extends Auditable{
 		this.headers = headers;
 	}
 
-	public List<String> getParentWorkflowIds() {
-		return parentWorkflowIds;
+	public List<String> getWorkflowIds() {
+		return workflowIds;
 	}
 
-	public void setParentWorkflowIds(List<String> parentWorkflowIds) {
-		this.parentWorkflowIds = parentWorkflowIds;
+	public void setWorkflowIds(List<String> workflowIds) {
+		this.workflowIds = workflowIds;
 	}
 
 	@Override
