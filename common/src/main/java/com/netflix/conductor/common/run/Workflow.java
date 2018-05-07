@@ -75,8 +75,6 @@ public class Workflow extends Auditable{
 
 	private Map<String, String> taskToDomain = new HashMap<>();
 
-	private Map<String, Object> headers = new HashMap<>();
-
 	private List<String> workflowIds = new ArrayList<>();
 
 	public Workflow(){
@@ -300,20 +298,6 @@ public class Workflow extends Auditable{
 	 */
 	public void setEvent(String event) {
 		this.event = event;
-	}
-
-	/**
-	 * @return Deluxe Owf Context holder
-	 */
-	public Map<String, Object> getHeaders() {
-		return headers;
-	}
-
-	/**
-	 * @param headers Deluxe Owf Context
-	 */
-	public void setHeaders(Map<String, Object> headers) {
-		this.headers = headers;
 	}
 
 	public List<String> getWorkflowIds() {

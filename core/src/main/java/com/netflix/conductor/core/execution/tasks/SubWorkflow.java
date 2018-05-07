@@ -197,7 +197,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 				restarted++;
 				task.getOutputData().put(RESTARTED, restarted);
 				task.getOutputData().remove(RESTART_ON);
-				provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getHeaders(),subWorkflow.getCorrelationId());
+				provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getCorrelationId());
 			} else {
 				return false; // Do nothing as waiting for the RESTART_ON time
 			}

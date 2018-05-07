@@ -215,7 +215,7 @@ public class AssetMonitor implements JavaEventAction {
 				executor.reset(actionSubWorkflowId, "Asset matched. Has been reset by incoming message " + messageId);
 			} else {
 				logger.info("Asset matches. Restarting sub-workflow " + actionSubWorkflowId);
-				executor.rewind(actionSubWorkflowId, actionSubWorkflow.getHeaders(),actionSubWorkflow.getCorrelationId());
+				executor.rewind(actionSubWorkflowId, actionSubWorkflow.getCorrelationId());
 			}
 		}
 	}

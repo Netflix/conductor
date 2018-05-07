@@ -1045,7 +1045,7 @@ public class WorkflowServiceTest {
 		
 		boolean failed = false;
 		try{
-			provider.rewind(wfid, Collections.emptyMap());
+			provider.rewind(wfid, null);
 		}catch(ApplicationException ae){
 			failed = true;
 		}
@@ -2198,7 +2198,7 @@ public class WorkflowServiceTest {
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
 		
-		provider.retry(wfid, Collections.emptyMap(), null);
+		provider.retry(wfid, null);
 		
 		es = ess.getExecutionStatus(wfid, true);
 		assertNotNull(es);
@@ -2261,7 +2261,7 @@ public class WorkflowServiceTest {
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.FAILED, es.getStatus());
 		
-		provider.rewind(es.getWorkflowId(), Collections.emptyMap());
+		provider.rewind(es.getWorkflowId(), null);
 		es = ess.getExecutionStatus(wfid, true);
 		assertNotNull(es);
 		assertEquals(WorkflowStatus.RUNNING, es.getStatus());
@@ -2450,7 +2450,7 @@ public class WorkflowServiceTest {
 		request.setReRunFromWorkflowId(wfid);
 		request.setReRunFromTaskId(es.getTasks().get(1).getTaskId());
 		
-		String reRunwfid = provider.rerun(request);
+		String reRunwfid = provider.rerun(request, null);
 		
 		Workflow esRR = ess.getExecutionStatus(reRunwfid, true);
 		assertNotNull(esRR);
@@ -2486,7 +2486,7 @@ public class WorkflowServiceTest {
 		RerunWorkflowRequest request1 = new RerunWorkflowRequest();
 		request1.setReRunFromWorkflowId(wfid);
 		
-		String reRunwfid1 = provider.rerun(request1);
+		String reRunwfid1 = provider.rerun(request1, null);
 		
 		es = ess.getExecutionStatus(reRunwfid1, true);
 		assertNotNull(es);
@@ -2639,7 +2639,7 @@ public class WorkflowServiceTest {
 		assertEquals(Status.SCHEDULED, t.getStatus());
 
 		// PAUSE
-		provider.pauseWorkflow(wfid);
+		provider.pauseWorkflow(wfid, null);
 		
 		// The workflow is paused but the scheduled task should be pollable
 		
@@ -2683,7 +2683,7 @@ public class WorkflowServiceTest {
 		assertTrue(task == null);
 		
 		// RESUME
-		provider.resumeWorkflow(wfid);
+		provider.resumeWorkflow(wfid, null);
 
 		// Now polling should get the second task
 		task = ess.poll("junit_task_2", "task2.junit.worker");
