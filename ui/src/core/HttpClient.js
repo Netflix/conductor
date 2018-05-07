@@ -32,11 +32,14 @@ const HttpClient = {
       });
   }),
 
-  post: (path, data) => new Promise((resolve, reject) => {
-    request
+  post: (path, data, token) => new Promise((resolve, reject) => {
+    let req = request
       .post(path, data)
-      .set('Accept', 'application/json')
-      .end((err, res) => {
+      .set('Accept', 'application/json');
+    if (token) {
+      req.set('Authorization', 'Bearer ' + token);
+    }
+    req.end((err, res) => {
         if (err || !res.ok) {
           console.error('Error on post! ' + res);
           reject(err);
@@ -51,51 +54,60 @@ const HttpClient = {
       });
   }),
 
-  postPlain: (path, data) => new Promise((resolve, reject) => {
-    request
+  postPlain: (path, data, token) => new Promise((resolve, reject) => {
+    let req = request
       .post(path, data)
-      .set('Accept', 'text/plain')
-      .end((err, res) => {
-        if (err || !res.ok) {
-          console.error('Error on post! ' + res);
-          reject(err);
-        } else {
-          if(res.body){
-            resolve(res.body);
-          }else{
-            resolve(res);
-          }
-
-        }
-      });
-  }),
-
-  put: (path, data) => new Promise((resolve, reject) => {
-    request
-      .put(path, data)
-      .set('Accept', 'application/json')
-      .end((err, res) => {
-        if (err || !res.ok) {
-          console.error('Error on post! ' + res);
-          reject(err);
-        } else {
+      .set('Accept', 'text/plain');
+    if (token) {
+      req.set('Authorization', 'Bearer ' + token);
+    }
+    req.end((err, res) => {
+      if (err || !res.ok) {
+        console.error('Error on post! ' + res);
+        reject(err);
+      } else {
+        if(res.body){
           resolve(res.body);
-        }
-      });
-  }),
-
-  delete: (path, data) => new Promise((resolve, reject) => {
-    request
-      .del(path, data)
-      .set('Accept', 'application/json')
-      .end((err, res) => {
-        if (err || !res.ok) {
-          console.error('Error on post! ' + err);
-          reject(err);
-        } else {
+        }else{
           resolve(res);
         }
-      });
+
+      }
+    });
+  }),
+
+  put: (path, data, token) => new Promise((resolve, reject) => {
+    let req = request
+      .put(path, data)
+      .set('Accept', 'application/json');
+    if (token) {
+      req.set('Authorization', 'Bearer ' + token);
+    }
+    req.end((err, res) => {
+      if (err || !res.ok) {
+        console.error('Error on post! ' + res);
+        reject(err);
+      } else {
+        resolve(res.body);
+      }
+    });
+  }),
+
+  delete: (path, data, token) => new Promise((resolve, reject) => {
+    let req = request
+      .del(path, data)
+      .set('Accept', 'application/json');
+    if (token) {
+      req.set('Authorization', 'Bearer ' + token);
+    }
+    req.end((err, res) => {
+      if (err || !res.ok) {
+        console.error('Error on post! ' + err);
+        reject(err);
+      } else {
+        resolve(res);
+      }
+    });
   })
 };
 
