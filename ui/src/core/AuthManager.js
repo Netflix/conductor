@@ -7,9 +7,6 @@ const authEnabled = authUrl !== undefined && clientId !== undefined && clientSec
   authUrl !== '' && clientId !== '' && clientSecret !== '';
 
 const AuthManager = {
-  isAuthEnabled: () => {
-    return authEnabled;
-  },
 
   getAuthToken: () => new Promise((resolve, reject) => {
     if (!authEnabled) {
