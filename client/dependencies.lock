@@ -1,6 +1,6 @@
 {
     "compile": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -8,15 +8,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -28,12 +34,14 @@
             "requested": "1.19.4"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.7.25"
         }
     },
     "compileClasspath": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -41,15 +49,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -61,12 +75,14 @@
             "requested": "1.19.4"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.7.25"
         }
     },
     "default": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -74,15 +90,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -94,8 +116,10 @@
             "requested": "1.19.4"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.7.25"
         }
     },
     "findbugs": {
@@ -111,7 +135,7 @@
         }
     },
     "runtime": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -119,15 +143,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -139,12 +169,14 @@
             "requested": "1.19.4"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.7.25"
         }
     },
     "runtimeClasspath": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -152,15 +184,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -172,12 +210,14 @@
             "requested": "1.19.4"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.7.25"
         }
     },
     "testCompile": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -185,15 +225,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -213,8 +259,10 @@
             "requested": "1.10.0"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.8.0-alpha1",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.8.0-alpha1"
         },
         "org.slf4j:slf4j-log4j12": {
             "locked": "1.8.0-alpha1",
@@ -222,7 +270,7 @@
         }
     },
     "testCompileClasspath": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -230,15 +278,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -258,8 +312,10 @@
             "requested": "1.10.0"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.8.0-alpha1",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.8.0-alpha1"
         },
         "org.slf4j:slf4j-log4j12": {
             "locked": "1.8.0-alpha1",
@@ -267,7 +323,7 @@
         }
     },
     "testRuntime": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -275,15 +331,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -303,8 +365,10 @@
             "requested": "1.10.0"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.8.0-alpha1",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.8.0-alpha1"
         },
         "org.slf4j:slf4j-log4j12": {
             "locked": "1.8.0-alpha1",
@@ -312,7 +376,7 @@
         }
     },
     "testRuntimeClasspath": {
-        "com.amazonaws:aws-java-sdk": {
+        "com.amazonaws:aws-java-sdk-core": {
             "locked": "1.11.86",
             "requested": "1.11.86"
         },
@@ -320,15 +384,21 @@
             "locked": "2.7.5",
             "requested": "2.7.5"
         },
+        "com.github.rholder:guava-retrying": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.0.0"
+        },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.5",
+            "locked": "0.7.6",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.8.7",
+            "locked": "1.9.0",
             "requested": "latest.release"
         },
         "com.netflix.spectator:spectator-api": {
@@ -348,8 +418,10 @@
             "requested": "1.10.0"
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.8.0-alpha1",
-            "requested": "1.7.25"
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "1.8.0-alpha1"
         },
         "org.slf4j:slf4j-log4j12": {
             "locked": "1.8.0-alpha1",
