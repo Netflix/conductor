@@ -331,6 +331,7 @@ public class WorkflowExecutor {
 		notifyWorkflowStatus(workflow, StartEndState.start);
 
 		decide(workflowId);
+		logger.info("Workflow rewind.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
 	}
 
 	public void retry(String workflowId, String correlationId) throws Exception {
@@ -362,7 +363,6 @@ public class WorkflowExecutor {
 		}
 		List<Task> failedTasks  = new ArrayList<Task>(failedMap.values());
 		List<Task> cancelledTasks = new ArrayList<Task>(cancelledMap.values());
-		logger.info("retry. Failed tasks " + failedTasks + ", cancelled tasks " + cancelledTasks);
 
 		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
 		List<String> forbiddenTypes = workflowDef.getRetryForbidden();
