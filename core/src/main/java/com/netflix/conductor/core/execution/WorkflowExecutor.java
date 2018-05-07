@@ -208,10 +208,10 @@ public class WorkflowExecutor {
 		}
 	}
 
-	public String rerun(RerunWorkflowRequest request,String correlationId) throws Exception {
+	public String rerun(RerunWorkflowRequest request) throws Exception {
 		Preconditions.checkNotNull(request.getReRunFromWorkflowId(), "reRunFromWorkflowId is missing");
 		if(!rerunWF(request.getReRunFromWorkflowId(), request.getReRunFromTaskId(), request.getTaskInput(),
-				request.getWorkflowInput(), correlationId)){
+				request.getWorkflowInput(), request.getCorrelationId())){
 			throw new ApplicationException(Code.INVALID_INPUT, "Task " + request.getReRunFromTaskId() + " not found");
 		}
 		return request.getReRunFromWorkflowId();

@@ -2450,7 +2450,7 @@ public class WorkflowServiceTest {
 		request.setReRunFromWorkflowId(wfid);
 		request.setReRunFromTaskId(es.getTasks().get(1).getTaskId());
 		
-		String reRunwfid = provider.rerun(request, null);
+		String reRunwfid = provider.rerun(request);
 		
 		Workflow esRR = ess.getExecutionStatus(reRunwfid, true);
 		assertNotNull(esRR);
@@ -2486,7 +2486,7 @@ public class WorkflowServiceTest {
 		RerunWorkflowRequest request1 = new RerunWorkflowRequest();
 		request1.setReRunFromWorkflowId(wfid);
 		
-		String reRunwfid1 = provider.rerun(request1, null);
+		String reRunwfid1 = provider.rerun(request1);
 		
 		es = ess.getExecutionStatus(reRunwfid1, true);
 		assertNotNull(es);
