@@ -67,13 +67,16 @@ public class TaskSummary {
 	private String output;
 	
 	private String taskId;
-	
+
+	private String workerId;
+
 	public TaskSummary(Task task) {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
     	sdf.setTimeZone(gmt);
     	
     	this.taskId = task.getTaskId();
+    	this.workerId = task.getWorkerId();
     	this.taskDefName = task.getTaskDefName();
     	this.taskType = task.getTaskType();
 		this.workflowId = task.getWorkflowInstanceId();
@@ -327,6 +330,13 @@ public class TaskSummary {
 	public void setTaskId(String taskId) {
 		this.taskId = taskId;
 	}
-	
-	
+
+
+	public String getWorkerId() {
+		return workerId;
+	}
+
+	public void setWorkerId(String workerId) {
+		this.workerId = workerId;
+	}
 }
