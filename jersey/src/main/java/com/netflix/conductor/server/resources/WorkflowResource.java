@@ -241,10 +241,10 @@ public class WorkflowResource {
 
 	@POST
 	@Path("/{workflowId}/rerun")
-	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Reruns the workflow from a specific task")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
 	public Response rerun(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
 		executor.validateAuth(workflowId, headers);
 
@@ -306,14 +306,15 @@ public class WorkflowResource {
 	@Path("/{workflowId}/cancel")
 	@ApiOperation("Cancel workflow execution")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
-	@Produces({MediaType.TEXT_PLAIN})
-	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, Map<String, Object> input) throws Exception {
+	@Consumes(MediaType.WILDCARD)
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
 
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 		handleCorrelationId(workflowId, headers, builder);
 
-		executor.cancelWorkflow(workflowId, input);
+		executor.cancelWorkflow(workflowId);
 		return builder.build();
 	}
 

@@ -495,13 +495,13 @@ public class WorkflowExecutor {
 		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
 
-	public String cancelWorkflow(String workflowId,Map<String, Object> inputbody) throws Exception {
+	public String cancelWorkflow(String workflowId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		workflow.setStatus(WorkflowStatus.CANCELLED);
-		return cancelWorkflow(workflow, inputbody, null);
+		return cancelWorkflow(workflow, null);
 	}
 
-	public String cancelWorkflow(Workflow workflow, Map<String, Object> inputbody, String reason) throws Exception {
+	public String cancelWorkflow(Workflow workflow, String reason) throws Exception {
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
