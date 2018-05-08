@@ -3,7 +3,6 @@ import { Router } from 'express';
 import http from '../core/HttpClient';
 import moment from 'moment';
 import lookup from '../core/ApiLookup';
-import authManager from '../core/AuthManager';
 
 const router = new Router();
 
@@ -133,11 +132,10 @@ router.get('/id/:workflowId', async (req, res, next) => {
 
 router.delete('/terminate/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
-    const result = await http.delete(baseURL2 + req.params.workflowId, null, token);
+    const result = await http.delete(baseURL2 + req.params.workflowId);
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
     next(err);
@@ -146,11 +144,11 @@ router.delete('/terminate/:workflowId', async (req, res, next) => {
 
 router.post('/cancel/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
-    const result = await http.postPlain(baseURL2 + req.params.workflowId + '/cancel', null, token);
+    const result = await http.postPlain(baseURL2 + req.params.workflowId + '/cancel', {});
+    console.log("result", result);
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
     console.log("err", err);
@@ -160,11 +158,10 @@ router.post('/cancel/:workflowId', async (req, res, next) => {
 
 router.post('/restart/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
-    const result = await http.post(baseURL2 + req.params.workflowId + '/restart', null, token);
+    const result = await http.post(baseURL2 + req.params.workflowId + '/restart');
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
     next(err);
@@ -173,11 +170,10 @@ router.post('/restart/:workflowId', async (req, res, next) => {
 
 router.post('/retry/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
-    const result = await http.post(baseURL2 + req.params.workflowId + '/retry', null, token);
+    const result = await http.post(baseURL2 + req.params.workflowId + '/retry');
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
     next(err);
@@ -186,11 +182,10 @@ router.post('/retry/:workflowId', async (req, res, next) => {
 
 router.post('/pause/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
-    const result = await http.put(baseURL2 + req.params.workflowId + '/pause', null, token);
+    const result = await http.put(baseURL2 + req.params.workflowId + '/pause');
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
     next(err);
@@ -199,11 +194,10 @@ router.post('/pause/:workflowId', async (req, res, next) => {
 
 router.post('/resume/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
-    const result = await http.put(baseURL2 + req.params.workflowId + '/resume', null, token);
+    const result = await http.put(baseURL2 + req.params.workflowId + '/resume');
     res.status(200).send({result: req.params.workflowId });
   } catch (err) {
     next(err);
