@@ -62,7 +62,7 @@ public class ApplicationExceptionMapper implements ExceptionMapper<ApplicationEx
 	
 	@Override
 	public Response toResponse(ApplicationException e) {
-		logger.error(e.getMessage(), e);
+		logger.error(e.getMessage());
 		if(e.getHttpStatusCode() == 500) {
 			Monitors.error("error", "error");
 		}
