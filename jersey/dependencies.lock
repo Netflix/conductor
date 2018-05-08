@@ -45,6 +45,12 @@
         "com.netflix.conductor:conductor-core": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -132,6 +138,12 @@
         "com.netflix.conductor:conductor-core": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -218,6 +230,12 @@
         },
         "com.netflix.conductor:conductor-core": {
             "project": true
+        },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
         },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [
@@ -312,6 +330,12 @@
         "com.netflix.conductor:conductor-core": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -399,6 +423,12 @@
         "com.netflix.conductor:conductor-core": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -485,6 +515,12 @@
         },
         "com.netflix.conductor:conductor-core": {
             "project": true
+        },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
         },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [
@@ -581,6 +617,12 @@
         "com.netflix.conductor:conductor-core": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -676,6 +718,12 @@
         "com.netflix.conductor:conductor-core": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -770,6 +818,12 @@
         },
         "com.netflix.conductor:conductor-core": {
             "project": true
+        },
+        "com.netflix.servo:servo-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.12.17"
         },
         "com.netflix.spectator:spectator-api": {
             "firstLevelTransitive": [

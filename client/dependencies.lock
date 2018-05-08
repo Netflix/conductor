@@ -15,15 +15,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -56,15 +56,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -97,15 +97,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -150,15 +150,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -191,15 +191,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -232,15 +232,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -285,15 +285,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -338,15 +338,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -391,15 +391,15 @@
             "locked": "2.0.0"
         },
         "com.netflix.archaius:archaius-core": {
-            "locked": "0.7.6",
+            "locked": "0.7.5",
             "requested": "0.7.5"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
         "com.netflix.eureka:eureka-client": {
-            "locked": "1.9.0",
-            "requested": "latest.release"
+            "locked": "1.8.7",
+            "requested": "1.8.7"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",

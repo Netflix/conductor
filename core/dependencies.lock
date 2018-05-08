@@ -29,6 +29,10 @@
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
             "requested": "0.40.0"
@@ -77,6 +81,10 @@
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
+        },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -127,6 +135,10 @@
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
             "requested": "0.40.0"
@@ -175,6 +187,10 @@
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
+        },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -225,6 +241,10 @@
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
             "requested": "0.40.0"
@@ -273,6 +293,10 @@
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
+        },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
@@ -335,6 +359,10 @@
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
             "requested": "0.40.0"
@@ -396,6 +424,10 @@
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
+        },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
             "requested": "0.40.0"
@@ -456,6 +488,10 @@
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
+        },
+        "com.netflix.servo:servo-core": {
+            "locked": "0.12.17",
+            "requested": "0.12.17"
         },
         "com.netflix.spectator:spectator-api": {
             "locked": "0.40.0",
