@@ -63,7 +63,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 		try {
 
-			String subWorkflowId = provider.startWorkflow(name, version, wfInput, correlationId, workflow.getWorkflowId(), workflow.getParentWorkflowIds(), task.getTaskId(), null, workflow.getTaskToDomain());
+			String subWorkflowId = provider.startWorkflow(name, version, wfInput, correlationId, workflow.getWorkflowId(), task.getTaskId(), null, workflow.getTaskToDomain(), workflow.getWorkflowIds());
 			task.getOutputData().put("subWorkflowId", subWorkflowId);
 			task.getInputData().put("subWorkflowId", subWorkflowId);
 			task.setStatus(Status.IN_PROGRESS);
@@ -147,7 +147,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		Workflow subWorkflow = provider.getWorkflow(workflowId, true);
 		if (workflow.getStatus() == WorkflowStatus.CANCELLED) {
 			subWorkflow.setStatus(WorkflowStatus.CANCELLED);
-			provider.cancelWorkflow(subWorkflow, null, "Parent workflow has been cancelled");
+			provider.cancelWorkflow(subWorkflow, "Parent workflow has been cancelled");
 		} else {
 			subWorkflow.setStatus(WorkflowStatus.TERMINATED);
 			provider.terminateWorkflow(subWorkflow, "Parent workflow has been terminated with status " + workflow.getStatus(), null);
@@ -197,7 +197,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 				restarted++;
 				task.getOutputData().put(RESTARTED, restarted);
 				task.getOutputData().remove(RESTART_ON);
-				provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getHeaders());
+				provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getCorrelationId());
 			} else {
 				return false; // Do nothing as waiting for the RESTART_ON time
 			}

@@ -111,22 +111,22 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, null, event, taskToDomain, null);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, null, event, taskToDomain, headers);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, null, parentWorkflowTaskId, event, null, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null);
 	}
 
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, List<String> parentWorkflowIds, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowIds, parentWorkflowTaskId, event, taskToDomain, null);
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, List<String> parentWorkflowIds, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, Map<String, Object> headers) throws Exception {
+	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
 
 		try {
 			if(input == null){
@@ -141,15 +141,6 @@ public class WorkflowExecutor {
 			// Input validation required
 			if (exists.getInputValidation() != null && !exists.getInputValidation().isEmpty()) {
 				validateWorkflowInput(exists, input);
-			}
-
-			// Auth validation if requested and only when rules are defined in workflow
-			// Do not validate auth if parentWorkflowId/event passed as it is internal calls (event message, sub-workflow, cancel/timeout/failure workflow)
-			if (this.validateAuth
-					&& StringUtils.isEmpty(event)
-					&& StringUtils.isEmpty(parentWorkflowId)
-					&& MapUtils.isNotEmpty(exists.getAuthValidation())) {
-				validateAuth(exists, headers);
 			}
 
 			Set<String> missingTaskDefs = exists.all().stream()
@@ -173,18 +164,28 @@ public class WorkflowExecutor {
 			wf.setInput(input);
 			wf.setStatus(WorkflowStatus.RUNNING);
 			wf.setParentWorkflowId(parentWorkflowId);
-			if (CollectionUtils.isNotEmpty(parentWorkflowIds)) {
-				wf.getParentWorkflowIds().addAll(parentWorkflowIds);
-			} else {
-				if (!wf.getParentWorkflowIds().contains(workflowId)) {
-					wf.getParentWorkflowIds().add(workflowId);
-				}
+
+			// Add other ids if passed
+			if (CollectionUtils.isNotEmpty(workflowIds)) {
+				workflowIds.forEach(id -> {
+					if (!wf.getWorkflowIds().contains(id)) {
+						wf.getWorkflowIds().add(id);
+					}
+				});
 			}
+
+			// Add parent workflow id
 			if (StringUtils.isNotEmpty(parentWorkflowId)) {
-				if (!wf.getParentWorkflowIds().contains(parentWorkflowId)) {
-					wf.getParentWorkflowIds().add(parentWorkflowId);
+				if (!wf.getWorkflowIds().contains(parentWorkflowId)) {
+					wf.getWorkflowIds().add(parentWorkflowId);
 				}
 			}
+
+			// Add current id
+			if (!wf.getWorkflowIds().contains(workflowId)) {
+				wf.getWorkflowIds().add(workflowId);
+			}
+
 			wf.setParentWorkflowTaskId(parentWorkflowTaskId);
 			wf.setOwnerApp(WorkflowContext.get().getClientApp());
 			wf.setCreateTime(System.currentTimeMillis());
@@ -192,7 +193,6 @@ public class WorkflowExecutor {
 			wf.setUpdateTime(null);
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
-			wf.setHeaders(headers);
 			edao.createWorkflow(wf);
 
 			// send wf start message
@@ -229,7 +229,7 @@ public class WorkflowExecutor {
 			workflow.getTasks().forEach(t -> edao.removeTask(t.getTaskId()));
 			// Set workflow as RUNNING
 			workflow.setStatus(WorkflowStatus.RUNNING);
-			if(correlationId != null){
+			if(StringUtils.isNotEmpty(correlationId)){
 				workflow.setCorrelationId(correlationId);
 			}
 			if(workflowInput != null){
@@ -288,7 +288,7 @@ public class WorkflowExecutor {
 			}
 			// and workflow as RUNNING
 			workflow.setStatus(WorkflowStatus.RUNNING);
-			if(correlationId != null){
+			if(StringUtils.isNotEmpty(correlationId)){
 				workflow.setCorrelationId(correlationId);
 			}
 			if(workflowInput != null){
@@ -307,7 +307,7 @@ public class WorkflowExecutor {
 		return false;
 	}
 
-	public void rewind(String workflowId, Map<String, Object> headers) throws Exception {
+	public void rewind(String workflowId, String correlationId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
@@ -322,16 +322,19 @@ public class WorkflowExecutor {
 		workflow.setEndTime(0);
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
-		workflow.setHeaders(headers);
+		if(StringUtils.isNotEmpty(correlationId)) {
+			workflow.setCorrelationId(correlationId);
+		}
 		edao.updateWorkflow(workflow);
 
 		// send wf start message
 		notifyWorkflowStatus(workflow, StartEndState.start);
 
 		decide(workflowId);
+		logger.info("Workflow rewind.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
 	}
 
-	public void retry(String workflowId, Map<String, Object> headers,String correlationId) throws Exception {
+	public void retry(String workflowId, String correlationId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running.  status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
@@ -360,7 +363,6 @@ public class WorkflowExecutor {
 		}
 		List<Task> failedTasks  = new ArrayList<Task>(failedMap.values());
 		List<Task> cancelledTasks = new ArrayList<Task>(cancelledMap.values());
-		logger.info("retry. Failed tasks " + failedTasks + ", cancelled tasks " + cancelledTasks);
 
 		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
 		List<String> forbiddenTypes = workflowDef.getRetryForbidden();
@@ -427,7 +429,6 @@ public class WorkflowExecutor {
 		scheduleTask(workflow, rescheduledTasks);
 
 		workflow.setStatus(WorkflowStatus.RUNNING);
-		workflow.setHeaders(headers);
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
 		}
@@ -494,13 +495,13 @@ public class WorkflowExecutor {
 		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
 
-	public String cancelWorkflow(String workflowId,Map<String, Object> inputbody) throws Exception {
+	public String cancelWorkflow(String workflowId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		workflow.setStatus(WorkflowStatus.CANCELLED);
-		return cancelWorkflow(workflow, inputbody, null);
+		return cancelWorkflow(workflow, null);
 	}
 
-	public String cancelWorkflow(Workflow workflow, Map<String, Object> inputbody, String reason) throws Exception {
+	public String cancelWorkflow(Workflow workflow, String reason) throws Exception {
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
@@ -848,7 +849,7 @@ public class WorkflowExecutor {
 		return false;
 	}
 
-	public void pauseWorkflow(String workflowId) throws Exception {
+	public void pauseWorkflow(String workflowId,String correlationId) throws Exception {
 		WorkflowStatus status = WorkflowStatus.PAUSED;
 		Workflow workflow = edao.getWorkflow(workflowId, false);
 		if(workflow.getStatus().isTerminal()){
@@ -858,16 +859,22 @@ public class WorkflowExecutor {
 			return;		//Already paused!
 		}
 		workflow.setStatus(status);
+		if(StringUtils.isNotEmpty(correlationId)) {
+			workflow.setCorrelationId(correlationId);
+		}
 		edao.updateWorkflow(workflow);
 	}
 
-	public void resumeWorkflow(String workflowId) throws Exception{
+	public void resumeWorkflow(String workflowId,String correlationId) throws Exception{
 		Workflow workflow = edao.getWorkflow(workflowId, false);
 		if(!workflow.getStatus().equals(WorkflowStatus.PAUSED)){
 			logger.error("Workflow is not is not PAUSED so cannot resume. Current status=" + workflow.getStatus() + ", workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId());
 			throw new IllegalStateException("The workflow " + workflowId + " is not is not PAUSED so cannot resume");
 		}
 		workflow.setStatus(WorkflowStatus.RUNNING);
+		if(StringUtils.isNotEmpty(correlationId)) {
+			workflow.setCorrelationId(correlationId);
+		}
 		edao.updateWorkflow(workflow);
 		decide(workflowId);
 	}
@@ -1026,10 +1033,6 @@ public class WorkflowExecutor {
 				});
 			}
 		}
-	}
-
-	public void updateWorkflow(Workflow workflow) {
-		edao.updateWorkflow(workflow);
 	}
 
 	private String getActiveDomain(String taskType, String[] domains){
@@ -1199,14 +1202,31 @@ public class WorkflowExecutor {
 		});
 	}
 
-	private void validateAuth(WorkflowDef workflowDef, Map<String, Object> headers) {
-		// Header valeus are wrapped as a list
-		List strings = (List)headers.get(HttpHeaders.AUTHORIZATION);
+	public void validateAuth(String workflowId, HttpHeaders headers) {
+		Workflow workflow = edao.getWorkflow(workflowId, false);
+		if (workflow == null) {
+			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found for workflowId=" + workflowId);
+		}
+
+		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+		if (workflowDef == null) {
+			throw new ApplicationException(Code.NOT_FOUND, "No such workflow definition found by name=" + workflow.getWorkflowType() + ", version=" + workflow.getVersion());
+		}
+
+		validateAuth(workflowDef, headers);
+	}
+
+	public void validateAuth(WorkflowDef workflowDef, HttpHeaders headers) {
+		if (!this.validateAuth || MapUtils.isEmpty(workflowDef.getAuthValidation())) {
+			return;
+		}
+
+		List<String> strings = headers.getRequestHeader(HttpHeaders.AUTHORIZATION);
 		if (strings == null || strings.isEmpty())
 			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
 
 		// It gives us: Bearer token
-		String bearer = (String)strings.get(0);
+		String bearer = strings.get(0);
 		if (StringUtils.isEmpty(bearer))
 			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
 
