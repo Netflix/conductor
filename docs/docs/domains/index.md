@@ -12,7 +12,7 @@ The poll call must now specify the domain.
 #### Java Client
 If you are using the java client then a simple property change will force  WorkflowTaskCoordinator to pass the domain to the poller.
 ```
-	conductor.worker.T2.domain=mydomain //Task T2 needs to poll for domain "mydomain"
+    conductor.worker.T2.domain=mydomain //Task T2 needs to poll for domain "mydomain"
 ```
 #### REST call
 `GET /tasks/poll/batch/T2?workerid=myworker&domain=mydomain`
@@ -23,25 +23,25 @@ When starting the workflow, make sure the task to domain mapping is passes
 
 #### Java Client
 ```
-	Map<String, Object> input = new HashMap<>();
-	input.put("wf_input1", "one”);
+    Map<String, Object> input = new HashMap<>();
+    input.put("wf_input1", "one”);
 
-	Map<String, String> taskToDomain = new HashMap<>();
-	taskToDomain.put("T2", "mydomain");
-	
-	// Other options ...
-	// taskToDomain.put("*", "mydomain") will put all tasks in mydomain
-	// taskToDomain.put("T2", "mydomain,fallbackDomain") If mydomain has no active workers
-	//        for T2 then will be put in fallbackDomain. Same can be used with "*" too.
-	
-	StartWorkflowRequest swr = new StartWorkflowRequest();
-	swr.withName(“myWorkflow”)
-		.withCorrelationId(“corr1”)
-		.withVersion(1)
-		.withInput(input)
-		.withTaskToDomain(taskToDomain);
-	
-	wfclient.startWorkflow(swr);
+    Map<String, String> taskToDomain = new HashMap<>();
+    taskToDomain.put("T2", "mydomain");
+    
+    // Other options ...
+    // taskToDomain.put("*", "mydomain") will put all tasks in mydomain
+    // taskToDomain.put("T2", "mydomain,fallbackDomain") If mydomain has no active workers
+    //        for T2 then will be put in fallbackDomain. Same can be used with "*" too.
+    
+    StartWorkflowRequest swr = new StartWorkflowRequest();
+    swr.withName(“myWorkflow”)
+        .withCorrelationId(“corr1”)
+        .withVersion(1)
+        .withInput(input)
+        .withTaskToDomain(taskToDomain);
+    
+    wfclient.startWorkflow(swr);
 
 ```
 
@@ -54,10 +54,10 @@ When starting the workflow, make sure the task to domain mapping is passes
   "version": 1,
   "correlatonId": "corr1"
   "input": {
-	"wf_input1": "one"
+    "wf_input1": "one"
   },
   "taskToDomain": {
-	"T2": "mydomain"
+    "T2": "mydomain"
   }
 }
 

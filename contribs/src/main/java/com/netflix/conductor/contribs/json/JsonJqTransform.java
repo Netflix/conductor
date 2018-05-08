@@ -41,62 +41,62 @@ import net.thisptr.jackson.jq.exception.JsonQueryException;
 @Singleton
 public class JsonJqTransform extends WorkflowSystemTask {
 
-	private static final Logger logger = LoggerFactory.getLogger(JsonJqTransform.class);
-	
-	private static final String QUERY_EXPRESSION_PARAMETER = "queryExpression";
-	
-	private ObjectMapper om = new ObjectMapper();
-	
-	private LoadingCache<String, JsonQuery> queryCache = createQueryCache();
+    private static final Logger logger = LoggerFactory.getLogger(JsonJqTransform.class);
 
-	public JsonJqTransform() {
-		super("JSON_JQ_TRANSFORM");
-	}
-	
-	@Override
-	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		Map<String, Object> taskInput = task.getInputData();
-		Map<String, Object> taskOutput = task.getOutputData();
+    private static final String QUERY_EXPRESSION_PARAMETER = "queryExpression";
 
-		String queryExpression = (String) taskInput.get(QUERY_EXPRESSION_PARAMETER);
-		
-		if(queryExpression == null) {
-			task.setReasonForIncompletion("Missing '" + QUERY_EXPRESSION_PARAMETER + "' in input parameters");
-			task.setStatus(Task.Status.FAILED);
-			return;
-		}
-		
-		try {
-			JsonNode input = om.valueToTree(taskInput);
-			JsonQuery query = queryCache.get(queryExpression);
-			List<JsonNode> result = query.apply(input);
-			
-			task.setStatus(Task.Status.COMPLETED);
-			if (result == null) {
-				taskOutput.put("result", null);
-				taskOutput.put("resultList", null);
-			} else if (result.isEmpty()) {
-				taskOutput.put("result", null);
-				taskOutput.put("resultList", result);
-			} else {
-				taskOutput.put("result", result.get(0));
-				taskOutput.put("resultList", result);
-			}
-		} catch(Exception e) {
-			logger.error(e.getMessage(), e);
-			task.setStatus(Task.Status.FAILED);
-			task.setReasonForIncompletion(e.getMessage());
-			taskOutput.put("error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
-		}
-	}
+    private ObjectMapper om = new ObjectMapper();
 
-	private LoadingCache<String, JsonQuery> createQueryCache() {
-		CacheLoader<String, JsonQuery> loader = new CacheLoader<String, JsonQuery>() {
-			@Override
-			public JsonQuery load(@Nonnull String query) throws JsonQueryException {
-				return JsonQuery.compile(query);
-			}
-		};
-		return CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(1000).build(loader);
-	}
+    private LoadingCache<String, JsonQuery> queryCache = createQueryCache();
+
+    public JsonJqTransform() {
+        super("JSON_JQ_TRANSFORM");
+    }
+
+    @Override
+    public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+        Map<String, Object> taskInput = task.getInputData();
+        Map<String, Object> taskOutput = task.getOutputData();
+
+        String queryExpression = (String) taskInput.get(QUERY_EXPRESSION_PARAMETER);
+
+        if(queryExpression == null) {
+            task.setReasonForIncompletion("Missing '" + QUERY_EXPRESSION_PARAMETER + "' in input parameters");
+            task.setStatus(Task.Status.FAILED);
+            return;
+        }
+
+        try {
+            JsonNode input = om.valueToTree(taskInput);
+            JsonQuery query = queryCache.get(queryExpression);
+            List<JsonNode> result = query.apply(input);
+
+            task.setStatus(Task.Status.COMPLETED);
+            if (result == null) {
+                taskOutput.put("result", null);
+                taskOutput.put("resultList", null);
+            } else if (result.isEmpty()) {
+                taskOutput.put("result", null);
+                taskOutput.put("resultList", result);
+            } else {
+                taskOutput.put("result", result.get(0));
+                taskOutput.put("resultList", result);
+            }
+        } catch(Exception e) {
+            logger.error(e.getMessage(), e);
+            task.setStatus(Task.Status.FAILED);
+            task.setReasonForIncompletion(e.getMessage());
+            taskOutput.put("error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+        }
+    }
+
+    private LoadingCache<String, JsonQuery> createQueryCache() {
+        CacheLoader<String, JsonQuery> loader = new CacheLoader<String, JsonQuery>() {
+            @Override
+            public JsonQuery load(@Nonnull String query) throws JsonQueryException {
+                return JsonQuery.compile(query);
+            }
+        };
+        return CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(1000).build(loader);
+    }
 }

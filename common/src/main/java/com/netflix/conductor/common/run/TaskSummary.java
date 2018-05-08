@@ -31,302 +31,302 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
  */
 public class TaskSummary {
 
-	/**
-	 * The time should be stored as GMT
-	 */
-	private static final TimeZone gmt = TimeZone.getTimeZone("GMT");
-	
-	private String workflowId;
+    /**
+     * The time should be stored as GMT
+     */
+    private static final TimeZone gmt = TimeZone.getTimeZone("GMT");
 
-	private String workflowType;
-	
-	private String correlationId;
-	
-	private String scheduledTime;
-	
-	private String startTime;
-	
-	private String updateTime;
-	
-	private String endTime;
-	
-	private Status status;
-	
-	private String reasonForIncompletion;
-	
-	private long executionTime;
-	
-	private long queueWaitTime;
-	
-	private String taskDefName;
-	
-	private String taskType;
-	
-	private String input;
-	
-	private String output;
-	
-	private String taskId;
-	
-	public TaskSummary(Task task) {
-		
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    	sdf.setTimeZone(gmt);
-    	
-    	this.taskId = task.getTaskId();
-    	this.taskDefName = task.getTaskDefName();
-    	this.taskType = task.getTaskType();
-		this.workflowId = task.getWorkflowInstanceId();
-		this.workflowType = task.getWorkflowType();
-		this.correlationId = task.getCorrelationId();
-		this.scheduledTime = sdf.format(new Date(task.getScheduledTime()));
-		this.startTime = sdf.format(new Date(task.getStartTime()));
-		this.updateTime = sdf.format(new Date(task.getUpdateTime()));
-		this.endTime = sdf.format(new Date(task.getEndTime()));
-		this.status = task.getStatus();
-		this.reasonForIncompletion = task.getReasonForIncompletion();
-		this.queueWaitTime = task.getQueueWaitTime();
-		if (task.getInputData() != null) {
-			this.input = task.getInputData().toString();
-		}
-		
-		if (task.getOutputData() != null) {
-			this.output = task.getOutputData().toString();
-		}
-		
-		
-		if(task.getEndTime() > 0){
-			this.executionTime = task.getEndTime() - task.getStartTime();
-		}
-	}
+    private String workflowId;
 
-	/**
-	 * @return the workflowId
-	 */
-	public String getWorkflowId() {
-		return workflowId;
-	}
+    private String workflowType;
 
-	public String getWorkflowType() {
-		return workflowType;
-	}
+    private String correlationId;
 
-	/**
-	 * @param workflowId the workflowId to set
-	 */
-	public void setWorkflowId(String workflowId) {
-		this.workflowId = workflowId;
-	}
+    private String scheduledTime;
 
-	/**
-	 * @return the correlationId
-	 */
-	public String getCorrelationId() {
-		return correlationId;
-	}
+    private String startTime;
 
-	/**
-	 * @param correlationId the correlationId to set
-	 */
-	public void setCorrelationId(String correlationId) {
-		this.correlationId = correlationId;
-	}
+    private String updateTime;
 
-	/**
-	 * @return the scheduledTime
-	 */
-	public String getScheduledTime() {
-		return scheduledTime;
-	}
+    private String endTime;
 
-	/**
-	 * @param scheduledTime the scheduledTime to set
-	 */
-	public void setScheduledTime(String scheduledTime) {
-		this.scheduledTime = scheduledTime;
-	}
+    private Status status;
 
-	/**
-	 * @return the startTime
-	 */
-	public String getStartTime() {
-		return startTime;
-	}
+    private String reasonForIncompletion;
 
-	/**
-	 * @param startTime the startTime to set
-	 * 
-	 */
-	public void setStartTime(String startTime) {
-		this.startTime = startTime;
-	}
+    private long executionTime;
 
-	/**
-	 * @return the updateTime
-	 */
-	public String getUpdateTime() {
-		return updateTime;
-	}
+    private long queueWaitTime;
 
-	/**
-	 * @param updateTime the updateTime to set
-	 * 
-	 */
-	public void setUpdateTime(String updateTime) {
-		this.updateTime = updateTime;
-	}
+    private String taskDefName;
 
-	/**
-	 * @return the endTime
-	 */
-	public String getEndTime() {
-		return endTime;
-	}
+    private String taskType;
 
-	/**
-	 * @param endTime the endTime to set
-	 * 
-	 */
-	public void setEndTime(String endTime) {
-		this.endTime = endTime;
-	}
+    private String input;
 
-	/**
-	 * @return the status
-	 */
-	public Status getStatus() {
-		return status;
-	}
+    private String output;
 
-	/**
-	 * @param status the status to set
-	 * 
-	 */
-	public void setStatus(Status status) {
-		this.status = status;
-	}
+    private String taskId;
 
-	/**
-	 * @return the reasonForIncompletion
-	 */
-	public String getReasonForIncompletion() {
-		return reasonForIncompletion;
-	}
+    public TaskSummary(Task task) {
 
-	/**
-	 * @param reasonForIncompletion the reasonForIncompletion to set
-	 * 
-	 */
-	public void setReasonForIncompletion(String reasonForIncompletion) {
-		this.reasonForIncompletion = reasonForIncompletion;
-	}
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        sdf.setTimeZone(gmt);
 
-	/**
-	 * @return the executionTime
-	 */
-	public long getExecutionTime() {
-		return executionTime;
-	}
+        this.taskId = task.getTaskId();
+        this.taskDefName = task.getTaskDefName();
+        this.taskType = task.getTaskType();
+        this.workflowId = task.getWorkflowInstanceId();
+        this.workflowType = task.getWorkflowType();
+        this.correlationId = task.getCorrelationId();
+        this.scheduledTime = sdf.format(new Date(task.getScheduledTime()));
+        this.startTime = sdf.format(new Date(task.getStartTime()));
+        this.updateTime = sdf.format(new Date(task.getUpdateTime()));
+        this.endTime = sdf.format(new Date(task.getEndTime()));
+        this.status = task.getStatus();
+        this.reasonForIncompletion = task.getReasonForIncompletion();
+        this.queueWaitTime = task.getQueueWaitTime();
+        if (task.getInputData() != null) {
+            this.input = task.getInputData().toString();
+        }
 
-	/**
-	 * @param executionTime the executionTime to set
-	 * 
-	 */
-	public void setExecutionTime(long executionTime) {
-		this.executionTime = executionTime;
-	}
+        if (task.getOutputData() != null) {
+            this.output = task.getOutputData().toString();
+        }
 
-	/**
-	 * @return the queueWaitTime
-	 */
-	public long getQueueWaitTime() {
-		return queueWaitTime;
-	}
 
-	/**
-	 * @param queueWaitTime the queueWaitTime to set
-	 * 
-	 */
-	public void setQueueWaitTime(long queueWaitTime) {
-		this.queueWaitTime = queueWaitTime;
-	}
+        if(task.getEndTime() > 0){
+            this.executionTime = task.getEndTime() - task.getStartTime();
+        }
+    }
 
-	/**
-	 * @return the taskDefName
-	 */
-	public String getTaskDefName() {
-		return taskDefName;
-	}
+    /**
+     * @return the workflowId
+     */
+    public String getWorkflowId() {
+        return workflowId;
+    }
 
-	/**
-	 * @param taskDefName the taskDefName to set
-	 * 
-	 */
-	public void setTaskDefName(String taskDefName) {
-		this.taskDefName = taskDefName;
-	}
+    public String getWorkflowType() {
+        return workflowType;
+    }
 
-	/**
-	 * @return the taskType
-	 */
-	public String getTaskType() {
-		return taskType;
-	}
+    /**
+     * @param workflowId the workflowId to set
+     */
+    public void setWorkflowId(String workflowId) {
+        this.workflowId = workflowId;
+    }
 
-	/**
-	 * @param taskType the taskType to set
-	 * 
-	 */
-	public void setTaskType(String taskType) {
-		this.taskType = taskType;
-	}
+    /**
+     * @return the correlationId
+     */
+    public String getCorrelationId() {
+        return correlationId;
+    }
 
-	/**
-	 * 
-	 * @return input to the task
-	 */
-	public String getInput() {
-		return input;
-	}
-	
-	/**
-	 * 
-	 * @param input input to the task
-	 */
-	public void setInput(String input) {
-		this.input = input;
-	}
-	
-	/**
-	 * 
-	 * @return output of the task
-	 */
-	public String getOutput() {
-		return output;
-	}
-	
-	/**
-	 * 
-	 * @param output Task output
-	 */
-	public void setOutput(String output) {
-		this.output = output;
-	}
+    /**
+     * @param correlationId the correlationId to set
+     */
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+    }
 
-	/**
-	 * @return the taskId
-	 */
-	public String getTaskId() {
-		return taskId;
-	}
+    /**
+     * @return the scheduledTime
+     */
+    public String getScheduledTime() {
+        return scheduledTime;
+    }
 
-	/**
-	 * @param taskId the taskId to set
-	 * 
-	 */
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
-	}
-	
-	
+    /**
+     * @param scheduledTime the scheduledTime to set
+     */
+    public void setScheduledTime(String scheduledTime) {
+        this.scheduledTime = scheduledTime;
+    }
+
+    /**
+     * @return the startTime
+     */
+    public String getStartTime() {
+        return startTime;
+    }
+
+    /**
+     * @param startTime the startTime to set
+     *
+     */
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    /**
+     * @return the updateTime
+     */
+    public String getUpdateTime() {
+        return updateTime;
+    }
+
+    /**
+     * @param updateTime the updateTime to set
+     *
+     */
+    public void setUpdateTime(String updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    /**
+     * @return the endTime
+     */
+    public String getEndTime() {
+        return endTime;
+    }
+
+    /**
+     * @param endTime the endTime to set
+     *
+     */
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    /**
+     * @return the status
+     */
+    public Status getStatus() {
+        return status;
+    }
+
+    /**
+     * @param status the status to set
+     *
+     */
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    /**
+     * @return the reasonForIncompletion
+     */
+    public String getReasonForIncompletion() {
+        return reasonForIncompletion;
+    }
+
+    /**
+     * @param reasonForIncompletion the reasonForIncompletion to set
+     *
+     */
+    public void setReasonForIncompletion(String reasonForIncompletion) {
+        this.reasonForIncompletion = reasonForIncompletion;
+    }
+
+    /**
+     * @return the executionTime
+     */
+    public long getExecutionTime() {
+        return executionTime;
+    }
+
+    /**
+     * @param executionTime the executionTime to set
+     *
+     */
+    public void setExecutionTime(long executionTime) {
+        this.executionTime = executionTime;
+    }
+
+    /**
+     * @return the queueWaitTime
+     */
+    public long getQueueWaitTime() {
+        return queueWaitTime;
+    }
+
+    /**
+     * @param queueWaitTime the queueWaitTime to set
+     *
+     */
+    public void setQueueWaitTime(long queueWaitTime) {
+        this.queueWaitTime = queueWaitTime;
+    }
+
+    /**
+     * @return the taskDefName
+     */
+    public String getTaskDefName() {
+        return taskDefName;
+    }
+
+    /**
+     * @param taskDefName the taskDefName to set
+     *
+     */
+    public void setTaskDefName(String taskDefName) {
+        this.taskDefName = taskDefName;
+    }
+
+    /**
+     * @return the taskType
+     */
+    public String getTaskType() {
+        return taskType;
+    }
+
+    /**
+     * @param taskType the taskType to set
+     *
+     */
+    public void setTaskType(String taskType) {
+        this.taskType = taskType;
+    }
+
+    /**
+     *
+     * @return input to the task
+     */
+    public String getInput() {
+        return input;
+    }
+
+    /**
+     *
+     * @param input input to the task
+     */
+    public void setInput(String input) {
+        this.input = input;
+    }
+
+    /**
+     *
+     * @return output of the task
+     */
+    public String getOutput() {
+        return output;
+    }
+
+    /**
+     *
+     * @param output Task output
+     */
+    public void setOutput(String output) {
+        this.output = output;
+    }
+
+    /**
+     * @return the taskId
+     */
+    public String getTaskId() {
+        return taskId;
+    }
+
+    /**
+     * @param taskId the taskId to set
+     *
+     */
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
+
+
 }

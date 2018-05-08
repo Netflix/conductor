@@ -30,30 +30,30 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
  */
 public class TestWorkflowTask {
 
-	@Test
-	public void test() throws Exception {
-		ObjectMapper om = new ObjectMapper();
-		WorkflowTask task = new WorkflowTask();
-		task.setType("Hello");
-		task.setName("name");
-		
-		String json = om.writeValueAsString(task);
+    @Test
+    public void test() throws Exception {
+        ObjectMapper om = new ObjectMapper();
+        WorkflowTask task = new WorkflowTask();
+        task.setType("Hello");
+        task.setName("name");
 
-		WorkflowTask read = om.readValue(json, WorkflowTask.class);
-		assertNotNull(read);
-		assertEquals(task.getName(), read.getName());
-		assertEquals(task.getType(), read.getType());
-		
-		task = new WorkflowTask();
-		task.setWorkflowTaskType(Type.SUB_WORKFLOW);
-		task.setName("name");
-		
-		json = om.writeValueAsString(task);
+        String json = om.writeValueAsString(task);
 
-		read = om.readValue(json, WorkflowTask.class);
-		assertNotNull(read);
-		assertEquals(task.getName(), read.getName());
-		assertEquals(task.getType(), read.getType());
-		assertEquals(Type.SUB_WORKFLOW.name(), read.getType());
-	}
+        WorkflowTask read = om.readValue(json, WorkflowTask.class);
+        assertNotNull(read);
+        assertEquals(task.getName(), read.getName());
+        assertEquals(task.getType(), read.getType());
+
+        task = new WorkflowTask();
+        task.setWorkflowTaskType(Type.SUB_WORKFLOW);
+        task.setName("name");
+
+        json = om.writeValueAsString(task);
+
+        read = om.readValue(json, WorkflowTask.class);
+        assertNotNull(read);
+        assertEquals(task.getName(), read.getName());
+        assertEquals(task.getType(), read.getType());
+        assertEquals(Type.SUB_WORKFLOW.name(), read.getType());
+    }
 }

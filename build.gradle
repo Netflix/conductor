@@ -1,6 +1,6 @@
 buildscript {
-	
-	repositories {
+    
+    repositories {
         jcenter()
     }
     
@@ -37,8 +37,8 @@ subprojects {
     }
 
     dependencies {
-    	testCompile "junit:junit-dep:${revJUnit}"
-    	testCompile "org.mockito:mockito-all:${revMockito}"
+        testCompile "junit:junit-dep:${revJUnit}"
+        testCompile "org.mockito:mockito-all:${revMockito}"
     }
 
     group = "com.netflix.${githubProjectName}"
@@ -48,12 +48,12 @@ subprojects {
     }
     
     license {
-		excludes(['**/*.txt', '**/*.conf', '**/*.properties', '**/*.json', '**/swagger-ui/*'])
-	}
-	
-	task licenseFormatTests (type:nl.javadude.gradle.plugins.license.License) {
-    	source = fileTree(dir: "src/test").include("**/*")
-	}
-	licenseFormat.dependsOn licenseFormatTests
+        excludes(['**/*.txt', '**/*.conf', '**/*.properties', '**/*.json', '**/swagger-ui/*'])
+    }
+    
+    task licenseFormatTests (type:nl.javadude.gradle.plugins.license.License) {
+        source = fileTree(dir: "src/test").include("**/*")
+    }
+    licenseFormat.dependsOn licenseFormatTests
 
 }

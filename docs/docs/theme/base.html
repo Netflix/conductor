@@ -65,23 +65,23 @@
     {# SIDE NAV, TOGGLES ON MOBILE #}
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
       <div class="wy-side-nav-search" style="background-color:#fcfcfc">
-	{%- block site_name %}
+    {%- block site_name %}
         <a href="{{ nav.homepage.url }}" style="border:0;padding:0"> <img style="border-radius:0;width:238px;height:87px;margin:0 0 0 0;background-color:#fcfcfc;border:0;padding:0" class="cornerlogo" src="{{ base_url }}/img/conductor-vector-x.png"/>
         </a>
-	{%- endblock %}
-	{%- block search_button %}
+    {%- endblock %}
+    {%- block search_button %}
         {% include "searchbox.html" %}
-	{%- endblock %}
+    {%- endblock %}
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
         {%- block site_nav %}
-	<ul class="current">
+    <ul class="current">
           {% for nav_item in nav %}
             <li>{% include "toc.html" %}<li>
           {% endfor %}
         </ul>
-	{%- endblock %}
+    {%- endblock %}
       </div>
       &nbsp;
     </nav>
@@ -105,9 +105,9 @@
               {% endblock %}
             </div>
           </div>
-	  {%- block footer %}
+      {%- block footer %}
           {% include "footer.html" %}
-	  {% endblock %}
+      {% endblock %}
         </div>
       </div>
 

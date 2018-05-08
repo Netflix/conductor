@@ -29,72 +29,72 @@ import com.netflix.config.DynamicProperty;
  */
 public class PropertyFactory {
 
-	private DynamicProperty global;
+    private DynamicProperty global;
 
-	private DynamicProperty local;
+    private DynamicProperty local;
 
-	private static final String PROPERTY_PREFIX = "conductor.worker";
+    private static final String PROPERTY_PREFIX = "conductor.worker";
 
-	private static ConcurrentHashMap<String, PropertyFactory> factories = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, PropertyFactory> factories = new ConcurrentHashMap<>();
 
-	private PropertyFactory(String prefix, String propName, String workerName) {
-		this.global = DynamicProperty.getInstance(prefix + "." + propName);
-		this.local = DynamicProperty.getInstance(prefix + "." + workerName + "." + propName);
-	}
+    private PropertyFactory(String prefix, String propName, String workerName) {
+        this.global = DynamicProperty.getInstance(prefix + "." + propName);
+        this.local = DynamicProperty.getInstance(prefix + "." + workerName + "." + propName);
+    }
 
-	/**
-	 *
-	 * @param defaultValue Default Value
-	 * @return Returns the value as integer.  If not value is set (either global or worker specific), then returns the default value.
-	 */
-	public Integer getInteger(int defaultValue) {
-		Integer value = local.getInteger();
-		if(value == null) {
-			value = global.getInteger(defaultValue);
-		}
-		return value;
-	}
+    /**
+     *
+     * @param defaultValue Default Value
+     * @return Returns the value as integer.  If not value is set (either global or worker specific), then returns the default value.
+     */
+    public Integer getInteger(int defaultValue) {
+        Integer value = local.getInteger();
+        if(value == null) {
+            value = global.getInteger(defaultValue);
+        }
+        return value;
+    }
 
-	/**
-	 *
-	 * @param defaultValue Default Value
-	 * @return Returns the value as String.  If not value is set (either global or worker specific), then returns the default value.
-	 */
-	public String getString(String defaultValue) {
-		String value = local.getString();
-		if(value == null) {
-			value = global.getString(defaultValue);
-		}
-		return value;
-	}
+    /**
+     *
+     * @param defaultValue Default Value
+     * @return Returns the value as String.  If not value is set (either global or worker specific), then returns the default value.
+     */
+    public String getString(String defaultValue) {
+        String value = local.getString();
+        if(value == null) {
+            value = global.getString(defaultValue);
+        }
+        return value;
+    }
 
-	/**
-	 *
-	 * @param defaultValue Default Value
-	 * @return Returns the value as Boolean.  If not value is set (either global or worker specific), then returns the default value.
-	 */
-	public Boolean getBoolean(Boolean defaultValue) {
-		Boolean value = local.getBoolean();
-		if(value == null) {
-			value = global.getBoolean(defaultValue);
-		}
-		return value;
-	}
+    /**
+     *
+     * @param defaultValue Default Value
+     * @return Returns the value as Boolean.  If not value is set (either global or worker specific), then returns the default value.
+     */
+    public Boolean getBoolean(Boolean defaultValue) {
+        Boolean value = local.getBoolean();
+        if(value == null) {
+            value = global.getBoolean(defaultValue);
+        }
+        return value;
+    }
 
-	public static Integer getInteger(String workerName, String property, Integer defaultValue) {
-		return getPropertyFactory(workerName, property).getInteger(defaultValue);
-	}
+    public static Integer getInteger(String workerName, String property, Integer defaultValue) {
+        return getPropertyFactory(workerName, property).getInteger(defaultValue);
+    }
 
-	public static Boolean getBoolean(String workerName, String property, Boolean defaultValue) {
-		return getPropertyFactory(workerName, property).getBoolean(defaultValue);
-	}
+    public static Boolean getBoolean(String workerName, String property, Boolean defaultValue) {
+        return getPropertyFactory(workerName, property).getBoolean(defaultValue);
+    }
 
-	public static String getString(String workerName, String property, String defaultValue) {
-		return getPropertyFactory(workerName, property).getString(defaultValue);
-	}
+    public static String getString(String workerName, String property, String defaultValue) {
+        return getPropertyFactory(workerName, property).getString(defaultValue);
+    }
 
-	private static PropertyFactory getPropertyFactory(String workerName, String property) {
-		String key = property + "." + workerName;
-		return factories.computeIfAbsent(key, t -> new PropertyFactory(PROPERTY_PREFIX, property, workerName));
-	}
+    private static PropertyFactory getPropertyFactory(String workerName, String property) {
+        String key = property + "." + workerName;
+        return factories.computeIfAbsent(key, t -> new PropertyFactory(PROPERTY_PREFIX, property, workerName));
+    }
 }

@@ -24,69 +24,69 @@ package com.netflix.conductor.core.events.queue;
  */
 public class Message {
 
-	private String payload;
-	
-	private String id;
-	
-	private String receipt;
-	
-	public Message() {
-		
-	}
+    private String payload;
 
-	public Message(String id, String payload, String receipt) {
-		this.payload = payload;
-		this.id = id;
-		this.receipt = receipt;
-	}
+    private String id;
 
-	/**
-	 * @return the payload
-	 */
-	public String getPayload() {
-		return payload;
-	}
+    private String receipt;
 
-	/**
-	 * @param payload the payload to set
-	 */
-	public void setPayload(String payload) {
-		this.payload = payload;
-	}
+    public Message() {
 
-	/**
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
-	}
+    }
 
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(String id) {
-		this.id = id;
-	}
+    public Message(String id, String payload, String receipt) {
+        this.payload = payload;
+        this.id = id;
+        this.receipt = receipt;
+    }
 
-	/**
-	 * 
-	 * @return Receipt attached to the message
-	 */
-	public String getReceipt() {
-		return receipt;
-	}
-	
-	/**
-	 * 
-	 * @param receipt Receipt attached to the message
-	 */
-	public void setReceipt(String receipt) {
-		this.receipt = receipt;
-	}
+    /**
+     * @return the payload
+     */
+    public String getPayload() {
+        return payload;
+    }
 
-	@Override
-	public String toString() {
-		return id;
-	}
-	
+    /**
+     * @param payload the payload to set
+     */
+    public void setPayload(String payload) {
+        this.payload = payload;
+    }
+
+    /**
+     * @return the id
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    /**
+     *
+     * @return Receipt attached to the message
+     */
+    public String getReceipt() {
+        return receipt;
+    }
+
+    /**
+     *
+     * @param receipt Receipt attached to the message
+     */
+    public void setReceipt(String receipt) {
+        this.receipt = receipt;
+    }
+
+    @Override
+    public String toString() {
+        return id;
+    }
+
 }

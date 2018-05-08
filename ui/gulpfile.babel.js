@@ -101,12 +101,12 @@ gulp.task('serve', (done) => {
 
 gulp.task('server-bundle', (done) => {
   webpack(config, function(err, stats) {
-		if(err) throw new gutil.PluginError("webpack:build", err);
-		console.log("[webpack:build]" + stats.toString({
-			colors: true
-		}));
-		done();
-	});
+        if(err) throw new gutil.PluginError("webpack:build", err);
+        console.log("[webpack:build]" + stats.toString({
+            colors: true
+        }));
+        done();
+    });
 
 });
 

@@ -35,15 +35,15 @@ import com.netflix.conductor.dao.index.ElasticsearchModule;
  */
 public class RedisESWorkflowModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		
-		install(new ElasticsearchModule());
-		bind(MetadataDAO.class).to(RedisMetadataDAO.class);
-		bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
-		bind(QueueDAO.class).to(DynoQueueDAO.class);
-		bind(IndexDAO.class).to(ElasticSearchDAO.class);
-		
-	}
+    @Override
+    protected void configure() {
+
+        install(new ElasticsearchModule());
+        bind(MetadataDAO.class).to(RedisMetadataDAO.class);
+        bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
+        bind(QueueDAO.class).to(DynoQueueDAO.class);
+        bind(IndexDAO.class).to(ElasticSearchDAO.class);
+
+    }
 
 }

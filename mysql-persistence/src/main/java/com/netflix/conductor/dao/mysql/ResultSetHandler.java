@@ -9,5 +9,5 @@ import java.sql.SQLException;
  */
 @FunctionalInterface
 public interface ResultSetHandler<R> {
-	R apply(ResultSet resultSet) throws SQLException;
+    R apply(ResultSet resultSet) throws SQLException;
 }

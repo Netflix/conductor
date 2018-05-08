@@ -36,28 +36,28 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
  */
 public class TestTask {
 
-	@Test
-	public void test() {
-		
-		Task task = new Task();
-		task.setStatus(Status.FAILED);
-		assertEquals(Status.FAILED, task.getStatus());
-		
-		
-		Set<String> resultStatues = Arrays.asList(TaskResult.Status.values()).stream().map(status->status.name()).collect(Collectors.toSet());
-		
-		for(Status status : Status.values()) {
-			if(resultStatues.contains(status.name())) {
-				TaskResult.Status trStatus = TaskResult.Status.valueOf(status.name());
-				assertEquals(status.name(), trStatus.name());
-				
-				task = new Task();
-				task.setStatus(status);
-				assertEquals(status, task.getStatus());				
-				
-			}
-			
-			
-		}
-	}
+    @Test
+    public void test() {
+
+        Task task = new Task();
+        task.setStatus(Status.FAILED);
+        assertEquals(Status.FAILED, task.getStatus());
+
+
+        Set<String> resultStatues = Arrays.asList(TaskResult.Status.values()).stream().map(status->status.name()).collect(Collectors.toSet());
+
+        for(Status status : Status.values()) {
+            if(resultStatues.contains(status.name())) {
+                TaskResult.Status trStatus = TaskResult.Status.valueOf(status.name());
+                assertEquals(status.name(), trStatus.name());
+
+                task = new Task();
+                task.setStatus(status);
+                assertEquals(status, task.getStatus());
+
+            }
+
+
+        }
+    }
 }

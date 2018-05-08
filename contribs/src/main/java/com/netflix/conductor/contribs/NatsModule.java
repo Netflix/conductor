@@ -35,19 +35,19 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class NatsModule extends AbstractModule {
-	private static Logger logger = LoggerFactory.getLogger(NatsModule.class);
-	
-	@Override
-	protected void configure() {
-		logger.info("NATS Module configured ...");
-	}
+    private static Logger logger = LoggerFactory.getLogger(NatsModule.class);
 
-	@ProvidesIntoMap
-	@StringMapKey("nats")
-	@Singleton
-	@Named("EventQueueProviders")
-	public EventQueueProvider getNATSEventQueueProvider(Configuration configuration) {
-		return new NATSEventQueueProvider(configuration);
-	}
-	
+    @Override
+    protected void configure() {
+        logger.info("NATS Module configured ...");
+    }
+
+    @ProvidesIntoMap
+    @StringMapKey("nats")
+    @Singleton
+    @Named("EventQueueProviders")
+    public EventQueueProvider getNATSEventQueueProvider(Configuration configuration) {
+        return new NATSEventQueueProvider(configuration);
+    }
+
 }

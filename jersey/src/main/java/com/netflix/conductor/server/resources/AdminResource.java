@@ -58,71 +58,71 @@ import io.swagger.annotations.ApiOperation;
 @Singleton
 public class AdminResource {
 
-	private static Logger logger = LoggerFactory.getLogger(AdminResource.class);
-	
-	private Configuration config;
+    private static Logger logger = LoggerFactory.getLogger(AdminResource.class);
 
-	private ExecutionService service;
-	
-	private QueueDAO queue;
-	
-	private String version;
-	
-	private String buildDate;
-	
-	@Inject
-	public AdminResource(Configuration config, ExecutionService service, QueueDAO queue) {
-		this.config = config;
-		this.service = service;
-		this.queue = queue;
-		this.version = "UNKNOWN";
-		this.buildDate = "UNKNOWN";
-		
-		try {
-			
-			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
-			Properties prop = new Properties();
-			prop.load(propertiesIs);
-			this.version = prop.getProperty("Implementation-Version");
-			this.buildDate = prop.getProperty("Build-Date");
-		}catch(Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-	}
+    private Configuration config;
 
-	@ApiOperation(value = "Get all the configuration parameters")
-	@GET
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/config")
-	public Map<String, Object> getAllConfig() {
-		Map<String, Object> map = config.getAll();
-		map.put("version", version);
-		map.put("buildDate", buildDate);
-		return map;
-	}
-	
-	
-	@GET
-	@Path("/task/{tasktype}")
-	@ApiOperation("Get the list of pending tasks for a given task type")
-	@Consumes({ MediaType.WILDCARD })
-	public List<Task> view(@PathParam("tasktype") String taskType,  @DefaultValue("0") @QueryParam("start") Integer start, @DefaultValue("100") @QueryParam("count") Integer count) throws Exception {
-		List<Task> tasks = service.getPendingTasksForTaskType(taskType);
-		int total = start + count;
-		total = (tasks.size() > total) ? total : tasks.size();
-		if(start > tasks.size()) start = tasks.size();
-		return tasks.subList(start, total); 
-	}
+    private ExecutionService service;
 
-	@POST
-	@Path("/sweep/requeue/{workflowId}")
-	@ApiOperation("Queue up all the running workflows for sweep")
-	@Consumes({ MediaType.WILDCARD })
-	@Produces({ MediaType.TEXT_PLAIN })
-	public String requeueSweep(@PathParam("workflowId") String workflowId) throws Exception {
-		boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
-		return pushed + "." + workflowId;
-	}
-	
+    private QueueDAO queue;
+
+    private String version;
+
+    private String buildDate;
+
+    @Inject
+    public AdminResource(Configuration config, ExecutionService service, QueueDAO queue) {
+        this.config = config;
+        this.service = service;
+        this.queue = queue;
+        this.version = "UNKNOWN";
+        this.buildDate = "UNKNOWN";
+
+        try {
+
+            InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
+            Properties prop = new Properties();
+            prop.load(propertiesIs);
+            this.version = prop.getProperty("Implementation-Version");
+            this.buildDate = prop.getProperty("Build-Date");
+        }catch(Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
+    @ApiOperation(value = "Get all the configuration parameters")
+    @GET
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/config")
+    public Map<String, Object> getAllConfig() {
+        Map<String, Object> map = config.getAll();
+        map.put("version", version);
+        map.put("buildDate", buildDate);
+        return map;
+    }
+
+
+    @GET
+    @Path("/task/{tasktype}")
+    @ApiOperation("Get the list of pending tasks for a given task type")
+    @Consumes({ MediaType.WILDCARD })
+    public List<Task> view(@PathParam("tasktype") String taskType,  @DefaultValue("0") @QueryParam("start") Integer start, @DefaultValue("100") @QueryParam("count") Integer count) throws Exception {
+        List<Task> tasks = service.getPendingTasksForTaskType(taskType);
+        int total = start + count;
+        total = (tasks.size() > total) ? total : tasks.size();
+        if(start > tasks.size()) start = tasks.size();
+        return tasks.subList(start, total);
+    }
+
+    @POST
+    @Path("/sweep/requeue/{workflowId}")
+    @ApiOperation("Queue up all the running workflows for sweep")
+    @Consumes({ MediaType.WILDCARD })
+    @Produces({ MediaType.TEXT_PLAIN })
+    public String requeueSweep(@PathParam("workflowId") String workflowId) throws Exception {
+        boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
+        return pushed + "." + workflowId;
+    }
+
 }

@@ -180,12 +180,12 @@ Consider **taskA**'s output as:
 When executed, the dynamic fork task will schedule two parallel task of type "encode_task" with reference names "forkedTask1" and "forkedTask2" and inputs as specified by _ dynamicTasksInputJSON_
 
 !!!warning "Dynamic Fork and Join"
-	**A Join task MUST follow FORK_JOIN_DYNAMIC**
-	
-	Workflow definition MUST include a Join task definition followed by FORK_JOIN_DYNAMIC task.  However, given the dynamic nature of the task, no joinOn parameters are required for this Join.  The join will wait for ALL the forked branches to complete before completing.
-	
-	Unlike FORK, which can execute parallel flows with each fork executing a series of tasks in  sequence, FORK_JOIN_DYNAMIC is limited to only one task per fork.  However, forked task can be a Sub Workflow, allowing for more complex execution flows.
-	 
+    **A Join task MUST follow FORK_JOIN_DYNAMIC**
+    
+    Workflow definition MUST include a Join task definition followed by FORK_JOIN_DYNAMIC task.  However, given the dynamic nature of the task, no joinOn parameters are required for this Join.  The join will wait for ALL the forked branches to complete before completing.
+    
+    Unlike FORK, which can execute parallel flows with each fork executing a series of tasks in  sequence, FORK_JOIN_DYNAMIC is limited to only one task per fork.  However, forked task can be a Sub Workflow, allowing for more complex execution flows.
+     
 # Join
 Join task is used to wait for completion of one or more tasks spawned by fork tasks.
 
@@ -199,7 +199,7 @@ Join task is used to wait for completion of one or more tasks spawned by fork ta
 
 ``` json
 {
-	"joinOn": ["taskRef1", "taskRef3"]
+    "joinOn": ["taskRef1", "taskRef3"]
 }
 ```
 
@@ -251,14 +251,14 @@ Contrib module provides SQS integration where an external system can place a mes
 ```
 GET /queue
 ```
-	
+    
 * When updating the status of the task, the message needs to conform to the following spec:
-	* 	Message has to be a valid JSON string.
-	*  The message JSON should contain a key named ```externalId``` with the value being a JSONified string that contains the following keys:
-		*  ```workflowId```: Id of the workflow
-		*  ```taskRefName```: Task reference name that should be updated.
-	*  Each queue represents a specific task status and tasks are marked accordingly.  e.g. message coming to a ```COMPLETED``` queue marks the task status as ```COMPLETED```.
-	*  Tasks' output is updated with the message.
+    *     Message has to be a valid JSON string.
+    *  The message JSON should contain a key named ```externalId``` with the value being a JSONified string that contains the following keys:
+        *  ```workflowId```: Id of the workflow
+        *  ```taskRefName```: Task reference name that should be updated.
+    *  Each queue represents a specific task status and tasks are marked accordingly.  e.g. message coming to a ```COMPLETED``` queue marks the task status as ```COMPLETED```.
+    *  Tasks' output is updated with the message.
 
 #### Example SQS Payload:
 
@@ -321,8 +321,8 @@ Task Input using an absolute URL
 The task is marked as ```FAILED``` if the request cannot be completed or the remote server returns non successful status code. 
 
 !!!note
-	HTTP task currently only supports Content-Type as application/json and is able to parse the text as well as JSON response.  XML input/output is currently not supported.  However, if the response cannot be parsed as JSON or Text, a string representation is stored as a text value.
-	
+    HTTP task currently only supports Content-Type as application/json and is able to parse the text as well as JSON response.  XML input/output is currently not supported.  However, if the response cannot be parsed as JSON or Text, a string representation is stored as a text value.
+    
 # Event
 Event task provides ability to publish an event (message) to either Conductor or an external eventing system like SQS.  Event tasks are useful for creating event based dependencies for workflows and tasks.
 
@@ -336,7 +336,7 @@ Event task provides ability to publish an event (message) to either Conductor or
 
 ``` json
 {
-	"sink": 'sqs:example_sqs_queue_name'
+    "sink": 'sqs:example_sqs_queue_name'
 }
 ```
 
@@ -346,7 +346,7 @@ When producing an event with Conductor as sink, the event name follows the struc
 For SQS, use the **name** of the queue and NOT the URI.  Conductor looks up the URI based on the name.
 
 !!!warning
-	When using SQS add the [ContribsModule](https://github.com/Netflix/conductor/blob/master/contribs/src/main/java/com/netflix/conductor/contribs/ContribsModule.java) to the deployment.  The module needs to be configured with AWSCredentialsProvider for Conductor to be able to use AWS APIs.
+    When using SQS add the [ContribsModule](https://github.com/Netflix/conductor/blob/master/contribs/src/main/java/com/netflix/conductor/contribs/ContribsModule.java) to the deployment.  The module needs to be configured with AWSCredentialsProvider for Conductor to be able to use AWS APIs.
 
 ### Supported Sinks
 * Conductor

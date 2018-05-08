@@ -26,5 +26,5 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
  */
 public interface EventQueueProvider {
 
-	ObservableQueue getQueue(String queueURI);
+    ObservableQueue getQueue(String queueURI);
 }

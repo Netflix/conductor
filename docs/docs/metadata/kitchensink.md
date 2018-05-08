@@ -174,7 +174,7 @@ Start the execution of the kitchensink workflow by posting the following:
 ```shell
 curl -X POST --header 'Content-Type: application/json' --header 'Accept: text/plain' 'http://localhost:8080/api/workflow/kitchensink' -d '
 {
-	"task2Name": "task_5" 
+    "task2Name": "task_5" 
 }
 '
 ```
@@ -223,37 +223,37 @@ curl http://localhost:8080/api/tasks/poll/task_1
 ```json
 curl -H 'Content-Type:application/json' -H 'Accept:application/json' -X POST http://localhost:8080/api/tasks/ -d '
 {
-	"taskId": "b9eea7dd-3fbd-46b9-a9ff-b00279459476",
-	"workflowInstanceId": "b0d1a935-3d74-46fd-92b2-0ca1e388659f",
-	"status": "COMPLETED",
-	"output": {
-	    "mod": 5,
-	    "taskToExecute": "task_1",
-	    "oddEven": 0,
-	    "dynamicTasks": [
-	        {
-	            "name": "task_1",
-	            "taskReferenceName": "task_1_1",
-	            "type": "SIMPLE"
-	        },
-	        {
-	            "name": "sub_workflow_4",
-	            "taskReferenceName": "wf_dyn",
-	            "type": "SUB_WORKFLOW",
-	            "subWorkflowParam": {
-	                "name": "sub_flow_1"
-	            }
-	        }
-	    ],
-	    "inputs": {
-	        "task_1_1": {},
-	        "wf_dyn": {}
-	    }
-	}
+    "taskId": "b9eea7dd-3fbd-46b9-a9ff-b00279459476",
+    "workflowInstanceId": "b0d1a935-3d74-46fd-92b2-0ca1e388659f",
+    "status": "COMPLETED",
+    "output": {
+        "mod": 5,
+        "taskToExecute": "task_1",
+        "oddEven": 0,
+        "dynamicTasks": [
+            {
+                "name": "task_1",
+                "taskReferenceName": "task_1_1",
+                "type": "SIMPLE"
+            },
+            {
+                "name": "sub_workflow_4",
+                "taskReferenceName": "wf_dyn",
+                "type": "SUB_WORKFLOW",
+                "subWorkflowParam": {
+                    "name": "sub_flow_1"
+                }
+            }
+        ],
+        "inputs": {
+            "task_1_1": {},
+            "wf_dyn": {}
+        }
+    }
 }'
 ```
 This will mark the task_1 as completed and schedule ```task_5``` as the next task.  
 Repeat the same process for the subsequently scheduled tasks until the completion.
 
 !!! hint "Using Client Libraries"
-	Conductor provides client libraries in Java (a Python client is works) to simplify task polling and execution.  
+    Conductor provides client libraries in Java (a Python client is works) to simplify task polling and execution.  

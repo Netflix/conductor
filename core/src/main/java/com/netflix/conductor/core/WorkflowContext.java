@@ -25,32 +25,32 @@ package com.netflix.conductor.core;
  */
 public class WorkflowContext {
 
-	public static final ThreadLocal<WorkflowContext> threadLocal = InheritableThreadLocal.withInitial(() -> new WorkflowContext(""));
-	
-	private String clientApp;
+    public static final ThreadLocal<WorkflowContext> threadLocal = InheritableThreadLocal.withInitial(() -> new WorkflowContext(""));
+
+    private String clientApp;
     
-	
-	public WorkflowContext(String clientApp){
-		this.clientApp = clientApp;
-	}
-	
-	public static WorkflowContext get(){
-		return threadLocal.get();
-	}
 
-	public static void set(WorkflowContext ctx){
-		threadLocal.set(ctx);
-	}
-	
-	public static void unset(){
-		threadLocal.remove();
-	}
+    public WorkflowContext(String clientApp){
+        this.clientApp = clientApp;
+    }
 
-	/**
-	 * @return the clientApp
-	 */
-	public String getClientApp() {
-		return clientApp;
-	}
-	
+    public static WorkflowContext get(){
+        return threadLocal.get();
+    }
+
+    public static void set(WorkflowContext ctx){
+        threadLocal.set(ctx);
+    }
+
+    public static void unset(){
+        threadLocal.remove();
+    }
+
+    /**
+     * @return the clientApp
+     */
+    public String getClientApp() {
+        return clientApp;
+    }
+
 }

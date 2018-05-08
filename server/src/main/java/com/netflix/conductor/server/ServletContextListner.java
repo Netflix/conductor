@@ -38,59 +38,59 @@ import com.google.inject.servlet.ServletModule;
  */
 public class ServletContextListner extends GuiceServletContextListener {
 
-	@Override
-	protected Injector getInjector() {
-		
-		loadProperties();
-		
-		ConductorConfig config = new ConductorConfig();
-		ConductorServer server = new ConductorServer(config);
-		
-		return Guice.createInjector(server.getGuiceModule(), getSwagger());
-	}
-	
-	private ServletModule getSwagger() {
-		
-		String resourceBasePath = ServletContextListner.class.getResource("/swagger-ui").toExternalForm();
-		DefaultServlet ds = new DefaultServlet();
-		
-		ServletModule sm = new ServletModule() {
-			@Override
-			protected void configureServlets() {
-				Map<String, String> params = new HashMap<>();
-				params.put("resourceBase", resourceBasePath);
-				params.put("redirectWelcome", "true");
-				serve("/*").with(ds, params);
-			}
-		};
-		
-		return sm;
-		
-	}
-	
-	private void loadProperties() {
-		try {
-			
-			String key = "conductor_properties";
-			String propertyFile = Optional.ofNullable(System.getProperty(key)).orElse(System.getenv(key));
-			if(propertyFile != null) {
-				System.out.println("Using " + propertyFile);
-				FileInputStream propFile = new FileInputStream(propertyFile);
-				Properties props = new Properties(System.getProperties());
-				props.load(propFile);
-				System.setProperties(props);
-			}
-			
-			key = "log4j_properties";
-			String log4jConfig = Optional.ofNullable(System.getProperty(key)).orElse(System.getenv(key));
-			if(log4jConfig != null) {
-				PropertyConfigurator.configure(new FileInputStream(log4jConfig));
-			}
-			
-		} catch (Exception e) {
-			System.err.println("Error loading properties " + e.getMessage());
-			e.printStackTrace();
-		}
-	}
-	
+    @Override
+    protected Injector getInjector() {
+
+        loadProperties();
+
+        ConductorConfig config = new ConductorConfig();
+        ConductorServer server = new ConductorServer(config);
+
+        return Guice.createInjector(server.getGuiceModule(), getSwagger());
+    }
+
+    private ServletModule getSwagger() {
+
+        String resourceBasePath = ServletContextListner.class.getResource("/swagger-ui").toExternalForm();
+        DefaultServlet ds = new DefaultServlet();
+
+        ServletModule sm = new ServletModule() {
+            @Override
+            protected void configureServlets() {
+                Map<String, String> params = new HashMap<>();
+                params.put("resourceBase", resourceBasePath);
+                params.put("redirectWelcome", "true");
+                serve("/*").with(ds, params);
+            }
+        };
+
+        return sm;
+
+    }
+
+    private void loadProperties() {
+        try {
+
+            String key = "conductor_properties";
+            String propertyFile = Optional.ofNullable(System.getProperty(key)).orElse(System.getenv(key));
+            if(propertyFile != null) {
+                System.out.println("Using " + propertyFile);
+                FileInputStream propFile = new FileInputStream(propertyFile);
+                Properties props = new Properties(System.getProperties());
+                props.load(propFile);
+                System.setProperties(props);
+            }
+
+            key = "log4j_properties";
+            String log4jConfig = Optional.ofNullable(System.getProperty(key)).orElse(System.getenv(key));
+            if(log4jConfig != null) {
+                PropertyConfigurator.configure(new FileInputStream(log4jConfig));
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error loading properties " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }

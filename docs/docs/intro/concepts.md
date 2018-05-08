@@ -6,8 +6,8 @@ Workflows are defined using a JSON based DSL and includes a set of tasks that ar
 * All tasks need to be registered before they can be used by active workflows.
 * A task can be re-used within multiple workflows.
 Worker tasks fall into two categories:
-	* System Task
-	* Worker Task
+    * System Task
+    * Worker Task
 
 ## System Tasks
 System tasks are executed within the JVM of the Conductor server and managed by Conductor for its execution and scalability.

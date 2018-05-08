@@ -23,65 +23,65 @@ package com.netflix.conductor.common.metadata.tasks;
  * Model that represents the task's execution log.
  */
 public class TaskExecLog {
-	
-	private String log;
-	
-	private String taskId;
-	
-	private long createdTime;
-	
-	public TaskExecLog() {}
-	
-	public TaskExecLog(String log) {
-		this.log =log;
-		this.createdTime = System.currentTimeMillis();
-	}
-	
-	/**
-	 * 
-	 * @return Task Exec Log
-	 */
-	public String getLog() {
-		return log;
-	}
-	
-	/**
-	 * 
-	 * @param log The Log
-	 */
-	public void setLog(String log) {
-		this.log = log;
-	}
 
-	/**
-	 * @return the taskId
-	 */
-	public String getTaskId() {
-		return taskId;
-	}
+    private String log;
 
-	/**
-	 * @param taskId the taskId to set
-	 * 
-	 */
-	public void setTaskId(String taskId) {
-		this.taskId = taskId;
-	}
+    private String taskId;
 
-	/**
-	 * @return the createdTime
-	 */
-	public long getCreatedTime() {
-		return createdTime;
-	}
+    private long createdTime;
 
-	/**
-	 * @param createdTime the createdTime to set
-	 * 
-	 */
-	public void setCreatedTime(long createdTime) {
-		this.createdTime = createdTime;
-	}
-	
-	
+    public TaskExecLog() {}
+
+    public TaskExecLog(String log) {
+        this.log =log;
+        this.createdTime = System.currentTimeMillis();
+    }
+
+    /**
+     *
+     * @return Task Exec Log
+     */
+    public String getLog() {
+        return log;
+    }
+
+    /**
+     *
+     * @param log The Log
+     */
+    public void setLog(String log) {
+        this.log = log;
+    }
+
+    /**
+     * @return the taskId
+     */
+    public String getTaskId() {
+        return taskId;
+    }
+
+    /**
+     * @param taskId the taskId to set
+     *
+     */
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
+
+    /**
+     * @return the createdTime
+     */
+    public long getCreatedTime() {
+        return createdTime;
+    }
+
+    /**
+     * @param createdTime the createdTime to set
+     *
+     */
+    public void setCreatedTime(long createdTime) {
+        this.createdTime = createdTime;
+    }
+
+
 }

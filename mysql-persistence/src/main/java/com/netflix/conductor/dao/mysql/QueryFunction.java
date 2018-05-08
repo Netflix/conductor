@@ -8,5 +8,5 @@ import java.sql.SQLException;
  */
 @FunctionalInterface
 public interface QueryFunction<R> {
-	R apply(Query query) throws SQLException;
+    R apply(Query query) throws SQLException;
 }

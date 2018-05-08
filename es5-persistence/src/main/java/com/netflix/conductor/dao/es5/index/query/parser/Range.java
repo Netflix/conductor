@@ -28,65 +28,65 @@ import java.io.InputStream;
  * 
  */
 public class Range extends AbstractNode {
-	
-	private String low;
-	
-	private String high;
-	
-	public Range(InputStream is) throws ParserException {
-		super(is);
-	}
 
-	@Override
-	protected void _parse() throws Exception {
-		this.low = readNumber(is);
-		
-		skipWhitespace();
-		byte[] peeked = read(3);
-		assertExpected(peeked, "AND");
-		skipWhitespace();
-		
-		String num = readNumber(is);
-		if(num == null || "".equals(num)){
-			throw new ParserException("Missing the upper range value...");
-		}
-		this.high = num;
-	
-	}
+    private String low;
 
-	private String readNumber(InputStream is) throws Exception {
-		StringBuilder sb = new StringBuilder();
-		while(is.available() > 0){
-			is.mark(1);
-			char c = (char) is.read();
-			if(!isNumeric(c)){
-				is.reset();
-				break;
-			}else{
-				sb.append(c);
-			}
-		}
-		String numValue =  sb.toString().trim();
-		return numValue;
-	}
+    private String high;
 
-	
-	/**
-	 * @return the low
-	 */
-	public String getLow() {
-		return low;
-	}
+    public Range(InputStream is) throws ParserException {
+        super(is);
+    }
 
-	/**
-	 * @return the high
-	 */
-	public String getHigh() {
-		return high;
-	}
+    @Override
+    protected void _parse() throws Exception {
+        this.low = readNumber(is);
 
-	@Override
-	public String toString(){
-		return low + " AND " + high;
-	}
+        skipWhitespace();
+        byte[] peeked = read(3);
+        assertExpected(peeked, "AND");
+        skipWhitespace();
+
+        String num = readNumber(is);
+        if(num == null || "".equals(num)){
+            throw new ParserException("Missing the upper range value...");
+        }
+        this.high = num;
+
+    }
+
+    private String readNumber(InputStream is) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        while(is.available() > 0){
+            is.mark(1);
+            char c = (char) is.read();
+            if(!isNumeric(c)){
+                is.reset();
+                break;
+            }else{
+                sb.append(c);
+            }
+        }
+        String numValue =  sb.toString().trim();
+        return numValue;
+    }
+
+
+    /**
+     * @return the low
+     */
+    public String getLow() {
+        return low;
+    }
+
+    /**
+     * @return the high
+     */
+    public String getHigh() {
+        return high;
+    }
+
+    @Override
+    public String toString(){
+        return low + " AND " + high;
+    }
 }

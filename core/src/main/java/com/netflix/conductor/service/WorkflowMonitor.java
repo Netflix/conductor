@@ -45,72 +45,72 @@ import com.netflix.conductor.metrics.Monitors;
 @Singleton
 public class WorkflowMonitor {
 
-	private static Logger logger = LoggerFactory.getLogger(WorkflowMonitor.class);
+    private static Logger logger = LoggerFactory.getLogger(WorkflowMonitor.class);
 
-	private MetadataDAO metadata;
+    private MetadataDAO metadata;
 
-	private ExecutionDAO edao;
+    private ExecutionDAO edao;
 
-	private QueueDAO queue;
+    private QueueDAO queue;
 
-	private ScheduledExecutorService ses;
+    private ScheduledExecutorService ses;
 
-	private List<TaskDef> tasks;
+    private List<TaskDef> tasks;
 
-	private List<WorkflowDef> workflows;
+    private List<WorkflowDef> workflows;
 
-	private int refreshCounter = 0;
+    private int refreshCounter = 0;
 
-	private int metadataRefreshInterval;
+    private int metadataRefreshInterval;
 
-	private int statsFrequencyInSeconds;
+    private int statsFrequencyInSeconds;
 
-	@Inject
-	public WorkflowMonitor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, Configuration config) {
-		this.metadata = metadata;
-		this.edao = edao;
-		this.queue = queue;
-		this.metadataRefreshInterval = config.getIntProperty("workflow.monitor.metadata.refresh.counter", 10);
-		this.statsFrequencyInSeconds = config.getIntProperty("workflow.monitor.stats.freq.seconds", 60);
-		init();
-	}
+    @Inject
+    public WorkflowMonitor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, Configuration config) {
+        this.metadata = metadata;
+        this.edao = edao;
+        this.queue = queue;
+        this.metadataRefreshInterval = config.getIntProperty("workflow.monitor.metadata.refresh.counter", 10);
+        this.statsFrequencyInSeconds = config.getIntProperty("workflow.monitor.stats.freq.seconds", 60);
+        init();
+    }
 
 
-	public void init() {
+    public void init() {
 
-		this.ses = Executors.newScheduledThreadPool(1);
-		this.ses.scheduleWithFixedDelay(() -> {
-			try {
+        this.ses = Executors.newScheduledThreadPool(1);
+        this.ses.scheduleWithFixedDelay(() -> {
+            try {
 
-				if (refreshCounter <= 0) {
-					workflows = metadata.getAll();
-					tasks = metadata.getAllTaskDefs().stream().collect(Collectors.toList());
-					refreshCounter = metadataRefreshInterval;
-				}
+                if (refreshCounter <= 0) {
+                    workflows = metadata.getAll();
+                    tasks = metadata.getAllTaskDefs().stream().collect(Collectors.toList());
+                    refreshCounter = metadataRefreshInterval;
+                }
 
-				workflows.forEach(wf -> {
-					String name = wf.getName();
-					String version = "" + wf.getVersion();
-					String ownerApp = wf.getOwnerApp();
-					long count = edao.getPendingWorkflowCount(name);
-					Monitors.recordRunningWorkflows(count, name, version, ownerApp);
-				});
+                workflows.forEach(wf -> {
+                    String name = wf.getName();
+                    String version = "" + wf.getVersion();
+                    String ownerApp = wf.getOwnerApp();
+                    long count = edao.getPendingWorkflowCount(name);
+                    Monitors.recordRunningWorkflows(count, name, version, ownerApp);
+                });
 
-				tasks.forEach(task -> {
-					long size = queue.getSize(task.getName());
-					long inProgressCount = edao.getInProgressTaskCount(task.getName());
-					Monitors.recordQueueDepth(task.getName(), size, task.getOwnerApp());
-					if(task.concurrencyLimit() > 0) {
-						Monitors.recordTaskInProgress(task.getName(), inProgressCount, task.getOwnerApp());
-					}
-				});
+                tasks.forEach(task -> {
+                    long size = queue.getSize(task.getName());
+                    long inProgressCount = edao.getInProgressTaskCount(task.getName());
+                    Monitors.recordQueueDepth(task.getName(), size, task.getOwnerApp());
+                    if(task.concurrencyLimit() > 0) {
+                        Monitors.recordTaskInProgress(task.getName(), inProgressCount, task.getOwnerApp());
+                    }
+                });
 
-				refreshCounter--;
+                refreshCounter--;
 
-			} catch (Exception e) {
-				logger.error("Error while publishing scheduled metrics", e);
-			}
-		}, 120, statsFrequencyInSeconds, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger.error("Error while publishing scheduled metrics", e);
+            }
+        }, 120, statsFrequencyInSeconds, TimeUnit.SECONDS);
 
-	}
+    }
 }

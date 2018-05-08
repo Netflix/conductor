@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.dao.es5.index.query.parser;
 
@@ -37,122 +37,121 @@ import static org.junit.Assert.*;
  */
 public class TestExpression extends AbstractParserTest {
 
-	@Test
-	public void test() throws Exception{
-		String test = "type='IMAGE' AND subType	='sdp' AND (metadata.width > 50 OR metadata.height > 50)";
-		//test = "type='IMAGE' AND subType	='sdp'";
-		//test = "(metadata.type = 'IMAGE')";
-		InputStream is = new BufferedInputStream(new ByteArrayInputStream(test.getBytes()));
-		Expression expr = new Expression(is);
-		
-		System.out.println(expr);
-		
-		assertTrue(expr.isBinaryExpr());
-		assertNull(expr.getGroupedExpression());
-		assertNotNull(expr.getNameValue());
-		
-		NameValue nv = expr.getNameValue();
-		assertEquals("type", nv.getName().getName());
-		assertEquals("=", nv.getOp().getOperator());
-		assertEquals("\"IMAGE\"", nv.getValue().getValue());
-		
-		Expression rhs = expr.getRightHandSide();
-		assertNotNull(rhs);
-		assertTrue(rhs.isBinaryExpr());
-		
-		nv = rhs.getNameValue();
-		assertNotNull(nv);	//subType = sdp
-		assertNull(rhs.getGroupedExpression());
-		assertEquals("subType", nv.getName().getName());
-		assertEquals("=", nv.getOp().getOperator());
-		assertEquals("\"sdp\"", nv.getValue().getValue());
-		
-		assertEquals("AND", rhs.getOperator().getOperator());
-		rhs = rhs.getRightHandSide();
-		assertNotNull(rhs);
-		assertFalse(rhs.isBinaryExpr());
-		GroupedExpression ge = rhs.getGroupedExpression();
-		assertNotNull(ge);
-		expr = ge.getExpression();
-		assertNotNull(expr);
-		
-		assertTrue(expr.isBinaryExpr());
-		nv = expr.getNameValue();
-		assertNotNull(nv);
-		assertEquals("metadata.width", nv.getName().getName());
-		assertEquals(">", nv.getOp().getOperator());
-		assertEquals("50", nv.getValue().getValue());
-		
-		
-		
-		assertEquals("OR", expr.getOperator().getOperator());
-		rhs = expr.getRightHandSide();
-		assertNotNull(rhs);
-		assertFalse(rhs.isBinaryExpr());
-		nv = rhs.getNameValue();
-		assertNotNull(nv);
-		
-		assertEquals("metadata.height", nv.getName().getName());
-		assertEquals(">", nv.getOp().getOperator());
-		assertEquals("50", nv.getValue().getValue());
-		
-	}
+    @Test
+    public void test() throws Exception {
+        String test = "type='IMAGE' AND subType    ='sdp' AND (metadata.width > 50 OR metadata.height > 50)";
+        //test = "type='IMAGE' AND subType    ='sdp'";
+        //test = "(metadata.type = 'IMAGE')";
+        InputStream is = new BufferedInputStream(new ByteArrayInputStream(test.getBytes()));
+        Expression expr = new Expression(is);
 
-	@Test
-	public void testWithSysConstants() throws Exception{
-		String test = "type='IMAGE' AND subType	='sdp' AND description IS null";
-		InputStream is = new BufferedInputStream(new ByteArrayInputStream(test.getBytes()));
-		Expression expr = new Expression(is);
-		
-		System.out.println(expr);
-		
-		assertTrue(expr.isBinaryExpr());
-		assertNull(expr.getGroupedExpression());
-		assertNotNull(expr.getNameValue());
-		
-		NameValue nv = expr.getNameValue();
-		assertEquals("type", nv.getName().getName());
-		assertEquals("=", nv.getOp().getOperator());
-		assertEquals("\"IMAGE\"", nv.getValue().getValue());
-		
-		Expression rhs = expr.getRightHandSide();
-		assertNotNull(rhs);
-		assertTrue(rhs.isBinaryExpr());
-		
-		nv = rhs.getNameValue();
-		assertNotNull(nv);	//subType = sdp
-		assertNull(rhs.getGroupedExpression());
-		assertEquals("subType", nv.getName().getName());
-		assertEquals("=", nv.getOp().getOperator());
-		assertEquals("\"sdp\"", nv.getValue().getValue());
-		
-		assertEquals("AND", rhs.getOperator().getOperator());
-		rhs = rhs.getRightHandSide();
-		assertNotNull(rhs);
-		assertFalse(rhs.isBinaryExpr());
-		GroupedExpression ge = rhs.getGroupedExpression();
-		assertNull(ge);
-		nv = rhs.getNameValue();
-		assertNotNull(nv);
-		assertEquals("description", nv.getName().getName());
-		assertEquals("IS", nv.getOp().getOperator());
-		ConstValue cv = nv.getValue();
-		assertNotNull(cv);
-		assertEquals(cv.getSysConstant(), ConstValue.SystemConsts.NULL);
+        System.out.println(expr);
 
-		test = "description IS not null";
-		is = new BufferedInputStream(new ByteArrayInputStream(test.getBytes()));
-		expr = new Expression(is);
-		
-		System.out.println(expr);
-		nv = expr.getNameValue();
-		assertNotNull(nv);
-		assertEquals("description", nv.getName().getName());
-		assertEquals("IS", nv.getOp().getOperator());
-		cv = nv.getValue();
-		assertNotNull(cv);
-		assertEquals(cv.getSysConstant(), ConstValue.SystemConsts.NOT_NULL);
-		
-	}
+        assertTrue(expr.isBinaryExpr());
+        assertNull(expr.getGroupedExpression());
+        assertNotNull(expr.getNameValue());
+
+        NameValue nv = expr.getNameValue();
+        assertEquals("type", nv.getName().getName());
+        assertEquals("=", nv.getOp().getOperator());
+        assertEquals("\"IMAGE\"", nv.getValue().getValue());
+
+        Expression rhs = expr.getRightHandSide();
+        assertNotNull(rhs);
+        assertTrue(rhs.isBinaryExpr());
+
+        nv = rhs.getNameValue();
+        assertNotNull(nv);    //subType = sdp
+        assertNull(rhs.getGroupedExpression());
+        assertEquals("subType", nv.getName().getName());
+        assertEquals("=", nv.getOp().getOperator());
+        assertEquals("\"sdp\"", nv.getValue().getValue());
+
+        assertEquals("AND", rhs.getOperator().getOperator());
+        rhs = rhs.getRightHandSide();
+        assertNotNull(rhs);
+        assertFalse(rhs.isBinaryExpr());
+        GroupedExpression ge = rhs.getGroupedExpression();
+        assertNotNull(ge);
+        expr = ge.getExpression();
+        assertNotNull(expr);
+
+        assertTrue(expr.isBinaryExpr());
+        nv = expr.getNameValue();
+        assertNotNull(nv);
+        assertEquals("metadata.width", nv.getName().getName());
+        assertEquals(">", nv.getOp().getOperator());
+        assertEquals("50", nv.getValue().getValue());
+
+
+        assertEquals("OR", expr.getOperator().getOperator());
+        rhs = expr.getRightHandSide();
+        assertNotNull(rhs);
+        assertFalse(rhs.isBinaryExpr());
+        nv = rhs.getNameValue();
+        assertNotNull(nv);
+
+        assertEquals("metadata.height", nv.getName().getName());
+        assertEquals(">", nv.getOp().getOperator());
+        assertEquals("50", nv.getValue().getValue());
+
+    }
+
+    @Test
+    public void testWithSysConstants() throws Exception {
+        String test = "type='IMAGE' AND subType    ='sdp' AND description IS null";
+        InputStream is = new BufferedInputStream(new ByteArrayInputStream(test.getBytes()));
+        Expression expr = new Expression(is);
+
+        System.out.println(expr);
+
+        assertTrue(expr.isBinaryExpr());
+        assertNull(expr.getGroupedExpression());
+        assertNotNull(expr.getNameValue());
+
+        NameValue nv = expr.getNameValue();
+        assertEquals("type", nv.getName().getName());
+        assertEquals("=", nv.getOp().getOperator());
+        assertEquals("\"IMAGE\"", nv.getValue().getValue());
+
+        Expression rhs = expr.getRightHandSide();
+        assertNotNull(rhs);
+        assertTrue(rhs.isBinaryExpr());
+
+        nv = rhs.getNameValue();
+        assertNotNull(nv);    //subType = sdp
+        assertNull(rhs.getGroupedExpression());
+        assertEquals("subType", nv.getName().getName());
+        assertEquals("=", nv.getOp().getOperator());
+        assertEquals("\"sdp\"", nv.getValue().getValue());
+
+        assertEquals("AND", rhs.getOperator().getOperator());
+        rhs = rhs.getRightHandSide();
+        assertNotNull(rhs);
+        assertFalse(rhs.isBinaryExpr());
+        GroupedExpression ge = rhs.getGroupedExpression();
+        assertNull(ge);
+        nv = rhs.getNameValue();
+        assertNotNull(nv);
+        assertEquals("description", nv.getName().getName());
+        assertEquals("IS", nv.getOp().getOperator());
+        ConstValue cv = nv.getValue();
+        assertNotNull(cv);
+        assertEquals(cv.getSysConstant(), ConstValue.SystemConsts.NULL);
+
+        test = "description IS not null";
+        is = new BufferedInputStream(new ByteArrayInputStream(test.getBytes()));
+        expr = new Expression(is);
+
+        System.out.println(expr);
+        nv = expr.getNameValue();
+        assertNotNull(nv);
+        assertEquals("description", nv.getName().getName());
+        assertEquals("IS", nv.getOp().getOperator());
+        cv = nv.getValue();
+        assertNotNull(cv);
+        assertEquals(cv.getSysConstant(), ConstValue.SystemConsts.NOT_NULL);
+
+    }
 
 }

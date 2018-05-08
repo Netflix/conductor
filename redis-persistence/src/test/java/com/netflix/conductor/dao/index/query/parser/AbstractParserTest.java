@@ -28,8 +28,8 @@ import java.io.InputStream;
  */
 public abstract class AbstractParserTest {
 
-	protected InputStream getInputStream(String expression) {
-		return new BufferedInputStream(new ByteArrayInputStream(expression.getBytes()));
-	}
+    protected InputStream getInputStream(String expression) {
+        return new BufferedInputStream(new ByteArrayInputStream(expression.getBytes()));
+    }
 
 }

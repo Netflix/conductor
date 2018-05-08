@@ -1,20 +1,20 @@
 .hljs {
-	font-size: 13px;
-	background-color: #f3f6f6;
+    font-size: 13px;
+    background-color: #f3f6f6;
 }
 .hljs-attribute {
-	color: #000000
+    color: #000000
 }
 .hljs-string {
-	color: green
+    color: green
 }
 code {
-	color: green;
-	font-size: 13px
+    color: green;
+    font-size: 13px
 }
 .wy-side-nav-search {
-	margin-bottom: 0;
+    margin-bottom: 0;
 }
 body {
-	font-family: "Arial","proxima-nova","Helvetica Neue","Arial","sans-serif";
+    font-family: "Arial","proxima-nova","Helvetica Neue","Arial","sans-serif";
 }

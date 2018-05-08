@@ -47,10 +47,10 @@ JSON for start workflow request
   "version": 1, // Version
   “correlatond”: “corr1” // correlation Id
   "input": {
-	// Input map. 
+    // Input map. 
   },
   "taskToDomain": {
-	// Task to domain map
+    // Task to domain map
   }
 }
 ```
@@ -173,10 +173,10 @@ These are critical endpoints used to poll for task, send ack (after polling) and
     "callbackAfterSeconds": 0,
     "status": "IN_PROGRESS|FAILED|COMPLETED",
     "outputData": {
- 		//JSON document representing Task execution output     
+         //JSON document representing Task execution output     
     }
     
 }
 ```
 !!!info "Acknowledging tasks after poll"
-	If the worker fails to ack the task after polling, the task is re-queued and put back in queue and is made available during subsequent poll.
+    If the worker fails to ack the task after polling, the task is re-queued and put back in queue and is made available during subsequent poll.

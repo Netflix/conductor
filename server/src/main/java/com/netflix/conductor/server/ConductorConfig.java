@@ -40,113 +40,113 @@ import com.netflix.conductor.core.config.Configuration;
  */
 public class ConductorConfig implements Configuration {
 
-	private static Logger logger = LoggerFactory.getLogger(ConductorConfig.class);
-	
-	@Override
-	public int getSweepFrequency() {
-		return getIntProperty("decider.sweep.frequency.seconds", 30);
-	}
+    private static Logger logger = LoggerFactory.getLogger(ConductorConfig.class);
 
-	@Override
-	public boolean disableSweep() {
-		String disable = getProperty("decider.sweep.disable", "false");
-		return Boolean.getBoolean(disable);
-	}
+    @Override
+    public int getSweepFrequency() {
+        return getIntProperty("decider.sweep.frequency.seconds", 30);
+    }
 
-	@Override
-	public boolean disableAsyncWorkers() {
-		String disable = getProperty("conductor.disable.async.workers", "false");
-		return Boolean.getBoolean(disable);
-	}
-	
-	@Override
-	public String getServerId() {
-		try {
-			return InetAddress.getLocalHost().getHostName();
-		} catch (UnknownHostException e) {
-			return "unknown";
-		}
-	}
+    @Override
+    public boolean disableSweep() {
+        String disable = getProperty("decider.sweep.disable", "false");
+        return Boolean.getBoolean(disable);
+    }
 
-	@Override
-	public String getEnvironment() {
-		return getProperty("environment", "test");
-	}
+    @Override
+    public boolean disableAsyncWorkers() {
+        String disable = getProperty("conductor.disable.async.workers", "false");
+        return Boolean.getBoolean(disable);
+    }
 
-	@Override
-	public String getStack() {
-		return getProperty("STACK", "test");
-	}
+    @Override
+    public String getServerId() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return "unknown";
+        }
+    }
 
-	@Override
-	public String getAppId() {
-		return getProperty("APP_ID", "conductor");
-	}
+    @Override
+    public String getEnvironment() {
+        return getProperty("environment", "test");
+    }
 
-	@Override
-	public String getRegion() {
-		return getProperty("EC2_REGION", "us-east-1");
-	}
+    @Override
+    public String getStack() {
+        return getProperty("STACK", "test");
+    }
 
-	@Override
-	public String getAvailabilityZone() {
-		return getProperty("EC2_AVAILABILITY_ZONE", "us-east-1c");
-	}
+    @Override
+    public String getAppId() {
+        return getProperty("APP_ID", "conductor");
+    }
 
-	@Override
-	public int getIntProperty(String key, int defaultValue) {
-		String val = getProperty(key, Integer.toString(defaultValue));
-		try{
-			defaultValue = Integer.parseInt(val);
-		}catch(NumberFormatException e){}
-		return defaultValue;
-	}
+    @Override
+    public String getRegion() {
+        return getProperty("EC2_REGION", "us-east-1");
+    }
 
-	@Override
-	public String getProperty(String key, String defaultValue) {
+    @Override
+    public String getAvailabilityZone() {
+        return getProperty("EC2_AVAILABILITY_ZONE", "us-east-1c");
+    }
 
-		String val = null;
-		try{
-			val = System.getenv(key.replace('.','_'));
-			if (val == null || val.isEmpty()) {
-				val = Optional.ofNullable(System.getProperty(key)).orElse(defaultValue);
-			}
-		}catch(Exception e){
-			logger.error(e.getMessage(), e);
-		}
-		return val;
-	}
+    @Override
+    public int getIntProperty(String key, int defaultValue) {
+        String val = getProperty(key, Integer.toString(defaultValue));
+        try{
+            defaultValue = Integer.parseInt(val);
+        }catch(NumberFormatException e){}
+        return defaultValue;
+    }
 
-	@Override
-	public Map<String, Object> getAll() {
-		Map<String, Object> map = new HashMap<>();
-		Properties props = System.getProperties();
-		props.entrySet().forEach(entry -> map.put(entry.getKey().toString(), entry.getValue()));
-		return map;
-	}
+    @Override
+    public String getProperty(String key, String defaultValue) {
 
-	@Override
-	public List<AbstractModule> getAdditionalModules() {
-		
-		String additionalModuleClasses = getProperty("conductor.additional.modules", null);
-		if(!StringUtils.isEmpty(additionalModuleClasses)) {
-			try {
-				List<AbstractModule> modules = new LinkedList<>();
-				String[] classes = additionalModuleClasses.split(",");
-				for(String clazz : classes) {
-					Object moduleObj = Class.forName(clazz).newInstance();
-					if(moduleObj instanceof AbstractModule) {
-						AbstractModule abstractModule = (AbstractModule)moduleObj;
-						modules.add(abstractModule);
-					} else {
-						logger.error(clazz + " does not implement " + AbstractModule.class.getName() + ", skipping...");
-					}
-				}
-				return modules;
-			}catch(Exception e) {
-				logger.warn(e.getMessage(), e);
-			}
-		}
-		return null;
-	}
+        String val = null;
+        try{
+            val = System.getenv(key.replace('.','_'));
+            if (val == null || val.isEmpty()) {
+                val = Optional.ofNullable(System.getProperty(key)).orElse(defaultValue);
+            }
+        }catch(Exception e){
+            logger.error(e.getMessage(), e);
+        }
+        return val;
+    }
+
+    @Override
+    public Map<String, Object> getAll() {
+        Map<String, Object> map = new HashMap<>();
+        Properties props = System.getProperties();
+        props.entrySet().forEach(entry -> map.put(entry.getKey().toString(), entry.getValue()));
+        return map;
+    }
+
+    @Override
+    public List<AbstractModule> getAdditionalModules() {
+
+        String additionalModuleClasses = getProperty("conductor.additional.modules", null);
+        if(!StringUtils.isEmpty(additionalModuleClasses)) {
+            try {
+                List<AbstractModule> modules = new LinkedList<>();
+                String[] classes = additionalModuleClasses.split(",");
+                for(String clazz : classes) {
+                    Object moduleObj = Class.forName(clazz).newInstance();
+                    if(moduleObj instanceof AbstractModule) {
+                        AbstractModule abstractModule = (AbstractModule)moduleObj;
+                        modules.add(abstractModule);
+                    } else {
+                        logger.error(clazz + " does not implement " + AbstractModule.class.getName() + ", skipping...");
+                    }
+                }
+                return modules;
+            }catch(Exception e) {
+                logger.warn(e.getMessage(), e);
+            }
+        }
+        return null;
+    }
 }

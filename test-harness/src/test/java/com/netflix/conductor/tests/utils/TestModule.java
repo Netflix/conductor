@@ -47,59 +47,59 @@ import redis.clients.jedis.JedisCommands;
  *
  */
 public class TestModule extends AbstractModule {
-	
-	private int maxThreads = 50;
-	
-	private ExecutorService executorService;
-	
-	@Override
-	protected void configure() {
 
-		System.setProperty("workflow.system.task.worker.callback.seconds", "0");
-		System.setProperty("workflow.system.task.worker.queue.size", "10000");
-		System.setProperty("workflow.system.task.worker.thread.count", "10");
+    private int maxThreads = 50;
 
-		configureExecutorService();
+    private ExecutorService executorService;
 
-		ConductorConfig config = new ConductorConfig();
-		bind(Configuration.class).toInstance(config);
-		JedisCommands jedisMock = new JedisMock();
+    @Override
+    protected void configure() {
 
-		DynoQueueDAO queueDao = new DynoQueueDAO(jedisMock, jedisMock, new ShardSupplier() {
-			
-			@Override
-			public Set<String> getQueueShards() {
-				return Arrays.asList("a").stream().collect(Collectors.toSet());
-			}
-			
-			@Override
-			public String getCurrentShard() {
-				return "a";
-			}
-		}, config);
-		
-		bind(MetadataDAO.class).to(RedisMetadataDAO.class);
-		bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
-		bind(DynoQueueDAO.class).toInstance(queueDao);
-		bind(QueueDAO.class).to(DynoQueueDAO.class);
-		bind(IndexDAO.class).to(MockIndexDAO.class);		
-		DynoProxy proxy = new DynoProxy(jedisMock);
-		bind(DynoProxy.class).toInstance(proxy);
-		install(new CoreModule());
-		bind(UserTask.class).asEagerSingleton();
-	}
-	
-	@Provides
-	public ExecutorService getExecutorService(){
-		return this.executorService;
-	}
-	
-	private void configureExecutorService(){
-		AtomicInteger count = new AtomicInteger(0);
-		this.executorService = java.util.concurrent.Executors.newFixedThreadPool(maxThreads, runnable -> {
+        System.setProperty("workflow.system.task.worker.callback.seconds", "0");
+        System.setProperty("workflow.system.task.worker.queue.size", "10000");
+        System.setProperty("workflow.system.task.worker.thread.count", "10");
+
+        configureExecutorService();
+
+        ConductorConfig config = new ConductorConfig();
+        bind(Configuration.class).toInstance(config);
+        JedisCommands jedisMock = new JedisMock();
+
+        DynoQueueDAO queueDao = new DynoQueueDAO(jedisMock, jedisMock, new ShardSupplier() {
+
+            @Override
+            public Set<String> getQueueShards() {
+                return Arrays.asList("a").stream().collect(Collectors.toSet());
+            }
+
+            @Override
+            public String getCurrentShard() {
+                return "a";
+            }
+        }, config);
+
+        bind(MetadataDAO.class).to(RedisMetadataDAO.class);
+        bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
+        bind(DynoQueueDAO.class).toInstance(queueDao);
+        bind(QueueDAO.class).to(DynoQueueDAO.class);
+        bind(IndexDAO.class).to(MockIndexDAO.class);
+        DynoProxy proxy = new DynoProxy(jedisMock);
+        bind(DynoProxy.class).toInstance(proxy);
+        install(new CoreModule());
+        bind(UserTask.class).asEagerSingleton();
+    }
+
+    @Provides
+    public ExecutorService getExecutorService(){
+        return this.executorService;
+    }
+
+    private void configureExecutorService(){
+        AtomicInteger count = new AtomicInteger(0);
+        this.executorService = java.util.concurrent.Executors.newFixedThreadPool(maxThreads, runnable -> {
             Thread workflowWorkerThread = new Thread(runnable);
             workflowWorkerThread.setName(String.format("workflow-worker-%d", count.getAndIncrement()));
             return workflowWorkerThread;
         });
-	}
+    }
 }

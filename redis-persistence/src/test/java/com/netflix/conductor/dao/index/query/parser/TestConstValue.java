@@ -30,74 +30,74 @@ import static org.junit.Assert.*;
  */
 public class TestConstValue extends AbstractParserTest {
 
-	@Test
-	public void testStringConst() throws Exception {
-		String test = "'string value'";
-		String expected = test.replaceAll("'", "\"");		//Quotes are removed but then the result is double quoted.
-		ConstValue cv = new ConstValue(getInputStream(test));
-		assertNotNull(cv.getValue());
-		assertEquals(expected, cv.getValue());
-		assertTrue(cv.getValue() instanceof String);
-		
-		test = "\"string value\"";
-		cv = new ConstValue(getInputStream(test));
-		assertNotNull(cv.getValue());
-		assertEquals(expected, cv.getValue());
-		assertTrue(cv.getValue() instanceof String);
-	}
-	
-	@Test
-	public void testSystemConst() throws Exception {
-		String test = "null";
-		ConstValue cv = new ConstValue(getInputStream(test));
-		assertNotNull(cv.getValue());
-		assertTrue(cv.getValue() instanceof String);
-		assertEquals(cv.getSysConstant(), ConstValue.SystemConsts.NULL);
-		test = "null";
-		
-		test = "not null";
-		cv = new ConstValue(getInputStream(test));
-		assertNotNull(cv.getValue());
-		assertEquals(cv.getSysConstant(), ConstValue.SystemConsts.NOT_NULL);
-	}
-	
-	@Test(expected=ParserException.class)
-	public void testInvalid() throws Exception {
-		String test = "'string value";
-		new ConstValue(getInputStream(test));
-	}
-	
-	
-	@Test
-	public void testNumConst() throws Exception {
-		String test = "12345.89";
-		ConstValue cv = new ConstValue(getInputStream(test));
-		assertNotNull(cv.getValue());
-		assertTrue(cv.getValue() instanceof String);		//Numeric values are stored as string as we are just passing thru them to ES
-		assertEquals(test, cv.getValue());
-	}
-	
-	@Test
-	public void testRange() throws Exception {
-		String test = "50 AND 100";
-		Range range = new Range(getInputStream(test));
-		assertEquals("50", range.getLow());
-		assertEquals("100", range.getHigh());
-	}
-	
-	@Test(expected=ParserException.class)
-	public void testBadRange() throws Exception {
-		String test = "50 AND";
-		new Range(getInputStream(test));
-	}
+    @Test
+    public void testStringConst() throws Exception {
+        String test = "'string value'";
+        String expected = test.replaceAll("'", "\"");        //Quotes are removed but then the result is double quoted.
+        ConstValue cv = new ConstValue(getInputStream(test));
+        assertNotNull(cv.getValue());
+        assertEquals(expected, cv.getValue());
+        assertTrue(cv.getValue() instanceof String);
 
-	@Test
-	public void testArray() throws Exception {
-		String test = "(1, 3, 'name', 'value2')";
-		ListConst lc = new ListConst(getInputStream(test));
-		List<Object> list = lc.getList();
-		assertEquals(4, list.size());
-		assertTrue(list.contains("1"));		
-		assertEquals("'value2'", list.get(3));		//Values are preserved as it is...
-	}
+        test = "\"string value\"";
+        cv = new ConstValue(getInputStream(test));
+        assertNotNull(cv.getValue());
+        assertEquals(expected, cv.getValue());
+        assertTrue(cv.getValue() instanceof String);
+    }
+
+    @Test
+    public void testSystemConst() throws Exception {
+        String test = "null";
+        ConstValue cv = new ConstValue(getInputStream(test));
+        assertNotNull(cv.getValue());
+        assertTrue(cv.getValue() instanceof String);
+        assertEquals(cv.getSysConstant(), ConstValue.SystemConsts.NULL);
+        test = "null";
+
+        test = "not null";
+        cv = new ConstValue(getInputStream(test));
+        assertNotNull(cv.getValue());
+        assertEquals(cv.getSysConstant(), ConstValue.SystemConsts.NOT_NULL);
+    }
+
+    @Test(expected=ParserException.class)
+    public void testInvalid() throws Exception {
+        String test = "'string value";
+        new ConstValue(getInputStream(test));
+    }
+
+
+    @Test
+    public void testNumConst() throws Exception {
+        String test = "12345.89";
+        ConstValue cv = new ConstValue(getInputStream(test));
+        assertNotNull(cv.getValue());
+        assertTrue(cv.getValue() instanceof String);        //Numeric values are stored as string as we are just passing thru them to ES
+        assertEquals(test, cv.getValue());
+    }
+
+    @Test
+    public void testRange() throws Exception {
+        String test = "50 AND 100";
+        Range range = new Range(getInputStream(test));
+        assertEquals("50", range.getLow());
+        assertEquals("100", range.getHigh());
+    }
+
+    @Test(expected=ParserException.class)
+    public void testBadRange() throws Exception {
+        String test = "50 AND";
+        new Range(getInputStream(test));
+    }
+
+    @Test
+    public void testArray() throws Exception {
+        String test = "(1, 3, 'name', 'value2')";
+        ListConst lc = new ListConst(getInputStream(test));
+        List<Object> list = lc.getList();
+        assertEquals(4, list.size());
+        assertTrue(list.contains("1"));
+        assertEquals("'value2'", list.get(3));        //Values are preserved as it is...
+    }
 }

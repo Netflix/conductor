@@ -5,12 +5,12 @@ buildscript {
 }
 
 plugins {
-	id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
 configurations.all {
     resolutionStrategy {
-		force 'com.fasterxml.jackson.core:jackson-core:2.7.5'
+        force 'com.fasterxml.jackson.core:jackson-core:2.7.5'
     }
 }
 
@@ -19,27 +19,27 @@ apply plugin: "org.akhikhl.gretty"
 
 dependencies {
  
-	//Conductor
-	compile project(':conductor-core')
-	compile project(':conductor-jersey')
-	compile project(':conductor-redis-persistence')
-	compile project(':conductor-mysql-persistence')
-	compile project(':conductor-contribs')
-	
-	//Jetty
-	compile "org.eclipse.jetty:jetty-server:${revJetteyServer}"
-	compile "org.eclipse.jetty:jetty-servlet:${revJettyServlet}"
-	
-	//Guice
-	compile "com.sun.jersey.contribs:jersey-guice:${revJerseyGuice}"
-	compile "com.google.inject:guice:${revGuice}"
-	compile "com.google.inject.extensions:guice-servlet:${revGuiceServlet}"
-	
-	//Swagger
-	compile "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
-	
-	//In memory
-	compile "org.rarefiedredis.redis:redis-java:${revRarefiedRedis}"
+    //Conductor
+    compile project(':conductor-core')
+    compile project(':conductor-jersey')
+    compile project(':conductor-redis-persistence')
+    compile project(':conductor-mysql-persistence')
+    compile project(':conductor-contribs')
+
+    //Jetty
+    compile "org.eclipse.jetty:jetty-server:${revJetteyServer}"
+    compile "org.eclipse.jetty:jetty-servlet:${revJettyServlet}"
+
+    //Guice
+    compile "com.sun.jersey.contribs:jersey-guice:${revJerseyGuice}"
+    compile "com.google.inject:guice:${revGuice}"
+    compile "com.google.inject.extensions:guice-servlet:${revGuiceServlet}"
+
+    //Swagger
+    compile "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
+
+    //In memory
+    compile "org.rarefiedredis.redis:redis-java:${revRarefiedRedis}"
 }
 
 shadowJar {

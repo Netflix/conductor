@@ -25,12 +25,12 @@ package com.netflix.conductor.dao.es5.index.query.parser;
 @SuppressWarnings("serial")
 public class ParserException extends Exception {
 
-	public ParserException(String message) {
-		super(message);
-	}
+    public ParserException(String message) {
+        super(message);
+    }
 
-	public ParserException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public ParserException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
 }

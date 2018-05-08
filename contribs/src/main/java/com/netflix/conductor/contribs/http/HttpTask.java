@@ -58,374 +58,374 @@ import com.sun.jersey.oauth.signature.OAuthSecrets;
 @Singleton
 public class HttpTask extends WorkflowSystemTask {
 
-	public static final String REQUEST_PARAMETER_NAME = "http_request";
-	
-	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
+    public static final String REQUEST_PARAMETER_NAME = "http_request";
 
-	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
-	
-	public static final String NAME = "HTTP";
-	
-	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>(){};
-	
-	private TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>(){};
-	
-	protected ObjectMapper om = objectMapper();
+    static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 
-	protected RestClientManager rcm;
-	
-	protected Configuration config;
-	
-	private String requestParameter;
-	
-	@Inject
-	public HttpTask(RestClientManager rcm, Configuration config) {
-		this(NAME, rcm, config);
-	}
-	
-	public HttpTask(String name, RestClientManager rcm, Configuration config) {
-		super(name);
-		this.rcm = rcm;
-		this.config = config;
-		this.requestParameter = REQUEST_PARAMETER_NAME;
-		logger.info("HttpTask initialized...");
-	}
-	
-	@Override
-	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		Object request = task.getInputData().get(requestParameter);
-		task.setWorkerId(config.getServerId());
-		if(request == null) {
-			String reason = MISSING_REQUEST;
-			task.setReasonForIncompletion(reason);
-			task.setStatus(Status.FAILED);
-			return;
-		}
-		
-		Input input = om.convertValue(request, Input.class);
-		if(input.getUri() == null) {
-			String reason = "Missing HTTP URI.  See documentation for HttpTask for required input parameters";
-			task.setReasonForIncompletion(reason);
-			task.setStatus(Status.FAILED);
-			return;
-		}
-		
-		if(input.getMethod() == null) {
-			String reason = "No HTTP method specified";
-			task.setReasonForIncompletion(reason);
-			task.setStatus(Status.FAILED);
-			return;
-		}
-		
-		try {
-			
-			HttpResponse response = httpCall(input);
-			logger.info("response {}, {}", response.statusCode, response.body);
-			if(response.statusCode > 199 && response.statusCode < 300) {
-				task.setStatus(Status.COMPLETED);
-			} else {
-				if(response.body != null) {
-					task.setReasonForIncompletion(response.body.toString());
-				} else {
-					task.setReasonForIncompletion("No response from the remote service");
-				}
-				task.setStatus(Status.FAILED);
-			}
-			if(response != null) {
-				task.getOutputData().put("response", response.asMap());
-			}
-			
-		}catch(Exception e) {
-			logger.error(String.format("Failed to invoke http task - uri: %s, vipAddress: %s", input.getUri(), input.getVipAddress()), e);
-			task.setStatus(Status.FAILED);
-			task.setReasonForIncompletion("Failed to invoke http task due to: " + e.toString());
-			task.getOutputData().put("response", e.toString());
-		}
-	}
+    private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
 
-	/**
-	 * 
-	 * @param input HTTP Request
-	 * @return Response of the http call
-	 * @throws Exception If there was an error making http call
-	 */
-	protected HttpResponse httpCall(Input input) throws Exception {
-		Client client = rcm.getClient(input);
+    public static final String NAME = "HTTP";
 
-		if(input.oauthConsumerKey != null) {
-			logger.info("Configuring OAuth filter");
-			OAuthParameters params = new OAuthParameters().consumerKey(input.oauthConsumerKey).signatureMethod("HMAC-SHA1").version("1.0");
-			OAuthSecrets secrets = new OAuthSecrets().consumerSecret(input.oauthConsumerSecret);
-			client.addFilter(new OAuthClientFilter(client.getProviders(), params, secrets));
-		}
+    private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>(){};
 
-		Builder builder = client.resource(input.uri).type(input.contentType);
+    private TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>(){};
 
-		if(input.body != null) {
-			builder.entity(input.body);
-		}
-		input.headers.entrySet().forEach(e -> {
-			builder.header(e.getKey(), e.getValue());
-		});
-		
-		HttpResponse response = new HttpResponse();
-		try {
+    protected ObjectMapper om = objectMapper();
 
-			ClientResponse cr = builder.accept(input.accept).method(input.method, ClientResponse.class);
-			if (cr.getStatus() != 204 && cr.hasEntity()) {
-				response.body = extractBody(cr);
-			}
-			response.statusCode = cr.getStatus();
-			response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
-			response.headers = cr.getHeaders();
-			return response;
+    protected RestClientManager rcm;
 
-		} catch(UniformInterfaceException ex) {
-			ClientResponse cr = ex.getResponse();
-			logger.error(String.format("Got unexpected http response - uri: %s, vipAddress: %s, status code: %s", input.getUri(), input.getVipAddress(), cr.getStatus()), ex);
-			if(cr.getStatus() > 199 && cr.getStatus() < 300) {
-				if(cr.getStatus() != 204 && cr.hasEntity()) {
-					response.body = extractBody(cr);
-				}
-				response.headers = cr.getHeaders();
-				response.statusCode = cr.getStatus();
-				response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
-				return response;
-			}else {
-				String reason = cr.getEntity(String.class);
-				logger.error(reason, ex);
-				throw new Exception(reason);
-			}
-		}
-	}
+    protected Configuration config;
 
-	private Object extractBody(ClientResponse cr) {
+    private String requestParameter;
 
-		String json = cr.getEntity(String.class);
-		logger.info(json);
-		
-		try {
-			
-			JsonNode node = om.readTree(json);
-			if (node.isArray()) {
-				return om.convertValue(node, listOfObj);
-			} else if (node.isObject()) {
-				return om.convertValue(node, mapOfObj);
-			} else if (node.isNumber()) {
-				return om.convertValue(node, Double.class);
-			} else {
-				return node.asText();
-			}
+    @Inject
+    public HttpTask(RestClientManager rcm, Configuration config) {
+        this(NAME, rcm, config);
+    }
 
-		} catch (IOException jpe) {
-			logger.error(jpe.getMessage(), jpe);
-			return json;
-		}
-	}
+    public HttpTask(String name, RestClientManager rcm, Configuration config) {
+        super(name);
+        this.rcm = rcm;
+        this.config = config;
+        this.requestParameter = REQUEST_PARAMETER_NAME;
+        logger.info("HttpTask initialized...");
+    }
 
-	@Override
-	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		return false;
-	}
-	
-	@Override
-	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		task.setStatus(Status.CANCELED);
-	}
-	
-	@Override
-	public boolean isAsync() {
-		return true;
-	}
-	
-	@Override
-	public int getRetryTimeInSecond() {
-		return 60;
-	}
-	
-	private static ObjectMapper objectMapper() {
-	    final ObjectMapper om = new ObjectMapper();
+    @Override
+    public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+        Object request = task.getInputData().get(requestParameter);
+        task.setWorkerId(config.getServerId());
+        if(request == null) {
+            String reason = MISSING_REQUEST;
+            task.setReasonForIncompletion(reason);
+            task.setStatus(Status.FAILED);
+            return;
+        }
+
+        Input input = om.convertValue(request, Input.class);
+        if(input.getUri() == null) {
+            String reason = "Missing HTTP URI.  See documentation for HttpTask for required input parameters";
+            task.setReasonForIncompletion(reason);
+            task.setStatus(Status.FAILED);
+            return;
+        }
+
+        if(input.getMethod() == null) {
+            String reason = "No HTTP method specified";
+            task.setReasonForIncompletion(reason);
+            task.setStatus(Status.FAILED);
+            return;
+        }
+
+        try {
+
+            HttpResponse response = httpCall(input);
+            logger.info("response {}, {}", response.statusCode, response.body);
+            if(response.statusCode > 199 && response.statusCode < 300) {
+                task.setStatus(Status.COMPLETED);
+            } else {
+                if(response.body != null) {
+                    task.setReasonForIncompletion(response.body.toString());
+                } else {
+                    task.setReasonForIncompletion("No response from the remote service");
+                }
+                task.setStatus(Status.FAILED);
+            }
+            if(response != null) {
+                task.getOutputData().put("response", response.asMap());
+            }
+
+        }catch(Exception e) {
+            logger.error(String.format("Failed to invoke http task - uri: %s, vipAddress: %s", input.getUri(), input.getVipAddress()), e);
+            task.setStatus(Status.FAILED);
+            task.setReasonForIncompletion("Failed to invoke http task due to: " + e.toString());
+            task.getOutputData().put("response", e.toString());
+        }
+    }
+
+    /**
+     *
+     * @param input HTTP Request
+     * @return Response of the http call
+     * @throws Exception If there was an error making http call
+     */
+    protected HttpResponse httpCall(Input input) throws Exception {
+        Client client = rcm.getClient(input);
+
+        if(input.oauthConsumerKey != null) {
+            logger.info("Configuring OAuth filter");
+            OAuthParameters params = new OAuthParameters().consumerKey(input.oauthConsumerKey).signatureMethod("HMAC-SHA1").version("1.0");
+            OAuthSecrets secrets = new OAuthSecrets().consumerSecret(input.oauthConsumerSecret);
+            client.addFilter(new OAuthClientFilter(client.getProviders(), params, secrets));
+        }
+
+        Builder builder = client.resource(input.uri).type(input.contentType);
+
+        if(input.body != null) {
+            builder.entity(input.body);
+        }
+        input.headers.entrySet().forEach(e -> {
+            builder.header(e.getKey(), e.getValue());
+        });
+
+        HttpResponse response = new HttpResponse();
+        try {
+
+            ClientResponse cr = builder.accept(input.accept).method(input.method, ClientResponse.class);
+            if (cr.getStatus() != 204 && cr.hasEntity()) {
+                response.body = extractBody(cr);
+            }
+            response.statusCode = cr.getStatus();
+            response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
+            response.headers = cr.getHeaders();
+            return response;
+
+        } catch(UniformInterfaceException ex) {
+            ClientResponse cr = ex.getResponse();
+            logger.error(String.format("Got unexpected http response - uri: %s, vipAddress: %s, status code: %s", input.getUri(), input.getVipAddress(), cr.getStatus()), ex);
+            if(cr.getStatus() > 199 && cr.getStatus() < 300) {
+                if(cr.getStatus() != 204 && cr.hasEntity()) {
+                    response.body = extractBody(cr);
+                }
+                response.headers = cr.getHeaders();
+                response.statusCode = cr.getStatus();
+                response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
+                return response;
+            }else {
+                String reason = cr.getEntity(String.class);
+                logger.error(reason, ex);
+                throw new Exception(reason);
+            }
+        }
+    }
+
+    private Object extractBody(ClientResponse cr) {
+
+        String json = cr.getEntity(String.class);
+        logger.info(json);
+
+        try {
+
+            JsonNode node = om.readTree(json);
+            if (node.isArray()) {
+                return om.convertValue(node, listOfObj);
+            } else if (node.isObject()) {
+                return om.convertValue(node, mapOfObj);
+            } else if (node.isNumber()) {
+                return om.convertValue(node, Double.class);
+            } else {
+                return node.asText();
+            }
+
+        } catch (IOException jpe) {
+            logger.error(jpe.getMessage(), jpe);
+            return json;
+        }
+    }
+
+    @Override
+    public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+        return false;
+    }
+
+    @Override
+    public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+        task.setStatus(Status.CANCELED);
+    }
+
+    @Override
+    public boolean isAsync() {
+        return true;
+    }
+
+    @Override
+    public int getRetryTimeInSecond() {
+        return 60;
+    }
+
+    private static ObjectMapper objectMapper() {
+        final ObjectMapper om = new ObjectMapper();
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         om.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
         om.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
         om.setSerializationInclusion(Include.NON_NULL);
         om.setSerializationInclusion(Include.NON_EMPTY);
-	    return om;
-	}
-	
-	public static class HttpResponse {
-		
-		public Object body;
-		
-		public MultivaluedMap<String, String> headers;
-		
-		public int statusCode;
+        return om;
+    }
 
-		public String reasonPhrase;
+    public static class HttpResponse {
 
-		@Override
-		public String toString() {
-			return "HttpResponse [body=" + body + ", headers=" + headers + ", statusCode=" + statusCode + ", reasonPhrase=" + reasonPhrase + "]";
-		}
-		
-		public Map<String, Object> asMap() {
-			
-			Map<String, Object> map = new HashMap<>();
-			map.put("body", body);
-			map.put("headers", headers);
-			map.put("statusCode", statusCode);
-			map.put("reasonPhrase", reasonPhrase);
-			
-			return map;
-		}
-	}
-	
-	public static class Input {
-		
-		private String method;	//PUT, POST, GET, DELETE, OPTIONS, HEAD
-		
-		private String vipAddress;
-		
-		private Map<String, Object> headers = new HashMap<>();
-		
-		private String uri;
-		
-		private Object body;
-		
-		private String accept = MediaType.APPLICATION_JSON;
+        public Object body;
 
-		private String contentType = MediaType.APPLICATION_JSON;
-		
-		private String oauthConsumerKey;
+        public MultivaluedMap<String, String> headers;
 
-		private String oauthConsumerSecret;
+        public int statusCode;
 
-		/**
-		 * @return the method
-		 */
-		public String getMethod() {
-			return method;
-		}
+        public String reasonPhrase;
 
-		/**
-		 * @param method the method to set
-		 */
-		public void setMethod(String method) {
-			this.method = method;
-		}
+        @Override
+        public String toString() {
+            return "HttpResponse [body=" + body + ", headers=" + headers + ", statusCode=" + statusCode + ", reasonPhrase=" + reasonPhrase + "]";
+        }
 
-		/**
-		 * @return the headers
-		 */
-		public Map<String, Object> getHeaders() {
-			return headers;
-		}
+        public Map<String, Object> asMap() {
 
-		/**
-		 * @param headers the headers to set
-		 */
-		public void setHeaders(Map<String, Object> headers) {
-			this.headers = headers;
-		}
+            Map<String, Object> map = new HashMap<>();
+            map.put("body", body);
+            map.put("headers", headers);
+            map.put("statusCode", statusCode);
+            map.put("reasonPhrase", reasonPhrase);
 
-		/**
-		 * @return the body
-		 */
-		public Object getBody() {
-			return body;
-		}
+            return map;
+        }
+    }
 
-		/**
-		 * @param body the body to set
-		 */
-		public void setBody(Object body) {
-			this.body = body;
-		}
+    public static class Input {
 
-		/**
-		 * @return the uri
-		 */
-		public String getUri() {
-			return uri;
-		}
+        private String method;    //PUT, POST, GET, DELETE, OPTIONS, HEAD
 
-		/**
-		 * @param uri the uri to set
-		 */
-		public void setUri(String uri) {
-			this.uri = uri;
-		}
+        private String vipAddress;
 
-		/**
-		 * @return the vipAddress
-		 */
-		public String getVipAddress() {
-			return vipAddress;
-		}
+        private Map<String, Object> headers = new HashMap<>();
 
-		/**
-		 * @param vipAddress the vipAddress to set
-		 * 
-		 */
-		public void setVipAddress(String vipAddress) {
-			this.vipAddress = vipAddress;
-		}
+        private String uri;
 
-		/**
-		 * @return the accept
-		 */
-		public String getAccept() {
-			return accept;
-		}
+        private Object body;
 
-		/**
-		 * @param accept the accept to set
-		 * 
-		 */
-		public void setAccept(String accept) {
-			this.accept = accept;
-		}
+        private String accept = MediaType.APPLICATION_JSON;
 
-		/**
-		 * @return the MIME content type to use for the request
-		 */
-		public String getContentType() {
-			return contentType;
-		}
+        private String contentType = MediaType.APPLICATION_JSON;
 
-		/**
-		 * @param contentType the MIME content type to set
-		 */
-		public void setContentType(String contentType) {
-			this.contentType = contentType;
-		}
+        private String oauthConsumerKey;
 
-		/**
-		 * @return the OAuth consumer Key
-		 */
-		public String getOauthConsumerKey() {
-			return oauthConsumerKey;
-		}
+        private String oauthConsumerSecret;
 
-		/**
-		 * @param oauthConsumerKey the OAuth consumer key to set
-		 */
-		public void setOauthConsumerKey(String oauthConsumerKey) {
-			this.oauthConsumerKey = oauthConsumerKey;
-		}
+        /**
+         * @return the method
+         */
+        public String getMethod() {
+            return method;
+        }
 
-		/**
-		 * @return the OAuth consumer secret
-		 */
-		public String getOauthConsumerSecret() {
-			return oauthConsumerSecret;
-		}
+        /**
+         * @param method the method to set
+         */
+        public void setMethod(String method) {
+            this.method = method;
+        }
 
-		/**
-		 * @param oauthConsumerSecret the OAuth consumer secret to set
-		 */
-		public void setOauthConsumerSecret(String oauthConsumerSecret) {
-			this.oauthConsumerSecret = oauthConsumerSecret;
-		}
-	}
+        /**
+         * @return the headers
+         */
+        public Map<String, Object> getHeaders() {
+            return headers;
+        }
+
+        /**
+         * @param headers the headers to set
+         */
+        public void setHeaders(Map<String, Object> headers) {
+            this.headers = headers;
+        }
+
+        /**
+         * @return the body
+         */
+        public Object getBody() {
+            return body;
+        }
+
+        /**
+         * @param body the body to set
+         */
+        public void setBody(Object body) {
+            this.body = body;
+        }
+
+        /**
+         * @return the uri
+         */
+        public String getUri() {
+            return uri;
+        }
+
+        /**
+         * @param uri the uri to set
+         */
+        public void setUri(String uri) {
+            this.uri = uri;
+        }
+
+        /**
+         * @return the vipAddress
+         */
+        public String getVipAddress() {
+            return vipAddress;
+        }
+
+        /**
+         * @param vipAddress the vipAddress to set
+         *
+         */
+        public void setVipAddress(String vipAddress) {
+            this.vipAddress = vipAddress;
+        }
+
+        /**
+         * @return the accept
+         */
+        public String getAccept() {
+            return accept;
+        }
+
+        /**
+         * @param accept the accept to set
+         *
+         */
+        public void setAccept(String accept) {
+            this.accept = accept;
+        }
+
+        /**
+         * @return the MIME content type to use for the request
+         */
+        public String getContentType() {
+            return contentType;
+        }
+
+        /**
+         * @param contentType the MIME content type to set
+         */
+        public void setContentType(String contentType) {
+            this.contentType = contentType;
+        }
+
+        /**
+         * @return the OAuth consumer Key
+         */
+        public String getOauthConsumerKey() {
+            return oauthConsumerKey;
+        }
+
+        /**
+         * @param oauthConsumerKey the OAuth consumer key to set
+         */
+        public void setOauthConsumerKey(String oauthConsumerKey) {
+            this.oauthConsumerKey = oauthConsumerKey;
+        }
+
+        /**
+         * @return the OAuth consumer secret
+         */
+        public String getOauthConsumerSecret() {
+            return oauthConsumerSecret;
+        }
+
+        /**
+         * @param oauthConsumerSecret the OAuth consumer secret to set
+         */
+        public void setOauthConsumerSecret(String oauthConsumerSecret) {
+            this.oauthConsumerSecret = oauthConsumerSecret;
+        }
+    }
 }

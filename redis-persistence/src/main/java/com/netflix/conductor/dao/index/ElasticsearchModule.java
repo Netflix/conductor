@@ -40,18 +40,18 @@ import com.netflix.conductor.core.config.Configuration;
  */
 public class ElasticsearchModule extends AbstractModule {
 
-	private static Logger log = LoggerFactory.getLogger(ElasticSearchDAO.class);
-	
-	@Provides
-	@Singleton
-	public Client getClient(Configuration config) throws Exception {
+    private static Logger log = LoggerFactory.getLogger(ElasticSearchDAO.class);
 
-		String clusterAddress = config.getProperty("workflow.elasticsearch.url", "");
-		if(clusterAddress.equals("")) {
-			log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
-		}
-		
-    	Settings.Builder settings = Settings.settingsBuilder();
+    @Provides
+    @Singleton
+    public Client getClient(Configuration config) throws Exception {
+
+        String clusterAddress = config.getProperty("workflow.elasticsearch.url", "");
+        if(clusterAddress.equals("")) {
+            log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
+        }
+
+        Settings.Builder settings = Settings.settingsBuilder();
         settings.put("client.transport.ignore_cluster_name", true);
         settings.put("client.transport.sniff", true);
         
@@ -68,8 +68,8 @@ public class ElasticsearchModule extends AbstractModule {
     
     }
 
-	@Override
-	protected void configure() {
-		
-	}
+    @Override
+    protected void configure() {
+
+    }
 }

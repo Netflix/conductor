@@ -5,7 +5,7 @@
 After polling for the task update the status of the task to `IN_PROGRESS` and set the `callbackAfterSeconds` value to the desired time.  The task will remain in the queue until the specified second before worker polling for it will receive it again.
 
 If there is a timeout set for the task, and the `callbackAfterSeconds` exceeds the timeout value, it will result in task being TIMED_OUT.
-	
+    
 #### How long can a workflow be in running state?  Can I have a workflow that keeps running for days or months?
 
 Yes.  As long as the timeouts on the tasks are set to handle long running workflows, it will stay in running state.

@@ -28,58 +28,58 @@ import rx.Observable;
  */
 public interface ObservableQueue {
 
-	/**
-	 * 
-	 * @return An observable for the given queue
-	 */
-	public Observable<Message> observe();
+    /**
+     *
+     * @return An observable for the given queue
+     */
+    public Observable<Message> observe();
 
-	/**
-	 * 
-	 * @return Type of the queue
-	 */
-	public String getType();
-	
-	/**
-	 * 
-	 * @return Name of the queue
-	 */
-	public String getName();
-	
-	/**
-	 * 
-	 * @return URI identifier for the queue.
-	 */
-	public String getURI();
-	
-	/**
-	 * 
-	 * @param messages messages to be ack'ed
-	 * @return the id of the ones which could not be ack'ed 
-	 */
-	public List<String> ack(List<Message> messages);
-	
-	/**
-	 * 
-	 * @param messages Messages to be published
-	 */
-	public void publish(List<Message> messages);
-	
-	/**
-	 * Extend the lease of the unacknowledged message for longer period.
-	 * @param message Message for which the timeout has to be changed
-	 * @param unackTimeout timeout in milliseconds for which the unack lease should be extended. (replaces the current value with this value)
-	 */
-	public void setUnackTimeout(Message message, long unackTimeout);
-	
-	/**
-	 * 
-	 * @return Size of the queue - no. messages pending.  Note: Depending upon the implementation, this can be an approximation
-	 */
-	public long size();
-	
-	/**
-	 *  Used to close queue instance prior to remove from queues
-	 */
-	default  void close() { }
+    /**
+     *
+     * @return Type of the queue
+     */
+    public String getType();
+
+    /**
+     *
+     * @return Name of the queue
+     */
+    public String getName();
+
+    /**
+     *
+     * @return URI identifier for the queue.
+     */
+    public String getURI();
+
+    /**
+     *
+     * @param messages messages to be ack'ed
+     * @return the id of the ones which could not be ack'ed
+     */
+    public List<String> ack(List<Message> messages);
+
+    /**
+     *
+     * @param messages Messages to be published
+     */
+    public void publish(List<Message> messages);
+
+    /**
+     * Extend the lease of the unacknowledged message for longer period.
+     * @param message Message for which the timeout has to be changed
+     * @param unackTimeout timeout in milliseconds for which the unack lease should be extended. (replaces the current value with this value)
+     */
+    public void setUnackTimeout(Message message, long unackTimeout);
+
+    /**
+     *
+     * @return Size of the queue - no. messages pending.  Note: Depending upon the implementation, this can be an approximation
+     */
+    public long size();
+
+    /**
+     *  Used to close queue instance prior to remove from queues
+     */
+    default  void close() { }
 }

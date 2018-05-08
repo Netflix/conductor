@@ -26,24 +26,24 @@ import java.io.InputStream;
  */
 public class Name extends AbstractNode {
 
-	private String value;
-	
-	public Name(InputStream is) throws ParserException {
-		super(is);
-	}
+    private String value;
 
-	@Override
-	protected void _parse() throws Exception {
-		this.value = readToken();
-	}
-	
-	@Override
-	public String toString(){
-		return value;
-	}
-	
-	public String getName(){
-		return value;
-	}
+    public Name(InputStream is) throws ParserException {
+        super(is);
+    }
+
+    @Override
+    protected void _parse() throws Exception {
+        this.value = readToken();
+    }
+
+    @Override
+    public String toString(){
+        return value;
+    }
+
+    public String getName(){
+        return value;
+    }
 
 }

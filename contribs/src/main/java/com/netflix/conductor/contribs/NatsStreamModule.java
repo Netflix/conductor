@@ -37,19 +37,19 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class NatsStreamModule extends AbstractModule {
-	private static Logger logger = LoggerFactory.getLogger(NatsStreamModule.class);
-	
-	@Override
-	protected void configure() {
-		logger.info("NATS Streaming Module configured ...");
-	}
+    private static Logger logger = LoggerFactory.getLogger(NatsStreamModule.class);
 
-	@ProvidesIntoMap
-	@StringMapKey("nats_stream")
-	@Singleton
-	@Named("EventQueueProviders")
-	public EventQueueProvider geNATSStreamEventQueueProvider(Configuration configuration) {
-		return new NATSStreamEventQueueProvider(configuration);
-	}
-	
+    @Override
+    protected void configure() {
+        logger.info("NATS Streaming Module configured ...");
+    }
+
+    @ProvidesIntoMap
+    @StringMapKey("nats_stream")
+    @Singleton
+    @Named("EventQueueProviders")
+    public EventQueueProvider geNATSStreamEventQueueProvider(Configuration configuration) {
+        return new NATSStreamEventQueueProvider(configuration);
+    }
+
 }

@@ -19,53 +19,53 @@ import java.util.Map;
 
 public class RerunWorkflowRequest {
 
-	private String reRunFromWorkflowId;
+    private String reRunFromWorkflowId;
 
-	private Map<String, Object> workflowInput;
-	
-	private String reRunFromTaskId;
+    private Map<String, Object> workflowInput;
 
-	private Map<String, Object> taskInput;
+    private String reRunFromTaskId;
 
-	private String correlationId;
+    private Map<String, Object> taskInput;
 
-	public String getReRunFromWorkflowId() {
-		return reRunFromWorkflowId;
-	}
+    private String correlationId;
 
-	public void setReRunFromWorkflowId(String reRunFromWorkflowId) {
-		this.reRunFromWorkflowId = reRunFromWorkflowId;
-	}
+    public String getReRunFromWorkflowId() {
+        return reRunFromWorkflowId;
+    }
 
-	public Map<String, Object> getWorkflowInput() {
-		return workflowInput;
-	}
+    public void setReRunFromWorkflowId(String reRunFromWorkflowId) {
+        this.reRunFromWorkflowId = reRunFromWorkflowId;
+    }
 
-	public void setWorkflowInput(Map<String, Object> workflowInput) {
-		this.workflowInput = workflowInput;
-	}
+    public Map<String, Object> getWorkflowInput() {
+        return workflowInput;
+    }
 
-	public String getReRunFromTaskId() {
-		return reRunFromTaskId;
-	}
+    public void setWorkflowInput(Map<String, Object> workflowInput) {
+        this.workflowInput = workflowInput;
+    }
 
-	public void setReRunFromTaskId(String reRunFromTaskId) {
-		this.reRunFromTaskId = reRunFromTaskId;
-	}
+    public String getReRunFromTaskId() {
+        return reRunFromTaskId;
+    }
 
-	public Map<String, Object> getTaskInput() {
-		return taskInput;
-	}
+    public void setReRunFromTaskId(String reRunFromTaskId) {
+        this.reRunFromTaskId = reRunFromTaskId;
+    }
 
-	public void setTaskInput(Map<String, Object> taskInput) {
-		this.taskInput = taskInput;
-	}
+    public Map<String, Object> getTaskInput() {
+        return taskInput;
+    }
 
-	public String getCorrelationId() {
-		return correlationId;
-	}
+    public void setTaskInput(Map<String, Object> taskInput) {
+        this.taskInput = taskInput;
+    }
 
-	public void setCorrelationId(String correlationId) {
-		this.correlationId = correlationId;
-	}
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+    }
 }

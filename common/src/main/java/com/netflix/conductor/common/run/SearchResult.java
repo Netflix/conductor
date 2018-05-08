@@ -26,47 +26,47 @@ import java.util.List;
  */
 public class SearchResult<T> {
 
-	private long totalHits;
-	
-	private List<T> results;
+    private long totalHits;
 
-	public SearchResult(){
-		
-	}
-	
-	public SearchResult(long totalHits, List<T> results) {
-		super();
-		this.totalHits = totalHits;
-		this.results = results;
-	}
+    private List<T> results;
 
-	/**
-	 * @return the totalHits
-	 */
-	public long getTotalHits() {
-		return totalHits;
-	}
+    public SearchResult(){
 
-	/**
-	 * @return the results
-	 */
-	public List<T> getResults() {
-		return results;
-	}
+    }
 
-	/**
-	 * @param totalHits the totalHits to set
-	 */
-	public void setTotalHits(long totalHits) {
-		this.totalHits = totalHits;
-	}
+    public SearchResult(long totalHits, List<T> results) {
+        super();
+        this.totalHits = totalHits;
+        this.results = results;
+    }
 
-	/**
-	 * @param results the results to set
-	 */
-	public void setResults(List<T> results) {
-		this.results = results;
-	}
-	
+    /**
+     * @return the totalHits
+     */
+    public long getTotalHits() {
+        return totalHits;
+    }
+
+    /**
+     * @return the results
+     */
+    public List<T> getResults() {
+        return results;
+    }
+
+    /**
+     * @param totalHits the totalHits to set
+     */
+    public void setTotalHits(long totalHits) {
+        this.totalHits = totalHits;
+    }
+
+    /**
+     * @param results the results to set
+     */
+    public void setResults(List<T> results) {
+        this.results = results;
+    }
+
 
 }

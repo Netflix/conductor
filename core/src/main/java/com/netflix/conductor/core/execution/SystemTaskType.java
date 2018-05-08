@@ -33,32 +33,32 @@ import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
  */
 public enum SystemTaskType {
 
-	DECISION(new Decision()), FORK(new Fork()), JOIN(new Join());
-	
-	private static Set<String> builtInTasks = new HashSet<>();
-	static {
+    DECISION(new Decision()), FORK(new Fork()), JOIN(new Join());
 
-		builtInTasks.add(SystemTaskType.DECISION.name());
-		builtInTasks.add(SystemTaskType.FORK.name());
-		builtInTasks.add(SystemTaskType.JOIN.name());
-	}
+    private static Set<String> builtInTasks = new HashSet<>();
+    static {
 
-	private WorkflowSystemTask impl;
-	
-	SystemTaskType(WorkflowSystemTask impl) {
-		this.impl = impl;
-	}
-	
-	public WorkflowSystemTask impl() {
-		return this.impl;
-	}
+        builtInTasks.add(SystemTaskType.DECISION.name());
+        builtInTasks.add(SystemTaskType.FORK.name());
+        builtInTasks.add(SystemTaskType.JOIN.name());
+    }
 
-	public static boolean is(String taskType) {
-		return WorkflowSystemTask.is(taskType);
-	}
-		
-	public static boolean isBuiltIn(String taskType) {
-		return is(taskType) && builtInTasks.contains(taskType);		
-	}
+    private WorkflowSystemTask impl;
+
+    SystemTaskType(WorkflowSystemTask impl) {
+        this.impl = impl;
+    }
+
+    public WorkflowSystemTask impl() {
+        return this.impl;
+    }
+
+    public static boolean is(String taskType) {
+        return WorkflowSystemTask.is(taskType);
+    }
+
+    public static boolean isBuiltIn(String taskType) {
+        return is(taskType) && builtInTasks.contains(taskType);
+    }
 
 }

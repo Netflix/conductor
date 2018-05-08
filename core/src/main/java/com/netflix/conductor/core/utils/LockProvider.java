@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public interface LockProvider {
-	
-   	AutoCloseable lock(String path, long timeOut, TimeUnit unit) throws Exception;
-   	
+
+       AutoCloseable lock(String path, long timeOut, TimeUnit unit) throws Exception;
+
 }

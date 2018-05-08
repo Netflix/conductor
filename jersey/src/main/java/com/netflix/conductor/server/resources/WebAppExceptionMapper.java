@@ -30,9 +30,9 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class WebAppExceptionMapper implements ExceptionMapper<WebApplicationException> {
 
-	@Override
-	public Response toResponse(WebApplicationException exception) {
-		return exception.getResponse();
-	}
+    @Override
+    public Response toResponse(WebApplicationException exception) {
+        return exception.getResponse();
+    }
 
 }

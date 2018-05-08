@@ -37,63 +37,63 @@ import rx.Observable;
  */
 public class MockObservableQueue implements ObservableQueue {
 
-	private String uri;
-	
-	private String name;
-	
-	private String type;
-	
-	private Set<Message> messages = new TreeSet<>(Comparator.comparing(Message::getId));
-	
-	public MockObservableQueue(String uri, String name, String type) {
-		this.uri = uri;
-		this.name = name;
-		this.type = type;
-	}
-	
-	@Override
-	public Observable<Message> observe() {
-		return Observable.from(messages);
-	}
+    private String uri;
 
-	public String getType() {
-		return type;
-	}
+    private String name;
 
-	@Override
-	public String getName() {
-		return name;
-	}
+    private String type;
 
-	@Override
-	public String getURI() {
-		return uri;
-	}
+    private Set<Message> messages = new TreeSet<>(Comparator.comparing(Message::getId));
 
-	@Override
-	public List<String> ack(List<Message> messages) {
-		messages.removeAll(messages);
-		return messages.stream().map(Message::getId).collect(Collectors.toList());
-	}
+    public MockObservableQueue(String uri, String name, String type) {
+        this.uri = uri;
+        this.name = name;
+        this.type = type;
+    }
 
-	@Override
-	public void publish(List<Message> messages) {
-		this.messages.addAll(messages);
-	}
+    @Override
+    public Observable<Message> observe() {
+        return Observable.from(messages);
+    }
 
-	@Override
-	public void setUnackTimeout(Message message, long unackTimeout) {
-	}
-	
-	@Override
-	public long size() {
-		return messages.size();
-	}
+    public String getType() {
+        return type;
+    }
 
-	@Override
-	public String toString() {
-		return "MockObservableQueue [uri=" + uri + ", name=" + name + ", type=" + type + "]";
-	}
+    @Override
+    public String getName() {
+        return name;
+    }
 
-	
+    @Override
+    public String getURI() {
+        return uri;
+    }
+
+    @Override
+    public List<String> ack(List<Message> messages) {
+        messages.removeAll(messages);
+        return messages.stream().map(Message::getId).collect(Collectors.toList());
+    }
+
+    @Override
+    public void publish(List<Message> messages) {
+        this.messages.addAll(messages);
+    }
+
+    @Override
+    public void setUnackTimeout(Message message, long unackTimeout) {
+    }
+
+    @Override
+    public long size() {
+        return messages.size();
+    }
+
+    @Override
+    public String toString() {
+        return "MockObservableQueue [uri=" + uri + ", name=" + name + ", type=" + type + "]";
+    }
+
+
 }

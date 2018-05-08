@@ -25,6 +25,6 @@ package com.netflix.conductor.dao.es5.index.query.parser;
 @FunctionalInterface
 public interface FunctionThrowingException<T> {
 
-	void accept(T t) throws Exception;
+    void accept(T t) throws Exception;
 
 }

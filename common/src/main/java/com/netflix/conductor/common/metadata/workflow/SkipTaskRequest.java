@@ -18,25 +18,25 @@ package com.netflix.conductor.common.metadata.workflow;
 import java.util.Map;
 
 public class SkipTaskRequest {
-	private Map<String, Object> taskInput;
-	
-	private Map<String, Object> taskOutput;
+    private Map<String, Object> taskInput;
 
-	public Map<String, Object> getTaskInput() {
-		return taskInput;
-	}
+    private Map<String, Object> taskOutput;
 
-	public void setTaskInput(Map<String, Object> taskInput) {
-		this.taskInput = taskInput;
-	}
+    public Map<String, Object> getTaskInput() {
+        return taskInput;
+    }
 
-	public Map<String, Object> getTaskOutput() {
-		return taskOutput;
-	}
+    public void setTaskInput(Map<String, Object> taskInput) {
+        this.taskInput = taskInput;
+    }
 
-	public void setTaskOutput(Map<String, Object> taskOutput) {
-		this.taskOutput = taskOutput;
-	}
-	
-	
+    public Map<String, Object> getTaskOutput() {
+        return taskOutput;
+    }
+
+    public void setTaskOutput(Map<String, Object> taskOutput) {
+        this.taskOutput = taskOutput;
+    }
+
+
 }

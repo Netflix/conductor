@@ -25,7 +25,7 @@ package com.netflix.conductor.core.utils;
 @SuppressWarnings("serial")
 public class LockException extends Exception {
 
-	public LockException(String msg){
-		super(msg);
-	}
+    public LockException(String msg){
+        super(msg);
+    }
 }

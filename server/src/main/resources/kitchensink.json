@@ -10,8 +10,8 @@
         "mod": "${workflow.input.mod}",
         "oddEven": "${workflow.input.oddEven}",
         "env": {
-        	"taskId": "${CPEWF_TASK_ID}",
-        	"workflowId": "${HOSTNAME}"
+            "taskId": "${CPEWF_TASK_ID}",
+            "workflowId": "${HOSTNAME}"
         }
       },
       "type": "SIMPLE"

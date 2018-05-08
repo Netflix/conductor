@@ -37,24 +37,24 @@ import com.netflix.conductor.dao.QueueDAO;
 @Singleton
 public class DynoEventQueueProvider implements EventQueueProvider {
 
-	private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-	
-	private QueueDAO dao;
-	
-	private Configuration config;
-	
-	@Inject
-	public DynoEventQueueProvider(QueueDAO dao, Configuration config) {
-		this.dao = dao;
-		this.config = config;
-	}
-	
-	@Override
-	public ObservableQueue getQueue(String queueURI) {
-		return queues.computeIfAbsent(queueURI, q -> {
-			DynoObservableQueue queue = new DynoObservableQueue(queueURI, dao, config);
-			return queue;
-		});
-	}
+    private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
+
+    private QueueDAO dao;
+
+    private Configuration config;
+
+    @Inject
+    public DynoEventQueueProvider(QueueDAO dao, Configuration config) {
+        this.dao = dao;
+        this.config = config;
+    }
+
+    @Override
+    public ObservableQueue getQueue(String queueURI) {
+        return queues.computeIfAbsent(queueURI, q -> {
+            DynoObservableQueue queue = new DynoObservableQueue(queueURI, dao, config);
+            return queue;
+        });
+    }
 
 }
