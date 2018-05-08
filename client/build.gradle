@@ -4,7 +4,7 @@ dependencies {
 	compile 'com.sun.jersey:jersey-client:1.19.+'
 	compile 'org.slf4j:slf4j-api:1.7.+'
 	compile 'com.netflix.spectator:spectator-api:0.40.0'
-	compile 'com.netflix.eureka:eureka-client:latest.release'
+	compile 'com.netflix.eureka:eureka-client:1.8.8'
 	compile 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.7.5'
 	compile 'com.netflix.archaius:archaius-core:0.7.5' 
 	
