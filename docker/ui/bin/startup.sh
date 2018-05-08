@@ -12,13 +12,5 @@ if [ -z "$WF_SERVER" ];
     echo "using Conductor API server from '$WF_SERVER'"
 fi
 
-secrets=/app/config/secrets.env
-if [ -f $secrets ]; then
-    echo Loading environments from $secrets
-    secrets=$(cat $secrets | grep =)
-    export $secrets
-fi
-
-
 # Run server.js in the foreground, sending messages to stdout
-exec node server.js
+node server.js

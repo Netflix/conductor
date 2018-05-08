@@ -249,7 +249,7 @@ export default function workflows(state = initialState, action) {
       cancelling: false,
       retrying: false,
       pausing: false,
-      resuming: false
+      resumign: false
     };
     case 'GET_TASK_LOGS':
       return {
