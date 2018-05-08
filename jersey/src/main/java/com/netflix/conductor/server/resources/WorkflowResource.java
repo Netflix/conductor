@@ -18,8 +18,7 @@
  */
 package com.netflix.conductor.server.resources;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
@@ -39,7 +38,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +49,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -82,29 +83,41 @@ public class WorkflowResource {
 		this.maxSearchSize = config.getIntProperty("workflow.max.search.size", 5_000);
 	}
 
+	private String handleCorrelationId(String workflowId, HttpHeaders headers,
+									   Response.ResponseBuilder builder) throws JsonProcessingException {
+		String correlationId = null;
+		if (headers.getRequestHeaders().containsKey(Correlator.headerKey)) {
+			Correlator correlator = new Correlator(logger, headers);
+			correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflowId);
+			correlator.updateSequenceNo();
+			correlationId = correlator.asCorrelationId();
+			headers.getRequestHeaders().remove(Correlator.headerKey);
+			builder.header(Correlator.headerKey, correlationId);
+		}
+		return correlationId;
+	}
+
 	@POST
 	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	public Response startWorkflow(StartWorkflowRequest request, @Context HttpHeaders headers) throws Exception {
 		WorkflowDef def = metadata.getWorkflowDef(request.getName(), request.getVersion());
 		if (def == null) {
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + request.getName() + ", version=" + request.getVersion());
 		}
+		executor.validateAuth(def, headers);
 
 		// Generate id on this layer as we need to have it before starting workflow
 		String workflowId = IDGenerator.generate();
 		Response.ResponseBuilder builder = Response.ok(workflowId);
-		Map<String, Object> map = convert(headers);
-		if (headers.getRequestHeaders().containsKey(Correlator.headerKey)) {
-			Correlator correlator = new Correlator(logger, headers);
-			correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflowId);
-			correlator.updateSequenceNo();
-			request.setCorrelationId(correlator.asCorrelationId());
-			map.remove(Correlator.headerKey);
-			builder.header(Correlator.headerKey, request.getCorrelationId());
+
+		String correlationId = handleCorrelationId(workflowId, headers, builder);
+		if (StringUtils.isNotEmpty(correlationId)) {
+			request.setCorrelationId(correlationId);
 		}
-		executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), map);
+
+		executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain());
 		return builder.build();
 	}
 
@@ -112,7 +125,7 @@ public class WorkflowResource {
 	@Path("/{name}")
 	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Start a new workflow.  Returns the ID of the workflow instance that can be later used for tracking")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	public Response startWorkflow(@Context HttpHeaders headers,
 								  @PathParam("name") String name, @QueryParam("version") Integer version,
 								  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
@@ -129,7 +142,7 @@ public class WorkflowResource {
 	@GET
 	@Path("/{name}/correlated/{correlationId}")
 	@ApiOperation("Lists workflows for the given correlation id")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public List<Workflow> getWorkflows(@PathParam("name") String name, @PathParam("correlationId") String correlationId,
 									   @QueryParam("includeClosed") @DefaultValue("false") boolean includeClosed,
@@ -140,7 +153,7 @@ public class WorkflowResource {
 	@GET
 	@Path("/{workflowId}")
 	@ApiOperation("Gets the workflow by workflow id")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Workflow getExecutionStatus(
 			@PathParam("workflowId") String workflowId,
@@ -151,16 +164,22 @@ public class WorkflowResource {
 	@DELETE
 	@Path("/{workflowId}/remove")
 	@ApiOperation("Removes the workflow from the system")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
-	public void delete(@PathParam("workflowId") String workflowId) throws Exception {
+	public Response delete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		executor.validateAuth(workflowId, headers);
+
+		Response.ResponseBuilder builder = Response.noContent();
+		handleCorrelationId(workflowId, headers, builder);
+
 		service.removeWorkflow(workflowId);
+		return builder.build();
 	}
 
 	@GET
 	@Path("/running/{name}")
 	@ApiOperation("Retrieve all the running workflows")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public List<String> getRunningWorkflow(@PathParam("name") String workflowName, @QueryParam("version") @DefaultValue("1") Integer version,
 										   @QueryParam("startTime") Long startTime, @QueryParam("endTime") Long endTime) throws Exception {
@@ -174,7 +193,7 @@ public class WorkflowResource {
 	@PUT
 	@Path("/decide/{workflowId}")
 	@ApiOperation("Starts the decision task for a workflow")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public void decide(@PathParam("workflowId") String workflowId) throws Exception {
 		executor.decide(workflowId);
@@ -183,25 +202,37 @@ public class WorkflowResource {
 	@PUT
 	@Path("/{workflowId}/pause")
 	@ApiOperation("Pauses the workflow")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
-	public void pauseWorkflow(@PathParam("workflowId") String workflowId) throws Exception {
-		executor.pauseWorkflow(workflowId);
+	public Response pauseWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		executor.validateAuth(workflowId, headers);
+
+		Response.ResponseBuilder builder = Response.noContent();
+		String correlationId = handleCorrelationId(workflowId, headers, builder);
+
+		executor.pauseWorkflow(workflowId, correlationId);
+		return builder.build();
 	}
 
 	@PUT
 	@Path("/{workflowId}/resume")
 	@ApiOperation("Resumes the workflow")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
-	public void resumeWorkflow(@PathParam("workflowId") String workflowId) throws Exception {
-		executor.resumeWorkflow(workflowId);
+	public Response resumeWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		executor.validateAuth(workflowId, headers);
+
+		Response.ResponseBuilder builder = Response.noContent();
+		String correlationId = handleCorrelationId(workflowId, headers, builder);
+
+		executor.resumeWorkflow(workflowId, correlationId);
+		return builder.build();
 	}
 
 	@PUT
 	@Path("/{workflowId}/skiptask/{taskReferenceName}")
 	@ApiOperation("Skips a given task from a current running workflow")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public void skipTaskFromWorkflow(@PathParam("workflowId") String workflowId, @PathParam("taskReferenceName") String taskReferenceName,
 									 SkipTaskRequest skipTaskRequest) throws Exception {
@@ -211,67 +242,84 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/rerun")
 	@ApiOperation("Reruns the workflow from a specific task")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-	public String rerun(@PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
+	public Response rerun(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
+		executor.validateAuth(workflowId, headers);
+
+		Response.ResponseBuilder builder = Response.ok(workflowId);
+		String correlationId = handleCorrelationId(workflowId, headers, builder);
 		request.setReRunFromWorkflowId(workflowId);
-		return executor.rerun(request);
+		request.setCorrelationId(correlationId);
+
+		executor.rerun(request);
+		return builder.build();
 	}
 
 	@POST
 	@Path("/{workflowId}/restart")
 	@ApiOperation("Restarts a completed workflow")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
-	public void restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
-		Map<String, Object> map = convert(headers);
-		executor.rewind(workflowId, map);
+	public Response restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		executor.validateAuth(workflowId, headers);
+
+		Response.ResponseBuilder builder = Response.noContent();
+		String correlationId = handleCorrelationId(workflowId, headers, builder);
+
+		executor.rewind(workflowId, correlationId);
+		return builder.build();
 	}
 
 	@POST
 	@Path("/{workflowId}/retry")
 	@ApiOperation("Retries the last failed task")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Response retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
-		Map<String, Object> map = convert(headers);
+		executor.validateAuth(workflowId, headers);
+
 		Response.ResponseBuilder builder = Response.noContent();
-		if (headers.getRequestHeaders().containsKey(Correlator.headerKey)) {
-			Correlator correlator = new Correlator(logger, headers);
-			correlator.addIdentifier("urn:deluxe:conductor:workflow:" + workflowId);
-			correlator.updateSequenceNo();
-			map.remove(Correlator.headerKey);
-			executor.retry(workflowId, map,correlator.asCorrelationId());
-			builder.header(Correlator.headerKey, correlator.asCorrelationId());
-		}
-		else
-		{
-			executor.retry(workflowId, map,"");
-		}
+		String correlationId = handleCorrelationId(workflowId, headers, builder);
+
+		executor.retry(workflowId, correlationId);
 		return builder.build();
 	}
 
 	@DELETE
 	@Path("/{workflowId}")
 	@ApiOperation("Terminate workflow execution")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
-	public void terminate(@PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
+	public Response terminate(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
+		executor.validateAuth(workflowId, headers);
+
+		Response.ResponseBuilder builder = Response.noContent();
+		handleCorrelationId(workflowId, headers, builder);
+
 		executor.terminateWorkflow(workflowId, reason);
+		return builder.build();
 	}
 
 	@POST
 	@Path("/{workflowId}/cancel")
 	@ApiOperation("Cancel workflow execution")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
-	@Produces({MediaType.TEXT_PLAIN})
-	public String cancel(@PathParam("workflowId") String workflowId, Map<String, Object> input) throws Exception {
-		return executor.cancelWorkflow(workflowId, input);
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@Consumes(MediaType.WILDCARD)
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		executor.validateAuth(workflowId, headers);
+
+		Response.ResponseBuilder builder = Response.ok(workflowId);
+		handleCorrelationId(workflowId, headers, builder);
+
+		executor.cancelWorkflow(workflowId);
+		return builder.build();
 	}
 
 	@ApiOperation(value = "Search for workflows based in payload and other parameters", notes = "use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC.  If order is not specified, defaults to ASC")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", value = "", dataType = "string", required = false, paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@GET
 	@Consumes(MediaType.WILDCARD)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -296,34 +344,5 @@ public class WorkflowResource {
 			list = Arrays.asList(sortStr.split("\\|"));
 		}
 		return list;
-	}
-
-	private Map<String, Object> convert(HttpHeaders headers) {
-		Map<String, Object> result = new HashMap<>();
-
-		headers.getRequestHeaders().forEach((key, strings) -> {
-			if (strings != null && !strings.isEmpty()) {
-				List<Object> values = new ArrayList<>(strings.size());
-				ObjectMapper mapper = new ObjectMapper();
-				TypeReference<Map<String, Object>> mapType = new TypeReference<Map<String, Object>>() {
-				};
-				strings.forEach(value -> {
-					if (StringUtils.isNotEmpty(value) && value.startsWith("{") && value.endsWith("}")) {
-						try {
-							String json = StringEscapeUtils.unescapeJson(value);
-							Map<String, Object> map = mapper.readValue(json, mapType);
-							values.add(map);
-						} catch (Exception e) {
-							throw new RuntimeException("Unable to parse json value " + value + " for " + key, e);
-						}
-					} else {
-						values.add(value);
-					}
-				});
-				result.put(key, values);
-			}
-		});
-
-		return result;
 	}
 }

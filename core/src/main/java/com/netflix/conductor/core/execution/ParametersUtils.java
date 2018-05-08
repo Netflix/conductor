@@ -85,20 +85,19 @@ public class ParametersUtils {
 		Map<String, Object> wf = new HashMap<>();
 		wf.put("input", workflow.getInput());
 		wf.put("output", workflow.getOutput());
-		wf.put("headers", workflow.getHeaders());
 		wf.put("status", workflow.getStatus());
 		wf.put("startTime", workflow.getStartTime());
 		wf.put("startTimeIso", fmt.print(workflow.getStartTime()));
 		wf.put("workflowId", workflow.getWorkflowId());
 		wf.put("parentWorkflowId", workflow.getParentWorkflowId());
-		wf.put("parentWorkflowIds", workflow.getParentWorkflowIds());
 		wf.put("parentWorkflowTaskId", workflow.getParentWorkflowTaskId());
 		wf.put("workflowType", workflow.getWorkflowType());
 		wf.put("version", workflow.getVersion());
 		wf.put("correlationId", workflow.getCorrelationId());
 		wf.put("reasonForIncompletion", workflow.getReasonForIncompletion());
 		wf.put("schemaVersion", workflow.getSchemaVersion());
-		
+		wf.put("workflowIds", workflow.getWorkflowIds());
+
 		inputMap.put("workflow", wf);
 		if (MapUtils.isNotEmpty(defaults)) {
 			inputMap.putAll(defaults);
