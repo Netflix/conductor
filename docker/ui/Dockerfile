@@ -22,7 +22,7 @@ RUN apk update && apk add \
   libjpeg-turbo-dev 
 
 # Make app folders
-RUN mkdir -p /app/ui
+RUN mkdir -p /app/config /app/ui
 
 # Copy the ui files onto the image
 COPY ./docker/ui/bin /app
