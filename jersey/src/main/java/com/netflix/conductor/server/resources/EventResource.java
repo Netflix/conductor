@@ -55,61 +55,61 @@ import io.swagger.annotations.ApiOperation;
 @Singleton
 public class EventResource {
 
-	private MetadataService service;
-	
-	private EventProcessor ep;
-	
-	@Inject
-	public EventResource(MetadataService service, EventProcessor ep) {
-		this.service = service;
-		this.ep = ep;
-	}
+    private MetadataService service;
 
-	@POST
-	@ApiOperation("Add a new event handler.")
-	public void addEventHandler(EventHandler eventHandler) {
-		service.addEventHandler(eventHandler);
-	}
+    private EventProcessor ep;
 
-	@PUT
-	@ApiOperation("Update an existing event handler.")
-	public void updateEventHandler(EventHandler eventHandler) {
-		service.updateEventHandler(eventHandler);
-	}
-	
+    @Inject
+    public EventResource(MetadataService service, EventProcessor ep) {
+        this.service = service;
+        this.ep = ep;
+    }
 
-	@DELETE
-	@Path("/{name}")
-	@ApiOperation("Remove an event handler")
-	public void removeEventHandlerStatus(@PathParam("name") String name) {
-		service.removeEventHandlerStatus(name);
-	}
+    @POST
+    @ApiOperation("Add a new event handler.")
+    public void addEventHandler(EventHandler eventHandler) {
+        service.addEventHandler(eventHandler);
+    }
 
-	@GET
-	@ApiOperation("Get all the event handlers")
-	public List<EventHandler> getEventHandlers() {
-		return service.getEventHandlers();
-	}
-	
-	@GET
-	@Path("/{event}")
-	@ApiOperation("Get event handlers for a given event")
-	public List<EventHandler> getEventHandlersForEvent(@PathParam("event") String event, @QueryParam("activeOnly") @DefaultValue("true") boolean activeOnly) {
-		return service.getEventHandlersForEvent(event, activeOnly);
-	}
-	
-	@GET
-	@Path("/queues")
-	@ApiOperation("Get registered queues")
-	public Map<String, ?> getEventQueues(@QueryParam("verbose") @DefaultValue("false") boolean verbose) {
-		return (verbose ? ep.getQueueSizes() : ep.getQueues());
-	}
+    @PUT
+    @ApiOperation("Update an existing event handler.")
+    public void updateEventHandler(EventHandler eventHandler) {
+        service.updateEventHandler(eventHandler);
+    }
 
-	@GET
-	@Path("/queues/providers")
-	@ApiOperation("Get registered queue providers")
-	public List<String> getEventQueueProviders() {
-		return EventQueues.providers();
-	}
-	
+
+    @DELETE
+    @Path("/{name}")
+    @ApiOperation("Remove an event handler")
+    public void removeEventHandlerStatus(@PathParam("name") String name) {
+        service.removeEventHandlerStatus(name);
+    }
+
+    @GET
+    @ApiOperation("Get all the event handlers")
+    public List<EventHandler> getEventHandlers() {
+        return service.getEventHandlers();
+    }
+
+    @GET
+    @Path("/{event}")
+    @ApiOperation("Get event handlers for a given event")
+    public List<EventHandler> getEventHandlersForEvent(@PathParam("event") String event, @QueryParam("activeOnly") @DefaultValue("true") boolean activeOnly) {
+        return service.getEventHandlersForEvent(event, activeOnly);
+    }
+
+    @GET
+    @Path("/queues")
+    @ApiOperation("Get registered queues")
+    public Map<String, ?> getEventQueues(@QueryParam("verbose") @DefaultValue("false") boolean verbose) {
+        return (verbose ? ep.getQueueSizes() : ep.getQueues());
+    }
+
+    @GET
+    @Path("/queues/providers")
+    @ApiOperation("Get registered queue providers")
+    public List<String> getEventQueueProviders() {
+        return EventQueues.providers();
+    }
+
 }

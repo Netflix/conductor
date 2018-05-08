@@ -29,24 +29,24 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
  */
 public class Wait extends WorkflowSystemTask {
 
-	public static final String NAME = "WAIT";
-	
-	public Wait() {
-		super(NAME);
-	}
-	
-	@Override
-	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		task.setStatus(Status.IN_PROGRESS);
-	}
+    public static final String NAME = "WAIT";
 
-	@Override
-	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		return false;
-	}
-	
-	@Override
-	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		task.setStatus(Status.CANCELED);
-	}
+    public Wait() {
+        super(NAME);
+    }
+
+    @Override
+    public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+        task.setStatus(Status.IN_PROGRESS);
+    }
+
+    @Override
+    public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+        return false;
+    }
+
+    @Override
+    public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+        task.setStatus(Status.CANCELED);
+    }
 }

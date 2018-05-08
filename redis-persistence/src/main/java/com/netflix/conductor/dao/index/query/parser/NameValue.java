@@ -29,89 +29,89 @@ import org.elasticsearch.index.query.QueryBuilders;
  * Represents an expression of the form as below:
  * key OPR value 
  * OPR is the comparison operator which could be on the following:
- * 	&gt;, &lt;, = , !=, IN, BETWEEN
+ *     &gt;, &lt;, = , !=, IN, BETWEEN
  * </pre>
  */
 public class NameValue extends AbstractNode implements FilterProvider {
 
-	private Name name;
-	
-	private ComparisonOp op;
-	
-	private ConstValue value;
-	
-	private Range range;
-	
-	private ListConst valueList;
-	
-	public NameValue(InputStream is) throws ParserException {
-		super(is);
-	}
+    private Name name;
 
-	@Override
-	protected void _parse() throws Exception {
-		this.name = new Name(is);
-		this.op = new ComparisonOp(is);
-		
-		if(this.op.getOperator().equals(ComparisonOp.Operators.BETWEEN.value())){
-			this.range = new Range(is);
-		}if(this.op.getOperator().equals(ComparisonOp.Operators.IN.value())){
-			this.valueList = new ListConst(is);
-		}else{
-			this.value = new ConstValue(is);
-		}
-	}
-	
-	@Override
-	public String toString() {
-		return "" + name + op + value;
-	}
+    private ComparisonOp op;
 
-	/**
-	 * @return the name
-	 */
-	public Name getName() {
-		return name;
-	}
+    private ConstValue value;
 
-	/**
-	 * @return the op
-	 */
-	public ComparisonOp getOp() {
-		return op;
-	}
+    private Range range;
 
-	/**
-	 * @return the value
-	 */
-	public ConstValue getValue() {
-		return value;
-	}
-	
-	@Override
-	public QueryBuilder getFilterBuilder(){
-		if(op.getOperator().equals(ComparisonOp.Operators.EQUALS.value())){
-			return QueryBuilders.queryStringQuery(name.getName() + ":" + value.getValue().toString());
-		}else if(op.getOperator().equals(ComparisonOp.Operators.BETWEEN.value())){
-			return QueryBuilders.rangeQuery(name.getName()).from(range.getLow()).to(range.getHigh());
-		}else if(op.getOperator().equals(ComparisonOp.Operators.IN.value())){
-			return QueryBuilders.termsQuery(name.getName(), valueList.getList());
-		}else if(op.getOperator().equals(ComparisonOp.Operators.NOT_EQUALS.value())){
-			return QueryBuilders.queryStringQuery("NOT " + name.getName() + ":" + value.getValue().toString());
-		}else if(op.getOperator().equals(ComparisonOp.Operators.GREATER_THAN.value())){
-			return QueryBuilders.rangeQuery(name.getName()).from(value.getValue()).includeLower(false).includeUpper(false);
-		}else if(op.getOperator().equals(ComparisonOp.Operators.IS.value())){
-			if(value.getSysConstant().equals(ConstValue.SystemConsts.NULL)){
-				return QueryBuilders.boolQuery().mustNot(QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery()).mustNot(QueryBuilders.existsQuery(name.getName())));
-			} else if(value.getSysConstant().equals(ConstValue.SystemConsts.NOT_NULL)){
-				return QueryBuilders.boolQuery().mustNot(QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery()).must(QueryBuilders.existsQuery(name.getName())));
-			}
-		}else if(op.getOperator().equals(ComparisonOp.Operators.LESS_THAN.value())){
-			return QueryBuilders.rangeQuery(name.getName()).to(value.getValue()).includeLower(false).includeUpper(false);
-		}
-		
-		throw new IllegalStateException("Incorrect/unsupported operators");
-	}
+    private ListConst valueList;
 
-	
+    public NameValue(InputStream is) throws ParserException {
+        super(is);
+    }
+
+    @Override
+    protected void _parse() throws Exception {
+        this.name = new Name(is);
+        this.op = new ComparisonOp(is);
+
+        if(this.op.getOperator().equals(ComparisonOp.Operators.BETWEEN.value())){
+            this.range = new Range(is);
+        }if(this.op.getOperator().equals(ComparisonOp.Operators.IN.value())){
+            this.valueList = new ListConst(is);
+        }else{
+            this.value = new ConstValue(is);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "" + name + op + value;
+    }
+
+    /**
+     * @return the name
+     */
+    public Name getName() {
+        return name;
+    }
+
+    /**
+     * @return the op
+     */
+    public ComparisonOp getOp() {
+        return op;
+    }
+
+    /**
+     * @return the value
+     */
+    public ConstValue getValue() {
+        return value;
+    }
+
+    @Override
+    public QueryBuilder getFilterBuilder(){
+        if(op.getOperator().equals(ComparisonOp.Operators.EQUALS.value())){
+            return QueryBuilders.queryStringQuery(name.getName() + ":" + value.getValue().toString());
+        }else if(op.getOperator().equals(ComparisonOp.Operators.BETWEEN.value())){
+            return QueryBuilders.rangeQuery(name.getName()).from(range.getLow()).to(range.getHigh());
+        }else if(op.getOperator().equals(ComparisonOp.Operators.IN.value())){
+            return QueryBuilders.termsQuery(name.getName(), valueList.getList());
+        }else if(op.getOperator().equals(ComparisonOp.Operators.NOT_EQUALS.value())){
+            return QueryBuilders.queryStringQuery("NOT " + name.getName() + ":" + value.getValue().toString());
+        }else if(op.getOperator().equals(ComparisonOp.Operators.GREATER_THAN.value())){
+            return QueryBuilders.rangeQuery(name.getName()).from(value.getValue()).includeLower(false).includeUpper(false);
+        }else if(op.getOperator().equals(ComparisonOp.Operators.IS.value())){
+            if(value.getSysConstant().equals(ConstValue.SystemConsts.NULL)){
+                return QueryBuilders.boolQuery().mustNot(QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery()).mustNot(QueryBuilders.existsQuery(name.getName())));
+            } else if(value.getSysConstant().equals(ConstValue.SystemConsts.NOT_NULL)){
+                return QueryBuilders.boolQuery().mustNot(QueryBuilders.boolQuery().must(QueryBuilders.matchAllQuery()).must(QueryBuilders.existsQuery(name.getName())));
+            }
+        }else if(op.getOperator().equals(ComparisonOp.Operators.LESS_THAN.value())){
+            return QueryBuilders.rangeQuery(name.getName()).to(value.getValue()).includeLower(false).includeUpper(false);
+        }
+
+        throw new IllegalStateException("Incorrect/unsupported operators");
+    }
+
+
 }

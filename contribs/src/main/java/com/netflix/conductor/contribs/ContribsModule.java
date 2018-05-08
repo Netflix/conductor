@@ -45,54 +45,54 @@ import com.netflix.conductor.core.events.sqs.SQSEventQueueProvider;
  */
 public class ContribsModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		bind(QueueManager.class).asEagerSingleton();
-		//bind(SQSEventQueueProvider.class).asEagerSingleton();
-	}
+    @Override
+    protected void configure() {
+        bind(QueueManager.class).asEagerSingleton();
+        //bind(SQSEventQueueProvider.class).asEagerSingleton();
+    }
 
 
-	@ProvidesIntoMap
-	@StringMapKey("sqs")
-	@Singleton
-	@Named("EventQueueProviders")
-	public EventQueueProvider getSQSEventQueueProvider(AmazonSQSClient amazonSQSClient) {
-		return new SQSEventQueueProvider(amazonSQSClient);
-	}
+    @ProvidesIntoMap
+    @StringMapKey("sqs")
+    @Singleton
+    @Named("EventQueueProviders")
+    public EventQueueProvider getSQSEventQueueProvider(AmazonSQSClient amazonSQSClient) {
+        return new SQSEventQueueProvider(amazonSQSClient);
+    }
 
 
 
-	@Provides
-	public AmazonSQSClient getSQSClient(AWSCredentialsProvider acp) {
-		return new AmazonSQSClient(acp);
-	}
-	
-	@Provides
-	public Map<Status, ObservableQueue> getQueues(Configuration config, AWSCredentialsProvider acp) {
-		
-		String stack = "";
-		if(config.getStack() != null && config.getStack().length() > 0) {
-			stack = config.getStack() + "_";
-		}
-		Status[] statuses = new Status[]{Status.COMPLETED, Status.FAILED};
-		Map<Status, ObservableQueue> queues = new HashMap<>();
-		for(Status status : statuses) {
-			String queueName = config.getProperty("workflow.listener.queue.prefix", config.getAppId() + "_sqs_notify_" + stack + status.name());
-			AmazonSQSClient client = new AmazonSQSClient(acp);
-			Builder builder = new SQSObservableQueue.Builder().withClient(client).withQueueName(queueName);
-			
-			String auth = config.getProperty("workflow.listener.queue.authorizedAccounts", "");
-			String[] accounts = auth.split(",");
-			for(String accountToAuthorize : accounts) {
-				accountToAuthorize = accountToAuthorize.trim();
-				if(accountToAuthorize.length() > 0) {
-					builder.addAccountToAuthorize(accountToAuthorize.trim());
-				}
-			}
-			ObservableQueue queue = builder.build();
-			queues.put(status, queue);
-		}
-		
-		return queues;
-	}
+    @Provides
+    public AmazonSQSClient getSQSClient(AWSCredentialsProvider acp) {
+        return new AmazonSQSClient(acp);
+    }
+
+    @Provides
+    public Map<Status, ObservableQueue> getQueues(Configuration config, AWSCredentialsProvider acp) {
+
+        String stack = "";
+        if(config.getStack() != null && config.getStack().length() > 0) {
+            stack = config.getStack() + "_";
+        }
+        Status[] statuses = new Status[]{Status.COMPLETED, Status.FAILED};
+        Map<Status, ObservableQueue> queues = new HashMap<>();
+        for(Status status : statuses) {
+            String queueName = config.getProperty("workflow.listener.queue.prefix", config.getAppId() + "_sqs_notify_" + stack + status.name());
+            AmazonSQSClient client = new AmazonSQSClient(acp);
+            Builder builder = new SQSObservableQueue.Builder().withClient(client).withQueueName(queueName);
+
+            String auth = config.getProperty("workflow.listener.queue.authorizedAccounts", "");
+            String[] accounts = auth.split(",");
+            for(String accountToAuthorize : accounts) {
+                accountToAuthorize = accountToAuthorize.trim();
+                if(accountToAuthorize.length() > 0) {
+                    builder.addAccountToAuthorize(accountToAuthorize.trim());
+                }
+            }
+            ObservableQueue queue = builder.build();
+            queues.put(status, queue);
+        }
+
+        return queues;
+    }
 }

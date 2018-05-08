@@ -66,9 +66,9 @@ function handleLogin() {
     str = '<li><input type="checkbox" id="scope_' + i + '" scope="' + scope.scope + '"' +'" oauthtype="' + scope.OAuthSchemeKey +'"/>' + '<label for="scope_' + i + '">' + scope.scope ;
     if (scope.description) {
       if ($.map(auths, function(n, i) { return i; }).length > 1) //if we have more than one scheme, display schemes
-	    str += '<br/><span class="api-scope-desc">' + scope.description + ' ('+ scope.OAuthSchemeKey+')' +'</span>';
-	  else
-	    str += '<br/><span class="api-scope-desc">' + scope.description + '</span>';
+        str += '<br/><span class="api-scope-desc">' + scope.description + ' ('+ scope.OAuthSchemeKey+')' +'</span>';
+      else
+        str += '<br/><span class="api-scope-desc">' + scope.description + '</span>';
     }
     str += '</label></li>';
     popup.append(str);

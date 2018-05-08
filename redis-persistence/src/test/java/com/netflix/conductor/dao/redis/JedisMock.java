@@ -740,25 +740,25 @@ public class JedisMock extends Jedis {
     }
     
     @Override
-	public Long zadd(String key, double score, String member, ZAddParams params) {
-		
-		try {
-			
-			if(params.contains("xx")) {
-				Double existing = redis.zscore(key, member);
-				if(existing == null) {
-					return 0L;
-				}
-				return redis.zadd(key, new ZsetPair(member, score));
-			}else {
-				return redis.zadd(key, new ZsetPair(member, score));
-			}
-			
-		} catch (Exception e) {
-			throw new JedisException(e);
-		}
-	}
-	
+    public Long zadd(String key, double score, String member, ZAddParams params) {
+
+        try {
+
+            if(params.contains("xx")) {
+                Double existing = redis.zscore(key, member);
+                if(existing == null) {
+                    return 0L;
+                }
+                return redis.zadd(key, new ZsetPair(member, score));
+            }else {
+                return redis.zadd(key, new ZsetPair(member, score));
+            }
+
+        } catch (Exception e) {
+            throw new JedisException(e);
+        }
+    }
+
 
     @Override public Long zadd(final String key, final Map<String, Double> scoreMembers) {
         try {
@@ -1167,25 +1167,25 @@ public class JedisMock extends Jedis {
         }
     }
     
-	@Override
-	public ScanResult<String> sscan(String key, String cursor, ScanParams params) {
-		try {
-			org.rarefiedredis.redis.ScanResult<Set<String>> sr = redis.sscan(key, Long.valueOf(cursor), "count", "1000000");
-			List<String> list = sr.results.stream().collect(Collectors.toList());
+    @Override
+    public ScanResult<String> sscan(String key, String cursor, ScanParams params) {
+        try {
+            org.rarefiedredis.redis.ScanResult<Set<String>> sr = redis.sscan(key, Long.valueOf(cursor), "count", "1000000");
+            List<String> list = sr.results.stream().collect(Collectors.toList());
             ScanResult<String> result = new ScanResult<String>("0", list);
             return result;
         }
         catch (Exception e) {
             throw new JedisException(e);
         }
-	}
+    }
 
-	public ScanResult<Entry<String, String>> hscan(final String key, final String cursor) {
-    	try {
+    public ScanResult<Entry<String, String>> hscan(final String key, final String cursor) {
+        try {
             org.rarefiedredis.redis.ScanResult<Map<String, String>> mockr = redis.hscan(key, Long.valueOf(cursor), "count", "1000000");
             Map<String, String> results = mockr.results;
             List<Entry<String, String>> list = results.entrySet().stream().collect(Collectors.toList());
-			ScanResult<Entry<String, String>> result = new ScanResult<Entry<String, String>>("0", list);
+            ScanResult<Entry<String, String>> result = new ScanResult<Entry<String, String>>("0", list);
             
             return result;
         }
@@ -1194,13 +1194,13 @@ public class JedisMock extends Jedis {
         }
     }
 
-	public ScanResult<Tuple> zscan(final String key, final String cursor) {
-		try {
-			org.rarefiedredis.redis.ScanResult<Set<ZsetPair>> sr = redis.zscan(key, Long.valueOf(cursor), "count", "1000000");
-			List<ZsetPair> list = sr.results.stream().collect(Collectors.toList());
-			List<Tuple> tl = new LinkedList<Tuple>();
-			list.forEach(p -> tl.add(new Tuple(p.member, p.score)));
-			ScanResult<Tuple> result = new ScanResult<Tuple>("0", tl);
+    public ScanResult<Tuple> zscan(final String key, final String cursor) {
+        try {
+            org.rarefiedredis.redis.ScanResult<Set<ZsetPair>> sr = redis.zscan(key, Long.valueOf(cursor), "count", "1000000");
+            List<ZsetPair> list = sr.results.stream().collect(Collectors.toList());
+            List<Tuple> tl = new LinkedList<Tuple>();
+            list.forEach(p -> tl.add(new Tuple(p.member, p.score)));
+            ScanResult<Tuple> result = new ScanResult<Tuple>("0", tl);
             return result;
         }
         catch (Exception e) {

@@ -36,43 +36,43 @@ import com.netflix.conductor.core.execution.ParametersUtils;
  * Static holders for internal event queues
  */
 public class EventQueues {
-	
-	private static Logger logger = LoggerFactory.getLogger(EventQueues.class);
 
-	private static ParametersUtils parametersUtils = new ParametersUtils();
+    private static Logger logger = LoggerFactory.getLogger(EventQueues.class);
 
-	@Inject
-	@Named("EventQueueProviders")
-	public static Map<String, EventQueueProvider> providers; //TODO this is a leaky abstraction, when the static injection is moved to singleton this will be fixed
+    private static ParametersUtils parametersUtils = new ParametersUtils();
 
-	private EventQueues() {
+    @Inject
+    @Named("EventQueueProviders")
+    public static Map<String, EventQueueProvider> providers; //TODO this is a leaky abstraction, when the static injection is moved to singleton this will be fixed
 
-	}
+    private EventQueues() {
 
-	public static List<String> providers() {
-		return providers.values().stream()
-				.map(p -> p.getClass().getName())
-				.collect(Collectors.toList());
-	}
+    }
 
-	public static ObservableQueue getQueue(String eventt, boolean throwException) {
-		String event = parametersUtils.replace(eventt).toString();
-		String type = event.substring(0, event.indexOf(':'));
-		String queueURI = event.substring(event.indexOf(':') + 1);
-		EventQueueProvider provider = providers.get(type);
-		if (provider != null) {
-			try {
-				return provider.getQueue(queueURI);
-			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
-				if (throwException) {
-					throw e;
-				}
-			}
-		} else {
-			throw new IllegalArgumentException("Unknown queue type " + type);
-		}
-		return null;
+    public static List<String> providers() {
+        return providers.values().stream()
+                .map(p -> p.getClass().getName())
+                .collect(Collectors.toList());
+    }
 
-	}
+    public static ObservableQueue getQueue(String eventt, boolean throwException) {
+        String event = parametersUtils.replace(eventt).toString();
+        String type = event.substring(0, event.indexOf(':'));
+        String queueURI = event.substring(event.indexOf(':') + 1);
+        EventQueueProvider provider = providers.get(type);
+        if (provider != null) {
+            try {
+                return provider.getQueue(queueURI);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                if (throwException) {
+                    throw e;
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown queue type " + type);
+        }
+        return null;
+
+    }
 }

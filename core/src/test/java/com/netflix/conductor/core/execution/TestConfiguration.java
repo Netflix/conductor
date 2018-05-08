@@ -29,63 +29,63 @@ import com.netflix.conductor.core.config.Configuration;
  */
 public class TestConfiguration implements Configuration {
 
-	@Override
-	public int getSweepFrequency() {
-		return 1;
-	}
+    @Override
+    public int getSweepFrequency() {
+        return 1;
+    }
 
-	@Override
-	public boolean disableSweep() {
-		return false;
-	}
-	
-	@Override
-	public boolean disableAsyncWorkers() {
-		return false;
-	}
+    @Override
+    public boolean disableSweep() {
+        return false;
+    }
 
-	@Override
-	public String getServerId() {
-		return "server_id";
-	}
+    @Override
+    public boolean disableAsyncWorkers() {
+        return false;
+    }
 
-	@Override
-	public String getEnvironment() {
-		return "test";
-	}
+    @Override
+    public String getServerId() {
+        return "server_id";
+    }
 
-	@Override
-	public String getStack() {
-		return "junit";
-	}
+    @Override
+    public String getEnvironment() {
+        return "test";
+    }
 
-	@Override
-	public String getAppId() {
-		return "workflow";
-	}
+    @Override
+    public String getStack() {
+        return "junit";
+    }
 
-	@Override
-	public String getProperty(String string, String def) {
-		return "dummy";
-	}
-	
-	@Override
-	public String getAvailabilityZone() {
-		return "us-east-1a";
-	}
-	
-	@Override
-	public int getIntProperty(String string, int def) {
-		return 100;
-	}
-	
-	@Override
-	public String getRegion() {
-		return "us-east-1";
-	}
-	
-	@Override
-	public Map<String, Object> getAll() {
-		return null;
-	}
+    @Override
+    public String getAppId() {
+        return "workflow";
+    }
+
+    @Override
+    public String getProperty(String string, String def) {
+        return "dummy";
+    }
+
+    @Override
+    public String getAvailabilityZone() {
+        return "us-east-1a";
+    }
+
+    @Override
+    public int getIntProperty(String string, int def) {
+        return 100;
+    }
+
+    @Override
+    public String getRegion() {
+        return "us-east-1";
+    }
+
+    @Override
+    public Map<String, Object> getAll() {
+        return null;
+    }
 }

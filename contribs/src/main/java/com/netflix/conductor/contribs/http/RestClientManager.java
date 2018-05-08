@@ -30,9 +30,9 @@ import com.sun.jersey.api.client.Client;
 @Singleton
 public class RestClientManager {
 
-	private Client defaultClient = Client.create();
-	
-	public Client getClient(Input input) {
-		return defaultClient;
-	}
+    private Client defaultClient = Client.create();
+
+    public Client getClient(Input input) {
+        return defaultClient;
+    }
 }

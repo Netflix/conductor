@@ -30,13 +30,13 @@ import com.netflix.conductor.core.execution.SystemTaskType;
  */
 public class TestSystemTasks {
 
-	@Test
-	public void test(){
-		new SubWorkflow();
-		assertTrue(SystemTaskType.is(SystemTaskType.JOIN.name()));
-		assertTrue(SystemTaskType.is(SystemTaskType.FORK.name()));
-		assertTrue(SystemTaskType.is(SystemTaskType.DECISION.name()));
-		assertTrue(SystemTaskType.is(SubWorkflow.NAME));
-	}
+    @Test
+    public void test(){
+        new SubWorkflow();
+        assertTrue(SystemTaskType.is(SystemTaskType.JOIN.name()));
+        assertTrue(SystemTaskType.is(SystemTaskType.FORK.name()));
+        assertTrue(SystemTaskType.is(SystemTaskType.DECISION.name()));
+        assertTrue(SystemTaskType.is(SubWorkflow.NAME));
+    }
 
 }

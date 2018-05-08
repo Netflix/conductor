@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.dao.es5.index.query.parser;
 
@@ -32,23 +32,23 @@ import static org.junit.Assert.assertNotNull;
  */
 public class TestComparisonOp extends AbstractParserTest {
 
-	@Test
-	public void test() throws Exception {
-		String[] tests = new String[]{"<",">","=","!=","IN"};
-		for(String test : tests){
-			ComparisonOp name = new ComparisonOp(getInputStream(test));
-			String nameVal = name.getOperator();
-			assertNotNull(nameVal);
-			assertEquals(test, nameVal);
-		}
-	}
-	
-	@Test(expected=ParserException.class)
-	public void testInvalidOp() throws Exception {
-		String test =  "AND";
-		ComparisonOp name = new ComparisonOp(getInputStream(test));
-		String nameVal = name.getOperator();
-		assertNotNull(nameVal);
-		assertEquals(test, nameVal);
-	}
+    @Test
+    public void test() throws Exception {
+        String[] tests = new String[]{"<", ">", "=", "!=", "IN"};
+        for (String test : tests) {
+            ComparisonOp name = new ComparisonOp(getInputStream(test));
+            String nameVal = name.getOperator();
+            assertNotNull(nameVal);
+            assertEquals(test, nameVal);
+        }
+    }
+
+    @Test(expected = ParserException.class)
+    public void testInvalidOp() throws Exception {
+        String test = "AND";
+        ComparisonOp name = new ComparisonOp(getInputStream(test));
+        String nameVal = name.getOperator();
+        assertNotNull(nameVal);
+        assertEquals(test, nameVal);
+    }
 }

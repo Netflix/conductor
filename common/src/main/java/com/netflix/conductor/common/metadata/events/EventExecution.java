@@ -29,156 +29,156 @@ import com.netflix.conductor.common.metadata.events.EventHandler.Action;
  */
 public class EventExecution {
 
-	public enum Status {
-		IN_PROGRESS, COMPLETED, FAILED, SKIPPED
-	}
-	
-	private String id;
-	
-	private String messageId;
-	
-	private String name;
-	
-	private String event;
-	
-	private long created;
-	
-	private Status status;
-	
-	private Action.Type action;
-	
-	private Map<String, Object> output = new HashMap<>();
+    public enum Status {
+        IN_PROGRESS, COMPLETED, FAILED, SKIPPED
+    }
 
-	public EventExecution() {
-		
-	}
-	
-	public EventExecution(String id, String messageId) {
-		this.id = id;
-		this.messageId = messageId;
-	}
-	
-	/**
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
-	}
+    private String id;
 
-	/**
-	 * @param id the id to set
-	 * 
-	 */
-	public void setId(String id) {
-		this.id = id;
-	}
+    private String messageId;
 
-	
-	/**
-	 * @return the messageId
-	 */
-	public String getMessageId() {
-		return messageId;
-	}
+    private String name;
 
-	/**
-	 * @param messageId the messageId to set
-	 * 
-	 */
-	public void setMessageId(String messageId) {
-		this.messageId = messageId;
-	}
+    private String event;
 
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
-	}
+    private long created;
 
-	/**
-	 * @param name the name to set
-	 * 
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+    private Status status;
 
-	/**
-	 * @return the event
-	 */
-	public String getEvent() {
-		return event;
-	}
+    private Action.Type action;
 
-	/**
-	 * @param event the event to set
-	 * 
-	 */
-	public void setEvent(String event) {
-		this.event = event;
-	}
+    private Map<String, Object> output = new HashMap<>();
 
-	/**
-	 * @return the created
-	 */
-	public long getCreated() {
-		return created;
-	}
+    public EventExecution() {
 
-	/**
-	 * @param created the created to set
-	 * 
-	 */
-	public void setCreated(long created) {
-		this.created = created;
-	}
+    }
 
-	/**
-	 * @return the status
-	 */
-	public Status getStatus() {
-		return status;
-	}
+    public EventExecution(String id, String messageId) {
+        this.id = id;
+        this.messageId = messageId;
+    }
 
-	/**
-	 * @param status the status to set
-	 * 
-	 */
-	public void setStatus(Status status) {
-		this.status = status;
-	}
+    /**
+     * @return the id
+     */
+    public String getId() {
+        return id;
+    }
 
-	/**
-	 * @return the action
-	 */
-	public Action.Type getAction() {
-		return action;
-	}
+    /**
+     * @param id the id to set
+     *
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	/**
-	 * @param action the action to set
-	 * 
-	 */
-	public void setAction(Action.Type action) {
-		this.action = action;
-	}
 
-	/**
-	 * @return the output
-	 */
-	public Map<String, Object> getOutput() {
-		return output;
-	}
+    /**
+     * @return the messageId
+     */
+    public String getMessageId() {
+        return messageId;
+    }
 
-	/**
-	 * @param output the output to set
-	 * 
-	 */
-	public void setOutput(Map<String, Object> output) {
-		this.output = output;
-	}
-	
-	
-	
+    /**
+     * @param messageId the messageId to set
+     *
+     */
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     *
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return the event
+     */
+    public String getEvent() {
+        return event;
+    }
+
+    /**
+     * @param event the event to set
+     *
+     */
+    public void setEvent(String event) {
+        this.event = event;
+    }
+
+    /**
+     * @return the created
+     */
+    public long getCreated() {
+        return created;
+    }
+
+    /**
+     * @param created the created to set
+     *
+     */
+    public void setCreated(long created) {
+        this.created = created;
+    }
+
+    /**
+     * @return the status
+     */
+    public Status getStatus() {
+        return status;
+    }
+
+    /**
+     * @param status the status to set
+     *
+     */
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    /**
+     * @return the action
+     */
+    public Action.Type getAction() {
+        return action;
+    }
+
+    /**
+     * @param action the action to set
+     *
+     */
+    public void setAction(Action.Type action) {
+        this.action = action;
+    }
+
+    /**
+     * @return the output
+     */
+    public Map<String, Object> getOutput() {
+        return output;
+    }
+
+    /**
+     * @param output the output to set
+     *
+     */
+    public void setOutput(Map<String, Object> output) {
+        this.output = output;
+    }
+
+
+
 }

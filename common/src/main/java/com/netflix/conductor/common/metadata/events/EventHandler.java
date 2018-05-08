@@ -29,316 +29,316 @@ import java.util.Map;
  */
 public class EventHandler {
 
-	private String name;
-	
-	private String event;
-	
-	private String condition;
-	
-	private List<Action> actions = new LinkedList<>();
-	
-	private boolean active;
-	
-	public EventHandler() {
-		
-	}
+    private String name;
 
-	/**
-	 * @return the name MUST be unique within a conductor instance
-	 */
-	public String getName() {
-		return name;
-	}
+    private String event;
 
-	/**
-	 * @param name the name to set
-	 * 
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+    private String condition;
 
-	/**
-	 * @return the event
-	 */
-	public String getEvent() {
-		return event;
-	}
+    private List<Action> actions = new LinkedList<>();
 
-	/**
-	 * @param event the event to set
-	 * 
-	 */
-	public void setEvent(String event) {
-		this.event = event;
-	}
+    private boolean active;
 
-	/**
-	 * @return the condition
-	 */
-	public String getCondition() {
-		return condition;
-	}
+    public EventHandler() {
 
-	/**
-	 * @param condition the condition to set
-	 * 
-	 */
-	public void setCondition(String condition) {
-		this.condition = condition;
-	}
+    }
 
-	/**
-	 * @return the actions
-	 */
-	public List<Action> getActions() {
-		return actions;
-	}
+    /**
+     * @return the name MUST be unique within a conductor instance
+     */
+    public String getName() {
+        return name;
+    }
 
-	/**
-	 * @param actions the actions to set
-	 * 
-	 */
-	public void setActions(List<Action> actions) {
-		this.actions = actions;
-	}
+    /**
+     * @param name the name to set
+     *
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/**
-	 * @return the active
-	 */
-	public boolean isActive() {
-		return active;
-	}
+    /**
+     * @return the event
+     */
+    public String getEvent() {
+        return event;
+    }
 
-	/**
-	 * @param active if set to false, the event handler is deactivated
-	 * 
-	 */
-	public void setActive(boolean active) {
-		this.active = active;
-	}
+    /**
+     * @param event the event to set
+     *
+     */
+    public void setEvent(String event) {
+        this.event = event;
+    }
+
+    /**
+     * @return the condition
+     */
+    public String getCondition() {
+        return condition;
+    }
+
+    /**
+     * @param condition the condition to set
+     *
+     */
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    /**
+     * @return the actions
+     */
+    public List<Action> getActions() {
+        return actions;
+    }
+
+    /**
+     * @param actions the actions to set
+     *
+     */
+    public void setActions(List<Action> actions) {
+        this.actions = actions;
+    }
+
+    /**
+     * @return the active
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * @param active if set to false, the event handler is deactivated
+     *
+     */
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 
 
-	public static class Action {
-		
-		public enum Type { start_workflow, complete_task, fail_task }
-		
-		private Type action;
-		
-		private StartWorkflow start_workflow;
-		
-		private TaskDetails complete_task;
-		
-		private TaskDetails fail_task;
-		
-		private boolean expandInlineJSON;
+    public static class Action {
 
-		/**
-		 * @return the action
-		 */
-		public Type getAction() {
-			return action;
-		}
+        public enum Type { start_workflow, complete_task, fail_task }
 
-		/**
-		 * @param action the action to set
-		 * 
-		 */
-		public void setAction(Type action) {
-			this.action = action;
-		}
+        private Type action;
 
-		/**
-		 * @return the start_workflow
-		 */
-		public StartWorkflow getStart_workflow() {
-			return start_workflow;
-		}
+        private StartWorkflow start_workflow;
 
-		/**
-		 * @param start_workflow the start_workflow to set
-		 * 
-		 */
-		public void setStart_workflow(StartWorkflow start_workflow) {
-			this.start_workflow = start_workflow;
-		}
+        private TaskDetails complete_task;
 
-		/**
-		 * @return the complete_task
-		 */
-		public TaskDetails getComplete_task() {
-			return complete_task;
-		}
+        private TaskDetails fail_task;
 
-		/**
-		 * @param complete_task the complete_task to set
-		 * 
-		 */
-		public void setComplete_task(TaskDetails complete_task) {
-			this.complete_task = complete_task;
-		}
+        private boolean expandInlineJSON;
 
-		/**
-		 * @return the fail_task
-		 */
-		public TaskDetails getFail_task() {
-			return fail_task;
-		}
+        /**
+         * @return the action
+         */
+        public Type getAction() {
+            return action;
+        }
 
-		/**
-		 * @param fail_task the fail_task to set
-		 * 
-		 */
-		public void setFail_task(TaskDetails fail_task) {
-			this.fail_task = fail_task;
-		}
-		
-		/**
-		 * 
-		 * @param expandInlineJSON when set to true, the in-lined JSON strings are expanded to a full json document 
-		 */
-		public void setExpandInlineJSON(boolean expandInlineJSON) {
-			this.expandInlineJSON = expandInlineJSON;
-		}
-		
-		/**
-		 * 
-		 * @return true if the json strings within the payload should be expanded.
-		 */
-		public boolean isExpandInlineJSON() {
-			return expandInlineJSON;
-		}
-	}
-	
-	public static class TaskDetails {
-		
-		private String workflowId;
-		
-		private String taskRefName;
-		
-		private Map<String, Object> output = new HashMap<>();
+        /**
+         * @param action the action to set
+         *
+         */
+        public void setAction(Type action) {
+            this.action = action;
+        }
 
-		/**
-		 * @return the workflowId
-		 */
-		public String getWorkflowId() {
-			return workflowId;
-		}
+        /**
+         * @return the start_workflow
+         */
+        public StartWorkflow getStart_workflow() {
+            return start_workflow;
+        }
 
-		/**
-		 * @param workflowId the workflowId to set
-		 * 
-		 */
-		public void setWorkflowId(String workflowId) {
-			this.workflowId = workflowId;
-		}
+        /**
+         * @param start_workflow the start_workflow to set
+         *
+         */
+        public void setStart_workflow(StartWorkflow start_workflow) {
+            this.start_workflow = start_workflow;
+        }
 
-		/**
-		 * @return the taskRefName
-		 */
-		public String getTaskRefName() {
-			return taskRefName;
-		}
+        /**
+         * @return the complete_task
+         */
+        public TaskDetails getComplete_task() {
+            return complete_task;
+        }
 
-		/**
-		 * @param taskRefName the taskRefName to set
-		 * 
-		 */
-		public void setTaskRefName(String taskRefName) {
-			this.taskRefName = taskRefName;
-		}
+        /**
+         * @param complete_task the complete_task to set
+         *
+         */
+        public void setComplete_task(TaskDetails complete_task) {
+            this.complete_task = complete_task;
+        }
 
-		/**
-		 * @return the output
-		 */
-		public Map<String, Object> getOutput() {
-			return output;
-		}
+        /**
+         * @return the fail_task
+         */
+        public TaskDetails getFail_task() {
+            return fail_task;
+        }
 
-		/**
-		 * @param output the output to set
-		 * 
-		 */
-		public void setOutput(Map<String, Object> output) {
-			this.output = output;
-		}
-		
-		
-		
-	}
-	
-	public static class StartWorkflow {
-		
-		private String name;
-		
-		private Integer version;
-		
-		private String correlationId;
-		
-		private Map<String, Object> input = new HashMap<>();
+        /**
+         * @param fail_task the fail_task to set
+         *
+         */
+        public void setFail_task(TaskDetails fail_task) {
+            this.fail_task = fail_task;
+        }
 
-		/**
-		 * @return the name
-		 */
-		public String getName() {
-			return name;
-		}
+        /**
+         *
+         * @param expandInlineJSON when set to true, the in-lined JSON strings are expanded to a full json document
+         */
+        public void setExpandInlineJSON(boolean expandInlineJSON) {
+            this.expandInlineJSON = expandInlineJSON;
+        }
 
-		/**
-		 * @param name the name to set
-		 * 
-		 */
-		public void setName(String name) {
-			this.name = name;
-		}
+        /**
+         *
+         * @return true if the json strings within the payload should be expanded.
+         */
+        public boolean isExpandInlineJSON() {
+            return expandInlineJSON;
+        }
+    }
 
-		/**
-		 * @return the version
-		 */
-		public Integer getVersion() {
-			return version;
-		}
+    public static class TaskDetails {
 
-		/**
-		 * @param version the version to set
-		 * 
-		 */
-		public void setVersion(Integer version) {
-			this.version = version;
-		}
+        private String workflowId;
 
-		
-		/**
-		 * @return the correlationId
-		 */
-		public String getCorrelationId() {
-			return correlationId;
-		}
+        private String taskRefName;
 
-		/**
-		 * @param correlationId the correlationId to set
-		 * 
-		 */
-		public void setCorrelationId(String correlationId) {
-			this.correlationId = correlationId;
-		}
+        private Map<String, Object> output = new HashMap<>();
 
-		/**
-		 * @return the input
-		 */
-		public Map<String, Object> getInput() {
-			return input;
-		}
+        /**
+         * @return the workflowId
+         */
+        public String getWorkflowId() {
+            return workflowId;
+        }
 
-		/**
-		 * @param input the input to set
-		 * 
-		 */
-		public void setInput(Map<String, Object> input) {
-			this.input = input;
-		}
-		
-		
-	}
-	
+        /**
+         * @param workflowId the workflowId to set
+         *
+         */
+        public void setWorkflowId(String workflowId) {
+            this.workflowId = workflowId;
+        }
+
+        /**
+         * @return the taskRefName
+         */
+        public String getTaskRefName() {
+            return taskRefName;
+        }
+
+        /**
+         * @param taskRefName the taskRefName to set
+         *
+         */
+        public void setTaskRefName(String taskRefName) {
+            this.taskRefName = taskRefName;
+        }
+
+        /**
+         * @return the output
+         */
+        public Map<String, Object> getOutput() {
+            return output;
+        }
+
+        /**
+         * @param output the output to set
+         *
+         */
+        public void setOutput(Map<String, Object> output) {
+            this.output = output;
+        }
+
+
+
+    }
+
+    public static class StartWorkflow {
+
+        private String name;
+
+        private Integer version;
+
+        private String correlationId;
+
+        private Map<String, Object> input = new HashMap<>();
+
+        /**
+         * @return the name
+         */
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * @param name the name to set
+         *
+         */
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        /**
+         * @return the version
+         */
+        public Integer getVersion() {
+            return version;
+        }
+
+        /**
+         * @param version the version to set
+         *
+         */
+        public void setVersion(Integer version) {
+            this.version = version;
+        }
+
+
+        /**
+         * @return the correlationId
+         */
+        public String getCorrelationId() {
+            return correlationId;
+        }
+
+        /**
+         * @param correlationId the correlationId to set
+         *
+         */
+        public void setCorrelationId(String correlationId) {
+            this.correlationId = correlationId;
+        }
+
+        /**
+         * @return the input
+         */
+        public Map<String, Object> getInput() {
+            return input;
+        }
+
+        /**
+         * @param input the input to set
+         *
+         */
+        public void setInput(Map<String, Object> input) {
+            this.input = input;
+        }
+
+
+    }
+
 }

@@ -66,254 +66,254 @@ import java.util.stream.Collectors;
  */
 public class SQSObservableQueue implements ObservableQueue {
 
-	private static Logger logger = LoggerFactory.getLogger(SQSObservableQueue.class);
+    private static Logger logger = LoggerFactory.getLogger(SQSObservableQueue.class);
 
-	private static final String QUEUE_TYPE = "sqs";
+    private static final String QUEUE_TYPE = "sqs";
 
-	private String queueName;
+    private String queueName;
 
-	private int visibilityTimeout;
+    private int visibilityTimeout;
 
-	private int batchSize;
+    private int batchSize;
 
-	private AmazonSQSClient client;
+    private AmazonSQSClient client;
 
-	private int pollTimeInMS;
+    private int pollTimeInMS;
 
-	private String queueURL;
+    private String queueURL;
 
-	private SQSObservableQueue(String queueName, AmazonSQSClient client, int visibilityTimeout, int batchSize, int pollTimeInMS, List<String> accountsToAuthorize) {
-		this.queueName = queueName;
-		this.client = client;
-		this.visibilityTimeout = visibilityTimeout;
-		this.batchSize = batchSize;
-		this.pollTimeInMS = pollTimeInMS;
-		this.queueURL = getOrCreateQueue();
-		addPolicy(accountsToAuthorize);
-	}
+    private SQSObservableQueue(String queueName, AmazonSQSClient client, int visibilityTimeout, int batchSize, int pollTimeInMS, List<String> accountsToAuthorize) {
+        this.queueName = queueName;
+        this.client = client;
+        this.visibilityTimeout = visibilityTimeout;
+        this.batchSize = batchSize;
+        this.pollTimeInMS = pollTimeInMS;
+        this.queueURL = getOrCreateQueue();
+        addPolicy(accountsToAuthorize);
+    }
 
-	@Override
-	public Observable<Message> observe() {
-		OnSubscribe<Message> subscriber = getOnSubscribe();
-		return Observable.create(subscriber);
-	}
+    @Override
+    public Observable<Message> observe() {
+        OnSubscribe<Message> subscriber = getOnSubscribe();
+        return Observable.create(subscriber);
+    }
 
-	@Override
-	public List<String> ack(List<Message> messages) {
-		return delete(messages);
-	}
+    @Override
+    public List<String> ack(List<Message> messages) {
+        return delete(messages);
+    }
 
-	@Override
-	public void publish(List<Message> messages) {
-		publishMessages(messages);
-	}
+    @Override
+    public void publish(List<Message> messages) {
+        publishMessages(messages);
+    }
 
-	@Override
-	public long size() {
-		GetQueueAttributesResult attributes = client.getQueueAttributes(queueURL, Collections.singletonList("ApproximateNumberOfMessages"));
-		String sizeAsStr = attributes.getAttributes().get("ApproximateNumberOfMessages");
-		try {
-			return Long.parseLong(sizeAsStr);
-		} catch(Exception e) {
-			return -1;
-		}
-	}
+    @Override
+    public long size() {
+        GetQueueAttributesResult attributes = client.getQueueAttributes(queueURL, Collections.singletonList("ApproximateNumberOfMessages"));
+        String sizeAsStr = attributes.getAttributes().get("ApproximateNumberOfMessages");
+        try {
+            return Long.parseLong(sizeAsStr);
+        } catch(Exception e) {
+            return -1;
+        }
+    }
 
-	@Override
-	public void setUnackTimeout(Message message, long unackTimeout) {
-		int unackTimeoutInSeconds = (int) (unackTimeout / 1000);
-		ChangeMessageVisibilityRequest request = new ChangeMessageVisibilityRequest(queueURL, message.getReceipt(), unackTimeoutInSeconds);
-		client.changeMessageVisibility(request);
-	}
+    @Override
+    public void setUnackTimeout(Message message, long unackTimeout) {
+        int unackTimeoutInSeconds = (int) (unackTimeout / 1000);
+        ChangeMessageVisibilityRequest request = new ChangeMessageVisibilityRequest(queueURL, message.getReceipt(), unackTimeoutInSeconds);
+        client.changeMessageVisibility(request);
+    }
 
-	@Override
-	public String getType() {
-		return QUEUE_TYPE;
-	}
+    @Override
+    public String getType() {
+        return QUEUE_TYPE;
+    }
 
-	@Override
-	public String getName() {
-		return queueName;
-	}
+    @Override
+    public String getName() {
+        return queueName;
+    }
 
-	@Override
-	public String getURI() {
-		return queueURL;
-	}
+    @Override
+    public String getURI() {
+        return queueURL;
+    }
 
-	public static class Builder {
+    public static class Builder {
 
-		private String queueName;
+        private String queueName;
 
-		private int visibilityTimeout = 30;	//seconds
+        private int visibilityTimeout = 30;    //seconds
 
-		private int batchSize = 5;
+        private int batchSize = 5;
 
-		private int pollTimeInMS = 100;
+        private int pollTimeInMS = 100;
 
-		private AmazonSQSClient client;
+        private AmazonSQSClient client;
 
-		private List<String> accountsToAuthorize = new LinkedList<>();
+        private List<String> accountsToAuthorize = new LinkedList<>();
 
-		public Builder withQueueName(String queueName) {
-			this.queueName = queueName;
-			return this;
-		}
+        public Builder withQueueName(String queueName) {
+            this.queueName = queueName;
+            return this;
+        }
 
-		/**
-		 *
-		 * @param visibilityTimeout Visibility timeout for the message in SECONDS
-		 * @return builder instance
-		 */
-		public Builder withVisibilityTimeout(int visibilityTimeout) {
-			this.visibilityTimeout = visibilityTimeout;
-			return this;
-		}
+        /**
+         *
+         * @param visibilityTimeout Visibility timeout for the message in SECONDS
+         * @return builder instance
+         */
+        public Builder withVisibilityTimeout(int visibilityTimeout) {
+            this.visibilityTimeout = visibilityTimeout;
+            return this;
+        }
 
-		public Builder withBatchSize(int batchSize) {
-			this.batchSize = batchSize;
-			return this;
-		}
+        public Builder withBatchSize(int batchSize) {
+            this.batchSize = batchSize;
+            return this;
+        }
 
-		public Builder withClient(AmazonSQSClient client) {
-			this.client = client;
-			return this;
-		}
+        public Builder withClient(AmazonSQSClient client) {
+            this.client = client;
+            return this;
+        }
 
-		public Builder withPollTimeInMS(int pollTimeInMS) {
-			this.pollTimeInMS = pollTimeInMS;
-			return this;
-		}
+        public Builder withPollTimeInMS(int pollTimeInMS) {
+            this.pollTimeInMS = pollTimeInMS;
+            return this;
+        }
 
-		public Builder withAccountsToAuthorize(List<String> accountsToAuthorize) {
-			this.accountsToAuthorize = accountsToAuthorize;
-			return this;
-		}
+        public Builder withAccountsToAuthorize(List<String> accountsToAuthorize) {
+            this.accountsToAuthorize = accountsToAuthorize;
+            return this;
+        }
 
-		public Builder addAccountToAuthorize(String accountToAuthorize) {
-			this.accountsToAuthorize.add(accountToAuthorize);
-			return this;
-		}
+        public Builder addAccountToAuthorize(String accountToAuthorize) {
+            this.accountsToAuthorize.add(accountToAuthorize);
+            return this;
+        }
 
-		public SQSObservableQueue build() {
-			return new SQSObservableQueue(queueName, client, visibilityTimeout, batchSize, pollTimeInMS, accountsToAuthorize);
-		}
-	}
+        public SQSObservableQueue build() {
+            return new SQSObservableQueue(queueName, client, visibilityTimeout, batchSize, pollTimeInMS, accountsToAuthorize);
+        }
+    }
 
-	//Private methods
-	@VisibleForTesting
-	String getOrCreateQueue() {
+    //Private methods
+    @VisibleForTesting
+    String getOrCreateQueue() {
         List<String> queueUrls = listQueues(queueName);
-		if (queueUrls == null || queueUrls.isEmpty()) {
+        if (queueUrls == null || queueUrls.isEmpty()) {
             CreateQueueRequest createQueueRequest = new CreateQueueRequest().withQueueName(queueName);
             CreateQueueResult result = client.createQueue(createQueueRequest);
             return result.getQueueUrl();
-		} else {
+        } else {
             return queueUrls.get(0);
         }
     }
 
-	String getQueueARN() {
-		GetQueueAttributesResult response = client.getQueueAttributes(queueURL, Collections.singletonList("QueueArn"));
-		return response.getAttributes().get("QueueArn");
-	}
+    String getQueueARN() {
+        GetQueueAttributesResult response = client.getQueueAttributes(queueURL, Collections.singletonList("QueueArn"));
+        return response.getAttributes().get("QueueArn");
+    }
 
-	private void addPolicy(List<String> accountsToAuthorize) {
-		if(accountsToAuthorize == null || accountsToAuthorize.isEmpty()) {
-			logger.info("No additional security policies attached for the queue " + queueName);
-			return;
-		}
-		logger.info("Authorizing " + accountsToAuthorize + " to the queue " + queueName);
-		Map<String, String> attributes = new HashMap<>();
-		attributes.put("Policy", getPolicy(accountsToAuthorize));
-		SetQueueAttributesResult result = client.setQueueAttributes(queueURL, attributes);
-		logger.info("policy attachment result: " + result);
-		logger.info("policy attachment result: status=" + result.getSdkHttpMetadata().getHttpStatusCode());
-	}
+    private void addPolicy(List<String> accountsToAuthorize) {
+        if(accountsToAuthorize == null || accountsToAuthorize.isEmpty()) {
+            logger.info("No additional security policies attached for the queue " + queueName);
+            return;
+        }
+        logger.info("Authorizing " + accountsToAuthorize + " to the queue " + queueName);
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("Policy", getPolicy(accountsToAuthorize));
+        SetQueueAttributesResult result = client.setQueueAttributes(queueURL, attributes);
+        logger.info("policy attachment result: " + result);
+        logger.info("policy attachment result: status=" + result.getSdkHttpMetadata().getHttpStatusCode());
+    }
 
-	private String getPolicy(List<String> accountIds) {
-		Policy policy = new Policy("AuthorizedWorkerAccessPolicy");
-		Statement stmt = new Statement(Effect.Allow);
-		Action action = SQSActions.SendMessage;
-		stmt.getActions().add(action);
-		stmt.setResources(new LinkedList<>());
-		for(String accountId : accountIds) {
-			Principal principal = new Principal(accountId);
-			stmt.getPrincipals().add(principal);
-		}
-		stmt.getResources().add(new Resource(getQueueARN()));
-		policy.getStatements().add(stmt);
-		return policy.toJson();
-	}
+    private String getPolicy(List<String> accountIds) {
+        Policy policy = new Policy("AuthorizedWorkerAccessPolicy");
+        Statement stmt = new Statement(Effect.Allow);
+        Action action = SQSActions.SendMessage;
+        stmt.getActions().add(action);
+        stmt.setResources(new LinkedList<>());
+        for(String accountId : accountIds) {
+            Principal principal = new Principal(accountId);
+            stmt.getPrincipals().add(principal);
+        }
+        stmt.getResources().add(new Resource(getQueueARN()));
+        policy.getStatements().add(stmt);
+        return policy.toJson();
+    }
 
-	private List<String> listQueues(String queueName) {
+    private List<String> listQueues(String queueName) {
         ListQueuesRequest listQueuesRequest = new ListQueuesRequest().withQueueNamePrefix(queueName);
         ListQueuesResult resultList = client.listQueues(listQueuesRequest);
         return resultList.getQueueUrls().stream()
-				.filter(queueUrl -> queueUrl.contains(queueName))
-				.collect(Collectors.toList());
+                .filter(queueUrl -> queueUrl.contains(queueName))
+                .collect(Collectors.toList());
     }
 
-	void publishMessages(List<Message> messages) {
-		logger.info("Sending {} messages", messages.size());
-		SendMessageBatchRequest batch = new SendMessageBatchRequest(queueURL);
-		messages.forEach(msg -> {
-			SendMessageBatchRequestEntry sendr = new SendMessageBatchRequestEntry(msg.getId(), msg.getPayload());
-			batch.getEntries().add(sendr);
-		});
-		logger.info("sending {}", batch.getEntries().size());
-		SendMessageBatchResult result = client.sendMessageBatch(batch);
-		logger.info("send result {}", result.getFailed().toString());
-	}
+    void publishMessages(List<Message> messages) {
+        logger.info("Sending {} messages", messages.size());
+        SendMessageBatchRequest batch = new SendMessageBatchRequest(queueURL);
+        messages.forEach(msg -> {
+            SendMessageBatchRequestEntry sendr = new SendMessageBatchRequestEntry(msg.getId(), msg.getPayload());
+            batch.getEntries().add(sendr);
+        });
+        logger.info("sending {}", batch.getEntries().size());
+        SendMessageBatchResult result = client.sendMessageBatch(batch);
+        logger.info("send result {}", result.getFailed().toString());
+    }
 
-	@VisibleForTesting
-	List<Message> receiveMessages() {
-		try {
-			ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest()
-					.withQueueUrl(queueURL)
-					.withVisibilityTimeout(visibilityTimeout)
-					.withMaxNumberOfMessages(batchSize);
+    @VisibleForTesting
+    List<Message> receiveMessages() {
+        try {
+            ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest()
+                    .withQueueUrl(queueURL)
+                    .withVisibilityTimeout(visibilityTimeout)
+                    .withMaxNumberOfMessages(batchSize);
 
-			ReceiveMessageResult result = client.receiveMessage(receiveMessageRequest);
+            ReceiveMessageResult result = client.receiveMessage(receiveMessageRequest);
 
-			List<Message> messages = result.getMessages().stream()
-					.map(msg -> new Message(msg.getMessageId(), msg.getBody(), msg.getReceiptHandle()))
-					.collect(Collectors.toList());
-			Monitors.recordEventQueueMessagesProcessed(QUEUE_TYPE, this.queueName, messages.size());
-			return messages;
-		} catch (Exception e) {
-			logger.error("Exception while getting messages from SQS ", e);
-			Monitors.recordObservableQMessageReceivedErrors(QUEUE_TYPE);
-		}
-		return new ArrayList<>();
-	}
+            List<Message> messages = result.getMessages().stream()
+                    .map(msg -> new Message(msg.getMessageId(), msg.getBody(), msg.getReceiptHandle()))
+                    .collect(Collectors.toList());
+            Monitors.recordEventQueueMessagesProcessed(QUEUE_TYPE, this.queueName, messages.size());
+            return messages;
+        } catch (Exception e) {
+            logger.error("Exception while getting messages from SQS ", e);
+            Monitors.recordObservableQMessageReceivedErrors(QUEUE_TYPE);
+        }
+        return new ArrayList<>();
+    }
 
-	@VisibleForTesting
-	OnSubscribe<Message> getOnSubscribe() {
-		return subscriber -> {
-			Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
-			interval.flatMap((Long x)->{
-				List<Message> msgs = receiveMessages();
-		        return Observable.from(msgs);
-			}).subscribe(subscriber::onNext, subscriber::onError);
-		};
-	}
+    @VisibleForTesting
+    OnSubscribe<Message> getOnSubscribe() {
+        return subscriber -> {
+            Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
+            interval.flatMap((Long x)->{
+                List<Message> msgs = receiveMessages();
+                return Observable.from(msgs);
+            }).subscribe(subscriber::onNext, subscriber::onError);
+        };
+    }
 
-	private List<String> delete(List<Message> messages) {
-		if (messages == null || messages.isEmpty()) {
+    private List<String> delete(List<Message> messages) {
+        if (messages == null || messages.isEmpty()) {
             return null;
         }
 
         DeleteMessageBatchRequest batch = new DeleteMessageBatchRequest().withQueueUrl(queueURL);
-    	List<DeleteMessageBatchRequestEntry> entries = batch.getEntries();
+        List<DeleteMessageBatchRequestEntry> entries = batch.getEntries();
 
         messages.forEach(m -> entries.add(new DeleteMessageBatchRequestEntry().withId(m.getId()).withReceiptHandle(m.getReceipt())));
 
         DeleteMessageBatchResult result = client.deleteMessageBatch(batch);
         List<String> failures = result.getFailed().stream()
-				.map(BatchResultErrorEntry::getId)
-				.collect(Collectors.toList());
-		logger.debug("Failed to delete: {}", failures);
+                .map(BatchResultErrorEntry::getId)
+                .collect(Collectors.toList());
+        logger.debug("Failed to delete: {}", failures);
         return failures;
 
     }

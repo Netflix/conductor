@@ -31,46 +31,46 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
  */
 public class Join extends WorkflowSystemTask {
 
-	public Join() {
-		super("JOIN");
-	}
-	
-	@Override
-	@SuppressWarnings("unchecked")
-	public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
-		
-		boolean allDone = true;
-		boolean hasFailures = false;
-		StringBuilder failureReason = new StringBuilder();
-		List<String> joinOn = (List<String>) task.getInputData().get("joinOn");
-		for(String joinOnRef : joinOn){
-			Task forkedTask = workflow.getTaskByRefName(joinOnRef);
-			if(forkedTask == null){
-				//Task is not even scheduled yet
-				allDone = false;
-				break;
-			}
-			Status taskStatus = forkedTask.getStatus();
-			hasFailures = !taskStatus.isSuccessful();
-			if(hasFailures){
-				failureReason.append(forkedTask.getReasonForIncompletion()).append(" ");
-			}
-			task.getOutputData().put(joinOnRef, forkedTask.getOutputData());
-			allDone = taskStatus.isTerminal();
-			if(!allDone || hasFailures){
-				break;
-			}
-		}
-		if(allDone || hasFailures){
-			if(hasFailures){
-				task.setReasonForIncompletion(failureReason.toString());
-				task.setStatus(Status.FAILED);
-			}else{
-				task.setStatus(Status.COMPLETED);	
-			}	
-			return true;
-		}	
-		return false;
-	}
+    public Join() {
+        super("JOIN");
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
+
+        boolean allDone = true;
+        boolean hasFailures = false;
+        StringBuilder failureReason = new StringBuilder();
+        List<String> joinOn = (List<String>) task.getInputData().get("joinOn");
+        for(String joinOnRef : joinOn){
+            Task forkedTask = workflow.getTaskByRefName(joinOnRef);
+            if(forkedTask == null){
+                //Task is not even scheduled yet
+                allDone = false;
+                break;
+            }
+            Status taskStatus = forkedTask.getStatus();
+            hasFailures = !taskStatus.isSuccessful();
+            if(hasFailures){
+                failureReason.append(forkedTask.getReasonForIncompletion()).append(" ");
+            }
+            task.getOutputData().put(joinOnRef, forkedTask.getOutputData());
+            allDone = taskStatus.isTerminal();
+            if(!allDone || hasFailures){
+                break;
+            }
+        }
+        if(allDone || hasFailures){
+            if(hasFailures){
+                task.setReasonForIncompletion(failureReason.toString());
+                task.setStatus(Status.FAILED);
+            }else{
+                task.setStatus(Status.COMPLETED);
+            }
+            return true;
+        }
+        return false;
+    }
 
 }

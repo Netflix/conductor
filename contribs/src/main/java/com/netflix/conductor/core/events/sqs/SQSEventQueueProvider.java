@@ -38,22 +38,22 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 @Singleton
 public class SQSEventQueueProvider implements EventQueueProvider {
 
-	private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-	
-	private AmazonSQSClient client;
-	
-	@Inject
-	public SQSEventQueueProvider(AmazonSQSClient client) {
-		this.client = client;
-	}
-	
-	@Override
-	public ObservableQueue getQueue(String queueURI) {
-		return queues.computeIfAbsent(queueURI, q -> {
-			Builder builder = new SQSObservableQueue.Builder();
-			SQSObservableQueue queue = builder.withBatchSize(1).withClient(client).withPollTimeInMS(100).withQueueName(queueURI).withVisibilityTimeout(60).build();
-			return queue;
-		});
-	}
+    private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
+
+    private AmazonSQSClient client;
+
+    @Inject
+    public SQSEventQueueProvider(AmazonSQSClient client) {
+        this.client = client;
+    }
+
+    @Override
+    public ObservableQueue getQueue(String queueURI) {
+        return queues.computeIfAbsent(queueURI, q -> {
+            Builder builder = new SQSObservableQueue.Builder();
+            SQSObservableQueue queue = builder.withBatchSize(1).withClient(client).withPollTimeInMS(100).withQueueName(queueURI).withVisibilityTimeout(60).build();
+            return queue;
+        });
+    }
 
 }

@@ -44,61 +44,61 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
  *
  */
 public final class JerseyModule extends JerseyServletModule {
-	
+
     @Override
     protected void configureServlets() {
 
 
-    	filter("/*").through(apiOriginFilter());
+        filter("/*").through(apiOriginFilter());
         
-        Map<String, String> jerseyParams = new HashMap<>();	
-		jerseyParams.put("com.sun.jersey.config.feature.FilterForwardOn404", "true");
-		jerseyParams.put("com.sun.jersey.config.property.WebPageContentRegex", "/(((webjars|api-docs|swagger-ui/docs|manage)/.*)|(favicon\\.ico))");
-		jerseyParams.put(PackagesResourceConfig.PROPERTY_PACKAGES, "com.netflix.conductor.server.resources;io.swagger.jaxrs.json;io.swagger.jaxrs.listing");
-		jerseyParams.put(ResourceConfig.FEATURE_DISABLE_WADL, "false");
-		serve("/api/*").with(GuiceContainer.class, jerseyParams);
+        Map<String, String> jerseyParams = new HashMap<>();
+        jerseyParams.put("com.sun.jersey.config.feature.FilterForwardOn404", "true");
+        jerseyParams.put("com.sun.jersey.config.property.WebPageContentRegex", "/(((webjars|api-docs|swagger-ui/docs|manage)/.*)|(favicon\\.ico))");
+        jerseyParams.put(PackagesResourceConfig.PROPERTY_PACKAGES, "com.netflix.conductor.server.resources;io.swagger.jaxrs.json;io.swagger.jaxrs.listing");
+        jerseyParams.put(ResourceConfig.FEATURE_DISABLE_WADL, "false");
+        serve("/api/*").with(GuiceContainer.class, jerseyParams);
     }
     
     @Provides 
-	@Singleton
-	public ObjectMapper objectMapper() {
-	    final ObjectMapper objectMapper = new ObjectMapper();
+    @Singleton
+    public ObjectMapper objectMapper() {
+        final ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
         objectMapper.setSerializationInclusion(Include.NON_NULL);
         objectMapper.setSerializationInclusion(Include.NON_EMPTY);
-	    return objectMapper;
-	}
+        return objectMapper;
+    }
 
-	@Provides 
-	@Singleton
-	JacksonJsonProvider jacksonJsonProvider(ObjectMapper mapper) {
-	    return new JacksonJsonProvider(mapper);
-	}
-	
-	@Provides
+    @Provides
+    @Singleton
+    JacksonJsonProvider jacksonJsonProvider(ObjectMapper mapper) {
+        return new JacksonJsonProvider(mapper);
+    }
+
+    @Provides
     @Singleton
     public Filter apiOriginFilter() {
         return new Filter(){
 
-			@Override
-			public void init(FilterConfig filterConfig) throws ServletException {}
+            @Override
+            public void init(FilterConfig filterConfig) throws ServletException {}
 
-			@Override
-			public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		        HttpServletResponse res = (HttpServletResponse) response;
-		        if (!res.containsHeader("Access-Control-Allow-Origin")) {
-		            res.setHeader("Access-Control-Allow-Origin", "*");
-		        }
-		        res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
-		        res.addHeader("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization");
-		        
-		        chain.doFilter(request, response);
-		    }
-			@Override
-			public void destroy() {}
-        	
+            @Override
+            public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+                HttpServletResponse res = (HttpServletResponse) response;
+                if (!res.containsHeader("Access-Control-Allow-Origin")) {
+                    res.setHeader("Access-Control-Allow-Origin", "*");
+                }
+                res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+                res.addHeader("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization");
+
+                chain.doFilter(request, response);
+            }
+            @Override
+            public void destroy() {}
+
         };
     }
     @Override

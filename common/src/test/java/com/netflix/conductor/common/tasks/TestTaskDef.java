@@ -30,19 +30,19 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
  */
 public class TestTaskDef {
 
-	@Test
-	public void test() {
-		
-		String name = "test1";
-		String description = "desc";
-		int retryCount = 10;
-		int timeout = 100;
-		TaskDef def = new TaskDef(name, description, retryCount, timeout);
-		assertEquals(36_00, def.getResponseTimeoutSeconds());
-		assertEquals(name, def.getName());
-		assertEquals(description, def.getDescription());
-		assertEquals(retryCount, def.getRetryCount());
-		assertEquals(timeout, def.getTimeoutSeconds());
-		
-	}
+    @Test
+    public void test() {
+
+        String name = "test1";
+        String description = "desc";
+        int retryCount = 10;
+        int timeout = 100;
+        TaskDef def = new TaskDef(name, description, retryCount, timeout);
+        assertEquals(36_00, def.getResponseTimeoutSeconds());
+        assertEquals(name, def.getName());
+        assertEquals(description, def.getDescription());
+        assertEquals(retryCount, def.getRetryCount());
+        assertEquals(timeout, def.getTimeoutSeconds());
+
+    }
 }

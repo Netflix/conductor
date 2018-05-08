@@ -26,8 +26,8 @@ import org.junit.Test;
  */
 public class TestGroupedExpression {
 
-	@Test
-	public void test(){
-		
-	}
+    @Test
+    public void test(){
+
+    }
 }

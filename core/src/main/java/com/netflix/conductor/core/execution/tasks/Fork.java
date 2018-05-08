@@ -23,9 +23,9 @@ package com.netflix.conductor.core.execution.tasks;
  *
  */
 public class Fork extends WorkflowSystemTask {
-	
-	public Fork() {
-		super("FORK");
-	}
+
+    public Fork() {
+        super("FORK");
+    }
 
 }

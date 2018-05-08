@@ -102,7 +102,7 @@ templates['content_type'] = template({"1":function(container,depth0,helpers,part
 },"2":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "	<option value=\""
+  return "    <option value=\""
     + ((stack1 = (helpers.sanitize || (depth0 && depth0.sanitize) || alias2).call(alias1,depth0,{"name":"sanitize","hash":{},"data":data})) != null ? stack1 : "")
     + "\">"
     + ((stack1 = (helpers.sanitize || (depth0 && depth0.sanitize) || alias2).call(alias1,depth0,{"name":"sanitize","hash":{},"data":data})) != null ? stack1 : "")
@@ -361,11 +361,11 @@ templates['param'] = template({"1":function(container,depth0,helpers,partials,da
 },"2":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "			<input type=\"file\" name='"
+  return "            <input type=\"file\" name='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
     + "' id='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.valueId : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
-    + "'/>\n			<div class=\"parameter-content-type\" />\n";
+    + "'/>\n            <div class=\"parameter-content-type\" />\n";
 },"4":function(container,depth0,helpers,partials,data) {
     var stack1;
 
@@ -373,7 +373,7 @@ templates['param'] = template({"1":function(container,depth0,helpers,partials,da
 },"5":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "				<div class=\"editor_holder\"></div>\n				<textarea class='body-textarea' name='"
+  return "                <div class=\"editor_holder\"></div>\n                <textarea class='body-textarea' name='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
     + "' id='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.valueId : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
@@ -383,11 +383,11 @@ templates['param'] = template({"1":function(container,depth0,helpers,partials,da
 },"7":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "				<textarea class='body-textarea' name='"
+  return "                <textarea class='body-textarea' name='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
     + "' id='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.valueId : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
-    + "'></textarea>\n				<div class=\"editor_holder\"></div>\n				<br />\n				<div class=\"parameter-content-type\" />\n";
+    + "'></textarea>\n                <div class=\"editor_holder\"></div>\n                <br />\n                <div class=\"parameter-content-type\" />\n";
 },"9":function(container,depth0,helpers,partials,data) {
     var stack1;
 
@@ -411,7 +411,7 @@ templates['param'] = template({"1":function(container,depth0,helpers,partials,da
     + ((stack1 = (helpers.sanitize || (depth0 && depth0.sanitize) || alias2).call(alias1,(depth0 != null ? depth0.description : depth0),{"name":"sanitize","hash":{},"data":data})) != null ? stack1 : "")
     + "</td>\n<td>"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.paramType : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
-    + "</td>\n<td>\n	<span class=\"model-signature\"></span>\n</td>\n";
+    + "</td>\n<td>\n    <span class=\"model-signature\"></span>\n</td>\n";
 },"useData":true});
 templates['param_list'] = template({"1":function(container,depth0,helpers,partials,data) {
     return " required";
@@ -557,7 +557,7 @@ templates['param_required'] = template({"1":function(container,depth0,helpers,pa
 },"2":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "			<input type=\"file\" name='"
+  return "            <input type=\"file\" name='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
     + "' id='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.valueId : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
@@ -569,7 +569,7 @@ templates['param_required'] = template({"1":function(container,depth0,helpers,pa
 },"5":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "				<div class=\"editor_holder\"></div>\n				<textarea class='body-textarea required' placeholder='(required)' name='"
+  return "                <div class=\"editor_holder\"></div>\n                <textarea class='body-textarea required' placeholder='(required)' name='"
     + ((stack1 = (helpers.sanitize || (depth0 && depth0.sanitize) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"sanitize","hash":{},"data":data})) != null ? stack1 : "")
     + "' id=\""
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.valueId : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
@@ -579,11 +579,11 @@ templates['param_required'] = template({"1":function(container,depth0,helpers,pa
 },"7":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "				<textarea class='body-textarea required' placeholder='(required)' name='"
+  return "                <textarea class='body-textarea required' placeholder='(required)' name='"
     + ((stack1 = (helpers.sanitize || (depth0 && depth0.sanitize) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"sanitize","hash":{},"data":data})) != null ? stack1 : "")
     + "' id='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.valueId : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
-    + "'></textarea>\n				<div class=\"editor_holder\"></div>\n				<br />\n				<div class=\"parameter-content-type\" />\n";
+    + "'></textarea>\n                <div class=\"editor_holder\"></div>\n                <br />\n                <div class=\"parameter-content-type\" />\n";
 },"9":function(container,depth0,helpers,partials,data) {
     var stack1;
 
@@ -591,7 +591,7 @@ templates['param_required'] = template({"1":function(container,depth0,helpers,pa
 },"10":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : {}, alias2=helpers.helperMissing;
 
-  return "			<input class='parameter' class='required' type='file' name='"
+  return "            <input class='parameter' class='required' type='file' name='"
     + ((stack1 = (helpers.sanitize || (depth0 && depth0.sanitize) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"sanitize","hash":{},"data":data})) != null ? stack1 : "")
     + "' id='"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.valueId : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
@@ -611,7 +611,7 @@ templates['param_required'] = template({"1":function(container,depth0,helpers,pa
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.name : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
     + "</label></td>\n<td>\n"
     + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.isBody : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.program(9, data, 0),"data":data})) != null ? stack1 : "")
-    + "</td>\n<td>\n	<strong><span class=\"markdown\">"
+    + "</td>\n<td>\n    <strong><span class=\"markdown\">"
     + ((stack1 = (helpers.sanitize || (depth0 && depth0.sanitize) || alias2).call(alias1,(depth0 != null ? depth0.description : depth0),{"name":"sanitize","hash":{},"data":data})) != null ? stack1 : "")
     + "</span></strong>\n</td>\n<td>"
     + ((stack1 = (helpers.escape || (depth0 && depth0.escape) || alias2).call(alias1,(depth0 != null ? depth0.paramType : depth0),{"name":"escape","hash":{},"data":data})) != null ? stack1 : "")
@@ -777,54 +777,54 @@ templates['status_code'] = template({"1":function(container,depth0,helpers,parti
 
 $(function() {
 
-	// Helper function for vertically aligning DOM elements
-	// http://www.seodenver.com/simple-vertical-align-plugin-for-jquery/
-	$.fn.vAlign = function() {
-		return this.each(function(){
-			var ah = $(this).height();
-			var ph = $(this).parent().height();
-			var mh = (ph - ah) / 2;
-			$(this).css('margin-top', mh);
-		});
-	};
+    // Helper function for vertically aligning DOM elements
+    // http://www.seodenver.com/simple-vertical-align-plugin-for-jquery/
+    $.fn.vAlign = function() {
+        return this.each(function(){
+            var ah = $(this).height();
+            var ph = $(this).parent().height();
+            var mh = (ph - ah) / 2;
+            $(this).css('margin-top', mh);
+        });
+    };
 
-	$.fn.stretchFormtasticInputWidthToParent = function() {
-		return this.each(function(){
-			var p_width = $(this).closest("form").innerWidth();
-			var p_padding = parseInt($(this).closest("form").css('padding-left') ,10) + parseInt($(this).closest('form').css('padding-right'), 10);
-			var this_padding = parseInt($(this).css('padding-left'), 10) + parseInt($(this).css('padding-right'), 10);
-			$(this).css('width', p_width - p_padding - this_padding);
-		});
-	};
+    $.fn.stretchFormtasticInputWidthToParent = function() {
+        return this.each(function(){
+            var p_width = $(this).closest("form").innerWidth();
+            var p_padding = parseInt($(this).closest("form").css('padding-left') ,10) + parseInt($(this).closest('form').css('padding-right'), 10);
+            var this_padding = parseInt($(this).css('padding-left'), 10) + parseInt($(this).css('padding-right'), 10);
+            $(this).css('width', p_width - p_padding - this_padding);
+        });
+    };
 
-	$('form.formtastic li.string input, form.formtastic textarea').stretchFormtasticInputWidthToParent();
+    $('form.formtastic li.string input, form.formtastic textarea').stretchFormtasticInputWidthToParent();
 
-	// Vertically center these paragraphs
-	// Parent may need a min-height for this to work..
-	$('ul.downplayed li div.content p').vAlign();
+    // Vertically center these paragraphs
+    // Parent may need a min-height for this to work..
+    $('ul.downplayed li div.content p').vAlign();
 
-	// When a sandbox form is submitted..
-	$("form.sandbox").submit(function(){
+    // When a sandbox form is submitted..
+    $("form.sandbox").submit(function(){
 
-		var error_free = true;
+        var error_free = true;
 
-		// Cycle through the forms required inputs
- 		$(this).find("input.required").each(function() {
+        // Cycle through the forms required inputs
+         $(this).find("input.required").each(function() {
 
-			// Remove any existing error styles from the input
-			$(this).removeClass('error');
+            // Remove any existing error styles from the input
+            $(this).removeClass('error');
 
-			// Tack the error style on if the input is empty..
-			if ($(this).val() === '') {
-				$(this).addClass('error');
-				$(this).wiggle();
-				error_free = false;
-			}
+            // Tack the error style on if the input is empty..
+            if ($(this).val() === '') {
+                $(this).addClass('error');
+                $(this).wiggle();
+                error_free = false;
+            }
 
-		});
+        });
 
-		return error_free;
-	});
+        return error_free;
+    });
 
 });
 
@@ -858,15 +858,15 @@ if (Function.prototype.bind && console && typeof console.log === "object") {
 
 window.Docs = {
 
-	shebang: function() {
+    shebang: function() {
 
-		// If shebang has an operation nickname in it..
-		// e.g. /docs/#!/words/get_search
-		var fragments = $.param.fragment().split('/');
-		fragments.shift(); // get rid of the bang
+        // If shebang has an operation nickname in it..
+        // e.g. /docs/#!/words/get_search
+        var fragments = $.param.fragment().split('/');
+        fragments.shift(); // get rid of the bang
 
-		switch (fragments.length) {
-			case 1:
+        switch (fragments.length) {
+            case 1:
         if (fragments[0].length > 0) { // prevent matching "#/"
           // Expand all operations for the resource and scroll to it
           var dom_id = 'resource_' + fragments[0];
@@ -874,9 +874,9 @@ window.Docs = {
           Docs.expandEndpointListForResource(fragments[0]);
           $("#"+dom_id).slideto({highlight: false});
         }
-				break;
-			case 2:
-				// Refer to the endpoint DOM element, e.g. #words_get_search
+                break;
+            case 2:
+                // Refer to the endpoint DOM element, e.g. #words_get_search
 
         // Expand Resource
         Docs.expandEndpointListForResource(fragments[0]);
@@ -890,87 +890,87 @@ window.Docs = {
             Docs.expandOperation($('#'+li_content_dom_id));
             $('#'+li_dom_id).slideto({highlight: false});
             break;
-		}
-	},
+        }
+    },
 
-	toggleEndpointListForResource: function(resource) {
-		var elem = $('li#resource_' + Docs.escapeResourceName(resource) + ' ul.endpoints');
-		if (elem.is(':visible')) {
-			$.bbq.pushState('#/', 2);
-			Docs.collapseEndpointListForResource(resource);
-		} else {
+    toggleEndpointListForResource: function(resource) {
+        var elem = $('li#resource_' + Docs.escapeResourceName(resource) + ' ul.endpoints');
+        if (elem.is(':visible')) {
+            $.bbq.pushState('#/', 2);
+            Docs.collapseEndpointListForResource(resource);
+        } else {
             $.bbq.pushState('#/' + resource, 2);
-			Docs.expandEndpointListForResource(resource);
-		}
-	},
+            Docs.expandEndpointListForResource(resource);
+        }
+    },
 
-	// Expand resource
-	expandEndpointListForResource: function(resource) {
-		var resource = Docs.escapeResourceName(resource);
-		if (resource == '') {
-			$('.resource ul.endpoints').slideDown();
-			return;
-		}
+    // Expand resource
+    expandEndpointListForResource: function(resource) {
+        var resource = Docs.escapeResourceName(resource);
+        if (resource == '') {
+            $('.resource ul.endpoints').slideDown();
+            return;
+        }
 
-		$('li#resource_' + resource).addClass('active');
+        $('li#resource_' + resource).addClass('active');
 
-		var elem = $('li#resource_' + resource + ' ul.endpoints');
-		elem.slideDown();
-	},
+        var elem = $('li#resource_' + resource + ' ul.endpoints');
+        elem.slideDown();
+    },
 
-	// Collapse resource and mark as explicitly closed
-	collapseEndpointListForResource: function(resource) {
-		var resource = Docs.escapeResourceName(resource);
-		if (resource == '') {
-			$('.resource ul.endpoints').slideUp();
-			return;
-		}
+    // Collapse resource and mark as explicitly closed
+    collapseEndpointListForResource: function(resource) {
+        var resource = Docs.escapeResourceName(resource);
+        if (resource == '') {
+            $('.resource ul.endpoints').slideUp();
+            return;
+        }
 
-		$('li#resource_' + resource).removeClass('active');
+        $('li#resource_' + resource).removeClass('active');
 
-		var elem = $('li#resource_' + resource + ' ul.endpoints');
-		elem.slideUp();
-	},
+        var elem = $('li#resource_' + resource + ' ul.endpoints');
+        elem.slideUp();
+    },
 
-	expandOperationsForResource: function(resource) {
-		// Make sure the resource container is open..
-		Docs.expandEndpointListForResource(resource);
+    expandOperationsForResource: function(resource) {
+        // Make sure the resource container is open..
+        Docs.expandEndpointListForResource(resource);
 
-		if (resource == '') {
-			$('.resource ul.endpoints li.operation div.content').slideDown();
-			return;
-		}
+        if (resource == '') {
+            $('.resource ul.endpoints li.operation div.content').slideDown();
+            return;
+        }
 
-		$('li#resource_' + Docs.escapeResourceName(resource) + ' li.operation div.content').each(function() {
-			Docs.expandOperation($(this));
-		});
-	},
+        $('li#resource_' + Docs.escapeResourceName(resource) + ' li.operation div.content').each(function() {
+            Docs.expandOperation($(this));
+        });
+    },
 
-	collapseOperationsForResource: function(resource) {
-		// Make sure the resource container is open..
-		Docs.expandEndpointListForResource(resource);
+    collapseOperationsForResource: function(resource) {
+        // Make sure the resource container is open..
+        Docs.expandEndpointListForResource(resource);
 
-		if (resource == '') {
-			$('.resource ul.endpoints li.operation div.content').slideUp();
-			return;
-		}
+        if (resource == '') {
+            $('.resource ul.endpoints li.operation div.content').slideUp();
+            return;
+        }
 
-		$('li#resource_' + Docs.escapeResourceName(resource) + ' li.operation div.content').each(function() {
-			Docs.collapseOperation($(this));
-		});
-	},
+        $('li#resource_' + Docs.escapeResourceName(resource) + ' li.operation div.content').each(function() {
+            Docs.collapseOperation($(this));
+        });
+    },
 
-	escapeResourceName: function(resource) {
-		return resource.replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^`{|}~]/g, "\\$&");
-	},
+    escapeResourceName: function(resource) {
+        return resource.replace(/[!"#$%&'()*+,.\/:;<=>?@\[\\\]\^`{|}~]/g, "\\$&");
+    },
 
-	expandOperation: function(elem) {
-		elem.slideDown();
-	},
+    expandOperation: function(elem) {
+        elem.slideDown();
+    },
 
-	collapseOperation: function(elem) {
-		elem.slideUp();
-	}
+    collapseOperation: function(elem) {
+        elem.slideUp();
+    }
 };
 
 /*!
@@ -9419,126 +9419,126 @@ function blitBuffer (src, dst, offset, length) {
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
-	'use strict';
+    'use strict';
 
   var Arr = (typeof Uint8Array !== 'undefined')
     ? Uint8Array
     : Array
 
-	var PLUS   = '+'.charCodeAt(0)
-	var SLASH  = '/'.charCodeAt(0)
-	var NUMBER = '0'.charCodeAt(0)
-	var LOWER  = 'a'.charCodeAt(0)
-	var UPPER  = 'A'.charCodeAt(0)
-	var PLUS_URL_SAFE = '-'.charCodeAt(0)
-	var SLASH_URL_SAFE = '_'.charCodeAt(0)
+    var PLUS   = '+'.charCodeAt(0)
+    var SLASH  = '/'.charCodeAt(0)
+    var NUMBER = '0'.charCodeAt(0)
+    var LOWER  = 'a'.charCodeAt(0)
+    var UPPER  = 'A'.charCodeAt(0)
+    var PLUS_URL_SAFE = '-'.charCodeAt(0)
+    var SLASH_URL_SAFE = '_'.charCodeAt(0)
 
-	function decode (elt) {
-		var code = elt.charCodeAt(0)
-		if (code === PLUS ||
-		    code === PLUS_URL_SAFE)
-			return 62 // '+'
-		if (code === SLASH ||
-		    code === SLASH_URL_SAFE)
-			return 63 // '/'
-		if (code < NUMBER)
-			return -1 //no match
-		if (code < NUMBER + 10)
-			return code - NUMBER + 26 + 26
-		if (code < UPPER + 26)
-			return code - UPPER
-		if (code < LOWER + 26)
-			return code - LOWER + 26
-	}
+    function decode (elt) {
+        var code = elt.charCodeAt(0)
+        if (code === PLUS ||
+            code === PLUS_URL_SAFE)
+            return 62 // '+'
+        if (code === SLASH ||
+            code === SLASH_URL_SAFE)
+            return 63 // '/'
+        if (code < NUMBER)
+            return -1 //no match
+        if (code < NUMBER + 10)
+            return code - NUMBER + 26 + 26
+        if (code < UPPER + 26)
+            return code - UPPER
+        if (code < LOWER + 26)
+            return code - LOWER + 26
+    }
 
-	function b64ToByteArray (b64) {
-		var i, j, l, tmp, placeHolders, arr
+    function b64ToByteArray (b64) {
+        var i, j, l, tmp, placeHolders, arr
 
-		if (b64.length % 4 > 0) {
-			throw new Error('Invalid string. Length must be a multiple of 4')
-		}
+        if (b64.length % 4 > 0) {
+            throw new Error('Invalid string. Length must be a multiple of 4')
+        }
 
-		// the number of equal signs (place holders)
-		// if there are two placeholders, than the two characters before it
-		// represent one byte
-		// if there is only one, then the three characters before it represent 2 bytes
-		// this is just a cheap hack to not do indexOf twice
-		var len = b64.length
-		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+        // the number of equal signs (place holders)
+        // if there are two placeholders, than the two characters before it
+        // represent one byte
+        // if there is only one, then the three characters before it represent 2 bytes
+        // this is just a cheap hack to not do indexOf twice
+        var len = b64.length
+        placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
 
-		// base64 is 4/3 + up to two characters of the original data
-		arr = new Arr(b64.length * 3 / 4 - placeHolders)
+        // base64 is 4/3 + up to two characters of the original data
+        arr = new Arr(b64.length * 3 / 4 - placeHolders)
 
-		// if there are placeholders, only get up to the last complete 4 chars
-		l = placeHolders > 0 ? b64.length - 4 : b64.length
+        // if there are placeholders, only get up to the last complete 4 chars
+        l = placeHolders > 0 ? b64.length - 4 : b64.length
 
-		var L = 0
+        var L = 0
 
-		function push (v) {
-			arr[L++] = v
-		}
+        function push (v) {
+            arr[L++] = v
+        }
 
-		for (i = 0, j = 0; i < l; i += 4, j += 3) {
-			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-			push((tmp & 0xFF0000) >> 16)
-			push((tmp & 0xFF00) >> 8)
-			push(tmp & 0xFF)
-		}
+        for (i = 0, j = 0; i < l; i += 4, j += 3) {
+            tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+            push((tmp & 0xFF0000) >> 16)
+            push((tmp & 0xFF00) >> 8)
+            push(tmp & 0xFF)
+        }
 
-		if (placeHolders === 2) {
-			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-			push(tmp & 0xFF)
-		} else if (placeHolders === 1) {
-			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-			push((tmp >> 8) & 0xFF)
-			push(tmp & 0xFF)
-		}
+        if (placeHolders === 2) {
+            tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+            push(tmp & 0xFF)
+        } else if (placeHolders === 1) {
+            tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+            push((tmp >> 8) & 0xFF)
+            push(tmp & 0xFF)
+        }
 
-		return arr
-	}
+        return arr
+    }
 
-	function uint8ToBase64 (uint8) {
-		var i,
-			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-			output = "",
-			temp, length
+    function uint8ToBase64 (uint8) {
+        var i,
+            extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+            output = "",
+            temp, length
 
-		function encode (num) {
-			return lookup.charAt(num)
-		}
+        function encode (num) {
+            return lookup.charAt(num)
+        }
 
-		function tripletToBase64 (num) {
-			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-		}
+        function tripletToBase64 (num) {
+            return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+        }
 
-		// go through the array every three bytes, we'll deal with trailing stuff later
-		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-			output += tripletToBase64(temp)
-		}
+        // go through the array every three bytes, we'll deal with trailing stuff later
+        for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+            temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+            output += tripletToBase64(temp)
+        }
 
-		// pad the end with zeros, but make sure to not forget the extra bytes
-		switch (extraBytes) {
-			case 1:
-				temp = uint8[uint8.length - 1]
-				output += encode(temp >> 2)
-				output += encode((temp << 4) & 0x3F)
-				output += '=='
-				break
-			case 2:
-				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-				output += encode(temp >> 10)
-				output += encode((temp >> 4) & 0x3F)
-				output += encode((temp << 2) & 0x3F)
-				output += '='
-				break
-		}
+        // pad the end with zeros, but make sure to not forget the extra bytes
+        switch (extraBytes) {
+            case 1:
+                temp = uint8[uint8.length - 1]
+                output += encode(temp >> 2)
+                output += encode((temp << 4) & 0x3F)
+                output += '=='
+                break
+            case 2:
+                temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+                output += encode(temp >> 10)
+                output += encode((temp >> 4) & 0x3F)
+                output += encode((temp << 2) & 0x3F)
+                output += '='
+                break
+        }
 
-		return output
-	}
+        return output
+    }
 
-	exports.toByteArray = b64ToByteArray
-	exports.fromByteArray = uint8ToBase64
+    exports.toByteArray = b64ToByteArray
+    exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
 },{}],16:[function(require,module,exports){
@@ -22485,7 +22485,7 @@ SwaggerUi.Views.ContentTypeView = Backbone.View.extend({
   initialize: function() {},
 
   render: function(){
-  	this.model.contentTypeId = 'ct' + Math.random();
+      this.model.contentTypeId = 'ct' + Math.random();
     $(this.el).html(Handlebars.templates.content_type(this.model));
     return this;
   }

@@ -28,15 +28,15 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
  *
  */
 public class Decision extends WorkflowSystemTask {
-	
-	public Decision() {
-		super("DECISION");
-	}
-	
-	@Override
-	public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
-		task.setStatus(Status.COMPLETED);
-		return true;
-	}
+
+    public Decision() {
+        super("DECISION");
+    }
+
+    @Override
+    public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) throws Exception {
+        task.setStatus(Status.COMPLETED);
+        return true;
+    }
 
 }

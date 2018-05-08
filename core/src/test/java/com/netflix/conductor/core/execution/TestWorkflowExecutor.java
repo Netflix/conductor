@@ -65,77 +65,77 @@ import static org.mockito.Mockito.when;
  */
 public class TestWorkflowExecutor {
 
-	@Test
-	public void test() throws Exception {
+    @Test
+    public void test() throws Exception {
 
-		AtomicBoolean httpTaskExecuted = new AtomicBoolean(false);
-		AtomicBoolean http2TaskExecuted = new AtomicBoolean(false);
+        AtomicBoolean httpTaskExecuted = new AtomicBoolean(false);
+        AtomicBoolean http2TaskExecuted = new AtomicBoolean(false);
 
-		new Wait();
-		new WorkflowSystemTask("HTTP") {
-			@Override
-			public boolean isAsync() {
-				return true;
-			}
+        new Wait();
+        new WorkflowSystemTask("HTTP") {
+            @Override
+            public boolean isAsync() {
+                return true;
+            }
 
-			@Override
-			public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-				httpTaskExecuted.set(true);
-				task.setStatus(Status.COMPLETED);
-				super.start(workflow, task, executor);
-			}
+            @Override
+            public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+                httpTaskExecuted.set(true);
+                task.setStatus(Status.COMPLETED);
+                super.start(workflow, task, executor);
+            }
 
-		};
+        };
 
-		new WorkflowSystemTask("HTTP2") {
+        new WorkflowSystemTask("HTTP2") {
 
-			@Override
-			public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-				http2TaskExecuted.set(true);
-				task.setStatus(Status.COMPLETED);
-				super.start(workflow, task, executor);
-			}
+            @Override
+            public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+                http2TaskExecuted.set(true);
+                task.setStatus(Status.COMPLETED);
+                super.start(workflow, task, executor);
+            }
 
-		};
+        };
 
-		Workflow workflow = new Workflow();
-		workflow.setWorkflowId("1");
+        Workflow workflow = new Workflow();
+        workflow.setWorkflowId("1");
 
-		TestConfiguration config = new TestConfiguration();
-		MetadataDAO metadataDAO = mock(MetadataDAO.class);
-		ExecutionDAO edao = mock(ExecutionDAO.class);
-		QueueDAO queue = mock(QueueDAO.class);
-		ObjectMapper objectMapper = new ObjectMapper();
-		ParametersUtils parametersUtils = new ParametersUtils();
-		Map<String, TaskMapper> taskMappers = new HashMap<>();
-		taskMappers.put("DECISION", new DecisionTaskMapper());
-		taskMappers.put("DYNAMIC", new DynamicTaskMapper(parametersUtils, metadataDAO));
-		taskMappers.put("FORK_JOIN", new ForkJoinTaskMapper());
-		taskMappers.put("JOIN", new JoinTaskMapper());
-		taskMappers.put("FORK_JOIN_DYNAMIC", new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper));
-		taskMappers.put("USER_DEFINED", new UserDefinedTaskMapper(parametersUtils, metadataDAO));
-		taskMappers.put("SIMPLE", new SimpleTaskMapper(parametersUtils, metadataDAO));
-		taskMappers.put("SUB_WORKFLOW", new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
-		taskMappers.put("EVENT", new EventTaskMapper(parametersUtils));
-		taskMappers.put("WAIT", new WaitTaskMapper(parametersUtils));
-		DeciderService deciderService = new DeciderService(metadataDAO, taskMappers);
-		WorkflowExecutor executor = new WorkflowExecutor(deciderService, metadataDAO, edao, queue, config);
-		List<Task> tasks = new LinkedList<>();
+        TestConfiguration config = new TestConfiguration();
+        MetadataDAO metadataDAO = mock(MetadataDAO.class);
+        ExecutionDAO edao = mock(ExecutionDAO.class);
+        QueueDAO queue = mock(QueueDAO.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        ParametersUtils parametersUtils = new ParametersUtils();
+        Map<String, TaskMapper> taskMappers = new HashMap<>();
+        taskMappers.put("DECISION", new DecisionTaskMapper());
+        taskMappers.put("DYNAMIC", new DynamicTaskMapper(parametersUtils, metadataDAO));
+        taskMappers.put("FORK_JOIN", new ForkJoinTaskMapper());
+        taskMappers.put("JOIN", new JoinTaskMapper());
+        taskMappers.put("FORK_JOIN_DYNAMIC", new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper));
+        taskMappers.put("USER_DEFINED", new UserDefinedTaskMapper(parametersUtils, metadataDAO));
+        taskMappers.put("SIMPLE", new SimpleTaskMapper(parametersUtils, metadataDAO));
+        taskMappers.put("SUB_WORKFLOW", new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
+        taskMappers.put("EVENT", new EventTaskMapper(parametersUtils));
+        taskMappers.put("WAIT", new WaitTaskMapper(parametersUtils));
+        DeciderService deciderService = new DeciderService(metadataDAO, taskMappers);
+        WorkflowExecutor executor = new WorkflowExecutor(deciderService, metadataDAO, edao, queue, config);
+        List<Task> tasks = new LinkedList<>();
 
-		WorkflowTask taskToSchedule = new WorkflowTask();
-		taskToSchedule.setWorkflowTaskType(Type.USER_DEFINED);
-		taskToSchedule.setType("HTTP");
+        WorkflowTask taskToSchedule = new WorkflowTask();
+        taskToSchedule.setWorkflowTaskType(Type.USER_DEFINED);
+        taskToSchedule.setType("HTTP");
 
-		WorkflowTask taskToSchedule2 = new WorkflowTask();
-		taskToSchedule2.setWorkflowTaskType(Type.USER_DEFINED);
-		taskToSchedule2.setType("HTTP2");
+        WorkflowTask taskToSchedule2 = new WorkflowTask();
+        taskToSchedule2.setWorkflowTaskType(Type.USER_DEFINED);
+        taskToSchedule2.setType("HTTP2");
 
-		WorkflowTask wait = new WorkflowTask();
-		wait.setWorkflowTaskType(Type.WAIT);
-		wait.setType("WAIT");
-		wait.setTaskReferenceName("wait");
+        WorkflowTask wait = new WorkflowTask();
+        wait.setWorkflowTaskType(Type.WAIT);
+        wait.setType("WAIT");
+        wait.setTaskReferenceName("wait");
 
-		Task task1 = new Task();
+        Task task1 = new Task();
         task1.setTaskType(taskToSchedule.getType());
         task1.setTaskDefName(taskToSchedule.getName());
         task1.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -178,21 +178,21 @@ public class TestWorkflowExecutor {
         task3.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
         task3.setWorkflowTask(taskToSchedule);
 
-		tasks.add(task1);
-		tasks.add(task2);
-		tasks.add(task3);
+        tasks.add(task1);
+        tasks.add(task2);
+        tasks.add(task3);
 
 
-		when(edao.createTasks(tasks)).thenReturn(tasks);
-		AtomicInteger startedTaskCount = new AtomicInteger(0);
-		doAnswer(invocation -> {
+        when(edao.createTasks(tasks)).thenReturn(tasks);
+        AtomicInteger startedTaskCount = new AtomicInteger(0);
+        doAnswer(invocation -> {
             startedTaskCount.incrementAndGet();
             return null;
         }).when(edao)
                 .updateTask(any());
 
-		AtomicInteger queuedTaskCount = new AtomicInteger(0);
-		doAnswer(invocation -> {
+        AtomicInteger queuedTaskCount = new AtomicInteger(0);
+        doAnswer(invocation -> {
             String queueName = invocation.getArgumentAt(0, String.class);
             System.out.println(queueName);
             queuedTaskCount.incrementAndGet();
@@ -200,13 +200,13 @@ public class TestWorkflowExecutor {
         }).when(queue)
                 .push(any(), any(), anyInt());
 
-		boolean stateChanged = executor.scheduleTask(workflow, tasks);
-		assertEquals(2, startedTaskCount.get());
-		assertEquals(1, queuedTaskCount.get());
-		assertTrue(stateChanged);
-		assertFalse(httpTaskExecuted.get());
-		assertTrue(http2TaskExecuted.get());
-	}
+        boolean stateChanged = executor.scheduleTask(workflow, tasks);
+        assertEquals(2, startedTaskCount.get());
+        assertEquals(1, queuedTaskCount.get());
+        assertTrue(stateChanged);
+        assertFalse(httpTaskExecuted.get());
+        assertTrue(http2TaskExecuted.get());
+    }
 
 
 }

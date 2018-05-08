@@ -46,34 +46,34 @@ import io.swagger.annotations.ApiOperation;
 @Singleton
 public class QueueAdminResource {
 
-	private QueueManager qm;
-	
-	@Inject
-	public QueueAdminResource(QueueManager qm) {
-		this.qm = qm;
-	}
-	
-	@ApiOperation("Get the queue length")
-	@GET
-	@Path("/size")
-	@Consumes(MediaType.WILDCARD)
-	public Map<String, Long> size() {
-		return qm.size();
-	}
-	
-	@ApiOperation("Get Queue Names")
-	@GET
-	@Path("/")
-	@Consumes(MediaType.WILDCARD)
-	public Map<Status, String> names() {
-		return qm.queues();
-	}
-	
-	@POST
-	@Path("/update/{workflowId}/{taskRefName}/{status}")
-	@ApiOperation("Publish a message in queue to mark a wait task as completed.")
-	public void update(@PathParam("workflowId") String workflowId, @PathParam("taskRefName") String taskRefName, @PathParam("status") Status status, Map<String, Object> output) throws Exception {
-		qm.update(workflowId, taskRefName, output, status);
-	}
-	
+    private QueueManager qm;
+
+    @Inject
+    public QueueAdminResource(QueueManager qm) {
+        this.qm = qm;
+    }
+
+    @ApiOperation("Get the queue length")
+    @GET
+    @Path("/size")
+    @Consumes(MediaType.WILDCARD)
+    public Map<String, Long> size() {
+        return qm.size();
+    }
+
+    @ApiOperation("Get Queue Names")
+    @GET
+    @Path("/")
+    @Consumes(MediaType.WILDCARD)
+    public Map<Status, String> names() {
+        return qm.queues();
+    }
+
+    @POST
+    @Path("/update/{workflowId}/{taskRefName}/{status}")
+    @ApiOperation("Publish a message in queue to mark a wait task as completed.")
+    public void update(@PathParam("workflowId") String workflowId, @PathParam("taskRefName") String taskRefName, @PathParam("status") Status status, Map<String, Object> output) throws Exception {
+        qm.update(workflowId, taskRefName, output, status);
+    }
+
 }

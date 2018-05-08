@@ -1,14 +1,14 @@
 dependencies {
 
-	compile project(':conductor-core')
-	compile "redis.clients:jedis:${revJedis}"
-	compile "com.google.inject:guice:${revGuice}"
-	compile "com.netflix.dyno:dyno-core:${revDynoCore}"
-	compile "com.netflix.dyno:dyno-jedis:${revDynoJedis}"
- 	compile "com.netflix.dyno-queues:dyno-queues-redis:${revDynoQueues}"
-	compile "org.elasticsearch:elasticsearch:${revElasticSearch2}"
+    compile project(':conductor-core')
+    compile "redis.clients:jedis:${revJedis}"
+    compile "com.google.inject:guice:${revGuice}"
+    compile "com.netflix.dyno:dyno-core:${revDynoCore}"
+    compile "com.netflix.dyno:dyno-jedis:${revDynoJedis}"
+     compile "com.netflix.dyno-queues:dyno-queues-redis:${revDynoQueues}"
+    compile "org.elasticsearch:elasticsearch:${revElasticSearch2}"
 
-	//In memory redis for unit testing
- 	testCompile "org.rarefiedredis.redis:redis-java:${revRarefiedRedis}"
+    //In memory redis for unit testing
+     testCompile "org.rarefiedredis.redis:redis-java:${revRarefiedRedis}"
 
 }

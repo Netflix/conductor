@@ -20,23 +20,23 @@ import java.util.List;
 import java.util.Map;
 
 public class DynamicForkJoinTaskList {
-	
-	private List<DynamicForkJoinTask> dynamicTasks = new ArrayList<DynamicForkJoinTask>();
-	
-	public void add(String taskName, String workflowName, String referenceName, Map<String, Object> input){
-		dynamicTasks.add(new DynamicForkJoinTask(taskName, workflowName, referenceName, input));
-	}
 
-	public void add(DynamicForkJoinTask dtask){
-		dynamicTasks.add(dtask);
-	}
-	
-	public List<DynamicForkJoinTask> getDynamicTasks() {
-		return dynamicTasks;
-	}
+    private List<DynamicForkJoinTask> dynamicTasks = new ArrayList<DynamicForkJoinTask>();
 
-	public void setDynamicTasks(List<DynamicForkJoinTask> dynamicTasks) {
-		this.dynamicTasks = dynamicTasks;
-	}
+    public void add(String taskName, String workflowName, String referenceName, Map<String, Object> input){
+        dynamicTasks.add(new DynamicForkJoinTask(taskName, workflowName, referenceName, input));
+    }
+
+    public void add(DynamicForkJoinTask dtask){
+        dynamicTasks.add(dtask);
+    }
+
+    public List<DynamicForkJoinTask> getDynamicTasks() {
+        return dynamicTasks;
+    }
+
+    public void setDynamicTasks(List<DynamicForkJoinTask> dynamicTasks) {
+        this.dynamicTasks = dynamicTasks;
+    }
 
 }

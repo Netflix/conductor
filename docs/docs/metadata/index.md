@@ -123,7 +123,7 @@ __${SOURCE.input/output.JSONPath}__
 
 
 !!! note "JSON Path Support"
-	Conductor supports [JSONPath](http://goessner.net/articles/JsonPath/) specification and uses Java implementation from [here](https://github.com/jayway/JsonPath).
+    Conductor supports [JSONPath](http://goessner.net/articles/JsonPath/) specification and uses Java implementation from [here](https://github.com/jayway/JsonPath).
 
 **Example**
 
@@ -190,8 +190,8 @@ When scheduling the task, Conductor will merge the values from workflow input an
       }
     },
     "headers": {
-    	"Accept": "application/json",
-    	"Content-Type": "application/json"
+        "Accept": "application/json",
+        "Content-Type": "application/json"
     }
   }
 }

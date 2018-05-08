@@ -6,14 +6,14 @@ The API and storage layers are pluggable and provide ability to work with differ
 # Installing and Running
 
 !!! hint "Running in production"
-	For a detailed configuration guide on installing and running Conductor server in production visit [Conductor Server](/server) documentation.
+    For a detailed configuration guide on installing and running Conductor server in production visit [Conductor Server](/server) documentation.
 
 ## Running In-Memory Server
 
 Follow the steps below to quickly bring up a local Conductor instance backed by an in-memory database with a simple kitchen sink workflow that demonstrate all the capabilities of Conductor.
 
 !!!warning:
-	In-Memory server is meant for a quick demonstration purpose and does not store the data on disk.  All the data is lost once the server dies.
+    In-Memory server is meant for a quick demonstration purpose and does not store the data on disk.  All the data is lost once the server dies.
 
 #### Checkout the source from github
 
@@ -44,7 +44,7 @@ docker-compose up
 If you ran it locally, launch UI at [http://localhost:3000/](http://localhost:3000/) or if you have ran it using docker-compose launch the UI at [http://localhost:5000/](http://localhost:5000/)
 
 !!!Note:
-	The server will load a sample kitchen sink workflow definition by default.  See [here](/metadata/kitchensink/) for details.
+    The server will load a sample kitchen sink workflow definition by default.  See [here](/metadata/kitchensink/) for details.
 
 
 # Runtime Model
@@ -75,7 +75,7 @@ Conductor follows RPC based communication model where workers are running on a s
 ```
 POST /workflow/{name}
 {
-	... //json payload as workflow input
+    ... //json payload as workflow input
 }
 ```
 
@@ -84,13 +84,13 @@ POST /workflow/{name}
 ```
 GET /tasks/poll/batch/{taskType}
 ```
-	
+    
 **Update task status**
-	
+    
 ```json
 POST /tasks
 {
-	"outputData": {
+    "outputData": {
         "encodeResult":"success",
         "location": "http://cdn.example.com/file/location.png"
         //any task specific output
@@ -98,4 +98,4 @@ POST /tasks
      "status": "COMPLETED"
 }
 ```
-	
+    

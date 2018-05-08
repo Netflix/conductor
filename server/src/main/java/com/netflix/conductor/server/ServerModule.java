@@ -50,85 +50,85 @@ import redis.clients.jedis.JedisCommands;
  *
  */
 public class ServerModule extends AbstractModule {
-	
-	private int maxThreads = 50;
-	
-	private ExecutorService es;
-	
-	private JedisCommands dynoConn;
-	
-	private HostSupplier hostSupplier;
-	
-	private String region;
-	
-	private String localRack;
-	
-	private ConductorConfig conductorConfig;
-	
-	private ConductorServer.DB db;
 
-	public ServerModule(JedisCommands jedis, HostSupplier hostSupplier, ConductorConfig conductorConfig, ConductorServer.DB db) {
-		this.dynoConn = jedis;
-		this.hostSupplier = hostSupplier;
-		this.conductorConfig = conductorConfig;
-		this.region = conductorConfig.getRegion();
-		this.localRack = conductorConfig.getAvailabilityZone();
-		this.db = db;
-		
-	}
-	
-	@Override
-	protected void configure() {
-		
-		configureExecutorService();
-		
-		bind(Configuration.class).toInstance(conductorConfig);
+    private int maxThreads = 50;
 
-		if (db == ConductorServer.DB.mysql) {
-			install(new MySQLWorkflowModule());
-		} else {
-			String localDC = localRack;
-			localDC = localDC.replaceAll(region, "");
-			DynoShardSupplier ss = new DynoShardSupplier(hostSupplier, region, localDC);
-			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, conductorConfig);
+    private ExecutorService es;
 
-			bind(MetadataDAO.class).to(RedisMetadataDAO.class);
-			bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
-			bind(DynoQueueDAO.class).toInstance(queueDao);
-			bind(QueueDAO.class).to(DynoQueueDAO.class);
+    private JedisCommands dynoConn;
 
-			DynoProxy proxy = new DynoProxy(dynoConn);
-			bind(DynoProxy.class).toInstance(proxy);
-		}
+    private HostSupplier hostSupplier;
 
-		install(new ElasticsearchModule());
-		bind(IndexDAO.class).to(ElasticSearchDAO.class);
-		
-		install(new CoreModule());
-		install(new JerseyModule());
-		
-		new HttpTask(new RestClientManager(), conductorConfig);
-		new JsonJqTransform();
-		
-		List<AbstractModule> additionalModules = conductorConfig.getAdditionalModules();
-		if(additionalModules != null) {
-			for(AbstractModule additionalModule : additionalModules) {
-				install(additionalModule);
-			}
-		}
-	}
-	
-	@Provides
-	public ExecutorService getExecutorService(){
-		return this.es;
-	}
-	
-	private void configureExecutorService(){
-		AtomicInteger count = new AtomicInteger(0);
-		this.es = java.util.concurrent.Executors.newFixedThreadPool(maxThreads, runnable -> {
+    private String region;
+
+    private String localRack;
+
+    private ConductorConfig conductorConfig;
+
+    private ConductorServer.DB db;
+
+    public ServerModule(JedisCommands jedis, HostSupplier hostSupplier, ConductorConfig conductorConfig, ConductorServer.DB db) {
+        this.dynoConn = jedis;
+        this.hostSupplier = hostSupplier;
+        this.conductorConfig = conductorConfig;
+        this.region = conductorConfig.getRegion();
+        this.localRack = conductorConfig.getAvailabilityZone();
+        this.db = db;
+
+    }
+
+    @Override
+    protected void configure() {
+
+        configureExecutorService();
+
+        bind(Configuration.class).toInstance(conductorConfig);
+
+        if (db == ConductorServer.DB.mysql) {
+            install(new MySQLWorkflowModule());
+        } else {
+            String localDC = localRack;
+            localDC = localDC.replaceAll(region, "");
+            DynoShardSupplier ss = new DynoShardSupplier(hostSupplier, region, localDC);
+            DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, conductorConfig);
+
+            bind(MetadataDAO.class).to(RedisMetadataDAO.class);
+            bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
+            bind(DynoQueueDAO.class).toInstance(queueDao);
+            bind(QueueDAO.class).to(DynoQueueDAO.class);
+
+            DynoProxy proxy = new DynoProxy(dynoConn);
+            bind(DynoProxy.class).toInstance(proxy);
+        }
+
+        install(new ElasticsearchModule());
+        bind(IndexDAO.class).to(ElasticSearchDAO.class);
+
+        install(new CoreModule());
+        install(new JerseyModule());
+
+        new HttpTask(new RestClientManager(), conductorConfig);
+        new JsonJqTransform();
+
+        List<AbstractModule> additionalModules = conductorConfig.getAdditionalModules();
+        if(additionalModules != null) {
+            for(AbstractModule additionalModule : additionalModules) {
+                install(additionalModule);
+            }
+        }
+    }
+
+    @Provides
+    public ExecutorService getExecutorService(){
+        return this.es;
+    }
+
+    private void configureExecutorService(){
+        AtomicInteger count = new AtomicInteger(0);
+        this.es = java.util.concurrent.Executors.newFixedThreadPool(maxThreads, runnable -> {
             Thread conductorWorkerThread = new Thread(runnable);
             conductorWorkerThread.setName("conductor-worker-" + count.getAndIncrement());
             return conductorWorkerThread;
         });
-	}
+    }
 }

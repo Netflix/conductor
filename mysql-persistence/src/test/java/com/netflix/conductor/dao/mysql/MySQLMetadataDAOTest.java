@@ -191,7 +191,7 @@ public class MySQLMetadataDAOTest extends MySQLBaseDAOTest {
 
         List<EventHandler> byEvents = dao.getEventHandlersForEvent(event1, true);
         assertNotNull(byEvents);
-        assertEquals(0, byEvents.size());		//event is marked as in-active
+        assertEquals(0, byEvents.size());        //event is marked as in-active
 
         eh.setActive(true);
         eh.setEvent(event2);

@@ -24,17 +24,17 @@ import com.netflix.conductor.common.run.Workflow;
  */
 public interface WorkflowArchiveDAO {
 
-	/**
-	 * 
-	 * @param workflow Workflow to be archived
-	 */
-	public abstract void archive(Workflow workflow);
-	
-	/**
-	 * 
-	 * @param workflowId Retrieve workflow using ID
-	 * @return Workflow identified by workflowId
-	 */
-	public abstract Workflow get(String workflowId);
+    /**
+     *
+     * @param workflow Workflow to be archived
+     */
+    public abstract void archive(Workflow workflow);
+
+    /**
+     *
+     * @param workflowId Retrieve workflow using ID
+     * @return Workflow identified by workflowId
+     */
+    public abstract Workflow get(String workflowId);
 
 }

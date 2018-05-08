@@ -29,26 +29,26 @@ import com.google.inject.Injector;
  */
 public class TestRunner extends BlockJUnit4ClassRunner {
 
-	private Injector injector;
-	
-	static {
-		System.setProperty("EC2_REGION", "us-east-1");
-		System.setProperty("EC2_AVAILABILITY_ZONE", "us-east-1c");
-	}
+    private Injector injector;
 
-	
-	public TestRunner(Class<?> klass) throws Exception {
-		super(klass);
-		System.setProperty("workflow.namespace.prefix", "conductor" + System.getProperty("user.name"));
-		injector = Guice.createInjector(new TestModule());
-	}
+    static {
+        System.setProperty("EC2_REGION", "us-east-1");
+        System.setProperty("EC2_AVAILABILITY_ZONE", "us-east-1c");
+    }
 
-	@Override
-	protected Object createTest() throws Exception {
-		Object test = super.createTest();
-		injector.injectMembers(test);
-		return test;
-	}
-	
-	
+
+    public TestRunner(Class<?> klass) throws Exception {
+        super(klass);
+        System.setProperty("workflow.namespace.prefix", "conductor" + System.getProperty("user.name"));
+        injector = Guice.createInjector(new TestModule());
+    }
+
+    @Override
+    protected Object createTest() throws Exception {
+        Object test = super.createTest();
+        injector.injectMembers(test);
+        return test;
+    }
+
+
 }

@@ -57,82 +57,82 @@ import rx.Observable;
  *
  */
 public class TestEventProcessor {
-	
-	@Test
-	public void testEventProcessor() throws Exception {
-		String event = "sqs:arn:account090:sqstest1";
-		String queueURI = "arn:account090:sqstest1";
-	
-		EventQueueProvider provider = mock(EventQueueProvider.class);
-		
-		ObservableQueue queue = mock(ObservableQueue.class);
-		Message[] messages = new Message[1];
-		messages[0] = new Message("t0", "{}", "t0");
-		Observable<Message> msgObservable = Observable.from(messages);
-		when(queue.observe()).thenReturn(msgObservable);
-		when(queue.getURI()).thenReturn(queueURI);
-		when(queue.getName()).thenReturn(queueURI);
-		when(queue.getType()).thenReturn("sqs");
-		when(provider.getQueue(queueURI)).thenReturn(queue);
-		EventQueues.providers = new HashMap<>();
-		
-		EventQueues.providers.put("sqs", provider);
-		
-		EventHandler eh = new EventHandler();
-		eh.setName(UUID.randomUUID().toString());
-		eh.setActive(false);
-		Action action = new Action();
-		action.setAction(Type.start_workflow);
-		action.setStart_workflow(new StartWorkflow());
-		action.getStart_workflow().setName("workflow_x");
-		action.getStart_workflow().setVersion(1);	//TODO: Remove this to simulate the null value for version being passed!
-		eh.getActions().add(action);
-		eh.setEvent(event);
-		
-		MetadataService ms = mock(MetadataService.class);
-		
 
-		when(ms.getEventHandlers()).thenReturn(Arrays.asList(eh));
-		when(ms.getEventHandlersForEvent(eh.getEvent(), true)).thenReturn(Arrays.asList(eh));
-		
-		//Execution Service Mock
-		ExecutionService eservice = mock(ExecutionService.class);
-		when(eservice.addEventExecution(any())).thenReturn(true);
-		
-		//Workflow Executor Mock
-		WorkflowExecutor executor = mock(WorkflowExecutor.class);
-		String id = UUID.randomUUID().toString();
-		AtomicBoolean started = new AtomicBoolean(false);
-		doAnswer(new Answer<String>() {
+    @Test
+    public void testEventProcessor() throws Exception {
+        String event = "sqs:arn:account090:sqstest1";
+        String queueURI = "arn:account090:sqstest1";
 
-			@Override
-			public String answer(InvocationOnMock invocation) throws Throwable {
-				started.set(true);
-				return id;
-			}
-		}).when(executor).startWorkflow(action.getStart_workflow().getName(), 1, action.getStart_workflow().getCorrelationId(), action.getStart_workflow().getInput(), event);
+        EventQueueProvider provider = mock(EventQueueProvider.class);
 
-		//Metadata Service Mock
-		MetadataService metadata = mock(MetadataService.class);
-		WorkflowDef def = new WorkflowDef();
-		def.setVersion(1);
-		def.setName(action.getStart_workflow().getName());
-		when(metadata.getWorkflowDef(any(), any())).thenReturn(def);
-		
-		ActionProcessor ap = new ActionProcessor(executor, metadata);
-		
-		EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper());
-		assertNotNull(ep.getQueues());
-		assertEquals(1, ep.getQueues().size());
-		
-		String queueEvent = ep.getQueues().keySet().iterator().next();
-		assertEquals(eh.getEvent(), queueEvent);
-		
-		String epQueue = ep.getQueues().values().iterator().next();
-		assertEquals(queueURI, epQueue);
-				
-		Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-		assertTrue(started.get());
-	}
-	
+        ObservableQueue queue = mock(ObservableQueue.class);
+        Message[] messages = new Message[1];
+        messages[0] = new Message("t0", "{}", "t0");
+        Observable<Message> msgObservable = Observable.from(messages);
+        when(queue.observe()).thenReturn(msgObservable);
+        when(queue.getURI()).thenReturn(queueURI);
+        when(queue.getName()).thenReturn(queueURI);
+        when(queue.getType()).thenReturn("sqs");
+        when(provider.getQueue(queueURI)).thenReturn(queue);
+        EventQueues.providers = new HashMap<>();
+
+        EventQueues.providers.put("sqs", provider);
+
+        EventHandler eh = new EventHandler();
+        eh.setName(UUID.randomUUID().toString());
+        eh.setActive(false);
+        Action action = new Action();
+        action.setAction(Type.start_workflow);
+        action.setStart_workflow(new StartWorkflow());
+        action.getStart_workflow().setName("workflow_x");
+        action.getStart_workflow().setVersion(1);    //TODO: Remove this to simulate the null value for version being passed!
+        eh.getActions().add(action);
+        eh.setEvent(event);
+
+        MetadataService ms = mock(MetadataService.class);
+
+
+        when(ms.getEventHandlers()).thenReturn(Arrays.asList(eh));
+        when(ms.getEventHandlersForEvent(eh.getEvent(), true)).thenReturn(Arrays.asList(eh));
+
+        //Execution Service Mock
+        ExecutionService eservice = mock(ExecutionService.class);
+        when(eservice.addEventExecution(any())).thenReturn(true);
+
+        //Workflow Executor Mock
+        WorkflowExecutor executor = mock(WorkflowExecutor.class);
+        String id = UUID.randomUUID().toString();
+        AtomicBoolean started = new AtomicBoolean(false);
+        doAnswer(new Answer<String>() {
+
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                started.set(true);
+                return id;
+            }
+        }).when(executor).startWorkflow(action.getStart_workflow().getName(), 1, action.getStart_workflow().getCorrelationId(), action.getStart_workflow().getInput(), event);
+
+        //Metadata Service Mock
+        MetadataService metadata = mock(MetadataService.class);
+        WorkflowDef def = new WorkflowDef();
+        def.setVersion(1);
+        def.setName(action.getStart_workflow().getName());
+        when(metadata.getWorkflowDef(any(), any())).thenReturn(def);
+
+        ActionProcessor ap = new ActionProcessor(executor, metadata);
+
+        EventProcessor ep = new EventProcessor(eservice, ms, ap, new TestConfiguration(), new ObjectMapper());
+        assertNotNull(ep.getQueues());
+        assertEquals(1, ep.getQueues().size());
+
+        String queueEvent = ep.getQueues().keySet().iterator().next();
+        assertEquals(eh.getEvent(), queueEvent);
+
+        String epQueue = ep.getQueues().values().iterator().next();
+        assertEquals(queueURI, epQueue);
+
+        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+        assertTrue(started.get());
+    }
+
 }

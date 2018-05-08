@@ -26,63 +26,63 @@ import com.netflix.conductor.core.config.Configuration;
 
 public class BaseDynoDAO {
 
-	private static final String NAMESPACE_SEP = ".";
+    private static final String NAMESPACE_SEP = ".";
 
-	protected DynoProxy dynoClient;
+    protected DynoProxy dynoClient;
 
-	protected ObjectMapper om;
+    protected ObjectMapper om;
 
-	protected String domain;
+    protected String domain;
 
-	private Configuration config;
+    private Configuration config;
 
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+    protected Logger logger = LoggerFactory.getLogger(getClass());
 
-	protected BaseDynoDAO(DynoProxy dynoClient, ObjectMapper om, Configuration config) {
-		this.dynoClient = dynoClient;
-		this.om = om;
-		this.config = config;
-		this.domain = config.getProperty("workflow.dyno.keyspace.domain", null);
-	}
+    protected BaseDynoDAO(DynoProxy dynoClient, ObjectMapper om, Configuration config) {
+        this.dynoClient = dynoClient;
+        this.om = om;
+        this.config = config;
+        this.domain = config.getProperty("workflow.dyno.keyspace.domain", null);
+    }
 
-	public String nsKey(String... nsValues) {
-		String rootNamespace = config.getProperty("workflow.namespace.prefix", null);
-		String namespacedKey = rootNamespace + NAMESPACE_SEP;
-		String stack = config.getStack();
-		if (stack != null && !stack.isEmpty()) {
-			namespacedKey = namespacedKey + stack + NAMESPACE_SEP;
-		}
-		if (domain != null && !domain.isEmpty()) {
-			namespacedKey = namespacedKey + domain + NAMESPACE_SEP;
-		}
-		for (int i = 0; i < nsValues.length; i++) {
-			namespacedKey = namespacedKey + nsValues[i];
-			if (i < nsValues.length - 1) {
-				namespacedKey = namespacedKey + NAMESPACE_SEP;
-			}
-		}
-		//QUES cpewf.devint.test.WORKFLOW.UUID isSystemTask the stack in here same as the NETFLIX_STACK ? and what about the domain?
-		//Looking at the data saved in dynomite cpewf.WORKFLOW.UUID
-		return namespacedKey;
-	}
+    public String nsKey(String... nsValues) {
+        String rootNamespace = config.getProperty("workflow.namespace.prefix", null);
+        String namespacedKey = rootNamespace + NAMESPACE_SEP;
+        String stack = config.getStack();
+        if (stack != null && !stack.isEmpty()) {
+            namespacedKey = namespacedKey + stack + NAMESPACE_SEP;
+        }
+        if (domain != null && !domain.isEmpty()) {
+            namespacedKey = namespacedKey + domain + NAMESPACE_SEP;
+        }
+        for (int i = 0; i < nsValues.length; i++) {
+            namespacedKey = namespacedKey + nsValues[i];
+            if (i < nsValues.length - 1) {
+                namespacedKey = namespacedKey + NAMESPACE_SEP;
+            }
+        }
+        //QUES cpewf.devint.test.WORKFLOW.UUID isSystemTask the stack in here same as the NETFLIX_STACK ? and what about the domain?
+        //Looking at the data saved in dynomite cpewf.WORKFLOW.UUID
+        return namespacedKey;
+    }
 
-	public DynoProxy getDyno() {
-		return dynoClient;
-	}
-	
-	protected String toJson(Object value) {
-		try {
-			return om.writeValueAsString(value);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	protected <T>T readValue(String json, Class<T> clazz) {
-		try {
-			return om.readValue(json, clazz);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    public DynoProxy getDyno() {
+        return dynoClient;
+    }
+
+    protected String toJson(Object value) {
+        try {
+            return om.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected <T>T readValue(String json, Class<T> clazz) {
+        try {
+            return om.readValue(json, clazz);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

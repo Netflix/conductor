@@ -42,181 +42,181 @@ import com.netflix.spectator.api.histogram.PercentileTimer;
  */
 public class Monitors {
 
-	private static Registry registry = Spectator.globalRegistry();
+    private static Registry registry = Spectator.globalRegistry();
 
-	private static Map<String, Map<Map<String, String>, Counter>> counters = new ConcurrentHashMap<>();
+    private static Map<String, Map<Map<String, String>, Counter>> counters = new ConcurrentHashMap<>();
 
-	private static Map<String, Map<Map<String, String>, PercentileTimer>> timers = new ConcurrentHashMap<>();
+    private static Map<String, Map<Map<String, String>, PercentileTimer>> timers = new ConcurrentHashMap<>();
 
-	private static Map<String, Map<Map<String, String>, AtomicLong>> gauges = new ConcurrentHashMap<>();
+    private static Map<String, Map<Map<String, String>, AtomicLong>> gauges = new ConcurrentHashMap<>();
 
-	public static final String classQualifier = "WorkflowMonitor";
+    public static final String classQualifier = "WorkflowMonitor";
 
-	private Monitors() {
+    private Monitors() {
 
-	}
+    }
 
-	/**
-	 * 
-	 * @param className Name of the class
-	 * @param methodName Method name
-	 *            
-	 */
-	public static void error(String className, String methodName) {
-		getCounter(className, "workflow_server_error", "methodName", methodName).increment();
-	}
+    /**
+     *
+     * @param className Name of the class
+     * @param methodName Method name
+     *
+     */
+    public static void error(String className, String methodName) {
+        getCounter(className, "workflow_server_error", "methodName", methodName).increment();
+    }
 
-	public static Stopwatch start(String className, String name, String... additionalTags) {
-		return start(getTimer(className, name, additionalTags));
-	}
+    public static Stopwatch start(String className, String name, String... additionalTags) {
+        return start(getTimer(className, name, additionalTags));
+    }
 
-	/**
-	 * Increment a counter that is used to measure the rate at which some event
-	 * is occurring. Consider a simple queue, counters would be used to measure
-	 * things like the rate at which items are being inserted and removed.
-	 * 
-	 * @param className
-	 * @param name
-	 * @param additionalTags
-	 */
-	private static void counter(String className, String name, String... additionalTags) {
-		getCounter(className, name, additionalTags).increment();
-	}
+    /**
+     * Increment a counter that is used to measure the rate at which some event
+     * is occurring. Consider a simple queue, counters would be used to measure
+     * things like the rate at which items are being inserted and removed.
+     *
+     * @param className
+     * @param name
+     * @param additionalTags
+     */
+    private static void counter(String className, String name, String... additionalTags) {
+        getCounter(className, name, additionalTags).increment();
+    }
 
-	/**
-	 * Set a gauge is a handle to get the current value. Typical examples for
-	 * gauges would be the size of a queue or number of threads in the running
-	 * state. Since gauges are sampled, there is no information about what might
-	 * have occurred between samples.
-	 * 
-	 * @param className
-	 * @param name
-	 * @param measurement
-	 * @param additionalTags
-	 */
-	private static void gauge(String className, String name, long measurement, String... additionalTags) {
-		getGauge(className, name, additionalTags).getAndSet(measurement);
-	}
+    /**
+     * Set a gauge is a handle to get the current value. Typical examples for
+     * gauges would be the size of a queue or number of threads in the running
+     * state. Since gauges are sampled, there is no information about what might
+     * have occurred between samples.
+     *
+     * @param className
+     * @param name
+     * @param measurement
+     * @param additionalTags
+     */
+    private static void gauge(String className, String name, long measurement, String... additionalTags) {
+        getGauge(className, name, additionalTags).getAndSet(measurement);
+    }
 
-	public static Timer getTimer(String className, String name, String... additionalTags) {
-		Map<String, String> tags = toMap(className, additionalTags);
-		tags.put("unit", TimeUnit.SECONDS.name());
-		return timers.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {
-			Id id = registry.createId(name, tags);
-			return PercentileTimer.get(registry, id);
-		});
-	}
+    public static Timer getTimer(String className, String name, String... additionalTags) {
+        Map<String, String> tags = toMap(className, additionalTags);
+        tags.put("unit", TimeUnit.SECONDS.name());
+        return timers.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {
+            Id id = registry.createId(name, tags);
+            return PercentileTimer.get(registry, id);
+        });
+    }
 
-	private static Counter getCounter(String className, String name, String... additionalTags) {
-		Map<String, String> tags = toMap(className, additionalTags);
+    private static Counter getCounter(String className, String name, String... additionalTags) {
+        Map<String, String> tags = toMap(className, additionalTags);
 
-		return counters.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {
-			Id id = registry.createId(name, tags);
-			return registry.counter(id);
-		});
-	}
+        return counters.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {
+            Id id = registry.createId(name, tags);
+            return registry.counter(id);
+        });
+    }
 
-	private static AtomicLong getGauge(String className, String name, String... additionalTags) {
-		Map<String, String> tags = toMap(className, additionalTags);
+    private static AtomicLong getGauge(String className, String name, String... additionalTags) {
+        Map<String, String> tags = toMap(className, additionalTags);
 
-		return gauges.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {
-			Id id = registry.createId(name, tags);
-			return registry.gauge(id, new AtomicLong(0));
-		});
-	}
+        return gauges.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {
+            Id id = registry.createId(name, tags);
+            return registry.gauge(id, new AtomicLong(0));
+        });
+    }
 
-	private static Map<String, String> toMap(String className, String... additionalTags) {
-		Map<String, String> tags = new HashMap<>();
-		tags.put("class", className);
-		for (int j = 0; j < additionalTags.length - 1; j++) {
-			String tk = additionalTags[j];
-			String tv = "" + additionalTags[j + 1];
-			if(!tv.isEmpty()) {
-				tags.put(tk, tv);	
-			}			
-			j++;
-		}
-		return tags;
-	}
+    private static Map<String, String> toMap(String className, String... additionalTags) {
+        Map<String, String> tags = new HashMap<>();
+        tags.put("class", className);
+        for (int j = 0; j < additionalTags.length - 1; j++) {
+            String tk = additionalTags[j];
+            String tv = "" + additionalTags[j + 1];
+            if(!tv.isEmpty()) {
+                tags.put(tk, tv);
+            }
+            j++;
+        }
+        return tags;
+    }
 
-	private static Stopwatch start(Timer sm) {
+    private static Stopwatch start(Timer sm) {
 
-		Stopwatch sw = new BasicStopwatch() {
+        Stopwatch sw = new BasicStopwatch() {
 
-			@Override
-			public void stop() {
-				super.stop();
-				long duration = getDuration(TimeUnit.MILLISECONDS);
-				sm.record(duration, TimeUnit.MILLISECONDS);
-			}
+            @Override
+            public void stop() {
+                super.stop();
+                long duration = getDuration(TimeUnit.MILLISECONDS);
+                sm.record(duration, TimeUnit.MILLISECONDS);
+            }
 
-		};
-		sw.start();
-		return sw;
-	}
+        };
+        sw.start();
+        return sw;
+    }
 
-	public static void recordQueueWaitTime(String taskType, long queueWaitTime) {
-		getTimer(classQualifier, "task_queue_wait", "taskType", taskType).record(queueWaitTime, TimeUnit.MILLISECONDS);
-	}
+    public static void recordQueueWaitTime(String taskType, long queueWaitTime) {
+        getTimer(classQualifier, "task_queue_wait", "taskType", taskType).record(queueWaitTime, TimeUnit.MILLISECONDS);
+    }
 
-	public static void recordTaskExecutionTime(String taskType, long duration, boolean includesRetries, Task.Status status) {
-		getTimer(classQualifier, "task_execution", "taskType", taskType, "includeRetries", "" + includesRetries, "status", status.name()).record(duration, TimeUnit.MILLISECONDS);
-	}
+    public static void recordTaskExecutionTime(String taskType, long duration, boolean includesRetries, Task.Status status) {
+        getTimer(classQualifier, "task_execution", "taskType", taskType, "includeRetries", "" + includesRetries, "status", status.name()).record(duration, TimeUnit.MILLISECONDS);
+    }
 
-	public static void recordTaskPoll(String taskType) {
-		counter(classQualifier, "task_poll", "taskType", taskType);
-	}
+    public static void recordTaskPoll(String taskType) {
+        counter(classQualifier, "task_poll", "taskType", taskType);
+    }
 
-	public static void recordQueueDepth(String taskType, long size, String ownerApp) {
-		gauge(classQualifier, "task_queue_depth", size, "taskType", taskType, "ownerApp", ""+ownerApp);
-	}
-	
-	public static void recordTaskInProgress(String taskType, long size, String ownerApp) {
-		gauge(classQualifier, "task_in_progress", size, "taskType", taskType, "ownerApp", ""+ownerApp);
-	}
+    public static void recordQueueDepth(String taskType, long size, String ownerApp) {
+        gauge(classQualifier, "task_queue_depth", size, "taskType", taskType, "ownerApp", ""+ownerApp);
+    }
 
-	public static void recordRunningWorkflows(long count, String name, String version, String ownerApp) {
-		gauge(classQualifier, "workflow_running", count, "workflowName", name, "version", version, "ownerApp", ""+ownerApp);
+    public static void recordTaskInProgress(String taskType, long size, String ownerApp) {
+        gauge(classQualifier, "task_in_progress", size, "taskType", taskType, "ownerApp", ""+ownerApp);
+    }
 
-	}
+    public static void recordRunningWorkflows(long count, String name, String version, String ownerApp) {
+        gauge(classQualifier, "workflow_running", count, "workflowName", name, "version", version, "ownerApp", ""+ownerApp);
 
-	public static void recordTaskTimeout(String taskType) {
-		counter(classQualifier, "task_timeout", "taskType", taskType);
-	}
+    }
 
-	public static void recordTaskResponseTimeout(String taskType) {
-		counter(classQualifier, "task_response_timeout", "taskType", taskType);
-	}
-	
-	public static void recordWorkflowTermination(String workflowType, WorkflowStatus status, String ownerApp) {
-		counter(classQualifier, "workflow_failure", "workflowName", workflowType, "status", status.name(), "ownerApp", ""+ownerApp);
-	}
+    public static void recordTaskTimeout(String taskType) {
+        counter(classQualifier, "task_timeout", "taskType", taskType);
+    }
 
-	public static void recordWorkflowStartError(String workflowType, String ownerApp) {
-		counter(classQualifier, "workflow_start_error", "workflowName", workflowType, "ownerApp", ""+ownerApp);
-	}
-	
-	public static void recordUpdateConflict(String taskType, String workflowType, WorkflowStatus status) {
-		counter(classQualifier, "task_update_conflict", "workflowName", workflowType, "taskType", taskType, "workflowStatus", status.name());
-	}
+    public static void recordTaskResponseTimeout(String taskType) {
+        counter(classQualifier, "task_response_timeout", "taskType", taskType);
+    }
 
-	public static void recordUpdateConflict(String taskType, String workflowType, Status status) {
-		counter(classQualifier, "task_update_conflict", "workflowName", workflowType, "taskType", taskType, "workflowStatus", status.name());
-	}
+    public static void recordWorkflowTermination(String workflowType, WorkflowStatus status, String ownerApp) {
+        counter(classQualifier, "workflow_failure", "workflowName", workflowType, "status", status.name(), "ownerApp", ""+ownerApp);
+    }
 
-	public static void recordWorkflowCompletion(String workflowType, long duration, String ownerApp) {
-		getTimer(classQualifier, "workflow_execution", "workflowName", workflowType, "ownerApp", ""+ownerApp).record(duration, TimeUnit.MILLISECONDS);
-	}
+    public static void recordWorkflowStartError(String workflowType, String ownerApp) {
+        counter(classQualifier, "workflow_start_error", "workflowName", workflowType, "ownerApp", ""+ownerApp);
+    }
 
-	public static void recordTaskRateLimited(String taskDefName, int limit) {
-		gauge(classQualifier, "task_rate_limited", limit, "taskType", taskDefName);
-	}
+    public static void recordUpdateConflict(String taskType, String workflowType, WorkflowStatus status) {
+        counter(classQualifier, "task_update_conflict", "workflowName", workflowType, "taskType", taskType, "workflowStatus", status.name());
+    }
 
-	public static void recordEventQueueMessagesProcessed(String queueType, String queueName, int count) {
-		getCounter(classQualifier, "event_queue_messages_processed", "queueType", queueType, "queueName", queueName).increment(count);
-	}
+    public static void recordUpdateConflict(String taskType, String workflowType, Status status) {
+        counter(classQualifier, "task_update_conflict", "workflowName", workflowType, "taskType", taskType, "workflowStatus", status.name());
+    }
 
-	public static void recordObservableQMessageReceivedErrors(String queueType) {
-		counter(classQualifier, "observable_queue_error", "queueType", queueType);
-	}
+    public static void recordWorkflowCompletion(String workflowType, long duration, String ownerApp) {
+        getTimer(classQualifier, "workflow_execution", "workflowName", workflowType, "ownerApp", ""+ownerApp).record(duration, TimeUnit.MILLISECONDS);
+    }
+
+    public static void recordTaskRateLimited(String taskDefName, int limit) {
+        gauge(classQualifier, "task_rate_limited", limit, "taskType", taskDefName);
+    }
+
+    public static void recordEventQueueMessagesProcessed(String queueType, String queueName, int count) {
+        getCounter(classQualifier, "event_queue_messages_processed", "queueType", queueType, "queueName", queueName).increment(count);
+    }
+
+    public static void recordObservableQMessageReceivedErrors(String queueType) {
+        counter(classQualifier, "observable_queue_error", "queueType", queueType);
+    }
 }

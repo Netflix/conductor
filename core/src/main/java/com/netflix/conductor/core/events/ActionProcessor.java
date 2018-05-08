@@ -48,158 +48,158 @@ import java.util.Map;
 @Singleton
 public class ActionProcessor {
 
-	private static Logger logger = LoggerFactory.getLogger(ActionProcessor.class);
+    private static Logger logger = LoggerFactory.getLogger(ActionProcessor.class);
 
-	private WorkflowExecutor executor;
+    private WorkflowExecutor executor;
 
-	private MetadataService metadata;
-	
-	private static final ObjectMapper om = new ObjectMapper();
-	
-	private ParametersUtils pu = new ParametersUtils();
-	
-	@Inject
-	public ActionProcessor(WorkflowExecutor executor, MetadataService metadata) {
-		this.executor = executor;
-		this.metadata = metadata;
-	}
+    private MetadataService metadata;
 
-	public Map<String, Object> execute(Action action, String payload, String event, String messageId) throws Exception {
+    private static final ObjectMapper om = new ObjectMapper();
 
-		logger.debug("Executing {}", action.getAction());
-		Object jsonObj = om.readValue(payload, Object.class);
-		if(action.isExpandInlineJSON()) {
-			jsonObj = expand(jsonObj);
-		}
+    private ParametersUtils pu = new ParametersUtils();
 
-		switch (action.getAction()) {
-			case start_workflow:
-				Map<String, Object> op = startWorkflow(action, jsonObj, event, messageId);
-				return op;
-			case complete_task:
-				op = completeTask(action, jsonObj, action.getComplete_task(), Status.COMPLETED, event, messageId);
-				return op;
-			case fail_task:
-				op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, event, messageId);
-				return op;
-			default:
-				break;
-		}
-		throw new UnsupportedOperationException("Action not supported " + action.getAction());
+    @Inject
+    public ActionProcessor(WorkflowExecutor executor, MetadataService metadata) {
+        this.executor = executor;
+        this.metadata = metadata;
+    }
 
-	}
+    public Map<String, Object> execute(Action action, String payload, String event, String messageId) throws Exception {
 
-	private Map<String, Object> completeTask(Action action, Object payload, TaskDetails taskDetails, Status status, String event, String messageId) {
-		
-		Map<String, Object> input = new HashMap<>();
-		input.put("workflowId", taskDetails.getWorkflowId());
-		input.put("taskRefName", taskDetails.getTaskRefName());
-		input.putAll(taskDetails.getOutput());
-		
-		Map<String, Object> replaced = pu.replace(input, payload);
-		String workflowId = "" + replaced.get("workflowId");
-		String taskRefName = "" + replaced.get("taskRefName");
-		Workflow found = executor.getWorkflow(workflowId, true);
-		if(found == null) {
-			replaced.put("error", "No workflow found with ID: " + workflowId);
-			return replaced;
-		}
-		Task task = found.getTaskByRefName(taskRefName);
-		if(task == null) {
-			replaced.put("error", "No task found with reference name: " + taskRefName + ", workflowId: " + workflowId);
-			return replaced;
-		}
-		
-		task.setStatus(status);
-		task.setOutputData(replaced);
-		task.getOutputData().put("conductor.event.messageId", messageId);
-		task.getOutputData().put("conductor.event.name", event);
-		
-		try {
-			executor.updateTask(new TaskResult(task));
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			replaced.put("error", e.getMessage());
-		}
-		return replaced;
-	}
+        logger.debug("Executing {}", action.getAction());
+        Object jsonObj = om.readValue(payload, Object.class);
+        if(action.isExpandInlineJSON()) {
+            jsonObj = expand(jsonObj);
+        }
 
-	private Map<String, Object> startWorkflow(Action action, Object payload, String event, String messageId) throws Exception {
-		StartWorkflow params = action.getStart_workflow();
-		Map<String, Object> op = new HashMap<>();
-		try {
-			
-			WorkflowDef def = metadata.getWorkflowDef(params.getName(), params.getVersion());
-			Map<String, Object> inputParams = params.getInput();
-			Map<String, Object> workflowInput = pu.replace(inputParams, payload);
-			workflowInput.put("conductor.event.messageId", messageId);
-			workflowInput.put("conductor.event.name", event);
-			
-			String id = executor.startWorkflow(def.getName(), def.getVersion(), params.getCorrelationId(), workflowInput, event);
-			op.put("workflowId", id);
-			
-			
-		}catch(Exception e) {
-			logger.error(e.getMessage(), e);
-			op.put("error", e.getMessage());
-		}
-		
-		return op;
-	}
-	
-	private Object getJson(String jsonAsString) {
-		try {
-			Object value =  om.readValue(jsonAsString, Object.class);
-			return value;
-		} catch (Exception e) {
-			return jsonAsString;
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	@VisibleForTesting
-	Object expand(Object input) {
-		if(input instanceof List) {
-			expandList((List<Object>)input);
-			return input;
-		}else if(input instanceof Map) {
-			expandMap((Map<String, Object>)input);
-			return input;
-		}else if(input instanceof String) {
-			return getJson((String)input);
-		}else {
-			return input;
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void expandList(List<Object> input) {
-		for(Object value : input) {
-			if(value instanceof String) {
-				value = getJson(value.toString());				
-			} else if (value instanceof Map) {
-				expandMap((Map<String, Object>) value);
-			} else if (value instanceof List) {
-				expandList((List<Object>)value); 
-			}
-		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	private void expandMap(Map<String, Object> input) {
-		for(Map.Entry<String, Object> e: input.entrySet()) {
-			Object value = e.getValue();
-			if(value instanceof String) {
-				value = getJson(value.toString());
-				e.setValue(value);
-			} else if (value instanceof Map) {
-				expandMap((Map<String, Object>) value);
-			} else if (value instanceof List) {
-				expandList((List<Object>)value); 
-			}
-		}
-	}
+        switch (action.getAction()) {
+            case start_workflow:
+                Map<String, Object> op = startWorkflow(action, jsonObj, event, messageId);
+                return op;
+            case complete_task:
+                op = completeTask(action, jsonObj, action.getComplete_task(), Status.COMPLETED, event, messageId);
+                return op;
+            case fail_task:
+                op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, event, messageId);
+                return op;
+            default:
+                break;
+        }
+        throw new UnsupportedOperationException("Action not supported " + action.getAction());
 
-	
+    }
+
+    private Map<String, Object> completeTask(Action action, Object payload, TaskDetails taskDetails, Status status, String event, String messageId) {
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("workflowId", taskDetails.getWorkflowId());
+        input.put("taskRefName", taskDetails.getTaskRefName());
+        input.putAll(taskDetails.getOutput());
+
+        Map<String, Object> replaced = pu.replace(input, payload);
+        String workflowId = "" + replaced.get("workflowId");
+        String taskRefName = "" + replaced.get("taskRefName");
+        Workflow found = executor.getWorkflow(workflowId, true);
+        if(found == null) {
+            replaced.put("error", "No workflow found with ID: " + workflowId);
+            return replaced;
+        }
+        Task task = found.getTaskByRefName(taskRefName);
+        if(task == null) {
+            replaced.put("error", "No task found with reference name: " + taskRefName + ", workflowId: " + workflowId);
+            return replaced;
+        }
+
+        task.setStatus(status);
+        task.setOutputData(replaced);
+        task.getOutputData().put("conductor.event.messageId", messageId);
+        task.getOutputData().put("conductor.event.name", event);
+
+        try {
+            executor.updateTask(new TaskResult(task));
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            replaced.put("error", e.getMessage());
+        }
+        return replaced;
+    }
+
+    private Map<String, Object> startWorkflow(Action action, Object payload, String event, String messageId) throws Exception {
+        StartWorkflow params = action.getStart_workflow();
+        Map<String, Object> op = new HashMap<>();
+        try {
+
+            WorkflowDef def = metadata.getWorkflowDef(params.getName(), params.getVersion());
+            Map<String, Object> inputParams = params.getInput();
+            Map<String, Object> workflowInput = pu.replace(inputParams, payload);
+            workflowInput.put("conductor.event.messageId", messageId);
+            workflowInput.put("conductor.event.name", event);
+
+            String id = executor.startWorkflow(def.getName(), def.getVersion(), params.getCorrelationId(), workflowInput, event);
+            op.put("workflowId", id);
+
+
+        }catch(Exception e) {
+            logger.error(e.getMessage(), e);
+            op.put("error", e.getMessage());
+        }
+
+        return op;
+    }
+
+    private Object getJson(String jsonAsString) {
+        try {
+            Object value =  om.readValue(jsonAsString, Object.class);
+            return value;
+        } catch (Exception e) {
+            return jsonAsString;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @VisibleForTesting
+    Object expand(Object input) {
+        if(input instanceof List) {
+            expandList((List<Object>)input);
+            return input;
+        }else if(input instanceof Map) {
+            expandMap((Map<String, Object>)input);
+            return input;
+        }else if(input instanceof String) {
+            return getJson((String)input);
+        }else {
+            return input;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandList(List<Object> input) {
+        for(Object value : input) {
+            if(value instanceof String) {
+                value = getJson(value.toString());
+            } else if (value instanceof Map) {
+                expandMap((Map<String, Object>) value);
+            } else if (value instanceof List) {
+                expandList((List<Object>)value);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandMap(Map<String, Object> input) {
+        for(Map.Entry<String, Object> e: input.entrySet()) {
+            Object value = e.getValue();
+            if(value instanceof String) {
+                value = getJson(value.toString());
+                e.setValue(value);
+            } else if (value instanceof Map) {
+                expandMap((Map<String, Object>) value);
+            } else if (value instanceof List) {
+                expandList((List<Object>)value);
+            }
+        }
+    }
+
+
 
 }

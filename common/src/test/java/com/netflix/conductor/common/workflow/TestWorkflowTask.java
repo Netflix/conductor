@@ -32,25 +32,25 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
  */
 public class TestWorkflowTask {
 
-	@Test
-	public void test() {
-		WorkflowTask wt = new WorkflowTask();
-		wt.setWorkflowTaskType(Type.DECISION);
-		
-		assertNotNull(wt.getType());
-		assertEquals(Type.DECISION.name(), wt.getType());
-	}
-	
-	@Test
-	public void testOptional() {
-		WorkflowTask task = new WorkflowTask();
-		assertFalse(task.isOptional());
-		
-		task.setOptional(Boolean.FALSE);
-		assertFalse(task.isOptional());
-		
-		task.setOptional(Boolean.TRUE);
-		assertTrue(task.isOptional());
-		
-	}
+    @Test
+    public void test() {
+        WorkflowTask wt = new WorkflowTask();
+        wt.setWorkflowTaskType(Type.DECISION);
+
+        assertNotNull(wt.getType());
+        assertEquals(Type.DECISION.name(), wt.getType());
+    }
+
+    @Test
+    public void testOptional() {
+        WorkflowTask task = new WorkflowTask();
+        assertFalse(task.isOptional());
+
+        task.setOptional(Boolean.FALSE);
+        assertFalse(task.isOptional());
+
+        task.setOptional(Boolean.TRUE);
+        assertTrue(task.isOptional());
+
+    }
 }

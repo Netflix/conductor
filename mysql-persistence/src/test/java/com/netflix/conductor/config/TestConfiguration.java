@@ -27,70 +27,70 @@ import com.netflix.conductor.core.config.Configuration;
  */
 public class TestConfiguration implements Configuration {
 
-	private Map<String, String> testProperties = Maps.newHashMap(ImmutableMap.of("test", "dummy"));
+    private Map<String, String> testProperties = Maps.newHashMap(ImmutableMap.of("test", "dummy"));
 
-	@Override
-	public int getSweepFrequency() {
-		return 1;
-	}
+    @Override
+    public int getSweepFrequency() {
+        return 1;
+    }
 
-	@Override
-	public boolean disableSweep() {
-		return false;
-	}
+    @Override
+    public boolean disableSweep() {
+        return false;
+    }
 
-	@Override
-	public boolean disableAsyncWorkers() {
-		return false;
-	}
+    @Override
+    public boolean disableAsyncWorkers() {
+        return false;
+    }
 
-	@Override
-	public String getServerId() {
-		return "server_id";
-	}
+    @Override
+    public String getServerId() {
+        return "server_id";
+    }
 
-	@Override
-	public String getEnvironment() {
-		return "test";
-	}
+    @Override
+    public String getEnvironment() {
+        return "test";
+    }
 
-	@Override
-	public String getStack() {
-		return "junit";
-	}
+    @Override
+    public String getStack() {
+        return "junit";
+    }
 
-	@Override
-	public String getAppId() {
-		return "workflow";
-	}
+    @Override
+    public String getAppId() {
+        return "workflow";
+    }
 
-	@Override
-	public String getProperty(String string, String def) {
-		String val = testProperties.get(string);
-		return val != null ? val : def;
-	}
+    @Override
+    public String getProperty(String string, String def) {
+        String val = testProperties.get(string);
+        return val != null ? val : def;
+    }
 
-	public void setProperty(String key, String value) {
-		testProperties.put(key, value);
-	}
+    public void setProperty(String key, String value) {
+        testProperties.put(key, value);
+    }
 
-	@Override
-	public String getAvailabilityZone() {
-		return "us-east-1a";
-	}
+    @Override
+    public String getAvailabilityZone() {
+        return "us-east-1a";
+    }
 
-	@Override
-	public int getIntProperty(String string, int def) {
-		return 100;
-	}
+    @Override
+    public int getIntProperty(String string, int def) {
+        return 100;
+    }
 
-	@Override
-	public String getRegion() {
-		return "us-east-1";
-	}
+    @Override
+    public String getRegion() {
+        return "us-east-1";
+    }
 
-	@Override
-	public Map<String, Object> getAll() {
-		return null;
-	}
+    @Override
+    public Map<String, Object> getAll() {
+        return null;
+    }
 }

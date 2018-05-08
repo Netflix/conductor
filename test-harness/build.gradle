@@ -1,23 +1,23 @@
 configurations.all {
     resolutionStrategy {
-		force 'com.fasterxml.jackson.core:jackson-core:2.7.5'
+        force 'com.fasterxml.jackson.core:jackson-core:2.7.5'
     }
 }
 dependencies {
 
-	testCompile project(':conductor-core')
-	testCompile project(':conductor-jersey')
-	testCompile project(':conductor-redis-persistence')
-	testCompile project(':conductor-client')
-	testCompile project(':conductor-server')
-	
-	testCompile "org.eclipse.jetty:jetty-server:${revJetteyServer}"
-	testCompile "org.eclipse.jetty:jetty-servlet:${revJettyServlet}"
-	testCompile "org.rarefiedredis.redis:redis-java:${revRarefiedRedis}"
-	testCompile "com.sun.jersey.contribs:jersey-guice:${revJerseyGuice}"
+    testCompile project(':conductor-core')
+    testCompile project(':conductor-jersey')
+    testCompile project(':conductor-redis-persistence')
+    testCompile project(':conductor-client')
+    testCompile project(':conductor-server')
+    
+    testCompile "org.eclipse.jetty:jetty-server:${revJetteyServer}"
+    testCompile "org.eclipse.jetty:jetty-servlet:${revJettyServlet}"
+    testCompile "org.rarefiedredis.redis:redis-java:${revRarefiedRedis}"
+    testCompile "com.sun.jersey.contribs:jersey-guice:${revJerseyGuice}"
 
-	testCompile "com.google.inject.extensions:guice-servlet:${revGuiceServlet}"
-	testCompile "io.swagger:swagger-jersey-jaxrs:${revSwaggerJersey}"
+    testCompile "com.google.inject.extensions:guice-servlet:${revGuiceServlet}"
+    testCompile "io.swagger:swagger-jersey-jaxrs:${revSwaggerJersey}"
 }
 
 task server(type: JavaExec) {

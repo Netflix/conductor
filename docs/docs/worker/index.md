@@ -7,8 +7,8 @@ Conductor provides a framework to poll for tasks, manage the execution thread an
 1. Implement [Worker](https://github.com/Netflix/conductor/blob/dev/client/src/main/java/com/netflix/conductor/client/worker/Worker.java) interface to implement the task.
 2. Use [WorkflowTaskCoordinator](https://github.com/Netflix/conductor/blob/dev/client/src/main/java/com/netflix/conductor/client/task/WorkflowTaskCoordinator.java) to register the worker(s) and initialize the polling loop. 
 
-	* [Sample Worker Implementation](https://github.com/Netflix/conductor/blob/dev/client/src/test/java/com/netflix/conductor/client/sample/SampleWorker.java)
-	* [Example](https://github.com/Netflix/conductor/blob/dev/client/src/test/java/com/netflix/conductor/client/sample/Main.java)
+    * [Sample Worker Implementation](https://github.com/Netflix/conductor/blob/dev/client/src/test/java/com/netflix/conductor/client/sample/SampleWorker.java)
+    * [Example](https://github.com/Netflix/conductor/blob/dev/client/src/test/java/com/netflix/conductor/client/sample/Main.java)
 
 ###WorkflowTaskCoordinator
 Manages the Task workers thread pool and server communication (poll, task update and ack).
@@ -35,4 +35,4 @@ These properties can be set either by Worker implementation or by setting the fo
 Follow the example as documented in the readme or take a look at [kitchensink_workers.py](https://github.com/Netflix/conductor/blob/dev/client/python/kitchensink_workers.py)
 
 !!!warning
-	Python client is under development is not production battle tested.  We encourage you to test it out and let us know the feedback.  Pull Requests with fixes or enhancements are welcomed!
+    Python client is under development is not production battle tested.  We encourage you to test it out and let us know the feedback.  Pull Requests with fixes or enhancements are welcomed!

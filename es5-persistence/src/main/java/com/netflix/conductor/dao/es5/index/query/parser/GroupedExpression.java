@@ -28,40 +28,40 @@ import org.elasticsearch.index.query.QueryBuilder;
  */
 public class GroupedExpression extends AbstractNode implements FilterProvider {
 
-	private Expression expression;
-	
-	public GroupedExpression(InputStream is) throws ParserException {
-		super(is);
-	}
+    private Expression expression;
 
-	@Override
-	protected void _parse() throws Exception {
-		byte[] peeked = read(1);
-		assertExpected(peeked, "(");
-		
-		this.expression = new Expression(is);
-		
-		peeked = read(1);
-		assertExpected(peeked, ")");
-		
-	}
-	
-	@Override
-	public String toString(){
-		return "(" + expression + ")";
-	}
+    public GroupedExpression(InputStream is) throws ParserException {
+        super(is);
+    }
 
-	/**
-	 * @return the expression
-	 */
-	public Expression getExpression() {
-		return expression;
-	}
+    @Override
+    protected void _parse() throws Exception {
+        byte[] peeked = read(1);
+        assertExpected(peeked, "(");
 
-	@Override
-	public QueryBuilder getFilterBuilder() {
-		return expression.getFilterBuilder();
-	}
+        this.expression = new Expression(is);
 
-	
+        peeked = read(1);
+        assertExpected(peeked, ")");
+
+    }
+
+    @Override
+    public String toString(){
+        return "(" + expression + ")";
+    }
+
+    /**
+     * @return the expression
+     */
+    public Expression getExpression() {
+        return expression;
+    }
+
+    @Override
+    public QueryBuilder getFilterBuilder() {
+        return expression.getFilterBuilder();
+    }
+
+
 }
