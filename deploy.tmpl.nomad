@@ -32,6 +32,13 @@ job "conductor" {
       attribute = "${attr.platform.aws.placement.availability-zone}"
     }
 
+    # vault declaration
+    vault {
+      change_mode = "noop"
+      env = false
+      policies = ["read-secrets"]
+    }
+
     task "ui" {
       driver = "docker"
       config {
