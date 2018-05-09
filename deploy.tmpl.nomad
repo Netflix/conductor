@@ -39,6 +39,9 @@ job "conductor" {
         port_map {
           http = 5000
         }
+        volumes = [
+          "local/secrets/conductor-ui.env:/app/config/secrets.env"
+        ]
         labels {
           service = "${NOMAD_JOB_NAME}"
         }
@@ -61,6 +64,16 @@ job "conductor" {
           interval = "10s"
           timeout  = "3s"
         }
+      }
+      # Write secrets to the file that can be mounted as volume
+      template {
+        data = <<EOF
+        {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
+        EOF
+        destination   = "local/secrets/conductor-ui.env"
+        change_mode   = "signal"
+        change_signal = "SIGINT"
       }
       resources {
         cpu    = 128 # MHz
@@ -96,7 +109,7 @@ job "conductor" {
           http = 8080
         }
         volumes = [
-          "local/secrets/conductor.env:/app/config/secrets.env"
+          "local/secrets/conductor-server.env:/app/config/secrets.env"
         ]
         labels {
           service = "${NOMAD_JOB_NAME}"
@@ -154,7 +167,7 @@ job "conductor" {
         {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
-        destination   = "local/secrets/conductor.env"
+        destination   = "local/secrets/conductor-server.env"
         change_mode   = "signal"
         change_signal = "SIGINT"
       }
