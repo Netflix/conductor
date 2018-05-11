@@ -101,6 +101,52 @@ class Grapher extends Component {
       window.open('#/workflow/id/' + id,'_new');
   }
 
+  dragElement(elmnt) {
+    if (elmnt == null) {
+      return;
+    }
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    if (document.getElementById(elmnt.id + "header")) {
+      /* if present, the header is where you move the DIV from:*/
+      document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+    } else {
+      /* otherwise, move the DIV from anywhere inside the DIV:*/
+      elmnt.onmousedown = dragMouseDown;
+    }
+
+    function dragMouseDown(e) {
+      // forbid text selection while dragging div
+      document.body.classList.add("off-text-selection");
+      e = e || window.event;
+      // get the mouse cursor position at startup:
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      document.onmouseup = closeDragElement;
+      // call a function whenever the cursor moves:
+      document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+      e = e || window.event;
+      // calculate the new cursor position:
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      // set the element's new position:
+      elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+      elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+      // enable text selection back
+      document.body.classList.remove("off-text-selection");
+      /* stop moving when mouse button is released:*/
+      document.onmouseup = null;
+      document.onmousemove = null;
+    }
+  }
+
   render() {
 
     let layout = this.state.layout;
@@ -185,10 +231,12 @@ class Grapher extends Component {
       return (
         <div className="graph-ui-content" id="graph-ui-content">
           <div id="propsdiv" style={{display: this.state.showSideBar?'':'none', padding: '5px 5px 10px 10px'}}>
-            <h4 className="propsheader">
-              <i className="fa fa-close fa-1x close-btn" onClick={hideProps}></i>
-              {this.state.selectedTask.taskType} ({this.state.selectedTask.status})
-            </h4>
+            <div id="propsdivheader" style={{cursor: 'grab'}}>
+              <h4 className="propsheader">
+                <i className="fa fa-close fa-1x close-btn" style={{cursor: 'auto'}} onClick={hideProps}></i>
+                {this.state.selectedTask.taskType} ({this.state.selectedTask.status})
+              </h4>
+            </div>
             <div style={{color: '#ff0000', display: this.state.selectedTask.status == 'FAILED' || this.state.selectedTask.status == 'RESET'?'':'none'}}>{this.state.selectedTask.reasonForIncompletion}</div>
             <Tabs defaultActiveKey={1}>
               <Tab eventKey={1} title="Summary">
@@ -214,11 +262,15 @@ class Grapher extends Component {
           <svg>
             <g transform="translate(20,20)"></g>
           </svg>
-          <div id="abcd" style={{display: this.state.showSubGraph?'':'none', padding: '5px 5px 10px 10px', zIndex: this.state.showSubGraph?'':'-100'}}>
-            <h4 className="propsheader">
-              <i className="fa fa-close fa-1x close-btn" onClick={hidesub}></i>
-              <a onClick={showSubGraphDetails}>Sub Workflow Details</a>
-            </h4>
+          <div id="abcd" style={{display: this.state.showSubGraph?'':'none', padding: '5px 5px 10px 10px', zIndex: this.state.showSubGraph?'100':'-100'}}>
+            <div id="abcdheader" style={{cursor: 'grab'}}>
+              <h4 className="propsheader">
+                <i className="fa fa-close fa-1x close-btn" style={{cursor: 'auto'}} onClick={hidesub}></i>
+                <a onClick={showSubGraphDetails}>Sub Workflow Details</a>
+              </h4>
+            </div>
+            {this.dragElement(div)}
+            {this.dragElement(propsdiv)}
             {this.getSubGraph()}
           </div>
         </div>

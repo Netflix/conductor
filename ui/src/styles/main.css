@@ -678,3 +678,9 @@ table tbody {
 .red {
   color: red;
 }
+.off-text-selection {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
