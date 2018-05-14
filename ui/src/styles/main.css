@@ -617,6 +617,8 @@ table tbody {
   background-color: #ffffff;
   box-shadow: 0 5px 55px rgba(0,0,0,.7);
   padding-right: 10px;
+  resize: both;
+  overflow: auto;
 }
 #abcd {
   min-height: 100%;
@@ -626,6 +628,8 @@ table tbody {
   background-color: #ffffff;
   box-shadow: 0 5px 55px rgba(0,0,0,.7);
   padding-right: 10px;
+  resize: both;
+  overflow: auto;
 }
 .close-btn {
   xfloat: right;
