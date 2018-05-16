@@ -148,10 +148,12 @@ job "conductor" {
         workflow_elasticsearch_initial_sleep_seconds = "30"
 
         // NATS settings
-        io_nats_client_url = "nats://events.service.<TLD>:4222"
+        io_nats_streaming_url = "nats://events.service.<TLD>:4222"
+        io_nats_streaming_clusterId = "events-streaming"
+        io_nats_streaming_durableName = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}-<TLD>"
 
         // Additional nats & asset modules
-        conductor_additional_modules = "com.netflix.conductor.contribs.NatsModule,com.netflix.conductor.contribs.AssetModule"
+        conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule,com.netflix.conductor.contribs.AssetModule"
 
         // Exclude demo workflows
         loadSample = "false"
