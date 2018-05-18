@@ -32,6 +32,7 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.IdsQueryBuilder;
@@ -519,7 +520,8 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 		Preconditions.checkNotNull(correlationId, "correlationId cannot be null");
 
-		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(correlationId) + "*");
+		String sha256hex = DigestUtils.sha256Hex(correlationId);
+		QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(sha256hex) + "*");
 		List<HashMap> wraps = findAll(toIndexName(CORR_ID_TO_WORKFLOWS), toTypeName(CORR_ID_TO_WORKFLOWS), query, HashMap.class);
 		Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
 		List<Workflow> workflows = workflowIds.stream().map(this::getWorkflow).collect(Collectors.toList());
@@ -827,9 +829,10 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	}
 
 	private void addWorkflowToCorrIdMapping(Workflow workflow) {
+		String sha256hex = DigestUtils.sha256Hex(workflow.getCorrelationId());
 		String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
 		String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
-		String id = toId(workflow.getCorrelationId(), workflow.getWorkflowId());
+		String id = toId(sha256hex, workflow.getWorkflowId());
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
 				"correlationId", workflow.getCorrelationId());
@@ -837,9 +840,10 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	}
 
 	private void deleteWorkflowToCorrIdMapping(Workflow workflow) {
+		String sha256hex = DigestUtils.sha256Hex(workflow.getCorrelationId());
 		String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
 		String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
-		String id = toId(workflow.getCorrelationId(), workflow.getWorkflowId());
+		String id = toId(sha256hex, workflow.getWorkflowId());
 		delete(indexName, typeName, id);
 	}
 
