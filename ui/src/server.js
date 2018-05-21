@@ -5,6 +5,7 @@ import Bunyan from 'bunyan';
 
 let log = Bunyan.createLogger({src : true, name: 'Conductor UI'});
 
+const v1API = require('./api/v1');
 const wfeAPI = require('./api/wfe');
 const sysAPI = require('./api/sys');
 const eventsAPI = require('./api/events');
@@ -13,6 +14,7 @@ let app = express();
 log.info('Serving static ' + process.cwd());
 app.use(express.static('public'));
 
+app.use('/v1', v1API);
 app.use('/api/wfe', wfeAPI);
 app.use('/api/sys', sysAPI);
 app.use('/api/events', eventsAPI);
