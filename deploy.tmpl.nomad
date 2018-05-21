@@ -40,6 +40,10 @@ job "conductor" {
     }
 
     task "ui" {
+      meta {
+        product-class = "third-party"
+        stack-role = "ui"
+      }
       driver = "docker"
       config {
         image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-ui"
@@ -60,6 +64,7 @@ job "conductor" {
         }
       }
       env {
+        TLD = "<TLD>"
         WF_SERVICE = "${NOMAD_JOB_NAME}-server.service.<TLD>"
       }
       service {
@@ -109,6 +114,10 @@ job "conductor" {
     }
 
     task "server" {
+      meta {
+        product-class = "third-party"
+        stack-role = "api"
+      }
       driver = "docker"
       config {
         image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-server"
