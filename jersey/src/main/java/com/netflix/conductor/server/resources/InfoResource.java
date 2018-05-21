@@ -56,7 +56,7 @@ public class InfoResource {
 			prop.load(propertiesIs);
 			String version = prop.getProperty("Implementation-Version");
 			String change = prop.getProperty("Change");
-			fullVersion = version + "-" + change;
+			fullVersion = config.getProperty("APP.VERSION", version + "-" + change);
 		} catch (Exception e) {
 			logger.error("Failed to read conductor-core.properties" + e.getMessage(), e);
 		}

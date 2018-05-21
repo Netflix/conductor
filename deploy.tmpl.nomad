@@ -65,6 +65,7 @@ job "conductor" {
       }
       env {
         TLD = "<TLD>"
+        APP_VERSION = "<APP_VERSION>"
         WF_SERVICE = "${NOMAD_JOB_NAME}-server.service.<TLD>"
       }
       service {
@@ -140,6 +141,7 @@ job "conductor" {
       env {
         TLD   = "<TLD>"
         STACK = "<ENV_TYPE>"
+        APP_VERSION = "<APP_VERSION>"
 
         // Database settings
         db = "elasticsearch"
