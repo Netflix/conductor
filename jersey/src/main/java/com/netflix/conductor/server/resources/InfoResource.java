@@ -18,21 +18,21 @@
  */
 package com.netflix.conductor.server.resources;
 
+import com.google.common.collect.ImmutableMap;
+import com.netflix.conductor.core.config.Configuration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * @author Oleksiy Lysak
@@ -45,15 +45,18 @@ import java.util.Properties;
 public class InfoResource {
 	private static Logger logger = LoggerFactory.getLogger(InfoResource.class);
 	private String fullVersion;
+	private Configuration config;
 
-	public InfoResource() {
+	@Inject
+	public InfoResource(Configuration config) {
+		this.config = config;
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
 			prop.load(propertiesIs);
 			String version = prop.getProperty("Implementation-Version");
 			String change = prop.getProperty("Change");
-			fullVersion = version + "-" + change;
+			fullVersion = config.getProperty("APP.VERSION", version + "-" + change);
 		} catch (Exception e) {
 			logger.error("Failed to read conductor-core.properties" + e.getMessage(), e);
 		}
@@ -72,10 +75,41 @@ public class InfoResource {
 	@ApiOperation(value = "Get the dependencies")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> dependencies() {
+		List<Object> endpoints = new ArrayList<>();
+		endpoints.add(config.getProperty("conductor.auth.url", ""));
+		endpoints.add("events.service." + config.getProperty("TLD", "local"));
+		endpoints.add("vault.service." + config.getProperty("TLD", "local"));
+
+		List<Map<String, Object>> dependencies = new ArrayList<>();
+		dependencies.add(ImmutableMap.<String, Object>builder()
+				.put("name", "auth")
+				.put("version", "v1")
+				.put("scheme", "https")
+				.put("external", false)
+				.build());
+		dependencies.add(ImmutableMap.<String, Object>builder()
+				.put("name", "vault")
+				.put("version", "v1")
+				.put("scheme", "http")
+				.put("external", false)
+				.build());
+		dependencies.add(ImmutableMap.<String, Object>builder()
+				.put("name", "events")
+				.put("version", "v1")
+				.put("scheme", "nats")
+				.put("external", false)
+				.build());
+		dependencies.add(ImmutableMap.<String, Object>builder()
+				.put("name", "*")
+				.put("version", "v1")
+				.put("scheme", "http")
+				.put("external", false)
+				.build());
+
 		Map<String, Object> result = new HashMap<>();
 		result.put("version", fullVersion);
-		result.put("endpoints", null);
-		result.put("dependencies", null);
+		result.put("endpoints", endpoints);
+		result.put("dependencies", dependencies);
 		return result;
 	}
 }
