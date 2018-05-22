@@ -116,7 +116,7 @@ job "conductor" {
 
     task "server" {
       meta {
-        product-class = "third-party"
+        product-class = "custom"
         stack-role = "api"
       }
       driver = "docker"
