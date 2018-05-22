@@ -43,7 +43,9 @@ import javax.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -97,6 +99,10 @@ public class WorkflowServiceTest {
     private static final String DYNAMIC_FORK_JOIN_WF_LEGACY = "DynamicFanInOutTestLegacy";
 
     private static final int RETRY_COUNT = 1;
+    public static final String JUNIT_TEST_WF_NON_RESTARTABLE = "junit_test_wf_non_restartable";
+
+    @Rule
+    public final ExpectedException expectedException = ExpectedException.none();
 
     @Inject
     private ExecutionService workflowExecutionService;
@@ -2725,6 +2731,46 @@ public class WorkflowServiceTest {
         printTaskStatuses(wfid, "final");
 
     }
+
+    @Test
+    public void testNonRestartartableWorkflows() throws Exception {
+        String taskName = "junit_task_1";
+        TaskDef taskDef = metadataService.getTaskDef(taskName);
+        taskDef.setRetryCount(0);
+        metadataService.updateTaskDef(taskDef);
+
+        WorkflowDef found = metadataService.getWorkflowDef(LINEAR_WORKFLOW_T1_T2, 1);
+        found.setName(JUNIT_TEST_WF_NON_RESTARTABLE);
+        found.setRestartable(false);
+        metadataService.updateWorkflowDef(found);
+
+        assertNotNull(found);
+        assertNotNull(found.getFailureWorkflow());
+        assertFalse(StringUtils.isBlank(found.getFailureWorkflow()));
+
+        String correlationId = "unit_test_1" + UUID.randomUUID().toString();
+        Map<String, Object> input = new HashMap<String, Object>();
+        String inputParam1 = "p1 value";
+        input.put("param1", inputParam1);
+        input.put("param2", "p2 value");
+        String wfid = workflowExecutor.startWorkflow(JUNIT_TEST_WF_NON_RESTARTABLE, 1, correlationId, input);
+        assertNotNull(wfid);
+
+        Task task = getTask("junit_task_1");
+        task.setStatus(Status.FAILED);
+        workflowExecutionService.updateTask(task);
+
+        // If we get the full workflow here then, last task should be completed and the next task should be scheduled
+        Workflow es = workflowExecutionService.getExecutionStatus(wfid, true);
+        assertNotNull(es);
+        assertEquals(WorkflowStatus.FAILED, es.getStatus());
+
+        expectedException.expect(ApplicationException.class);
+        expectedException.expectMessage(String.format("is an instance of WorkflowDef: %s and version: %d and is non restartable", JUNIT_TEST_WF_NON_RESTARTABLE, 1));
+        workflowExecutor.rewind(es.getWorkflowId());
+
+    }
+
 
     @Test
     public void testRestart() throws Exception {
