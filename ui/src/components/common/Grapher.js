@@ -127,16 +127,17 @@ class Grapher extends Component {
     }
 
     function elementDrag(e) {
-      if (e.clientY <= 0) {
-        return;
-      }
-
       e = e || window.event;
       // calculate the new cursor position:
       pos1 = pos3 - e.clientX;
       pos2 = pos4 - e.clientY;
       pos3 = e.clientX;
       pos4 = e.clientY;
+
+      if (elmnt.offsetTop - pos2 < 0) {
+        return;
+      }
+
       // set the element's new position:
       elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
       elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
