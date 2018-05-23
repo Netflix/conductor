@@ -127,6 +127,10 @@ class Grapher extends Component {
     }
 
     function elementDrag(e) {
+      if (e.clientY <= 0) {
+        return;
+      }
+
       e = e || window.event;
       // calculate the new cursor position:
       pos1 = pos3 - e.clientX;
@@ -216,13 +220,16 @@ class Grapher extends Component {
           let vx = innerGraph[v].vertices;
           let subg = {n : n, vx: vx, layout: layout};
 
+          d3.select("#propsdiv").style("top", '5px');
           d3.select("#propsdiv").style("left", (window.outerWidth-600) + 'px');
+          div.style.top = "5px";
           div.style.left = (window.outerWidth-1200) + "px";
           p.setState({selectedTask: data.task, showSubGraph:true, showSideBar: true, subGraph: subg, subGraphId: innerGraph[v].id});
           p.setState({showSubGraph: true});
 
         } else if(vertices[v].tooltip != null){
             let data = vertices[v].data;
+            d3.select("#propsdiv").style("top", '5px');
             d3.select("#propsdiv").style("left", (window.outerWidth-600) + 'px');
             p.setState({selectedTask: data.task, showSideBar:true, subGraph: null, showSubGraph: false});
         }
