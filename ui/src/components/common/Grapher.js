@@ -133,6 +133,11 @@ class Grapher extends Component {
       pos2 = pos4 - e.clientY;
       pos3 = e.clientX;
       pos4 = e.clientY;
+
+      if (elmnt.offsetTop - pos2 < 0) {
+        return;
+      }
+
       // set the element's new position:
       elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
       elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
@@ -216,13 +221,16 @@ class Grapher extends Component {
           let vx = innerGraph[v].vertices;
           let subg = {n : n, vx: vx, layout: layout};
 
+          d3.select("#propsdiv").style("top", '5px');
           d3.select("#propsdiv").style("left", (window.outerWidth-600) + 'px');
+          div.style.top = "5px";
           div.style.left = (window.outerWidth-1200) + "px";
           p.setState({selectedTask: data.task, showSubGraph:true, showSideBar: true, subGraph: subg, subGraphId: innerGraph[v].id});
           p.setState({showSubGraph: true});
 
         } else if(vertices[v].tooltip != null){
             let data = vertices[v].data;
+            d3.select("#propsdiv").style("top", '5px');
             d3.select("#propsdiv").style("left", (window.outerWidth-600) + 'px');
             p.setState({selectedTask: data.task, showSideBar:true, subGraph: null, showSubGraph: false});
         }
