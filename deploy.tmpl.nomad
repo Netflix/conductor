@@ -41,7 +41,7 @@ job "conductor" {
 
     task "ui" {
       meta {
-        product-class = "third-party"
+        product-class = "custom"
         stack-role = "ui"
       }
       driver = "docker"
