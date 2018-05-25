@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class Monitors {
 
-	private static Registry registry = new DefaultRegistry();
+	private static Registry registry = Spectator.globalRegistry();
 
 	private static Map<String, Map<Map<String, String>, Counter>> counters = new ConcurrentHashMap<>();
 
