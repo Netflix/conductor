@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.netflix.conductor.dao.es5.es;
+package com.netflix.conductor.dao.es;
 
 import org.apache.commons.io.FileUtils;
 import org.elasticsearch.client.Client;
@@ -28,12 +28,13 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.transport.Netty4Plugin;
+
+import static java.util.Collections.singletonList;
 
 
 public class EmbeddedElasticSearch {
@@ -63,7 +64,7 @@ public class EmbeddedElasticSearch {
 		start(DEFAULT_CLUSTER_NAME, DEFAULT_HOST, DEFAULT_PORT, true);
 	}
 
-	public static synchronized void start(String clusterName, String host, int port, boolean enableTransportClient) throws Exception{
+	public static synchronized void start(String clusterName, String host, int port, boolean enableTransportClient) throws Exception {
 
 		if (instance != null && !instance.isClosed()) {
 			logger.info("Elastic Search is already running on port {}", getPort());
@@ -74,7 +75,7 @@ public class EmbeddedElasticSearch {
 		setupDataDir(settings);
 
 		logger.info("Starting ElasticSearch for cluster {} ", settings.get("cluster.name"));
-		instance = new PluginConfigurableNode(settings, Arrays.asList(Netty4Plugin.class));
+		instance = new PluginConfigurableNode(settings, singletonList(Netty4Plugin.class));
 		instance.start();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -109,8 +110,8 @@ public class EmbeddedElasticSearch {
 	}
 
 	private static Settings getSettings(String clusterName, String host, int port, boolean enableTransportClient) throws IOException {
-		dataDir = Files.createTempDirectory(clusterName+"_"+System.currentTimeMillis()+"data").toFile();
-		File homeDir = Files.createTempDirectory(clusterName+"_"+System.currentTimeMillis()+"-home").toFile();
+		dataDir = Files.createTempDirectory(clusterName + "_" + System.currentTimeMillis() + "data").toFile();
+		File homeDir = Files.createTempDirectory(clusterName + "_" + System.currentTimeMillis() + "-home").toFile();
 		Settings.Builder settingsBuilder = Settings.builder()
 				.put("cluster.name", clusterName)
 				.put("http.host", host)

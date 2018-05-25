@@ -16,12 +16,13 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es5.index;
+package com.netflix.conductor.dao.es.index;
 
 import java.net.InetAddress;
 
 import javax.inject.Singleton;
 
+import com.netflix.conductor.dao.IndexDAO;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
@@ -68,6 +69,6 @@ public class ElasticsearchModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		
+        bind(IndexDAO.class).to(ElasticSearchDAO.class);
 	}
 }

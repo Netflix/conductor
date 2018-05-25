@@ -16,20 +16,18 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es5.index.query.parser;
+package com.netflix.conductor.dao.es.index.query.parser;
 
-import org.elasticsearch.index.query.QueryBuilder;
+import org.junit.Test;
 
 /**
  * @author Viren
  *
  */
-public interface FilterProvider {
+public class TestGroupedExpression {
 
-	/**
-	 * 
-	 * @return FilterBuilder for elasticsearch
-	 */
-	public QueryBuilder getFilterBuilder();
-
+	@Test
+	public void test(){
+		
+	}
 }

@@ -16,18 +16,15 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es5.index.query.parser;
-
-import org.junit.Test;
+package com.netflix.conductor.dao.es.index.query.parser;
 
 /**
  * @author Viren
  *
  */
-public class TestGroupedExpression {
+@FunctionalInterface
+public interface FunctionThrowingException<T> {
 
-	@Test
-	public void test(){
-		
-	}
+	void accept(T t) throws Exception;
+
 }

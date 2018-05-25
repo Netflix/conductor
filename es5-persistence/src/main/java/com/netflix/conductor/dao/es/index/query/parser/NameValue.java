@@ -16,14 +16,14 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es5.index.query.parser;
+package com.netflix.conductor.dao.es.index.query.parser;
 
 import java.io.InputStream;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-import com.netflix.conductor.dao.es5.index.query.parser.ComparisonOp.Operators;
+import com.netflix.conductor.dao.es.index.query.parser.ComparisonOp.Operators;
 
 /**
  * @author Viren

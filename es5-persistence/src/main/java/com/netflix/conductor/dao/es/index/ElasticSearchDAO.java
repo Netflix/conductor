@@ -16,7 +16,7 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es5.index;
+package com.netflix.conductor.dao.es.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.annotations.Trace;
@@ -33,8 +33,8 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.es5.index.query.parser.Expression;
-import com.netflix.conductor.dao.es5.index.query.parser.ParserException;
+import com.netflix.conductor.dao.es.index.query.parser.Expression;
+import com.netflix.conductor.dao.es.index.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;

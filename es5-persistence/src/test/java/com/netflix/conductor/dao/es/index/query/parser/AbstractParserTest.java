@@ -16,27 +16,20 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es5.index.query.parser;
+package com.netflix.conductor.dao.es.index.query.parser;
 
-import org.junit.Test;
-
-import com.netflix.conductor.dao.es5.index.query.parser.Name;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 /**
  * @author Viren
  *
  */
-public class TestName extends AbstractParserTest {
+public abstract class AbstractParserTest {
 
-	@Test
-	public void test() throws Exception{
-		String test =  "metadata.en_US.lang		";
-		Name name = new Name(getInputStream(test));
-		String nameVal = name.getName();
-		assertNotNull(nameVal);
-		assertEquals(test.trim(), nameVal);
+	protected InputStream getInputStream(String expression) {
+		return new BufferedInputStream(new ByteArrayInputStream(expression.getBytes()));
 	}
+
 }
