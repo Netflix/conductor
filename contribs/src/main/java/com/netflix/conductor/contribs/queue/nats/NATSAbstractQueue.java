@@ -21,6 +21,7 @@ package com.netflix.conductor.contribs.queue.nats;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.metrics.Monitors;
 import io.nats.client.NUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +79,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 		dstMsg.setPayload(payload);
 
 		messages.add(dstMsg);
+		Monitors.recordEventQueueMessagesReceived(queueType.name(), queueURI);
 	}
 
 	@Override

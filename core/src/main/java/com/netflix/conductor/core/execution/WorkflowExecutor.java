@@ -195,6 +195,9 @@ public class WorkflowExecutor {
 			wf.setTaskToDomain(taskToDomain);
 			edao.createWorkflow(wf);
 
+			// metrics
+			Monitors.recordWorkflowStart(wf.getWorkflowType());
+
 			// send wf start message
 			notifyWorkflowStatus(wf, StartEndState.start);
 
@@ -237,6 +240,9 @@ public class WorkflowExecutor {
 			}
 
 			edao.updateWorkflow(workflow);
+
+			// metrics
+			Monitors.recordWorkflowRerun(workflow.getWorkflowType());
 
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
@@ -297,6 +303,9 @@ public class WorkflowExecutor {
 
 			edao.updateWorkflow(workflow);
 
+			// metrics
+			Monitors.recordWorkflowRerun(workflow.getWorkflowType());
+
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
 
@@ -326,6 +335,9 @@ public class WorkflowExecutor {
 			workflow.setCorrelationId(correlationId);
 		}
 		edao.updateWorkflow(workflow);
+
+		// metrics
+		Monitors.recordWorkflowRestart(workflow.getWorkflowType());
 
 		// send wf start message
 		notifyWorkflowStatus(workflow, StartEndState.start);
@@ -433,6 +445,9 @@ public class WorkflowExecutor {
 			workflow.setCorrelationId(correlationId);
 		}
 		edao.updateWorkflow(workflow);
+
+		// metrics
+		Monitors.recordWorkflowRetry(workflow.getWorkflowType());
 
 		decide(workflowId);
 		logger.info("Workflow retry.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
@@ -551,11 +566,12 @@ public class WorkflowExecutor {
 
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
+		// metrics
+		Monitors.recordWorkflowCancel(workflow.getWorkflowType());
+
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
 
-		// Send to atlas
-		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
 		logger.info("Workflow has cancelled, workflowId=" + workflow.getWorkflowId()+",input="+workflow.getInput()+",CorrelationId="+workflow.getCorrelationId()+",output="+workflow.getOutput());
 		return workflowId;
 	}
@@ -581,11 +597,12 @@ public class WorkflowExecutor {
 
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
+		// metrics
+		Monitors.recordWorkflowReset(workflow.getWorkflowType());
+
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
 
-		// Send to atlas
-		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
 		return workflowId;
 	}
 
@@ -862,7 +879,10 @@ public class WorkflowExecutor {
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
 		}
+
 		edao.updateWorkflow(workflow);
+		// metrics
+		Monitors.recordWorkflowPause(workflow.getWorkflowType());
 	}
 
 	public void resumeWorkflow(String workflowId,String correlationId) throws Exception{
@@ -876,6 +896,8 @@ public class WorkflowExecutor {
 			workflow.setCorrelationId(correlationId);
 		}
 		edao.updateWorkflow(workflow);
+		// metrics
+		Monitors.recordWorkflowResume(workflow.getWorkflowType());
 		decide(workflowId);
 	}
 
@@ -933,6 +955,13 @@ public class WorkflowExecutor {
 		} else {
 			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), 0);
 		}
+	}
+
+	public void removeWorkflow(String workflowId) {
+		Workflow workflow = getWorkflow(workflowId, false);
+		edao.removeWorkflow(workflowId);
+		// metrics
+		Monitors.recordWorkflowRemove(workflow.getWorkflowType());
 	}
 
 	//Executes the async system task

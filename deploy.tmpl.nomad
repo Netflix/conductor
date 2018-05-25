@@ -168,7 +168,7 @@ job "conductor" {
         loadSample = "false"
       }
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.<DM_TLD>/ auth=true"]
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.<DM_TLD>/ auth=true", "metrics=${NOMAD_JOB_NAME}"]
         name = "${JOB}-${TASK}"
         port = "http"
         check {
