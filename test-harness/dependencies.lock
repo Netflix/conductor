@@ -53,6 +53,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-server"
@@ -92,9 +93,16 @@
         "com.netflix.conductor:conductor-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs",
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-jersey",
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
+                "com.netflix.conductor:conductor-server"
+            ],
+            "project": true
+        },
+        "com.netflix.conductor:conductor-es2-persistence": {
+            "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
             "project": true
@@ -196,6 +204,7 @@
         },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence"
             ],
             "locked": "2.4"
@@ -262,6 +271,18 @@
             ],
             "locked": "3.2.1"
         },
+        "org.apache.logging.log4j:log4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence"
+            ],
+            "locked": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence"
+            ],
+            "locked": "2.9.1"
+        },
         "org.eclipse.jetty:jetty-server": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
@@ -278,8 +299,7 @@
         },
         "org.elasticsearch:elasticsearch": {
             "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-redis-persistence"
+                "com.netflix.conductor:conductor-es2-persistence"
             ],
             "locked": "2.4.6"
         },
@@ -367,6 +387,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-server"
@@ -406,9 +427,16 @@
         "com.netflix.conductor:conductor-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs",
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-jersey",
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
+                "com.netflix.conductor:conductor-server"
+            ],
+            "project": true
+        },
+        "com.netflix.conductor:conductor-es2-persistence": {
+            "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
             "project": true
@@ -510,6 +538,7 @@
         },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence"
             ],
             "locked": "2.4"
@@ -576,6 +605,18 @@
             ],
             "locked": "3.2.1"
         },
+        "org.apache.logging.log4j:log4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence"
+            ],
+            "locked": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence"
+            ],
+            "locked": "2.9.1"
+        },
         "org.eclipse.jetty:jetty-server": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
@@ -592,8 +633,7 @@
         },
         "org.elasticsearch:elasticsearch": {
             "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-redis-persistence"
+                "com.netflix.conductor:conductor-es2-persistence"
             ],
             "locked": "2.4.6"
         },
@@ -681,6 +721,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-server"
@@ -720,9 +761,16 @@
         "com.netflix.conductor:conductor-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs",
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-jersey",
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
+                "com.netflix.conductor:conductor-server"
+            ],
+            "project": true
+        },
+        "com.netflix.conductor:conductor-es2-persistence": {
+            "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
             "project": true
@@ -824,6 +872,7 @@
         },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence"
             ],
             "locked": "2.4"
@@ -890,6 +939,18 @@
             ],
             "locked": "3.2.1"
         },
+        "org.apache.logging.log4j:log4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence"
+            ],
+            "locked": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence"
+            ],
+            "locked": "2.9.1"
+        },
         "org.eclipse.jetty:jetty-server": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
@@ -906,8 +967,7 @@
         },
         "org.elasticsearch:elasticsearch": {
             "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-redis-persistence"
+                "com.netflix.conductor:conductor-es2-persistence"
             ],
             "locked": "2.4.6"
         },
@@ -995,6 +1055,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-server"
@@ -1034,9 +1095,16 @@
         "com.netflix.conductor:conductor-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs",
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-jersey",
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
+                "com.netflix.conductor:conductor-server"
+            ],
+            "project": true
+        },
+        "com.netflix.conductor:conductor-es2-persistence": {
+            "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
             "project": true
@@ -1138,6 +1206,7 @@
         },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence"
             ],
             "locked": "2.4"
@@ -1204,6 +1273,18 @@
             ],
             "locked": "3.2.1"
         },
+        "org.apache.logging.log4j:log4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence"
+            ],
+            "locked": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es2-persistence"
+            ],
+            "locked": "2.9.1"
+        },
         "org.eclipse.jetty:jetty-server": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
@@ -1220,8 +1301,7 @@
         },
         "org.elasticsearch:elasticsearch": {
             "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-redis-persistence"
+                "com.netflix.conductor:conductor-es2-persistence"
             ],
             "locked": "2.4.6"
         },

@@ -4,7 +4,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -58,10 +58,6 @@
             ],
             "locked": "0.68.0"
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
-        },
         "commons-io:commons-io": {
             "locked": "2.4",
             "requested": "2.4"
@@ -72,19 +68,23 @@
             ],
             "locked": "1.2.2"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -98,7 +98,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -152,10 +152,6 @@
             ],
             "locked": "0.68.0"
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
-        },
         "commons-io:commons-io": {
             "locked": "2.4",
             "requested": "2.4"
@@ -166,19 +162,23 @@
             ],
             "locked": "1.2.2"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -192,7 +192,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -246,10 +246,6 @@
             ],
             "locked": "0.68.0"
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
-        },
         "commons-io:commons-io": {
             "locked": "2.4",
             "requested": "2.4"
@@ -260,19 +256,23 @@
             ],
             "locked": "1.2.2"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -286,7 +286,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -340,10 +340,6 @@
             ],
             "locked": "0.68.0"
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
-        },
         "commons-io:commons-io": {
             "locked": "2.4",
             "requested": "2.4"
@@ -354,19 +350,23 @@
             ],
             "locked": "1.2.2"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -380,7 +380,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -433,10 +433,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "0.68.0"
-        },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
         },
         "commons-io:commons-io": {
             "locked": "2.4",
@@ -448,19 +444,23 @@
             ],
             "locked": "1.2.2"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -470,23 +470,11 @@
         }
     },
     "testCompile": {
-        "ch.qos.logback:logback-classic": {
-            "locked": "1.2.3",
-            "requested": "1.2.3"
-        },
-        "ch.qos.logback:logback-core": {
-            "locked": "1.2.3",
-            "requested": "1.2.3"
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j": {
-            "locked": "2.2.3",
-            "requested": "2.2.3"
-        },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -540,12 +528,8 @@
             ],
             "locked": "0.68.0"
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
-        },
         "commons-io:commons-io": {
-            "locked": "2.5",
+            "locked": "2.4",
             "requested": "2.4"
         },
         "io.reactivex:rxjava": {
@@ -558,19 +542,23 @@
             "locked": "4.10",
             "requested": "4.10"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.4"
+            "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.mockito:mockito-all": {
             "locked": "1.10.0",
@@ -584,23 +572,11 @@
         }
     },
     "testCompileClasspath": {
-        "ch.qos.logback:logback-classic": {
-            "locked": "1.2.3",
-            "requested": "1.2.3"
-        },
-        "ch.qos.logback:logback-core": {
-            "locked": "1.2.3",
-            "requested": "1.2.3"
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j": {
-            "locked": "2.2.3",
-            "requested": "2.2.3"
-        },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -654,12 +630,8 @@
             ],
             "locked": "0.68.0"
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
-        },
         "commons-io:commons-io": {
-            "locked": "2.5",
+            "locked": "2.4",
             "requested": "2.4"
         },
         "io.reactivex:rxjava": {
@@ -672,19 +644,23 @@
             "locked": "4.10",
             "requested": "4.10"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.4"
+            "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.mockito:mockito-all": {
             "locked": "1.10.0",
@@ -698,23 +674,11 @@
         }
     },
     "testRuntime": {
-        "ch.qos.logback:logback-classic": {
-            "locked": "1.2.3",
-            "requested": "1.2.3"
-        },
-        "ch.qos.logback:logback-core": {
-            "locked": "1.2.3",
-            "requested": "1.2.3"
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j": {
-            "locked": "2.2.3",
-            "requested": "2.2.3"
-        },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -768,12 +732,8 @@
             ],
             "locked": "0.68.0"
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
-        },
         "commons-io:commons-io": {
-            "locked": "2.5",
+            "locked": "2.4",
             "requested": "2.4"
         },
         "io.reactivex:rxjava": {
@@ -786,19 +746,23 @@
             "locked": "4.10",
             "requested": "4.10"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.4"
+            "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.mockito:mockito-all": {
             "locked": "1.10.0",
@@ -812,23 +776,11 @@
         }
     },
     "testRuntimeClasspath": {
-        "ch.qos.logback:logback-classic": {
-            "locked": "1.2.3",
-            "requested": "1.2.3"
-        },
-        "ch.qos.logback:logback-core": {
-            "locked": "1.2.3",
-            "requested": "1.2.3"
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j": {
-            "locked": "2.2.3",
-            "requested": "2.2.3"
-        },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.7.5"
+            "locked": "2.8.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -882,12 +834,8 @@
             ],
             "locked": "0.68.0"
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "2.6.3",
-            "requested": "2.6.3"
-        },
         "commons-io:commons-io": {
-            "locked": "2.5",
+            "locked": "2.4",
             "requested": "2.4"
         },
         "io.reactivex:rxjava": {
@@ -900,19 +848,23 @@
             "locked": "4.10",
             "requested": "4.10"
         },
-        "mysql:mysql-connector-java": {
-            "locked": "5.1.43",
-            "requested": "5.1.43"
-        },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.4"
+            "locked": "3.0"
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
-            "requested": "4.0.3"
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "2.4.6",
+            "requested": "2.4.6"
         },
         "org.mockito:mockito-all": {
             "locked": "1.10.0",

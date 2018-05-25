@@ -7,7 +7,7 @@ dependencies {
 
 	testCompile project(':conductor-core')
 	testCompile project(':conductor-jersey')
-	testCompile project(':conductor-redis-persistence')
+	testCompile project(':conductor-redis-persistence').sourceSets.test.output
 	testCompile project(':conductor-client')
 	testCompile project(':conductor-server')
 	

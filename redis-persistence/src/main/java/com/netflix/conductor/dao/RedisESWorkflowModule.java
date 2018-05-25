@@ -22,7 +22,6 @@ import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
-import com.netflix.conductor.dao.index.ElasticSearchDAO;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.redis.DynoShardSupplier;
 
@@ -32,6 +31,10 @@ import redis.clients.jedis.JedisCommands;
 
 /**
  * @author Viren
+ * <p>
+ * ElasticSearch is no longer bound with Redis module. A better name would have been
+ * RedisWorkflowModule. But, to keep backward compatibility, this is left behind.
+ * </p>
  */
 public class RedisESWorkflowModule extends AbstractModule {
     private final Configuration config;
@@ -51,7 +54,6 @@ public class RedisESWorkflowModule extends AbstractModule {
         bind(MetadataDAO.class).to(RedisMetadataDAO.class);
         bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
         bind(QueueDAO.class).to(DynoQueueDAO.class);
-        bind(IndexDAO.class).to(ElasticSearchDAO.class);
 
         bind(DynoQueueDAO.class).toInstance(createQueueDAO());
         bind(DynoProxy.class).toInstance(new DynoProxy(dynomiteConnection));
