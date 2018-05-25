@@ -26,6 +26,7 @@ import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import org.apache.commons.lang.StringUtils;
@@ -199,6 +200,8 @@ public class EventProcessor {
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
+		} finally {
+			Monitors.recordEventQueueMessagesProcessed(queue.getType(), queue.getName(), 1);
 		}
 	}
 

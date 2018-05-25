@@ -172,7 +172,7 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		handleCorrelationId(workflowId, headers, builder);
 
-		service.removeWorkflow(workflowId);
+		executor.removeWorkflow(workflowId);
 		return builder.build();
 	}
 
