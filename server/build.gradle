@@ -25,6 +25,7 @@ dependencies {
 	compile project(':conductor-redis-persistence')
 	compile project(':conductor-mysql-persistence')
 	compile project(':conductor-contribs')
+    compile project(':conductor-es2-persistence')
 	
 	//Jetty
 	compile "org.eclipse.jetty:jetty-server:${revJetteyServer}"

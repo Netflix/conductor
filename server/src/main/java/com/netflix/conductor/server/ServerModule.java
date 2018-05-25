@@ -18,10 +18,6 @@
  */
 package com.netflix.conductor.server;
 
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.netflix.conductor.contribs.http.HttpTask;
@@ -29,22 +25,15 @@ import com.netflix.conductor.contribs.http.RestClientManager;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
-import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.dao.RedisESWorkflowModule;
-import com.netflix.conductor.dao.dynomite.DynoProxy;
-import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
-import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
-import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
-import com.netflix.conductor.dao.index.ElasticSearchDAO;
-import com.netflix.conductor.dao.index.ElasticsearchModule;
+import com.netflix.conductor.dao.es.index.ElasticsearchModule;
 import com.netflix.conductor.dao.mysql.MySQLWorkflowModule;
 import com.netflix.dyno.connectionpool.HostSupplier;
-import com.netflix.dyno.queues.redis.DynoShardSupplier;
-
 import redis.clients.jedis.JedisCommands;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Viren
@@ -92,7 +81,6 @@ public class ServerModule extends AbstractModule {
 		}
 
 		install(new ElasticsearchModule());
-		bind(IndexDAO.class).to(ElasticSearchDAO.class);
 		
 		install(new CoreModule());
 		install(new JerseyModule());
