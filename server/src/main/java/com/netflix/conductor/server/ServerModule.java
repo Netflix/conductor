@@ -41,6 +41,9 @@ import com.netflix.conductor.dao.es5.index.ElasticSearch5DAO;
 import com.netflix.conductor.dao.es5.index.Elasticsearch5Module;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.redis.DynoShardSupplier;
+import com.netflix.spectator.api.DefaultRegistry;
+import com.netflix.spectator.api.Registry;
+import com.netflix.spectator.api.Spectator;
 import redis.clients.jedis.JedisCommands;
 
 import java.util.List;
@@ -81,9 +84,12 @@ public class ServerModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
+		Registry registry = new DefaultRegistry();
+		Spectator.globalRegistry().add(registry);
 
 		configureExecutorService();
 		bind(Configuration.class).toInstance(config);
+		bind(Registry.class).toInstance(registry);
 
 		install(new Elasticsearch5Module());
 		bind(IndexDAO.class).to(ElasticSearch5DAO.class);

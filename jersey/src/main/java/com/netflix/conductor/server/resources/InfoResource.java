@@ -20,6 +20,8 @@ package com.netflix.conductor.server.resources;
 
 import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.metrics.Monitors;
+import com.netflix.spectator.api.Counter;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -33,6 +35,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Oleksiy Lysak
@@ -111,5 +114,28 @@ public class InfoResource {
 		result.put("endpoints", endpoints);
 		result.put("dependencies", dependencies);
 		return result;
+	}
+
+	@GET
+	@Path("/metrics")
+	@ApiOperation(value = "Get the metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> metrics() {
+		Map<String, Object> output = new TreeMap<>();
+
+		Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
+		counters.forEach((name, map) -> {
+			map.forEach((tags, counter) -> {
+				// Concatenate all tags into single line: tag1.tag2.tagX excluding class name
+				String joined = tags.entrySet().stream()
+						.filter(entry -> !entry.getKey().equals("class"))
+						.map(Map.Entry::getValue).collect(Collectors.joining("."));
+
+				// Emit the counter name
+				output.put(name + "." + joined + ".counter", counter.count());
+			});
+		});
+
+		return output;
 	}
 }

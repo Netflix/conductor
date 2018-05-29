@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.metrics;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.servo.monitor.BasicStopwatch;
 import com.netflix.servo.monitor.Stopwatch;
-import com.netflix.spectator.api.Counter;
-import com.netflix.spectator.api.Id;
-import com.netflix.spectator.api.Registry;
-import com.netflix.spectator.api.Spectator;
-import com.netflix.spectator.api.Timer;
+import com.netflix.spectator.api.*;
 import com.netflix.spectator.api.histogram.PercentileTimer;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Viren
@@ -57,10 +53,10 @@ public class Monitors {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param className Name of the class
 	 * @param methodName Method name
-	 *            
+	 *
 	 */
 	public static void error(String className, String methodName) {
 		getCounter(className, "workflow_server_error", "methodName", methodName).increment();
@@ -70,11 +66,15 @@ public class Monitors {
 		return start(getTimer(className, name, additionalTags));
 	}
 
+	public static Map<String, Map<Map<String, String>, Counter>> getCounters() {
+		return counters;
+	}
+
 	/**
 	 * Increment a counter that is used to measure the rate at which some event
 	 * is occurring. Consider a simple queue, counters would be used to measure
 	 * things like the rate at which items are being inserted and removed.
-	 * 
+	 *
 	 * @param className
 	 * @param name
 	 * @param additionalTags
@@ -88,7 +88,7 @@ public class Monitors {
 	 * gauges would be the size of a queue or number of threads in the running
 	 * state. Since gauges are sampled, there is no information about what might
 	 * have occurred between samples.
-	 * 
+	 *
 	 * @param className
 	 * @param name
 	 * @param measurement
@@ -132,8 +132,8 @@ public class Monitors {
 			String tk = additionalTags[j];
 			String tv = "" + additionalTags[j + 1];
 			if(!tv.isEmpty()) {
-				tags.put(tk, tv);	
-			}			
+				tags.put(tk, tv);
+			}
 			j++;
 		}
 		return tags;
@@ -170,18 +170,21 @@ public class Monitors {
 	public static void recordQueueDepth(String taskType, long size, String ownerApp) {
 		gauge(classQualifier, "task_queue_depth", size, "taskType", taskType, "ownerApp", ""+ownerApp);
 	}
-	
+
 	public static void recordTaskInProgress(String taskType, long size, String ownerApp) {
 		gauge(classQualifier, "task_in_progress", size, "taskType", taskType, "ownerApp", ""+ownerApp);
 	}
 
 	public static void recordRunningWorkflows(long count, String name, String version, String ownerApp) {
 		gauge(classQualifier, "workflow_running", count, "workflowName", name, "version", version, "ownerApp", ""+ownerApp);
-
 	}
 
 	public static void recordTaskTimeout(String taskType) {
 		counter(classQualifier, "task_timeout", "taskType", taskType);
+	}
+
+	public static void recordTaskResponseTimeout(String taskType) {
+		counter(classQualifier, "task_response_timeout", "taskType", taskType);
 	}
 
 	public static void recordWorkflowTermination(String workflowType, WorkflowStatus status) {
@@ -202,9 +205,74 @@ public class Monitors {
 
 	public static void recordWorkflowCompletion(String workflowType, long duration) {
 		getTimer(classQualifier, "workflow_execution", "workflowName", workflowType).record(duration, TimeUnit.MILLISECONDS);
+		recordWorkflowCompletion(workflowType); // counter
 	}
 
 	public static void recordTaskRateLimited(String taskDefName, int limit) {
 		gauge(classQualifier, "task_rate_limited", limit, "taskType", taskDefName);
+	}
+
+	public static void recordEventQueueMessagesProcessed(String queueType, String queueName, int count) {
+		getCounter(classQualifier, "event_queue_messages_processed", "queueType", queueType, "queueName", queueName).increment(count);
+	}
+
+	public static void recordEventQueueMessagesReceived(String queueType, String queueName) {
+		getCounter(classQualifier, "event_queue_messages_received", "queueType", queueType, "queueName", queueName).increment();
+	}
+
+	public static void recordObservableQMessageReceivedErrors(String queueType) {
+		counter(classQualifier, "observable_queue_error", "queueType", queueType);
+	}
+
+	public static void recordDaoRequests(String dao, String action, String taskType, String workflowType) {
+		counter(classQualifier, "dao_requests", "dao", dao, "action", action, "taskType", taskType, "workflowType", workflowType);
+	}
+
+	public static void recordDaoEventRequests(String dao, String action, String event) {
+		counter(classQualifier, "dao_requests", "dao", dao, "action", action, "event", event);
+	}
+
+	public static void recordDaoPayloadSize(String dao, String action, int size) {
+		gauge(classQualifier, "dao_payload_size", size, "dao", dao, "action", action);
+	}
+
+	public static void recordWorkflowStart(String workflowType) {
+		counter(classQualifier, "workflow_start", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowCompletion(String workflowType) {
+		counter(classQualifier, "workflow_completion", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowPause(String workflowType) {
+		counter(classQualifier, "workflow_pause", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowResume(String workflowType) {
+		counter(classQualifier, "workflow_resume", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowCancel(String workflowType) {
+		counter(classQualifier, "workflow_cancel", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowReset(String workflowType) {
+		counter(classQualifier, "workflow_reset", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowRerun(String workflowType) {
+		counter(classQualifier, "workflow_rerun", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowRetry(String workflowType) {
+		counter(classQualifier, "workflow_retry", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowRestart(String workflowType) {
+		counter(classQualifier, "workflow_restart", "workflowName", workflowType);
+	}
+
+	public static void recordWorkflowRemove(String workflowType) {
+		counter(classQualifier, "workflow_remove", "workflowName", workflowType);
 	}
 }
