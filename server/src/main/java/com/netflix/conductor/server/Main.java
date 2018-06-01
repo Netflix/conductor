@@ -51,7 +51,7 @@ public class Main {
 		System.out.println(" \\___\\___/|_| |_|\\__,_|\\__,_|\\___|\\__\\___/|_|   ");
 		System.out.println("\n\n\n");                                                
 		
-		server.start(config.getIntProperty("port", 8080), true);
+		server.start(config.getIntProperty("port", 8081), true);
 		
 	}
 		
