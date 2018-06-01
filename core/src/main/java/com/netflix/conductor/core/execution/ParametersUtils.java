@@ -50,6 +50,7 @@ public class ParametersUtils {
 	private TypeReference<Map<String, Object>> map = new TypeReference<Map<String,Object>>() {};
 
 	public enum SystemParameters {
+		UUID,
 		CPEWF_TASK_ID,
 		NETFLIX_ENV,
 		NETFLIX_STACK,
@@ -262,7 +263,9 @@ public class ParametersUtils {
 	}
 
 	private String getSystemParametersValue(String sysParam, String taskId){
-		if("CPEWF_TASK_ID".equals(sysParam)) {
+		if("UUID".equals(sysParam)) {
+			return UUID.randomUUID().toString();
+		} else if("CPEWF_TASK_ID".equals(sysParam)) {
 			return taskId;
 		} else if (sysParam.startsWith("CPEWF_CURRENT_TIMESTAMP")) {
 			try {
