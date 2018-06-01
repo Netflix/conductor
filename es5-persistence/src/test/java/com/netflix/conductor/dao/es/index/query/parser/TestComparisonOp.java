@@ -16,12 +16,9 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es5.index.query.parser;
+package com.netflix.conductor.dao.es.index.query.parser;
 
 import org.junit.Test;
-
-import com.netflix.conductor.dao.es5.index.query.parser.ComparisonOp;
-import com.netflix.conductor.dao.es5.index.query.parser.ParserException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

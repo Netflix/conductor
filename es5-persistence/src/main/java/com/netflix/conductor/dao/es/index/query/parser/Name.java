@@ -16,20 +16,34 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es5.index.query.parser;
+package com.netflix.conductor.dao.es.index.query.parser;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 /**
  * @author Viren
- *
+ * Represents the name of the field to be searched against.  
  */
-public abstract class AbstractParserTest {
+public class Name extends AbstractNode {
 
-	protected InputStream getInputStream(String expression) {
-		return new BufferedInputStream(new ByteArrayInputStream(expression.getBytes()));
+	private String value;
+	
+	public Name(InputStream is) throws ParserException {
+		super(is);
+	}
+
+	@Override
+	protected void _parse() throws Exception {
+		this.value = readToken();
+	}
+	
+	@Override
+	public String toString(){
+		return value;
+	}
+	
+	public String getName(){
+		return value;
 	}
 
 }
