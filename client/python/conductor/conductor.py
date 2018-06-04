@@ -18,6 +18,7 @@ import requests
 import json
 import sys
 import socket
+from itertools import chain
 
 
 hostname = socket.gethostname()
@@ -44,7 +45,7 @@ class BaseClient(object):
         theUrl = "{}/{}".format(self.baseURL, resPath)
         theHeader = self.headers
         if headers is not None:
-            theHeader = dict(self.headers.items() + headers.items())
+            theHeader = dict(chain(self.headers.items(), headers.items()))
         if body is not None:
             jsonBody = json.dumps(body, ensure_ascii=False)
             resp = requests.post(theUrl, params=queryParams, data=jsonBody, headers=theHeader)
@@ -58,7 +59,7 @@ class BaseClient(object):
         theUrl = "{}/{}".format(self.baseURL, resPath)
         theHeader = self.headers
         if headers is not None:
-            theHeader = dict(self.headers.items() + headers.items())
+            theHeader = dict(chain(self.headers.items(), headers.items()))
 
         if body is not None:
             jsonBody = json.dumps(body, ensure_ascii=False)
