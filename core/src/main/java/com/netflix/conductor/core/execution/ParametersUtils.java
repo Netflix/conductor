@@ -26,6 +26,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -98,6 +99,15 @@ public class ParametersUtils {
 		wf.put("reasonForIncompletion", workflow.getReasonForIncompletion());
 		wf.put("schemaVersion", workflow.getSchemaVersion());
 		wf.put("workflowIds", workflow.getWorkflowIds());
+
+		if (StringUtils.isNotEmpty(workflow.getCorrelationId())) {
+			try {
+				Map<String, Object> cloned = om.readValue(workflow.getCorrelationId(), map);
+				wf.put("correlationMap", cloned);
+			} catch (IOException e) {
+				logger.error("Unable to parse workflow correlation id");
+			}
+		}
 
 		inputMap.put("workflow", wf);
 		if (MapUtils.isNotEmpty(defaults)) {
