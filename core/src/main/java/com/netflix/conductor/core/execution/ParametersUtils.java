@@ -100,9 +100,10 @@ public class ParametersUtils {
 		wf.put("schemaVersion", workflow.getSchemaVersion());
 		wf.put("workflowIds", workflow.getWorkflowIds());
 
-		if (StringUtils.isNotEmpty(workflow.getCorrelationId())) {
+		String correlationId = workflow.getCorrelationId();
+		if (StringUtils.isNotEmpty(correlationId) && correlationId.startsWith("{") && correlationId.endsWith("}")) {
 			try {
-				Map<String, Object> cloned = om.readValue(workflow.getCorrelationId(), map);
+				Map<String, Object> cloned = om.readValue(correlationId, map);
 				wf.put("correlationMap", cloned);
 			} catch (IOException e) {
 				logger.error("Unable to parse workflow correlation id");
