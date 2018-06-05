@@ -512,7 +512,9 @@ public class WorkflowExecutor {
 
 	public String cancelWorkflow(String workflowId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
-		workflow.setStatus(WorkflowStatus.CANCELLED);
+		if (!workflow.getStatus().isTerminal()) {
+			workflow.setStatus(WorkflowStatus.CANCELLED);
+		}
 		return cancelWorkflow(workflow, null);
 	}
 
@@ -608,7 +610,9 @@ public class WorkflowExecutor {
 
 	public void terminateWorkflow(String workflowId, String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
-		workflow.setStatus(WorkflowStatus.TERMINATED);
+		if (!workflow.getStatus().isTerminal()) {
+			workflow.setStatus(WorkflowStatus.TERMINATED);
+		}
 		terminateWorkflow(workflow, reason, null);
 	}
 
@@ -623,7 +627,9 @@ public class WorkflowExecutor {
 		}
 
 		String workflowId = workflow.getWorkflowId();
-		workflow.setReasonForIncompletion(reason);
+		if (StringUtils.isEmpty(workflow.getReasonForIncompletion())) {
+			workflow.setReasonForIncompletion(reason);
+		}
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is terminated/reset.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason);
 		List<Task> tasks = workflow.getTasks();

@@ -148,6 +148,9 @@ public class SubWorkflow extends WorkflowSystemTask {
 		if (workflow.getStatus() == WorkflowStatus.CANCELLED) {
 			subWorkflow.setStatus(WorkflowStatus.CANCELLED);
 			provider.cancelWorkflow(subWorkflow, "Parent workflow has been cancelled");
+		} else if (workflow.getStatus() == WorkflowStatus.FAILED) {
+			subWorkflow.setStatus(WorkflowStatus.FAILED);
+			provider.terminateWorkflow(subWorkflow, "Parent workflow has been failed", null);
 		} else {
 			subWorkflow.setStatus(WorkflowStatus.TERMINATED);
 			provider.terminateWorkflow(subWorkflow, "Parent workflow has been terminated with status " + workflow.getStatus(), null);
