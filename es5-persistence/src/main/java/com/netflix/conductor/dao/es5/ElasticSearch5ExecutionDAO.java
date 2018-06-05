@@ -33,6 +33,7 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.IdsQueryBuilder;
@@ -691,7 +692,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 		} else {
 			addWorkflowInternal(workflow);
 			addWorkflowDefToWorkflowMapping(workflow);
-			if (workflow.getCorrelationId() != null) {
+			if (StringUtils.isNotEmpty(workflow.getCorrelationId())) {
 				addWorkflowToCorrIdMapping(workflow);
 			}
 		}
@@ -829,6 +830,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	}
 
 	private void addWorkflowToCorrIdMapping(Workflow workflow) {
+		if (StringUtils.isEmpty(workflow.getCorrelationId())) {
+			return;
+		}
 		String sha256hex = DigestUtils.sha256Hex(workflow.getCorrelationId());
 		String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
 		String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
@@ -840,6 +844,9 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 	}
 
 	private void deleteWorkflowToCorrIdMapping(Workflow workflow) {
+		if (StringUtils.isEmpty(workflow.getCorrelationId())) {
+			return;
+		}
 		String sha256hex = DigestUtils.sha256Hex(workflow.getCorrelationId());
 		String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
 		String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
