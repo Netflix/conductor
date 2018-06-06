@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.client.http;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -28,6 +29,8 @@ import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.filter.ClientFilter;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -54,6 +57,8 @@ public class TaskClient extends ClientBase {
 
     private static GenericType<SearchResult<TaskSummary>> searchResultTaskSummary = new GenericType<SearchResult<TaskSummary>>() {
     };
+
+    private static final Logger logger = LoggerFactory.getLogger(TaskClient.class);
 
     /**
      * Creates a default task client
@@ -206,6 +211,17 @@ public class TaskClient extends ClientBase {
      */
     public void updateTask(TaskResult taskResult) {
         Preconditions.checkNotNull(taskResult, "Task result cannot be null");
+        try {
+            //TODO introduce a config param to control the size
+            if (objectMapper.writeValueAsString(taskResult).length() > (2 * 1024 * 1024)) { //There is hard coded since there is no easy way to pass a config in here
+                taskResult.setReasonForIncompletion("The TaskResult payload is greater than the permissible 2MB");
+                taskResult.setStatus(TaskResult.Status.FAILED_WITH_TERMINAL_ERROR);
+                taskResult.setOutputData(null);
+            }
+        } catch (JsonProcessingException e) {
+            logger.error("Unable to parse the TaskResult: {}", taskResult);
+            throw new RuntimeException(e);
+        }
         postForEntity("tasks", taskResult);
     }
 
