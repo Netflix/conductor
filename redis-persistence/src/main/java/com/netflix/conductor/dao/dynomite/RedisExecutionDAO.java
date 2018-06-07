@@ -214,17 +214,18 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		}
 
 		String payload = toJson(task);
+		recordRedisDaoPayloadSize("updateTask", payload.length(), Optional.ofNullable(taskDef)
+				.map(TaskDef::getName)
+				.orElse("n/a"), task.getWorkflowType());
 		//The payload is verified and
 		if(payload.length() > taskPayloadThreshold) {
+			task.setReasonForIncompletion(String.format("Payload of the task: %s larger than the permissible %s bytes",
+					FileUtils.byteCountToDisplaySize(payload.length()), FileUtils.byteCountToDisplaySize(taskPayloadThreshold)));
 			task.setOutputData(null);
-			task.setReasonForIncompletion("Payload of the task larger than the permissible 5MB");
 			task.setStatus(Status.FAILED_WITH_TERMINAL_ERROR);
 			payload = toJson(task);
 		}
 		recordRedisDaoRequests("updateTask", task.getTaskType(), task.getWorkflowType());
-		recordRedisDaoPayloadSize("updateTask", payload.length(), Optional.ofNullable(taskDef)
-				.map(TaskDef::getName)
-				.orElse("n/a"), task.getWorkflowType());
 		dynoClient.set(nsKey(TASK, task.getTaskId()), payload);
 		logger.debug("Workflow task payload saved to TASK with taskKey: {}, workflowId: {}, taskId: {}, taskType: {} during updateTask",
 				nsKey(TASK, task.getTaskId()), task.getWorkflowInstanceId(), task.getTaskId(), task.getTaskType());

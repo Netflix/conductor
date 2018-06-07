@@ -15,8 +15,9 @@
  */
 package com.netflix.conductor.client.http;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
+import com.google.common.io.CountingOutputStream;
+import com.netflix.conductor.client.task.WorkflowTaskMetrics;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -32,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -208,17 +210,23 @@ public class TaskClient extends ClientBase {
      * Updates the result of a task execution.
      *
      * @param taskResult TaskResults to be updated.
+     * @param taskType
      */
-    public void updateTask(TaskResult taskResult) {
+    public void updateTask(TaskResult taskResult, String taskType) {
         Preconditions.checkNotNull(taskResult, "Task result cannot be null");
-        try {
-            //TODO introduce a config param to control the size
-            if (objectMapper.writeValueAsString(taskResult).length() > (2 * 1024 * 1024)) { //There is hard coded since there is no easy way to pass a config in here
-                taskResult.setReasonForIncompletion("The TaskResult payload is greater than the permissible 2MB");
+
+        long taskResultSize = 0;
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+             CountingOutputStream countingOutputStream = new CountingOutputStream(byteArrayOutputStream)) {
+            objectMapper.writeValue(countingOutputStream, taskResult);
+            taskResultSize = countingOutputStream.getCount();
+            WorkflowTaskMetrics.recordTaskResultPayloadSize(taskType, taskResultSize);
+            if (taskResultSize > (3 * 1024 * 1024)) { //There is hard coded since there is no easy way to pass a config in here
+                taskResult.setReasonForIncompletion(String.format("The TaskResult payload: %d is greater than the permissible 3MB", taskResultSize));
                 taskResult.setStatus(TaskResult.Status.FAILED_WITH_TERMINAL_ERROR);
                 taskResult.setOutputData(null);
             }
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             logger.error("Unable to parse the TaskResult: {}", taskResult);
             throw new RuntimeException(e);
         }
