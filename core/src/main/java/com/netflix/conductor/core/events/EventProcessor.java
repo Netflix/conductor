@@ -155,7 +155,7 @@ public class EventProcessor {
 				if (!StringUtils.isEmpty(condition)) {
 					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
 					if (!success) {
-						logger.info("handler {} condition {} did not match payload {}", handler.getName(), condition, payloadObj);
+						logger.error("handler {} condition {} did not match payload {}", handler.getName(), condition, payloadObj);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setEvent(handler.getEvent());
