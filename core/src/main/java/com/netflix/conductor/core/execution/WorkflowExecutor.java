@@ -1165,17 +1165,20 @@ public class WorkflowExecutor {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void notifyTaskStatus(Task task, StartEndState state) {
+	public void notifyTaskStatus(Task task, StartEndState state) {
 		try {
 			Map<String, Object> eventMap = task.getWorkflowTask().getEventMessages();
 			if (eventMap == null || !eventMap.containsKey(state.name())) {
 				return;
 			}
 
+			// Get the 'start' or 'end' map
+			eventMap = (Map<String, Object>)eventMap.get(state.name());
+
 			ParametersUtils pu = new ParametersUtils();
 			Workflow workflow = edao.getWorkflow(task.getWorkflowInstanceId());
 			Map<String, Object> map = pu.getTaskInputV2(eventMap, workflow, task.getTaskId(), null);
-			sendMessage(map, state.name());
+			sendMessage(map);
 		} catch (Exception ex) {
 			logger.error("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 		}
@@ -1190,17 +1193,19 @@ public class WorkflowExecutor {
 				return;
 			}
 
+			// Get the 'start' or 'end' map
+			eventMap = (Map<String, Object>)eventMap.get(state.name());
+
 			ParametersUtils pu = new ParametersUtils();
 			Map<String, Object> map = pu.getTaskInputV2(eventMap, workflow, null, null);
-			sendMessage(map, state.name());
+			sendMessage(map);
 		} catch (Exception ex) {
 			logger.error("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private void sendMessage(Map<String, Object> map, String name) throws Exception {
-		Map<String, Object> actionMap = (Map<String, Object>) map.get(name);
+	private void sendMessage(Map<String, Object> actionMap) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 
 		Message msg = new Message();
