@@ -31,7 +31,7 @@ public class Main {
 	public static void main(String[] args) {
 		
 		TaskClient taskClient = new TaskClient();
-		taskClient.setRootURI("http://localhost:8081/api/");		//Point this to the server API
+		taskClient.setRootURI("http://localhost:8080/api/");		//Point this to the server API
 		
 		int threadCount = 2;			//number of threads used to execute workers.  To avoid starvation, should be same or more than number of workers
 		
