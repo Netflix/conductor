@@ -38,6 +38,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.metrics.Monitors;
 
 @Singleton
 @Trace
@@ -50,6 +51,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	private final static String EVENT_HANDLERS = "EVENT_HANDLERS";
 	private final static String EVENT_HANDLERS_BY_EVENT = "EVENT_HANDLERS_BY_EVENT";
 	private final static String LATEST = "latest";
+    private static final String className = RedisMetadataDAO.class.getSimpleName();
 
 	private Map<String, TaskDef> taskDefCache = new HashMap<>();
 	
@@ -88,10 +90,15 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	}
 
 	private void refreshTaskDefs() {
-		Map<String, TaskDef> map = new HashMap<>();
-		getAllTaskDefs().forEach(taskDef -> map.put(taskDef.getName(), taskDef));
-		this.taskDefCache = map;
-		logger.debug("Refreshed task defs " + this.taskDefCache.size());
+        try {
+            Map<String, TaskDef> map = new HashMap<>();
+            getAllTaskDefs().forEach(taskDef -> map.put(taskDef.getName(), taskDef));
+            this.taskDefCache = map;
+            logger.debug("Refreshed task defs " + this.taskDefCache.size());
+        } catch (Exception e){
+            Monitors.error(className, "taskDefs");
+            logger.error("refreshTaskDefs failed ", e);
+        }
 	}
 	
 	@Override
