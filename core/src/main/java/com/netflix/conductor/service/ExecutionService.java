@@ -15,20 +15,6 @@
  */
 package com.netflix.conductor.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -50,6 +36,13 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 
@@ -123,7 +116,8 @@ public class ExecutionService {
 				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
 			}
 			task.setWorkerId(workerId);
-			task.setPollCount(task.getPollCount() + 1);			
+			task.setPollCount(task.getPollCount() + 1);
+			executor.notifyTaskStatus(task, WorkflowExecutor.StartEndState.start);
 			edao.updateTask(task);
 			tasks.add(task);
 		}
