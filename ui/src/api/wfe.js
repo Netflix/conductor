@@ -93,6 +93,12 @@ router.get('/id/:workflowId', async (req, res, next) => {
     const meta = await http.get(baseURLMeta + 'workflow/' + result.workflowType + '?version=' + result.version);
     const subs = [];
     const subworkflows = {};
+
+    // Work around in case server did not return tasks
+    if (result.tasks == undefined) {
+        result.tasks = [];
+    }
+
     result.tasks.forEach(task => {
       if(task.taskType == 'SUB_WORKFLOW'){
         let subWorkflowId = task.outputData && task.outputData.subWorkflowId;
