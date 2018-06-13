@@ -18,10 +18,6 @@
  */
 package com.netflix.conductor.server;
 
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.netflix.conductor.contribs.http.HttpTask;
@@ -29,21 +25,16 @@ import com.netflix.conductor.contribs.http.RestClientManager;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
-import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.dao.dynomite.DynoProxy;
-import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
-import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
-import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
-import com.netflix.conductor.dao.index.ElasticSearchDAO;
-import com.netflix.conductor.dao.index.ElasticsearchModule;
+import com.netflix.conductor.dao.RedisWorkflowModule;
+import com.netflix.conductor.dao.es.index.ElasticSearchModule;
+import com.netflix.conductor.dao.es5.index.ElasticSearchModuleV5;
 import com.netflix.conductor.dao.mysql.MySQLWorkflowModule;
 import com.netflix.dyno.connectionpool.HostSupplier;
-import com.netflix.dyno.queues.redis.DynoShardSupplier;
-
 import redis.clients.jedis.JedisCommands;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Viren
@@ -79,30 +70,24 @@ public class ServerModule extends AbstractModule {
 	
 	@Override
 	protected void configure() {
-		
+
 		configureExecutorService();
-		
+
 		bind(Configuration.class).toInstance(conductorConfig);
 
 		if (db == ConductorServer.DB.mysql) {
 			install(new MySQLWorkflowModule());
 		} else {
-			String localDC = localRack;
-			localDC = localDC.replaceAll(region, "");
-			DynoShardSupplier ss = new DynoShardSupplier(hostSupplier, region, localDC);
-			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, conductorConfig);
-
-			bind(MetadataDAO.class).to(RedisMetadataDAO.class);
-			bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
-			bind(DynoQueueDAO.class).toInstance(queueDao);
-			bind(QueueDAO.class).to(DynoQueueDAO.class);
-
-			DynoProxy proxy = new DynoProxy(dynoConn);
-			bind(DynoProxy.class).toInstance(proxy);
+			install(new RedisWorkflowModule(conductorConfig, dynoConn, hostSupplier));
 		}
 
-		install(new ElasticsearchModule());
-		bind(IndexDAO.class).to(ElasticSearchDAO.class);
+		if (conductorConfig.getProperty("workflow.elasticsearch.version", "2").equals("5")){
+			install(new ElasticSearchModuleV5());
+		}
+		else {
+			// Use ES2 as default.
+			install(new ElasticSearchModule());
+		}
 		
 		install(new CoreModule());
 		install(new JerseyModule());
