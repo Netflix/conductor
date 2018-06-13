@@ -140,7 +140,7 @@ public class WorkflowExecutor {
 
             if (!missingTaskDefs.isEmpty()) {
                 logger.error("Cannot find the task definitions for the following tasks used in workflow: {}", missingTaskDefs);
-                throw new ApplicationException(Code.INVALID_INPUT, "Cannot find the task definitions for the following tasks used in workflow: " + workflowName);
+                throw new ApplicationException(Code.INVALID_INPUT, "Cannot find the task definitions for the following tasks used in workflow: " + missingTaskDefs);
             }
             //A random UUID is assigned to the work flow instance
             String workflowId = IDGenerator.generate();
