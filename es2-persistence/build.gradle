@@ -1,5 +1,5 @@
 plugins {
-    id 'com.github.johnrengelman.plugin-shadow' version '2.0.3'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 configurations {
@@ -30,12 +30,11 @@ shadowJar {
     mergeServiceFiles {
         include 'META-INF/services/*'
         include 'META-INF/maven/*'
+        include 'META-INF/maven/*'
     }
+
+    relocate 'shadow.org', 'conductor.org'
 }
 
 jar.enabled = false
 jar.dependsOn shadowJar
-
-configureRelocationShadowJar {
-    prefix = 'conductor'
-}
