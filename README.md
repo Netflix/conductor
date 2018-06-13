@@ -15,17 +15,15 @@ Conductor is an _orchestration_ engine that runs in the cloud.
 ## Get Conductor
 Binaries are available from Maven Central and jcenter.
 
-|Group|Artifact|Latest Stable Version|
-|-----------|---------------|---------------------|
-|com.netflix.conductor|conductor-*|1.5.+|
-
 Below are the various artifacts published:
 
 |Artifact|Description|
 |-----------|---------------|
 |conductor-common|Common models used by various conductor modules|
 |conductor-core|Core Conductor module|
-|conductor-redis-persistence|Persistence using Redis/Dynomite and Elasticsearch|
+|conductor-redis-persistence|Persistence using Redis/Dynomite|
+|conductor-es2-persistence|Indexing using Elasticsearch 2.X|
+|conductor-es5-persistence|Indexing using Elasticsearch 5.X|
 |conductor-jersey|Jersey JAX-RS resources for the core services|
 |conductor-ui|node.js based UI for Conductor|
 |conductor-contribs|Optional contrib package that holds extended workflow tasks and support for SQS|
@@ -40,6 +38,7 @@ To build the server, use the following dependencies in your classpath:
 * conductor-core
 * conductor-jersey
 * conductor-redis-persistence (_unless using your own persistence module_)
+* conductor-es2-persistence _or_ conductor-es5-persistence (_unless using your own index module_)
 * conductor-contribs (_optional_)
 
 ### Deploying Jersey JAX-RS resources
@@ -53,7 +52,7 @@ Conductor relies on the guice (4.0+) for the dependency injection.
 Persistence has a guice module to wire up appropriate interfaces:
 
 ```java
-com.netflix.conductor.dao.RedisESWorkflowModule
+com.netflix.conductor.dao.RedisWorkflowModule
 ```
 ## Database Requirements
 
@@ -66,11 +65,11 @@ com.netflix.conductor.dao.RedisESWorkflowModule
 * Servlet Container
 
 ## Get Support
-Conductor is maintained by Content Platform Engineering team at Netflix.  Use github issue tracking for any support request.  
+Conductor is maintained by Media Workflow Infrastructure team at Netflix.  Use github issue tracking for any support request.  
 
 ## LICENSE
 
-Copyright (c) 2016 Netflix, Inc.
+Copyright (c) 2018 Netflix, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

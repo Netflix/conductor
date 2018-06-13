@@ -1,9 +1,7 @@
 dependencies {
 	compile project(':conductor-core')
 	compile "com.google.inject:guice:${revGuice}"
-	compile "org.elasticsearch:elasticsearch:${revElasticSearch2}"
 
-	compile "org.sql2o:sql2o:${revSql2o}"
 	compile "commons-io:commons-io:${revCommonsIo}"
 	compile "mysql:mysql-connector-java:${revMySqlConnector}"
 	compile "com.zaxxer:HikariCP:${revHikariCP}"

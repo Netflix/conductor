@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class TaskResource {
 
-	public static final Logger logger = LoggerFactory.getLogger(TaskResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(TaskResource.class);
 
 	private ExecutionService taskService;
 
@@ -109,6 +109,9 @@ public class TaskResource {
 			@QueryParam("domain") String domain,
 			@DefaultValue("1") @QueryParam("count") Integer count,
 			@DefaultValue("100") @QueryParam("timeout") Integer timeout) throws Exception {
+		if (timeout > 5000) {
+			throw new ApplicationException(Code.INVALID_INPUT, "Long Poll Timeout value cannot be more than 5 seconds");
+		}
 		List<Task> polledTasks = taskService.poll(taskType, workerId, domain, count, timeout);
 		logger.debug("The Tasks {} being returned for /tasks/poll/{}?{}&{}",
 				polledTasks.stream()
@@ -137,11 +140,11 @@ public class TaskResource {
 
 	@POST
 	@ApiOperation("Update a task")
-	public String updateTask(TaskResult task) throws Exception {
-		logger.debug("Update Task: {} with callback time: {}", task, task.getCallbackAfterSeconds());
-		taskService.updateTask(task);
-		logger.debug("Task: {} updated successfully with callback time: {}", task, task.getCallbackAfterSeconds());
-		return "\"" + task.getTaskId() + "\"";
+	public String updateTask(TaskResult taskResult) throws Exception {
+		logger.debug("Update Task: {} with callback time: {}", taskResult, taskResult.getCallbackAfterSeconds());
+		taskService.updateTask(taskResult);
+		logger.debug("Task: {} updated successfully with callback time: {}", taskResult, taskResult.getCallbackAfterSeconds());
+		return "\"" + taskResult.getTaskId() + "\"";
 	}
 
 	@POST
@@ -149,6 +152,7 @@ public class TaskResource {
 	@ApiOperation("Ack Task is recieved")
 	@Consumes({ MediaType.WILDCARD })
 	public String ack(@PathParam("taskId") String taskId, @QueryParam("workerid") String workerId) throws Exception {
+		logger.debug("Ack received for task: {} from worker: {}", taskId, workerId);
 		return "" + taskService.ackTaskReceived(taskId);
 	}
 	
@@ -178,7 +182,7 @@ public class TaskResource {
 	@Path("/queue/{taskType}/{taskId}")
 	@ApiOperation("Remove Task from a Task type queue")
 	@Consumes({ MediaType.WILDCARD })
-	public void remvoeTaskFromQueue(@PathParam("taskType") String taskType, @PathParam("taskId") String taskId) throws Exception {
+	public void removeTaskFromQueue(@PathParam("taskType") String taskType, @PathParam("taskId") String taskId) throws Exception {
 		taskService.removeTaskfromQueue(taskType, taskId);
 	}
 
@@ -203,13 +207,9 @@ public class TaskResource {
 	@ApiOperation("Get the details about each queue")
 	@Consumes({MediaType.WILDCARD})
 	public Map<String, Long> all() throws Exception {
-		Map<String, Long> all = queues.queuesDetail();
-		Set<Entry<String, Long>> entries = all.entrySet();
-		Set<Entry<String, Long>> sorted = new TreeSet<>(Comparator.comparing(Entry::getKey));
-		sorted.addAll(entries);
-		LinkedHashMap<String, Long> sortedMap = new LinkedHashMap<>();
-		sorted.stream().forEach(e -> sortedMap.put(e.getKey(), e.getValue()));
-		return sortedMap;
+		return queues.queuesDetail().entrySet().stream()
+				.sorted(Comparator.comparing(Entry::getKey))
+				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new));
 	}
 
 	@GET
@@ -223,7 +223,7 @@ public class TaskResource {
 
 	@GET
 	@Path("/queue/polldata/all")
-	@ApiOperation("Get the last poll data for a given task type")
+	@ApiOperation("Get the last poll data for all task types")
 	@Consumes({ MediaType.WILDCARD })
 	public List<PollData> getAllPollData() throws Exception {
 		return taskService.getAllPollData();
