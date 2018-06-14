@@ -1118,7 +1118,6 @@ public class WorkflowExecutor {
 				throw new RuntimeException("No system task found by name " + task.getTaskType());
 			}
 			task.setStartTime(System.currentTimeMillis());
-			edao.updateTask(task); // persist the task start time
 			if(!stt.isAsync()) {
 				notifyTaskStatus(task, StartEndState.start);
 				stt.start(workflow, task, this);
