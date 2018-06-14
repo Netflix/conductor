@@ -18,10 +18,6 @@
  */
 package com.netflix.conductor.core.execution;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
@@ -29,6 +25,10 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.tasks.Event;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.Wait;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Viren
@@ -130,6 +130,7 @@ public class SystemTask extends Task {
 		st.setWorkflowInstanceId(workflow.getWorkflowId());
 		st.setCorrelationId(workflow.getCorrelationId());
 		st.setScheduledTime(System.currentTimeMillis());
+		st.setStartTime(System.currentTimeMillis());
 		st.setEndTime(System.currentTimeMillis());
 		st.setInputData(input);
 		st.setTaskId(taskId);
