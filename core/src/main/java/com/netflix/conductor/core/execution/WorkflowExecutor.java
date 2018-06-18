@@ -90,6 +90,8 @@ public class WorkflowExecutor {
 
 	private boolean validateAuth;
 
+	private ParametersUtils pu = new ParametersUtils();
+
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ObjectMapper om, AuthManager auth, Configuration config) {
 		this.metadata = metadata;
@@ -1196,9 +1198,20 @@ public class WorkflowExecutor {
 			// Get the 'start' or 'end' map
 			eventMap = (Map<String, Object>)eventMap.get(state.name());
 
-			ParametersUtils pu = new ParametersUtils();
-			Map<String, Object> map = pu.getTaskInputV2(eventMap, workflow, null, null);
-			sendMessage(map);
+			// Check preProcess map for JSON Path engine
+			Map<String, Object> preProcess = (Map<String, Object>)eventMap.get("defaults");
+			if (MapUtils.isNotEmpty(preProcess)) {
+				// Generate variables input
+				Map<String, Map<String, Object>> doc = pu.getDoc(null, workflow, null, null);
+
+				// Replace preProcess map
+				preProcess = pu.replace(preProcess, doc);
+			}
+
+			// Feed preProcessed map as defaults so that already processed for JQ engine
+			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
+			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, null, null, null);
+			sendMessage(doc);
 		} catch (Exception ex) {
 			logger.error("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 		}

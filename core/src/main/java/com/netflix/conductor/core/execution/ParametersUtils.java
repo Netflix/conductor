@@ -25,6 +25,8 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.events.ScriptEvaluator;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
@@ -81,6 +83,14 @@ public class ParametersUtils {
 			inputParams.putAll(clone(taskDef.getInputTemplate()));
 		}
 
+		Map<String, Map<String, Object>> inputMap = getDoc(defaults, workflow, taskId, workflowTask);
+
+		Configuration option = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
+		DocumentContext io = JsonPath.parse(inputMap, option);
+		return replace(inputParams, io, taskId);
+	}
+
+	public Map<String, Map<String, Object>> getDoc(Map<String, Map<String, Object>> defaults, Workflow workflow, String taskId, WorkflowTask workflowTask) {
 		Map<String, Map<String, Object>> inputMap = new HashMap<>();
 
 		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
@@ -129,15 +139,13 @@ public class ParametersUtils {
 				inputMap.put("task", taskIO);
 			}
 		}
-		
+
 		workflow.getTasks().stream().map(Task::getReferenceTaskName).map(taskRefName -> workflow.getTaskByRefName(taskRefName)).forEach(task -> {
 			Map<String, Object> taskIO = createTaskIO(task);
 			inputMap.put(task.getReferenceTaskName(), taskIO);
 		});
-		Configuration option = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
-		DocumentContext io = JsonPath.parse(inputMap, option);
-		Map<String, Object> replaced = replace(inputParams, io, taskId);
-		return replaced;
+
+		return inputMap;
 	}
 
 	private Map<String, Object> createTaskIO(Task task) {
@@ -193,6 +201,12 @@ public class ParametersUtils {
 		DocumentContext io = JsonPath.parse(Collections.emptyMap(), option);
 		return replaceVariables(paramString, io, null);
 	}
+
+	public Map<String, Object> replace(Map<String, Object> input, Map<String, Object> doc) {
+		Configuration option = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
+		DocumentContext io = JsonPath.parse(doc, option);
+		return replace(input, io);
+	}
 	
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> replace(Map<String, Object> input, DocumentContext io, String taskId) {
@@ -235,7 +249,7 @@ public class ParametersUtils {
 	}
 
 	private Object replaceVariables(String paramString, DocumentContext io, String taskId){
-		String[] values = paramString.split("(?=\\$\\{)|(?<=\\})");
+		String[] values = paramString.split("(?=\\$\\{)|(?=\\$jq\\{)|(?<=\\})");
 		Object[] convertedValues = new Object[values.length];
 		for(int i=0; i < values.length; i++){
 			convertedValues[i] = values[i];
@@ -250,10 +264,18 @@ public class ParametersUtils {
 				} else {
 					convertedValues[i] = io.read(paramPath);
 				}
-
+			} else if(values[i].startsWith("$jq{") && values[i].endsWith("}")) {
+				String expression = values[i].substring(4, values[i].length() - 1);
+				try {
+					Object json = io.read("$");
+					List<Object> result = ScriptEvaluator.evalJqAsList(expression, json);
+					convertedValues[i] = (CollectionUtils.isNotEmpty(result) ? result.get(0) : null);
+				} catch (Exception ex) {
+					throw new RuntimeException(ex);
+				}
 			}
 		}
-		
+
 		Object retObj = convertedValues[0];
 		// If the parameter String was "v1 v2 v3" then make sure to stitch it back
 		if(convertedValues.length > 1){
