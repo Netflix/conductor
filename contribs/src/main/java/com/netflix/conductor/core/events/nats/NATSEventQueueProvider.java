@@ -33,6 +33,7 @@ import javax.inject.Singleton;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * @author Oleksiy Lysak
@@ -42,6 +43,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 	private static Logger logger = LoggerFactory.getLogger(NATSEventQueueProvider.class);
 	protected Map<String, NATSObservableQueue> queues = new ConcurrentHashMap<>();
 	private ConnectionFactory factory;
+	private int[] publishRetryIn;
 
 	@Inject
 	public NATSEventQueueProvider(Configuration config) {
@@ -65,13 +67,16 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 		// Init NATS API
 		factory = new ConnectionFactory(props);
 
+		String[] arr = config.getProperty("io.nats.publishRetryIn", "5,10,15").split(",");
+		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
+
 		EventQueues.registerProvider(QueueType.nats, this);
 		logger.info("NATS Event Queue Provider initialized...");
 	}
 
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
-		NATSObservableQueue queue = queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(factory, queueURI));
+		NATSObservableQueue queue = queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(factory, queueURI, publishRetryIn));
 		if (queue.isClosed()) {
 			queue.open();
 		}

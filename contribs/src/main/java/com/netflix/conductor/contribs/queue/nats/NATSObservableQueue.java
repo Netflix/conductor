@@ -35,8 +35,8 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 	private Subscription subs;
 	private Connection conn;
 
-	public NATSObservableQueue(ConnectionFactory factory, String queueURI) {
-		super(queueURI, EventQueues.QueueType.nats);
+	public NATSObservableQueue(ConnectionFactory factory, String queueURI, int[] delays) {
+		super(queueURI, EventQueues.QueueType.nats, delays);
 		this.fact = factory;
 		open();
 	}

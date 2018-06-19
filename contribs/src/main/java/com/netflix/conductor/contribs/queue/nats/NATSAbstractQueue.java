@@ -23,6 +23,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
 import io.nats.client.NUID;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -47,6 +48,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	protected final Lock mu = new ReentrantLock();
 	private EventQueues.QueueType queueType;
 	private ScheduledExecutorService execs;
+	private int[] publishRetryIn;
 	String queueURI;
 	String subject;
 	String queue;
@@ -55,9 +57,10 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	private boolean observable;
 	private boolean isOpened;
 
-	NATSAbstractQueue(String queueURI, EventQueues.QueueType queueType) {
+	NATSAbstractQueue(String queueURI, EventQueues.QueueType queueType, int[] publishRetryIn) {
 		this.queueURI = queueURI;
 		this.queueType = queueType;
+		this.publishRetryIn = publishRetryIn;
 
 		// If queue specified (e.g. subject:queue) - split to subject & queue
 		if (queueURI.contains(":")) {
@@ -153,13 +156,34 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	@Override
 	public void publish(List<Message> messages) {
 		messages.forEach(message -> {
+			String payload = message.getPayload();
 			try {
-				String payload = message.getPayload();
 				publish(subject, payload.getBytes());
 				logger.info(String.format("Published message to %s: %s", subject, payload));
-			} catch (Exception ex) {
-				logger.error("Failed to publish message " + message.getPayload() + " to " + subject, ex);
-				throw new RuntimeException(ex);
+			} catch (Exception eo) {
+				logger.error(String.format("Failed to publish to %s: %s", subject, payload), eo);
+				if (ArrayUtils.isEmpty(publishRetryIn)) {
+					throw new RuntimeException(eo);
+				}
+				for (int i = 0; i < publishRetryIn.length; i++) {
+					try {
+						int delay = publishRetryIn[i];
+						logger.error(String.format("Publish retry in %s seconds for %s", delay, subject));
+
+						Thread.sleep(delay * 1000L);
+						publish(subject, payload.getBytes());
+						logger.info(String.format("Published message to %s: %s", subject, payload));
+
+						break;
+					} catch (Exception ex) {
+						logger.error(String.format("Failed to publish to %s: %s", subject, payload), ex);
+						// Latest attempt
+						if (i == (publishRetryIn.length - 1)) {
+							logger.error(String.format("Publish gave up for %s: %s", subject, payload));
+							throw new RuntimeException(ex.getMessage(), ex);
+						}
+					}
+				}
 			}
 		});
 	}
