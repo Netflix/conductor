@@ -197,7 +197,6 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 				execs.shutdownNow();
 				execs = null;
 			}
-			closeSubs();
 			closeConn();
 			isOpened = false;
 		} finally {
@@ -239,7 +238,6 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 		logger.error("Monitor invoked for " + queueURI);
 		mu.lock();
 		try {
-			closeSubs();
 			closeConn();
 
 			// Connect
@@ -273,8 +271,6 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	abstract void publish(String subject, byte[] data) throws Exception;
 
 	abstract void subscribe();
-
-	abstract void closeSubs();
 
 	abstract void closeConn();
 }
