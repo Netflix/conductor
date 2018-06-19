@@ -18,11 +18,13 @@ package com.netflix.conductor.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -305,27 +307,36 @@ public class ExecutionService {
 	public void removeWorkflow(String workflowId, boolean archiveWorkflow) throws Exception {
 		executionDAO.removeWorkflow(workflowId, archiveWorkflow);
 	}
-
+	
 	public SearchResult<WorkflowSummary> search(String query, String freeText, int start, int size, List<String> sortOptions) {
-		
+
 		SearchResult<String> result = indexer.searchWorkflows(query, freeText, start, size, sortOptions);
 		List<WorkflowSummary> workflows = result.getResults().stream().parallel().map(workflowId -> {
 			try {
-				
+
 				WorkflowSummary summary = new WorkflowSummary(executionDAO.getWorkflow(workflowId, false));
 				return summary;
-				
+
 			} catch(Exception e) {
 				logger.error(e.getMessage(), e);
 				return null;
 			}
 		}).filter(Objects::nonNull).collect(Collectors.toList());
-		int missing = result.getResults().size() - workflows.size();
+
+		//Search again to filter out some workflows that might have been in flux state before.
+		//It's possible that during the first search ES had some workflows that were already completed in dynamo but
+		//still had a 'RUNNING' state in ES
+		SearchResult<String> repeatedResult = indexer.searchWorkflows(query, freeText, start, size, sortOptions);
+		Set<String> workflowIds = new HashSet<>(repeatedResult.getResults());
+		List<WorkflowSummary> filteredWorkflows = workflows.stream().filter(workflow->workflowIds.contains(workflow.getWorkflowId())).collect(Collectors.toList());
+
+		int missing = result.getResults().size() - filteredWorkflows.size();
 		long totalHits = result.getTotalHits() - missing;
-		SearchResult<WorkflowSummary> sr = new SearchResult<>(totalHits, workflows);
-		
+		SearchResult<WorkflowSummary> sr = new SearchResult<>(totalHits, filteredWorkflows);
+
 		return sr;
 	}
+
 
 	public SearchResult<WorkflowSummary> searchWorkflowByTasks(String query, String freeText, int start, int size, List<String> sortOptions) {
 		SearchResult<TaskSummary> taskSummarySearchResult = searchTasks(query, freeText, start, size, sortOptions);
