@@ -76,7 +76,7 @@ public class ScriptEvaluator {
 		if (result == null || result.isEmpty()) {
 			return null;
 		} else {
-			return result.get(0).textValue();
+			return result.get(0).asText();
 		}
 	}
 

@@ -12,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -81,24 +82,9 @@ public class FindUpdateAction implements JavaEventAction {
 					continue;
 				}
 
-				// Skip empty tasks
-				Map<String, Object> inputData = task.getInputData();
-				if (MapUtils.isEmpty(inputData)) {
-					continue;
-				}
-
-				// Skip task if it does not have ALL keys in the input parameters
-				boolean anyMissed = inputParameters.keySet().stream().anyMatch(item -> !inputData.containsKey(item));
-				if (anyMissed) {
-					continue;
-				}
-
-				// Skip if values do not match
-				boolean anyNotEqual = inputParameters.entrySet().stream().anyMatch(entry -> {
-					String value = inputData.get(entry.getKey()).toString();
-					return !entry.getValue().equalsIgnoreCase(value);
-				});
-				if (anyNotEqual) {
+				// Complex match - either legacy mode (compare maps) or the JQ expression against two maps
+				boolean matches = matches(task.getInputData(), inputParameters, findUpdate.getExpression());
+				if (!matches) {
 					continue;
 				}
 
@@ -126,5 +112,38 @@ public class FindUpdateAction implements JavaEventAction {
 		}
 
 		return output;
+	}
+
+	private boolean matches(Map<String, Object> task, Map<String, String> event, String expression) throws Exception {
+
+		// Use JQ expression
+		if (StringUtils.isNotEmpty(expression)) {
+			Map<String, Object> map = new HashMap<>();
+			map.put("task", task);
+			map.put("event", event);
+
+			String result = ScriptEvaluator.evalJq(expression, map);
+			return "true".equals(result);
+		} else { // Legacy mode
+			// Skip empty tasks
+			if (MapUtils.isEmpty(task)) {
+				return false;
+			}
+
+			// Skip task if it does not have ALL keys in the input parameters
+			boolean anyMissed = event.keySet().stream().anyMatch(item -> !task.containsKey(item));
+			if (anyMissed) {
+				return false;
+			}
+
+			// Skip if values do not match
+			boolean anyNotEqual = event.entrySet().stream().anyMatch(entry -> {
+				Object value = task.get(entry.getKey());
+				return !entry.getValue().equals(value);
+			});
+
+			// anyNotEqual is true if any of values does not match. false means all match
+			return !anyNotEqual;
+		}
 	}
 }

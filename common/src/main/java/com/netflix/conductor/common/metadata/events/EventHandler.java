@@ -466,6 +466,7 @@ public class EventHandler {
 		private String workflowName;
 		private String status;
 		private String failedReason;
+		private String expression;
 		private Map<String, String> statuses = new HashMap<>();
 		private Map<String, String> inputParameters = new HashMap<>();
 
@@ -487,6 +488,14 @@ public class EventHandler {
 
 		public String getFailedReason() {
 			return failedReason;
+		}
+
+		public String getExpression() {
+			return expression;
+		}
+
+		public void setExpression(String expression) {
+			this.expression = expression;
 		}
 
 		public void setFailedReason(String failedReason) {
@@ -515,6 +524,7 @@ public class EventHandler {
 					"workflowName='" + workflowName + '\'' +
 					", status='" + status + '\'' +
 					", statuses=" + statuses +
+					", expression='" + expression + '\'' +
 					", failedReason='" + failedReason + '\'' +
 					", inputParameters='" + inputParameters + '\'' +
 					'}';
