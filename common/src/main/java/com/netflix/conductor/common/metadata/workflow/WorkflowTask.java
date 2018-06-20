@@ -66,6 +66,9 @@ public class WorkflowTask {
 
 	private Map<String, Object> eventMessages = new HashMap<>();
 
+	// Used by Event task type for now
+	private Map<String, Object> defaults = new HashMap<>();
+
 	private String type = Type.SIMPLE.name();
 
 	private String dynamicTaskNameParam;
@@ -389,6 +392,14 @@ public class WorkflowTask {
 	 */
 	public void setTimeOutWorkflow(SubWorkflowParams timeOutWorkflow) {
 		this.timeOutWorkflow = timeOutWorkflow;
+	}
+
+	public Map<String, Object> getDefaults() {
+		return defaults;
+	}
+
+	public void setDefaults(Map<String, Object> defaults) {
+		this.defaults = defaults;
 	}
 
 	private Collection<List<WorkflowTask>> children(){

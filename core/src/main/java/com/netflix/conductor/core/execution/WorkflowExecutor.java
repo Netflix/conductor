@@ -1177,10 +1177,22 @@ public class WorkflowExecutor {
 			// Get the 'start' or 'end' map
 			eventMap = (Map<String, Object>)eventMap.get(state.name());
 
-			ParametersUtils pu = new ParametersUtils();
 			Workflow workflow = edao.getWorkflow(task.getWorkflowInstanceId());
-			Map<String, Object> map = pu.getTaskInputV2(eventMap, workflow, task.getTaskId(), null);
-			sendMessage(map);
+
+			// Check preProcess map for JSON Path engine
+			Map<String, Object> preProcess = (Map<String, Object>)eventMap.get("defaults");
+			if (MapUtils.isNotEmpty(preProcess)) {
+				// Generate variables input
+				Map<String, Map<String, Object>> inputMap = pu.getInputMap(null, workflow, null, null);
+
+				// Replace preProcess map
+				preProcess = pu.replace(preProcess, inputMap);
+			}
+
+			// Feed preProcessed map as defaults so that already processed for JQ engine
+			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
+			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, task.getTaskId(), null, null);
+			sendMessage(doc);
 		} catch (Exception ex) {
 			logger.error("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 		}
@@ -1202,10 +1214,10 @@ public class WorkflowExecutor {
 			Map<String, Object> preProcess = (Map<String, Object>)eventMap.get("defaults");
 			if (MapUtils.isNotEmpty(preProcess)) {
 				// Generate variables input
-				Map<String, Map<String, Object>> doc = pu.getDoc(null, workflow, null, null);
+				Map<String, Map<String, Object>> inputMap = pu.getInputMap(null, workflow, null, null);
 
 				// Replace preProcess map
-				preProcess = pu.replace(preProcess, doc);
+				preProcess = pu.replace(preProcess, inputMap);
 			}
 
 			// Feed preProcessed map as defaults so that already processed for JQ engine
