@@ -71,7 +71,6 @@ public class EventProcessor {
 	
 	private ObjectMapper objectMapper;
 
-	private static final String className = EventProcessor.class.getName();
 
 	@Inject
 	public EventProcessor(ExecutionService executionService, MetadataService metadataService,
@@ -125,7 +124,6 @@ public class EventProcessor {
                 created.stream().filter(q -> q != null).forEach(queue -> listen(queue));
             }
         } catch (Exception e) {
-            Monitors.error(className, "event");
             logger.error(e.getMessage(), e);
         }
 	}

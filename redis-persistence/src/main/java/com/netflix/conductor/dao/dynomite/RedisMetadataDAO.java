@@ -51,7 +51,6 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	private final static String EVENT_HANDLERS = "EVENT_HANDLERS";
 	private final static String EVENT_HANDLERS_BY_EVENT = "EVENT_HANDLERS_BY_EVENT";
 	private final static String LATEST = "latest";
-    private static final String className = RedisMetadataDAO.class.getSimpleName();
 
 	private Map<String, TaskDef> taskDefCache = new HashMap<>();
 	
@@ -96,7 +95,6 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
             this.taskDefCache = map;
             logger.debug("Refreshed task defs " + this.taskDefCache.size());
         } catch (Exception e){
-            Monitors.error(className, "taskDefs");
             logger.error("refreshTaskDefs failed ", e);
         }
 	}
