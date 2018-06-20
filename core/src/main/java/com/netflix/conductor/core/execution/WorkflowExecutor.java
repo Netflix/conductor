@@ -1226,7 +1226,10 @@ public class WorkflowExecutor {
 			sendMessage(doc);
 		} catch (Exception ex) {
 			logger.error("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
-			throw new RuntimeException(ex.getMessage(), ex);
+			// Throw exception for start only
+			if (StartEndState.start.equals(state)) {
+				throw new RuntimeException(ex.getMessage(), ex);
+			}
 		}
 	}
 
