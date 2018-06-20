@@ -83,14 +83,14 @@ public class ParametersUtils {
 			inputParams.putAll(clone(taskDef.getInputTemplate()));
 		}
 
-		Map<String, Map<String, Object>> inputMap = getDoc(defaults, workflow, taskId, workflowTask);
+		Map<String, Map<String, Object>> inputMap = getInputMap(defaults, workflow, taskId, workflowTask);
 
 		Configuration option = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
 		DocumentContext io = JsonPath.parse(inputMap, option);
 		return replace(inputParams, io, taskId);
 	}
 
-	public Map<String, Map<String, Object>> getDoc(Map<String, Map<String, Object>> defaults, Workflow workflow, String taskId, WorkflowTask workflowTask) {
+	public Map<String, Map<String, Object>> getInputMap(Map<String, Map<String, Object>> defaults, Workflow workflow, String taskId, WorkflowTask workflowTask) {
 		Map<String, Map<String, Object>> inputMap = new HashMap<>();
 
 		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
