@@ -33,6 +33,7 @@ import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -519,9 +520,18 @@ public class DeciderService {
 				task = SystemTask.subWorkflowTask(workflow, taskId, taskToSchedule, input, workflowName, workflowVersion);
 				tasks.add(task);
 				break;
-			case EVENT:				
+			case EVENT:
+				Map<String, Object> preProcess = taskToSchedule.getDefaults();
+				if (MapUtils.isNotEmpty(preProcess)) {
+					// Generate variables input
+					Map<String, Map<String, Object>> inputMap = pu.getInputMap(null, workflow, taskId, taskToSchedule);
+					// Replace preProcess map
+					preProcess = pu.replace(preProcess, inputMap);
+				}
+				Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
+
 				taskToSchedule.getInputParameters().put("sink", taskToSchedule.getSink());
-				Map<String, Object> eventTaskInput = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, null, taskToSchedule);
+				Map<String, Object> eventTaskInput = pu.getTaskInputV2(taskToSchedule.getInputParameters(), defaults, workflow, taskId, null, taskToSchedule);
 				String sink = (String)eventTaskInput.get("sink");				
 				Task eventTask = SystemTask.eventTask(workflow, taskId, taskToSchedule, eventTaskInput, sink);
 				tasks.add(eventTask);
