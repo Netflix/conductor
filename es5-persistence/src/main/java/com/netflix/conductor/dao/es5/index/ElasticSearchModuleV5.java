@@ -18,18 +18,17 @@
  */
 package com.netflix.conductor.dao.es5.index;
 
-import java.net.InetAddress;
+import java.util.ArrayList;
 
 import javax.inject.Singleton;
 
 import com.netflix.conductor.dao.IndexDAO;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.netflix.conductor.core.config.Configuration;
@@ -45,28 +44,29 @@ public class ElasticSearchModuleV5 extends AbstractModule {
 	
 	@Provides
 	@Singleton
-	public Client getClient(Configuration config) throws Exception {
+	public RestHighLevelClient getClient(Configuration config) throws Exception {
 
 		String clusterAddress = config.getProperty("workflow.elasticsearch.url", "");
 		if(clusterAddress.equals("")) {
 			log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
 		}
 
-        Settings settings = Settings.builder()
-                .put("client.transport.ignore_cluster_name",true)
-                .put("client.transport.sniff", true)
-                .build();
+        Settings settings = Settings.builder().build();
 
-        TransportClient tc = new PreBuiltTransportClient(settings);
+        //TransportClient tc = new PreBuiltTransportClient(settings);
+        RestClient restClient = RestClient.builder().build();
+        CustomHighLevelRestClient highLevelClient = new CustomHighLevelRestClient(restClient);
         String[] hosts = clusterAddress.split(",");
+        ArrayList<HttpHost> hostArray = new ArrayList<>();
         for (String host : hosts) {
             String[] hostparts = host.split(":");
             String hostname = hostparts[0];
             int hostport = 9200;
             if (hostparts.length == 2) hostport = Integer.parseInt(hostparts[1]);
-            tc.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostname), hostport));
+            hostArray.add(new HttpHost(hostname, hostport, "https"));
         }
-        return tc;
+        restClient.setHosts(hostArray.toArray(new HttpHost[0]));
+        return highLevelClient;
     
     }
 
