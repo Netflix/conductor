@@ -162,6 +162,7 @@ job "conductor" {
         io_nats_streaming_url = "nats://events.service.<TLD>:4222"
         io_nats_streaming_clusterId = "events-streaming"
         io_nats_streaming_durableName = "conductor-server-<TLD>"
+        io_nats_streaming_publishRetryIn = "5,10,15"
 
         // Additional nats & asset modules
         conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule,com.netflix.conductor.contribs.AssetModule"

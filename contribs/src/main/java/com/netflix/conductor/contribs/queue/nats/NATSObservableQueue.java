@@ -35,8 +35,8 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 	private Subscription subs;
 	private Connection conn;
 
-	public NATSObservableQueue(ConnectionFactory factory, String queueURI) {
-		super(queueURI, EventQueues.QueueType.nats);
+	public NATSObservableQueue(ConnectionFactory factory, String queueURI, int[] delays) {
+		super(queueURI, EventQueues.QueueType.nats, delays);
 		this.fact = factory;
 		open();
 	}
@@ -92,20 +92,9 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 	}
 
 	@Override
-	public void closeSubs() {
-		if (subs != null) {
-			try {
-				subs.close();
-			} catch (Exception ex) {
-				logger.error("closeSubs failed with " + ex.getMessage() + " for " + queueURI, ex);
-			}
-			subs = null;
-		}
-	}
-
-	@Override
 	public void closeConn() {
 		if (conn != null) {
+			subs = null;
 			try {
 				conn.close();
 			} catch (Exception ex) {

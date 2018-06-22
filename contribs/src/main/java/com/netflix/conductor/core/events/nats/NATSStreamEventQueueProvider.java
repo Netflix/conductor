@@ -25,6 +25,7 @@ import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import io.nats.client.Nats;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * @author Oleksiy Lysak
@@ -43,6 +45,7 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 	private String durableName;
 	private String clusterId;
 	private String natsUrl;
+	private int[] publishRetryIn;
 
 	@Inject
 	public NATSStreamEventQueueProvider(Configuration config) {
@@ -53,8 +56,11 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 		durableName = config.getProperty("io.nats.streaming.durableName", null);
 		natsUrl = config.getProperty("io.nats.streaming.url", Nats.DEFAULT_URL);
 
+		String[] arr = config.getProperty("io.nats.streaming.publishRetryIn", "5,10,15").split(",");
+		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
+
 		logger.info("NATS Streaming clusterId=" + clusterId +
-				", natsUrl=" + natsUrl + ", durableName=" + durableName);
+				", natsUrl=" + natsUrl + ", durableName=" + durableName + ", publishRetryIn=" + ArrayUtils.toString(publishRetryIn));
 
 		EventQueues.registerProvider(QueueType.nats_stream, this);
 		logger.info("NATS Stream Event Queue Provider initialized...");
@@ -62,7 +68,8 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
-		NATSStreamObservableQueue queue = queues.computeIfAbsent(queueURI, q -> new NATSStreamObservableQueue(clusterId, natsUrl, durableName, queueURI));
+		NATSStreamObservableQueue queue = queues.computeIfAbsent(queueURI, q ->
+				new NATSStreamObservableQueue(clusterId, natsUrl, durableName, queueURI, publishRetryIn));
 		if (queue.isClosed()) {
 			queue.open();
 		}
