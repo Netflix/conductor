@@ -114,6 +114,12 @@ class WorkflowDetails extends Component {
     }
     function tableBody(tasks){
       let trs = [];
+      if (tasks.length === 0) {
+          let row = <tr>
+            <td colSpan='10'><center><span className="red">No data found</span></center></td>
+          </tr>;
+          trs.push(row);
+      }
       tasks.forEach(task => {
         let row = <tr>
                     <td>{task.seq}</td>

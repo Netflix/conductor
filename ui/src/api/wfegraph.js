@@ -8,9 +8,8 @@ class Workflow2Graph {
     return {edges: this.edges, vertices: this.vertices, id: wfe.workflowId};
   }
   _convert(wfe, meta) {
-
     let subworkflows = {};
-    let metaTasks = meta.tasks;
+    let metaTasks = meta !== undefined && meta.tasks !== undefined ? meta.tasks : [];
     metaTasks.push({type:'final', name:'final', label: '', taskReferenceName: 'final', system: true});
     metaTasks.unshift({type:'start', name:'start', label: '', taskReferenceName: 'start', system: true});
 
