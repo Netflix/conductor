@@ -53,7 +53,6 @@ public class ElasticSearchModuleV5 extends AbstractModule {
 
         Settings settings = Settings.builder().build();
 
-        //TransportClient tc = new PreBuiltTransportClient(settings);
         String[] hosts = clusterAddress.split(",");
         ArrayList<HttpHost> hostArray = new ArrayList<>();
         for (String host : hosts) {
