@@ -54,7 +54,6 @@ public class ElasticSearchModuleV5 extends AbstractModule {
         Settings settings = Settings.builder().build();
 
         //TransportClient tc = new PreBuiltTransportClient(settings);
-        RestClient restClient = RestClient.builder().build();
         String[] hosts = clusterAddress.split(",");
         ArrayList<HttpHost> hostArray = new ArrayList<>();
         for (String host : hosts) {
@@ -64,7 +63,8 @@ public class ElasticSearchModuleV5 extends AbstractModule {
             if (hostparts.length == 2) hostport = Integer.parseInt(hostparts[1]);
             hostArray.add(new HttpHost(hostname, hostport, "https"));
         }
-        restClient.setHosts(hostArray.toArray(new HttpHost[0]));
+        RestClient restClient = RestClient.builder(hostArray.toArray(new HttpHost[0])).build();
+        //restClient.setHosts(hostArray.toArray(new HttpHost[0]));
         CustomHighLevelRestClient highLevelClient = new CustomHighLevelRestClient(restClient);
         return highLevelClient;
 
