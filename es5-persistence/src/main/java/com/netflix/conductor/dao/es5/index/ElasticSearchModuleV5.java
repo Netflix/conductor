@@ -73,6 +73,6 @@ public class ElasticSearchModuleV5 extends AbstractModule {
 	@Override
 	protected void configure() {
         bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
-        bind(CustomHighLevelRestClient.class);
+        bind(RestHighLevelClient.class).to(CustomHighLevelRestClient.class);
 	}
 }
