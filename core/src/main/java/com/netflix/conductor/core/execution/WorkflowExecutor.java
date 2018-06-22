@@ -129,7 +129,10 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
-
+		// If no predefined workflowId - generate one
+		if (StringUtils.isEmpty(workflowId)) {
+			workflowId = IDGenerator.generate();
+		}
 		try {
 			if(input == null){
 				throw new ApplicationException(Code.INVALID_INPUT, "NULL input passed when starting workflow");
@@ -151,10 +154,6 @@ public class WorkflowExecutor {
 					.collect(Collectors.toSet());
 			if(!missingTaskDefs.isEmpty()) {
 				throw new ApplicationException(Code.INVALID_INPUT, "Cannot find the task definitions for the following tasks used in workflow: " + missingTaskDefs);
-			}
-			// If no predefined workflowId - generate one
-			if (StringUtils.isEmpty(workflowId)) {
-				workflowId = IDGenerator.generate();
 			}
 
 			// Persist the Workflow
@@ -208,6 +207,7 @@ public class WorkflowExecutor {
 			return workflowId;
 
 		}catch (Exception e) {
+			edao.removeWorkflow(workflowId);
 			Monitors.recordWorkflowStartError(name);
 			throw e;
 		}
@@ -1226,6 +1226,10 @@ public class WorkflowExecutor {
 			sendMessage(doc);
 		} catch (Exception ex) {
 			logger.error("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
+			// Throw exception for start only
+			if (StartEndState.start.equals(state)) {
+				throw new RuntimeException(ex.getMessage(), ex);
+			}
 		}
 	}
 
