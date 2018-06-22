@@ -22,6 +22,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.run.Workflow;
@@ -205,7 +206,7 @@ public class ParametersUtils {
         Object[] convertedValues = new Object[values.length];
         for (int i = 0; i < values.length; i++) {
             convertedValues[i] = values[i];
-            if (values[i].startsWith("${") && values[i].endsWith("}")) {
+            if (values[i] != null && values[i].startsWith("${") && values[i].endsWith("}")) {
                 String paramPath = values[i].substring(2, values[i].length() - 1);
                 if (contains(paramPath)) {
                     String sysValue = getSystemParametersValue(paramPath, taskId);
@@ -214,7 +215,11 @@ public class ParametersUtils {
                     }
 
                 } else {
-                    convertedValues[i] = documentContext.read(paramPath);
+                    try {
+                        convertedValues[i] = documentContext.read(paramPath);
+                    } catch (Exception e) {
+                        convertedValues[i] = null;
+                    }
                 }
 
             }
