@@ -45,7 +45,7 @@ public class EmbeddedElasticSearchV5 {
 
 	private static final Logger logger = LoggerFactory.getLogger(EmbeddedElasticSearchV5.class);
 
-	public static final int DEFAULT_PORT = 9200;
+	public static final int DEFAULT_PORT = 8443;
 	public static final String DEFAULT_CLUSTER_NAME = "elasticsearch_test";
 	public static final String DEFAULT_HOST = "127.0.0.1";
 	public static final String DEFAULT_SETTING_FILE = "embedded-es.yml";

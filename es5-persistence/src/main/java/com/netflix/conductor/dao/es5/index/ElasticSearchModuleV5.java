@@ -61,10 +61,10 @@ public class ElasticSearchModuleV5 extends AbstractModule {
             String hostname = hostparts[0];
             int hostport = 9200;
             if (hostparts.length == 2) hostport = Integer.parseInt(hostparts[1]);
-            hostArray.add(new HttpHost(hostname, hostport, "https"));
+            String scheme = (hostport == 443) ? "https":"http";
+            hostArray.add(new HttpHost(hostname, hostport, scheme));
         }
         RestClient restClient = RestClient.builder(hostArray.toArray(new HttpHost[0])).build();
-        //restClient.setHosts(hostArray.toArray(new HttpHost[0]));
         CustomHighLevelRestClient highLevelClient = new CustomHighLevelRestClient(restClient);
         return highLevelClient;
 
