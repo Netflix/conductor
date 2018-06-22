@@ -26,7 +26,7 @@ public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO {
     public static final String PROP_TASKDEF_CACHE_REFRESH = "conductor.taskdef.cache.refresh.time.seconds";
     public static final int DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS = 60;
     private final ConcurrentHashMap<String, TaskDef> taskDefCache = new ConcurrentHashMap<>();
-
+    private static final String className = MySQLMetadataDAO.class.getSimpleName();
     @Inject
     public MySQLMetadataDAO(ObjectMapper om, DataSource dataSource, Configuration config) {
         super(om, dataSource);
@@ -379,7 +379,8 @@ public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO {
                 }
             });
         } catch (Exception e){
-            logger.error("refreshTaskDefs failed ", e);
+            Monitors.error(className, "refreshTaskDefs");
+            logger.error("refresh TaskDefs failed ", e);
         }
     }
 

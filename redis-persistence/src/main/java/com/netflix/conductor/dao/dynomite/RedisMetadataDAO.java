@@ -53,7 +53,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	private final static String LATEST = "latest";
 
 	private Map<String, TaskDef> taskDefCache = new HashMap<>();
-	
+	private static final String className = RedisMetadataDAO.class.getSimpleName();
 	@Inject
 	public RedisMetadataDAO(DynoProxy dynoClient, ObjectMapper objectMapper, Configuration config) {
 		super(dynoClient, objectMapper, config);
@@ -95,7 +95,8 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
             this.taskDefCache = map;
             logger.debug("Refreshed task defs " + this.taskDefCache.size());
         } catch (Exception e){
-            logger.error("refreshTaskDefs failed ", e);
+			Monitors.error(className, "refreshTaskDefs");
+            logger.error("refresh TaskDefs failed ", e);
         }
 	}
 	

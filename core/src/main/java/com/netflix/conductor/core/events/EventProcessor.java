@@ -71,6 +71,7 @@ public class EventProcessor {
 	
 	private ObjectMapper objectMapper;
 
+	private static final String className = EventProcessor.class.getSimpleName();
 
 	@Inject
 	public EventProcessor(ExecutionService executionService, MetadataService metadataService,
@@ -124,7 +125,8 @@ public class EventProcessor {
                 created.stream().filter(q -> q != null).forEach(queue -> listen(queue));
             }
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+			Monitors.error(className, "refresh");
+            logger.error("refresh event queues failed", e);
         }
 	}
 	
