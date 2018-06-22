@@ -44,7 +44,7 @@ public class ElasticSearchModuleV5 extends AbstractModule {
 	
 	@Provides
 	@Singleton
-	public RestHighLevelClient getClient(Configuration config) throws Exception {
+	public CustomHighLevelRestClient getClient(Configuration config) throws Exception {
 
 		String clusterAddress = config.getProperty("workflow.elasticsearch.url", "");
 		if(clusterAddress.equals("")) {
