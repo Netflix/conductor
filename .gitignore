@@ -9,6 +9,7 @@ build
 client/python/conductor.egg-info
 *.pyc
 .classpath
+.DS_Store
 docs/site
 site
 ui/.settings

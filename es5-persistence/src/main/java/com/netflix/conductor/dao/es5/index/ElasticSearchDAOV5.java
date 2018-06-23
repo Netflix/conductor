@@ -36,26 +36,25 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.dao.es5.index.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.ResourceAlreadyExistsException;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.entity.InputStreamEntity;
 import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.get.GetField;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -63,22 +62,18 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -119,7 +114,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
 	private ObjectMapper objectMapper;
 	
-	private Client elasticSearchClient;
+	private CustomHighLevelRestClient elasticSearchClient;
 	
 	
 	private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
@@ -133,7 +128,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 	
 	@Inject
-	public ElasticSearchDAOV5(Client elasticSearchClient, Configuration config, ObjectMapper objectMapper) {
+	public ElasticSearchDAOV5(CustomHighLevelRestClient elasticSearchClient, Configuration config, ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
 		this.elasticSearchClient = elasticSearchClient;
 		this.indexName = config.getProperty("workflow.elasticsearch.index.name", null);
@@ -163,14 +158,12 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 		this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
 
 		try {
-			elasticSearchClient.admin().indices().prepareGetIndex().addIndices(logIndexName).execute().actionGet();
-		} catch (IndexNotFoundException infe) {
+			elasticSearchClient.getLowLevelRestClient().performRequest("GET","/" + logIndexName);
+		} catch (Exception e) {
 			try {
-				elasticSearchClient.admin().indices().prepareCreate(logIndexName).execute().actionGet();
-			} catch (ResourceAlreadyExistsException ilee) {
-
-			} catch (Exception e) {
-				logger.error("Failed to update log index name: {}", logIndexName, e);
+				elasticSearchClient.getLowLevelRestClient().performRequest("PUT", "/" + logIndexName);
+			} catch (Exception createException) {
+				logger.error("Failed to update log index name: {}", logIndexName, createException);
 			}
 		}
 	}
@@ -181,37 +174,39 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 	private void initIndex() throws Exception {
 
 		//0. Add the index template
-		GetIndexTemplatesResponse result = elasticSearchClient.admin().indices().prepareGetTemplates("wfe_template").execute().actionGet();
-		if(result.getIndexTemplates().isEmpty()) {
+		Response response;
+		try {
+			elasticSearchClient.getLowLevelRestClient().performRequest("GET","/_template/wfe_template");
+		} catch (ResponseException re) {
 			logger.info("Creating the index template 'wfe_template'");
 			InputStream stream = ElasticSearchDAOV5.class.getResourceAsStream("/template.json");
-			byte[] templateSource = IOUtils.toByteArray(stream);
-			
+			HttpEntity entity = new InputStreamEntity(stream);
+
 			try {
-				elasticSearchClient.admin().indices().preparePutTemplate("wfe_template").setSource(templateSource, XContentType.JSON).execute().actionGet();
+				elasticSearchClient.getLowLevelRestClient().performRequest("PUT","/_template/wfe_template", Collections.emptyMap(), entity);
 			}catch(Exception e) {
 				logger.error("Failed to init index template", e);
 			}
 		}
-	
+
 		//1. Create the required index
 		try {
-			elasticSearchClient.admin().indices().prepareGetIndex().addIndices(indexName).execute().actionGet();
-		}catch(IndexNotFoundException infe) {
+			elasticSearchClient.getLowLevelRestClient().performRequest("GET","/" + indexName);
+		}catch(ResponseException re) {
 			try {
-				elasticSearchClient.admin().indices().prepareCreate(indexName).execute().actionGet();
-			}catch(ResourceAlreadyExistsException done) {}
+				elasticSearchClient.getLowLevelRestClient().performRequest("PUT","/" + indexName);
+			}catch(ResponseException done) {}
 		}
 				
 		//2. Mapping for the workflow document type
-		GetMappingsResponse response = elasticSearchClient.admin().indices().prepareGetMappings(indexName).addTypes(WORKFLOW_DOC_TYPE).execute().actionGet();
-		if(response.mappings().isEmpty()) {
+		try {
+			elasticSearchClient.getLowLevelRestClient().performRequest("GET","/" + indexName + "/_mapping/" + WORKFLOW_DOC_TYPE);
+		} catch(ResponseException re) {
 			logger.info("Adding the workflow type mappings");
 			InputStream stream = ElasticSearchDAOV5.class.getResourceAsStream("/wfe_type.json");
-			byte[] bytes = IOUtils.toByteArray(stream);
-			String source = new String(bytes);
+			HttpEntity entity = new InputStreamEntity(stream);
 			try {
-				elasticSearchClient.admin().indices().preparePutMapping(indexName).setType(WORKFLOW_DOC_TYPE).setSource(source).execute().actionGet();
+				elasticSearchClient.getLowLevelRestClient().performRequest("PUT","/" + indexName + "/_mapping/" + WORKFLOW_DOC_TYPE,Collections.emptyMap(),entity);
 			}catch(Exception e) {
 				logger.error("Failed to init index mappings", e);
 			}
@@ -272,13 +267,22 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 			return;
 		}
 		try {
-			BulkRequestBuilder bulkRequestBuilder = elasticSearchClient.prepareBulk();
+			BulkRequest bulkRequest = new BulkRequest();
+			StringBuilder sb = new StringBuilder();
 			for (TaskExecLog log : taskExecLogs) {
 				IndexRequest request = new IndexRequest(logIndexName, LOG_DOC_TYPE);
 				request.source(objectMapper.writeValueAsBytes(log), XContentType.JSON);
-				bulkRequestBuilder.add(request);
+				bulkRequest.add(request);
 			}
-			new RetryUtil<BulkResponse>().retryOnException(() -> bulkRequestBuilder.execute().actionGet(), null ,
+			new RetryUtil<BulkResponse>().retryOnException(() -> {
+						try {
+							return elasticSearchClient.bulk(bulkRequest,new Header[0]);
+						} catch (IOException e) {
+							logger.error("indexing error for dock_type task in retry loop", e);
+							//need unchecked exception here for the retry
+							throw new RuntimeException();
+						}
+					}, null ,
 					BulkResponse::hasFailures, RETRY_COUNT, "Indexing all execution logs into doc_type task", "addTaskExecutionLogs");
 		} catch (Throwable e) {
 			List<String> taskIds = taskExecLogs.stream().map(TaskExecLog::getTaskId).collect(Collectors.toList());
@@ -300,9 +304,12 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 			BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
 			QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery("*");
 			BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
-
-			final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(indexName).setQuery(fq).setTypes(TASK_DOC_TYPE);
-			SearchResponse response = srb.execute().actionGet();
+			SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+			sourceBuilder.query(fq);
+			SearchRequest searchRequest = new SearchRequest(indexName);
+			searchRequest.types(TASK_DOC_TYPE);
+			searchRequest.source(sourceBuilder);
+			SearchResponse response = elasticSearchClient.search(searchRequest,new Header[0]);
 			SearchHit[] hits = response.getHits().getHits();
 			List<TaskExecLog> logs = new ArrayList<>(hits.length);
 			for(SearchHit hit : hits) {
@@ -330,7 +337,15 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 		IndexRequest request = new IndexRequest(logIndexName, MSG_DOC_TYPE);
 		request.source(doc);
 		try {
-			new RetryUtil<>().retryOnException(() -> elasticSearchClient.index(request).actionGet(), null,
+			new RetryUtil<>().retryOnException(() -> {
+						try {
+							return elasticSearchClient.index(request);
+						} catch (IOException e) {
+							logger.error("Error indexing document for docType message", e);
+							//need unchecked exception here for the retry
+							throw new RuntimeException();
+						}
+					}, null,
 					null, RETRY_COUNT, "Indexing document in  for docType: message", "addMessage");
 		} catch (Throwable e) {
 			logger.error("Failed to index message: {}", message.getId(), e);
@@ -359,7 +374,14 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
 	private void updateWithRetry(UpdateRequest request, String operationDescription) {
 		try {
-			new RetryUtil<UpdateResponse>().retryOnException(() -> elasticSearchClient.update(request).actionGet(), null,
+			new RetryUtil<UpdateResponse>().retryOnException(() -> {
+						try {
+							return elasticSearchClient.update(request);
+						} catch (IOException e) {
+							e.printStackTrace();
+							return null;
+						}
+					}, null,
 					null, RETRY_COUNT,  operationDescription, "updateWithRetry");
 		} catch (Exception e) {
 			Monitors.error(className, "index");
@@ -391,7 +413,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 	public void removeWorkflow(String workflowId) {
 		try {
 			DeleteRequest request = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
-			DeleteResponse response = elasticSearchClient.delete(request).actionGet();
+			DeleteResponse response = elasticSearchClient.delete(request);
 			if (response.getResult() == DocWriteResponse.Result.DELETED) {
 				logger.error("Index removal failed - document not found by id: {}", workflowId);
 			}
@@ -417,7 +439,15 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 				.collect(Collectors.toMap(i -> keys[i], i -> values[i]));
 		request.doc(source);
 		logger.debug("Updating workflow {} with {}", workflowInstanceId, source);
-		new RetryUtil<>().retryOnException(() -> elasticSearchClient.update(request), null, null, RETRY_COUNT,
+		new RetryUtil<>().retryOnException(() -> {
+					try {
+						return elasticSearchClient.update(request);
+					} catch (IOException e) {
+						logger.error("Error in update for type {}", WORKFLOW_DOC_TYPE);
+						//Need unchecked exception here
+						throw new RuntimeException();
+					}
+				}, null, null, RETRY_COUNT,
 				"Updating index for doc_type workflow", "updateWorkflow");
 	}
 
@@ -430,7 +460,12 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 	public String get(String workflowInstanceId, String fieldToGet) {
 		Object value = null;
 		GetRequest request = new GetRequest(indexName, WORKFLOW_DOC_TYPE, workflowInstanceId).storedFields(fieldToGet);
-		GetResponse response = elasticSearchClient.get(request).actionGet();
+		GetResponse response = null;
+		try {
+			response = elasticSearchClient.get(request);
+		} catch (IOException e) {
+			logger.error("Error in get for type {}", WORKFLOW_DOC_TYPE);
+		}
 		Map<String, GetField> fields = response.getFields();
 		if(fields == null) {
 			return null;
@@ -453,7 +488,14 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 		BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
 		QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(freeTextQuery);
 		BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
-		final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(indexName).setQuery(fq).setTypes(docType).storedFields("_id").setFrom(start).setSize(size);
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.query(fq);
+		sourceBuilder.storedField("_id");
+		sourceBuilder.from(start);
+		sourceBuilder.size(size);
+
+		SearchRequest searchRequest = new SearchRequest(indexName);
+		searchRequest.types(docType);
 		if(sortOptions != null){
 			sortOptions.forEach(sortOption -> {
 				SortOrder order = SortOrder.ASC;
@@ -463,11 +505,17 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 					field = sortOption.substring(0, indx);
 					order = SortOrder.valueOf(sortOption.substring(indx+1));
 				}
-				srb.addSort(field, order);
+				sourceBuilder.sort(field, order);
 			});
 		}
+		searchRequest.source(sourceBuilder);
 		List<String> result = new LinkedList<String>();
-		SearchResponse response = srb.get();
+		SearchResponse response = new SearchResponse();
+		try {
+			response = elasticSearchClient.search(searchRequest,new Header[0]);
+		} catch (IOException e) {
+			logger.error("Error searching",e);
+		}
 		response.getHits().forEach(hit -> {
 			result.add(hit.getId());
 		});
@@ -483,12 +531,19 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 				.should(QueryBuilders.termQuery("status", "FAILED"))
 				.mustNot(QueryBuilders.existsQuery("archived"))
 				.minimumShouldMatch(1);
-		SearchRequestBuilder s = elasticSearchClient.prepareSearch(indexName)
-				.setTypes("workflow")
-				.setQuery(q)
-				.setSize(1000);
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.query(q);
+		sourceBuilder.size(1000);
+		SearchRequest searchRequest = new SearchRequest(indexName);
+		searchRequest.types("workflow");
+		searchRequest.source(sourceBuilder);
 
-		SearchResponse response = s.execute().actionGet();
+		SearchResponse response = null;
+		try {
+			response = elasticSearchClient.search(searchRequest, new Header[0]);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		SearchHits hits = response.getHits();
 		List<String> ids = new LinkedList<>();
 		for (SearchHit hit : hits.getHits()) {
