@@ -57,7 +57,9 @@ public class End2EndTests {
 		System.setProperty("EC2_AVAILABILITY_ZONE", "us-east-1c");
 		System.setProperty("workflow.elasticsearch.url", "localhost:9300");
 		System.setProperty("workflow.elasticsearch.index.name", "conductor");
+		System.setProperty("workflow.namespace.prefix", "integration-test");
 		System.setProperty("db", "memory");
+		System.setProperty("workflow.elasticsearch.version", "5");
 	}
 	
 	private static TaskClient tc;
@@ -67,7 +69,7 @@ public class End2EndTests {
 	
 	@BeforeClass
 	public static void setup() throws Exception {
-		
+
 		ConductorServer server = new ConductorServer(new ConductorConfig());
 		server.start(8080, false);
 		
@@ -151,7 +153,7 @@ public class End2EndTests {
 		
 		task.getOutputData().put("key1", "value1");
 		task.setStatus(Status.COMPLETED);
-		tc.updateTask(new TaskResult(task));
+		tc.updateTask(new TaskResult(task), task.getTaskType());
 		
 		polled = tc.batchPollTasksByTaskType(t0.getName(), "test", 1, 100);
 		assertNotNull(polled);

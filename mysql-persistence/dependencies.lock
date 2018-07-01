@@ -4,7 +4,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -56,7 +56,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -81,10 +81,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
@@ -102,7 +98,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -154,7 +150,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -179,10 +175,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
@@ -200,7 +192,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -252,7 +244,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -277,10 +269,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
@@ -298,7 +286,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -350,7 +338,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -375,10 +363,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
@@ -396,7 +380,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -448,7 +432,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -473,10 +457,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
@@ -506,7 +486,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -558,7 +538,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -587,10 +567,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.4"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
@@ -624,7 +600,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -676,7 +652,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -705,10 +681,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.4"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
@@ -742,7 +714,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -794,7 +766,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -823,10 +795,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.4"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
@@ -860,7 +828,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.8.1"
+            "locked": "2.7.5"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -912,7 +880,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "0.40.0"
+            "locked": "0.68.0"
         },
         "com.zaxxer:HikariCP": {
             "locked": "2.6.3",
@@ -941,10 +909,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.4"
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "2.4.6",
-            "requested": "2.4.6"
         },
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",

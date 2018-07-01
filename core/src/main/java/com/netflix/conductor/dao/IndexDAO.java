@@ -15,15 +15,15 @@
  */
 package com.netflix.conductor.dao;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 
@@ -163,5 +163,22 @@ public interface IndexDAO {
 	 * @param msg Message
 	 */
 	void addMessage(String queue, Message msg);
+
+	/**
+	 * Search for Workflows completed or failed beyond archiveTtlDays
+	 * @param indexName Name of the index to search
+	 * @param archiveTtlDays Archival Time to Live
+	 * @return List of worlflow Ids matching the pattern
+	 */
+	List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays);
+
+	/**
+	 * Search for RUNNING workflows changed in the last lastModifiedHoursAgoFrom to lastModifiedHoursAgoTo hours
+	 * @param lastModifiedHoursAgoFrom - last updated date should be lastModifiedHoursAgoFrom hours ago or later
+	 * @param lastModifiedHoursAgoTo - last updated date should be lastModifiedHoursAgoTo hours ago or earlier
+	 * 	 *
+	 * @return  List of workflow Ids matching the pattern
+	 */
+	List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo);
 
 }
