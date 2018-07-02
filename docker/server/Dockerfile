@@ -1,7 +1,7 @@
 #
 # conductor:server - Netflix conductor server
 #
-FROM java:8-jre-alpine
+FROM openjdk:8-jre-slim
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
