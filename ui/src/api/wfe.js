@@ -10,6 +10,7 @@ import identity from "lodash/identity";
 const router = new Router();
 const baseURL = process.env.WF_SERVER;
 const baseURL2 = baseURL + 'workflow/';
+const baseURL2ByTasks = baseURL2 + 'search-by-task';
 const baseURLMeta = baseURL + 'metadata/';
 const baseURLTask = baseURL + 'tasks/';
 
@@ -48,6 +49,38 @@ router.get('/', async (req, res, next) => {
 
 const LOG_DATE_FORMAT = 'MM/DD/YY, HH:mm:ss:SSS';
 
+router.get('/search-by-task/:taskId', async (req, res, next) => {
+  try {
+
+    let freeText = [];
+    if(req.query.freeText != '') {
+      freeText.push(req.params.taskId);
+    }else {
+      freeText.push('*');
+    }
+
+    let h = '-1';
+    if(req.query.h !== undefined && req.query.h != 'undefined' && req.query.h != ''){
+      h = req.query.h;
+    }
+    if(h != '-1'){
+      freeText.push('startTime:[now-' + h + 'h TO now]');
+    }
+    let start = 0;
+    if(!isNaN(req.query.start)){
+      start = req.query.start;
+    }
+
+    let query = req.query.q || "";
+    const url = baseURL2 + 'search-by-tasks?size=100&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start;
+    const result = await http.get(url);
+    const hits = result.results;
+    res.status(200).send({result: {hits:hits, totalHits: result.totalHits}});
+  } catch (err) {
+    next(err);
+  }
+})
+
 router.get('/id/:workflowId', async (req, res, next) => {
     try {
         const result = await http.get(baseURL2 + req.params.workflowId + '?includeTasks=true');
@@ -55,11 +88,7 @@ router.get('/id/:workflowId', async (req, res, next) => {
 
         const subs = filter(identity)(map(task => {
             if (task.taskType === 'SUB_WORKFLOW') {
-                let subWorkflowId = task.outputData && task.outputData.subWorkflowId;
-
-                if (subWorkflowId == null) {
-                    subWorkflowId = task.inputData.subWorkflowId;
-                }
+                const subWorkflowId = task.inputData && task.inputData.subWorkflowId;
 
                 if (subWorkflowId != null) {
                     return {
@@ -74,10 +103,8 @@ router.get('/id/:workflowId', async (req, res, next) => {
 
         result.tasks.forEach(task => {
             if (task.taskType === 'SUB_WORKFLOW') {
-                let subWorkflowId = task.outputData && task.outputData.subWorkflowId;
-                if (subWorkflowId == null) {
-                    subWorkflowId = task.inputData.subWorkflowId;
-                }
+                const subWorkflowId = task.inputData && task.inputData.subWorkflowId;
+
                 if (subWorkflowId != null) {
                     subs.push({
                         name: task.inputData.subWorkflowName,
