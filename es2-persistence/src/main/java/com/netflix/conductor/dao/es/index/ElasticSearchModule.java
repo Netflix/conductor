@@ -50,7 +50,7 @@ public class ElasticSearchModule extends AbstractModule {
 			log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
 		}
 		
-    	Settings.Builder settings = Settings.settingsBuilder();
+    	Settings.Builder settings = Settings.builder();
         settings.put("client.transport.ignore_cluster_name", true);
         settings.put("client.transport.sniff", true);
         
