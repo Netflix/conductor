@@ -207,7 +207,7 @@ public class WorkflowExecutor {
 			return workflowId;
 
 		}catch (Exception e) {
-            removeQuietly(workflowId);
+			removeQuietly(workflowId);
 			Monitors.recordWorkflowStartError(name);
 			throw e;
 		}
