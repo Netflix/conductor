@@ -207,7 +207,7 @@ public class WorkflowExecutor {
 			return workflowId;
 
 		}catch (Exception e) {
-			edao.removeWorkflow(workflowId);
+            removeQuietly(workflowId);
 			Monitors.recordWorkflowStartError(name);
 			throw e;
 		}
@@ -1337,4 +1337,11 @@ public class WorkflowExecutor {
 			queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
 		}
 	}
+
+	private void removeQuietly(String workflowId) {
+        try {
+            edao.removeWorkflow(workflowId);
+        } catch (Exception ignore) {
+        }
+    }
 }
