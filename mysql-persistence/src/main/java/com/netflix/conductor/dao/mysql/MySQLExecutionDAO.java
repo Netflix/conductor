@@ -714,6 +714,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
                     q -> q.addParameter(eventExecution.getName()).addParameter(eventExecution.getEvent())
                             .addParameter(eventExecution.getMessageId()).addParameter(eventExecution.getId())
                             .addJsonParameter(eventExecution).executeUpdate());
+            return true;
         }
         return false;
     }
