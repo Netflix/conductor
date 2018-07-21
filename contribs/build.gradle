@@ -13,6 +13,8 @@ dependencies {
 
 	compile "io.nats:java-nats-streaming:${revNatsStreaming}"
 
+	compile "org.apache.kafka:kafka-clients:${revKafkaClient}"
+
 	provided "javax.ws.rs:jsr311-api:${revJsr311Api}"
 	provided "io.swagger:swagger-jaxrs:${revSwagger}"
 
