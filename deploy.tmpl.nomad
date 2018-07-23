@@ -89,7 +89,7 @@ job "conductor" {
         change_signal = "SIGINT"
       }
       resources {
-        cpu    = 128 # MHz
+        cpu    = 256 # MHz
         memory = 512 # MB
         network {
           mbits = 4
