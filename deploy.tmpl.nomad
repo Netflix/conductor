@@ -375,7 +375,7 @@ job "conductor" {
 
       resources {
         cpu    = 256  # MHz
-        memory = 1024 # MB
+        memory = 2048 # MB
         network {
           mbits = 4
           port "http" {}
