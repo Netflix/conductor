@@ -18,29 +18,20 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.*;
 
 /**
  * @author Viren
@@ -60,7 +51,9 @@ public class SystemTaskWorkerCoordinator {
 	private int workerQueueSize;
 	
 	private int pollCount;
-	
+
+	private long pollFrequency;
+
 	private LinkedBlockingQueue<Runnable> workerQueue;
 	
 	private int unackTimeout;
@@ -81,6 +74,7 @@ public class SystemTaskWorkerCoordinator {
 		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
 		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 5);
 		this.pollCount = config.getIntProperty("workflow.system.task.worker.poll.count", 5);
+		this.pollFrequency = config.getIntProperty("workflow.system.task.worker.poll.frequency", 500);
 		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
 		this.workerQueue = new LinkedBlockingQueue<Runnable>(workerQueueSize);
 		if(threadCount > 0) {
@@ -117,7 +111,7 @@ public class SystemTaskWorkerCoordinator {
 	}
 	
 	private void listen(WorkflowSystemTask systemTask) {
-		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, 500, TimeUnit.MILLISECONDS);
+		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, pollFrequency, TimeUnit.MILLISECONDS);
 		logger.info("Started listening {}", systemTask.getName());
 	}
 

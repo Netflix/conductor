@@ -49,6 +49,7 @@ public class WorkflowSweeper {
     private QueueDAO queues;
 
     private int executorThreadPoolSize;
+    private long sweeperFrequency;
 
     private static final String className = WorkflowSweeper.class.getSimpleName();
 
@@ -57,6 +58,7 @@ public class WorkflowSweeper {
         this.config = config;
         this.queues = queues;
         this.executorThreadPoolSize = config.getIntProperty("workflow.sweeper.thread.count", 5);
+        this.sweeperFrequency = config.getIntProperty("workflow.sweeper.frequency", 500);
         if (this.executorThreadPoolSize > 0) {
             this.es = Executors.newFixedThreadPool(executorThreadPoolSize);
             init(executor);
@@ -88,7 +90,7 @@ public class WorkflowSweeper {
 
             }
 
-        }, 500, 500, TimeUnit.MILLISECONDS);
+        }, 500, sweeperFrequency, TimeUnit.MILLISECONDS);
     }
 
     public void sweep(List<String> workflowIds, WorkflowExecutor executor) throws Exception {
