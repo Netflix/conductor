@@ -154,8 +154,8 @@ job "conductor" {
 
         // Elasticsearch settings
         workflow_elasticsearch_mode = "elasticsearch"
-        workflow_elasticsearch_service = "${NOMAD_JOB_NAME}-search-tcp.service.<TLD>"
-        workflow_elasticsearch_cluster_name = "${NOMAD_JOB_NAME}.search"
+        workflow_elasticsearch_service = "${NOMAD_JOB_NAME}-temp-tcp.service.<TLD>"
+        workflow_elasticsearch_cluster_name = "${NOMAD_JOB_NAME}.temp"
         workflow_elasticsearch_initial_sleep_seconds = "30"
 
         // NATS settings
@@ -375,7 +375,7 @@ job "conductor" {
 
       resources {
         cpu    = 256  # MHz
-        memory = 1024 # MB
+        memory = 2048 # MB
         network {
           mbits = 4
           port "http" {}
