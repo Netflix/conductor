@@ -4,7 +4,8 @@ import { Breadcrumb, BreadcrumbItem, Grid, Row, Col, Well, OverlayTrigger,Button
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import { connect } from 'react-redux';
 import { getWorkflowMetaDetails } from '../../actions/WorkflowActions';
-import WorkflowMetaDia from './WorkflowMetaDia'
+import WorkflowMetaDia from './WorkflowMetaDia';
+import WorkflowMetaInput from './WorkflowMetaInput';
 
 class WorkflowMetaDetails extends Component {
 
@@ -32,6 +33,7 @@ class WorkflowMetaDetails extends Component {
     if(wf == null) {
       wf = {tasks: []};
     }
+    console.log("MetaDetails data" + wf.workflowId)
     return (
       <div className="ui-content">
         <Tabs>
@@ -40,10 +42,14 @@ class WorkflowMetaDetails extends Component {
           </Tab>
           <Tab eventKey={2} title="JSON">
             <div><pre>
-              {JSON.stringify(this.state.workflowMeta, null, 2)}
+              {JSON.stringify(this.state.workflowMeta, null, 2)};
           </pre></div>
           </Tab>
+          <Tab eventKey={3} title="Input">
+          <div><WorkflowMetaInput meta={this.state}/></div>
+          </Tab>
         </Tabs>
+
       </div>
     );
   }

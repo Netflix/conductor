@@ -9,6 +9,7 @@ import TasksMetaList from './components/workflow/tasks/TasksMetaList';
 import QueueList from './components/workflow/queues/QueueList';
 import WorkflowMetaDetails from './components/workflow/WorkflowMetaDetails';
 import WorkflowMetaDia from './components/workflow/WorkflowMetaDia';
+import WorkflowMetaInput from './components/workflow/WorkflowMetaInput';
 import Intro from './components/common/Home';
 import Help from './components/common/Help';
 
@@ -23,6 +24,7 @@ const routeConfig = [
       { path: 'workflow/queue/data', component: QueueList },
       { path: 'workflow', component: Workflow },
       { path: 'workflow/id/:workflowId', component: WorkflowDetails },
+      { path: 'workflow/id/:workflowId', component: WorkflowMetaInput },
       { path: 'events', component: Event },
       { path: 'events/executions', component: EventExecs },
       { path: 'help', component: Help }
