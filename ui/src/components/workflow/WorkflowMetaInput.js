@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import {JsonEditor} from 'react-json-edit';
 import request from 'superagent';
+import has from 'lodash/has';
+
 
 
 class WorkflowMetaInput extends Component {
@@ -11,32 +13,35 @@ class WorkflowMetaInput extends Component {
         name: props.meta.name,
         version: props.meta.version,
         json: props.meta.workflowMeta,
-        jsonTasks: props.meta.workflowMeta.tasks,
-        //jsonNode: props.meta.workflowMeta.tasks["0"].inputParameters.node,
         }
+
+
     }
 
     componentWillReceiveProps(nextProps) {
         this.state.name = nextProps.meta.name;
         this.state.version = nextProps.meta.version;
         this.state.json = nextProps.meta.workflowMeta;
-        this.state.jsonTasks = nextProps.meta.workflowMeta.tasks;
-        //this.state.jsonNode = nextProps.meta.workflowMeta.tasks["0"].inputParameters.node;
-    };
-
-    callback = (changes) => {
-      this.setState({jsonNode: changes});
     };
 
     render() {
 
         let wfname = this.state.name;
+        let jsonInput = JSON.stringify(this.state.json, null, 2);
 
-        let jsonInput = JSON.stringify(this.state.jsonTasks, null, 2);
+        var RegExp = /\input([\w.])+\}/igm
+        var RegExp2 = /[^\.]+(?=\})/igm
 
-        console.log(this.state);
-        console.log("json input stringify: " + jsonInput);
-               
+        var matchArray = jsonInput.match(RegExp);
+
+        if(matchArray) {
+        var matchString = matchArray.join();
+        var sortedArray = matchString.match(RegExp2);
+        var inputsArray = _.uniq(sortedArray);
+        console.log("Sorted array of inputs:" + inputsArray);
+        }
+       
+      
         function startWorfklow(){                            
 
             request
@@ -48,10 +53,24 @@ class WorkflowMetaInput extends Component {
             });  
           };
 
+          function printArray(){
+              return (
+                  
+                     inputsArray.map(item => <form>
+                        <label>
+                            input:
+                            <input type="text" value={item} />
+                        </label>   
+                    </form>)
+                 
+              )
+          };
+
+        
     
         return (
         <div>
-        <JsonEditor value={this.state.jsonTasks} propagateChanges={this.callback} tableLike={true}/>
+        {printArray}
         <button onClick={startWorfklow}>Send Workflow</button>
         </div>
         )
