@@ -14,7 +14,8 @@ class WorkflowMetaDetails extends Component {
     this.state = {
       name : props.params.name,
       version : props.params.version,
-      workflowMeta: {tasks: []}
+      workflowMeta: {tasks: []},
+      inputsArray: [],
     };
   }
 
@@ -22,10 +23,30 @@ class WorkflowMetaDetails extends Component {
     this.state.name = nextProps.params.name;
     this.state.version = nextProps.params.version;
     this.state.workflowMeta = nextProps.meta;
+    this.updateState();
   }
 
   componentWillMount(){
-    this.props.dispatch(getWorkflowMetaDetails(this.state.name, this.state.version));
+    this.props.dispatch(getWorkflowMetaDetails(this.state.name, this.state.version)); 
+  }
+
+
+  updateState(){
+   
+    var jsonInput = JSON.stringify(this.state.workflowMeta, null, 2);
+
+        var RegExp = /\input([\w.])+\}/igm
+        var RegExp2 = /[^\.]+(?=\})/igm
+
+        var matchArray = jsonInput.match(RegExp);
+
+        if(matchArray) {
+        var matchString = matchArray.join();
+        var sortedArray = matchString.match(RegExp2);
+        var inputsArray = _.uniq(sortedArray);
+        this.state.inputsArray = inputsArray;
+        }
+
   }
 
   render() {
@@ -33,7 +54,7 @@ class WorkflowMetaDetails extends Component {
     if(wf == null) {
       wf = {tasks: []};
     }
-    console.log("MetaDetails data" + wf.workflowId)
+
     return (
       <div className="ui-content">
         <Tabs>

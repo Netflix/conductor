@@ -11,66 +11,78 @@ class WorkflowMetaInput extends Component {
 
         this.state = {
         name: props.meta.name,
-        version: props.meta.version,
-        json: props.meta.workflowMeta,
+        inputs: props.meta.inputsArray,
+        outputs: [],
+        finalString: {},
         }
-
-
     }
 
     componentWillReceiveProps(nextProps) {
         this.state.name = nextProps.meta.name;
-        this.state.version = nextProps.meta.version;
-        this.state.json = nextProps.meta.workflowMeta;
+        this.state.inputs = nextProps.meta.inputsArray;
+        this.state.outputs = new Array(nextProps.meta.inputsArray.length)
     };
+
+    handleChange(idx , event){
+
+        console.log(event.target);
+        console.log(event);
+            console.log("value: " + event.target.value + "   idx: " + idx);
+
+            var arr = this.state.outputs;
+            var names = this.state.inputs;
+
+            console.log(this.state.outputs.length)
+
+            arr.splice(idx, 1, event.target.value);
+
+            console.log(arr);
+            console.log(this.state.inputs);
+
+
+            var string = {}
+                for (var i = 0; i < names.length; i++) {
+                     string[names[i]] = arr[i]
+                    }
+
+            console.log(JSON.stringify(string, null, 2));
+            //this.state.finalString = JSON.stringify(string, null, 2)
+
+            this.setState({finalString: JSON.stringify(string, null, 2)})
+
+            //TODO 
+            // connect values form arrays names and arr into one string
+            // example string:  { "node": "Leaf01", "mount_body": "..." }
+            // then send as data() in startWorkflow()
+    }
 
     render() {
 
         let wfname = this.state.name;
-        let jsonInput = JSON.stringify(this.state.json, null, 2);
+        let inputs = this.state.inputs;
+        let data = this.state.finalString;   
+        
+        console.log(data);
 
-        var RegExp = /\input([\w.])+\}/igm
-        var RegExp2 = /[^\.]+(?=\})/igm
-
-        var matchArray = jsonInput.match(RegExp);
-
-        if(matchArray) {
-        var matchString = matchArray.join();
-        var sortedArray = matchString.match(RegExp2);
-        var inputsArray = _.uniq(sortedArray);
-        console.log("Sorted array of inputs:" + inputsArray);
-        }
-       
-      
         function startWorfklow(){                            
 
             request
             .post('http://localhost:8080/api/workflow/' + wfname)
             .set('Content-Type', 'application/json')
-            .send(jsonInput)
+            .send(data)
             .end(function(err, res){
             console.log(res.text);
             });  
           };
 
-          function printArray(){
-              return (
-                  
-                     inputsArray.map(item => <form>
-                        <label>
-                            input:
-                            <input type="text" value={item} />
-                        </label>   
-                    </form>)
-                 
-              )
-          };
-
-        
+                
     
         return (
         <div>
-        {printArray}
+        {inputs.map((item, idx) => <form>
+                        <label>{item} + {idx}</label> 
+                        <input name={item} type="text" onChange={this.handleChange.bind(this, idx)} />  
+                    </form>)}
         <button onClick={startWorfklow}>Send Workflow</button>
         </div>
         )
