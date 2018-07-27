@@ -25,35 +25,28 @@ class WorkflowMetaInput extends Component {
 
     handleChange(idx , event){
 
-        console.log(event.target);
-        console.log(event);
-            console.log("value: " + event.target.value + "   idx: " + idx);
+        var arr = this.state.outputs;
+        var names = this.state.inputs;
 
-            var arr = this.state.outputs;
-            var names = this.state.inputs;
+        arr.splice(idx, 1, event.target.value);
 
-            console.log(this.state.outputs.length)
+        console.log(arr);
+        console.log(this.state.inputs);
 
-            arr.splice(idx, 1, event.target.value);
+        var string = {}
+            for (var i = 0; i < names.length; i++) {
 
-            console.log(arr);
-            console.log(this.state.inputs);
-
-
-            var string = {}
-                for (var i = 0; i < names.length; i++) {
-                     string[names[i]] = arr[i]
+                    if(arr[i].startsWith("{")){
+                        string[names[i]] = JSON.parse(arr[i])
                     }
+                    else
+                    string[names[i]] = arr[i]
+                }
 
-            console.log(JSON.stringify(string, null, 2));
-            //this.state.finalString = JSON.stringify(string, null, 2)
+        console.log(JSON.stringify(string, null, 2));
 
-            this.setState({finalString: JSON.stringify(string, null, 2)})
+        this.setState({finalString: JSON.stringify(string, null, 2)})
 
-            //TODO 
-            // connect values form arrays names and arr into one string
-            // example string:  { "node": "Leaf01", "mount_body": "..." }
-            // then send as data() in startWorkflow()
     }
 
     render() {
