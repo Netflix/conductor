@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
-import {JsonEditor} from 'react-json-edit';
 import request from 'superagent';
-import has from 'lodash/has';
+import { Button, Input, OverlayTrigger, Popover } from 'react-bootstrap';
 
 
 
@@ -9,11 +8,14 @@ class WorkflowMetaInput extends Component {
     constructor(props) {
         super(props);
 
+        this.startWorfklow = this.startWorfklow.bind(this);
+
         this.state = {
         name: props.meta.name,
         inputs: props.meta.inputsArray,
         outputs: [],
         finalString: {},
+        loading: false,
         }
     }
 
@@ -49,34 +51,49 @@ class WorkflowMetaInput extends Component {
 
     }
 
-    render() {
+    startWorfklow(){           
+        
+        this.setState({ loading: true });
 
         let wfname = this.state.name;
+        let data = this.state.finalString    
+
+        request
+        .post('http://localhost:8080/api/workflow/' + wfname)
+        .set('Content-Type', 'application/json')
+        .send(data)
+        .end(function(err, res){
+        console.log(res.text);
+        });  
+
+        setTimeout(() => {
+            this.setState({ loading: false });
+        }, 1000);
+      };
+
+      
+    render() {
+
         let inputs = this.state.inputs;
-        let data = this.state.finalString;   
-        
-        console.log(data);
+        let loading = this.state.loading;
 
-        function startWorfklow(){                            
-
-            request
-            .post('http://localhost:8080/api/workflow/' + wfname)
-            .set('Content-Type', 'application/json')
-            .send(data)
-            .end(function(err, res){
-            console.log(res.text);
-            });  
-          };
-
-                
+        const popover = (
+            <Popover id="popover-positioned-bottom" title="Workflow executed!">
+               Workflow successfully executed.
+            </Popover>
+         );             
     
         return (
         <div>
+            &nbsp;&nbsp;
         {inputs.map((item, idx) => <form>
-                        <label>{item} + {idx}</label> 
-                        <input name={item} type="text" onChange={this.handleChange.bind(this, idx)} />  
-                    </form>)}
-        <button onClick={startWorfklow}>Send Workflow</button>
+            
+                <Input type="input" label={item} placeholder="Enter the input" onChange={this.handleChange.bind(this, idx)}/>
+                    &nbsp;&nbsp;
+                </form>)}
+                <OverlayTrigger trigger='click' rootClose={true} placement="bottom" overlay={popover}>
+                <Button bsStyle="primary" bsSize="large" disabled={loading} onClick={!loading ? this.startWorfklow : null}>{loading ? 'Executing...' : 'Execute workflow'}</Button>
+                </OverlayTrigger>
         </div>
         )
     }
