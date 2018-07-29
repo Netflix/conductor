@@ -21,12 +21,12 @@
         "include_in_all": false
       },
       "input": {
-        "type": "string",
-        "index": "analyzed"
+        "type": "object",
+        "dynamic":  true
       },
       "output": {
-        "type": "string",
-        "index": "analyzed"
+        "type": "object",
+        "dynamic":  true
       },
       "reasonForIncompletion": {
         "type": "string",
