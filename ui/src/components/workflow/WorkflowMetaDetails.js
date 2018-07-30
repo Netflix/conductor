@@ -33,19 +33,19 @@ class WorkflowMetaDetails extends Component {
 
   updateState(){
    
-    var jsonInput = JSON.stringify(this.state.workflowMeta, null, 2);
+    if(this.state.workflowMeta) {
+      var jsonInput = JSON.stringify(this.state.workflowMeta, null, 2);
+      var RegExp = /\input([\w.])+\}/igm
+      var RegExp2 = /[^\.]+(?=\})/igm
+      var matchArray = jsonInput.match(RegExp);
+      }
 
-        var RegExp = /\input([\w.])+\}/igm
-        var RegExp2 = /[^\.]+(?=\})/igm
-
-        var matchArray = jsonInput.match(RegExp);
-
-        if(matchArray) {
-        var matchString = matchArray.join();
-        var sortedArray = matchString.match(RegExp2);
-        var inputsArray = _.uniq(sortedArray);
-        this.state.inputsArray = inputsArray;
-        }
+  if(matchArray) {
+      var matchString = matchArray.join();
+      var sortedArray = matchString.match(RegExp2);
+      var inputsArray = _.uniq(sortedArray);
+      this.state.inputsArray = inputsArray;
+      }
 
   }
 
