@@ -30,33 +30,10 @@ const LOG_DATE_FORMAT = 'MM/DD/YY, HH:mm:ss:SSS';
 
 router.get('/search-by-task/:taskId', async (req, res, next) => {
   try {
-    const freeText = [];
-    if (req.query.freeText != '') {
-      freeText.push(req.params.taskId);
-    } else {
-      freeText.push('*');
-    }
-
-    let h = '-1';
-    if (req.query.h !== undefined && req.query.h != 'undefined' && req.query.h != '') {
-      h = req.query.h;
-    }
-    if (h != '-1') {
-      freeText.push(`startTime:[now-${h}h TO now]`);
-    }
-    let start = 0;
-    if (!isNaN(req.query.start)) {
-      start = req.query.start;
-    }
-
-    const url = `${baseURL2}search-by-tasks?size=100&sort=startTime:DESC&freeText=${freeText.join(
-      ' AND '
-    )}&start=${start}`;
-    const result = await http.get(url, req.token);
-    const hits = result.results;
-    res.status(200).send({ result: { hits, totalHits: result.totalHits } });
-  } catch (err) {
-    next(err);
+    const result = await worflowService.searchByTask(req);
+    return res.status(200).json(result);
+  } catch (e) {
+    return next(e);
   }
 });
 
