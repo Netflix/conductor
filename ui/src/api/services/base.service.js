@@ -7,10 +7,11 @@ class BaseService {
     this.hostName = `http://${WEBSITE_HOSTNAME}`;
 
     // Set config defaults when creating the instance
-    this.config = {
-      method: 'POST',
-      headers: { Authorization: token }
-    };
+    this.config = {};
+
+    if (token) {
+      this.config.headers = { Authorization: token };
+    }
   }
 
   handleError = e => {
@@ -21,7 +22,7 @@ class BaseService {
 
   async get(url) {
     try {
-      return await axios({ ...this.config, method: 'GET', url });
+      return await axios({ ...this.config, method: 'GET', url: `${this.hostName}/${url}` });
     } catch (e) {
       return this.handleError(e);
     }
@@ -29,7 +30,7 @@ class BaseService {
 
   async post(url, data) {
     try {
-      return await axios({ ...this.config, method: 'POST', url, data });
+      return await axios({ ...this.config, method: 'POST', url: `${this.hostName}/${url}`, data });
     } catch (e) {
       return this.handleError(e);
     }
@@ -37,7 +38,7 @@ class BaseService {
 
   async put(url, data) {
     try {
-      return await axios({ ...this.config, method: 'PUT', url, data });
+      return await axios({ ...this.config, method: 'PUT', url: `${this.hostName}/${url}`, data });
     } catch (e) {
       return this.handleError(e);
     }
@@ -45,7 +46,7 @@ class BaseService {
 
   async delete(url) {
     try {
-      return await axios({ ...this.config, method: 'DELETE', url });
+      return await axios({ ...this.config, method: 'DELETE', url: `${this.hostName}/${url}` });
     } catch (e) {
       return this.handleError(e);
     }
