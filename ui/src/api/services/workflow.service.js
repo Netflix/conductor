@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-globals */
+/* eslint-disable no-restricted-globals,consistent-return */
 import identity from 'lodash/identity';
 import moment from 'moment';
 import filter from 'lodash/fp/filter';
@@ -73,18 +73,18 @@ class WorkflowService extends BaseService {
 
   async getByWorkflowId(req, workflowId) {
     const data = await this.get(`workflow/${workflowId}?includeTasks=true`, req.token);
-    const { data: meta } = await this.get(`metadata/workflow/${data.workflowType}?version=${data.version}`, req.token);
+    const meta = await this.get(`metadata/workflow/${data.workflowType}?version=${data.version}`, req.token);
 
     const subs = filter(identity)(
-      map(task => {
-        if (task.taskType === 'SUB_WORKFLOW') {
-          const subWorkflowId = task.inputData && task.inputData.subWorkflowId;
+      map(t1 => {
+        if (t1.taskType === 'SUB_WORKFLOW') {
+          const subWorkflowId = t1.inputData && t1.inputData.subWorkflowId;
 
           if (subWorkflowId != null) {
             return {
-              name: task.inputData.subWorkflowName,
-              version: task.inputData.subWorkflowVersion,
-              referenceTaskName: task.referenceTaskName,
+              name: t1.inputData.subWorkflowName,
+              version: t1.inputData.subWorkflowVersion,
+              referenceTaskName: t1.referenceTaskName,
               subWorkflowId
             };
           }
