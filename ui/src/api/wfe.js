@@ -39,70 +39,10 @@ router.get('/search-by-task/:taskId', async (req, res, next) => {
 
 router.get('/id/:workflowId', async (req, res, next) => {
   try {
-    const result = await http.get(`${baseURL2 + req.params.workflowId}?includeTasks=true`, req.token);
-    const meta = await http.get(`${baseURLMeta}workflow/${result.workflowType}?version=${result.version}`, req.token);
-
-    const subs = filter(identity)(
-      map(task => {
-        if (task.taskType === 'SUB_WORKFLOW') {
-          const subWorkflowId = task.inputData && task.inputData.subWorkflowId;
-
-          if (subWorkflowId != null) {
-            return {
-              name: task.inputData.subWorkflowName,
-              version: task.inputData.subWorkflowVersion,
-              referenceTaskName: task.referenceTaskName,
-              subWorkflowId
-            };
-          }
-        }
-      })(result.tasks || [])
-    );
-
-    (result.tasks || []).forEach(task => {
-      if (task.taskType === 'SUB_WORKFLOW') {
-        const subWorkflowId = task.inputData && task.inputData.subWorkflowId;
-
-        if (subWorkflowId != null) {
-          subs.push({
-            name: task.inputData.subWorkflowName,
-            version: task.inputData.subWorkflowVersion,
-            referenceTaskName: task.referenceTaskName,
-            subWorkflowId
-          });
-        }
-      }
-    });
-
-    const logs = map(task => Promise.all([task, http.get(`${baseURLTask + task.taskId}/log`)]))(result.tasks);
-
-    await Promise.all(logs).then(result => {
-      forEach(([task, logs]) => {
-        if (logs) {
-          task.logs = map(({ createdTime, log }) => `${moment(createdTime).format(LOG_DATE_FORMAT)} : ${log}`)(logs);
-        }
-      })(result);
-    });
-
-    const promises = map(({ name, version, subWorkflowId, referenceTaskName }) =>
-      Promise.all([
-        referenceTaskName,
-        http.get(`${baseURLMeta}workflow/${name}?version=${version}`),
-        http.get(`${baseURL2 + subWorkflowId}?includeTasks=true`)
-      ])
-    )(subs);
-
-    const subworkflows = await Promise.all(promises).then(result =>
-      transform(
-        result,
-        (result, [key, meta, wfe]) => {
-          result[key] = { meta, wfe };
-        },
-        {}
-      )
-    );
-
-    res.status(200).send({ result, meta, subworkflows });
+    const { workflowId } = req.params;
+    console.log(workflowId);
+    const result = await worflowService.getByWorkflowId(req, workflowId);
+    res.status(200).send(result);
   } catch (err) {
     next(err);
   }

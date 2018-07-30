@@ -44,7 +44,7 @@ class WorkflowService extends BaseService {
   }
 
   async searchByTask(req) {
-    const { freeText: reqFreeText = '', start: reqStart = '', h: reqH, q = '' } = req;
+    const { freeText: reqFreeText = '', start: reqStart = '', h: reqH } = req;
 
     const freeText = [];
     if (reqFreeText !== '') {
@@ -71,9 +71,9 @@ class WorkflowService extends BaseService {
     return { result: { hits, totalHits } };
   }
 
-  async getById(req, workflowId) {
-    const { data } = await this.get(`${workflowId}workflow?includeTasks=true`, req.token);
-    const meta = await this.get(`metadata/workflow/${data.workflowType}?version=${data.version}`, req.token);
+  async getByWorkflowId(req, workflowId) {
+    const data = await this.get(`workflow/${workflowId}?includeTasks=true`, req.token);
+    const { data: meta } = await this.get(`metadata/workflow/${data.workflowType}?version=${data.version}`, req.token);
 
     const subs = filter(identity)(
       map(task => {
@@ -107,7 +107,7 @@ class WorkflowService extends BaseService {
       }
     });
 
-    const logs = map(task => Promise.all([task, this.get(`tasks/${task.taskId}/log`)]))(result.tasks);
+    const logs = map(task => Promise.all([task, this.get(`tasks/${task.taskId}/log`)]))(data.tasks);
 
     await Promise.all(logs).then(result => {
       forEach(([task, logs]) => {
