@@ -21,6 +21,7 @@
   "license": "SEE LICENSE IN license.txt",
   "dependencies": {
     "autoprefixer": "^6.0.0",
+    "axios": "^0.18.0",
     "babel-polyfill": "^6.3.14",
     "bunyan": "^1.7.1",
     "clipboard": "^1.6.1",
