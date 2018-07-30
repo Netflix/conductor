@@ -105,6 +105,28 @@ export function restartWorfklow(workflowId){
   }
 }
 
+/*export function startWorfklow(workflowName){
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_RESTART_WORKFLOW',
+      workflowId
+    });
+
+
+    return http.post('/api/workflow/' + workflowName).then((data) => {
+      dispatch({
+        type: 'RECEIVED_RESTART_WORKFLOW',
+        workflowId
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}*/
+
 export function retryWorfklow(workflowId){
   return function (dispatch) {
     dispatch({
