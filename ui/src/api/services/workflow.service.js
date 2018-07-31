@@ -38,7 +38,7 @@ class WorkflowService extends BaseService {
       ' AND '
     )}&start=${start}&query=${q}`;
 
-    const { hits, totalHits } = await this.get(url, req.token);
+    const { results: hits, totalHits } = await this.get(url, req.token);
 
     return { result: { hits, totalHits } };
   }

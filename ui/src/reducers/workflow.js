@@ -1,4 +1,3 @@
-
 const initialState = {
   byStatus: {},
   byId: {},
@@ -14,8 +13,6 @@ const initialState = {
 };
 
 export default function workflows(state = initialState, action) {
-
-  let data = state.data;
   switch (action.type) {
     case 'GET_WORKFLOWS':
       return {
@@ -63,7 +60,7 @@ export default function workflows(state = initialState, action) {
       return {
         ...state,
         error: false,
-        data:[],
+        data: [],
         fetching: false,
         terminating: false,
         refetch: true
@@ -86,7 +83,6 @@ export default function workflows(state = initialState, action) {
         fetching: true,
         pausing: true,
         resuming: false
-
       };
     case 'REQUESTED_RESUME_WORKFLOW':
       return {
@@ -99,7 +95,7 @@ export default function workflows(state = initialState, action) {
       return {
         ...state,
         error: false,
-        data:[],
+        data: [],
         fetching: false,
         restarting: false,
         refetch: true
@@ -108,7 +104,7 @@ export default function workflows(state = initialState, action) {
       return {
         ...state,
         error: false,
-        data:[],
+        data: [],
         fetching: false,
         restarting: false,
         retrying: false,
@@ -118,7 +114,7 @@ export default function workflows(state = initialState, action) {
       return {
         ...state,
         error: false,
-        data:[],
+        data: [],
         fetching: false,
         restarting: false,
         retrying: false,
@@ -130,7 +126,7 @@ export default function workflows(state = initialState, action) {
       return {
         ...state,
         error: false,
-        data:[],
+        data: [],
         fetching: false,
         restarting: false,
         retrying: false,
@@ -223,17 +219,17 @@ export default function workflows(state = initialState, action) {
         refetch: false
       };
     case 'REQUEST_ERROR':
-    return {
-      ...state,
-      error: true,
-      exception: action.e,
-      fetching: false,
-      restarting: false,
-      terminating: false,
-      retrying: false,
-      pausing: false,
-      resumign: false
-    };
+      return {
+        ...state,
+        error: true,
+        exception: action.e,
+        fetching: false,
+        restarting: false,
+        terminating: false,
+        retrying: false,
+        pausing: false,
+        resumign: false
+      };
     case 'GET_TASK_LOGS':
       return {
         ...state,
@@ -250,5 +246,5 @@ export default function workflows(state = initialState, action) {
       };
     default:
       return state;
-    };
+  }
 }
