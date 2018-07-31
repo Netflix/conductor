@@ -11,20 +11,20 @@ function linkMaker(cell) {
 }
 
 function zeroPad(num) {
-  return ('0' + num).slice(-2);
+  return `0${num}`.slice(-2);
 }
 
 function formatDate(cell) {
   if (cell == null || !cell.split) {
     return '';
   }
-  let c = cell.split('T');
-  let time = c[1].split(':');
-  let hh = zeroPad(time[0]);
-  let mm = zeroPad(time[1]);
-  let ss = zeroPad(time[2].replace('Z', ''));
+  const c = cell.split('T');
+  const time = c[1].split(':');
+  const hh = zeroPad(time[0]);
+  const mm = zeroPad(time[1]);
+  const ss = zeroPad(time[2].replace('Z', ''));
 
-  let dt = c[0] + 'T' + hh + ':' + mm + ':' + ss + 'Z';
+  const dt = `${c[0]}T${hh}:${mm}:${ss}Z`;
 
   if (dt == null || dt === '') {
     return '';
@@ -90,21 +90,21 @@ const Workflow = React.createClass({
     if (search == null || search == 'undefined' || search == '') {
       search = '';
     }
-    let st = this.props.location.query.start;
+    const st = this.props.location.query.start;
     let start = 0;
     if (!isNaN(st)) {
       start = parseInt(st);
     }
 
     return {
-      search: search,
-      workflowTypes: workflowTypes,
-      status: status,
+      search,
+      workflowTypes,
+      status,
       h: this.props.location.query.h,
       workflows: [],
       update: true,
       fullstr: true,
-      start: start
+      start
     };
   },
   componentWillMount() {
@@ -113,7 +113,7 @@ const Workflow = React.createClass({
   },
   componentWillReceiveProps(nextProps) {
     let workflowDefs = nextProps.workflows;
-    workflowDefs = workflowDefs ? workflowDefs : [];
+    workflowDefs = workflowDefs || [];
     workflowDefs = workflowDefs.map(workflowDef => workflowDef.name);
 
     let search = nextProps.location.query.q;
@@ -142,12 +142,12 @@ const Workflow = React.createClass({
     update = update || this.state.status.join(',') != status.join(',');
 
     this.setState({
-      search: search,
-      h: h,
-      update: update,
-      status: status,
+      search,
+      h,
+      update,
+      status,
       workflows: workflowDefs,
-      start: start
+      start
     });
 
     this.refreshResults();
@@ -164,14 +164,14 @@ const Workflow = React.createClass({
     }
   },
   urlUpdate() {
-    let q = this.state.search;
-    let h = this.state.h;
-    let workflowTypes = this.state.workflowTypes;
-    let status = this.state.status;
-    let start = this.state.start;
+    const q = this.state.search;
+    const h = this.state.h;
+    const workflowTypes = this.state.workflowTypes;
+    const status = this.state.status;
+    const start = this.state.start;
     this.props.history.pushState(
       null,
-      '/workflow?q=' + q + '&h=' + h + '&workflowTypes=' + workflowTypes + '&status=' + status + '&start=' + start
+      `/workflow?q=${q}&h=${h}&workflowTypes=${workflowTypes}&status=${status}&start=${start}`
     );
   },
   doDispatch() {
@@ -179,14 +179,14 @@ const Workflow = React.createClass({
     if (this.state.search != '') {
       search = this.state.search;
     }
-    let h = this.state.h;
-    let query = [];
+    const h = this.state.h;
+    const query = [];
 
     if (this.state.workflowTypes.length > 0) {
-      query.push('workflowType IN (' + this.state.workflowTypes.join(',') + ') ');
+      query.push(`workflowType IN (${this.state.workflowTypes.join(',')}) `);
     }
     if (this.state.status.length > 0) {
-      query.push('status IN (' + this.state.status.join(',') + ') ');
+      query.push(`status IN (${this.state.status.join(',')}) `);
     }
     this.props.dispatch(
       searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start)
@@ -216,7 +216,7 @@ const Workflow = React.createClass({
     this.refreshResults();
   },
   searchChange(e) {
-    let val = e.target.value;
+    const val = e.target.value;
     this.setState({ search: val });
   },
   hourChange(e) {
@@ -227,7 +227,7 @@ const Workflow = React.createClass({
   keyPress(e) {
     if (e.key == 'Enter') {
       this.state.update = true;
-      var q = e.target.value;
+      let q = e.target.value;
       this.setState({ search: q });
       this.refreshResults();
     }
@@ -250,7 +250,7 @@ const Workflow = React.createClass({
       totalHits = this.props.data.totalHits;
       found = wfs.length;
     }
-    let start = parseInt(this.state.start);
+    const start = parseInt(this.state.start);
     let max = start + 100;
     if (found < 100) {
       max = start + found;
@@ -258,10 +258,10 @@ const Workflow = React.createClass({
     const workflowNames = this.state.workflows ? this.state.workflows : [];
     const statusList = ['RUNNING', 'COMPLETED', 'FAILED', 'TIMED_OUT', 'TERMINATED', 'PAUSED'];
 
-    //secondary filter to match sure we only show workflows that match the the status
-    var currentStatusArray = this.state.status;
+    // secondary filter to match sure we only show workflows that match the the status
+    let currentStatusArray = this.state.status;
     if (currentStatusArray.length > 0 && wfs.length > 0) {
-      filteredWfs = wfs.filter(function(wf) {
+      filteredWfs = wfs.filter(wf => {
         return currentStatusArray.includes(wf.status); //remove wft if status doesn't match search
       });
     } else {
@@ -272,7 +272,7 @@ const Workflow = React.createClass({
       <div className="ui-content">
         <div>
           <Panel header="Filter Workflows (Press Enter to search)">
-            <Grid fluid={true}>
+            <Grid fluid>
               <Row className="show-grid">
                 <Col md={4}>
                   <Input
@@ -302,7 +302,7 @@ const Workflow = React.createClass({
                     onChange={this.workflowTypeChange}
                     options={workflowNames}
                     placeholder="Filter by workflow type"
-                    multiple={true}
+                    multiple
                     selected={this.state.workflowTypes}
                   />
                   &nbsp;<i className="fa fa-angle-up fa-1x" />&nbsp;&nbsp;<label className="small nobold">
@@ -316,7 +316,7 @@ const Workflow = React.createClass({
                     options={statusList}
                     placeholder="Filter by status"
                     selected={this.state.status}
-                    multiple={true}
+                    multiple
                   />
                   &nbsp;<i className="fa fa-angle-up fa-1x" />&nbsp;&nbsp;<label className="small nobold">
                     Filter by Workflow Status
@@ -370,26 +370,26 @@ const Workflow = React.createClass({
         </span>
         <BootstrapTable
           data={filteredWfs}
-          striped={true}
-          hover={true}
+          striped
+          hover
           search={false}
           exportCSV={false}
           pagination={false}
           options={{ sizePerPage: 100 }}
         >
-          <TableHeaderColumn dataField="workflowType" isKey={true} dataAlign="left" dataSort={true}>
+          <TableHeaderColumn dataField="workflowType" isKey dataAlign="left" dataSort>
             Workflow
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="workflowId" dataSort={true} dataFormat={linkMaker}>
+          <TableHeaderColumn dataField="workflowId" dataSort dataFormat={linkMaker}>
             Workflow ID
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="status" dataSort={true}>
+          <TableHeaderColumn dataField="status" dataSort>
             Status
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="startTime" dataSort={true} dataFormat={formatDate}>
+          <TableHeaderColumn dataField="startTime" dataSort dataFormat={formatDate}>
             Start Time
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="updateTime" dataSort={true} dataFormat={formatDate}>
+          <TableHeaderColumn dataField="updateTime" dataSort dataFormat={formatDate}>
             Last Updated
           </TableHeaderColumn>
           <TableHeaderColumn dataField="endTime" hidden={false} dataFormat={formatDate}>
