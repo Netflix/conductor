@@ -1,22 +1,24 @@
+/* eslint-disable react/no-unescaped-entities */
 import React from 'react';
 import { Popover, OverlayTrigger, Table } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { getEventHandlers } from '../../actions/WorkflowActions';
 
-const Events = React.createClass({
-  getInitialState() {
-    return {
-      events: []
-    };
-  },
+class Events extends React.Component {
+  state = {
+    events: []
+  };
+
   componentWillMount() {
     this.props.dispatch(getEventHandlers());
-  },
+  }
+
   componentWillReceiveProps(nextProps) {
     this.state.events = nextProps.events || [];
-  },
+  }
+
   render() {
-    var wfs = this.state.events;
+    const { events: wfs } = this.state;
 
     function helpName() {
       return (
@@ -37,7 +39,6 @@ const Events = React.createClass({
       );
     }
     function helpQueue() {
-      //<i className="fa fa-question-circle"></i>
       return (
         <OverlayTrigger
           trigger="click"
@@ -64,7 +65,6 @@ const Events = React.createClass({
       );
     }
     function helpCond() {
-      //<i className="fa fa-question-circle"></i>
       return (
         <OverlayTrigger
           trigger="click"
@@ -88,7 +88,6 @@ const Events = React.createClass({
       );
     }
     function helpActions() {
-      //<i className="fa fa-question-circle"></i>
       return (
         <OverlayTrigger
           trigger="click"
@@ -132,9 +131,9 @@ const Events = React.createClass({
       );
     }
     function getActions(eh) {
-      let trs = [];
+      const trs = [];
       eh.actions.forEach(action => {
-        let row = (
+        const row = (
           <div>
             <b>{action.action}</b>
             <pre>{JSON.stringify(action[action.action], null, 2)}</pre>
@@ -145,20 +144,15 @@ const Events = React.createClass({
       return <div>{trs}</div>;
     }
     function tableBody(events) {
-      let trs = [];
+      const trs = [];
       events.forEach(eh => {
-        let row = (
+        const row = (
           <tr>
             <td>{nameMaker(eh.name, eh)}</td>
             <td>{eh.event}</td>
             <td>{eh.condition}</td>
             <td>{getActions(eh)}</td>
             <td>{eh.active ? 'Yes' : 'No'}</td>
-          </tr>
-        );
-        let actionRows = (
-          <tr>
-            <td colspan="4">{getActions(eh)}</td>
           </tr>
         );
         trs.push(row);
@@ -169,7 +163,7 @@ const Events = React.createClass({
     return (
       <div className="ui-content">
         <h1>Event Handlers</h1>
-        <Table responsive={true} striped={true} hover={true} condensed={false} bordered={true}>
+        <Table responsive striped hover condensed={false} bordered>
           <thead>
             <tr>
               <th>Name {helpName()}</th>
@@ -184,5 +178,6 @@ const Events = React.createClass({
       </div>
     );
   }
-});
+}
+
 export default connect(state => state.workflow)(Events);

@@ -1,26 +1,25 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import uuid from 'uuid';
+import { connect } from 'react-redux';
 import { Input, Popover, OverlayTrigger } from 'react-bootstrap';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import { getTaskDefs } from '../../../actions/WorkflowActions';
 
-const TaskMetaList = React.createClass({
-  getInitialState() {
-    return {
-      name: '',
-      version: '',
-      taskDefs: []
-    };
-  },
+class TaskMetaList extends React.Component {
+  state = {
+    taskDefs: []
+  };
+
   componentWillMount() {
     this.props.dispatch(getTaskDefs());
-  },
-  componentWillReceiveProps(nextProps) {
-    this.state.taskDefs = nextProps.taskDefs;
-  },
+  }
+
+  componentWillReceiveProps({ taskDefs }) {
+    this.setState({ taskDefs });
+  }
+
   render() {
-    const { taskDefs: wfs } = this.state;
+    const { taskDefs } = this.state;
 
     const retries = (_, row) => {
       return row.retryLogic === 'FIXED' ? `${row.retryLogic} (${row.retryDelaySeconds} seconds)` : '';
@@ -100,7 +99,7 @@ const TaskMetaList = React.createClass({
     return (
       <div className="ui-content">
         <h1>Task Definitions</h1>
-        <BootstrapTable data={wfs} striped hover search exportCSV={false} pagination={false}>
+        <BootstrapTable data={taskDefs} striped hover search exportCSV={false} pagination={false}>
           <TableHeaderColumn dataField="name" isKey dataAlign="left" dataSort dataFormat={editor}>
             Name/Version
           </TableHeaderColumn>
@@ -129,6 +128,6 @@ const TaskMetaList = React.createClass({
       </div>
     );
   }
-});
+}
 
 export default connect(state => state.workflow)(TaskMetaList);

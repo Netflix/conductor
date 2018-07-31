@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-globals */
+
 import React from 'react';
 import { Link } from 'react-router';
 import uuid from 'uuid';
@@ -73,114 +75,86 @@ function miniDetails(cell, row) {
   );
 }
 
-const Workflow = React.createClass({
-  getInitialState() {
-    let workflowTypes = this.props.location.query.workflowTypes;
-    if (workflowTypes != null && workflowTypes != '') {
-      workflowTypes = workflowTypes.split(',');
-    } else {
-      workflowTypes = [];
-    }
-    let status = this.props.location.query.status;
-    if (status != null && status != '') {
-      status = status.split(',');
-    } else {
-      status = [];
-    }
-    let search = this.props.location.query.q;
-    if (search == null || search == 'undefined' || search == '') {
-      search = '';
-    }
-    const st = this.props.location.query.start;
-    let start = 0;
-    if (!isNaN(st)) {
-      start = parseInt(st);
-    }
+class Workflow extends React.Component {
+  constructor(props) {
+    super(props);
+    const {
+      location: {
+        query: { workflowTypes = '', q = '', status = '', start = 0 }
+      }
+    } = props;
 
-    return {
-      search,
-      workflowTypes,
-      status,
+    this.state = {
+      search: q === 'undefined' || q === '' ? '' : q,
+      workflowTypes: workflowTypes === '' ? [] : workflowTypes.split(','),
+      status: status !== '' ? status.split(',') : [],
       h: this.props.location.query.h,
       workflows: [],
       update: true,
       fullstr: true,
-      start
+      start: !isNaN(start, 10) ? parseInt(start, 10) : start
     };
-  },
+  }
+
   componentWillMount() {
     this.props.dispatch(getWorkflowDefs());
     this.doDispatch();
-  },
-  componentWillReceiveProps(nextProps) {
-    let workflowDefs = nextProps.workflows;
-    workflowDefs = workflowDefs || [];
-    workflowDefs = workflowDefs.map(workflowDef => workflowDef.name);
+  }
 
-    let search = nextProps.location.query.q;
-    if (search == null || search == 'undefined' || search == '') {
+  componentWillReceiveProps({
+    workflows = [],
+    location: {
+      query: { h, start, status = '', q }
+    }
+  }) {
+    const workflowDefs = workflows.map(workflowDef => workflowDef.name);
+
+    let search = q;
+    if (search == null || search === 'undefined' || search === '') {
       search = '';
-    }
-    let h = nextProps.location.query.h;
-    if (isNaN(h)) {
-      h = '';
-    }
-    let start = nextProps.location.query.start;
-    if (isNaN(start)) {
-      start = 0;
-    }
-    let status = nextProps.location.query.status;
-    if (status != null && status != '') {
-      status = status.split(',');
-    } else {
-      status = [];
     }
 
     let update = true;
-    update = this.state.search != search;
-    update = update || this.state.h != h;
-    update = update || this.state.start != start;
-    update = update || this.state.status.join(',') != status.join(',');
+    update = this.state.search !== search;
+    update = update || this.state.h !== h;
+    update = update || this.state.start !== start;
 
     this.setState({
       search,
-      h,
+      h: isNaN(h, 10) ? '' : h,
       update,
-      status,
+      status: status !== '' ? status.split(',') : [],
       workflows: workflowDefs,
-      start
+      start: isNaN(start, 10) ? 0 : start
     });
 
     this.refreshResults();
-  },
-  searchBtnClick() {
+  }
+
+  searchBtnClick = () => {
     this.state.update = true;
     this.refreshResults();
-  },
-  refreshResults() {
+  };
+
+  refreshResults = () => {
     if (this.state.update) {
       this.state.update = false;
       this.urlUpdate();
       this.doDispatch();
     }
-  },
-  urlUpdate() {
-    const q = this.state.search;
-    const h = this.state.h;
-    const workflowTypes = this.state.workflowTypes;
-    const status = this.state.status;
-    const start = this.state.start;
+  };
+
+  urlUpdate = () => {
+    const { workflowTypes, status, start, h, search: q } = this.state;
+
     this.props.history.pushState(
       null,
       `/workflow?q=${q}&h=${h}&workflowTypes=${workflowTypes}&status=${status}&start=${start}`
     );
-  },
-  doDispatch() {
-    let search = '';
-    if (this.state.search != '') {
-      search = this.state.search;
-    }
-    const h = this.state.h;
+  };
+
+  doDispatch = () => {
+    const { search = '' } = this.state;
     const query = [];
 
     if (this.state.workflowTypes.length > 0) {
@@ -192,54 +166,63 @@ const Workflow = React.createClass({
     this.props.dispatch(
       searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start)
     );
-  },
-  workflowTypeChange(workflowTypes) {
+  };
+
+  workflowTypeChange = workflowTypes => {
     this.state.update = true;
     this.state.workflowTypes = workflowTypes;
     this.refreshResults();
-  },
-  statusChange(status) {
+  };
+
+  statusChange = status => {
     this.state.update = true;
     this.state.status = status;
     this.refreshResults();
-  },
-  nextPage() {
-    this.state.start = 100 + parseInt(this.state.start);
+  };
+
+  nextPage = () => {
+    this.state.start = 100 + parseInt(this.state.start, 10);
     this.state.update = true;
     this.refreshResults();
-  },
-  prevPage() {
-    this.state.start = parseInt(this.state.start) - 100;
+  };
+
+  prevPage = () => {
+    this.state.start = parseInt(this.state.start, 10) - 100;
     if (this.state.start < 0) {
       this.state.start = 0;
     }
     this.state.update = true;
     this.refreshResults();
-  },
-  searchChange(e) {
+  };
+
+  searchChange = e => {
     const val = e.target.value;
     this.setState({ search: val });
-  },
-  hourChange(e) {
+  };
+
+  hourChange = e => {
     this.state.update = true;
     this.state.h = e.target.value;
     this.refreshResults();
-  },
-  keyPress(e) {
+  };
+
+  keyPress = e => {
     if (e.key == 'Enter') {
       this.state.update = true;
-      let q = e.target.value;
+      const q = e.target.value;
       this.setState({ search: q });
       this.refreshResults();
     }
-  },
-  prefChange(e) {
+  };
+
+  prefChange = e => {
     this.setState({
       fullstr: e.target.checked
     });
     this.state.update = true;
     this.refreshResults();
-  },
+  };
+
   render() {
     let wfs = [];
     let filteredWfs = [];
@@ -260,11 +243,9 @@ const Workflow = React.createClass({
     const statusList = ['RUNNING', 'COMPLETED', 'FAILED', 'TIMED_OUT', 'TERMINATED', 'PAUSED'];
 
     // secondary filter to match sure we only show workflows that match the the status
-    let currentStatusArray = this.state.status;
+    const currentStatusArray = this.state.status;
     if (currentStatusArray.length > 0 && wfs.length > 0) {
-      filteredWfs = wfs.filter(wf => {
-        return currentStatusArray.includes(wf.status); //remove wft if status doesn't match search
-      });
+      filteredWfs = wfs.filter(wf => currentStatusArray.includes(wf.status));
     } else {
       filteredWfs = wfs;
     }
@@ -354,14 +335,14 @@ const Workflow = React.createClass({
           Total Workflows Found: <b>{totalHits}</b>, Displaying {this.state.start} <b>to</b> {max}
         </span>
         <span style={{ float: 'right' }}>
-          {parseInt(this.state.start) >= 100 ? (
+          {parseInt(this.state.start, 10) >= 100 ? (
             <a onClick={this.prevPage}>
               <i className="fa fa-backward" />&nbsp;Previous Page
             </a>
           ) : (
             ''
           )}
-          {parseInt(this.state.start) + 100 <= totalHits ? (
+          {parseInt(this.state.start, 10) + 100 <= totalHits ? (
             <a onClick={this.nextPage}>
               &nbsp;&nbsp;Next Page&nbsp;<i className="fa fa-forward" />
             </a>
@@ -415,6 +396,6 @@ const Workflow = React.createClass({
       </div>
     );
   }
-});
+}
 
 export default connect(state => state.workflow)(Workflow);
