@@ -14,7 +14,7 @@ class MetadataService extends BaseService {
   }
 
   async taskDef(token) {
-    const result = await this.get('metadata/workflow/taskdefs', token);
+    const result = await this.get('metadata/taskdefs', token);
 
     return { result };
   }
