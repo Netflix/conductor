@@ -9,9 +9,7 @@ class SystemRoutes {
     app.get('/api/sys/', async (req, res, next) => {
       try {
         const { token } = req;
-
         const result = await this.systemService.adminConfig(token);
-        console.log('result =>', result);
         res.status(200).send(result);
       } catch (err) {
         next(err);
