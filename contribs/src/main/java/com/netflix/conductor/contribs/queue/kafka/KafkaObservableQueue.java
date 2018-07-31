@@ -66,17 +66,17 @@ public class KafkaObservableQueue implements ObservableQueue {
 
   private static final String KAFKA_PREFIX = "kafka.";
 
-  private String queueName;
+  private final String queueName;
 
-  private int pollTimeInMS;
+  private final int pollTimeInMS;
 
-  private int longPollTimeout;
+  private final int longPollTimeout;
 
-  private int pollCount;
+  private final int pollCount;
 
-  private KafkaProducer<String, String> producer;
+  private final KafkaProducer<String, String> producer;
 
-  private KafkaConsumer<String, String> consumer;
+  private final KafkaConsumer<String, String> consumer;
 
   @Inject
   public KafkaObservableQueue(String queueName, Configuration config) {
@@ -89,9 +89,9 @@ public class KafkaObservableQueue implements ObservableQueue {
     Properties producerProps = new Properties();
     Properties consumerProps = new Properties();
     consumerProps.put("group.id", queueName + "_group");
-    int randomId = new Random().nextInt(100);
-    consumerProps.put("client.id", queueName + "_consumer_"+randomId);
-    producerProps.put("client.id", queueName + "_producer_"+randomId);
+    String serverId = config.getServerId();
+    consumerProps.put("client.id", queueName + "_consumer_"+serverId);
+    producerProps.put("client.id", queueName + "_producer_"+serverId);
     Map<String, Object> configMap = config.getAll();
     for (Entry<String, Object> entry : configMap.entrySet()) {
       String key = entry.getKey();
@@ -112,7 +112,7 @@ public class KafkaObservableQueue implements ObservableQueue {
     producer = new KafkaProducer<>(producerProps);
     consumer = new KafkaConsumer<>(consumerProps);
     consumer.subscribe(Collections.singletonList(queueName));
-    logger.info("KafkaaObservableQueue initialized for {}", queueName);
+    logger.info("KafkaObservableQueue initialized for {}", queueName);
   }
 
   @Override
@@ -163,12 +163,12 @@ public class KafkaObservableQueue implements ObservableQueue {
         return messages;
       }
 
-      logger.info("polled messages from kafka {}", records.count());
+      logger.info("polled {} messages from kafka topic.", records.count());
       records.forEach(record -> {
-        logger.debug("Consumer Record: key {}, value {}, partition {}, offset {}", record.key(),
+        logger.debug("Consumer Record: key: {}, value: {}, partition: {}, offset: {}", record.key(),
             record.value(), record.partition(), record.offset());
         Message message =
-            new Message(record.key() + record.partition(), String.valueOf(record.value()), "");
+            new Message(record.key() +":"+ record.partition(), String.valueOf(record.value()), "");
         messages.add(message);
       });
       consumer.commitAsync();
