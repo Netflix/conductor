@@ -1,4 +1,4 @@
-import WorflowService from './services/workflow.service';
+import WorflowService from '../services/workflow.service';
 
 class WorkflowRoutes {
   constructor() {

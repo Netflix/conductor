@@ -2,7 +2,7 @@ import BaseService from './base.service';
 
 class SystemService extends BaseService {
   async adminConfig(token) {
-    const config = await this.get('admin/config', token);
+    const { data: config } = await this.get('admin/config', token);
 
     const result = {
       ...config,

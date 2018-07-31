@@ -1,4 +1,4 @@
-import SystemService from './services/system.service';
+import SystemService from '../services/system.service';
 
 class SystemRoutes {
   constructor() {
@@ -10,8 +10,8 @@ class SystemRoutes {
       try {
         const { token } = req;
 
-        const result = this.systemService.adminConfig(token);
-
+        const result = await this.systemService.adminConfig(token);
+        console.log('result =>', result);
         res.status(200).send(result);
       } catch (err) {
         next(err);

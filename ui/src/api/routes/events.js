@@ -1,4 +1,4 @@
-import EventsService from './services/events.service';
+import EventsService from '../services/events.service';
 
 class SystemRoutes {
   constructor() {

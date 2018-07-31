@@ -28,7 +28,7 @@
     "create-react-class": "^15.5.3",
     "d3": "^3.5.16",
     "dagre-d3": "^0.4.17",
-    "express": "^4.13.3",
+    "express": "^4.16.3",
     "fbjs": "^0.7.2",
     "graceful-fs": "^4.0.0",
     "gulp-env": "^0.4.0",

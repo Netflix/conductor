@@ -38,7 +38,7 @@ class WorkflowService extends BaseService {
       ' AND '
     )}&start=${start}&query=${q}`;
 
-    const { results: hits, totalHits } = await this.get(url, req.token);
+    const { hits, totalHits } = await this.get(url, req.token);
 
     return { result: { hits, totalHits } };
   }
@@ -66,7 +66,7 @@ class WorkflowService extends BaseService {
     }
 
     const url = `search-by-tasks?size=100&sort=startTime:DESC&freeText=${freeText.join(' AND ')}&start=${start}`;
-    const { results: hits, totalHits } = await this.get(url, req.token);
+    const { hits, totalHits } = await this.get(url, req.token);
 
     return { result: { hits, totalHits } };
   }
