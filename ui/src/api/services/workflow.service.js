@@ -139,6 +139,7 @@ class WorkflowService extends BaseService {
   }
 
   async terminate(workflowId, token) {
+    console.log(workflowId, token);
     await this.delete(`workflow/${workflowId}`, token);
   }
 

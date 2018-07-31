@@ -39,7 +39,7 @@ class WorkflowRoutes {
         const {
           params: { workflowId },
           token
-        } = req.params;
+        } = req;
         await this.worflowService.terminate(workflowId, token);
 
         res.status(200).send({ result: workflowId });

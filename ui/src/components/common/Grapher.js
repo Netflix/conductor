@@ -1,3 +1,4 @@
+/* eslint-disable no-plusplus */
 import React, { Component } from 'react';
 import dagreD3 from 'dagre-d3';
 import d3 from 'd3';
@@ -19,51 +20,42 @@ class Grapher extends Component {
     this.setDivRef = elem => (this.divElem = elem);
     this.setPropsDivRef = elem => (this.propsDivElem = elem);
 
-    let starPoints = function(outerRadius, innerRadius) {
-      var results = '';
-      var angle = Math.PI / 8;
-      for (var i = 0; i < 2 * 8; i++) {
+    const starPoints = (outerRadius, innerRadius) => {
+      let results = '';
+      const angle = Math.PI / 8;
+      for (let i = 0; i < 2 * 8; i++) {
         // Use outer or inner radius depending on what iteration we are in.
-        var r = (i & 1) == 0 ? outerRadius : innerRadius;
-        var currX = 0 + Math.cos(i * angle) * r;
-        var currY = 0 + Math.sin(i * angle) * r;
+        const r = (i & 1) == 0 ? outerRadius : innerRadius;
+        const currX = 0 + Math.cos(i * angle) * r;
+        const currY = 0 + Math.sin(i * angle) * r;
         if (i == 0) {
-          results = currX + ',' + currY;
+          results = `${currX},${currY}`;
         } else {
-          results += ', ' + currX + ',' + currY;
+          results += `, ${currX},${currY}`;
         }
       }
       return results;
     };
 
     this.grapher.shapes().house = function(parent, bbox, node) {
-      var w = bbox.width,
+      let w = bbox.width,
         h = bbox.height,
         points = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: -h }, { x: w / 2, y: (-h * 3) / 2 }, { x: 0, y: -h }];
-      let shapeSvg = parent
+      const shapeSvg = parent
         .insert('polygon', ':first-child')
-        .attr(
-          'points',
-          points
-            .map(function(d) {
-              return d.x + ',' + d.y;
-            })
-            .join(' ')
-        )
-        .attr('transform', 'translate(' + -w / 2 + ',' + (h * 3) / 4 + ')');
+        .attr('points', points.map(d => d.x + ',' + d.y).join(' '))
+        .attr('transform', `translate(${-w / 2},${(h * 3) / 4})`);
 
-      node.intersect = function(point) {
-        return dagreD3.intersect.polygon(node, points, point);
-      };
+      node.intersect = point => dagreD3.intersect.polygon(node, points, point);
 
       return shapeSvg;
     };
 
-    this.grapher.shapes().star = function(parent, bbox, node) {
-      var w = bbox.width,
+    this.grapher.shapes().star = (parent, bbox, node) => {
+      let w = bbox.width,
         h = bbox.height,
         points = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: -h }, { x: w / 2, y: (-h * 3) / 2 }, { x: 0, y: -h }];
-      let shapeSvg = parent.insert('polygon', ':first-child').attr('points', starPoints(w, h));
+      const shapeSvg = parent.insert('polygon', ':first-child').attr('points', starPoints(w, h));
       node.intersect = function(point) {
         return dagreD3.intersect.polygon(node, points, point);
       };
@@ -81,7 +73,7 @@ class Grapher extends Component {
   }
 
   getSubGraph() {
-    let subg = this.state.subGraph;
+    const subg = this.state.subGraph;
     if (subg == null) {
       return '';
     }
@@ -91,13 +83,13 @@ class Grapher extends Component {
   render() {
     const { layout, edges, vertices } = this.props;
 
-    let g = new dagreD3.graphlib.Graph().setGraph({ rankdir: layout });
+    const g = new dagreD3.graphlib.Graph().setGraph({ rankdir: layout });
 
-    for (let vk in vertices) {
-      let v = vertices[vk];
+    for (const vk in vertices) {
+      const v = vertices[vk];
       let l = v.name;
       if (!v.system) {
-        l = v.name + '\n \n(' + v.ref + ')';
+        l = `${v.name}\n \n(${v.ref})`;
       } else {
         l = v.ref;
       }
@@ -105,7 +97,7 @@ class Grapher extends Component {
         label: l,
         shape: v.shape,
         style: v.style,
-        labelStyle: v.labelStyle + '; font-weight:normal; font-size: 11px'
+        labelStyle: `${v.labelStyle}; font-weight:normal; font-size: 11px`
       });
     }
 
@@ -113,51 +105,51 @@ class Grapher extends Component {
       g.setEdge(e.from, e.to, { label: e.label, lineInterpolate: 'basis', style: e.style });
     });
 
-    g.nodes().forEach(function(v) {
-      var node = g.node(v);
+    g.nodes().forEach(v => {
+      let node = g.node(v);
       if (node == null) {
-        console.log('NO node found ' + v);
+        console.log(`NO node found ${v}`);
       }
       node.rx = node.ry = 5;
     });
 
-    let svg = d3.select(this.svgElem);
-    let inner = svg.select('g');
+    const svg = d3.select(this.svgElem);
+    const inner = svg.select('g');
     inner.attr('transform', 'translate(20,20)');
     this.grapher(inner, g);
-    let w = g.graph().width + 50;
-    let h = g.graph().height + 50;
-    svg.attr('width', w + 'px').attr('height', h + 'px');
+    const w = g.graph().width + 50;
+    const h = g.graph().height + 50;
+    svg.attr('width', `${w}px`).attr('height', `${h}px`);
 
-    let innerGraph = this.state.innerGraph || [];
-    let p = this;
+    const innerGraph = this.state.innerGraph || [];
+    const p = this;
 
-    let showSubGraphDetails = function() {
-      let id = p.state.subGraphId;
-      window.open('#/workflow/id/' + id, '_new');
+    const showSubGraphDetails = () => {
+      const id = p.state.subGraphId;
+      window.open(`#/workflow/id/${id}`, '_new');
     };
 
-    let hidesub = function() {
+    const hidesub = function() {
       p.setState({ showSubGraph: false });
     };
 
-    let hideProps = function() {
+    const hideProps = function() {
       p.setState({ showSideBar: false });
     };
 
-    inner.selectAll('g.node').on('click', function(v) {
+    inner.selectAll('g.node').on('click', v => {
       if (innerGraph[v] != null) {
-        let data = vertices[v].data;
+        const data = vertices[v].data;
 
-        let n = innerGraph[v].edges;
-        let vx = innerGraph[v].vertices;
-        let subg = { n: n, vx: vx, layout: layout };
+        const n = innerGraph[v].edges;
+        const vx = innerGraph[v].vertices;
+        const subg = { n, vx, layout };
 
-        p.propsDivElem.style.left = window.innerWidth / 2 + 100 + 'px';
-        p.propsDivElem.style.width = window.innerWidth / 2 - 100 + 'px';
+        p.propsDivElem.style.left = `${window.innerWidth / 2 + 100}px`;
+        p.propsDivElem.style.width = `${window.innerWidth / 2 - 100}px`;
         p.propsDivElem.style.overflowX = 'scroll';
-        p.propsDivElem.style.height = window.innerHeight + 'px';
-        p.divElem.style.width = window.outerWidth / 2 - 100 + 'px';
+        p.propsDivElem.style.height = `${window.innerHeight}px`;
+        p.divElem.style.width = `${window.outerWidth / 2 - 100}px`;
         p.divElem.style.display = 'inline-block';
 
         p.setState({
@@ -169,10 +161,10 @@ class Grapher extends Component {
         });
         p.setState({ showSubGraph: true });
       } else if (vertices[v].tooltip != null) {
-        let data = vertices[v].data;
-        p.propsDivElem.style.left = window.innerWidth / 2 + 100 + 'px';
-        p.propsDivElem.style.width = window.innerWidth / 2 - 100 + 'px';
-        p.propsDivElem.style.height = window.innerHeight + 'px';
+        const data = vertices[v].data;
+        p.propsDivElem.style.left = `${window.innerWidth / 2 + 100}px`;
+        p.propsDivElem.style.width = `${window.innerWidth / 2 - 100}px`;
+        p.propsDivElem.style.height = `${window.innerHeight}px`;
 
         p.propsDivElem.style.position = 'fixed';
         p.propsDivElem.style.display = 'block';
@@ -201,7 +193,7 @@ class Grapher extends Component {
           </div>
           <Tabs defaultActiveKey={1}>
             <Tab eventKey={1} title="Summary">
-              <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}>
+              <Table responsive striped={false} hover={false} condensed={false} bordered>
                 <tbody>
                   <tr>
                     <th>Task Ref. Name</th>
@@ -226,7 +218,7 @@ class Grapher extends Component {
                   </tr>
                   <tr>
                     <td colSpan="4">
-                      <pre style={{ width: window.outerWidth / 2 - 140 + 'px' }} id="t_input">
+                      <pre style={{ width: `${window.outerWidth / 2 - 140}px` }} id="t_input">
                         {JSON.stringify(this.state.selectedTask.inputData, null, 3)}
                       </pre>
                     </td>
@@ -239,7 +231,7 @@ class Grapher extends Component {
                   </tr>
                   <tr>
                     <td colSpan="4">
-                      <pre style={{ width: window.outerWidth / 2 - 140 + 'px' }} id="t_output">
+                      <pre style={{ width: `${window.outerWidth / 2 - 140}px` }} id="t_output">
                         {JSON.stringify(this.state.selectedTask.outputData, null, 3)}
                       </pre>
                     </td>
