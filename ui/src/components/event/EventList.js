@@ -1,7 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
 import React from 'react';
-import { Popover, OverlayTrigger, Table } from 'react-bootstrap';
+import uuid from 'uuid';
 import { connect } from 'react-redux';
+import { Popover, OverlayTrigger, Table } from 'react-bootstrap';
 import { getEventHandlers } from '../../actions/WorkflowActions';
 
 class Events extends React.Component {
@@ -27,7 +28,7 @@ class Events extends React.Component {
           rootClose
           placement="bottom"
           overlay={
-            <Popover title="Event Handler Name" style={{ width: '300px' }}>
+            <Popover id={`popover-id-${uuid.v4()}`} title="Event Handler Name" style={{ width: '300px' }}>
               <div className="info">Unique name identifying the event handler.</div>
             </Popover>
           }
@@ -45,7 +46,7 @@ class Events extends React.Component {
           rootClose
           placement="bottom"
           overlay={
-            <Popover title="Event / Queue" style={{ width: '500px' }}>
+            <Popover id={`popover-id-${uuid.v4()}`} title="Event / Queue" style={{ width: '500px' }}>
               <div className="info">
                 <p>
                   Name of the Queue which the handler listens to. The supported queue systems are <b>SQS</b> and{' '}
@@ -71,7 +72,7 @@ class Events extends React.Component {
           rootClose
           placement="bottom"
           overlay={
-            <Popover title="Condition" style={{ width: '500px' }}>
+            <Popover id={`popover-id-${uuid.v4()}`} title="Condition" style={{ width: '500px' }}>
               <div className="info">
                 <p>An expression that can be evaluated with the payload in the queue.</p>
                 <p>The Actions are executed ONLY when the expression evaluation returns True</p>
@@ -94,7 +95,7 @@ class Events extends React.Component {
           rootClose
           placement="bottom"
           overlay={
-            <Popover title="Actions" style={{ width: '500px' }}>
+            <Popover id={`popover-id-${uuid.v4()}`} title="Actions" style={{ width: '500px' }}>
               <div className="info small">
                 <p>Set of actions that are taken when a message arrives with payload that matches the condition.</p>
                 <p>Supported Actions are: start_workflow, complete_task and fail_task</p>
@@ -119,7 +120,7 @@ class Events extends React.Component {
           rootClose
           placement="right"
           overlay={
-            <Popover title={row.name} style={{ width: '500px' }}>
+            <Popover id={`popover-id-${uuid.v4()}`} title={row.name} style={{ width: '500px' }}>
               <div className="left">
                 <pre>{JSON.stringify(row, null, 2)}</pre>
               </div>

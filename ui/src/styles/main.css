@@ -14,7 +14,7 @@
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 700;
-  src: local('Source Sans Pro Bold'), local('SourceSansPro-Bold'), url('../fonts/sourcesanspro-bold.woff') format('woff');
+  src: local('Source Sans Pro Bold'), local('SourceSansPro-Bold'), url('../fonts/SourceSansPro-Bold.otf.woff') format('woff');
 }
 
 *, *:before, *:after {
