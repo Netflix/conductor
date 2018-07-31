@@ -137,6 +137,46 @@ class WorkflowService extends BaseService {
 
     return { result: data, meta, subworkflows };
   }
+
+  async terminate(workflowId, token) {
+    await this.delete(`workflow/${workflowId}`, token);
+  }
+
+  async restart(workflowId, token) {
+    await this.post(`workflow/${workflowId}/restart`, token);
+  }
+
+  async retry(workflowId, token) {
+    await this.post(`workflow/${workflowId}/retry`, token);
+  }
+
+  async pause(workflowId, token) {
+    await this.put(`workflow/${workflowId}/pause`, token);
+  }
+
+  async resume(workflowId, token) {
+    await this.put(`workflow/${workflowId}/resume`, token);
+  }
+
+  async taskLog(taskId, token) {
+    const logs = await this.get(`tasks/${taskId}/log`, token);
+    return { logs };
+  }
+
+  async queueData(token) {
+    const sizes = await this.get('tasks/queue/all', token);
+    const polldata = await this.get('tasks/queue/polldata/all', token);
+    polldata.forEach(pd => {
+      let qname = pd.queueName;
+
+      if (pd.domain != null) {
+        qname = `${pd.domain}:${qname}`;
+      }
+      pd.qsize = sizes[qname];
+    });
+
+    return { polldata };
+  }
 }
 
 module.exports = WorkflowService;
