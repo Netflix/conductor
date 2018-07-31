@@ -8,7 +8,7 @@
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 400;
-  src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url('../fonts/sourcesanspro.woff') format('woff');
+  src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url('../fonts/SourceSansPro-Regular.otf.woff') format('woff');
 }
 @font-face {
   font-family: 'Source Sans Pro';

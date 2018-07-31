@@ -1,7 +1,8 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import uuid from 'uuid';
 import { Input, Popover, OverlayTrigger } from 'react-bootstrap';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
-import { connect } from 'react-redux';
 import { getTaskDefs } from '../../../actions/WorkflowActions';
 
 const TaskMetaList = React.createClass({
@@ -19,13 +20,11 @@ const TaskMetaList = React.createClass({
     this.state.taskDefs = nextProps.taskDefs;
   },
   render() {
-    var wfs = this.state.taskDefs;
+    const { taskDefs: wfs } = this.state;
 
-    function retries(cell, row) {
-      if (row.retryLogic == 'FIXED') {
-        return row.retryLogic + ' (' + row.retryDelaySeconds + ' seconds)';
-      }
-    }
+    const retries = (_, row) => {
+      return row.retryLogic === 'FIXED' ? `${row.retryLogic} (${row.retryDelaySeconds} seconds)` : '';
+    };
 
     function editor(cell, row) {
       return (
@@ -34,7 +33,7 @@ const TaskMetaList = React.createClass({
           rootClose
           placement="right"
           overlay={
-            <Popover title={row.name} style={{ width: '500px' }}>
+            <Popover id={`popover-id-${uuid.v4()}`} title={row.name} style={{ width: '500px' }}>
               <div className="left">
                 <form>
                   <Input
@@ -86,13 +85,7 @@ const TaskMetaList = React.createClass({
                     addonBefore="Concurrent Exec Limit"
                   />
                   <br />
-                  <Input
-                    type="textarea"
-                    label="Task Description"
-                    ref="description"
-                    value={row.description}
-                    readonly={true}
-                  />
+                  <Input type="textarea" label="Task Description" ref="description" value={row.description} readonly />
                   <br />
                 </form>
               </div>
@@ -107,29 +100,29 @@ const TaskMetaList = React.createClass({
     return (
       <div className="ui-content">
         <h1>Task Definitions</h1>
-        <BootstrapTable data={wfs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
-          <TableHeaderColumn dataField="name" isKey={true} dataAlign="left" dataSort={true} dataFormat={editor}>
+        <BootstrapTable data={wfs} striped hover search exportCSV={false} pagination={false}>
+          <TableHeaderColumn dataField="name" isKey dataAlign="left" dataSort dataFormat={editor}>
             Name/Version
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="ownerApp" dataSort={true}>
+          <TableHeaderColumn dataField="ownerApp" dataSort>
             Owner App
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="timeoutPolicy" dataSort={true}>
+          <TableHeaderColumn dataField="timeoutPolicy" dataSort>
             Timeout Policy
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="timeoutSeconds" dataSort={true}>
+          <TableHeaderColumn dataField="timeoutSeconds" dataSort>
             Timeout Seconds
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="responseTimeoutSeconds" dataSort={true}>
+          <TableHeaderColumn dataField="responseTimeoutSeconds" dataSort>
             Response Timeout Seconds
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="retryCount" dataSort={true}>
+          <TableHeaderColumn dataField="retryCount" dataSort>
             Retry Count
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="concurrentExecLimit" dataSort={true}>
+          <TableHeaderColumn dataField="concurrentExecLimit" dataSort>
             Concurrent Exec Limit
           </TableHeaderColumn>
-          <TableHeaderColumn dataField="retryLogic" dataSort={true} dataFormat={retries}>
+          <TableHeaderColumn dataField="retryLogic" dataSort dataFormat={retries}>
             Retry Logic
           </TableHeaderColumn>
         </BootstrapTable>
