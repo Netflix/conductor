@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { Input, Button, Panel, Popover, OverlayTrigger, ButtonGroup, Grid, Row, Col } from 'react-bootstrap';
-import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
+import uuid from 'uuid';
 import { connect } from 'react-redux';
-import { searchWorkflows, getWorkflowDefs } from '../../../actions/WorkflowActions';
 import Typeahead from 'react-bootstrap-typeahead';
+import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
+import { Input, Button, Panel, Popover, OverlayTrigger, ButtonGroup, Grid, Row, Col } from 'react-bootstrap';
+import { searchWorkflows, getWorkflowDefs } from '../../../actions/WorkflowActions';
 
 function linkMaker(cell) {
   return <Link to={`/workflow/id/${cell}`}>{cell}</Link>;
@@ -41,7 +42,7 @@ function miniDetails(cell, row) {
         rootClose
         placement="left"
         overlay={
-          <Popover title="Workflow Details" width={400}>
+          <Popover id={`popover-id-${uuid.v4()}`} title="Workflow Details" width={400}>
             <span className="red">
               {row.reasonForIncompletion == null ? (
                 ''
