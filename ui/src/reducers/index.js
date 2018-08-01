@@ -1,9 +1,10 @@
-import { combineReducers } from 'redux'
-import workflow from './workflow'
-import global from './global'
+import { combineReducers } from 'redux';
+import workflow from './workflow';
+import global from './global';
 
 const workflowApp = combineReducers({
-  workflow, global
-})
+  workflow,
+  global
+});
 
-export default workflowApp
+export default workflowApp;

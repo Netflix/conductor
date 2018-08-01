@@ -11,7 +11,8 @@ import Intro from './components/common/Home';
 import Help from './components/common/Help';
 
 const routeConfig = [
-  { path: '/',
+  {
+    path: '/',
     component: App,
     indexRoute: { component: Intro },
     childRoutes: [
@@ -26,6 +27,6 @@ const routeConfig = [
       { path: 'help', component: Help }
     ]
   }
-]
+];
 
 export default routeConfig;

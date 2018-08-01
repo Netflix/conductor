@@ -1,19 +1,30 @@
-import http from '../core/HttpClient';
+/* eslint-disable consistent-return */
+import axios from 'axios';
 
-export function searchWorkflows(query, search, hours, fullstr, start) {
-  return function(dispatch) {
+const searchWorkflowsByTaskId = (dispatch, search, hours, start) => {
+  return axios.get(`/api/wfe/search-by-task/${search}?h=${hours}&start=${start}`).then(({ data }) => {
+    dispatch({
+      type: 'RECEIVED_WORKFLOWS',
+      data
+    });
+  });
+};
+
+export const searchWorkflows = (query, search, hours, fullstr, start) => {
+  return dispatch => {
     dispatch({
       type: 'GET_WORKFLOWS',
       search
     });
 
-    if (fullstr && search != null && search.length > 0) {
-      search = `"${search}"`;
-    }
 
-    return http
-      .get(`/api/wfe/${status}?q=${query}&h=${hours}&freeText=${search}&start=${start}`)
-      .then(data => {
+    return axios
+      .get(
+        `/api/wfe?q=${query}&h=${hours}&freeText=${
+          fullstr && search != null && search.length > 0 ? `"${search}"` : search
+        }&start=${start}`
+      )
+      .then(({ data }) => {
         if (data && data.result && data.result.totalHits > 0) {
           dispatch({
             type: 'RECEIVED_WORKFLOWS',
@@ -30,27 +41,18 @@ export function searchWorkflows(query, search, hours, fullstr, start) {
         });
       });
   };
-}
+};
 
-function searchWorkflowsByTaskId(dispatch, search, hours, start) {
-  return http.get(`/api/wfe/search-by-task/${search}?h=${hours}&start=${start}`).then(data => {
-    dispatch({
-      type: 'RECEIVED_WORKFLOWS',
-      data
-    });
-  });
-}
-
-export function getWorkflowDetails(workflowId) {
-  return function(dispatch) {
+export const getWorkflowDetails = workflowId => {
+  return dispatch => {
     dispatch({
       type: 'GET_WORKFLOW_DETAILS',
       workflowId
     });
 
-    return http
+    return axios
       .get(`/api/wfe/id/${workflowId}`)
-      .then(data => {
+      .then(({ data }) => {
         dispatch({
           type: 'RECEIVED_WORKFLOW_DETAILS',
           data
@@ -63,18 +65,18 @@ export function getWorkflowDetails(workflowId) {
         });
       });
   };
-}
+};
 
-export function terminateWorkflow(workflowId) {
-  return function(dispatch) {
+export const terminateWorkflow = workflowId => {
+  return dispatch => {
     dispatch({
       type: 'REQUESTED_TERMINATE_WORKFLOW',
       workflowId
     });
 
-    return http
+    return axios
       .delete(`/api/wfe/terminate/${workflowId}`)
-      .then(data => {
+      .then(() => {
         dispatch({
           type: 'RECEIVED_TERMINATE_WORKFLOW',
           workflowId
@@ -87,18 +89,18 @@ export function terminateWorkflow(workflowId) {
         });
       });
   };
-}
+};
 
-export function restartWorfklow(workflowId) {
-  return function(dispatch) {
+export const restartWorfklow = workflowId => {
+  return dispatch => {
     dispatch({
       type: 'REQUESTED_RESTART_WORKFLOW',
       workflowId
     });
 
-    return http
+    return axios
       .post(`/api/wfe/restart/${workflowId}`)
-      .then(data => {
+      .then(() => {
         dispatch({
           type: 'RECEIVED_RESTART_WORKFLOW',
           workflowId
@@ -111,18 +113,18 @@ export function restartWorfklow(workflowId) {
         });
       });
   };
-}
+};
 
-export function retryWorfklow(workflowId) {
-  return function(dispatch) {
+export const retryWorfklow = workflowId => {
+  return dispatch => {
     dispatch({
       type: 'REQUESTED_RETRY_WORKFLOW',
       workflowId
     });
 
-    return http
+    return axios
       .post(`/api/wfe/retry/${workflowId}`)
-      .then(data => {
+      .then(() => {
         dispatch({
           type: 'RECEIVED_RETRY_WORKFLOW',
           workflowId
@@ -135,18 +137,18 @@ export function retryWorfklow(workflowId) {
         });
       });
   };
-}
+};
 
-export function pauseWorfklow(workflowId) {
-  return function(dispatch) {
+export const pauseWorfklow = workflowId => {
+  return dispatch => {
     dispatch({
       type: 'REQUESTED_PAUSE_WORKFLOW',
       workflowId
     });
 
-    return http
+    return axios
       .post(`/api/wfe/pause/${workflowId}`)
-      .then(data => {
+      .then(() => {
         dispatch({
           type: 'RECEIVED_PAUSE_WORKFLOW',
           workflowId
@@ -159,18 +161,18 @@ export function pauseWorfklow(workflowId) {
         });
       });
   };
-}
+};
 
-export function resumeWorfklow(workflowId) {
-  return function(dispatch) {
+export const resumeWorfklow = workflowId => {
+  return dispatch => {
     dispatch({
       type: 'REQUESTED_RESUME_WORKFLOW',
       workflowId
     });
 
-    return http
+    return axios
       .post(`/api/wfe/resume/${workflowId}`)
-      .then(data => {
+      .then(() => {
         dispatch({
           type: 'RECEIVED_RESUME_WORKFLOW',
           workflowId
@@ -183,18 +185,18 @@ export function resumeWorfklow(workflowId) {
         });
       });
   };
-}
+};
 
 // metadata
-export function getWorkflowDefs() {
-  return function(dispatch) {
+export const getWorkflowDefs = () => {
+  return dispatch => {
     dispatch({
       type: 'LIST_WORKFLOWS'
     });
 
-    return http
+    return axios
       .get('/api/wfe/metadata/workflow')
-      .then(data => {
+      .then(({ data }) => {
         dispatch({
           type: 'RECEIVED_LIST_WORKFLOWS',
           workflows: data
@@ -207,19 +209,19 @@ export function getWorkflowDefs() {
         });
       });
   };
-}
+};
 
-export function getWorkflowMetaDetails(name, version) {
-  return function(dispatch) {
+export const getWorkflowMetaDetails = (name, version) => {
+  return dispatch => {
     dispatch({
       type: 'GET_WORKFLOW_DEF',
       name,
       version
     });
 
-    return http
+    return axios
       .get(`/api/wfe/metadata/workflow/${name}/${version}`)
-      .then(data => {
+      .then(({ data }) => {
         dispatch({
           type: 'RECEIVED_WORKFLOW_DEF',
           name,
@@ -234,17 +236,17 @@ export function getWorkflowMetaDetails(name, version) {
         });
       });
   };
-}
+};
 
-export function getTaskDefs() {
-  return function(dispatch) {
+export const getTaskDefs = () => {
+  return dispatch => {
     dispatch({
       type: 'GET_TASK_DEFS'
     });
 
-    return http
+    return axios
       .get('/api/wfe/metadata/taskdef')
-      .then(data => {
+      .then(({ data }) => {
         dispatch({
           type: 'RECEIVED_TASK_DEFS',
           taskDefs: data
@@ -257,20 +259,20 @@ export function getTaskDefs() {
         });
       });
   };
-}
+};
 
-export function getQueueData() {
-  return function(dispatch) {
+export const getQueueData = () => {
+  return dispatch => {
     dispatch({
       type: 'GET_POLL_DATA'
     });
 
-    return http
+    return axios
       .get('/api/wfe/queue/data')
-      .then(data => {
+      .then(({ data: queueData }) => {
         dispatch({
           type: 'RECEIVED_POLL_DATA',
-          queueData: data
+          queueData
         });
       })
       .catch(e => {
@@ -280,18 +282,18 @@ export function getQueueData() {
         });
       });
   };
-}
+};
 
-export function updateWorkflow(workflow) {
-  return function(dispatch) {
+export const updateWorkflow = workflow => {
+  return dispatch => {
     dispatch({
       type: 'REQUESTED_UPDATE_WORKFLOW_DEF',
       workflow
     });
 
-    return http
+    return axios
       .put('/api/wfe/metadata/', workflow)
-      .then(data => {
+      .then(() => {
         dispatch({
           type: 'RECEIVED_UPDATE_WORKFLOW_DEF'
         });
@@ -303,20 +305,20 @@ export function updateWorkflow(workflow) {
         });
       });
   };
-}
+};
 
-export function getEventHandlers() {
-  return function(dispatch) {
+export const getEventHandlers = () => {
+  return dispatch => {
     dispatch({
       type: 'LIST_EVENT_HANDLERS'
     });
 
-    return http
+    return axios
       .get('/api/events')
-      .then(data => {
+      .then(({ data: events }) => {
         dispatch({
           type: 'RECEIVED_LIST_EVENT_HANDLERS',
-          events: data
+          events
         });
       })
       .catch(e => {
@@ -326,17 +328,17 @@ export function getEventHandlers() {
         });
       });
   };
-}
+};
 
-export function getEvents(event, time, query) {
-  return function(dispatch) {
+export const getEvents = () => {
+  return dispatch => {
     dispatch({
       type: 'LIST_EVENT'
     });
 
-    return http
+    return axios
       .get('/api/events/executions')
-      .then(data => {
+      .then(({ data }) => {
         dispatch({
           type: 'RECEIVED_LIST_EVENT',
           events: data
@@ -349,20 +351,20 @@ export function getEvents(event, time, query) {
         });
       });
   };
-}
+};
 
-export function getTaskLogs(taskId) {
-  return function(dispatch) {
+export const getTaskLogs = taskId => {
+  return dispatch => {
     dispatch({
       type: 'GET_TASK_LOGS'
     });
 
-    return http
+    return axios
       .get(`/api/wfe/task/log${taskId}`)
-      .then(data => {
+      .then(({ data: logs }) => {
         dispatch({
           type: 'RECEIVED_GET_TASK_LOGS',
-          logs: data
+          logs
         });
       })
       .catch(e => {
@@ -372,4 +374,4 @@ export function getTaskLogs(taskId) {
         });
       });
   };
-}
+};

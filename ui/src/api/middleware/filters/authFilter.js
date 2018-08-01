@@ -1,6 +1,6 @@
 export default class AuthFilter {
-  init(app) {
-    app.use((req, res, next) => {
+  init = app => {
+    app.use((req, _, next) => {
       const { headers: { authorization = '' } = {} } = req;
 
       if (!authorization) {
@@ -11,5 +11,5 @@ export default class AuthFilter {
 
       next();
     });
-  }
+  };
 }
