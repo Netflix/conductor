@@ -10,6 +10,20 @@ import BaseService from './base.service';
 const LOG_DATE_FORMAT = 'MM/DD/YY, HH:mm:ss:SSS';
 
 class WorkflowService extends BaseService {
+  constructor() {
+    super();
+
+    const {
+      WORKFLOW_API_BASE_ROUTE = 'workflow',
+      META_API_BASE_ROUTE = 'metadata',
+      TASKS_API_BASE_ROUTE = 'tasks'
+    } = process.env;
+
+    this.baseWorkflowRoute = WORKFLOW_API_BASE_ROUTE;
+    this.baseMetadataRoute = META_API_BASE_ROUTE;
+    this.baseTasksRoute = TASKS_API_BASE_ROUTE;
+  }
+
   async search(reqFreeText, reqStart, reqH, q, token) {
     const freeText = [];
     if (reqFreeText !== '') {
@@ -32,7 +46,7 @@ class WorkflowService extends BaseService {
       start = reqStart;
     }
 
-    const url = `workflow/search?size=100&sort=startTime:DESC&freeText=${freeText.join(
+    const url = `${this.baseWorkflowRoute}/search?size=100&sort=startTime:DESC&freeText=${freeText.join(
       ' AND '
     )}&start=${start}&query=${q}`;
 
@@ -61,15 +75,20 @@ class WorkflowService extends BaseService {
       start = reqStart;
     }
 
-    const url = `search-by-tasks?size=100&sort=startTime:DESC&freeText=${freeText.join(' AND ')}&start=${start}`;
+    const url = `${this.baseWorkflowRoute}/search-by-tasks?size=100&sort=startTime:DESC&freeText=${freeText.join(
+      ' AND '
+    )}&start=${start}`;
     const { hits, totalHits } = await this.get(url, token);
 
     return { result: { hits, totalHits } };
   }
 
   async getByWorkflowId(workflowId, token) {
-    const data = await this.get(`workflow/${workflowId}?includeTasks=true`, token);
-    const meta = await this.get(`metadata/workflow/${data.workflowType}?version=${data.version}`, token);
+    const data = await this.get(`${this.baseWorkflowRoute}/${workflowId}?includeTasks=true`, token);
+    const meta = await this.get(
+      `${this.baseMetadataRoute}/workflow/${data.workflowType}?version=${data.version}`,
+      token
+    );
 
     const subs = filter(identity)(
       map(t1 => {
@@ -103,7 +122,7 @@ class WorkflowService extends BaseService {
       }
     });
 
-    const logs = map(task => Promise.all([task, this.get(`tasks/${task.taskId}/log`)]))(data.tasks);
+    const logs = map(task => Promise.all([task, this.get(`${this.baseTasksRoute}/${task.taskId}/log`)]))(data.tasks);
 
     await Promise.all(logs).then(result => {
       forEach(([task, logs]) => {
@@ -116,8 +135,8 @@ class WorkflowService extends BaseService {
     const promises = map(({ name, version, subWorkflowId, referenceTaskName }) =>
       Promise.all([
         referenceTaskName,
-        this.get(`metadata/workflow/${name}?version=${version}`, token),
-        this.get(`workflow/${subWorkflowId}?includeTasks=true`, token)
+        this.get(`${this.baseMetadataRoute}/workflow/${name}?version=${version}`, token),
+        this.get(`${this.baseWorkflowRoute}/${subWorkflowId}?includeTasks=true`, token)
       ])
     )(subs);
 
@@ -136,33 +155,33 @@ class WorkflowService extends BaseService {
 
   async terminate(workflowId, token) {
     console.log(workflowId, token);
-    await this.delete(`workflow/${workflowId}`, token);
+    await this.delete(`${this.baseWorkflowRoute}/${workflowId}`, token);
   }
 
   async restart(workflowId, token) {
-    await this.post(`workflow/${workflowId}/restart`, token);
+    await this.post(`${this.baseWorkflowRoute}/${workflowId}/restart`, token);
   }
 
   async retry(workflowId, token) {
-    await this.post(`workflow/${workflowId}/retry`, token);
+    await this.post(`${this.baseWorkflowRoute}/${workflowId}/retry`, token);
   }
 
   async pause(workflowId, token) {
-    await this.put(`workflow/${workflowId}/pause`, token);
+    await this.put(`${this.baseWorkflowRoute}/${workflowId}/pause`, token);
   }
 
   async resume(workflowId, token) {
-    await this.put(`workflow/${workflowId}/resume`, token);
+    await this.put(`${this.baseWorkflowRoute}/${workflowId}/resume`, token);
   }
 
   async taskLog(taskId, token) {
-    const logs = await this.get(`tasks/${taskId}/log`, token);
+    const logs = await this.get(`${this.baseTasksRoute}/${taskId}/log`, token);
     return { logs };
   }
 
   async queueData(token) {
-    const sizes = await this.get('tasks/queue/all', token);
-    const polldata = await this.get('tasks/queue/polldata/all', token);
+    const sizes = await this.get(`${this.baseTasksRoute}/queue/all`, token);
+    const polldata = await this.get(`${this.baseTasksRoute}/queue/polldata/all`, token);
     polldata.forEach(pd => {
       let qname = pd.queueName;
 
