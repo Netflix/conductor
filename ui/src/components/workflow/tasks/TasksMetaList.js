@@ -35,56 +35,45 @@ class TaskMetaList extends React.Component {
             <Popover id={`popover-id-${uuid.v4()}`} title={row.name} style={{ width: '500px' }}>
               <div className="left">
                 <form>
-                  <Input
-                    type="text"
-                    ref="retryCount"
-                    value={row.retryCount}
-                    addonBefore="Retry Count"
-                    addonAfter="Times"
-                  />
+                  <Input type="text" value={row.retryCount} addonBefore="Retry Count" addonAfter="Times" readOnly />
                   <br />
-                  <Input type="select" ref="retryLogic" value={row.retryLogic} addonBefore="Retry Logic">
+                  <Input type="select" value={row.retryLogic} addonBefore="Retry Logic" readOnly>
                     <option value="FIXED">FIXED</option>
                     <option value="EXPONENTIAL_BACKOFF">EXPONENTIAL_BACKOFF</option>
                   </Input>
                   <br />
                   <Input
                     type="text"
-                    ref="retryDelaySeconds"
-                    value={row.retryDelaySeconds}
+                    defaultValue={row.retryDelaySeconds}
                     addonBefore="Retry Delay"
                     addonAfter="Seconds"
+                    readOnly
                   />
                   <br />
-                  <Input type="select" ref="timeoutPolicy" value={row.timeoutPolicy} addonBefore="Time Out Action">
+                  <Input type="select" defaultValue={row.timeoutPolicy} addonBefore="Time Out Action" readOnly>
                     <option value="RETRY_TASK">RETRY TASK</option>
                     <option value="TIME_OUT_WF">TIME_OUT_WF</option>
                   </Input>
                   <br />
                   <Input
                     type="text"
-                    ref="timeoutSeconds"
-                    value={row.timeoutSeconds}
+                    defaultValue={row.timeoutSeconds}
                     addonBefore="Time Out"
                     addonAfter="Seconds"
+                    readOnly
                   />
                   <br />
                   <Input
                     type="text"
-                    ref="restimeoutSeconds"
-                    value={row.responseTimeoutSeconds}
+                    defaultValue={row.responseTimeoutSeconds}
                     addonBefore="Response Time Out"
                     addonAfter="timeoutSeconds"
+                    readOnly
                   />
                   <br />
-                  <Input
-                    type="text"
-                    ref="concurrentExecLimit"
-                    value={row.concurrentExecLimit}
-                    addonBefore="Concurrent Exec Limit"
-                  />
+                  <Input type="text" defaultValue={row.concurrentExecLimit} addonBefore="Concurrent Exec Limit" />
                   <br />
-                  <Input type="textarea" label="Task Description" ref="description" value={row.description} readonly />
+                  <Input type="textarea" label="Task Description" defaultValue={row.description} readOnly />
                   <br />
                 </form>
               </div>

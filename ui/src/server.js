@@ -9,6 +9,7 @@ const WorkflowRoutes = require('./api/routes/workflow');
 const MetadataRoutes = require('./api/routes/metadata');
 const SystemRoutes = require('./api/routes/system');
 const EventsRoutes = require('./api/routes/events');
+const TaskRoutes = require('./api/routes/tasks');
 
 class Main {
   init() {
@@ -31,6 +32,7 @@ class Main {
 
     new WorkflowRoutes().init(app);
     new MetadataRoutes().init(app);
+    new TaskRoutes().init(app);
     new SystemRoutes().init(app);
     new EventsRoutes().init(app);
   };

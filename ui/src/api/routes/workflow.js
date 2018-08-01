@@ -116,30 +116,6 @@ class WorkflowRoutes {
         next(err);
       }
     });
-
-    app.get('/task/log/:taskId', async (req, res, next) => {
-      try {
-        const {
-          params: { taskId },
-          token
-        } = req;
-
-        const logs = await this.worflowService.queueData(taskId, token);
-        res.status(200).send(logs);
-      } catch (err) {
-        next(err);
-      }
-    });
-
-    app.get('/queue/data', async (req, res, next) => {
-      try {
-        const { token } = req;
-        const polldata = await this.worflowService.queueData(token);
-        res.status(200).send(polldata);
-      } catch (err) {
-        next(err);
-      }
-    });
   }
 }
 

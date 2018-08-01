@@ -173,26 +173,6 @@ class WorkflowService extends BaseService {
   async resume(workflowId, token) {
     await this.put(`${this.baseWorkflowRoute}/${workflowId}/resume`, token);
   }
-
-  async taskLog(taskId, token) {
-    const logs = await this.get(`${this.baseTasksRoute}/${taskId}/log`, token);
-    return { logs };
-  }
-
-  async queueData(token) {
-    const sizes = await this.get(`${this.baseTasksRoute}/queue/all`, token);
-    const polldata = await this.get(`${this.baseTasksRoute}/queue/polldata/all`, token);
-    polldata.forEach(pd => {
-      let qname = pd.queueName;
-
-      if (pd.domain != null) {
-        qname = `${pd.domain}:${qname}`;
-      }
-      pd.qsize = sizes[qname];
-    });
-
-    return { polldata };
-  }
 }
 
 module.exports = WorkflowService;
