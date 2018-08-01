@@ -154,7 +154,6 @@ class WorkflowService extends BaseService {
   }
 
   async terminate(workflowId, token) {
-    console.log(workflowId, token);
     await this.delete(`${this.baseWorkflowRoute}/${workflowId}`, token);
   }
 

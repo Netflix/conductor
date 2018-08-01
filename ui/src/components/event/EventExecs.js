@@ -46,7 +46,7 @@ class EventExecs extends React.Component {
           </Row>
         </Grid>
         <br />
-        <Table responsive striped hover condensed bordered>
+        <Table responsive striped hover condensed={false} bordered>
           <thead>
             <tr>
               <th>Something here</th>
