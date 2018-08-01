@@ -1,16 +1,9 @@
 import axios from 'axios';
 
 class BaseService {
-  constructor(token) {
+  constructor() {
     const { WF_SERVER } = process.env;
     this.hostName = WF_SERVER;
-
-    // Set config defaults when creating the instance
-    this.config = {};
-
-    if (token) {
-      this.config.headers = { Authorization: token };
-    }
   }
 
   handleError = e => {
@@ -19,36 +12,43 @@ class BaseService {
     return e;
   };
 
-  async get(url) {
+  config = token => (token ? { Authorization: token } : {});
+
+  async get(url, token) {
     try {
-      const { data } = await axios({ ...this.config, method: 'GET', url: `${this.hostName}${url}` });
+      const { data } = await axios({ ...this.config(token), method: 'GET', url: `${this.hostName}${url}` });
       return data;
     } catch (e) {
       return this.handleError(e);
     }
   }
 
-  async post(url, body) {
+  async post(url, body, token) {
     try {
-      const { data } = await axios({ ...this.config, method: 'POST', url: `${this.hostName}${url}`, data: body });
+      const { data } = await axios({
+        ...this.config(token),
+        method: 'POST',
+        url: `${this.hostName}${url}`,
+        data: body
+      });
       return data;
     } catch (e) {
       return this.handleError(e);
     }
   }
 
-  async put(url, body) {
+  async put(url, body, token) {
     try {
-      const { data } = await axios({ ...this.config, method: 'PUT', url: `${this.hostName}${url}`, data: body });
+      const { data } = await axios({ ...this.config(token), method: 'PUT', url: `${this.hostName}${url}`, data: body });
       return data;
     } catch (e) {
       return this.handleError(e);
     }
   }
 
-  async delete(url) {
+  async delete(url, token) {
     try {
-      const { data } = await axios({ ...this.config, method: 'DELETE', url: `${this.hostName}${url}` });
+      const { data } = await axios({ ...this.config(token), method: 'DELETE', url: `${this.hostName}${url}` });
       return data;
     } catch (e) {
       return this.handleError(e);

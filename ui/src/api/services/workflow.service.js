@@ -67,9 +67,9 @@ class WorkflowService extends BaseService {
     return { result: { hits, totalHits } };
   }
 
-  async getByWorkflowId(req, workflowId) {
-    const data = await this.get(`workflow/${workflowId}?includeTasks=true`, req.token);
-    const meta = await this.get(`metadata/workflow/${data.workflowType}?version=${data.version}`, req.token);
+  async getByWorkflowId(workflowId, token) {
+    const data = await this.get(`workflow/${workflowId}?includeTasks=true`, token);
+    const meta = await this.get(`metadata/workflow/${data.workflowType}?version=${data.version}`, token);
 
     const subs = filter(identity)(
       map(t1 => {
@@ -116,8 +116,8 @@ class WorkflowService extends BaseService {
     const promises = map(({ name, version, subWorkflowId, referenceTaskName }) =>
       Promise.all([
         referenceTaskName,
-        this.get(`metadata/workflow/${name}?version=${version}`),
-        this.get(`workflow/${subWorkflowId}?includeTasks=true`)
+        this.get(`metadata/workflow/${name}?version=${version}`, token),
+        this.get(`workflow/${subWorkflowId}?includeTasks=true`, token)
       ])
     )(subs);
 

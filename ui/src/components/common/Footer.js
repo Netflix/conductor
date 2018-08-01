@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import http from '../../core/HttpClient';
+import axios from 'axios';
 
 class Footer extends Component {
   constructor(props) {
@@ -9,13 +9,14 @@ class Footer extends Component {
       sys: {}
     };
 
-    http.get('/api/sys/').then(data => {
+    axios.get('/api/sys/').then(({ data: sys }) => {
       this.state = {
-        sys: data.sys
+        sys
       };
       window.sys = this.state.sys;
     });
   }
+
   render() {
     return (
       <div className="Footer navbar-fixed-bottom">

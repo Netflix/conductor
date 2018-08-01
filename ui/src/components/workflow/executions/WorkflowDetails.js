@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import moment from 'moment';
 import map from 'lodash/fp/map';
 import Clipboard from 'clipboard';
@@ -7,7 +8,6 @@ import { OverlayTrigger, Button, Popover, Panel, Table } from 'react-bootstrap';
 import { getWorkflowDetails } from '../../../actions/WorkflowActions';
 import WorkflowAction from './WorkflowAction';
 import WorkflowMetaDia from '../WorkflowMetaDia';
-import http from '../../../core/HttpClient';
 import Tab from '../../common/Tab';
 import TabContainer from '../../common/TabContainer';
 
@@ -136,8 +136,8 @@ class WorkflowDetails extends React.Component {
   constructor(props) {
     super(props);
 
-    http.get('/api/sys/').then(data => {
-      window.sys = data.sys;
+    axios.get('/api/sys/').then(({ data: sys }) => {
+      window.sys = sys;
     });
   }
 

@@ -36,7 +36,7 @@ class WorkflowRoutes {
     app.get('/api/wfe/id/:workflowId', async (req, res, next) => {
       try {
         const {
-          patams: { workflowId },
+          params: { workflowId },
           token
         } = req;
         const result = await this.worflowService.getByWorkflowId(workflowId, token);
