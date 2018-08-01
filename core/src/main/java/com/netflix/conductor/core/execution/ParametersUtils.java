@@ -202,12 +202,6 @@ public class ParametersUtils {
 		return replaceVariables(paramString, io, null);
 	}
 
-	public Map<String, Object> replace(Map<String, Object> input, Map<String, Object> doc) {
-		Configuration option = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
-		DocumentContext io = JsonPath.parse(doc, option);
-		return replace(input, io);
-	}
-	
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> replace(Map<String, Object> input, DocumentContext io, String taskId) {
 		for (Entry<String, Object> e : input.entrySet()) {

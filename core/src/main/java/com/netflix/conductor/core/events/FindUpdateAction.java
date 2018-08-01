@@ -5,17 +5,17 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.utils.TaskUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class FindUpdateAction implements JavaEventAction {
 	private static Logger logger = LoggerFactory.getLogger(FindUpdateAction.class);
@@ -63,8 +63,22 @@ public class FindUpdateAction implements JavaEventAction {
 			}
 		}
 
+		List<Workflow> workflows;
+		if (StringUtils.isNotEmpty(findUpdate.getMainWorkflowId())) {
+			String workflowId = ScriptEvaluator.evalJq(findUpdate.getMainWorkflowId(), payload);
+			if (StringUtils.isEmpty(workflowId))
+				throw new RuntimeException("mainWorkflowId evaluating is empty");
+
+			Workflow workflow = executor.getWorkflow(workflowId, true);
+
+			// Let's find the sub-workflow
+			workflows = findChildSubWorkflow(workflow, workflowName);
+		} else {
+			workflows = executor.getRunningWorkflows(workflowName);
+		}
+
 		// Working with running workflows only.
-		for (Workflow workflow : executor.getRunningWorkflows(workflowName)) {
+		for (Workflow workflow : workflows) {
 			// Move on if workflow completed/failed hence no need to update
 			if (workflow.getStatus().isTerminal()) {
 				continue;
@@ -112,6 +126,26 @@ public class FindUpdateAction implements JavaEventAction {
 		}
 
 		return output;
+	}
+
+	private List<Workflow> findChildSubWorkflow(Workflow parent, String workflowName) {
+		// Let's find the sub-workflow in the current parent
+		List<Workflow> result = parent.getTasks().stream()
+				.filter(task -> SubWorkflow.NAME.equals(task.getTaskType()))
+				.filter(task -> workflowName.equals(task.getInputData().get("subWorkflowName")))
+				.map(task -> executor.getWorkflow(task.getInputData().get("subWorkflowId").toString(), true))
+				.collect(Collectors.toList());
+		// Exit if found anything ?
+		if (CollectionUtils.isNotEmpty(result)) {
+			return result;
+		}
+		// If not found, then consider each child sub-workflow as parent recursively
+		return parent.getTasks().stream()
+				.filter(task -> SubWorkflow.NAME.equals(task.getTaskType()))
+				.map(task -> executor.getWorkflow(task.getInputData().get("subWorkflowId").toString(), true))
+				.map(workflow -> findChildSubWorkflow(workflow, workflowName))
+				.flatMap(Collection::stream)
+				.collect(Collectors.toList());
 	}
 
 	private boolean matches(Map<String, Object> task, Map<String, String> event, String expression) throws Exception {
