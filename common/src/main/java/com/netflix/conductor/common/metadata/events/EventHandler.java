@@ -469,6 +469,7 @@ public class EventHandler {
 		private String expression;
 		private Map<String, String> statuses = new HashMap<>();
 		private Map<String, String> inputParameters = new HashMap<>();
+		private String mainWorkflowId;
 
 		public String getWorkflowName() {
 			return workflowName;
@@ -518,6 +519,14 @@ public class EventHandler {
 			this.inputParameters = inputParameters;
 		}
 
+		public String getMainWorkflowId() {
+			return mainWorkflowId;
+		}
+
+		public void setMainWorkflowId(String mainWorkflowId) {
+			this.mainWorkflowId = mainWorkflowId;
+		}
+
 		@Override
 		public String toString() {
 			return "FindUpdate{" +
@@ -526,6 +535,7 @@ public class EventHandler {
 					", statuses=" + statuses +
 					", expression='" + expression + '\'' +
 					", failedReason='" + failedReason + '\'' +
+					", mainWorkflowId='" + mainWorkflowId + '\'' +
 					", inputParameters='" + inputParameters + '\'' +
 					'}';
 		}

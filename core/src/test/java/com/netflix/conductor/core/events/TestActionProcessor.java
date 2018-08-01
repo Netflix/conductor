@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.service.MetadataService;
 import org.junit.Test;
@@ -401,6 +402,61 @@ public class TestActionProcessor {
 		EventHandler.Action action = newFindUpdateAction();
 
 		Map<String, Object> payload = new HashMap<>();
+		payload.put("featureId", "f");
+		payload.put("versionId", "v");
+
+		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		verify(executor, times(1)).updateTask(captor.capture());
+
+		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
+		assertEquals("foo", captor.getValue().getOutputData().get("conductor.event.name"));
+		assertEquals("bar", captor.getValue().getOutputData().get("conductor.event.messageId"));
+		assertEquals(TaskResult.Status.COMPLETED, captor.getValue().getStatus());
+
+		assertEquals(payload, op.get("conductor.event.payload"));
+		assertEquals("foo", op.get("conductor.event.name"));
+		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
+	}
+
+	@Test
+	public void findUpdate_main_wfid_completed() throws Exception {
+		Workflow parentWorkflow = new Workflow();
+		parentWorkflow.setWorkflowId("1");
+		parentWorkflow.setWorkflowType("parent");
+		parentWorkflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+		parentWorkflow.getTasks().add(new Task());
+		parentWorkflow.getTasks().get(0).setTaskType(SubWorkflow.NAME);
+		parentWorkflow.getTasks().get(0).getInputData().put("subWorkflowName", "junit");
+		parentWorkflow.getTasks().get(0).getInputData().put("subWorkflowId", "2");
+
+		Workflow subWorkflow = new Workflow();
+		subWorkflow.setWorkflowId("2");
+		subWorkflow.setWorkflowType("junit");
+		subWorkflow.setStatus(Workflow.WorkflowStatus.RUNNING);
+
+		Task task = new Task();
+		task.setTaskId("2");
+		task.setTaskType(Wait.NAME);
+		task.setStatus(Task.Status.IN_PROGRESS);
+		task.getInputData().put("featureId", "f");
+		task.getInputData().put("versionId", "v");
+		subWorkflow.getTasks().add(task);
+
+		WorkflowExecutor executor = mock(WorkflowExecutor.class);
+		when(executor.getWorkflow("1", true)).thenReturn(parentWorkflow);
+		when(executor.getWorkflow("2", true)).thenReturn(subWorkflow);
+
+		MetadataService metadata = mock(MetadataService.class);
+		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
+
+		EventHandler.Action action = newFindUpdateAction();
+		action.getFind_update().setMainWorkflowId(".workflowId");
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("workflowId", "1");
 		payload.put("featureId", "f");
 		payload.put("versionId", "v");
 
