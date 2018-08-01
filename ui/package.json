@@ -51,7 +51,6 @@
     "react-toastr": "2.9.3",
     "redux": "^3.3.1",
     "redux-thunk": "^1.0.3",
-    "superagent": "^1.7.2",
     "underscore": "^1.8.3",
     "uuid": "^3.3.2",
     "webpack": "^1.12.10"
@@ -69,7 +68,6 @@
     "babelify": "^7.2.0",
     "browser-sync": "^2.9.1",
     "browserify": "^12.0.1",
-    "chai": "^3.2.0",
     "cssnano": "^3.0.0",
     "eslint": "^4.16.0",
     "eslint-config-airbnb": "^16.1.0",
