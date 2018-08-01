@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -154,7 +153,8 @@ public class KafkaObservableQueue implements ObservableQueue {
     return queueName;
   }
 
-  private List<Message> receiveMessages() {
+  @VisibleForTesting() 
+  List<Message> receiveMessages() {
     List<Message> messages = new ArrayList<>();
     try {
 
@@ -178,7 +178,8 @@ public class KafkaObservableQueue implements ObservableQueue {
     return messages;
   }
 
-  private void publishMessages(List<Message> messages) {
+  @VisibleForTesting()
+  void publishMessages(List<Message> messages) {
 
     if (messages == null || messages.isEmpty()) {
       return;
@@ -205,7 +206,7 @@ public class KafkaObservableQueue implements ObservableQueue {
   }
 
   @VisibleForTesting
-  private OnSubscribe<Message> getOnSubscribe() {
+  OnSubscribe<Message> getOnSubscribe() {
     return subscriber -> {
       Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
       interval.flatMap((Long x) -> {

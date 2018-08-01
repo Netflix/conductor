@@ -43,7 +43,7 @@ public class KafkaModule extends AbstractModule {
   @StringMapKey("kafka")
   @Singleton
   @Named("EventQueueProviders")
-  public EventQueueProvider getNATSEventQueueProvider(Configuration configuration) {
+  public EventQueueProvider getKafkaEventQueueProvider(Configuration configuration) {
     return new KafkaEventQueueProvider(configuration);
   }
 
