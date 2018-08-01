@@ -1,5 +1,5 @@
 export default class PostMiddleware {
-  init(app) {
+  init = () => {
     // placeholder for post routes middleware.
-  }
+  };
 }

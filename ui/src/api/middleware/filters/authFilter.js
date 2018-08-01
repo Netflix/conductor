@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 export default class AuthFilter {
   init = app => {
     app.use((req, _, next) => {

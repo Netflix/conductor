@@ -8,7 +8,11 @@ class WorkflowRoutes {
   init(app) {
     app.get('/api/wfe/', async (req, res, next) => {
       try {
-        const result = await this.worflowService.search(req);
+        const {
+          query: { freeText: reqFreeText = '', start: reqStart = '', h: reqH, q = '' },
+          token
+        } = req;
+        const result = await this.worflowService.search(reqFreeText, reqStart, reqH, q, token);
         return res.status(200).json(result);
       } catch (e) {
         return next(e);
@@ -17,7 +21,12 @@ class WorkflowRoutes {
 
     app.get('/api/wfe/search-by-task/:taskId', async (req, res, next) => {
       try {
-        const result = await this.worflowService.searchByTask(req);
+        const {
+          query: { freeText: reqFreeText = '', start: reqStart = '', h: reqH },
+          params: { taskId },
+          token
+        } = req;
+        const result = await this.worflowService.searchByTask(taskId, reqFreeText, reqStart, reqH, token);
         return res.status(200).json(result);
       } catch (e) {
         return next(e);
@@ -26,8 +35,11 @@ class WorkflowRoutes {
 
     app.get('/api/wfe/id/:workflowId', async (req, res, next) => {
       try {
-        const { workflowId } = req.params;
-        const result = await this.worflowService.getByWorkflowId(req, workflowId);
+        const {
+          patams: { workflowId },
+          token
+        } = req;
+        const result = await this.worflowService.getByWorkflowId(workflowId, token);
         res.status(200).send(result);
       } catch (err) {
         next(err);

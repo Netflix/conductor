@@ -10,9 +10,7 @@ import BaseService from './base.service';
 const LOG_DATE_FORMAT = 'MM/DD/YY, HH:mm:ss:SSS';
 
 class WorkflowService extends BaseService {
-  async search(req) {
-    const { freeText: reqFreeText = '', start: reqStart = '', h: reqH, q = '' } = req;
-
+  async search(reqFreeText, reqStart, reqH, q, token) {
     const freeText = [];
     if (reqFreeText !== '') {
       freeText.push(reqFreeText);
@@ -38,17 +36,15 @@ class WorkflowService extends BaseService {
       ' AND '
     )}&start=${start}&query=${q}`;
 
-    const { results: hits, totalHits } = await this.get(url, req.token);
+    const { results: hits, totalHits } = await this.get(url, token);
 
     return { result: { hits, totalHits } };
   }
 
-  async searchByTask(req) {
-    const { freeText: reqFreeText = '', start: reqStart = '', h: reqH } = req;
-
+  async searchByTask(taskId, reqFreeText, reqStart, reqH, token) {
     const freeText = [];
     if (reqFreeText !== '') {
-      freeText.push(req.params.taskId);
+      freeText.push(taskId);
     } else {
       freeText.push('*');
     }
@@ -66,7 +62,7 @@ class WorkflowService extends BaseService {
     }
 
     const url = `search-by-tasks?size=100&sort=startTime:DESC&freeText=${freeText.join(' AND ')}&start=${start}`;
-    const { hits, totalHits } = await this.get(url, req.token);
+    const { hits, totalHits } = await this.get(url, token);
 
     return { result: { hits, totalHits } };
   }
