@@ -48,7 +48,18 @@ public class UserDefinedTaskMapperTest {
         String taskId = IDGenerator.generate();
         String retriedTaskId = IDGenerator.generate();
         when(metadataDAO.getTaskDef("user_task")).thenReturn(new TaskDef());
-        TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), taskToSchedule, new HashMap<>(), 0, retriedTaskId, taskId, null);
+
+        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
+                .withWorkflowDefinition(new WorkflowDef())
+                .withWorkflowInstance(new Workflow())
+                .withTaskDefinition(new TaskDef())
+                .withTaskToSchedule(taskToSchedule)
+                .withTaskInput(new HashMap<>())
+                .withRetryCount(0)
+                .withRetryTaskId(retriedTaskId)
+                .withTaskId(taskId)
+                .withDeciderService(null)
+                .build();
 
         //when
         List<Task> mappedTasks = userDefinedTaskMapper.getMappedTasks(taskMapperContext);
@@ -67,7 +78,17 @@ public class UserDefinedTaskMapperTest {
         String taskId = IDGenerator.generate();
         String retriedTaskId = IDGenerator.generate();
         when(metadataDAO.getTaskDef("user_task")).thenReturn(null);
-        TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), taskToSchedule, new HashMap<>(), 0, retriedTaskId, taskId, null);
+
+        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
+                .withWorkflowDefinition(new WorkflowDef())
+                .withWorkflowInstance(new Workflow())
+                .withTaskToSchedule(taskToSchedule)
+                .withTaskInput(new HashMap<>())
+                .withRetryCount(0)
+                .withRetryTaskId(retriedTaskId)
+                .withTaskId(taskId)
+                .withDeciderService(null)
+                .build();
 
         //then
         expectedException.expect(TerminateWorkflowException.class);

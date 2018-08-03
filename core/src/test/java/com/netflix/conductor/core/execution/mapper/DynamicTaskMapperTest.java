@@ -57,7 +57,18 @@ public class DynamicTaskMapperTest {
         when(parametersUtils.getTaskInput(anyMap(), any(Workflow.class), any(TaskDef.class), anyString())).thenReturn(taskInput);
 
         String taskId = IDGenerator.generate();
-        TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), workflowTask, taskInput, 0, null, taskId, null);
+        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
+                .withWorkflowDefinition(new WorkflowDef())
+                .withWorkflowInstance(new Workflow())
+                .withTaskDefinition(new TaskDef())
+                .withTaskToSchedule(workflowTask)
+                .withTaskInput(taskInput)
+                .withRetryCount(0)
+                .withRetryTaskId(null)
+                .withTaskId(taskId)
+                .withDeciderService(null)
+                .build();
+        //TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), workflowTask, taskInput, 0, null, taskId, null);
 
         List<Task> mappedTasks = dynamicTaskMapper.getMappedTasks(taskMapperContext);
 
