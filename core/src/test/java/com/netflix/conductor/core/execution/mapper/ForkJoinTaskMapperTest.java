@@ -109,7 +109,6 @@ public class ForkJoinTaskMapperTest {
                 .withDeciderService(deciderService)
                 .build();
 
-        //TaskMapperContext taskMapperContext = new TaskMapperContext(def,workflow, forkTask, null, 0 , null, taskId, deciderService);
         List<Task> mappedTasks = forkJoinTaskMapper.getMappedTasks(taskMapperContext);
 
         assertEquals(3, mappedTasks.size());
@@ -181,7 +180,6 @@ public class ForkJoinTaskMapperTest {
 
         String taskId = IDGenerator.generate();
 
-        //TaskMapperContext taskMapperContext = new TaskMapperContext(def,workflow, forkTask, null, 0 , null, taskId, deciderService);
         TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
                 .withWorkflowDefinition(def)
                 .withWorkflowInstance(workflow)

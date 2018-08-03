@@ -205,7 +205,6 @@ public class ForkJoinDynamicTaskMapperTest {
                 .withDeciderService(deciderService)
                 .build();
 
-        //TaskMapperContext taskMapperContext = new TaskMapperContext(def, workflowInstance, dynamicForkJoinToSchedule, null,0, null, taskId, deciderService);
         //then
         List<Task> mappedTasks = forkJoinDynamicTaskMapper.getMappedTasks(taskMapperContext);
 

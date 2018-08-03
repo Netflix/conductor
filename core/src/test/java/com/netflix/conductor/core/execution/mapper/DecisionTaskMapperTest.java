@@ -116,11 +116,9 @@ public class DecisionTaskMapperTest {
         TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
                 .withWorkflowDefinition(workflowDef)
                 .withWorkflowInstance(workflowInstance)
-                .withTaskDefinition(null)
                 .withTaskToSchedule(decisionTask)
                 .withTaskInput(input)
                 .withRetryCount(0)
-                .withRetryTaskId(null)
                 .withTaskId(IDGenerator.generate())
                 .withDeciderService(deciderService)
                 .build();

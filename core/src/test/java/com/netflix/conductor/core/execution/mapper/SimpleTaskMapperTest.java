@@ -60,8 +60,6 @@ public class SimpleTaskMapperTest {
                 .withTaskId(taskId)
                 .build();
 
-        //TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), taskToSchedule, new HashMap<>(), 0, retriedTaskId, taskId, null);
-
         List<Task> mappedTasks = simpleTaskMapper.getMappedTasks(taskMapperContext);
         assertNotNull(mappedTasks);
         assertEquals(1, mappedTasks.size());
@@ -75,7 +73,6 @@ public class SimpleTaskMapperTest {
         taskToSchedule.setName("simple_task");
         String taskId = IDGenerator.generate();
         String retriedTaskId = IDGenerator.generate();
-        //TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), taskToSchedule, new HashMap<>(), 0, retriedTaskId, taskId, null);
 
         TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
                 .withWorkflowDefinition(new WorkflowDef())

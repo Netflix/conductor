@@ -58,7 +58,6 @@ public class UserDefinedTaskMapperTest {
                 .withRetryCount(0)
                 .withRetryTaskId(retriedTaskId)
                 .withTaskId(taskId)
-                .withDeciderService(null)
                 .build();
 
         //when
@@ -87,7 +86,6 @@ public class UserDefinedTaskMapperTest {
                 .withRetryCount(0)
                 .withRetryTaskId(retriedTaskId)
                 .withTaskId(taskId)
-                .withDeciderService(null)
                 .build();
 
         //then

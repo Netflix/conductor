@@ -43,14 +43,9 @@ public class EventTaskMapperTest {
                 .withWorkflowInstance(new Workflow())
                 .withTaskDefinition(new TaskDef())
                 .withTaskToSchedule(taskToBeScheduled)
-                .withTaskInput(null)
                 .withRetryCount(0)
-                .withRetryTaskId(null)
                 .withTaskId(taskId)
-                .withDeciderService(null)
                 .build();
-
-        //TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), taskToBeScheduled, null, 0, null, taskId, null);
 
         List<Task> mappedTasks = eventTaskMapper.getMappedTasks(taskMapperContext);
         assertEquals(1, mappedTasks.size());

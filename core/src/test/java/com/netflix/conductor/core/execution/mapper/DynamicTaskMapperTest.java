@@ -64,11 +64,8 @@ public class DynamicTaskMapperTest {
                 .withTaskToSchedule(workflowTask)
                 .withTaskInput(taskInput)
                 .withRetryCount(0)
-                .withRetryTaskId(null)
                 .withTaskId(taskId)
-                .withDeciderService(null)
                 .build();
-        //TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), workflowTask, taskInput, 0, null, taskId, null);
 
         List<Task> mappedTasks = dynamicTaskMapper.getMappedTasks(taskMapperContext);
 

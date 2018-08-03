@@ -36,12 +36,9 @@ public class WaitTaskMapperTest {
                 .withTaskToSchedule(taskToSchedule)
                 .withTaskInput(new HashMap<>())
                 .withRetryCount(0)
-                .withRetryTaskId(null)
                 .withTaskId(taskId)
-                .withDeciderService(null)
                 .build();
 
-        //TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), taskToSchedule, new HashMap<>(), 0, null, taskId, null);
         WaitTaskMapper waitTaskMapper = new WaitTaskMapper(parametersUtils);
         //When
         List<Task> mappedTasks = waitTaskMapper.getMappedTasks(taskMapperContext);

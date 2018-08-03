@@ -32,15 +32,9 @@ public class JoinTaskMapperTest {
                 .withWorkflowInstance(new Workflow())
                 .withTaskDefinition(new TaskDef())
                 .withTaskToSchedule(taskToSchedule)
-                .withTaskInput(null)
                 .withRetryCount(0)
-                .withRetryTaskId(null)
                 .withTaskId(taskId)
-                .withDeciderService(null)
                 .build();
-
-        /*TaskMapperContext taskMapperContext = new TaskMapperContext(new WorkflowDef(), new Workflow(), taskToSchedule,
-                null, 0, null, taskId, null);*/
 
         List<Task> mappedTasks = new JoinTaskMapper().getMappedTasks(taskMapperContext);
 
