@@ -39,21 +39,6 @@ public class TaskMapperContext {
     private String taskId;
     private DeciderService deciderService;
 
-
-    /*private TaskMapperContext(WorkflowDef workflowDefinition, Workflow workflowInstance, TaskDef taskDefinition, WorkflowTask taskToSchedule,
-                             Map<String, Object> taskInput, int retryCount, String retryTaskId, String taskId, DeciderService deciderService) {
-
-        this.workflowDefinition = workflowDefinition;
-        this.workflowInstance = workflowInstance;
-        this.taskDefinition = taskDefinition;
-        this.taskToSchedule = taskToSchedule;
-        this.taskInput = taskInput;
-        this.retryCount = retryCount;
-        this.retryTaskId = retryTaskId;
-        this.taskId = taskId;
-        this.deciderService = deciderService;
-    }*/
-
     private TaskMapperContext(Builder builder) {
         workflowDefinition = builder.workflowDefinition;
         workflowInstance = builder.workflowInstance;
