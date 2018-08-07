@@ -199,7 +199,7 @@ job "conductor" {
         cpu    = 256  # MHz
         memory = 2048 # MB
         network {
-          mbits = 2
+          mbits = 4
           port "http" {}
         }
       }
