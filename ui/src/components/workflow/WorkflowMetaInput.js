@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import request from 'superagent';
-import { Button, Input, OverlayTrigger, Popover } from 'react-bootstrap';
+import { Button, Input, Label, Well } from 'react-bootstrap';
 
 
 
@@ -16,6 +16,8 @@ class WorkflowMetaInput extends Component {
         outputs: [],
         finalString: {},
         loading: false,
+        label: "info",
+        log: {}
         }
     }
 
@@ -57,43 +59,76 @@ class WorkflowMetaInput extends Component {
 
         let wfname = this.state.name;
         let data = this.state.finalString    
+        var self = this;
 
         request
         .post('http://localhost:8080/api/workflow/' + wfname)
         .set('Content-Type', 'application/json')
         .send(data)
         .end(function(err, res){
-        console.log(res.text);
+                if(err){
+                    setTimeout(() => {
+                        self.setState({ loading: false,
+                                        label: "danger",
+                                        log: err
+                                 });
+                           }, 1000);
+                }
+                else{
+                    setTimeout(() => {
+                        self.setState({ loading: false,
+                                        label: "success",
+                                        log: res
+                                 });
+                           }, 1000);
+                }           
         });  
 
-        setTimeout(() => {
-            this.setState({ loading: false });
-        }, 1000);
+
       };
+
+    consoleLog(){    
+        if(this.state.label == "success"){
+            return (
+                <div>
+                    <Well>
+                    <span><h4>Workflow id: </h4> <Label bsStyle="info">{this.state.log.text}</Label><br/></span>
+                    <span><h4>Status code: </h4> <Label bsStyle="success">{this.state.log.statusCode}</Label><br/></span>
+                    <span><h4>Status text: </h4> <Label bsStyle="success">{this.state.log.statusText}</Label><br/></span>
+                    </Well>
+                </div>
+            );
+        }
+        if(this.state.label == "danger") {
+            return (
+                <div>
+                    <Well>
+                    <span><h4>Error: </h4> <Label bsStyle="danger">{this.state.log.toString()}</Label><br/></span>
+                    </Well>
+                </div>
+            )
+        } 
+        
+    }
 
       
     render() {
 
         let inputs = this.state.inputs;
         let loading = this.state.loading;
-
-        const popover = (
-            <Popover id="popover-positioned-bottom" title="Workflow executed!">
-               Workflow successfully executed.
-            </Popover>
-         );             
-    
+  
         return (
         <div>
             &nbsp;&nbsp;
+            <h1>Inputs of <Label bsStyle={this.state.label}>{this.state.name}</Label> workflow</h1>
+            &nbsp;&nbsp;
         {inputs.map((item, idx) => <form>
-            
                 <Input type="input" label={item} placeholder="Enter the input" onChange={this.handleChange.bind(this, idx)}/>
                     &nbsp;&nbsp;
                 </form>)}
-                <OverlayTrigger trigger='click' rootClose={true} placement="bottom" overlay={popover}>
                 <Button bsStyle="primary" bsSize="large" disabled={loading} onClick={!loading ? this.startWorfklow : null}>{loading ? 'Executing...' : 'Execute workflow'}</Button>
-                </OverlayTrigger>
+                <h3>Console log</h3>
+                {this.consoleLog()}    
         </div>
         )
     }
