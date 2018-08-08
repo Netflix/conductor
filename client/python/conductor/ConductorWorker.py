@@ -80,8 +80,7 @@ class ConductorWorker:
         except Exception as err:
             print('Error executing task: ' + str(err))
             task['status'] = 'FAILED'
-            task['logs'] = str(err)
-            task['outputData'] = str(err)
+            task['outputData'] = {'error-message' : str(err) }
             self.taskClient.updateTask(task)
 
     def poll_and_execute(self, taskType, exec_function, domain=None):
