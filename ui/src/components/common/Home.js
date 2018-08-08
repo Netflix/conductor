@@ -12,7 +12,7 @@ class Introduction extends Component {
     return (
         <Jumbotron className="jumbotron">
           <div className="row">
-            <img src="/images/conductor.png"></img>
+            <img src="/images/FRINX_logo_jumbotron.png"></img>
           </div>
           <div className="row">&nbsp;</div>
         </Jumbotron>

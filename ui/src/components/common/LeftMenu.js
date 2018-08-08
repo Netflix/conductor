@@ -127,8 +127,8 @@ const LeftMenu = React.createClass({
     return (
       <div className="left-menu" style={{width:width}}>
         <div className="logo textual pull-left">
-          <a href="/" title="Conductor">
-            <h4><i className={this.state.loading?"fa fa-bars fa-spin fa-1x":"fa fa-bars"}></i> {this.state.loading || minimize?'':'Conductor'}</h4>
+          <a href="/" title="Frinx Conductor">
+            <h4><i className={this.state.loading?"fa fa-bars fa-spin fa-1x":""}></i>{this.state.loading || minimize?'':<img src="/images/FRINX_logo_smaller.png" width="120" alt="Frinx" margin="15px"></img>}</h4>
           </a>
         </div>
         <div className="menuList">
