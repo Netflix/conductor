@@ -51,9 +51,11 @@ class WorkflowMetaInput extends Component {
 
         this.setState({finalString: JSON.stringify(string, null, 2)})
 
-    }
+    };
 
-    startWorfklow(){           
+    startWorfklow(e){     
+        
+        e.preventDefault();
         
         this.setState({ loading: true });
 
@@ -82,9 +84,7 @@ class WorkflowMetaInput extends Component {
                                  });
                            }, 1000);
                 }           
-        });  
-
-
+        });
       };
 
     consoleLog(){    
@@ -110,7 +110,6 @@ class WorkflowMetaInput extends Component {
         } 
         
     }
-
       
     render() {
 
@@ -122,7 +121,7 @@ class WorkflowMetaInput extends Component {
             &nbsp;&nbsp;
             <h1>Inputs of <Label bsStyle={this.state.label}>{this.state.name}</Label> workflow</h1>
             &nbsp;&nbsp;
-        {inputs.map((item, idx) => <form>
+        {inputs.map((item, idx) => <form onSubmit={!loading ? this.startWorfklow : null}>
                 <Input type="input" label={item} placeholder="Enter the input" onChange={this.handleChange.bind(this, idx)}/>
                     &nbsp;&nbsp;
                 </form>)}
