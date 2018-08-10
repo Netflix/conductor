@@ -24,6 +24,7 @@ import com.sun.jersey.oauth.signature.OAuthParameters;
 import com.sun.jersey.oauth.signature.OAuthSecrets;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,6 +178,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 				if (cr.getStatus() != 204 && cr.hasEntity()) {
 					response.body = extractBody(cr);
 				}
+				response.error = ex.getMessage();
 				response.headers = cr.getHeaders();
 				response.statusCode = cr.getStatus();
 				return response;
@@ -185,6 +187,13 @@ class GenericHttpTask extends WorkflowSystemTask {
 				logger.error(reason, ex);
 				throw new Exception(reason);
 			}
+		} catch (Exception ex) {
+			logger.error(ex.getMessage(), ex);
+			response.body = null;
+			response.headers = null;
+			response.statusCode = 0;
+			response.error = ex.getMessage();
+			return response;
 		}
 	}
 
@@ -219,6 +228,16 @@ class GenericHttpTask extends WorkflowSystemTask {
 	private void setAuthorization(Input input) throws Exception {
 		AuthResponse response = auth.authorize();
 		input.getHeaders().put(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
+	}
+
+	void setReasonForIncompletion(HttpResponse response, Task task) {
+		if (response.body != null) {
+			task.setReasonForIncompletion(response.body.toString());
+		} else if (StringUtils.isNotEmpty(response.error)) {
+			task.setReasonForIncompletion(response.error);
+		} else {
+			task.setReasonForIncompletion("No response from the remote service");
+		}
 	}
 
 	@SuppressWarnings("unchecked")

@@ -11,6 +11,8 @@ public class HttpResponse {
 
 	public int statusCode;
 
+	public String error;
+
 	@Override
 	public String toString() {
 		return "HttpResponse [body=" + body + ", headers=" + headers + ", statusCode=" + statusCode + "]";
@@ -20,6 +22,7 @@ public class HttpResponse {
 
 		Map<String, Object> map = new HashMap<>();
 		map.put("body", body);
+		map.put("error", error);
 		map.put("headers", headers);
 		map.put("statusCode", statusCode);
 
