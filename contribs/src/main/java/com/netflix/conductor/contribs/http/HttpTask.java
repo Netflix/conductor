@@ -125,11 +125,7 @@ public class HttpTask extends GenericHttpTask {
 			if (task.getStatus() == Status.COMPLETED) {
 				checkHttpResponseValidation(task, response);
 			} else {
-				if (response.body != null) {
-					task.setReasonForIncompletion(response.body.toString());
-				} else {
-					task.setReasonForIncompletion("No response from the remote service");
-				}
+				setReasonForIncompletion(response, task);
 			}
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {

@@ -133,11 +133,7 @@ public class HttpWaitTask extends GenericHttpTask {
 			}
 			// Check the http response validation. It will overwrite the task status if needed
 			if (task.getStatus() != Task.Status.IN_PROGRESS) {
-				if (response.body != null) {
-					task.setReasonForIncompletion(response.body.toString());
-				} else {
-					task.setReasonForIncompletion("No response from the remote service");
-				}
+				setReasonForIncompletion(response, task);
 			}
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {
