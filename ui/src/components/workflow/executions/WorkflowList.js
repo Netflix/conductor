@@ -3,6 +3,7 @@ import { Link, browserHistory } from 'react-router';
 import { Input, Button, Panel, Popover, OverlayTrigger, ButtonGroup, Grid, Row, Col  } from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import { connect } from 'react-redux';
+import request from 'superagent';
 import { searchWorkflows, getWorkflowDefs } from '../../../actions/WorkflowActions';
 import Typeahead from 'react-bootstrap-typeahead';
 
@@ -52,6 +53,8 @@ const Workflow = React.createClass({
 
   getInitialState() {
 
+    this.waitForDel = this.waitForDel.bind(this);
+
     let workflowTypes = this.props.location.query.workflowTypes;
     if(workflowTypes != null && workflowTypes != '') {
       workflowTypes = workflowTypes.split(',');
@@ -82,7 +85,11 @@ const Workflow = React.createClass({
       workflows: [],
       update: true,
       fullstr: true,
-      start: start
+      start: start,
+      loading: false,
+      alertDel: {},
+      filteredWfsLength: {},
+      count: {}
     }
   },
   componentWillMount(){
@@ -214,9 +221,54 @@ const Workflow = React.createClass({
     this.state.update = true;
     this.refreshResults();
   },
+  waitForDel(){
+    
+    let count = this.state.count;
+    let filteredWfsLength = this.state.filteredWfsLength;
+    var _this = this;
+
+    console.log(filteredWfsLength);
+    console.log(count);
+  
+    if (count == filteredWfsLength){
+      console.log("all deleted");
+      window.location.reload();
+    }
+    else {
+      console.log("waiting");
+      setTimeout(function() { _this.waitForDel() }, 250);
+    }
+  },
+  deleteWorkflows(filteredWfs) {
+    var self = this;
+    this.setState({ loading: true,
+                    filteredWfsLength: filteredWfs.length,
+                    count: 0
+    });
+    if(filteredWfs) { 
+      for (var i = 0; i < filteredWfs.length; i++){
+        let workflowId = filteredWfs[i].workflowId;
+        request
+        .delete('http://localhost:8080/api/workflow/' + workflowId + '/remove')
+        .query('archiveWorkflow=false')
+        .set('Accept', 'application/json')
+        .send({workflowId})
+        .end(function(err, res){
+          if(res){
+            self.setState({count: self.state.count + 1})
+          }
+        })
+      }
+    }
+    console.log(this.state.filteredWfsLength);
+    console.log("count: " + this.state.count);
+    this.waitForDel();
+  },
  render() {
     let wfs = [];
     let filteredWfs = [];
+    let loading = this.state.loading;
+    let alertDel = this.state.alertDel
 
      let totalHits = 0;
     let found = 0;
@@ -269,6 +321,7 @@ const Workflow = React.createClass({
                 <br/>&nbsp;&nbsp;&nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Created (in past hours)</label>
               </Col>
             </Row>
+            <Button bsStyle="danger" disabled={loading} onClick={() => this.deleteWorkflows(filteredWfs)}><i className="fa fa-trash"/>&nbsp;&nbsp;{loading ? 'Deleting...' : 'Delete all'}</Button>
           </Grid>
           <form>
 
