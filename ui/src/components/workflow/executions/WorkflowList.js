@@ -8,6 +8,7 @@ import WorkflowAction  from './WorkflowAction';
 import Typeahead from 'react-bootstrap-typeahead';
 import Select from 'react-select';
 
+const ILLEGAL_SEARCH_CHARACTERS = /#|"|%|&|\\/;
 const Workflow = React.createClass({
 
   getInitialState() {
@@ -180,6 +181,10 @@ const Workflow = React.createClass({
   },
   searchChange(e){
     let val = e.target.value;
+    if (val && ILLEGAL_SEARCH_CHARACTERS.test(val)) {
+      alert('Illegal character typed/pasted into field');
+      return;
+    }
     this.setState({ search: val });
   },
   hourChange(e){
