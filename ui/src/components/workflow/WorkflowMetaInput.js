@@ -113,7 +113,7 @@ class WorkflowMetaInput extends Component {
       
     render() {
 
-        let inputs = this.state.inputs;
+        let inputs = this.state.inputs; 
         let loading = this.state.loading;
   
         return (
@@ -125,7 +125,7 @@ class WorkflowMetaInput extends Component {
                 <Input type="input" label={item} placeholder="Enter the input" onChange={this.handleChange.bind(this, idx)}/>
                     &nbsp;&nbsp;
                 </form>)}
-                <Button bsStyle="primary" bsSize="large" disabled={loading} onClick={!loading ? this.startWorfklow : null}>{loading ? 'Executing...' : 'Execute workflow'}</Button>
+                <Button bsStyle="primary" bsSize="large" disabled={loading} onClick={!loading ? this.startWorfklow : null}><i className="fa fa-play"/>&nbsp;&nbsp;{loading ? 'Executing...' : 'Execute workflow'}</Button>
                 <h3>Console log</h3>
                 {this.consoleLog()}    
         </div>
