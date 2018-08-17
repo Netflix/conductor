@@ -248,7 +248,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	/**
 	 * This method evaluates if the {@link Task} is rate limited or not based on {@link Task#getRateLimitPerFrequency()}
 	 * and {@link Task#getRateLimitFrequencyInSeconds()}
-	 * <p>
+	 *
 	 * The rate limiting is implemented using the Redis constructs of sorted set and TTL of each element in the rate limited bucket.
 	 * <ul>
 	 *     <li>All the entries that are in the not in the frequency bucket are cleaned up by leveraging {@link DynoProxy#zremrangeByScore(String, String, String)},
@@ -257,7 +257,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	 *     this is achieved by using {@link DynoProxy#zcount(String, double, double)} </li>
 	 *     <li>Once the count is calculated then a evaluation is made to determine if it is within the bounds of {@link Task#getRateLimitPerFrequency()}, if so the count is increased and an expiry TTL is added to the entry</li>
 	 * </ul>
-	 * </p>
+	 *
 	 * @param task: which needs to be evaluated whether it is rateLimited or not
 	 * @return true: If the {@link Task} is rateLimited
 	 * 		false: If the {@link Task} is not rateLimited
