@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {OverlayTrigger, Button, Popover, Panel, Table} from 'react-bootstrap';
+import {OverlayTrigger, Button, Popover, Panel, Table, Input} from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import {connect} from 'react-redux';
 import {getWorkflowDetails} from '../../../actions/WorkflowActions';
@@ -11,6 +11,7 @@ import Clipboard from 'clipboard';
 import map from "lodash/fp/map";
 import Tab from "../../common/Tab";
 import TabContainer from "../../common/TabContainer";
+import request from 'superagent';
 
 new Clipboard('.btn');
 
@@ -97,9 +98,106 @@ function showFailure(wf) {
 }
 
 
+var toggle = false;
+var arrGlobal = [];
+var stringGlobal = {}
+
+function handleChange(idx, index, names, event) { 
+
+   var names = names;
+   stringGlobal = {};
+
+   arrGlobal.splice(idx, 1, event.target.value);
+
+        for (var i = 0; i < names.length; i++) {
+
+            if(arrGlobal[i]){
+                if(arrGlobal[i].startsWith("{")){
+                    stringGlobal[names[i]] = JSON.parse(arrGlobal[i])
+                    }
+                else
+                    stringGlobal[names[i]] = arrGlobal[i]
+                }
+            }
+
+        stringGlobal = JSON.stringify(stringGlobal, null, 2);
+        console.log(stringGlobal);
+        toggle = true;
+}
+
+function getObject(wf){
+
+    if (wf) {
+
+       var inputObject = wf.input;
+       var names = [];
+       var inputs = [];
+       var index = 0;
+
+       for (let key in inputObject) {
+           names[index] = key;
+           if(typeof inputObject[key] == 'object'){
+               inputs[index] = JSON.stringify(inputObject[key]);
+           }
+           else
+           inputs[index] = inputObject[key];
+           
+           index++;
+        }
+     }
+
+     arrGlobal = inputs;
+
+     return (
+        inputs.map((item, idx) => <form onSubmit={(e) => {startWorfklow(e, wf) }}>
+        <Input type="text" label={names[idx]} defaultValue={item} onChange={handleChange.bind(this, idx, index, names)}/>
+            &nbsp;&nbsp;
+        </form>)
+     );
+}
+
+var loadingGlobal = false;
+function startWorfklow(e, wf){    
+    
+    e.preventDefault();
+   
+    let wfname = wf.workflowType;
+    let wfId = wf.workflowId;
+    let data = {};
+    var self = this;
+    loadingGlobal = true;
+    console.log("Toggle: " + toggle);
+
+    if(toggle){
+        data = stringGlobal;
+    }
+    else
+        data = JSON.stringify(wf.input, null, 2);
+
+    console.log("Data: " + data);
+
+   request
+    .post('http://localhost:8080/api/workflow/' + wfname)
+    .set('Content-Type', 'application/json')
+    .send(data)
+    .end(function(err, res){ 
+            console.log(res); 
+            setTimeout(() => {
+                loadingGlobal = false;
+                   }, 1000);     
+    });
+
+}
+
+
 class WorkflowDetails extends Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            inputs : [],
+            names : []
+          };
 
         http.get('/api/sys/').then((data) => {
             window.sys = data.sys;
@@ -121,6 +219,7 @@ class WorkflowDetails extends Component {
     }
 
     render() {
+
         let wf = this.props.data;
         if (wf == null) {
             wf = {};
@@ -132,6 +231,8 @@ class WorkflowDetails extends Component {
         tasks = tasks.sort(function (a, b) {
             return a.seq - b.seq;
         });
+
+
 
         return (
             <div className="ui-content">
@@ -210,6 +311,11 @@ class WorkflowDetails extends Component {
                         <i title="copy to clipboard" className="btn fa fa-clipboard"
                            data-clipboard-target="#fulljson"/>
                         <pre style={{height: '80%'}} id="fulljson">{JSON.stringify(wf, null, 3)}</pre>
+                    </Tab>
+                    <Tab eventKey={5} title="Edit input">
+                        &nbsp;&nbsp;
+                       {getObject(wf)}
+                       <Button bsStyle="primary" bsSize="large" disabled={loadingGlobal} onClick={() => {startWorfklow(wf) }}><i className="fa fa-repeat"/>&nbsp;&nbsp;Rerun workflow</Button>
                     </Tab>
                 </TabContainer>
             </div>
