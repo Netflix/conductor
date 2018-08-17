@@ -67,6 +67,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	private static final String RAW_JSON_FIELD = "rawJSON";
 	// Keys Families
 	private static final String TASK_LIMIT_BUCKET = "TASK_LIMIT_BUCKET";
+	private static final String TASK_RATE_LIMIT_BUCKET = "TASK_RATE_LIMIT_BUCKET";
 	private final static String IN_PROGRESS_TASKS = "IN_PROGRESS_TASKS";
 	private final static String TASKS_IN_PROGRESS_STATUS = "TASKS_IN_PROGRESS_STATUS";	//Tasks which are in IN_PROGRESS status.
 	private final static String WORKFLOW_TO_TASKS = "WORKFLOW_TO_TASKS";
@@ -242,6 +243,49 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
         }
 
 		indexDAO.indexTask(task);
+	}
+
+	/**
+	 * This method evaluates if the {@link Task} is rate limited or not based on {@link Task#getRateLimitPerFrequency()}
+	 * and {@link Task#getRateLimitFrequencyInSeconds()}
+	 * <p>
+	 * The rate limiting is implemented using the Redis constructs of sorted set and TTL of each element in the rate limited bucket.
+	 * <ul>
+	 *     <li>All the entries that are in the not in the frequency bucket are cleaned up by leveraging {@link DynoProxy#zremrangeByScore(String, String, String)},
+	 *     this is done to make the next step of evaluation efficient</li>
+	 *     <li>A current count(tasks executed within the frequency) is calculated based on the current time and the beginning of the rate limit frequency time(which is current time - {@link Task#getRateLimitFrequencyInSeconds()} in millis),
+	 *     this is achieved by using {@link DynoProxy#zcount(String, double, double)} </li>
+	 *     <li>Once the count is calculated then a evaluation is made to determine if it is within the bounds of {@link Task#getRateLimitPerFrequency()}, if so the count is increased and an expiry TTL is added to the entry</li>
+	 * </ul>
+	 * </p>
+	 * @param task: which needs to be evaluated whether it is rateLimited or not
+	 * @return true: If the {@link Task} is rateLimited
+	 * 		false: If the {@link Task} is not rateLimited
+	 */
+	@Override
+	public boolean exceedsRateLimitPerFrequency(Task task) {
+		int rateLimitPerFrequency = task.getRateLimitPerFrequency();
+		int rateLimitFrequencyInSeconds = task.getRateLimitFrequencyInSeconds();
+		if (rateLimitPerFrequency <= 0) {
+			return false;
+		} else {
+			long currentTimeEpochMillis = System.currentTimeMillis();
+			long currentTimeEpochMinusRateLimitBucket = currentTimeEpochMillis - (rateLimitFrequencyInSeconds * 1000);
+			String key = nsKey(TASK_RATE_LIMIT_BUCKET, task.getTaskDefName());
+			dynoClient.zremrangeByScore(key, "-inf", String.valueOf(currentTimeEpochMinusRateLimitBucket));
+			int currentBucketCount = Math.toIntExact(
+					dynoClient.zcount(key,
+							currentTimeEpochMinusRateLimitBucket,
+							currentTimeEpochMillis));
+
+			if (currentBucketCount < rateLimitPerFrequency) {
+				dynoClient.zadd(key, currentTimeEpochMillis, String.valueOf(currentTimeEpochMillis));
+				dynoClient.expire(key, rateLimitFrequencyInSeconds);
+				return false;
+			} else {
+				return true;
+			}
+		}
 	}
 
 	@Override

@@ -127,6 +127,16 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         withTransaction(connection -> updateTask(connection, task));
     }
 
+    /**
+     * This is a dummy implementation and this feature is not for Mysql backed Conductor
+     * @param task: which needs to be evaluated whether it is rateLimited or not
+     * @return
+     */
+    @Override
+    public boolean exceedsRateLimitPerFrequency(Task task) {
+        return false;
+    }
+
     @Override
     public boolean exceedsInProgressLimit(Task task) {
         TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
