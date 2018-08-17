@@ -266,9 +266,13 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	public boolean exceedsRateLimitPerFrequency(Task task) {
 		int rateLimitPerFrequency = task.getRateLimitPerFrequency();
 		int rateLimitFrequencyInSeconds = task.getRateLimitFrequencyInSeconds();
-		if (rateLimitPerFrequency <= 0) {
+		if (rateLimitPerFrequency <= 0 && rateLimitFrequencyInSeconds <=0) {
+			logger.info("Rate limit not applied to the Task: {}  either rateLimitPerFrequency: {} or rateLimitFrequencyInSeconds: {} is 0 or less",
+			task, rateLimitPerFrequency, rateLimitFrequencyInSeconds);
 			return false;
 		} else {
+			logger.info("Evaluating rate limiting for Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {}",
+					task, rateLimitPerFrequency, rateLimitFrequencyInSeconds);
 			long currentTimeEpochMillis = System.currentTimeMillis();
 			long currentTimeEpochMinusRateLimitBucket = currentTimeEpochMillis - (rateLimitFrequencyInSeconds * 1000);
 			String key = nsKey(TASK_RATE_LIMIT_BUCKET, task.getTaskDefName());
@@ -281,8 +285,12 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			if (currentBucketCount < rateLimitPerFrequency) {
 				dynoClient.zadd(key, currentTimeEpochMillis, String.valueOf(currentTimeEpochMillis));
 				dynoClient.expire(key, rateLimitFrequencyInSeconds);
+				logger.info("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} within the rate limit with current count {}",
+						task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, ++currentBucketCount);
 				return false;
 			} else {
+				logger.info("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} is out of bounds of rate limit with current count {}",
+						task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, currentBucketCount);
 				return true;
 			}
 		}

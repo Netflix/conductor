@@ -244,7 +244,7 @@ public class TaskDef extends Auditable {
 
 	/**
 	 *
-	 * @return rateLimitPerSecond The max number of tasks that will be allowed to be executed per second at any given point of time.
+	 * @return rateLimitPerFrequency The max number of tasks that will be allowed to be executed per rateLimitFrequencyInSeconds.
 	 */
 	public Integer getRateLimitPerFrequency() {
 		return rateLimitPerFrequency == null ? 0 : rateLimitPerFrequency;
@@ -252,7 +252,8 @@ public class TaskDef extends Auditable {
 
 	/**
 	 *
-	 * @param rateLimitPerFrequency The max number of tasks that will be allowed to be executed per second at any given point of time. Setting the value to 0 removes the rate limit
+	 * @param rateLimitPerFrequency The max number of tasks that will be allowed to be executed per rateLimitFrequencyInSeconds.
+	 *                                 Setting the value to 0 removes the rate limit
 	 */
 	public void setRateLimitPerFrequency(Integer rateLimitPerFrequency) {
 		this.rateLimitPerFrequency = rateLimitPerFrequency;
