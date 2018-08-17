@@ -315,7 +315,7 @@ class WorkflowDetails extends Component {
                     <Tab eventKey={5} title="Edit input">
                         &nbsp;&nbsp;
                        {getObject(wf)}
-                       <Button bsStyle="primary" bsSize="large" disabled={loadingGlobal} onClick={() => {startWorfklow(wf) }}><i className="fa fa-repeat"/>&nbsp;&nbsp;Rerun workflow</Button>
+                       <Button bsStyle="primary" bsSize="large" disabled={loadingGlobal} onClick={(e) => {startWorfklow(e, wf) }}><i className="fa fa-repeat"/>&nbsp;&nbsp;Rerun workflow</Button>
                     </Tab>
                 </TabContainer>
             </div>
