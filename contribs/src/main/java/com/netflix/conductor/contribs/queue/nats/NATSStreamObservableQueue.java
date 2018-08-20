@@ -106,13 +106,12 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 
 	@Override
 	public void closeConn() {
-		if (conn != null) {
+		if (subs != null) {
+			close(subs);
 			subs = null;
-			try {
-				conn.close();
-			} catch (Exception ex) {
-				logger.error("closeConn failed with " + ex.getMessage() + " for " + queueURI, ex);
-			}
+		}
+		if (conn != null) {
+			close(conn);
 			conn = null;
 		}
 	}
