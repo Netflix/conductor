@@ -71,7 +71,27 @@ class TaskMetaList extends React.Component {
                     readOnly
                   />
                   <br />
-                  <Input type="text" defaultValue={row.concurrentExecLimit} addonBefore="Concurrent Exec Limit" />
+                  <Input
+                    type="text"
+                    ref="concurrentExecLimit"
+                    value={row.concurrentExecLimit}
+                    addonBefore="Concurrent Exec Limit"
+                  />
+                  <br />
+                  <Input
+                    type="text"
+                    ref="rateLimitPerFrequency"
+                    value={row.rateLimitPerFrequency}
+                    addonBefore="Rate Limit Amount"
+                  />
+                  <br />
+                  <Input
+                    type="text"
+                    ref="rateLimitFrequencyInSeconds"
+                    value={row.rateLimitFrequencyInSeconds}
+                    addonBefore="Rate Limit Frequency"
+                    addonAfter="Seconds"
+                  />
                   <br />
                   <Input type="textarea" label="Task Description" defaultValue={row.description} readOnly />
                   <br />
@@ -109,6 +129,12 @@ class TaskMetaList extends React.Component {
           </TableHeaderColumn>
           <TableHeaderColumn dataField="concurrentExecLimit" dataSort>
             Concurrent Exec Limit
+          </TableHeaderColumn>
+          <TableHeaderColumn dataField="rateLimitPerFrequency" dataSort>
+            Rate Limit Amount
+          </TableHeaderColumn>
+          <TableHeaderColumn dataField="rateLimitFrequencyInSeconds" dataSort>
+            Rate Limit Frequency Seconds
           </TableHeaderColumn>
           <TableHeaderColumn dataField="retryLogic" dataSort dataFormat={retries}>
             Retry Logic
