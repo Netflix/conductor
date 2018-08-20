@@ -170,13 +170,12 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 						break;
 					} catch (Exception ex) {
 						logger.error(String.format("Failed to publish to %s: %s", subject, payload), ex);
+                        closeConn();
 						// Latest attempt
 						if (i == (publishRetryIn.length - 1)) {
 							logger.error(String.format("Publish gave up for %s: %s", subject, payload));
 							throw new RuntimeException(ex.getMessage(), ex);
 						}
-						// Otherwise closing
-						closeConn();
 					}
 				}
 			}
