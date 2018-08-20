@@ -31,21 +31,20 @@ class WorkflowMetaInput extends Component {
 
         var arr = this.state.outputs;
         var names = this.state.inputs;
+        var string = {};
 
         arr.splice(idx, 1, event.target.value);
 
         console.log(arr);
         console.log(this.state.inputs);
 
-        var string = {}
-            for (var i = 0; i < names.length; i++) {
-
-                    if(arr[i].startsWith("{")){
-                        string[names[i]] = JSON.parse(arr[i])
+            for (let i = 0; i < names.length; i++) {
+                if(arr[i] && arr[i].startsWith("{")){
+                    string[names[i]] = JSON.parse(arr[i]);
                     }
-                    else
-                    string[names[i]] = arr[i]
-                }
+                else if(arr[i])
+                string[names[i]] = arr[i];
+            }
 
         console.log(JSON.stringify(string, null, 2));
 
