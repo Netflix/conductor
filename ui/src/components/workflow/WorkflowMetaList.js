@@ -22,7 +22,6 @@ const WorkflowMetaList = React.createClass({
 
   componentWillReceiveProps(nextProps){
     this.state.workflows = nextProps.workflows;
-
   },
 
   render() {
@@ -43,10 +42,18 @@ const WorkflowMetaList = React.createClass({
       return (<Link to={`/workflow/metadata/${row.name}/${row.version}`}>{row.name} / {row.version}</Link>);
     };
 
+  
     return (
       <div className="ui-content">
         <h1>Workflows</h1>
-        <BootstrapTable data={wfs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
+        <ButtonGroup>
+          <Button onClick={() => {this.refs.table.handleSearch("")} }>ALL</Button>
+          <Button onClick={() => {this.refs.table.handleSearch("SOUTHBOUND")} }>SOUTHBOUND</Button>
+          <Button onClick={() => {this.refs.table.handleSearch("UNIFIED")} }>UNIFIED</Button>
+          <Button onClick={() => {this.refs.table.handleSearch("L3VPN")} }>L3VPN</Button>
+          <Button onClick={() => {this.refs.table.handleSearch("EXAMPLE")} }>EXAMPLE</Button>
+        </ButtonGroup>
+        <BootstrapTable ref="table" data={wfs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
           <TableHeaderColumn dataField="name" isKey={true} dataAlign="left" dataSort={true} dataFormat={nameMaker}>Name/Version</TableHeaderColumn>
           <TableHeaderColumn dataField="inputParameters" dataSort={true} dataFormat={jsonMaker}>Input Parameters</TableHeaderColumn>
           <TableHeaderColumn dataField="tasks" hidden={false} dataFormat={taskMaker}>Tasks</TableHeaderColumn>
