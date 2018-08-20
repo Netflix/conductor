@@ -261,7 +261,7 @@ public class TaskDef extends Auditable {
 
 	/**
 	 * @return rateLimitFrequencyInSeconds: The time bucket that is used to rate limit tasks based on {@link #getRateLimitPerFrequency()}
-	 * If null or not set them defaults to 1 second
+	 * If null or not set, then defaults to 1 second
 	 */
 	public Integer getRateLimitFrequencyInSeconds() {
 		return rateLimitFrequencyInSeconds == null ? 1 : rateLimitFrequencyInSeconds;

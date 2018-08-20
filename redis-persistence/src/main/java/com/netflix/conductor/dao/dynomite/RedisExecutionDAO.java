@@ -267,11 +267,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		int rateLimitPerFrequency = task.getRateLimitPerFrequency();
 		int rateLimitFrequencyInSeconds = task.getRateLimitFrequencyInSeconds();
 		if (rateLimitPerFrequency <= 0 && rateLimitFrequencyInSeconds <=0) {
-			logger.info("Rate limit not applied to the Task: {}  either rateLimitPerFrequency: {} or rateLimitFrequencyInSeconds: {} is 0 or less",
+			logger.debug("Rate limit not applied to the Task: {}  either rateLimitPerFrequency: {} or rateLimitFrequencyInSeconds: {} is 0 or less",
 			task, rateLimitPerFrequency, rateLimitFrequencyInSeconds);
 			return false;
 		} else {
-			logger.info("Evaluating rate limiting for Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {}",
+			logger.debug("Evaluating rate limiting for Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {}",
 					task, rateLimitPerFrequency, rateLimitFrequencyInSeconds);
 			long currentTimeEpochMillis = System.currentTimeMillis();
 			long currentTimeEpochMinusRateLimitBucket = currentTimeEpochMillis - (rateLimitFrequencyInSeconds * 1000);
@@ -287,6 +287,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 				dynoClient.expire(key, rateLimitFrequencyInSeconds);
 				logger.info("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} within the rate limit with current count {}",
 						task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, ++currentBucketCount);
+				Monitors.recordTaskRateLimited(task.getTaskDefName(), rateLimitPerFrequency);
 				return false;
 			} else {
 				logger.info("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} is out of bounds of rate limit with current count {}",
@@ -310,7 +311,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		long current = getInProgressTaskCount(task.getTaskDefName());
 		if(current >= limit) {
 			logger.info("Task execution count limited. task - {}:{}, limit: {}, current: {}", task.getTaskId(), task.getTaskDefName(), limit, current);
-			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
+			Monitors.recordTaskConcurrentExecutionLimited(task.getTaskDefName(), limit);
 			return true;
 		}
 
@@ -327,7 +328,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			String inProgressKey = nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName());
 			//Cleanup any items that are still present in the rate limit bucket but not in progress anymore!
 			ids.stream().filter(id -> !dynoClient.sismember(inProgressKey, id)).forEach(id2 -> dynoClient.zrem(rateLimitKey, id2));
-			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
+			Monitors.recordTaskConcurrentExecutionLimited(task.getTaskDefName(), limit);
 		}
 		return rateLimited;
 	}
