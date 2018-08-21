@@ -24,6 +24,22 @@ const WorkflowMetaList = React.createClass({
     this.state.workflows = nextProps.workflows;
   },
 
+  filterLabels() {
+    var wfs = this.state.workflows;
+    var tags = [];
+
+    for (let key in wfs) {
+      let str = wfs[key].name;
+      tags[key] = str.substring(0, str.indexOf("_"));
+    }
+    tags = _.uniq(tags);
+
+    return (
+      tags.map((item, idx) => 
+        <Button onClick={() => {this.refs.table.handleSearch(`${item}`)} }>{item}</Button>)
+    )
+  },
+
   render() {
     var wfs = this.state.workflows;
 
@@ -46,13 +62,7 @@ const WorkflowMetaList = React.createClass({
     return (
       <div className="ui-content">
         <h1>Workflows</h1>
-        <ButtonGroup>
-          <Button onClick={() => {this.refs.table.handleSearch("")} }>ALL</Button>
-          <Button onClick={() => {this.refs.table.handleSearch("SOUTHBOUND")} }>SOUTHBOUND</Button>
-          <Button onClick={() => {this.refs.table.handleSearch("UNIFIED")} }>UNIFIED</Button>
-          <Button onClick={() => {this.refs.table.handleSearch("L3VPN")} }>L3VPN</Button>
-          <Button onClick={() => {this.refs.table.handleSearch("EXAMPLE")} }>EXAMPLE</Button>
-        </ButtonGroup>
+        {this.filterLabels()}
         <BootstrapTable ref="table" data={wfs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
           <TableHeaderColumn dataField="name" isKey={true} dataAlign="left" dataSort={true} dataFormat={nameMaker}>Name/Version</TableHeaderColumn>
           <TableHeaderColumn dataField="inputParameters" dataSort={true} dataFormat={jsonMaker}>Input Parameters</TableHeaderColumn>
