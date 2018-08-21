@@ -30,7 +30,7 @@ class Main {
 
   routesConfig(app) {
     log.info(`Serving static ${process.cwd()}`);
-    app.use(express.static('public/dist'));
+    app.use(express.static('public/build'));
 
     new WorkflowRoutes().init(app);
     new MetadataRoutes().init(app);

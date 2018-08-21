@@ -8,12 +8,9 @@
     }
   },
   "scripts": {
-    "test": "mocha --reporter nyan --compilers js:babel-core/register --recursive --check-leaks",
+    "test": "react-scripts test",
     "start": "react-scripts start",
-    "build-old": "gulp build --release",
     "build": "react-scripts build && (rm -rf ./server/public/build | true) && cp -r build server/public",
-    "deploy": "gulp deploy --release",
-    "eslint": "eslint  [src]*",
     "server": "nodemon ./server/server.js"
   },
   "repository": {
@@ -61,8 +58,7 @@
     "redux": "^3.3.1",
     "redux-thunk": "^1.0.3",
     "underscore": "^1.8.3",
-    "uuid": "^3.3.2",
-    "webpack": "^1.12.10"
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "eslint": "^4.16.0",
@@ -70,7 +66,6 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.5.1",
-    "mocha": "^2.5.3",
     "nodemon": "^1.18.3"
   }
 }
