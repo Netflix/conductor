@@ -11,13 +11,9 @@ import vars from 'postcss-simple-vars';
 import extend from 'postcss-simple-extend';
 import cssnano from 'cssnano';
 import runSequence from 'run-sequence';
-import ghPages from 'gulp-gh-pages';
-import path from 'path';
-import cp from 'child_process';
 import webpack from 'webpack';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
-import env from 'gulp-env';
 import config from './config';
 
 const paths = {
@@ -29,15 +25,14 @@ const paths = {
   srcImg: 'src/images/**',
   srcPublic: 'src/public/**',
   srcLint: ['src/**/*.js', 'test/**/*.js'],
-  dist: 'dist/public',
-  distDeploy: './dist/public/**/*'
+  dist: 'dist/public'
 };
 
 gulp.task('clean', cb => {
   rimraf('dist', cb);
 });
 
-gulp.task('browserSync', ['serve'], () => {
+gulp.task('browserSync', () => {
   const bundler = webpack(config[0]);
   browserSync({
     proxy: {
@@ -51,59 +46,6 @@ gulp.task('browserSync', ['serve'], () => {
       ]
     },
     files: ['dist/public/**/*.css', 'dist/public/**/*.html']
-  });
-});
-
-const webpackConfig = {};
-
-gulp.task('serve', done => {
-  console.log(`Stats : ${JSON.stringify(config.stats)}`);
-  const bundler = webpack(config);
-  const start = () => {
-    const server = cp.fork('server.js', {
-      cwd: path.join(__dirname, './dist'),
-      env: Object.assign({ NODE_ENV: 'development' }, process.env),
-      silent: false
-    });
-    server.once('message', message => {
-      if (message.match(/^online$/)) {
-        console.log('Server is online...');
-        if (!webpackConfig.isGulpTaskDone) {
-          done();
-          webpackConfig.isGulpTaskDone = true;
-        }
-      }
-    });
-    server.once('error', err => console.log(`Server startup failed ${err}`));
-    process.on('exit', () => server.kill('SIGTERM'));
-    return server;
-  };
-  const bundle = (err, stats) => {
-    if (err) {
-      console.log(`Bundle errors! ${err}`);
-    }
-
-    console.log(stats.toString(config[0].stats));
-    if (!webpackConfig.serverInstance) {
-      webpackConfig.serverInstance = start();
-    } else {
-      webpackConfig.serverInstance.kill('SIGTERM');
-      webpackConfig.serverInstance = start();
-    }
-  };
-  bundler.watch(200, bundle);
-});
-
-gulp.task('server-bundle', done => {
-  webpack(config, (err, stats) => {
-    // eslint-disable-next-line no-undef
-    if (err) throw new gutil.PluginError('webpack:build', err);
-    console.log(
-      `[webpack:build]${stats.toString({
-        colors: true
-      })}`
-    );
-    done();
   });
 });
 
@@ -148,23 +90,6 @@ gulp.task('watchTask', () => {
   });
 });
 
-gulp.task('deploy', () => gulp.src(paths.distDeploy).pipe(ghPages()));
-
 gulp.task('watch', cb => {
-  runSequence('clean', ['set-env', 'browserSync', 'watchTask', 'public', 'styles', 'fonts', 'images'], cb);
-});
-
-gulp.task('set-env', () => {
-  // Only use localhost if WF_SERVER is not set
-  const wfServer = process.env.WF_SERVER || 'http://localhost:8080/api/';
-  env({
-    vars: {
-      WF_SERVER: wfServer
-    }
-  });
-});
-
-gulp.task('build', cb => {
-  process.env.DEBUG = false;
-  runSequence('clean', ['server-bundle', 'styles', 'fonts', 'public', 'images'], cb);
+  runSequence('clean', ['browserSync', 'watchTask', 'public', 'styles', 'fonts', 'images'], cb);
 });

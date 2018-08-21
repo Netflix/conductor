@@ -3,15 +3,15 @@ require('dotenv').config();
 require('babel-polyfill');
 const express = require('express');
 const Bunyan = require('bunyan');
-const MiddlewareIndex = require('./api/middleware');
+const MiddlewareIndex = require('./middleware');
 
 const log = Bunyan.createLogger({ src: true, name: 'Conductor UI' });
 
-const WorkflowRoutes = require('./api/routes/workflow');
-const MetadataRoutes = require('./api/routes/metadata');
-const SystemRoutes = require('./api/routes/system');
-const EventsRoutes = require('./api/routes/events');
-const TaskRoutes = require('./api/routes/tasks');
+const WorkflowRoutes = require('./routes/workflow');
+const MetadataRoutes = require('./routes/metadata');
+const SystemRoutes = require('./routes/system');
+const EventsRoutes = require('./routes/events');
+const TaskRoutes = require('./routes/tasks');
 
 class Main {
   init() {
