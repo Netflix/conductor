@@ -66,6 +66,7 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.5.1",
-    "nodemon": "^1.18.3"
+    "nodemon": "^1.18.3",
+    "react-scripts": "^1.1.4"
   }
 }
