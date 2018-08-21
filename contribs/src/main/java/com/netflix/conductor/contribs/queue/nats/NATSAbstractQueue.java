@@ -31,13 +31,9 @@ import rx.Observable;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Oleksiy Lysak
@@ -45,17 +41,14 @@ import java.util.concurrent.locks.ReentrantLock;
 public abstract class NATSAbstractQueue implements ObservableQueue {
 	private static Logger logger = LoggerFactory.getLogger(NATSAbstractQueue.class);
 	protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
-	protected final Lock mu = new ReentrantLock();
+	private AtomicBoolean listened = new AtomicBoolean();
+	private AtomicBoolean opened = new AtomicBoolean();
 	private EventQueues.QueueType queueType;
 	private ScheduledExecutorService execs;
 	private int[] publishRetryIn;
-	String queueURI;
-	String subject;
-	String queue;
-
-	// Indicates that observe was called (Event Handler) and we must to re-initiate subscription upon reconnection
-	private boolean observable;
-	private boolean isOpened;
+	final String queueURI;
+	final String subject;
+	final String queue;
 
 	NATSAbstractQueue(String queueURI, EventQueues.QueueType queueType, int[] publishRetryIn) {
 		this.queueURI = queueURI;
@@ -88,14 +81,9 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	@Override
 	public Observable<Message> observe() {
 		logger.info("Observe invoked for queueURI " + queueURI);
-		observable = true;
+		listened.set(true);
 
-		mu.lock();
-		try {
-			subscribe();
-		} finally {
-			mu.unlock();
-		}
+		subscribe();
 
 		Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
 			Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
@@ -158,10 +146,12 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 		messages.forEach(message -> {
 			String payload = message.getPayload();
 			try {
-				publish(subject, payload.getBytes());
-				logger.info(String.format("Published message to %s: %s", subject, payload));
+				logger.info(String.format("Trying to publish to %s: %s", subject, payload));
+				publishWait(subject, payload);
+				logger.info(String.format("Published to %s: %s", subject, payload));
 			} catch (Exception eo) {
 				logger.error(String.format("Failed to publish to %s: %s", subject, payload), eo);
+				closeConn();
 				if (ArrayUtils.isEmpty(publishRetryIn)) {
 					throw new RuntimeException(eo);
 				}
@@ -171,12 +161,15 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 						logger.error(String.format("Publish retry in %s seconds for %s", delay, subject));
 
 						Thread.sleep(delay * 1000L);
-						publish(subject, payload.getBytes());
-						logger.info(String.format("Published message to %s: %s", subject, payload));
+
+						logger.info(String.format("Trying to publish to %s: %s", subject, payload));
+						publishWait(subject, payload);
+						logger.info(String.format("Published to %s: %s", subject, payload));
 
 						break;
 					} catch (Exception ex) {
 						logger.error(String.format("Failed to publish to %s: %s", subject, payload), ex);
+                        closeConn();
 						// Latest attempt
 						if (i == (publishRetryIn.length - 1)) {
 							logger.error(String.format("Publish gave up for %s: %s", subject, payload));
@@ -191,71 +184,91 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	@Override
 	public void close() {
 		logger.info("Closing connection for " + queueURI);
-		mu.lock();
-		try {
-			if (execs != null) {
-				execs.shutdownNow();
-				execs = null;
-			}
-			closeConn();
-			isOpened = false;
-		} finally {
-			mu.unlock();
+		if (execs != null) {
+			execs.shutdownNow();
+			execs = null;
 		}
+		closeConn();
+		opened.set(false);
 	}
 
 	public void open() {
 		// do nothing if not closed
-		if (isOpened) {
+		if (opened.get()) {
 			return;
 		}
 
-		mu.lock();
 		try {
-			try {
-				connect();
+			connect();
 
-				// Re-initiated subscription if existed
-				if (observable) {
-					subscribe();
-				}
-			} catch (Exception ignore) {
+			// Re-initiated subscription if existed
+			if (listened.get()) {
+				subscribe();
 			}
-
-			execs = Executors.newScheduledThreadPool(1);
-			execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
-			isOpened = true;
-		} finally {
-			mu.unlock();
+		} catch (Exception ignore) {
 		}
+
+		execs = Executors.newScheduledThreadPool(1);
+		execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
+		opened.set(true);
 	}
 
 	private void monitor() {
-		if (isConnected()) {
-			return;
-		}
-
-		logger.error("Monitor invoked for " + queueURI);
-		mu.lock();
 		try {
+			boolean observed = listened.get();
+			boolean connected = isConnected();
+			boolean subscribed = isSubscribed();
+
+			// All conditions are met
+			if (connected && observed && subscribed) {
+				return;
+			} else if (connected && !observed && !subscribed) {
+				return;
+			}
+
+			logger.error("Monitor invoked for " + queueURI);
 			closeConn();
 
 			// Connect
 			connect();
 
 			// Re-initiated subscription if existed
-			if (observable) {
+			if (observed) {
 				subscribe();
 			}
 		} catch (Exception ex) {
 			logger.error("Monitor failed with " + ex.getMessage() + " for " + queueURI, ex);
-		} finally {
-			mu.unlock();
+		}
+	}
+
+	private void publishWait(String subject, String payload) throws Exception {
+		LinkedBlockingDeque<Object> queue = new LinkedBlockingDeque<>();
+
+		Runnable task = () -> {
+			try {
+				publish(subject, payload.getBytes());
+				queue.add(Boolean.TRUE);
+			} catch (Exception ex) {
+				queue.add(ex);
+			}
+		};
+
+		Thread thread = new Thread(task);
+		thread.start();
+
+		// Publish must be really fast and no need to wait longer than even 3 seconds
+		Object result = queue.poll(3, TimeUnit.SECONDS);
+		if (result == null) {
+			thread.interrupt();
+			throw new RuntimeException("Publish timed out");
+		} else if (result instanceof Exception) {
+			Exception ex = (Exception)result;
+			throw new RuntimeException(ex.getMessage(), ex);
 		}
 	}
 
 	public boolean isClosed() {
-		return !isOpened;
+		return !opened.get();
 	}
 
 	void ensureConnected() {
@@ -264,9 +277,18 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 		}
 	}
 
+	void close(AutoCloseable closeable) {
+		try {
+			closeable.close();
+		} catch (Exception ignore) {
+		}
+	}
+
 	abstract void connect();
 
 	abstract boolean isConnected();
+
+	abstract boolean isSubscribed();
 
 	abstract void publish(String subject, byte[] data) throws Exception;
 

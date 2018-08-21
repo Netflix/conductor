@@ -20,42 +20,45 @@ package com.netflix.conductor.contribs.queue.nats;
 
 import com.netflix.conductor.core.events.EventQueues;
 import io.nats.client.Connection;
-import io.nats.client.ConnectionFactory;
-import io.nats.client.Subscription;
+import io.nats.client.Dispatcher;
+import io.nats.client.Nats;
+import io.nats.client.Options;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Oleksiy Lysak
  */
 public class NATSObservableQueue extends NATSAbstractQueue {
 	private static Logger logger = LoggerFactory.getLogger(NATSObservableQueue.class);
-	private ConnectionFactory fact;
-	private Subscription subs;
-	private Connection conn;
+	private final AtomicReference<Connection> conn = new AtomicReference<>();
+	private final AtomicReference<Dispatcher> disp = new AtomicReference<>();
+	private final Properties props;
 
-	public NATSObservableQueue(ConnectionFactory factory, String queueURI, int[] delays) {
+	public NATSObservableQueue(Properties props, String queueURI, int[] delays) {
 		super(queueURI, EventQueues.QueueType.nats, delays);
-		this.fact = factory;
+		this.props = props;
 		open();
 	}
 
 	@Override
 	public boolean isConnected() {
-		return (conn != null && conn.isConnected());
+		return (conn.get() != null
+				&& conn.get().getStatus() == Connection.Status.CONNECTED);
 	}
 
 	@Override
 	public void connect() {
 		try {
-			Connection temp = fact.createConnection();
+			Options options = new Options.Builder(props).build();
+			Connection temp = Nats.connect(options);
 			logger.info("Successfully connected for " + queueURI);
 
-			temp.setReconnectedCallback((event) -> logger.warn("onReconnect. Reconnected back for " + queueURI));
-			temp.setDisconnectedCallback((event -> logger.warn("onDisconnect. Disconnected for " + queueURI)));
-
-			conn = temp;
+			conn.set(temp);
 		} catch (Exception e) {
 			logger.error("Unable to establish nats connection for " + queueURI, e);
 			throw new RuntimeException(e);
@@ -64,43 +67,49 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 
 	@Override
 	public void subscribe() {
-		// do nothing if already subscribed
-		if (subs != null) {
+		if (isSubscribed()) {
 			return;
 		}
 
 		try {
 			ensureConnected();
 
+			Dispatcher dispatcher = conn.get().createDispatcher(msg -> onMessage(msg.getSubject(), msg.getData()));
+
 			// Create subject/queue subscription if the queue has been provided
 			if (StringUtils.isNotEmpty(queue)) {
 				logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-				subs = conn.subscribe(subject, queue, msg -> onMessage(msg.getSubject(), msg.getData()));
+				dispatcher.subscribe(subject, queue);
 			} else {
 				logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-				subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()));
+				dispatcher.subscribe(subject);
 			}
+
+			disp.set(dispatcher);
 		} catch (Exception ex) {
 			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
 		}
 	}
 
 	@Override
+	public boolean isSubscribed() {
+		return disp.get() != null;
+	}
+
+	@Override
 	public void publish(String subject, byte[] data) throws Exception {
 		ensureConnected();
-		conn.publish(subject, data);
+		conn.get().publish(subject, data);
 	}
 
 	@Override
 	public void closeConn() {
-		if (conn != null) {
-			subs = null;
-			try {
-				conn.close();
-			} catch (Exception ex) {
-				logger.error("closeConn failed with " + ex.getMessage() + " for " + queueURI, ex);
-			}
-			conn = null;
+		if (conn.get() != null) {
+			close(conn.get());
+			conn.set(null);
+		}
+		if (disp.get() != null) {
+			disp.set(null);
 		}
 	}
 }

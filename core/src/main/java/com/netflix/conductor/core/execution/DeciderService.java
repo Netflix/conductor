@@ -336,6 +336,7 @@ public class DeciderService {
 		rescheduled.setTaskId(IDGenerator.generate());
 		rescheduled.setRetriedTaskId(task.getTaskId());
 		rescheduled.setStatus(Status.SCHEDULED);
+		rescheduled.setReasonForIncompletion(null);
 		rescheduled.setPollCount(0);
 		rescheduled.setWorkerId(null);
 		rescheduled.setInputData(new HashMap<>());

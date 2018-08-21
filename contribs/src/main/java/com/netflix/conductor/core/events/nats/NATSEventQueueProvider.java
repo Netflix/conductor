@@ -24,7 +24,6 @@ import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.client.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +41,7 @@ import java.util.stream.Stream;
 public class NATSEventQueueProvider implements EventQueueProvider {
 	private static Logger logger = LoggerFactory.getLogger(NATSEventQueueProvider.class);
 	protected Map<String, NATSObservableQueue> queues = new ConcurrentHashMap<>();
-	private ConnectionFactory factory;
+	private final Properties props = new Properties();
 	private int[] publishRetryIn;
 
 	@Inject
@@ -50,7 +49,6 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 		logger.info("NATS Event Queue Provider init");
 
 		// Init NATS API. Handle "io_nats" and "io.nats" ways to specify parameters
-		Properties props = new Properties();
 		Properties temp = new Properties();
 		temp.putAll(System.getenv());
 		temp.putAll(System.getProperties());
@@ -64,10 +62,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 			props.put(key, config.getProperty(key, val));
 		});
 
-		// Init NATS API
-		factory = new ConnectionFactory(props);
-
-		String[] arr = config.getProperty("io.nats.publishRetryIn", "5,10,15").split(",");
+		String[] arr = config.getProperty("io.nats.client.publishRetryIn", ",").split(",");
 		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
 
 		EventQueues.registerProvider(QueueType.nats, this);
@@ -76,7 +71,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
-		NATSObservableQueue queue = queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(factory, queueURI, publishRetryIn));
+		NATSObservableQueue queue = queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(props, queueURI, publishRetryIn));
 		if (queue.isClosed()) {
 			queue.open();
 		}

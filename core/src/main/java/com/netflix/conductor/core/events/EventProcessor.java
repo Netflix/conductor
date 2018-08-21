@@ -70,11 +70,12 @@ public class EventProcessor {
 		int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
 
 		// default 60 for backward compatibility
+		int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
 		int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
 		if (executorThreadCount > 0) {
 			this.executors = Executors.newFixedThreadPool(executorThreadCount);
 			refresh();
-			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, 60, refreshPeriod, TimeUnit.SECONDS);
+			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
 		} else {
 			logger.warn("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
 		}
