@@ -6,10 +6,11 @@
   "scripts": {
     "test": "mocha --reporter nyan --compilers js:babel-core/register --recursive --check-leaks",
     "watch": "gulp watch",
-    "build": "gulp build --release",
+    "build-old": "gulp build --release",
+    "build": "babel src --out-dir dist --copy-files",
     "deploy": "gulp deploy --release",
     "eslint": "eslint  [src]*",
-    "server": "nodemon ./src/server.js"
+    "server": "nodemon ./server/server.js"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
     "create-react-class": "^15.5.3",
     "d3": "^3.5.16",
     "dagre-d3": "^0.4.17",
+    "dotenv": "^6.0.0",
     "express": "^4.16.3",
     "fbjs": "^0.7.2",
     "graceful-fs": "^4.0.0",
@@ -58,6 +60,7 @@
   },
   "devDependencies": {
     "babel": "^6.5.2",
+    "babel-cli": "^6.26.0",
     "babel-core": "^6.5.2",
     "babel-eslint": "^8.2.6",
     "babel-loader": "^6.2.1",
