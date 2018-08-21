@@ -1,4 +1,4 @@
-import TaskService from '../services/task.service';
+const TaskService = require('../services/task.service');
 
 class WorkflowRoutes {
   constructor() {

@@ -1,7 +1,9 @@
-import 'babel-polyfill';
-import express from 'express';
-import Bunyan from 'bunyan';
-import MiddlewareIndex from './api/middleware';
+/* eslint-disable class-methods-use-this */
+
+require('babel-polyfill');
+const express = require('express');
+const Bunyan = require('bunyan');
+const MiddlewareIndex = require('./api/middleware');
 
 const log = Bunyan.createLogger({ src: true, name: 'Conductor UI' });
 
@@ -22,11 +24,11 @@ class Main {
     this.startServer(app);
   }
 
-  preMiddlewareConfig = (app, middlewareIndex) => {
+  preMiddlewareConfig(app, middlewareIndex) {
     middlewareIndex.before(app);
-  };
+  }
 
-  routesConfig = app => {
+  routesConfig(app) {
     log.info(`Serving static ${process.cwd()}`);
     app.use(express.static('public'));
 
@@ -35,13 +37,13 @@ class Main {
     new TaskRoutes().init(app);
     new SystemRoutes().init(app);
     new EventsRoutes().init(app);
-  };
+  }
 
-  postMiddlewareConfig = (app, middlewareIndex) => {
+  postMiddlewareConfig(app, middlewareIndex) {
     middlewareIndex.after(app);
-  };
+  }
 
-  startServer = app => {
+  startServer(app) {
     const server = app.listen(process.env.NODE_PORT || 5000, () => {
       const { address: host, port } = server.address();
 
@@ -50,7 +52,7 @@ class Main {
         process.send('online');
       }
     });
-  };
+  }
 }
 
 const main = new Main();

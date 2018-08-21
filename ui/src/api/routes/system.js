@@ -1,4 +1,4 @@
-import SystemService from '../services/system.service';
+const SystemService = require('../services/system.service');
 
 class SystemRoutes {
   constructor() {

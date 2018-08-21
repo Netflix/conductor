@@ -1,4 +1,4 @@
-import BaseService from './base.service';
+const BaseService = require('./base.service');
 
 class MetadataService extends BaseService {
   constructor() {

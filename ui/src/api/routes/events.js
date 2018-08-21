@@ -1,4 +1,4 @@
-import EventsService from '../services/events.service';
+const EventsService = require('../services/events.service');
 
 class SystemRoutes {
   constructor() {

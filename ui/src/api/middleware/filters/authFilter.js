@@ -1,6 +1,7 @@
-/* eslint-disable consistent-return */
-export default class AuthFilter {
-  init = app => {
+/* eslint-disable consistent-return,class-methods-use-this */
+
+class AuthFilter {
+  init(app) {
     app.use((req, _, next) => {
       const { headers: { authorization = '' } = {} } = req;
 
@@ -12,5 +13,7 @@ export default class AuthFilter {
 
       next();
     });
-  };
+  }
 }
+
+module.exports = AuthFilter;

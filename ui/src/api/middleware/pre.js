@@ -1,7 +1,10 @@
-import AuthFilter from './filters/authFilter';
+/* eslint-disable class-methods-use-this */
+const AuthFilter = require('./filters/authFilter');
 
-export default class PreMiddleware {
-  init = app => {
+class PreMiddleware {
+  init(app) {
     new AuthFilter().init(app);
-  };
+  }
 }
+
+module.exports = PreMiddleware;

@@ -1,4 +1,4 @@
-import MetadataService from '../services/metadata.service';
+const MetadataService = require('../services/metadata.service');
 
 class MetadataRoutes {
   constructor() {

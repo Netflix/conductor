@@ -1,4 +1,4 @@
-import WorflowService from '../services/workflow.service';
+const WorflowService = require('../services/workflow.service');
 
 class WorkflowRoutes {
   constructor() {

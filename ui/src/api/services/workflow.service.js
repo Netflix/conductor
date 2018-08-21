@@ -1,11 +1,11 @@
 /* eslint-disable no-restricted-globals,consistent-return */
-import identity from 'lodash/identity';
-import moment from 'moment';
-import filter from 'lodash/fp/filter';
-import forEach from 'lodash/fp/forEach';
-import map from 'lodash/fp/map';
-import transform from 'lodash/transform';
-import BaseService from './base.service';
+const identity = require('lodash/identity');
+const moment = require('moment');
+const filter = require('lodash/fp/filter');
+const forEach = require('lodash/fp/forEach');
+const map = require('lodash/fp/map');
+const transform = require('lodash/transform');
+const BaseService = require('./base.service');
 
 const LOG_DATE_FORMAT = 'MM/DD/YY, HH:mm:ss:SSS';
 
