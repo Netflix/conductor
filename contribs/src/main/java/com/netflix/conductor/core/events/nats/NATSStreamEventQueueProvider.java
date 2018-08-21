@@ -24,7 +24,7 @@ import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import io.nats.client.Nats;
+import io.nats.client.Options;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 		// Get NATS Streaming options
 		clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
 		durableName = config.getProperty("io.nats.streaming.durableName", null);
-		natsUrl = config.getProperty("io.nats.streaming.url", Nats.DEFAULT_URL);
+		natsUrl = config.getProperty("io.nats.streaming.url", Options.DEFAULT_URL);
 
 		String[] arr = config.getProperty("io.nats.streaming.publishRetryIn", "5,10,15").split(",");
 		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();

@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -40,16 +41,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class NATSAbstractQueue implements ObservableQueue {
 	private static Logger logger = LoggerFactory.getLogger(NATSAbstractQueue.class);
 	protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
+	private AtomicBoolean listened = new AtomicBoolean();
+	private AtomicBoolean opened = new AtomicBoolean();
 	private EventQueues.QueueType queueType;
 	private ScheduledExecutorService execs;
 	private int[] publishRetryIn;
-	String queueURI;
-	String subject;
-	String queue;
-
-	// Indicates that observe was called (Event Handler) and we must to re-initiate subscription upon reconnection
-	private boolean observable;
-	private boolean isOpened;
+	final String queueURI;
+	final String subject;
+	final String queue;
 
 	NATSAbstractQueue(String queueURI, EventQueues.QueueType queueType, int[] publishRetryIn) {
 		this.queueURI = queueURI;
@@ -82,7 +81,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	@Override
 	public Observable<Message> observe() {
 		logger.info("Observe invoked for queueURI " + queueURI);
-		observable = true;
+		listened.set(true);
 
 		subscribe();
 
@@ -190,12 +189,12 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 			execs = null;
 		}
 		closeConn();
-		isOpened = false;
+		opened.set(false);
 	}
 
 	public void open() {
 		// do nothing if not closed
-		if (isOpened) {
+		if (opened.get()) {
 			return;
 		}
 
@@ -203,7 +202,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 			connect();
 
 			// Re-initiated subscription if existed
-			if (observable) {
+			if (listened.get()) {
 				subscribe();
 			}
 		} catch (Exception ignore) {
@@ -211,23 +210,30 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 
 		execs = Executors.newScheduledThreadPool(1);
 		execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
-		isOpened = true;
+		opened.set(true);
 	}
 
 	private void monitor() {
-		if (isConnected()) {
-			return;
-		}
-
-		logger.error("Monitor invoked for " + queueURI);
 		try {
+			boolean observed = listened.get();
+			boolean connected = isConnected();
+			boolean subscribed = isSubscribed();
+
+			// All conditions are met
+			if (connected && observed && subscribed) {
+				return;
+			} else if (connected && !observed && !subscribed) {
+				return;
+			}
+
+			logger.error("Monitor invoked for " + queueURI);
 			closeConn();
 
 			// Connect
 			connect();
 
 			// Re-initiated subscription if existed
-			if (observable) {
+			if (observed) {
 				subscribe();
 			}
 		} catch (Exception ex) {
@@ -236,22 +242,22 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	}
 
 	private void publishWait(String subject, String payload) throws Exception {
-		LinkedBlockingDeque<Object> deque = new LinkedBlockingDeque<>();
+		LinkedBlockingDeque<Object> queue = new LinkedBlockingDeque<>();
 
 		Runnable task = () -> {
 			try {
 				publish(subject, payload.getBytes());
-				deque.add(Boolean.TRUE);
+				queue.add(Boolean.TRUE);
 			} catch (Exception ex) {
-				deque.add(ex);
+				queue.add(ex);
 			}
 		};
 
 		Thread thread = new Thread(task);
 		thread.start();
 
-		// publish must be really fast
-		Object result = deque.poll(3, TimeUnit.SECONDS);
+		// Publish must be really fast and no need to wait longer than even 3 seconds
+		Object result = queue.poll(3, TimeUnit.SECONDS);
 		if (result == null) {
 			thread.interrupt();
 			throw new RuntimeException("Publish timed out");
@@ -261,7 +267,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	}
 
 	public boolean isClosed() {
-		return !isOpened;
+		return !opened.get();
 	}
 
 	void ensureConnected() {
@@ -280,6 +286,8 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 	abstract void connect();
 
 	abstract boolean isConnected();
+
+	abstract boolean isSubscribed();
 
 	abstract void publish(String subject, byte[] data) throws Exception;
 

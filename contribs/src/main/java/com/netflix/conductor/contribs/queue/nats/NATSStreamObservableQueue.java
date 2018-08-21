@@ -19,6 +19,7 @@
 package com.netflix.conductor.contribs.queue.nats;
 
 import com.netflix.conductor.core.events.EventQueues;
+import io.nats.client.Connection;
 import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
 import io.nats.streaming.Subscription;
@@ -28,16 +29,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Oleksiy Lysak
  */
 public class NATSStreamObservableQueue extends NATSAbstractQueue {
 	private static Logger logger = LoggerFactory.getLogger(NATSStreamObservableQueue.class);
-	private StreamingConnectionFactory fact;
-	private StreamingConnection conn;
-	private Subscription subs;
-	private String durableName;
+	private final AtomicReference<StreamingConnection> conn = new AtomicReference<>();
+	private final AtomicReference<Subscription> subs = new AtomicReference<>();
+	private final StreamingConnectionFactory fact;
+	private final String durableName;
 
 	public NATSStreamObservableQueue(String clusterId, String natsUrl, String durableName, String queueURI, int[] delays) {
 		super(queueURI, EventQueues.QueueType.nats_stream, delays);
@@ -51,7 +53,9 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 
 	@Override
 	public boolean isConnected() {
-		return (conn != null && conn.getNatsConnection() != null && conn.getNatsConnection().isConnected());
+		return (conn.get() != null
+				&& conn.get().getNatsConnection() != null
+				&& conn.get().getNatsConnection().getStatus() == Connection.Status.CONNECTED);
 	}
 
 	@Override
@@ -60,12 +64,7 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 			StreamingConnection temp = fact.createConnection();
 			logger.info("Successfully connected for " + queueURI);
 
-			temp.getNatsConnection().setReconnectedCallback((event) ->
-					logger.warn("onReconnect. Reconnected back for " + queueURI));
-			temp.getNatsConnection().setDisconnectedCallback((event ->
-					logger.warn("onDisconnect. Disconnected for " + queueURI)));
-
-			conn = temp;
+			conn.set(temp);
 		} catch (Exception e) {
 			logger.error("Unable to establish nats streaming connection for " + queueURI, e);
 			throw new RuntimeException(e);
@@ -74,45 +73,55 @@ public class NATSStreamObservableQueue extends NATSAbstractQueue {
 
 	@Override
 	public void subscribe() {
-		// do nothing if already subscribed
-		if (subs != null) {
+		if (isSubscribed()) {
 			return;
 		}
 
 		try {
 			ensureConnected();
 
-			SubscriptionOptions subscriptionOptions = new SubscriptionOptions
-					.Builder().durableName(durableName).build();
+			SubscriptionOptions options = new SubscriptionOptions.Builder()
+					.durableName(durableName)
+					.build();
+
+			StreamingConnection tmpConn = conn.get();
+			Subscription tmpSubs;
 
 			// Create subject/queue subscription if the queue has been provided
 			if (StringUtils.isNotEmpty(queue)) {
 				logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
-				subs = conn.subscribe(subject, queue, msg -> onMessage(msg.getSubject(), msg.getData()), subscriptionOptions);
+				tmpSubs = tmpConn.subscribe(subject, queue, msg -> onMessage(msg.getSubject(), msg.getData()), options);
 			} else {
 				logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
-				subs = conn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()), subscriptionOptions);
+				tmpSubs = tmpConn.subscribe(subject, msg -> onMessage(msg.getSubject(), msg.getData()), options);
 			}
+
+			subs.set(tmpSubs);
 		} catch (Exception ex) {
 			logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
 		}
 	}
 
 	@Override
+	public boolean isSubscribed() {
+		return subs.get() != null;
+	}
+
+	@Override
 	public void publish(String subject, byte[] data) throws Exception {
 		ensureConnected();
-		conn.publish(subject, data);
+		conn.get().publish(subject, data);
 	}
 
 	@Override
 	public void closeConn() {
-		if (subs != null) {
-			close(subs);
-			subs = null;
+		if (subs.get() != null) {
+			close(subs.get());
+			subs.set(null);
 		}
-		if (conn != null) {
-			close(conn);
-			conn = null;
+		if (conn.get() != null) {
+			close(conn.get());
+			conn.set(null);
 		}
 	}
 }
