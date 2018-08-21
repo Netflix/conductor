@@ -56,7 +56,7 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 		durableName = config.getProperty("io.nats.streaming.durableName", null);
 		natsUrl = config.getProperty("io.nats.streaming.url", Options.DEFAULT_URL);
 
-		String[] arr = config.getProperty("io.nats.streaming.publishRetryIn", "5,10,15").split(",");
+		String[] arr = config.getProperty("io.nats.streaming.publishRetryIn", ",").split(",");
 		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
 
 		logger.info("NATS Streaming clusterId=" + clusterId +

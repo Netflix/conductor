@@ -62,7 +62,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 			props.put(key, config.getProperty(key, val));
 		});
 
-		String[] arr = config.getProperty("io.nats.client.publishRetryIn", "5,10,15").split(",");
+		String[] arr = config.getProperty("io.nats.client.publishRetryIn", ",").split(",");
 		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
 
 		EventQueues.registerProvider(QueueType.nats, this);
