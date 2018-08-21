@@ -1,11 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Footer from './common/Footer';
-import ErrorPage from './common/Error';
-import LeftMenu from './common/LeftMenu';
-import packageJSON from '../../package.json';
+import Footer from '../common/Footer';
+import ErrorPage from '../common/Error';
+import LeftMenu from '../common/LeftMenu';
+import packageJSON from '../../../package.json';
 
-class App extends React.Component {
+class Home extends React.Component {
   state = {
     minimize: false
   };
@@ -50,4 +50,4 @@ class App extends React.Component {
   }
 }
 
-export default connect(state => state.global)(App);
+export default connect(state => state.global)(Home);

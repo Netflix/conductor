@@ -2,7 +2,11 @@
   "name": "nf-workflow-ui",
   "version": "1.0.0",
   "description": "Workflow User Interface",
-  "main": "index.js",
+  "proxy": {
+    "/api": {
+      "target": "http://localhost:3001"
+    }
+  },
   "scripts": {
     "test": "mocha --reporter nyan --compilers js:babel-core/register --recursive --check-leaks",
     "start": "react-scripts start",
@@ -25,6 +29,7 @@
     "autoprefixer": "^6.0.0",
     "axios": "^0.18.0",
     "babel-polyfill": "^6.3.14",
+    "bootstrap": "3.3.6",
     "bunyan": "^1.7.1",
     "clipboard": "^1.6.1",
     "create-react-class": "^15.5.3",

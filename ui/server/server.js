@@ -45,9 +45,12 @@ class Main {
 
   startServer(app) {
     const server = app.listen(process.env.NODE_PORT || 5000, () => {
-      const { address: host, port } = server.address();
+      const { address: host = 'localhost', port } = server.address();
+      const serverStartMessage = `Workflow UI listening at http://${host}:${port}`;
 
-      log.info('Workflow UI listening at http://%s:%s', host, port);
+      log.info(serverStartMessage);
+      console.info(serverStartMessage);
+
       if (process.send) {
         process.send('online');
       }

@@ -1,4 +1,4 @@
-import App from './components/App';
+import Home from './components/Home';
 import Workflow from './components/workflow/executions/WorkflowList';
 import Event from './components/event/EventList';
 import EventExecs from './components/event/EventExecs';
@@ -13,7 +13,7 @@ import Help from './components/common/Help';
 const routeConfig = [
   {
     path: '/',
-    component: App,
+    component: Home,
     indexRoute: { component: Intro },
     childRoutes: [
       { path: 'workflow/metadata', component: WorkflowMetaList },

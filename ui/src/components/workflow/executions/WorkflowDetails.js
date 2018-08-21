@@ -34,11 +34,11 @@ function workerLink(type, cell) {
   if (cell == null) {
     return '';
   }
-  let href = sys.env[type] || '#';
+  let href = window.sys.env[type] || '#';
   if (href !== '#') {
     href = href.replace('%s', cell);
   } else {
-    href = sys.env.WORKER_LINK;
+    href = window.sys.env.WORKER_LINK;
     href = href || '#';
     href = href.replace('%s', cell);
   }
