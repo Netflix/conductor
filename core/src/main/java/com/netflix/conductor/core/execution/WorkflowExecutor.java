@@ -1020,8 +1020,13 @@ public class WorkflowExecutor {
 			switch (task.getStatus()) {
 
 				case SCHEDULED:
-					notifyTaskStatus(task, StartEndState.start);
-					systemTask.start(workflow, task, this);
+					try {
+						notifyTaskStatus(task, StartEndState.start);
+						systemTask.start(workflow, task, this);
+					} catch (Exception ex) {
+						task.setStatus(Status.FAILED);
+						task.setReasonForIncompletion(ex.getMessage());
+					}
 					break;
 
 				case IN_PROGRESS:
