@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --reporter nyan --compilers js:babel-core/register --recursive --check-leaks",
-    "watch": "gulp watch",
+    "start": "react-scripts start",
     "build-old": "gulp build --release",
-    "build": "(rm -rf ./server/public/dist | true) && babel src --out-dir dist --copy-files && cp -r dist server/public",
+    "build": "react-scripts build && (rm -rf ./server/public/build | true) && cp -r build server/public",
     "deploy": "gulp deploy --release",
     "eslint": "eslint  [src]*",
     "server": "nodemon ./server/server.js"
