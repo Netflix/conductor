@@ -262,7 +262,8 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 			thread.interrupt();
 			throw new RuntimeException("Publish timed out");
 		} else if (result instanceof Exception) {
-			throw (Exception)result;
+			Exception ex = (Exception)result;
+			throw new RuntimeException(ex.getMessage(), ex);
 		}
 	}
 
