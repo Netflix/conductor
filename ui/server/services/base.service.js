@@ -8,9 +8,12 @@ class BaseService {
   }
 
   handleError(e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
-    return e;
+    const {
+      message,
+      response: { status }
+    } = e;
+    const responseMessage = `Message: ${message} : Status: ${status}`;
+    return new Error(responseMessage);
   }
 
   // eslint-disable-next-line no-confusing-arrow

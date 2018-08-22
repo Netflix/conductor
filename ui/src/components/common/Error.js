@@ -10,14 +10,8 @@ class ErrorPage extends React.Component {
   };
 
   componentWillReceiveProps(nextProps) {
-    let status = '';
-    let details = '';
-    if (nextProps.exception != null && nextProps.exception.response != null) {
-      status = `${nextProps.exception.response.status} - ${nextProps.exception.response.statusText}`;
-      details = JSON.stringify(nextProps.exception.response.text);
-    } else {
-      details = nextProps.exception;
-    }
+    const { message: status, stack: details, error } = nextProps;
+
     this.setState({
       alertVisible: nextProps.error,
       status,
@@ -47,4 +41,8 @@ class ErrorPage extends React.Component {
   }
 }
 
-export default connect(state => state.workflow)(ErrorPage);
+export default connect(state => ({
+  message: state.workflow.exception.message,
+  stack: state.workflow.exception.stack,
+  error: state.workflow.error
+}))(ErrorPage);
