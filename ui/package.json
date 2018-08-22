@@ -11,7 +11,8 @@
     "test": "react-scripts test",
     "start": "react-scripts start",
     "build": "react-scripts build && (rm -rf ./server/public/build | true) && cp -r build server/public",
-    "server": "nodemon ./server/server.js"
+    "server": "nodemon ./server/server.js",
+    "watch": "npm-run-all --parallel server start"
   },
   "repository": {
     "type": "git",
