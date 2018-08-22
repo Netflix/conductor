@@ -4,19 +4,12 @@ import { Panel, Button } from 'react-bootstrap';
 
 class ErrorPage extends React.Component {
   state = {
-    alertVisible: false,
-    status: '',
-    details: ''
+    alertVisible: false
   };
 
   componentWillReceiveProps(nextProps) {
-    const { message: status, stack: details, error } = nextProps;
-
-    this.setState({
-      alertVisible: nextProps.error,
-      status,
-      details
-    });
+    const { error } = nextProps;
+    this.setState({ alertVisible: error });
   }
 
   handleAlertDismiss = () => {
@@ -24,11 +17,14 @@ class ErrorPage extends React.Component {
   };
 
   render() {
-    if (this.state.alertVisible) {
+    const { message, stack } = this.props;
+    const { alertVisible } = this.state;
+
+    if (alertVisible) {
       return (
         <span className="error">
-          <Panel header={this.state.status} bsStyle="danger">
-            <code>{this.state.details}</code>
+          <Panel header={message} bsStyle="danger">
+            <code>{stack}</code>
           </Panel>
           <Button bsStyle="danger" onClick={this.handleAlertDismiss}>
             Close
