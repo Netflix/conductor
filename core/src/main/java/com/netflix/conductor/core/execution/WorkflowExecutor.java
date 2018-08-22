@@ -976,6 +976,10 @@ public class WorkflowExecutor {
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int unackTimeout) {
 		try {
 			Task task = edao.getTask(taskId);
+			if (task == null) {
+				logger.warn("No task found for task id = " + taskId + ". System task is " + systemTask);
+				return;
+			}
 
 			if(task.getStatus().isTerminal()) {
 				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
@@ -1044,7 +1048,7 @@ public class WorkflowExecutor {
 			logger.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
 
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.error("ExecuteSystemTask failed with " + e.getMessage() + " for task id=" + taskId + ", system task=" + systemTask, e);
 		}
 	}
 
