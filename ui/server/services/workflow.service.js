@@ -25,8 +25,6 @@ class WorkflowService extends BaseService {
   }
 
   async search(reqFreeText, reqStart, reqH, q, token) {
-    throw new Error('test');
-
     const freeText = [];
     if (reqFreeText !== '') {
       freeText.push(reqFreeText);
