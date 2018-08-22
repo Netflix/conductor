@@ -1048,7 +1048,7 @@ public class WorkflowExecutor {
 			logger.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
 
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.error("ExecuteSystemTask failed with " + e.getMessage() + " for task id=" + taskId + ", system task=" + systemTask, e);
 		}
 	}
 

@@ -6,6 +6,8 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -30,7 +32,17 @@ public class KeyValueLayout extends Layout {
         buf.append("severity=").append(event.getLevel().toString().toLowerCase()).append(" ");
         buf.append("logger=").append(event.getLoggerName().toLowerCase()).append(" ");
         buf.append("text=").append("\"").append(normalizeMessage(event.getMessage())).append("\"");
+        if (event.getThrowableInformation() != null
+                && event.getThrowableInformation().getThrowable() != null) {
+            Throwable throwable = event.getThrowableInformation().getThrowable();
+
+            StringWriter sw = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(sw));
+
+            buf.append(" stackTrace=").append("\"").append(normalizeMessage(sw.toString())).append("\"");
+        }
         buf.append("\n");
+
         return buf.toString();
     }
 
@@ -40,6 +52,9 @@ public class KeyValueLayout extends Layout {
             response = message.toString();
             if (response.contains("\n")) {
                 response = response.replace("\n", "");
+            }
+            if (response.contains("\t")) {
+                response = response.replace("\t", " ");
             }
             if (response.contains("\"")) {
                 response = response.replace("\"", "'");
