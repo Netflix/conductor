@@ -39,6 +39,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.filter.InternalFilter;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.format.ISODateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,6 +128,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 
 				// Find the suitable records
 				SearchRequestBuilder request = client.prepareSearch(indexName)
+						.addSort("deliverOn", SortOrder.ASC)
 						.setTypes(typeName)
 						.setVersion(true)
 						.setQuery(query)

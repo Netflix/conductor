@@ -153,6 +153,7 @@ job "conductor" {
         workflow_event_processor_refresh_seconds = "30"
         workflow_system_task_worker_poll_frequency = "5000"
         workflow_sweeper_frequency = "5000"
+        workflow_sweeper_thread_count = 10
 
         // Elasticsearch settings
         workflow_elasticsearch_mode = "elasticsearch"
