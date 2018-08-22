@@ -19,8 +19,8 @@ class BaseService {
   // eslint-disable-next-line no-confusing-arrow
   config(token) {
     return token
-      ? { headers: { Accept: 'application/json', Authorization: token } }
-      : { headers: { Accept: 'application/json' } };
+      ? { headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: token } }
+      : { headers: { Accept: 'application/json', 'Content-Type': 'application/json' } };
   }
 
   async get(url, token) {
