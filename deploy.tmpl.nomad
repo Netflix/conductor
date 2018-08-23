@@ -231,15 +231,17 @@ job "conductor" {
         mounts = [
           {
             target = "/usr/share/elasticsearch/data"
-            source = "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}.<ENV_TYPE>"
+            source = "${NOMAD_JOB_NAME}.${NOMAD_TASK_NAME}.<ENV_TYPE>.${attr.platform.aws.placement.availability-zone}"
             readonly = false
             volume_options {
               no_copy = false
               driver_config {
-                name = "ebs"
+                name = "<VOLUME_DRIVER>"
                 options = {
                   type = "gp2"
+                  ebstype = "gp2"
                   size = "16"
+                  backing = "relocatable"
                 }
               }
             }
