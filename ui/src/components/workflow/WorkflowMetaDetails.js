@@ -16,6 +16,8 @@ class WorkflowMetaDetails extends Component {
       version : props.params.version,
       workflowMeta: {tasks: []},
       inputsArray: [],
+      desc: [],
+      value: []
     };
   }
 
@@ -30,29 +32,72 @@ class WorkflowMetaDetails extends Component {
     this.props.dispatch(getWorkflowMetaDetails(this.state.name, this.state.version)); 
   }
 
+  getDetails() {
 
-  updateState(){
+    var inputsArray = this.state.inputsArray;
+    var json = JSON.stringify(this.state.workflowMeta, null, 2);
+    var detailsArray = [];
+    var tmpDesc = [];
+    var tmpValue = [];
+    var desc = [];
+    var value = [];
+    var regex1 = /\[.*?\[/;
+    var regex2 = /\].*?\]/;
+    var regex3 = /[^[\]"]+/;
+
+    if (inputsArray[0] != "") {
+      for (let i = 0; i < inputsArray.length; i++) {
+        var RegExp3 = new RegExp("\\b" + inputsArray[i] + ".*?\\" + "\]" + "\"", 'igm');
+        detailsArray[i] = json.match(RegExp3);
+      }
+    }
+
+    for (let i = 0; i < detailsArray.length; i++) {
+      if (detailsArray[i]) {
+
+        tmpDesc[i] = detailsArray[i][0].match(regex1);
+        tmpValue[i] = detailsArray[i][0].match(regex2);
+
+        tmpDesc[i] = tmpDesc[i][0].match(regex3);
+        tmpValue[i] = tmpValue[i][0].match(regex3);
+
+        desc[i] = tmpDesc[i][0];
+        value[i] = tmpValue[i][0];
+      } else {
+        desc[i] = null;
+        value[i] = null;
+      }
+    }
+
+    this.state.desc = desc;
+    this.state.value = value;
+
+  }
+
+  getInputs() {
 
     var matchArray = [];
-   
-    if(this.state.workflowMeta) {
-      var jsonInput = JSON.stringify(this.state.workflowMeta, null, 2);
-      var RegExp = /\input([\w.])+\}/igm
-      var RegExp2 = /[^\.]+(?=\})/igm
-      matchArray = jsonInput.match(RegExp);
-      }
+    var rgxInput = /\input([\w.])+\}/igm
+    var rgxTrim = /[^\.]+(?=\})/igm
 
-    if(matchArray) {
+    if (this.state.workflowMeta) {
+      var json = JSON.stringify(this.state.workflowMeta, null, 2);
+      matchArray = json.match(rgxInput);
+    }
+    if (matchArray) {
       var matchString = matchArray.join();
-      var sortedArray = matchString.match(RegExp2);
+      var sortedArray = matchString.match(rgxTrim);
       var inputsArray = _.uniq(sortedArray);
-
       this.state.inputsArray = inputsArray;
-      }
-    else {
+    } else {
       this.state.inputsArray = [];
     }
 
+  }
+
+  updateState() {
+    this.getInputs();
+    this.getDetails();
   }
 
   render() {

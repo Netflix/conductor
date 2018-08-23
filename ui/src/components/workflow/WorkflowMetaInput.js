@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import request from 'superagent';
-import { Button, Input, Label, Well } from 'react-bootstrap';
+import { Button, Input, Label, Well, Tooltip } from 'react-bootstrap';
 
 
 
@@ -13,6 +13,8 @@ class WorkflowMetaInput extends Component {
         this.state = {
         name: props.meta.name,
         inputs: props.meta.inputsArray,
+        desc: props.meta.desc,
+        value: props.meta.value,
         outputs: [],
         finalString: {},
         loading: false,
@@ -24,37 +26,40 @@ class WorkflowMetaInput extends Component {
     componentWillReceiveProps(nextProps) {
         this.state.name = nextProps.meta.name;
         this.state.inputs = nextProps.meta.inputsArray;
+        this.state.desc = nextProps.meta.desc;
+        this.state.value = nextProps.meta.value;
         this.state.outputs = new Array(nextProps.meta.inputsArray.length)
     };
 
-    handleChange(idx , event){
-
-        var arr = this.state.outputs;
+    handleChange(idx, event) {
+        var arr = this.state.value;
         var names = this.state.inputs;
         var string = {};
 
-        arr.splice(idx, 1, event.target.value);
+        if(idx != -1){
+            arr.splice(idx, 1, event.target.value);
+        }
 
         console.log(arr);
         console.log(this.state.inputs);
 
-            for (let i = 0; i < names.length; i++) {
-                if(arr[i] && arr[i].startsWith("{")){
-                    string[names[i]] = JSON.parse(arr[i]);
-                    }
-                else if(arr[i])
+        for (let i = 0; i < names.length; i++) {
+            if (arr[i] && arr[i].startsWith("{")) {
+                string[names[i]] = JSON.parse(arr[i]);
+            } else if (arr[i])
                 string[names[i]] = arr[i];
-            }
+        }
 
         console.log(JSON.stringify(string, null, 2));
 
-        this.setState({finalString: JSON.stringify(string, null, 2)})
+        this.state.finalString = JSON.stringify(string, null, 2);
 
     };
 
     startWorfklow(e){     
         
         e.preventDefault();
+        this.handleChange(-1);
         
         this.setState({ loading: true });
 
@@ -114,6 +119,16 @@ class WorkflowMetaInput extends Component {
 
         let inputs = this.state.inputs; 
         let loading = this.state.loading;
+        let value = this.state.value;
+        let desc = this.state.desc;
+
+        function renderDesc(idx) {
+            if(desc[idx]){
+                return (
+                    <Label>{desc[idx]}</Label> 
+                )
+            }
+        }
   
         return (
         <div>
@@ -121,8 +136,10 @@ class WorkflowMetaInput extends Component {
             <h1>Inputs of <Label bsStyle={this.state.label}>{this.state.name}</Label> workflow</h1>
             &nbsp;&nbsp;
         {inputs.map((item, idx) => <form onSubmit={!loading ? this.startWorfklow : null}>
-                <Input type="input" label={item} placeholder="Enter the input" onChange={this.handleChange.bind(this, idx)}/>
-                    &nbsp;&nbsp;
+                &nbsp;&nbsp;
+                <Input type="input" key={this.state.value} label={item} defaultValue={value[idx]} placeholder="Enter the input" onChange={this.handleChange.bind(this, idx)}/>
+                {renderDesc(idx)} 
+                &nbsp;&nbsp;
                 </form>)}
                 <Button bsStyle="primary" bsSize="large" disabled={loading} onClick={!loading ? this.startWorfklow : null}><i className="fa fa-play"/>&nbsp;&nbsp;{loading ? 'Executing...' : 'Execute workflow'}</Button>
                 <h3>Console log</h3>
