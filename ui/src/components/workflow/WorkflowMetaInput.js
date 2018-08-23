@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import request from 'superagent';
-import { Button, Input, Label, Well, Tooltip } from 'react-bootstrap';
+import { Button, Input, Label, Well } from 'react-bootstrap';
 
 
 
@@ -12,11 +12,10 @@ class WorkflowMetaInput extends Component {
 
         this.state = {
         name: props.meta.name,
-        inputs: props.meta.inputsArray,
+        labels: props.meta.inputsArray,
         desc: props.meta.desc,
         value: props.meta.value,
-        outputs: [],
-        finalString: {},
+        jsonData: {},
         loading: false,
         label: "info",
         log: {}
@@ -25,34 +24,33 @@ class WorkflowMetaInput extends Component {
 
     componentWillReceiveProps(nextProps) {
         this.state.name = nextProps.meta.name;
-        this.state.inputs = nextProps.meta.inputsArray;
+        this.state.labels = nextProps.meta.inputsArray;
         this.state.desc = nextProps.meta.desc;
         this.state.value = nextProps.meta.value;
-        this.state.outputs = new Array(nextProps.meta.inputsArray.length)
     };
 
     handleChange(idx, event) {
-        var arr = this.state.value;
-        var names = this.state.inputs;
-        var string = {};
+        var defValues = this.state.value;
+        var inputLabels = this.state.labels;
+        var dataObject = {};
 
         if(idx != -1){
-            arr.splice(idx, 1, event.target.value);
+            defValues.splice(idx, 1, event.target.value);
         }
 
-        console.log(arr);
-        console.log(this.state.inputs);
+        console.log(defValues);
+        console.log(this.state.labels);
 
-        for (let i = 0; i < names.length; i++) {
-            if (arr[i] && arr[i].startsWith("{")) {
-                string[names[i]] = JSON.parse(arr[i]);
-            } else if (arr[i])
-                string[names[i]] = arr[i];
+        for (let i = 0; i < inputLabels.length; i++) {
+            if (defValues[i] && defValues[i].startsWith("{")) {
+                dataObject[inputLabels[i]] = JSON.parse(defValues[i]);
+            } else if (defValues[i])
+                dataObject[inputLabels[i]] = defValues[i];
         }
 
-        console.log(JSON.stringify(string, null, 2));
+        console.log(JSON.stringify(dataObject, null, 2));
 
-        this.state.finalString = JSON.stringify(string, null, 2);
+        this.state.jsonData = JSON.stringify(dataObject, null, 2);
 
     };
 
@@ -61,11 +59,11 @@ class WorkflowMetaInput extends Component {
         e.preventDefault();
         this.handleChange(-1);
         
-        this.setState({ loading: true });
+        this.setState({loading: true})
 
         let wfname = this.state.name;
-        let data = this.state.finalString    
-        var self = this;
+        let data = this.state.jsonData;    
+        let self = this;
 
         request
         .post('http://localhost:8080/api/workflow/' + wfname)
@@ -78,7 +76,7 @@ class WorkflowMetaInput extends Component {
                                         label: "danger",
                                         log: err
                                  });
-                           }, 1000);
+                           }, 300);
                 }
                 else{
                     setTimeout(() => {
@@ -86,41 +84,19 @@ class WorkflowMetaInput extends Component {
                                         label: "success",
                                         log: res
                                  });
-                           }, 1000);
+                           }, 300);
                 }           
         });
       };
-
-    consoleLog(){    
-        if(this.state.label == "success"){
-            return (
-                <div>
-                    <Well>
-                    <span><h4>Workflow id: </h4> <Label bsStyle="info">{this.state.log.text}</Label><br/></span>
-                    <span><h4>Status code: </h4> <Label bsStyle="success">{this.state.log.statusCode}</Label><br/></span>
-                    <span><h4>Status text: </h4> <Label bsStyle="success">{this.state.log.statusText}</Label><br/></span>
-                    </Well>
-                </div>
-            );
-        }
-        if(this.state.label == "danger") {
-            return (
-                <div>
-                    <Well>
-                    <span><h4>Error: </h4> <Label bsStyle="danger">{this.state.log.toString()}</Label><br/></span>
-                    </Well>
-                </div>
-            )
-        } 
-        
-    }
       
     render() {
 
-        let inputs = this.state.inputs; 
+        let inputs = this.state.labels; 
         let loading = this.state.loading;
         let value = this.state.value;
         let desc = this.state.desc;
+        let label = this.state.label;
+        let log = this.state.log;
 
         function renderDesc(idx) {
             if(desc[idx]){
@@ -128,6 +104,29 @@ class WorkflowMetaInput extends Component {
                     <Label>{desc[idx]}</Label> 
                 )
             }
+        }
+
+        function consoleLog() {
+            if(label == "success"){
+                return (
+                    <div>
+                        <Well>
+                        <span><h4>Workflow id: </h4> <Label bsStyle="info">{log.text}</Label><br/></span>
+                        <span><h4>Status code: </h4> <Label bsStyle="success">{log.statusCode}</Label><br/></span>
+                        <span><h4>Status text: </h4> <Label bsStyle="success">{log.statusText}</Label><br/></span>
+                        </Well>
+                    </div>
+                );
+            }
+            if(label == "danger") {
+                return (
+                    <div>
+                        <Well>
+                        <span><h4>Error: </h4> <Label bsStyle="danger">{log.toString()}</Label><br/></span>
+                        </Well>
+                    </div>
+                )
+            } 
         }
   
         return (
@@ -143,7 +142,7 @@ class WorkflowMetaInput extends Component {
                 </form>)}
                 <Button bsStyle="primary" bsSize="large" disabled={loading} onClick={!loading ? this.startWorfklow : null}><i className="fa fa-play"/>&nbsp;&nbsp;{loading ? 'Executing...' : 'Execute workflow'}</Button>
                 <h3>Console log</h3>
-                {this.consoleLog()}    
+                {consoleLog()}    
         </div>
         )
     }
