@@ -1,5 +1,4 @@
 import React from 'react';
-import { render } from 'react-dom';
 import { Router, browserHistory } from 'react-router';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware, compose } from 'redux';
@@ -19,9 +18,10 @@ function updateLocation() {
   });
 }
 
-render(
+const App = () => (
   <Provider store={store}>
     <Router history={browserHistory} routes={routeConfig} onUpdate={updateLocation} />
-  </Provider>,
-  document.getElementById('content')
+  </Provider>
 );
+
+export default App;

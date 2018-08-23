@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router';
+import uuid from 'uuid';
 import { connect } from 'react-redux';
 import Typeahead from 'react-bootstrap-typeahead';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
@@ -43,7 +44,7 @@ function miniDetails(cell, row) {
         rootClose
         placement="left"
         overlay={
-          <Popover title="Workflow Details" width={400}>
+          <Popover id={`popover-id-${uuid.v4()}`} title="Workflow Details" width={400}>
             <span className="red">
               {row.reasonForIncompletion == null ? (
                 ''
@@ -208,7 +209,7 @@ class Workflow extends React.Component {
   keyPress = e => {
     if (e.key == 'Enter') {
       this.state.update = true;
-      var q = e.target.value;
+      const q = e.target.value;
       this.setState({ search: q });
       this.refreshResults();
     }
@@ -242,7 +243,7 @@ class Workflow extends React.Component {
     const statusList = ['RUNNING', 'COMPLETED', 'FAILED', 'TIMED_OUT', 'TERMINATED', 'PAUSED'];
 
     // secondary filter to match sure we only show workflows that match the the status
-    var currentStatusArray = this.state.status;
+    const currentStatusArray = this.state.status;
     if (currentStatusArray.length > 0 && wfs.length > 0) {
       filteredWfs = wfs.filter(wf => currentStatusArray.includes(wf.status));
     } else {
