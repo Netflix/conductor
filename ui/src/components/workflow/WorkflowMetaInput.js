@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import request from 'superagent';
 import { Button, Input, Label, Well } from 'react-bootstrap';
+import { Link } from 'react-router';
 
 
 
@@ -111,7 +112,7 @@ class WorkflowMetaInput extends Component {
                 return (
                     <div>
                         <Well>
-                        <span><h4>Workflow id: </h4> <Label bsStyle="info">{log.text}</Label><br/></span>
+                        <span><h4>Workflow id: <Label bsStyle="info"><Link to={`/workflow/id/${log.text}`}>{log.text}</Link></Label></h4><br/></span>
                         <span><h4>Status code: </h4> <Label bsStyle="success">{log.statusCode}</Label><br/></span>
                         <span><h4>Status text: </h4> <Label bsStyle="success">{log.statusText}</Label><br/></span>
                         </Well>
