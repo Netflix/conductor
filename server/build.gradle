@@ -18,19 +18,19 @@ apply plugin: 'war'
 apply plugin: "org.akhikhl.gretty"
 
 
-def version = project.version.toString().split( '-' )[0]
+def version = project.findProperty('submodVersion') ?: project.version.toString().split( '-' )[0]
 
 
 dependencies {
 
 	//Conductor
-	compile "com.netflix.conductor:conductor-core:$version"
-        compile "com.netflix.conductor:conductor-jersey:$version"
-        compile "com.netflix.conductor:conductor-redis-persistence:$version"
-        compile "com.netflix.conductor:conductor-mysql-persistence:$version"
-        compile "com.netflix.conductor:conductor-contribs:$version"
-        compile "com.netflix.conductor:conductor-es2-persistence:$version"
-        compile "com.netflix.conductor:conductor-es5-persistence:$version"
+	compile "com.netflix.conductor:conductor-core:${version}"
+        compile "com.netflix.conductor:conductor-jersey:${version}"
+        compile "com.netflix.conductor:conductor-redis-persistence:${version}"
+        compile "com.netflix.conductor:conductor-mysql-persistence:${version}"
+        compile "com.netflix.conductor:conductor-contribs:${version}"
+        compile "com.netflix.conductor:conductor-es2-persistence:${version}"
+        compile "com.netflix.conductor:conductor-es5-persistence:${version}"
 
 
 	//Jetty
