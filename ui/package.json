@@ -11,7 +11,8 @@
     "test": "react-scripts test",
     "start": "react-scripts start",
     "build": "react-scripts build && (rm -rf ./server/public/build | true) && cp -r build server/public",
-    "server": "nodemon ./server/server.js"
+    "server": "nodemon ./server/server.js",
+    "install:multi-python": "npm i --python=python2.7"
   },
   "repository": {
     "type": "git",
@@ -27,7 +28,6 @@
     "axios": "^0.18.0",
     "babel-polyfill": "^6.3.14",
     "bootstrap": "3.3.6",
-    "bunyan": "^1.7.1",
     "clipboard": "^1.6.1",
     "create-react-class": "^15.5.3",
     "d3": "^3.5.16",
