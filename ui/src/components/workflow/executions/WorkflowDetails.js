@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {OverlayTrigger, Button, Popover, Panel, Table, Input} from 'react-bootstrap';
+import {OverlayTrigger, Button, Popover, Panel, Table, Input, Well} from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import {connect} from 'react-redux';
 import {getWorkflowDetails} from '../../../actions/WorkflowActions';
@@ -98,55 +98,53 @@ function showFailure(wf) {
 }
 
 
-var toggle = false;
-var arrGlobal = [];
-var stringGlobal = {}
+var isChanged = false;
+var globalInput = [];
+var globalObject = {}
 
-function handleChange(idx, index, names, event) { 
+function handleChange(idx, index, names, event) {
 
-   var names = names;
-   stringGlobal = {};
+    var names = names;
+    globalObject = {};
 
-   arrGlobal.splice(idx, 1, event.target.value);
+    globalInput.splice(idx, 1, event.target.value);
 
-        for (var i = 0; i < names.length; i++) {
+    for (var i = 0; i < names.length; i++) {
 
-            if(arrGlobal[i]){
-                if(arrGlobal[i].startsWith("{")){
-                    stringGlobal[names[i]] = JSON.parse(arrGlobal[i])
-                    }
-                else
-                    stringGlobal[names[i]] = arrGlobal[i]
-                }
-            }
+        if (globalInput[i]) {
+            if (globalInput[i].startsWith("{")) {
+                globalObject[names[i]] = JSON.parse(globalInput[i])
+            } else
+                globalObject[names[i]] = globalInput[i]
+        }
+    }
 
-        stringGlobal = JSON.stringify(stringGlobal, null, 2);
-        console.log(stringGlobal);
-        toggle = true;
+    globalObject = JSON.stringify(globalObject, null, 2);
+    console.log(globalObject);
+    isChanged = true;
 }
 
-function getObject(wf){
+function getObject(wf) {
 
     if (wf) {
 
-       var inputObject = wf.input;
-       var names = [];
-       var inputs = [];
-       var index = 0;
+        var inputObject = wf.input;
+        var names = [];
+        var inputs = [];
+        var index = 0;
 
-       for (let key in inputObject) {
-           names[index] = key;
-           if(typeof inputObject[key] == 'object'){
-               inputs[index] = JSON.stringify(inputObject[key]);
-           }
-           else
-           inputs[index] = inputObject[key];
-           
-           index++;
+        for (let key in inputObject) {
+            names[index] = key;
+            if (typeof inputObject[key] == 'object') {
+                inputs[index] = JSON.stringify(inputObject[key]);
+            } else
+                inputs[index] = inputObject[key];
+
+            index++;
         }
-     }
+    }
 
-     arrGlobal = inputs;
+     globalInput = inputs;
 
      return (
         inputs.map((item, idx) => <form onSubmit={(e) => {startWorfklow(e, wf) }}>
@@ -156,48 +154,37 @@ function getObject(wf){
      );
 }
 
-var loadingGlobal = false;
-function startWorfklow(e, wf){    
-    
-    e.preventDefault();
-   
-    let wfname = wf.workflowType;
-    let wfId = wf.workflowId;
-    let data = {};
-    var self = this;
-    loadingGlobal = true;
-    console.log("Toggle: " + toggle);
+function startWorfklow(e, wf) {
 
-    if(toggle){
-        data = stringGlobal;
-    }
-    else
+    e.preventDefault();
+
+    let wfname = wf.workflowType;
+    let data = {};
+
+    if (isChanged) {
+        data = globalObject;
+    } else
         data = JSON.stringify(wf.input, null, 2);
 
     console.log("Data: " + data);
 
-   request
-    .post('http://localhost:8080/api/workflow/' + wfname)
-    .set('Content-Type', 'application/json')
-    .send(data)
-    .end(function(err, res){ 
-            console.log(res); 
-            setTimeout(() => {
-                loadingGlobal = false;
-                   }, 1000);     
-    });
+    request
+        .post('http://localhost:8080/api/workflow/' + wfname)
+        .set('Content-Type', 'application/json')
+        .send(data)
+        .end(function (err, res) {
+            console.log(res);
+        });
 
 }
-
 
 class WorkflowDetails extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            inputs : [],
-            names : []
-          };
+            loading: false,
+        }
 
         http.get('/api/sys/').then((data) => {
             window.sys = data.sys;
@@ -218,6 +205,14 @@ class WorkflowDetails extends Component {
         return true;
     }
 
+    wait() {
+        this.setState({ loading: true})
+
+        setTimeout(() => {
+            this.setState({ loading: false });
+               }, 400);
+    }
+
     render() {
 
         let wf = this.props.data;
@@ -231,8 +226,6 @@ class WorkflowDetails extends Component {
         tasks = tasks.sort(function (a, b) {
             return a.seq - b.seq;
         });
-
-
 
         return (
             <div className="ui-content">
@@ -315,7 +308,7 @@ class WorkflowDetails extends Component {
                     <Tab eventKey={5} title="Edit input">
                         &nbsp;&nbsp;
                        {getObject(wf)}
-                       <Button bsStyle="primary" bsSize="large" disabled={loadingGlobal} onClick={(e) => {startWorfklow(e, wf) }}><i className="fa fa-repeat"/>&nbsp;&nbsp;Rerun workflow</Button>
+                       <Button bsStyle="primary" bsSize="large" disabled={this.state.loading} onClick={(e) => {startWorfklow(e, wf); this.wait() }}><i className="fa fa-repeat"/>&nbsp;&nbsp;Rerun workflow</Button>
                     </Tab>
                 </TabContainer>
             </div>
