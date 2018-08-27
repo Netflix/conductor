@@ -8,16 +8,19 @@ class BaseService {
   }
 
   handleError(e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
-    return e;
+    const {
+      message,
+      response: { status }
+    } = e;
+    const responseMessage = `Message: ${message} : Status: ${status}`;
+    return new Error(responseMessage);
   }
 
   // eslint-disable-next-line no-confusing-arrow
   config(token) {
     return token
-      ? { headers: { Accept: 'application/json', Authorization: token } }
-      : { headers: { Accept: 'application/json' } };
+      ? { headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: token } }
+      : { headers: { Accept: 'application/json', 'Content-Type': 'application/json' } };
   }
 
   async get(url, token) {

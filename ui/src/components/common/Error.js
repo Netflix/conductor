@@ -4,25 +4,12 @@ import { Panel, Button } from 'react-bootstrap';
 
 class ErrorPage extends React.Component {
   state = {
-    alertVisible: false,
-    status: '',
-    details: ''
+    alertVisible: false
   };
 
   componentWillReceiveProps(nextProps) {
-    let status = '';
-    let details = '';
-    if (nextProps.exception != null && nextProps.exception.response != null) {
-      status = `${nextProps.exception.response.status} - ${nextProps.exception.response.statusText}`;
-      details = JSON.stringify(nextProps.exception.response.text);
-    } else {
-      details = nextProps.exception;
-    }
-    this.setState({
-      alertVisible: nextProps.error,
-      status,
-      details
-    });
+    const { error } = nextProps;
+    this.setState({ alertVisible: error });
   }
 
   handleAlertDismiss = () => {
@@ -30,11 +17,14 @@ class ErrorPage extends React.Component {
   };
 
   render() {
-    if (this.state.alertVisible) {
+    const { message, stack } = this.props;
+    const { alertVisible } = this.state;
+
+    if (alertVisible) {
       return (
         <span className="error">
-          <Panel header={this.state.status} bsStyle="danger">
-            <code>{this.state.details}</code>
+          <Panel header={message} bsStyle="danger">
+            <code>{stack}</code>
           </Panel>
           <Button bsStyle="danger" onClick={this.handleAlertDismiss}>
             Close
@@ -47,4 +37,8 @@ class ErrorPage extends React.Component {
   }
 }
 
-export default connect(state => state.workflow)(ErrorPage);
+export default connect(state => ({
+  message: state.workflow.exception.message,
+  stack: state.workflow.exception.stack,
+  error: state.workflow.error
+}))(ErrorPage);

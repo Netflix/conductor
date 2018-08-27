@@ -2,6 +2,7 @@ const initialState = {
   byStatus: {},
   byId: {},
   storeStateId: 0,
+  exception: {},
   fetching: false,
   refetch: false,
   terminating: false,
@@ -222,7 +223,7 @@ export default function workflows(state = initialState, action) {
       return {
         ...state,
         error: true,
-        exception: action.e,
+        exception: (action.e.response || {}).data,
         fetching: false,
         restarting: false,
         terminating: false,

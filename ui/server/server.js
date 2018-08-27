@@ -26,7 +26,7 @@ class Main {
   }
 
   routesConfig(app) {
-    app.use(express.static('public/build'));
+    app.use(express.static('server/public/build'));
 
     new WorkflowRoutes().init(app);
     new MetadataRoutes().init(app);

@@ -122,7 +122,9 @@ class WorkflowService extends BaseService {
       }
     });
 
-    const logs = map(task => Promise.all([task, this.get(`${this.baseTasksRoute}/${task.taskId}/log`)]))(data.tasks);
+    const logs = map(task => Promise.all([task, this.get(`${this.baseTasksRoute}/${task.taskId}/log`, token)]))(
+      data.tasks
+    );
 
     await Promise.all(logs).then(result => {
       forEach(([task, logs]) => {
