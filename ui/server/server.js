@@ -2,10 +2,7 @@
 require('dotenv').config();
 require('babel-polyfill');
 const express = require('express');
-const Bunyan = require('bunyan');
 const MiddlewareIndex = require('./middleware');
-
-const log = Bunyan.createLogger({ src: true, name: 'Conductor UI' });
 
 const WorkflowRoutes = require('./routes/workflow');
 const MetadataRoutes = require('./routes/metadata');
@@ -29,7 +26,6 @@ class Main {
   }
 
   routesConfig(app) {
-    log.info(`Serving static ${process.cwd()}`);
     app.use(express.static('server/public/build'));
 
     new WorkflowRoutes().init(app);
@@ -48,7 +44,6 @@ class Main {
       const { address: host = 'localhost', port } = server.address();
       const serverStartMessage = `Workflow UI listening at http://${host}:${port}`;
 
-      log.info(serverStartMessage);
       console.info(serverStartMessage);
 
       if (process.send) {
