@@ -25,6 +25,13 @@ RUN apk update && apk add \
 # Make app folders
 RUN mkdir -p /app/ui
 
+# Install node modules
+COPY ./ui/package.json /app/ui
+COPY ./ui/package-lock.json /app/ui
+
+RUN cd app/ui \
+    && npm install
+
 # Copy the ui files onto the image
 COPY ./docker/ui/bin /app
 COPY ./ui /app/ui
@@ -34,7 +41,6 @@ RUN chmod +x /app/startup.sh
 
 # Get and install conductor UI
 RUN cd /app/ui \
-  && npm install \
   && npm run build --server
 
 EXPOSE 5000
