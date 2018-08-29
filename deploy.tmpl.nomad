@@ -15,7 +15,7 @@ job "conductor" {
 
   constraint {
     attribute = "${meta.env_type}"
-    // Options: [ test | live ]
+    // Options: [ test | int | live ]
     value     = "<ENV_TYPE>"
   }
 
@@ -51,7 +51,7 @@ job "conductor" {
           http = 5000
         }
         volumes = [
-          "local/secrets/conductor-ui.env:/app/config/secrets.env"
+          "local/secrets/conductor-ui-<TLD>.env:/app/config/secrets.env"
         ]
         labels {
           service = "${NOMAD_JOB_NAME}"
@@ -84,7 +84,7 @@ job "conductor" {
         {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
-        destination   = "local/secrets/conductor-ui.env"
+        destination   = "local/secrets/conductor-ui-<TLD>.env"
         change_mode   = "signal"
         change_signal = "SIGINT"
       }
@@ -126,7 +126,7 @@ job "conductor" {
           http = 8080
         }
         volumes = [
-          "local/secrets/conductor-server.env:/app/config/secrets.env"
+          "local/secrets/conductor-server-<TLD>.env:/app/config/secrets.env"
         ]
         labels {
           service = "${NOMAD_JOB_NAME}"
@@ -191,7 +191,7 @@ job "conductor" {
         {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
-        destination   = "local/secrets/conductor-server.env"
+        destination   = "local/secrets/conductor-server-<TLD>.env"
         change_mode   = "signal"
         change_signal = "SIGINT"
       }
