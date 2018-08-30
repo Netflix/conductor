@@ -30,8 +30,8 @@ const Events = React.createClass({
       return cell?'Yes':'No';
     };
     function helpName() {
-      return (<OverlayTrigger trigger="click" rootClose placement="bottom" overlay={
-        <Popover title='Event Handler Name' style={{ width: '300px'}}>
+      return (<OverlayTrigger trigger={['hover','focus']} rootClose placement="bottom" overlay={
+        <Popover id="helpName" title='Event Handler Name' style={{ width: '300px'}}>
           <div className="info">
             Unique name identifying the event handler.
           </div>
@@ -40,8 +40,8 @@ const Events = React.createClass({
     }
     function helpQueue() {
       //<i className="fa fa-question-circle"></i>
-      return (<OverlayTrigger trigger="click" rootClose placement="bottom" overlay={
-        <Popover title='Event / Queue' style={{ width: '500px'}}>
+      return (<OverlayTrigger trigger={['hover','focus']} rootClose placement="bottom" overlay={
+        <Popover id="helpQueue" title='Event / Queue' style={{ width: '500px'}}>
           <div className="info">
             <p>Name of the Queue which the handler listens to.  The supported queue systems are <b>SQS</b>, <b>Conductor</b> and <b>NATs</b>.</p>
             <p>The name is prefixed by the source (sqs, conductor, nats).  e.g. sqs:sqs_queue_name</p>
@@ -53,8 +53,8 @@ const Events = React.createClass({
     }
     function helpCond() {
       //<i className="fa fa-question-circle"></i>
-      return (<OverlayTrigger trigger="click" rootClose placement="bottom" overlay={
-        <Popover title='Condition' style={{ width: '500px'}}>
+      return (<OverlayTrigger trigger={['hover','focus']} rootClose placement="bottom" overlay={
+        <Popover id="helpCond" title='Condition' style={{ width: '500px'}}>
           <div className="info">
             <p>An expression that can be evaluated with the payload in the queue.</p>
             <p>The Actions are executed ONLY when the expression evaluation returns True</p>
@@ -66,8 +66,8 @@ const Events = React.createClass({
     }
     function helpActions() {
       //<i className="fa fa-question-circle"></i>
-      return (<OverlayTrigger trigger="click" rootClose placement="bottom" overlay={
-        <Popover title='Actions' style={{ width: '500px'}}>
+      return (<OverlayTrigger trigger={['hover','focus']} rootClose placement="bottom" overlay={
+        <Popover id="helpActions" title='Actions' style={{ width: '500px'}}>
           <div className="info small">
             <p>Set of actions that are taken when a message arrives with payload that matches the condition.</p>
             <p>Supported Actions are: start_workflow, complete_task and fail_task</p>
@@ -78,15 +78,18 @@ const Events = React.createClass({
     }
     function nameMaker(cell, row){
       return (<OverlayTrigger trigger="click" rootClose placement="right" overlay={
-        <Popover title={row.name} style={{ width: '500px'}}><div className="left">
+        <Popover id="nameMaker" title={row.name} style={{ width: '500px'}}><div className="left">
           <pre>{JSON.stringify(row, null, 2)}</pre>
         </div></Popover>
       }><a>{cell}</a></OverlayTrigger>);
-    };
+    }
+    function activeMaker(cell){
+      return cell ? 'Yes' : 'No'
+    }
     function getActions(eh) {
       let trs = [];
       eh.actions.forEach(action => {
-        let row = <div><b>{action.action}</b><pre>{JSON.stringify(action[action.action], null, 2)}</pre></div>
+        let row = <div><b>{action.action}</b><pre>{JSON.stringify(action[action.action], null, 2)}</pre></div>;
         trs.push(row);
       });
       return <div>{trs}</div>;
@@ -101,7 +104,7 @@ const Events = React.createClass({
                     <td>{getActions(eh)}</td>
                     <td>{eh.active?'Yes':'No'}</td>
                   </tr>;
-        let actionRows = <tr><td colspan='4'>{getActions(eh)}</td></tr>
+        let actionRows = <tr><td colspan='4'>{getActions(eh)}</td></tr>;
         trs.push(row);
       });
       return <tbody>{trs}</tbody>
@@ -110,18 +113,12 @@ const Events = React.createClass({
     return (
       <div className="ui-content">
         <h1>Event Handlers</h1>
-        <Table responsive={true} striped={true} hover={true} condensed={false} bordered={true}>
-        <thead>
-          <tr>
-            <th>Name {helpName()}</th>
-            <th>Event / Queue {helpQueue()}</th>
-            <th>Condition {helpCond()}</th>
-            <th>Actions {helpActions()}</th>
-            <th>Active?</th>
-          </tr>
-        </thead>
-          {tableBody(wfs)}
-        </Table>
+        <BootstrapTable data={wfs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
+            <TableHeaderColumn dataField="name" isKey={true} dataAlign="left" dataFormat={nameMaker} dataSort={true}>Name {helpName()}</TableHeaderColumn>
+            <TableHeaderColumn dataField="event" dataSort={true}>Event / Queue {helpQueue()}</TableHeaderColumn>
+            <TableHeaderColumn dataField="condition" dataSort={true} >Condition {helpCond()}</TableHeaderColumn>
+            <TableHeaderColumn dataField="active" dataSort={false} dataFormat={activeMaker}>Active?</TableHeaderColumn>
+        </BootstrapTable>
       </div>
     );
   }
