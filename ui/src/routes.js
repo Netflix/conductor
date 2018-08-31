@@ -24,7 +24,7 @@ const routeConfig = [
       { path: 'workflow/queue/data', component: QueueList },
       { path: 'workflow', component: Workflow },
       { path: 'workflow/id/:workflowId', component: WorkflowDetails },
-      { path: 'workflow/id/:workflowId', component: WorkflowMetaInput },
+      { path: 'workflow/metadata/:workflowName', component: WorkflowMetaInput },
       { path: 'events', component: Event },
       { path: 'events/executions', component: EventExecs },
       { path: 'help', component: Help }

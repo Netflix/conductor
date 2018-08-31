@@ -35,7 +35,7 @@ const HttpClient = {
   post: (path, data) => new Promise((resolve, reject) => {
     request
       .post(path, data)
-      .set('Accept', 'application/json')
+      .set('Content-Type', 'application/json')
       .end((err, res) => {
         if (err || !res.ok) {
           console.error('Error on post! ' + res);

@@ -3,8 +3,6 @@ import request from 'superagent';
 import { Button, Input, Label, Well } from 'react-bootstrap';
 import { Link } from 'react-router';
 
-
-
 class WorkflowMetaInput extends Component {
     constructor(props) {
         super(props);
@@ -51,8 +49,7 @@ class WorkflowMetaInput extends Component {
 
         console.log(JSON.stringify(dataObject, null, 2));
 
-        this.state.jsonData = JSON.stringify(dataObject, null, 2);
-
+        this.state.jsonData = dataObject;
     };
 
     startWorfklow(e){     
@@ -67,8 +64,7 @@ class WorkflowMetaInput extends Component {
         let self = this;
 
         request
-        .post('http://localhost:8080/api/workflow/' + wfname)
-        .set('Content-Type', 'application/json')
+        .post('/api/wfe/workflow/' + wfname)
         .send(data)
         .end(function(err, res){
                 if(err){
@@ -112,7 +108,7 @@ class WorkflowMetaInput extends Component {
                 return (
                     <div>
                         <Well>
-                        <span><h4>Workflow id: <Label bsStyle="info"><Link to={`/workflow/id/${log.text}`}>{log.text}</Link></Label></h4><br/></span>
+                        <span><h4>{log.text}</h4><br/></span>
                         <span><h4>Status code: </h4> <Label bsStyle="success">{log.statusCode}</Label><br/></span>
                         <span><h4>Status text: </h4> <Label bsStyle="success">{log.statusText}</Label><br/></span>
                         </Well>
@@ -148,5 +144,4 @@ class WorkflowMetaInput extends Component {
         )
     }
 }
-
 export default WorkflowMetaInput;

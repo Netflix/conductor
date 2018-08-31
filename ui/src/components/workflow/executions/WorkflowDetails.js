@@ -119,7 +119,7 @@ function handleChange(idx, index, names, event) {
         }
     }
 
-    globalObject = JSON.stringify(globalObject, null, 2);
+    globalObject = globalObject;
     console.log(globalObject);
     isChanged = true;
 }
@@ -164,13 +164,10 @@ function startWorfklow(e, wf) {
     if (isChanged) {
         data = globalObject;
     } else
-        data = JSON.stringify(wf.input, null, 2);
-
-    console.log("Data: " + data);
+        data = wf.input;
 
     request
-        .post('http://localhost:8080/api/workflow/' + wfname)
-        .set('Content-Type', 'application/json')
+        .post('/api/wfe/workflow/' + wfname)
         .send(data)
         .end(function (err, res) {
             console.log(res);

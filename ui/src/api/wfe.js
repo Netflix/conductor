@@ -6,6 +6,7 @@ import forEach from "lodash/fp/forEach";
 import map from "lodash/fp/map";
 import transform from "lodash/transform";
 import identity from "lodash/identity";
+import bodyParser from "body-parser";
 
 const router = new Router();
 const baseURL = process.env.WF_SERVER;
@@ -154,7 +155,18 @@ router.delete('/terminate/:workflowId', async (req, res, next) => {
 router.post('/restart/:workflowId', async (req, res, next) => {
   try {
     const result = await http.post(baseURL2 + req.params.workflowId + '/restart');
-    res.status(200).send({result: req.params.workflowId });
+    res.status(200).send({result});
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.use(bodyParser.urlencoded({ extended: false}));
+router.use(bodyParser.json());
+router.post('/workflow/:workflowName', async (req, res, next) => {
+  try {
+    const result = await http.post(baseURL2 + req.params.workflowName, JSON.stringify(req.body));
+    res.status(200).send("Workflow successfully executed!");
   } catch (err) {
     next(err);
   }
