@@ -152,6 +152,7 @@ job "conductor" {
         decider_sweep_frequency_seconds = "5"
         workflow_event_processor_refresh_seconds = "30"
         workflow_system_task_worker_poll_frequency = "5000"
+        workflow_system_task_worker_queue_size = "300"
         workflow_sweeper_frequency = "5000"
         workflow_sweeper_thread_count = 10
 
