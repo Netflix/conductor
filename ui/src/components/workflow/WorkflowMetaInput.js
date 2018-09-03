@@ -137,6 +137,7 @@ class WorkflowMetaInput extends Component {
                 {renderDesc(idx)} 
                 &nbsp;&nbsp;
                 </form>)}
+                <br/>
                 <Button bsStyle="primary" bsSize="large" disabled={loading} onClick={!loading ? this.startWorfklow : null}><i className="fa fa-play"/>&nbsp;&nbsp;{loading ? 'Executing...' : 'Execute workflow'}</Button>
                 <h3>Console log</h3>
                 {consoleLog()}    

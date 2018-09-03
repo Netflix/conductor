@@ -44,6 +44,7 @@ class WorkflowMetaDetails extends Component {
     var regex1 = /\[.*?\[/;
     var regex2 = /\].*?\]/;
     var regex3 = /[^[\]"]+/;
+    var regex4 = /(?<=\[).+?(?=\])/;
 
     if (inputsArray[0] != "") {
       for (let i = 0; i < inputsArray.length; i++) {
@@ -58,11 +59,20 @@ class WorkflowMetaDetails extends Component {
         tmpDesc[i] = detailsArray[i][0].match(regex1);
         tmpValue[i] = detailsArray[i][0].match(regex2);
 
-        tmpDesc[i] = tmpDesc[i][0].match(regex3);
-        tmpValue[i] = tmpValue[i][0].match(regex3);
+        if (tmpDesc[i] == null) {
+          tmpDesc[i] = detailsArray[i][0].match(regex4)
 
-        desc[i] = tmpDesc[i][0];
-        value[i] = tmpValue[i][0];
+          desc[i] = tmpDesc[i][0];
+          value[i] = null;
+
+        } else {
+          tmpDesc[i] = tmpDesc[i][0].match(regex3);
+          tmpValue[i] = tmpValue[i][0].match(regex3);
+
+          desc[i] = tmpDesc[i][0];
+          value[i] = tmpValue[i][0];
+        }
+
       } else {
         desc[i] = null;
         value[i] = null;
@@ -72,7 +82,7 @@ class WorkflowMetaDetails extends Component {
     this.state.desc = desc;
     this.state.value = value;
 
-  }
+    }
 
   getInputs() {
 
