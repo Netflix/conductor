@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Link, browserHistory } from 'react-router';
-import { Breadcrumb, BreadcrumbItem, Input, Well, Button, Panel, DropdownButton, MenuItem, Popover, OverlayTrigger, ButtonGroup } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import { connect } from 'react-redux';
 import { getWorkflowDefs } from '../../actions/WorkflowActions';
@@ -12,7 +12,8 @@ const WorkflowMetaList = React.createClass({
     return {
       name: '',
       version: '',
-      workflows: []
+      workflows: [],
+      workflowsFiltered: []
     }
   },
 
@@ -22,6 +23,7 @@ const WorkflowMetaList = React.createClass({
 
   componentWillReceiveProps(nextProps){
     this.state.workflows = nextProps.workflows;
+    this.state.workflowsFiltered = nextProps.workflows;
   },
 
   filterLabels() {
@@ -36,12 +38,27 @@ const WorkflowMetaList = React.createClass({
 
     return (
       tags.map((item, idx) => 
-        <Button onClick={() => {this.refs.table.handleSearch(`${item}`)} }>{item}</Button>)
+        <Button onClick={() => { this.handleSearch(item)} }>{item}</Button>)
     )
   },
 
-  render() {
+  handleSearch(item) {
     var wfs = this.state.workflows;
+    var wfsFiltered = [];
+
+    for (let key in wfs) {
+      let str = wfs[key].name;
+      if (str.startsWith(item)) {
+        wfsFiltered.push(wfs[key]);
+      }
+    }
+    this.setState({
+      workflowsFiltered: wfsFiltered
+    })
+  },
+
+  render() {
+    var wfs = this.state.workflowsFiltered;
 
     function jsonMaker(cell, row){
       return JSON.stringify(cell);
@@ -62,7 +79,7 @@ const WorkflowMetaList = React.createClass({
     return (
       <div className="ui-content">
         <h1>Workflows</h1>
-        <Button onClick={() => {this.refs.table.handleSearch("")} }>ALL</Button>
+        <Button onClick={() => {this.handleSearch("")} }>ALL</Button>
         {this.filterLabels()}
         <BootstrapTable ref="table" data={wfs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
           <TableHeaderColumn dataField="name" isKey={true} dataAlign="left" dataSort={true} dataFormat={nameMaker}>Name/Version</TableHeaderColumn>
