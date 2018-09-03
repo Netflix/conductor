@@ -87,7 +87,7 @@ class WorkflowMetaDetails extends Component {
   getInputs() {
 
     var matchArray = [];
-    var rgxInput = /\input([\w.])+\}/igm
+    var rgxInput = /\workflow.input([\w.])+\}/igm
     var rgxTrim = /[^\.]+(?=\})/igm
 
     if (this.state.workflowMeta) {
