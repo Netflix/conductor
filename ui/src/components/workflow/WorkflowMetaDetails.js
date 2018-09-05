@@ -48,7 +48,7 @@ class WorkflowMetaDetails extends Component {
 
     if (inputsArray[0] != "") {
       for (let i = 0; i < inputsArray.length; i++) {
-        var RegExp3 = new RegExp("\\b" + inputsArray[i] + ".*?\\" + "\]" + "\"", 'igm');
+        var RegExp3 = new RegExp("\\b" + inputsArray[i] + "\\[.*?\\" + "\]" + "\"", 'igm');
         detailsArray[i] = json.match(RegExp3);
       }
     }
@@ -60,8 +60,8 @@ class WorkflowMetaDetails extends Component {
         tmpValue[i] = detailsArray[i][0].match(regex2);
 
         if (tmpDesc[i] == null) {
-          tmpDesc[i] = detailsArray[i][0].match(regex4)
-
+          tmpDesc[i] = detailsArray[i][0].match(regex4);
+          
           desc[i] = tmpDesc[i][0];
           value[i] = null;
 
