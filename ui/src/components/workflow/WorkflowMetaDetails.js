@@ -44,7 +44,7 @@ class WorkflowMetaDetails extends Component {
     var regex1 = /\[.*?\[/;
     var regex2 = /\].*?\]/;
     var regex3 = /[^[\]"]+/;
-    var regex4 = /(?<=\[).+?(?=\])/;
+    var regex4 = /\[(.*?)\]/;
 
     if (inputsArray[0] != "") {
       for (let i = 0; i < inputsArray.length; i++) {
@@ -62,7 +62,7 @@ class WorkflowMetaDetails extends Component {
         if (tmpDesc[i] == null) {
           tmpDesc[i] = detailsArray[i][0].match(regex4);
           
-          desc[i] = tmpDesc[i][0];
+          desc[i] = tmpDesc[i][1];
           value[i] = null;
 
         } else {
