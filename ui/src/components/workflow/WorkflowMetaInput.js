@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import request from 'superagent';
-import { Button, Input, Label, Well } from 'react-bootstrap';
+import { Button, Input, Label, Well, Panel } from 'react-bootstrap';
 import { Link } from 'react-router';
 
 class WorkflowMetaInput extends Component {
@@ -127,8 +127,9 @@ class WorkflowMetaInput extends Component {
         }
   
         return (
-        <div>
+        <div className="input-form">
             &nbsp;&nbsp;
+            <Panel header="Execute workflow">
             <h1>Inputs of <Label bsStyle={this.state.label}>{this.state.name}</Label> workflow</h1>
             &nbsp;&nbsp;
         {inputs.map((item, idx) => <form onSubmit={!loading ? this.startWorfklow : null}>
@@ -140,7 +141,8 @@ class WorkflowMetaInput extends Component {
                 <br/>
                 <Button bsStyle="primary" bsSize="large" disabled={loading} onClick={!loading ? this.startWorfklow : null}><i className="fa fa-play"/>&nbsp;&nbsp;{loading ? 'Executing...' : 'Execute workflow'}</Button>
                 <h3>Console log</h3>
-                {consoleLog()}    
+                {consoleLog()} 
+            </Panel>   
         </div>
         )
     }
