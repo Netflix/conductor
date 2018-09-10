@@ -18,3 +18,5 @@ dump.rdb
 *.iml
 out/
 .DS_Store
+gradle.properties
+ui/.vscode/settings.json

@@ -249,7 +249,7 @@ const Workflow = React.createClass({
       for (var i = 0; i < filteredWfs.length; i++){
         let workflowId = filteredWfs[i].workflowId;
         request
-        .delete('http://localhost:8080/api/workflow/' + workflowId + '/remove')
+        .delete('/api/wfe/workflow/' + workflowId)
         .query('archiveWorkflow=false')
         .set('Accept', 'application/json')
         .send({workflowId})
