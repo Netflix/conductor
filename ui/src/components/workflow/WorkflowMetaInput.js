@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import request from 'superagent';
 import { Button, Input, Label, Well, Panel } from 'react-bootstrap';
-import { Link } from 'react-router';
 
 class WorkflowMetaInput extends Component {
     constructor(props) {
@@ -37,17 +36,12 @@ class WorkflowMetaInput extends Component {
             defValues.splice(idx, 1, event.target.value);
         }
 
-        console.log(defValues);
-        console.log(this.state.labels);
-
         for (let i = 0; i < inputLabels.length; i++) {
             if (defValues[i] && defValues[i].startsWith("{")) {
                 dataObject[inputLabels[i]] = JSON.parse(defValues[i]);
             } else if (defValues[i])
                 dataObject[inputLabels[i]] = defValues[i];
         }
-
-        console.log(JSON.stringify(dataObject, null, 2));
 
         this.state.jsonData = dataObject;
     };
@@ -62,6 +56,8 @@ class WorkflowMetaInput extends Component {
         let wfname = this.state.name;
         let data = this.state.jsonData;    
         let self = this;
+
+        console.log(JSON.stringify(data, null, 2));
 
         request
         .post('/api/wfe/workflow/' + wfname)
@@ -88,12 +84,7 @@ class WorkflowMetaInput extends Component {
       
     render() {
 
-        let inputs = this.state.labels; 
-        let loading = this.state.loading;
-        let value = this.state.value;
-        let desc = this.state.desc;
-        let label = this.state.label;
-        let log = this.state.log;
+        const { loading, value, desc, label, labels, log, name } = this.state;
 
         function renderDesc(idx) {
             if(desc[idx]){
@@ -130,11 +121,11 @@ class WorkflowMetaInput extends Component {
         <div className="input-form">
             &nbsp;&nbsp;
             <Panel header="Execute workflow">
-            <h1>Inputs of <Label bsStyle={this.state.label}>{this.state.name}</Label> workflow</h1>
+            <h1>Inputs of <Label bsStyle={label}>{name}</Label> workflow</h1>
             &nbsp;&nbsp;
-        {inputs.map((item, idx) => <form onSubmit={!loading ? this.startWorfklow : null}>
+        {labels.map((item, idx) => <form onSubmit={!loading ? this.startWorfklow : null}>
                 &nbsp;&nbsp;
-                <Input type="input" key={this.state.value} label={item} defaultValue={value[idx]} placeholder="Enter the input" onChange={this.handleChange.bind(this, idx)}/>
+                <Input type="input" key={value} label={item} defaultValue={value[idx]} placeholder="Enter the input" onChange={this.handleChange.bind(this, idx)}/>
                 {renderDesc(idx)} 
                 &nbsp;&nbsp;
                 </form>)}

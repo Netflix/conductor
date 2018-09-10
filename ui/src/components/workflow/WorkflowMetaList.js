@@ -4,7 +4,6 @@ import { Button } from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import { connect } from 'react-redux';
 import { getWorkflowDefs } from '../../actions/WorkflowActions';
-import { WorkflowMetaDetails } from './WorkflowMetaDetails';
 
 const WorkflowMetaList = React.createClass({
 
