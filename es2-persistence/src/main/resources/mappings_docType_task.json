@@ -13,12 +13,12 @@
         "type": "long"
       },
       "input": {
-        "type": "string",
-        "index": "analyzed"
+        "type": "object",
+        "dynamic":  true
       },
       "output": {
-        "type": "string",
-        "index": "analyzed"
+        "type": "object",
+        "dynamic":  true
       },
       "queueWaitTime": {
         "type": "long"

@@ -22,6 +22,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 
@@ -62,9 +64,9 @@ public class TaskSummary {
 	
 	private String taskType;
 	
-	private String input;
+	private JsonNode input;
 	
-	private String output;
+	private JsonNode output;
 	
 	private String taskId;
 	
@@ -72,6 +74,7 @@ public class TaskSummary {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
     	sdf.setTimeZone(gmt);
+    	 ObjectMapper objectMapper = new ObjectMapper();
     	
     	this.taskId = task.getTaskId();
     	this.taskDefName = task.getTaskDefName();
@@ -87,11 +90,13 @@ public class TaskSummary {
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
 		if (task.getInputData() != null) {
-			this.input = task.getInputData().toString();
+		    JsonNode jsonNode = objectMapper.valueToTree(task.getInputData());
+			this.input = jsonNode;
 		}
 		
 		if (task.getOutputData() != null) {
-			this.output = task.getOutputData().toString();
+		    JsonNode jsonNode = objectMapper.valueToTree(task.getOutputData());
+			this.output = jsonNode;
 		}
 		
 		
@@ -281,39 +286,25 @@ public class TaskSummary {
 		this.taskType = taskType;
 	}
 
-	/**
-	 * 
-	 * @return input to the task
-	 */
-	public String getInput() {
-		return input;
-	}
 	
-	/**
-	 * 
-	 * @param input input to the task
-	 */
-	public void setInput(String input) {
-		this.input = input;
-	}
-	
-	/**
-	 * 
-	 * @return output of the task
-	 */
-	public String getOutput() {
-		return output;
-	}
-	
-	/**
-	 * 
-	 * @param output Task output
-	 */
-	public void setOutput(String output) {
-		this.output = output;
-	}
 
-	/**
+	public JsonNode getInput() {
+        return input;
+    }
+
+    public void setInput(JsonNode input) {
+        this.input = input;
+    }
+
+    public JsonNode getOutput() {
+        return output;
+    }
+
+    public void setOutput(JsonNode output) {
+        this.output = output;
+    }
+
+    /**
 	 * @return the taskId
 	 */
 	public String getTaskId() {
