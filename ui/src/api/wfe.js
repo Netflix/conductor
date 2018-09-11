@@ -95,7 +95,7 @@ router.get('/id/:workflowId', async (req, res, next) => {
     const subworkflows = {};
 
     // Work around in case server did not return tasks
-    if (result.tasks == undefined) {
+    if (result.tasks === undefined) {
         result.tasks = [];
     }
 
