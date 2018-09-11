@@ -14,6 +14,12 @@ class Workflow2Graph {
     metaTasks.unshift({type:'start', name:'start', label: '', taskReferenceName: 'start', system: true});
 
     let forks = [];
+
+    // Work around in case server did not return tasks
+    if (wfe.tasks === undefined) {
+      wfe.tasks = [];
+    }
+
     wfe.tasks.forEach(tt=>{
       if(tt.taskType == 'FORK'){
         let wfts = [];
