@@ -18,6 +18,7 @@ package com.netflix.conductor.server;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Singleton;
 import javax.servlet.Filter;
@@ -56,7 +57,9 @@ public final class JerseyModule extends JerseyServletModule {
 		jerseyParams.put("com.sun.jersey.config.property.WebPageContentRegex", "/(((webjars|api-docs|swagger-ui/docs|manage)/.*)|(favicon\\.ico))");
 		jerseyParams.put(PackagesResourceConfig.PROPERTY_PACKAGES, "com.netflix.conductor.server.resources;io.swagger.jaxrs.json;io.swagger.jaxrs.listing");
 		jerseyParams.put(ResourceConfig.FEATURE_DISABLE_WADL, "false");
-		serve("/api/*").with(GuiceContainer.class, jerseyParams);
+		
+		String path = Optional.ofNullable(System.getProperty("url.path")).orElse(Optional.ofNullable(System.getenv("url_path")).orElse("/api"));
+       	serve(path + "/*").with(GuiceContainer.class, jerseyParams);
     }
     
     @Provides 

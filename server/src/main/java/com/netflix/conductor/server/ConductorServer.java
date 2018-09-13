@@ -51,6 +51,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -270,16 +271,20 @@ public class ConductorServer {
 		
 		Client client = Client.create();
 		ObjectMapper om = new ObjectMapper();
-		client.resource("http://localhost:" + port + "/api/metadata/taskdefs").type(MediaType.APPLICATION_JSON).post(om.writeValueAsString(taskDefs));
+		
+		String path = Optional.ofNullable(System.getProperty("url.path")).orElse(Optional.ofNullable(System.getenv("url_path")).orElse("/api"));
+        String uri = "http://localhost:"+ port + path;        
+		
+		client.resource(uri + "/metadata/taskdefs").type(MediaType.APPLICATION_JSON).post(om.writeValueAsString(taskDefs));
 		
 		InputStream stream = Main.class.getResourceAsStream("/kitchensink.json");
-		client.resource("http://localhost:" + port + "/api/metadata/workflow").type(MediaType.APPLICATION_JSON).post(stream);
+		client.resource(uri + "/metadata/workflow").type(MediaType.APPLICATION_JSON).post(stream);
 		
 		stream = Main.class.getResourceAsStream("/sub_flow_1.json");
-		client.resource("http://localhost:" + port + "/api/metadata/workflow").type(MediaType.APPLICATION_JSON).post(stream);
+		client.resource(uri + "/metadata/workflow").type(MediaType.APPLICATION_JSON).post(stream);
 		
 		String input = "{\"task2Name\":\"task_5\"}";
-		client.resource("http://localhost:" + port + "/api/workflow/kitchensink").type(MediaType.APPLICATION_JSON).post(input);
+		client.resource(uri + "/workflow/kitchensink").type(MediaType.APPLICATION_JSON).post(input);
 		
 		logger.info("Kitchen sink workflows are created!");
 	}

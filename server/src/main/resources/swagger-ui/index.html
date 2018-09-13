@@ -49,12 +49,13 @@
           if(window.SwaggerTranslator) {
               window.SwaggerTranslator.translate();
           }
-          window.swaggerUi = new SwaggerUi({
-              url: "http://" + url + "/api/swagger.json",
+         //Swagger URL: http://localhost:8080/?url=localhost:8080 + "/api" or "url_path property/env"
+          window.swaggerUi = new SwaggerUi({              
+              url: "http://" + url + "/swagger.json",
               dom_id: "swagger-ui-container",
               supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
               onComplete: function(swaggerApi, swaggerUi){
-                  window.swaggerUi.api.setHost(url + "/api");
+                  window.swaggerUi.api.setHost(url);
                   if(typeof initOAuth == "function") {
                       initOAuth({
                           clientId: "your-client-id",

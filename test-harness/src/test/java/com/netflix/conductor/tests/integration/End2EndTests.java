@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -78,15 +79,18 @@ public class End2EndTests {
 
 		ConductorServer server = new ConductorServer(new ConductorConfig());
 		server.start(8080, false);
-
+		
+		String path = Optional.ofNullable(System.getProperty("url.path")).orElse(Optional.ofNullable(System.getenv("url_path")).orElse("/api"));
+        String uri = "http://localhost:8080" + path + "/";
+        
 		taskClient = new TaskClient();
-		taskClient.setRootURI("http://localhost:8080/api/");
+		taskClient.setRootURI(uri);
 
 		workflowClient = new WorkflowClient();
-		workflowClient.setRootURI("http://localhost:8080/api/");
+		workflowClient.setRootURI(uri);
 
 		metadataClient = new MetadataClient();
-		metadataClient.setRootURI("http://localhost:8080/api/");
+		metadataClient.setRootURI(uri);
 	}
 
 	@Test
@@ -253,7 +257,8 @@ public class End2EndTests {
 	@Test
 	public void testInvalidResource() {
         MetadataClient metadataClient = new MetadataClient();
-        metadataClient.setRootURI("http://localhost:8080/api/invalid");
+        String path = Optional.ofNullable(System.getProperty("url.path")).orElse(Optional.ofNullable(System.getenv("url_path")).orElse("/api"));
+        metadataClient.setRootURI("http://localhost:8080" + path + "/invalid");
 
         WorkflowDef def = new WorkflowDef();
         def.setName("testWorkflowDel");
