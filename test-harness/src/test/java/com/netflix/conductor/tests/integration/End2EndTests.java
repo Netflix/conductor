@@ -81,7 +81,7 @@ public class End2EndTests {
 		server.start(8080, false);
 		
 		String path = Optional.ofNullable(System.getProperty("url.path")).orElse(Optional.ofNullable(System.getenv("url_path")).orElse("/api"));
-        String uri = "http://localhost:8080" + path + "/";
+        String uri = "http://localhost:8080" + path + "/"; 
         
 		taskClient = new TaskClient();
 		taskClient.setRootURI(uri);
