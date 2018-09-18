@@ -204,7 +204,7 @@ class WorkflowDetails extends Component {
             <pre style={{height:'200px'}} id="wfinput">{JSON.stringify(wf.input, null, 3)}</pre>
             <strong>Workflow Output <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#wfoutput"></i></strong>
             <pre style={{height:'200px'}} id="wfoutput">{JSON.stringify(wf.output==null?{}:wf.output, null, 3)}</pre>
-            {wf.status == 'FAILED' || wf.status == 'RESET'?<div><strong>Workflow Faiure Reason (if any)</strong><pre>{wf.reasonForIncompletion?JSON.stringify(wf.reasonForIncompletion, null, 3):''}</pre></div>:''}
+            {wf.status == 'FAILED' || wf.status == 'RESET'?<div><strong>Workflow Failure Reason (if any)</strong><pre>{wf.reasonForIncompletion?JSON.stringify(wf.reasonForIncompletion, null, 3):''}</pre></div>:''}
           </div>
           </Tab>
           <Tab eventKey={4} title="JSON">
