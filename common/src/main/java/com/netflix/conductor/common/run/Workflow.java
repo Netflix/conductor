@@ -77,6 +77,8 @@ public class Workflow extends Auditable{
 
 	private List<String> workflowIds = new ArrayList<>();
 
+	private Map<String, Object> authorization = new HashMap<>();
+
 	public Workflow(){
 		
 	}
@@ -306,6 +308,14 @@ public class Workflow extends Auditable{
 
 	public void setWorkflowIds(List<String> workflowIds) {
 		this.workflowIds = workflowIds;
+	}
+
+	public Map<String, Object> getAuthorization() {
+		return authorization;
+	}
+
+	public void setAuthorization(Map<String, Object> authorization) {
+		this.authorization = authorization;
 	}
 
 	@Override

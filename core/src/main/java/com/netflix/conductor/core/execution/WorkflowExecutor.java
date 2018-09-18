@@ -113,22 +113,22 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
+	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
@@ -165,6 +165,7 @@ public class WorkflowExecutor {
 			wf.setInput(input);
 			wf.setStatus(WorkflowStatus.RUNNING);
 			wf.setParentWorkflowId(parentWorkflowId);
+			wf.setAuthorization(authorization);
 
 			// Add other ids if passed
 			if (CollectionUtils.isNotEmpty(workflowIds)) {
@@ -1292,9 +1293,9 @@ public class WorkflowExecutor {
 		validateAuth(workflowDef, headers);
 	}
 
-	public void validateAuth(WorkflowDef workflowDef, HttpHeaders headers) {
+	public Map<String, Object> validateAuth(WorkflowDef workflowDef, HttpHeaders headers) {
 		if (!this.validateAuth || MapUtils.isEmpty(workflowDef.getAuthValidation())) {
-			return;
+			return null;
 		}
 
 		List<String> strings = headers.getRequestHeader(HttpHeaders.AUTHORIZATION);
@@ -1313,10 +1314,12 @@ public class WorkflowExecutor {
 		// Get the access token
 		String token = bearer.substring(BEARER.length());
 
+		Map<String, Object> decoded = auth.decode(token);
+
 		// Do a validation
 		Map<String, Object> failedList;
 		try {
-			failedList = auth.validate(token, workflowDef.getAuthValidation());
+			failedList = auth.validate(decoded, workflowDef.getAuthValidation());
 		} catch (Exception ex) {
 			logger.error("Auth validation failed with " + ex.getMessage(), ex);
 			throw new ApplicationException(Code.UNAUTHORIZED, ex.getMessage());
@@ -1325,6 +1328,8 @@ public class WorkflowExecutor {
 		if (!failedList.isEmpty()) {
 			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: at least one of the verify conditions failed");
 		}
+
+		return decoded;
 	}
 
 	private void cancelTasks(Workflow workflow, List<Task> tasks) throws Exception {

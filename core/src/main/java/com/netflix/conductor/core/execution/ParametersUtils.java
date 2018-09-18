@@ -109,6 +109,7 @@ public class ParametersUtils {
 		wf.put("reasonForIncompletion", workflow.getReasonForIncompletion());
 		wf.put("schemaVersion", workflow.getSchemaVersion());
 		wf.put("workflowIds", workflow.getWorkflowIds());
+		wf.put("authorization", workflow.getAuthorization());
 
 		String correlationId = workflow.getCorrelationId();
 		if (StringUtils.isNotEmpty(correlationId) && correlationId.startsWith("{") && correlationId.endsWith("}")) {
