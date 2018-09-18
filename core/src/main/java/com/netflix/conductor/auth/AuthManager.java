@@ -108,8 +108,12 @@ public class AuthManager {
 	}
 
 	public Map<String, Object> validate(String token, Map<String, String> rules) {
-		Map<String, Object> payload = decode(token);
-		Long exp = (Long)payload.get("exp");
+		Map<String, Object> decoded = decode(token);
+		return validate(decoded, rules);
+	}
+
+	public Map<String, Object> validate(Map<String, Object> decoded, Map<String, String> rules) {
+		Long exp = (Long)decoded.get("exp");
 		if (exp == null) {
 			throw new IllegalArgumentException("Invalid token. No expiration claim present");
 		}
@@ -118,7 +122,7 @@ public class AuthManager {
 			throw new IllegalArgumentException("Invalid token. Token is expired");
 		}
 
-		JsonNode input = mapper.valueToTree(payload);
+		JsonNode input = mapper.valueToTree(decoded);
 
 		LoadingCache<String, JsonQuery> queryCache = createQueryCache();
 

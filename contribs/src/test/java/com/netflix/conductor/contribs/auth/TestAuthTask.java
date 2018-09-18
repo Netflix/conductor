@@ -36,6 +36,7 @@ import java.util.Map;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -99,7 +100,7 @@ public class TestAuthTask {
 	@Test
 	public void validate_no_exp() throws Exception {
 		AuthManager manger = mock(AuthManager.class);
-		when(manger.validate(any(), any())).thenThrow(new IllegalArgumentException("Invalid token. No expiration claim present"));
+		when(manger.validate(anyString(), any())).thenThrow(new IllegalArgumentException("Invalid token. No expiration claim present"));
 		AuthTask authTask = new AuthTask(manger);
 		String accessToken = JWT.create().withClaim("access", "foo").sign(Algorithm.none());
 
@@ -128,7 +129,7 @@ public class TestAuthTask {
 	@Test
 	public void validate_no_exp_fail() throws Exception {
 		AuthManager manger = mock(AuthManager.class);
-		when(manger.validate(any(), any())).thenThrow(new IllegalArgumentException("Invalid token. No expiration claim present"));
+		when(manger.validate(anyString(), any())).thenThrow(new IllegalArgumentException("Invalid token. No expiration claim present"));
 		AuthTask authTask = new AuthTask(manger);
 		String accessToken = JWT.create().withClaim("access", "foo").sign(Algorithm.none());
 
@@ -157,7 +158,7 @@ public class TestAuthTask {
 	@Test
 	public void validate_expired() throws Exception {
 		AuthManager manger = mock(AuthManager.class);
-		when(manger.validate(any(), any())).thenThrow(new IllegalArgumentException("Invalid token. Token is expired"));
+		when(manger.validate(anyString(), any())).thenThrow(new IllegalArgumentException("Invalid token. Token is expired"));
 		AuthTask authTask = new AuthTask(manger);
 		String accessToken = JWT.create()
 				.withClaim("exp", new Date(System.currentTimeMillis() - 60_000))
@@ -188,7 +189,7 @@ public class TestAuthTask {
 	@Test
 	public void validate_expired_fail() throws Exception {
 		AuthManager manger = mock(AuthManager.class);
-		when(manger.validate(any(), any())).thenThrow(new IllegalArgumentException("Invalid token. Token is expired"));
+		when(manger.validate(anyString(), any())).thenThrow(new IllegalArgumentException("Invalid token. Token is expired"));
 		AuthTask authTask = new AuthTask(manger);
 		String accessToken = JWT.create()
 				.withClaim("exp", new Date(System.currentTimeMillis() - 60_000))

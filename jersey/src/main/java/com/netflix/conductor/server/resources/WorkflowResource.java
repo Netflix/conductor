@@ -106,7 +106,7 @@ public class WorkflowResource {
 		if (def == null) {
 			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + request.getName() + ", version=" + request.getVersion());
 		}
-		executor.validateAuth(def, headers);
+		Map<String, Object> auth = executor.validateAuth(def, headers);
 
 		// Generate id on this layer as we need to have it before starting workflow
 		String workflowId = IDGenerator.generate();
@@ -117,7 +117,7 @@ public class WorkflowResource {
 			request.setCorrelationId(correlationId);
 		}
 
-		executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain());
+		executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth);
 		return builder.build();
 	}
 
