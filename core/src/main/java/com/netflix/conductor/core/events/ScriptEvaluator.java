@@ -104,8 +104,6 @@ public class ScriptEvaluator {
 			} catch (Exception e) {
 				throw new RuntimeException(fieldName + " evaluating failed with " + e.getMessage(), e);
 			}
-			if (StringUtils.isEmpty(fieldValue))
-				throw new RuntimeException(fieldName + " evaluating is empty");
 
 			return new HashMap.SimpleEntry<>(fieldName, fieldValue);
 		}).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
