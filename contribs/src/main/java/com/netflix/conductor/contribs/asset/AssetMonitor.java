@@ -197,7 +197,7 @@ public class AssetMonitor implements JavaEventAction {
 			boolean anyNotEqual = messageParameters.entrySet().stream().anyMatch(entry -> {
 				String wfValue = workflowParameters.get(entry.getKey());
 				String msgValue = entry.getValue();
-				return !(comparator.compare(wfValue, msgValue) == 0);
+				return !FindUpdateAction.matches(wfValue, msgValue);
 			});
 			if (anyNotEqual) {
 				continue;
