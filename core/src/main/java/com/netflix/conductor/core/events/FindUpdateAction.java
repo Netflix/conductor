@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class FindUpdateAction implements JavaEventAction {
+	private static Comparator<String> comparator = Comparator.comparing(String::toString);
 	private static Logger logger = LoggerFactory.getLogger(FindUpdateAction.class);
 	private WorkflowExecutor executor;
 
@@ -172,8 +173,9 @@ public class FindUpdateAction implements JavaEventAction {
 
 			// Skip if values do not match
 			boolean anyNotEqual = event.entrySet().stream().anyMatch(entry -> {
-				Object value = task.get(entry.getKey());
-				return !entry.getValue().equals(value);
+				String taskValue = (String)task.get(entry.getKey());
+				String msgValue = entry.getValue();
+				return !(comparator.compare(taskValue, msgValue) == 0);
 			});
 
 			// anyNotEqual is true if any of values does not match. false means all match
