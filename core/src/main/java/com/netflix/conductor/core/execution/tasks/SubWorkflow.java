@@ -200,7 +200,22 @@ public class SubWorkflow extends WorkflowSystemTask {
 				restarted++;
 				task.getOutputData().put(RESTARTED, restarted);
 				task.getOutputData().remove(RESTART_ON);
-				provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getCorrelationId());
+				try {
+					provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getCorrelationId());
+				} catch (Exception ex) {
+					logger.error("Unable to restart the sub-workflow " + subWorkflow.getWorkflowId() + " due to " + ex.getMessage(), ex);
+					task.setStatus(Status.FAILED);
+					task.setReasonForIncompletion(ex.getMessage());
+
+					subWorkflow.setStatus(WorkflowStatus.FAILED);
+					subWorkflow.setReasonForIncompletion(ex.getMessage());
+					try {
+						provider.terminateWorkflow(subWorkflow, ex.getMessage(), null);
+					} catch (Exception ignore) {
+					}
+
+					return true;
+				}
 			} else {
 				return false; // Do nothing as waiting for the RESTART_ON time
 			}
