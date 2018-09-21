@@ -172,9 +172,8 @@ public class FindUpdateAction implements JavaEventAction {
 
 			// Skip if values do not match
 			boolean anyNotEqual = event.entrySet().stream().anyMatch(entry -> {
-				String taskValue = (String)task.get(entry.getKey());
-				String msgValue = entry.getValue();
-				return !matches(taskValue, msgValue);
+				Object value = task.get(entry.getKey());
+				return !entry.getValue().equals(value);
 			});
 
 			// anyNotEqual is true if any of values does not match. false means all match
@@ -182,13 +181,5 @@ public class FindUpdateAction implements JavaEventAction {
 		}
 	}
 
-	public static boolean matches(String value1, String value2) {
-		if (StringUtils.isEmpty(value1) && StringUtils.isEmpty(value2)) {
-			return true;
-		} else if (StringUtils.isNotEmpty(value1)) {
-			return value1.equals(value2);
-		} else {
-			return value2.equals(value1);
-		}
-	}
+
 }

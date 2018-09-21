@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class AssetMonitor implements JavaEventAction {
-	private static Comparator<String> comparator = Comparator.comparing(String::toString);
 	private static Logger logger = LoggerFactory.getLogger(AssetMonitor.class);
 	private final WorkflowExecutor executor;
 	private final ExecutionDAO edao;
@@ -197,7 +196,13 @@ public class AssetMonitor implements JavaEventAction {
 			boolean anyNotEqual = messageParameters.entrySet().stream().anyMatch(entry -> {
 				String wfValue = workflowParameters.get(entry.getKey());
 				String msgValue = entry.getValue();
-				return !FindUpdateAction.matches(wfValue, msgValue);
+				if (StringUtils.isEmpty(wfValue) && StringUtils.isEmpty(msgValue)) {
+					return false;
+				} else if (StringUtils.isNotEmpty(msgValue)) {
+					return !msgValue.equalsIgnoreCase(wfValue);
+				} else {
+					return !wfValue.equalsIgnoreCase(msgValue);
+				}
 			});
 			if (anyNotEqual) {
 				continue;
