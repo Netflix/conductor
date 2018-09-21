@@ -11,19 +11,19 @@ const menuPaths = {
   },{
     label: 'All',
     href: '/workflow',
-    icon: 'fa-circle-thin'
+    icon: 'fa-circle'
   },{
     label: 'Running',
     href: '/workflow?status=RUNNING',
-    icon: 'fa-play-circle'
+    icon: 'far fa-play-circle'
   },{
     label: 'Failed',
     href: '/workflow?status=FAILED&h=48',
-    icon: 'fa-warning'
+    icon: 'fas fa-exclamation-circle'
   },{
     label: 'Timed Out',
     href: '/workflow?status=TIMED_OUT&h=48',
-    icon: 'fa-clock-o'
+    icon: 'far fa-clock'
   },{
     label: 'Terminated',
     href: '/workflow?status=TERMINATED&h=48',
@@ -33,6 +33,10 @@ const menuPaths = {
     href: '/workflow?status=COMPLETED&h=48',
     icon: 'fa-bullseye'
   },{
+    label: 'Scheduled',
+    href: '/workflow/scheduled',
+    icon: 'far fa-calendar-alt'
+  },{
     header: true,
     label: 'Metadata',
     href: '/events',
@@ -40,7 +44,7 @@ const menuPaths = {
   },{
     label: 'Workflow Defs',
     href: '/workflow/metadata',
-    icon: 'fa-code-fork'
+    icon: 'fas fa-code-branch'
   },{
     label: 'Tasks',
     href: '/workflow/metadata/tasks',
@@ -62,7 +66,7 @@ const menuPaths = {
   },{
     label: 'Poll Data',
     href: '/workflow/queue/data',
-    icon: 'fa-exchange'
+    icon: 'fas fa-exchange-alt'
   }]
 };
 

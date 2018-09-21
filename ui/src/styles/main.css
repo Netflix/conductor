@@ -554,7 +554,17 @@ a:hover {
 
 .input-form {
   width: 800px;
+  margin-top: 20px;
   margin-left: 20px;
+}
+
+.input-grid {
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+.input-grid .input {
+  text-align: center;
 }
 
 .menu-bars {

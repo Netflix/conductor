@@ -14,6 +14,11 @@ const baseURL2 = baseURL + 'workflow/';
 const baseURL2ByTasks = baseURL2 + 'search-by-task';
 const baseURLMeta = baseURL + 'metadata/';
 const baseURLTask = baseURL + 'tasks/';
+const cronJobs = [];
+
+var CronJob = require('cron').CronJob
+router.use(bodyParser.urlencoded({ extended: true}));
+router.use(bodyParser.json());
 
 
 router.get('/', async (req, res, next) => {
@@ -170,17 +175,86 @@ router.post('/restart/:workflowId', async (req, res, next) => {
   }
 });
 
-router.use(bodyParser.urlencoded({ extended: false}));
-router.use(bodyParser.json());
+//CronJobs requests
 router.post('/workflow/:workflowName', async (req, res, next) => {
+  if (!req.body.cronExp) {
+    http.post(baseURL2 + req.params.workflowName, JSON.stringify(req.body.json));
+    res.status(200).send("Workflow executed successully!");
+  } else {
+    let name = req.params.workflowName;
+    let desc = req.body.cronDesc;
+    let id = Math.floor((1 + Math.random()) * 0x10000).toString();
+    let job = new CronJob(req.body.cronExp, function () {
+      console.log('Workflow job ID: %s executed', id);
+      http.post(baseURL2 + req.params.workflowName, JSON.stringify(req.body.json));
+    }, null, true);
+
+    let jobData = {
+      id: id,
+      name: name,
+      desc: desc,
+      ...job
+    };
+    cronJobs.push(jobData);
+    res.status(200).send("Workflow job ID: " + id + " scheduled successfuly!");
+  }
+});
+
+router.get('/cronjobs', async (req, res, next) => {
   try {
-    const result = await http.post(baseURL2 + req.params.workflowName, JSON.stringify(req.body));
-    res.status(200).send("Workflow successfully executed!");
+    var cache = [];
+    var scheduledJobs = [];
+
+    scheduledJobs = JSON.stringify(cronJobs, function (key, value) {
+      if (typeof value === 'object' && value !== null) {
+        if (cache.indexOf(value) !== -1) {
+          return;
+        }
+        cache.push(value);
+      }
+      return value;
+    });
+    cache = null;
+
+    res.status(200).send(scheduledJobs);
   } catch (err) {
     next(err);
   }
 });
 
+router.post('/cronjobs/stop/:cronjobId', async (req, res, next) => {
+  try {
+    let index = cronJobs.findIndex(obj => obj.id == req.params.cronjobId);
+    cronJobs[index].context.stop();
+    console.log("Workflow job ID: %s stopped", req.params.cronjobId);
+    res.status(200).send("Workflow stopped successfully!");
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/cronjobs/start/:cronjobId', async (req, res, next) => {
+  try {
+    let index = cronJobs.findIndex(obj => obj.id == req.params.cronjobId);
+    cronJobs[index].context.start();
+    console.log("Workflow job ID: %s resumed", req.params.cronjobId);
+    res.status(200).send("Workflow resumed successfully!");
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/cronjobs/delete/:cronjobId', async (req, res, next) => {
+  try {
+    let index = cronJobs.findIndex(obj => obj.id == req.params.cronjobId);
+    cronJobs.splice(index, 1);
+    console.log("Workflow job ID: %s deleted", req.params.cronjobId);
+    res.status(200).send("Workflow deleted successfully!");
+  } catch (err) {
+    next(err);
+  }
+});
+//////////////////////////
 router.post('/retry/:workflowId', async (req, res, next) => {
   try {
     const result = await http.post(baseURL2 + req.params.workflowId + '/retry');
