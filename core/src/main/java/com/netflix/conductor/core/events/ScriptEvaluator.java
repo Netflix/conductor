@@ -106,7 +106,7 @@ public class ScriptEvaluator {
 			}
 
 			return new HashMap.SimpleEntry<>(fieldName, fieldValue);
-		}).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+		}).collect(HashMap::new, (m,v)->m.put(v.getKey(), v.getValue()), HashMap::putAll);
 	}
 
 	private static LoadingCache<String, JsonQuery> createQueryCache() {
