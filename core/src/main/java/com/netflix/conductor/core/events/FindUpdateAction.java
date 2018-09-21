@@ -180,6 +180,4 @@ public class FindUpdateAction implements JavaEventAction {
 			return !anyNotEqual;
 		}
 	}
-
-
 }
