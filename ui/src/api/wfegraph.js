@@ -37,7 +37,6 @@ class Workflow2Graph {
     this.executedTasks = {};
     let joins = {};
     wfe.tasks.forEach(t => {
-      console.log('t', t);
       this.executedTasks[t.referenceTaskName] = {status: t.status, input: t.inputData, output: t.outputData, taskType: t.taskType, reasonForIncompletion: t.reasonForIncompletion, task: t};
       if(t.taskType == 'JOIN' ){
         joins[t.referenceTaskName] = t.inputData.joinOn;
