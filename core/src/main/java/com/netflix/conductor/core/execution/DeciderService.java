@@ -266,6 +266,10 @@ public class DeciderService {
 			return true;
 		}
 
+		if (noPendingTasks && noPendingSchedule) {
+			logger.warn("Workflow might have a stuck state. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
+		}
+
 		return false;
 	}
 	
