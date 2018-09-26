@@ -220,7 +220,7 @@ public class End2EndTests {
 	@Test
 	public void testMetadataWorkflowDefinition() {
 		WorkflowDef def = new WorkflowDef();
-		def.setName("testWorkflowDel");
+		def.setName("testWorkflowDefMetadata");
 		def.setVersion(1);
 		WorkflowTask t0 = new WorkflowTask();
 		t0.setName("t0");
@@ -236,16 +236,16 @@ public class End2EndTests {
 		def.getTasks().add(t1);
 
 		metadataClient.registerWorkflowDef(def);
-		metadataClient.unregisterWorkflowDef("testWorkflowDel", 1);
+		metadataClient.unregisterWorkflowDef("testWorkflowDefMetadata", 1);
 
 		try {
-			metadataClient.getWorkflowDef("testWorkflowDel", 1);
+			metadataClient.getWorkflowDef("testWorkflowDefMetadata", 1);
 		} catch (ConductorClientException e) {
 			int statusCode = e.getStatus();
 			String errorMessage = e.getMessage();
 			boolean retryable = e.isRetryable();
 			assertEquals(404, statusCode);
-			assertEquals("No such workflow found by name: testWorkflowDel, version: 1", errorMessage);
+			assertEquals("No such workflow found by name: testWorkflowDefMetadata, version: 1", errorMessage);
 			assertFalse(retryable);
 		}
 	}
