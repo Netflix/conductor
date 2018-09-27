@@ -187,24 +187,24 @@ public class WorkflowServiceTest {
         WorkflowDef linearWorkflow = createSampleWorkflowDef(LINEAR_WORKFLOW_T1_T2);
         WorkflowDef longRunningWorkflow = createSampleWorkflowDef(LONG_RUNNING);
 
-        WorkflowTask wft1  = createSampleTaskType1("junit_task_1", "t1");
-        WorkflowTask wft2 = createSampleTaskType2( "junit_task_2", "t2");
-        WorkflowTask wft3 = createSampleTaskType2("junit_task_3", "t3");
+        WorkflowTask workflowTask1  = createSampleTaskType1("junit_task_1", "t1");
+        WorkflowTask workflowTask2 = createSampleTaskType2( "junit_task_2", "t2");
+        WorkflowTask workflowTask3 = createSampleTaskType2("junit_task_3", "t3");
 
-        WorkflowDef def2 = new WorkflowDef();
-        def2.setName(TEST_WORKFLOW_NAME_3);
-        def2.setDescription(def2.getName());
-        def2.setVersion(1);
-        def2.setInputParameters(Arrays.asList("param1", "param2"));
+        WorkflowDef workflowDef2 = new WorkflowDef();
+        workflowDef2.setName(TEST_WORKFLOW_NAME_3);
+        workflowDef2.setDescription(workflowDef2.getName());
+        workflowDef2.setVersion(1);
+        workflowDef2.setInputParameters(Arrays.asList("param1", "param2"));
         LinkedList<WorkflowTask> wftasks2 = new LinkedList<>();
 
-        wftasks2.add(wft1);
-        wftasks2.add(wft2);
-        wftasks2.add(wft3);
-        def2.setSchemaVersion(2);
-        def2.setTasks(wftasks2);
+        wftasks2.add(workflowTask1);
+        wftasks2.add(workflowTask2);
+        wftasks2.add(workflowTask3);
+        workflowDef2.setSchemaVersion(2);
+        workflowDef2.setTasks(wftasks2);
 
-        WorkflowDef[] wdsf = new WorkflowDef[]{linearWorkflow, def2, longRunningWorkflow};
+        WorkflowDef[] wdsf = new WorkflowDef[]{linearWorkflow, workflowDef2, longRunningWorkflow};
         for (WorkflowDef wd : wdsf) {
             metadataService.updateWorkflowDef(wd);
         }
@@ -357,7 +357,6 @@ public class WorkflowServiceTest {
         assertEquals(expected, objectMapper.writeValueAsString(taskInput));
     }
 
-
     @Test
     public void testWorkflowSchemaVersion() {
         WorkflowDef ver2 = new WorkflowDef();
@@ -379,7 +378,6 @@ public class WorkflowServiceTest {
         WorkflowDef found1 = metadataService.getWorkflowDef(ver1.getName(), 1);
         assertNotNull(found1);
         assertEquals(1, found1.getSchemaVersion());
-
     }
 
     @Test
@@ -582,7 +580,6 @@ public class WorkflowServiceTest {
         wf = workflowExecutionService.getExecutionStatus(wfid, true);
         assertNotNull(wf);
         assertEquals(WorkflowStatus.COMPLETED, wf.getStatus());
-
     }
 
     @Test
@@ -885,7 +882,6 @@ public class WorkflowServiceTest {
         metadataService.updateWorkflowDef(workflowDef);
     }
 
-
     private void createForkJoinWorkflowWithZeroRetry() {
 
         WorkflowDef def = new WorkflowDef();
@@ -936,7 +932,6 @@ public class WorkflowServiceTest {
         def.getTasks().add(join);
         def.getTasks().add(wft4);
         metadataService.updateWorkflowDef(def);
-
     }
 
     private void createForkJoinNestedWorkflow() {
@@ -953,14 +948,6 @@ public class WorkflowServiceTest {
         ip1.put("case", "workflow.input.case");
 
         WorkflowTask[] tasks = new WorkflowTask[21];
-
-        for (int i = 1; i < 3; i++) {
-            WorkflowTask wft = new WorkflowTask();
-            wft.setName("junit_task_" + i);
-            wft.setInputParameters(ip1);
-            wft.setTaskReferenceName("t" + i);
-            tasks[i] = wft;
-        }
 
         for (int i = 10; i < 21; i++) {
             WorkflowTask wft = new WorkflowTask();
@@ -1093,7 +1080,6 @@ public class WorkflowServiceTest {
         def.getTasks().add(join);
 
         metadataService.updateWorkflowDef(def);
-
     }
 
     private void createConditionalWF() {
@@ -1166,9 +1152,7 @@ public class WorkflowServiceTest {
 
         def2.getTasks().add(finalTask);
         metadataService.updateWorkflowDef(def2);
-
     }
-
 
     @Test
     public void testDefDAO() {
@@ -1249,9 +1233,7 @@ public class WorkflowServiceTest {
 
         outputParameters.remove("validationErrors");
         metadataService.updateWorkflowDef(found);
-
     }
-
 
     @Test
     public void testSimpleWorkflow() {
@@ -1652,7 +1634,6 @@ public class WorkflowServiceTest {
 
     @Test
     public void testSimpleWorkflowWithAllTaskInOneDomain() {
-
         String taskType1 = String.format("%s_1", LINEAR_WORKFLOW_T1_T2);
         String taskType2 = String.format("%s_2", LINEAR_WORKFLOW_T1_T2);
         String taskType3 = String.format("%s_1", LINEAR_WORKFLOW_T1_T2_SW);
@@ -1905,7 +1886,6 @@ public class WorkflowServiceTest {
         assertEquals("p1 value", param1);
         assertEquals("p2 value", param2);
 
-
         String task1Op = "task1.In.Progress";
         task.getOutputData().put("op", task1Op);
         task.setStatus(Status.IN_PROGRESS);
@@ -1969,7 +1949,6 @@ public class WorkflowServiceTest {
         assertNotNull(tasks);
         assertEquals(2, tasks.size());
     }
-
 
     @Test
     public void testConcurrentWorkflowExecutions() {
@@ -2142,7 +2121,6 @@ public class WorkflowServiceTest {
             }
         }
     }
-
 
     private Task getTask(String taskType) {
         Task task;
@@ -2855,7 +2833,6 @@ public class WorkflowServiceTest {
         workflowExecutor.rewind(workflow.getWorkflowId());
     }
 
-
     @Test
     public void testRestart() {
         String taskType1 = String.format("%s_1", LINEAR_WORKFLOW_T1_T2);
@@ -2911,7 +2888,6 @@ public class WorkflowServiceTest {
         assertNotNull(es);
         assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
     }
-
 
     @Test
     public void testTimeout() throws Exception {
@@ -3130,7 +3106,6 @@ public class WorkflowServiceTest {
         assertNotNull(es);
         assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
     }
-
 
     @Test
     public void testTaskSkipping() {
@@ -3448,7 +3423,6 @@ public class WorkflowServiceTest {
         taskDef.setTimeoutSeconds(0);
         taskDef.setRetryCount(RETRY_COUNT);
         metadataService.updateTaskDef(taskDef);
-
     }
 
     @Test
@@ -3459,7 +3433,6 @@ public class WorkflowServiceTest {
         taskDef.setRetryCount(0);
         taskDef.setTimeoutSeconds(2);
         metadataService.updateTaskDef(taskDef);
-
 
         createSubWorkflow();
 
@@ -3502,7 +3475,6 @@ public class WorkflowServiceTest {
 
         es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
         assertEquals(WorkflowStatus.TERMINATED, es.getStatus());
-
     }
 
     @Test
@@ -3609,7 +3581,6 @@ public class WorkflowServiceTest {
         taskDef.setRetryCount(retryCount);
         metadataService.updateTaskDef(taskDef);
     }
-
 
     @Test
     public void testWait() {
