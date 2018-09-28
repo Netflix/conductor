@@ -1,0 +1,104 @@
+{
+  "template": "*",
+  "order": 0,
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "workflow": {
+      "properties": {
+        "correlationId": {
+          "type": "keyword"
+        },
+        "endTime": {
+          "type": "date"
+        },
+        "event": {
+          "type": "keyword"
+        },
+        "executionTime": {
+          "type": "long"
+        },
+        "input": {
+          "type": "text"
+        },
+        "output": {
+          "type": "text"
+        },
+        "rawJSON": {
+          "type": "text",
+          "index": "not_analyzed",
+          "include_in_all": false
+        },
+        "reasonForIncompletion": {
+          "type": "keyword"
+        },
+        "startTime": {
+          "type": "date"
+        },
+        "status": {
+          "type": "keyword"
+        },
+        "updateTime": {
+          "type": "date"
+        },
+        "version": {
+          "type": "long"
+        },
+        "workflowId": {
+          "type": "keyword"
+        },
+        "workflowType": {
+          "type": "keyword"
+        }
+      }
+    },
+    "task": {
+      "properties": {
+        "endTime": {
+          "type": "date"
+        },
+        "executionTime": {
+          "type": "long"
+        },
+        "input": {
+          "type": "text"
+        },
+        "log": {
+          "type": "text"
+        },
+        "logs": {
+          "type": "text"
+        },
+        "output": {
+          "type": "text"
+        },
+        "queueWaitTime": {
+          "type": "long"
+        },
+        "scheduledTime": {
+          "type": "date"
+        },
+        "startTime": {
+          "type": "date"
+        },
+        "status": {
+          "type": "keyword"
+        },
+        "taskDefName": {
+          "type": "keyword"
+        },
+        "taskType": {
+          "type": "keyword"
+        },
+        "updateTime": {
+          "type": "date"
+        },
+        "workflowId": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}

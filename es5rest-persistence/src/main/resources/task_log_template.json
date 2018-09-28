@@ -1,0 +1,67 @@
+{
+  "template": "*",
+  "order": 0,
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "event": {
+      "properties": {
+        "action": {
+          "type": "keyword"
+        },
+        "created": {
+          "type": "long"
+        },
+        "event": {
+          "type": "keyword"
+        },
+        "id": {
+          "type": "keyword"
+        },
+        "messageId": {
+          "type": "keyword"
+        },
+        "name": {
+          "type": "keyword"
+        },
+        "status": {
+          "type": "keyword"
+        },
+        "output": {
+          "type": "object"
+        }
+      }
+    },
+    "task": {
+      "properties": {
+        "log": {
+          "type": "text"
+        },
+        "taskId": {
+          "type": "keyword"
+        },
+        "createdTime": {
+          "type": "long"
+        }
+      }
+    },
+    "message": {
+      "properties": {
+        "created": {
+          "type": "long"
+        },
+        "messageId": {
+          "type": "keyword"
+        },
+        "payload": {
+          "type": "text"
+        },
+        "queue": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "workflowdefs": {
+    "properties": {
+      "createTime": {
+        "type": "long"
+      },
+      "description": {
+        "type": "text"
+      },
+      "name": {
+        "type": "text"
+      },
+      "outputParameters": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false,
+        "include_in_all": false
+      },
+      "schemaVersion": {
+        "type": "long"
+      },
+      "tasks": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false,
+        "include_in_all": false
+      },
+      "version": {
+        "type": "long"
+      }
+    }
+  }
+}

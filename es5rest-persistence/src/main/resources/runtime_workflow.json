@@ -1,0 +1,75 @@
+{
+  "workflow": {
+    "properties": {
+      "correlationId": {
+        "type": "text"
+      },
+      "createTime": {
+        "type": "long"
+      },
+      "endTime": {
+        "type": "long"
+      },
+      "event": {
+        "type": "text"
+      },
+      "tasks": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false,
+        "include_in_all": false
+      },
+      "input": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false,
+        "include_in_all": false
+      },
+      "output": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false,
+        "include_in_all": false
+      },
+      "taskToDomain": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false,
+        "include_in_all": false
+      },
+      "reasonForIncompletion": {
+        "type": "text"
+      },
+      "schemaVersion": {
+        "type": "long"
+      },
+      "startTime": {
+        "type": "long"
+      },
+      "status": {
+        "type": "text"
+      },
+      "updateTime": {
+        "type": "long"
+      },
+      "version": {
+        "type": "long"
+      },
+      "workflowId": {
+        "type": "text"
+      },
+      "workflowType": {
+        "type": "text"
+      },
+      "parentWorkflowId": {
+        "type": "text"
+      },
+      "parentWorkflowTaskId": {
+        "type": "text"
+      },
+      "reRunFromWorkflowId": {
+        "type": "text"
+      }
+    }
+  }
+}
