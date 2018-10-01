@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.es5rest;
+package com.netflix.conductor.dao.es6rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch5RestMetadataDAO extends ElasticSearch5RestBaseDAO implements MetadataDAO {
-	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5RestMetadataDAO.class);
+public class ElasticSearch6RestMetadataDAO extends ElasticSearch6RestBaseDAO implements MetadataDAO {
+	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch6RestMetadataDAO.class);
 	// Keys Families
 	private final static String TASK_DEFS = "TASK_DEFS";
 	private final static String WORKFLOW_DEFS = "WORKFLOW_DEFS";
@@ -32,7 +32,7 @@ public class ElasticSearch5RestMetadataDAO extends ElasticSearch5RestBaseDAO imp
 	private Map<String, TaskDef> taskDefCache = new HashMap<>();
 
 	@Inject
-	public ElasticSearch5RestMetadataDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
+	public ElasticSearch6RestMetadataDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
 		super(client, config, mapper, "metadata");
 
 		ensureIndexExists(toIndexName(TASK_DEFS), toTypeName(TASK_DEFS));

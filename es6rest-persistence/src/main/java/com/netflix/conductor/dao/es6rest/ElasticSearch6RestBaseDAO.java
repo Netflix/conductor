@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.es5rest;
+package com.netflix.conductor.dao.es6rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -14,6 +14,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
@@ -40,10 +41,11 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Oleksiy Lysak
  */
-class ElasticSearch5RestBaseDAO {
-    private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5RestBaseDAO.class);
+class ElasticSearch6RestBaseDAO {
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearch6RestBaseDAO.class);
     private final static String NAMESPACE_SEP = ".";
     private final static String DEFAULT = "_default_";
+    private final static int BATCH_SIE = 1_000;
     private Set<String> indexCache = ConcurrentHashMap.newKeySet();
     RestHighLevelClient client;
     private ObjectMapper mapper;
@@ -51,7 +53,7 @@ class ElasticSearch5RestBaseDAO {
     private String prefix;
     private String stack;
 
-    ElasticSearch5RestBaseDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper, String context) {
+    ElasticSearch6RestBaseDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper, String context) {
         this.client = client;
         this.mapper = mapper;
         this.context = context;
@@ -225,22 +227,23 @@ class ElasticSearch5RestBaseDAO {
 
     void delete(String indexName, String typeName, String id) {
         ensureIndexExists(indexName);
-        try {
-            DeleteRequest request = new DeleteRequest()
-                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                    .index(indexName)
-                    .type(typeName)
-                    .id(id);
-            doWithRetry(() -> {
-                try {
-                    client.delete(request, RequestOptions.DEFAULT);
-                } catch (IOException e) {
-                    throw new RuntimeException(e.getMessage(), e);
+
+        DeleteRequest request = new DeleteRequest()
+                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                .index(indexName)
+                .type(typeName)
+                .id(id);
+
+        doWithRetry(() -> {
+            try {
+                client.delete(request, RequestOptions.DEFAULT);
+            } catch (Exception ex) {
+                if (!isDocMissingException(ex)) {
+                    logger.error("delete: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), ex);
+                    throw new RuntimeException(ex.getMessage(), ex);
                 }
-            });
-        } catch (Exception ex) {
-            logger.error("delete: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
-        }
+            }
+        });
     }
 
     boolean insert(String indexName, String typeName, String id, Map<String, ?> payload) {
@@ -260,7 +263,7 @@ class ElasticSearch5RestBaseDAO {
                 client.index(request, RequestOptions.DEFAULT);
                 result.set(true);
             } catch (Exception ex) {
-                if (!ex.getMessage().contains("version_conflict_engine_exception")) {
+                if (!isVerConflictException(ex)) {
                     logger.error("insert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
                     throw new RuntimeException(ex.getMessage(), ex);
                 }
@@ -284,12 +287,30 @@ class ElasticSearch5RestBaseDAO {
             try {
                 client.index(request, RequestOptions.DEFAULT);
             } catch (Exception ex) {
-                if (!ex.getMessage().contains("version_conflict_engine_exception")) {
+                if (!isConflictOrMissingException(ex)) {
                     logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
                     throw new RuntimeException(ex.getMessage(), ex);
                 }
             }
         });
+    }
+
+    void upsert(String indexName, String typeName, String id, Map<String, ?> payload) {
+        ensureIndexExists(indexName);
+        UpdateRequest request = new UpdateRequest().setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                .docAsUpsert(true)
+                .doc(payload)
+                .index(indexName)
+                .type(typeName)
+                .id(id);
+        try {
+            client.update(request, RequestOptions.DEFAULT);
+        } catch (Exception ex) {
+            if (!isConflictOrMissingException(ex)) {
+                logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+                throw new RuntimeException(ex.getMessage(), ex);
+            }
+        }
     }
 
     GetResponse findOne(String indexName, String typeName, String id) {
@@ -347,12 +368,12 @@ class ElasticSearch5RestBaseDAO {
         try {
             List<String> result = new LinkedList<>();
 
-            final SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.query(QueryBuilders.matchAllQuery());
             sourceBuilder.fetchSource(false);
-            sourceBuilder.size(1_000);
+            sourceBuilder.size(BATCH_SIE);
 
-            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
             searchRequest.source(sourceBuilder);
             searchRequest.scroll(scroll);
@@ -375,8 +396,7 @@ class ElasticSearch5RestBaseDAO {
 
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
             clearScrollRequest.addScrollId(scrollId);
-            ClearScrollResponse clearScrollResponse = client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
-            clearScrollResponse.isSucceeded();
+            client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
 
             if (logger.isDebugEnabled())
                 logger.debug("findIds: result={}", toJson(result));
@@ -387,7 +407,7 @@ class ElasticSearch5RestBaseDAO {
         }
     }
 
-    <T> List<T> findAll(String indexName, String typeName, QueryBuilder query, Class<T> clazz) {
+    <T> List<T> findAll(String indexName, String typeName, QueryBuilder query, int limit, Class<T> clazz) {
         if (logger.isDebugEnabled())
             logger.debug("findAll: index={}, type={}, clazz={}", indexName, typeName, clazz);
 
@@ -396,11 +416,11 @@ class ElasticSearch5RestBaseDAO {
         try {
             List<T> result = new LinkedList<>();
 
-            final SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.query(query);
-            sourceBuilder.size(1_000);
+            sourceBuilder.size(limit);
 
-            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
             searchRequest.source(sourceBuilder);
             searchRequest.scroll(scroll);
@@ -423,8 +443,7 @@ class ElasticSearch5RestBaseDAO {
 
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
             clearScrollRequest.addScrollId(scrollId);
-            ClearScrollResponse clearScrollResponse = client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
-            clearScrollResponse.isSucceeded();
+            client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
 
             if (logger.isDebugEnabled())
                 logger.debug("findAll: result={}", toJson(result));
@@ -435,8 +454,33 @@ class ElasticSearch5RestBaseDAO {
         }
     }
 
+    <T> List<T> findAll(String indexName, String typeName, QueryBuilder query, Class<T> clazz) {
+        return findAll(indexName, typeName, query, BATCH_SIE, clazz);
+    }
+
     <T> List<T> findAll(String indexName, String typeName, Class<T> clazz) {
-        return findAll(indexName, typeName, QueryBuilders.matchAllQuery(), clazz);
+        return findAll(indexName, typeName, QueryBuilders.matchAllQuery(), BATCH_SIE, clazz);
+    }
+
+    Long getCount(String indexName, String typeName, QueryBuilder query) {
+        try {
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            sourceBuilder.fetchSource(false);
+            sourceBuilder.query(query);
+            sourceBuilder.size(0);
+
+            SearchRequest searchRequest = new SearchRequest();
+            searchRequest.indices(indexName);
+            if (StringUtils.isNotEmpty(typeName)) {
+                searchRequest.types(typeName);
+            }
+            searchRequest.source(sourceBuilder);
+
+            return client.search(searchRequest, RequestOptions.DEFAULT).getHits().getTotalHits();
+        } catch (Exception ex) {
+            logger.error("getCount: failed for {}/{} with {}", indexName, typeName, ex.getMessage(), ex);
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
     }
 
     void doWithRetryNoisy(Runnable runnable) {
@@ -491,9 +535,15 @@ class ElasticSearch5RestBaseDAO {
         }
     }
 
-    boolean isConflictOrMissingException(Exception ex) {
-        return ex.getMessage().contains("document_missing_exception") ||
-                ex.getMessage().contains("version_conflict_engine_exception");
+    static boolean isVerConflictException(Exception ex) {
+        return ex.getMessage().contains("version_conflict_engine_exception");
     }
 
+    static boolean isDocMissingException(Exception ex) {
+        return ex.getMessage().contains("document_missing_exception");
+    }
+
+    static boolean isConflictOrMissingException(Exception ex) {
+        return isVerConflictException(ex) || isDocMissingException(ex);
+    }
 }

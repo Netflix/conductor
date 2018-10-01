@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.es5rest;
+package com.netflix.conductor.dao.es6rest;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.AbstractModule;
@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 
-public class Elasticsearch5RestModule extends AbstractModule {
-    private static final Logger log = LoggerFactory.getLogger(Elasticsearch5RestModule.class);
+public class Elasticsearch6RestModule extends AbstractModule {
+    private static final Logger log = LoggerFactory.getLogger(Elasticsearch6RestModule.class);
 
     @Provides
     @Singleton
