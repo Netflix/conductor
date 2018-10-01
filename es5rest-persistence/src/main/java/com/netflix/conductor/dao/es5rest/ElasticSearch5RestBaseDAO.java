@@ -12,15 +12,24 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.*;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.Scroll;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,12 +37,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ElasticSearch5RestBaseDAO {
+/**
+ * @author Oleksiy Lysak
+ */
+class ElasticSearch5RestBaseDAO {
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch5RestBaseDAO.class);
     private final static String NAMESPACE_SEP = ".";
     private final static String DEFAULT = "_default_";
-    protected Set<String> indexCache = ConcurrentHashMap.newKeySet();
-    private RestHighLevelClient client;
+    private Set<String> indexCache = ConcurrentHashMap.newKeySet();
+    RestHighLevelClient client;
     private ObjectMapper mapper;
     private String context;
     private String prefix;
@@ -200,27 +212,6 @@ public class ElasticSearch5RestBaseDAO {
         }
     }
 
-    GetResponse findOne(String indexName, String typeName, String id) {
-        ensureIndexExists(indexName);
-        try {
-            GetRequest request = new GetRequest().index(indexName).type(typeName).id(id);
-
-            AtomicReference<GetResponse> reference = new AtomicReference<>();
-            doWithRetryNoisy(() -> {
-                try {
-                    reference.set(client.get(request, RequestOptions.DEFAULT));
-                } catch (IOException e) {
-                    throw new RuntimeException(e.getMessage(), e);
-                }
-            });
-
-            return reference.get();
-        } catch (Exception ex) {
-            logger.error("findOne: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
-            throw ex;
-        }
-    }
-
     boolean exists(String indexName, String typeName, String id) {
         ensureIndexExists(indexName);
         try {
@@ -301,7 +292,154 @@ public class ElasticSearch5RestBaseDAO {
         });
     }
 
-    private void doWithRetryNoisy(Runnable runnable) {
+    GetResponse findOne(String indexName, String typeName, String id) {
+        ensureIndexExists(indexName);
+        try {
+            GetRequest request = new GetRequest().index(indexName).type(typeName).id(id);
+
+            AtomicReference<GetResponse> result = new AtomicReference<>();
+            doWithRetryNoisy(() -> {
+                try {
+                    result.set(client.get(request, RequestOptions.DEFAULT));
+                } catch (IOException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+            });
+
+            return result.get();
+        } catch (Exception ex) {
+            logger.error("findOne: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    <T> T findOne(String indexName, String typeName, String id, Class<T> clazz) {
+        ensureIndexExists(indexName);
+        try {
+            GetRequest request = new GetRequest().index(indexName).type(typeName).id(id);
+
+            AtomicReference<GetResponse> result = new AtomicReference<>();
+            doWithRetryNoisy(() -> {
+                try {
+                    result.set(client.get(request, RequestOptions.DEFAULT));
+                } catch (IOException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+            });
+
+            GetResponse record = result.get();
+            if (record.isExists()) {
+                return convert(record.getSource(), clazz);
+            }
+            return null;
+        } catch (Exception ex) {
+            logger.error("findOne: failed for {}/{}/{}/{} with {}", indexName, typeName, id, clazz, ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    List<String> findIds(String indexName, String typeName) {
+        if (logger.isDebugEnabled())
+            logger.debug("findIds: index={}, type={}", indexName, typeName);
+
+        // This type of the search fails if no such index
+        ensureIndexExists(indexName);
+        try {
+            List<String> result = new LinkedList<>();
+
+            final SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            sourceBuilder.query(QueryBuilders.matchAllQuery());
+            sourceBuilder.fetchSource(false);
+            sourceBuilder.size(1_000);
+
+            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
+            searchRequest.source(sourceBuilder);
+            searchRequest.scroll(scroll);
+
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+            while (searchHits != null && searchHits.length > 0) {
+                for(SearchHit hit : searchHits) {
+                    result.add(hit.getId());
+                }
+
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+                searchResponse = client.scroll(scrollRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+            }
+
+            ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+            clearScrollRequest.addScrollId(scrollId);
+            ClearScrollResponse clearScrollResponse = client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+            clearScrollResponse.isSucceeded();
+
+            if (logger.isDebugEnabled())
+                logger.debug("findIds: result={}", toJson(result));
+            return result;
+        } catch (Exception ex) {
+            logger.error("findIds: failed for {}/{} with {}", indexName, typeName, ex.getMessage(), ex);
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
+    }
+
+    <T> List<T> findAll(String indexName, String typeName, QueryBuilder query, Class<T> clazz) {
+        if (logger.isDebugEnabled())
+            logger.debug("findAll: index={}, type={}, clazz={}", indexName, typeName, clazz);
+
+        // This type of the search fails if no such index
+        ensureIndexExists(indexName);
+        try {
+            List<T> result = new LinkedList<>();
+
+            final SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            sourceBuilder.query(query);
+            sourceBuilder.size(1_000);
+
+            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
+            searchRequest.source(sourceBuilder);
+            searchRequest.scroll(scroll);
+
+            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+            while (searchHits != null && searchHits.length > 0) {
+                for(SearchHit hit : searchHits) {
+                    result.add(convert(hit.getSourceAsMap(), clazz));
+                }
+
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+                searchResponse = client.scroll(scrollRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+            }
+
+            ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+            clearScrollRequest.addScrollId(scrollId);
+            ClearScrollResponse clearScrollResponse = client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+            clearScrollResponse.isSucceeded();
+
+            if (logger.isDebugEnabled())
+                logger.debug("findAll: result={}", toJson(result));
+            return result;
+        } catch (Exception ex) {
+            logger.error("findAll: failed for {}/{}/{} with {}", indexName, typeName, clazz, ex.getMessage(), ex);
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
+    }
+
+    <T> List<T> findAll(String indexName, String typeName, Class<T> clazz) {
+        return findAll(indexName, typeName, QueryBuilders.matchAllQuery(), clazz);
+    }
+
+    void doWithRetryNoisy(Runnable runnable) {
         int retry = 3;
         while (true) {
             try {
