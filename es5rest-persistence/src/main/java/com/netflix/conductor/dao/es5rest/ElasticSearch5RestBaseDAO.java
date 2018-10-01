@@ -491,4 +491,9 @@ class ElasticSearch5RestBaseDAO {
         }
     }
 
+    boolean isConflictOrMissingException(Exception ex) {
+        return ex.getMessage().contains("document_missing_exception") ||
+                ex.getMessage().contains("version_conflict_engine_exception");
+    }
+
 }
