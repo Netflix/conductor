@@ -225,7 +225,7 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
         String indexName = toIndexName(WORKFLOW_DEFS);
         String typeName = toTypeName(WORKFLOW_DEFS);
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(name) + "*");
+        QueryBuilder query = QueryBuilders.termQuery("name", name);
         List<WorkflowDef> result = findAll(indexName, typeName, query, WorkflowDef.class);
 
         if (logger.isDebugEnabled())

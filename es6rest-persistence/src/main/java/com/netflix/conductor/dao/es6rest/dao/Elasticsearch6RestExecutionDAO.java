@@ -65,6 +65,10 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     private final static String POLL_DATA = "POLL_DATA";
     private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
 
+    // static indexes and types
+    private final Map<String, String> indexes = new HashMap<>();
+    private final Map<String, String> types = new HashMap<>();
+
     private MetadataDAO metadata;
     private IndexDAO indexer;
 
@@ -74,9 +78,23 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         this.indexer = indexer;
         this.metadata = metadata;
 
-        ensureIndexExists(toIndexName(TASK), toTypeName(TASK));
-        ensureIndexExists(toIndexName(WORKFLOW), toTypeName(WORKFLOW));
-        ensureIndexExists(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION));
+        // static indexes
+        initIndexType(IN_PROGRESS_TASKS);
+        initIndexType(WORKFLOW_TO_TASKS);
+        initIndexType(SCHEDULED_TASKS);
+        initIndexType(TASK);
+        initIndexType(WORKFLOW);
+        initIndexType(PENDING_WORKFLOWS);
+        initIndexType(WORKFLOW_DEF_TO_WORKFLOWS);
+        initIndexType(CORR_ID_TO_WORKFLOWS);
+        initIndexType(POLL_DATA);
+        initIndexType(EVENT_EXECUTION);
+    }
+
+    private void initIndexType(String name) {
+        indexes.put(name, toIndexName(name));
+        types.put(name, toTypeName(name));
+        ensureIndexExists(indexes.get(name), types.get(name));
     }
 
     @Override
@@ -85,7 +103,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             logger.debug("getPendingTasksByWorkflow: taskName={}, workflowId={}", taskName, workflowId);
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskName) + "*");
-        List<HashMap> wraps = findAll(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), query, HashMap.class);
+        List<HashMap> wraps = findAll(indexes.get(IN_PROGRESS_TASKS), types.get(IN_PROGRESS_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().filter(map -> workflowId.equals(map.get("workflowId")))
                 .map(map -> (String) map.get("taskId"))
                 .collect(Collectors.toSet());
@@ -202,9 +220,9 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             return true;
         }
 
-        String indexName = toIndexName(IN_PROGRESS_TASKS);
-        String typeName = toTypeName(IN_PROGRESS_TASKS);
-        QueryBuilder query = QueryBuilders.matchQuery("_id", toId(task.getTaskDefName()) + "*");
+        String indexName = indexes.get(IN_PROGRESS_TASKS);
+        String typeName = types.get(IN_PROGRESS_TASKS);
+        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(task.getTaskDefName()) + "*");
         List<HashMap> wraps = findAll(indexName, typeName, query, limit, HashMap.class);
         Set<String> ids = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         if (logger.isDebugEnabled())
@@ -266,7 +284,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             logger.debug("getTask: taskId={}", taskId);
         Preconditions.checkNotNull(taskId, "taskId name cannot be null");
 
-        Task task = findOne(toIndexName(TASK), toTypeName(TASK), toId(taskId), Task.class);
+        Task task = findOne(indexes.get(TASK), types.get(TASK), toId(taskId), Task.class);
 
         if (logger.isDebugEnabled())
             logger.debug("getTask: result={}", toJson(task));
@@ -281,7 +299,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         IdsQueryBuilder idsQuery = QueryBuilders.idsQuery();
         taskIds.forEach(id -> idsQuery.addIds(toId(id)));
 
-        List<Task> tasks = findAll(toIndexName(TASK), toTypeName(TASK), idsQuery, Task.class);
+        List<Task> tasks = findAll(indexes.get(TASK), types.get(TASK), idsQuery, Task.class);
 
         if (logger.isDebugEnabled())
             logger.debug("getTasks: result={}", toJson(tasks));
@@ -295,7 +313,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         Preconditions.checkNotNull(taskDefName, "task def name cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
-        List<HashMap> wraps = findAll(toIndexName(IN_PROGRESS_TASKS), toTypeName(IN_PROGRESS_TASKS), query, HashMap.class);
+        List<HashMap> wraps = findAll(indexes.get(IN_PROGRESS_TASKS), types.get(IN_PROGRESS_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
 
@@ -311,7 +329,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         Preconditions.checkNotNull(workflowId, "workflowId cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowId) + "*");
-        List<HashMap> wraps = findAll(toIndexName(WORKFLOW_TO_TASKS), toTypeName(WORKFLOW_TO_TASKS), query, HashMap.class);
+        List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TO_TASKS), types.get(WORKFLOW_TO_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
 
@@ -386,7 +404,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         if (logger.isDebugEnabled())
             logger.debug("getWorkflow: workflowId={}, includeTasks={}", workflowId, includeTasks);
 
-        Workflow workflow = findOne(toIndexName(WORKFLOW), toTypeName(WORKFLOW), toId(workflowId), Workflow.class);
+        Workflow workflow = findOne(indexes.get(WORKFLOW), types.get(WORKFLOW), toId(workflowId), Workflow.class);
         if (workflow != null) {
             if (includeTasks) {
                 List<Task> tasks = getTasksForWorkflow(workflowId);
@@ -421,7 +439,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
-        List<HashMap> wraps = findAll(toIndexName(PENDING_WORKFLOWS), toTypeName(PENDING_WORKFLOWS), query, HashMap.class);
+        List<HashMap> wraps = findAll(indexes.get(PENDING_WORKFLOWS), types.get(PENDING_WORKFLOWS), query, HashMap.class);
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId"))
                 .filter(Objects::nonNull).collect(Collectors.toSet());
 
@@ -450,7 +468,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         if (logger.isDebugEnabled())
             logger.debug("getPendingWorkflowCount: workflowName={}", workflowName);
 
-        String indexName = toIndexName(PENDING_WORKFLOWS);
+        String indexName = indexes.get(PENDING_WORKFLOWS);
         ensureIndexExists(indexName);
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
@@ -468,8 +486,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         if (logger.isDebugEnabled())
             logger.debug("getInProgressTaskCount: taskDefName={}", taskDefName);
 
-        String indexName = toIndexName(IN_PROGRESS_TASKS);
-        String typeName = toTypeName(IN_PROGRESS_TASKS);
+        String indexName = indexes.get(IN_PROGRESS_TASKS);
+        String typeName = types.get(IN_PROGRESS_TASKS);
         ensureIndexExists(indexName);
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
@@ -495,7 +513,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         List<String> dateStrs = dateStrBetweenDates(startTime, endTime);
         dateStrs.forEach(dateStr -> {
             QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName, dateStr) + "*");
-            List<HashMap> wraps = findAll(toIndexName(WORKFLOW_DEF_TO_WORKFLOWS), toTypeName(WORKFLOW_DEF_TO_WORKFLOWS), query, HashMap.class);
+            List<HashMap> wraps = findAll(indexes.get(WORKFLOW_DEF_TO_WORKFLOWS), types.get(WORKFLOW_DEF_TO_WORKFLOWS), query, HashMap.class);
             Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
             workflowIds.forEach(wfId -> {
                 try {
@@ -523,7 +541,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
         String sha256hex = DigestUtils.sha256Hex(correlationId);
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(sha256hex) + "*");
-        List<HashMap> wraps = findAll(toIndexName(CORR_ID_TO_WORKFLOWS), toTypeName(CORR_ID_TO_WORKFLOWS), query, HashMap.class);
+        List<HashMap> wraps = findAll(indexes.get(CORR_ID_TO_WORKFLOWS), types.get(CORR_ID_TO_WORKFLOWS), query, HashMap.class);
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
         List<Workflow> workflows = workflowIds.stream().map(this::getWorkflow).collect(Collectors.toList());
 
@@ -539,7 +557,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         try {
             String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
-            if (insert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee))) {
+            if (insert(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION), id, toMap(ee))) {
                 indexer.add(ee);
 
                 if (logger.isDebugEnabled())
@@ -564,7 +582,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         try {
             String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
-            upsert(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, toMap(ee));
+            upsert(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION), id, toMap(ee));
 
             indexer.add(ee);
             if (logger.isDebugEnabled())
@@ -585,7 +603,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             List<EventExecution> executions = Lists.newLinkedList();
             for (int i = 0; i < max; i++) {
                 String id = toId(eventHandlerName, eventName, messageId, messageId + "_" + i);
-                EventExecution ee = findOne(toIndexName(EVENT_EXECUTION), toTypeName(EVENT_EXECUTION), id, EventExecution.class);
+                EventExecution ee = findOne(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION), id, EventExecution.class);
                 if (ee == null) {
                     break;
                 }
@@ -621,7 +639,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String field = (domain == null) ? "DEFAULT" : domain;
         String id = toId(queueName, field);
 
-        upsert(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, toMap(pollData));
+        upsert(indexes.get(POLL_DATA), types.get(POLL_DATA), id, toMap(pollData));
 
         if (logger.isDebugEnabled())
             logger.debug("updateLastPoll: done");
@@ -637,7 +655,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String field = (domain == null) ? "DEFAULT" : domain;
         String id = toId(queueName, field);
 
-        PollData pollData = findOne(toIndexName(POLL_DATA), toTypeName(POLL_DATA), id, PollData.class);
+        PollData pollData = findOne(indexes.get(POLL_DATA), types.get(POLL_DATA), id, PollData.class);
 
         if (logger.isDebugEnabled())
             logger.debug("getPollData: result={}", toJson(pollData));
@@ -651,7 +669,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         Preconditions.checkNotNull(queueName, "queueName name cannot be null");
 
         QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(queueName) + "*");
-        List<PollData> pollData = findAll(toIndexName(POLL_DATA), toTypeName(POLL_DATA), query, PollData.class);
+        List<PollData> pollData = findAll(indexes.get(POLL_DATA), types.get(POLL_DATA), query, PollData.class);
 
         if (logger.isDebugEnabled())
             logger.debug("getPollData: result={}", toJson(pollData));
@@ -711,8 +729,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     }
 
     private void insertOrUpdateTask(Task task) {
-        String indexName = toIndexName(TASK);
-        String typeName = toTypeName(TASK);
+        String indexName = indexes.get(TASK);
+        String typeName = types.get(TASK);
         String id = toId(task.getTaskId());
         Map<String, ?> payload = toMap(task);
 
@@ -724,15 +742,15 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     }
 
     private void deleteTask(Task task) {
-        String indexName = toIndexName(TASK);
-        String typeName = toTypeName(TASK);
+        String indexName = indexes.get(TASK);
+        String typeName = types.get(TASK);
         String id = toId(task.getTaskId());
         delete(indexName, typeName, id);
     }
 
     private boolean addScheduledTask(Task task) {
-        String indexName = toIndexName(SCHEDULED_TASKS);
-        String typeName = toTypeName(SCHEDULED_TASKS);
+        String indexName = indexes.get(SCHEDULED_TASKS);
+        String typeName = types.get(SCHEDULED_TASKS);
         String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
         String id = toId(task.getWorkflowInstanceId(), taskKey); // Do not add taskId here!!!
 
@@ -748,16 +766,16 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     }
 
     private void deleteScheduledTask(Task task) {
-        String indexName = toIndexName(SCHEDULED_TASKS);
-        String typeName = toTypeName(SCHEDULED_TASKS);
+        String indexName = indexes.get(SCHEDULED_TASKS);
+        String typeName = types.get(SCHEDULED_TASKS);
         String taskKey = task.getReferenceTaskName() + String.valueOf(task.getRetryCount());
         String id = toId(task.getWorkflowInstanceId(), taskKey);
         delete(indexName, typeName, id);
     }
 
     private void addTaskToWorkflowMapping(Task task) {
-        String indexName = toIndexName(WORKFLOW_TO_TASKS);
-        String typeName = toTypeName(WORKFLOW_TO_TASKS);
+        String indexName = indexes.get(WORKFLOW_TO_TASKS);
+        String typeName = types.get(WORKFLOW_TO_TASKS);
         String id = toId(task.getWorkflowInstanceId(), task.getTaskId());
 
         Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
@@ -766,15 +784,15 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     }
 
     private void deleteTaskToWorkflowMapping(Task task) {
-        String indexName = toIndexName(WORKFLOW_TO_TASKS);
-        String typeName = toTypeName(WORKFLOW_TO_TASKS);
+        String indexName = indexes.get(WORKFLOW_TO_TASKS);
+        String typeName = types.get(WORKFLOW_TO_TASKS);
         String id = toId(task.getWorkflowInstanceId(), task.getTaskId());
         delete(indexName, typeName, id);
     }
 
     private void addTaskInProgress(Task task) {
-        String indexName = toIndexName(IN_PROGRESS_TASKS);
-        String typeName = toTypeName(IN_PROGRESS_TASKS);
+        String indexName = indexes.get(IN_PROGRESS_TASKS);
+        String typeName = types.get(IN_PROGRESS_TASKS);
         String id = toId(task.getTaskDefName(), task.getTaskId());
 
         Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
@@ -784,36 +802,36 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     }
 
     private void deleteTaskInProgress(Task task) {
-        String indexName = toIndexName(IN_PROGRESS_TASKS);
-        String typeName = toTypeName(IN_PROGRESS_TASKS);
+        String indexName = indexes.get(IN_PROGRESS_TASKS);
+        String typeName = types.get(IN_PROGRESS_TASKS);
         String id = toId(task.getTaskDefName(), task.getTaskId());
         delete(indexName, typeName, id);
     }
 
     private void addWorkflowInternal(Workflow workflow) {
-        String indexName = toIndexName(WORKFLOW);
-        String typeName = toTypeName(WORKFLOW);
+        String indexName = indexes.get(WORKFLOW);
+        String typeName = types.get(WORKFLOW);
         String id = toId(workflow.getWorkflowId());
         insert(indexName, typeName, id, toMap(workflow));
     }
 
     private void updateWorkflowInternal(Workflow workflow) {
-        String indexName = toIndexName(WORKFLOW);
-        String typeName = toTypeName(WORKFLOW);
+        String indexName = indexes.get(WORKFLOW);
+        String typeName = types.get(WORKFLOW);
         String id = toId(workflow.getWorkflowId());
         update(indexName, typeName, id, toMap(workflow));
     }
 
     private void deleteWorkflow(Workflow workflow) {
-        String indexName = toIndexName(WORKFLOW);
-        String typeName = toTypeName(WORKFLOW);
+        String indexName = indexes.get(WORKFLOW);
+        String typeName = types.get(WORKFLOW);
         String id = toId(workflow.getWorkflowId());
         delete(indexName, typeName, id);
     }
 
     private void addWorkflowDefToWorkflowMapping(Workflow workflow) {
-        String indexName = toIndexName(WORKFLOW_DEF_TO_WORKFLOWS);
-        String typeName = toTypeName(WORKFLOW_DEF_TO_WORKFLOWS);
+        String indexName = indexes.get(WORKFLOW_DEF_TO_WORKFLOWS);
+        String typeName = types.get(WORKFLOW_DEF_TO_WORKFLOWS);
         String id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
 
         Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
@@ -823,8 +841,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     }
 
     private void deleteWorkflowDefToWorkflowMapping(Workflow workflow) {
-        String indexName = toIndexName(WORKFLOW_DEF_TO_WORKFLOWS);
-        String typeName = toTypeName(WORKFLOW_DEF_TO_WORKFLOWS);
+        String indexName = indexes.get(WORKFLOW_DEF_TO_WORKFLOWS);
+        String typeName = types.get(WORKFLOW_DEF_TO_WORKFLOWS);
         String id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
         delete(indexName, typeName, id);
     }
@@ -834,8 +852,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             return;
         }
         String sha256hex = DigestUtils.sha256Hex(workflow.getCorrelationId());
-        String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
-        String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
+        String indexName = indexes.get(CORR_ID_TO_WORKFLOWS);
+        String typeName = types.get(CORR_ID_TO_WORKFLOWS);
         String id = toId(sha256hex, workflow.getWorkflowId());
 
         Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
@@ -848,15 +866,15 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             return;
         }
         String sha256hex = DigestUtils.sha256Hex(workflow.getCorrelationId());
-        String indexName = toIndexName(CORR_ID_TO_WORKFLOWS);
-        String typeName = toTypeName(CORR_ID_TO_WORKFLOWS);
+        String indexName = indexes.get(CORR_ID_TO_WORKFLOWS);
+        String typeName = types.get(CORR_ID_TO_WORKFLOWS);
         String id = toId(sha256hex, workflow.getWorkflowId());
         delete(indexName, typeName, id);
     }
 
     private void addPendingWorkflow(Workflow workflow) {
-        String indexName = toIndexName(PENDING_WORKFLOWS);
-        String typeName = toTypeName(PENDING_WORKFLOWS);
+        String indexName = indexes.get(PENDING_WORKFLOWS);
+        String typeName = types.get(PENDING_WORKFLOWS);
         String id = toId(workflow.getWorkflowType(), workflow.getWorkflowId());
 
         Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
@@ -865,8 +883,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     }
 
     private void deletePendingWorkflow(String workflowType, String workflowId) {
-        String indexName = toIndexName(PENDING_WORKFLOWS);
-        String typeName = toTypeName(PENDING_WORKFLOWS);
+        String indexName = indexes.get(PENDING_WORKFLOWS);
+        String typeName = types.get(PENDING_WORKFLOWS);
         String id = toId(workflowType, workflowId);
         delete(indexName, typeName, id);
     }
