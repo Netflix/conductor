@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.es6rest;
+package com.netflix.conductor.dao.es6rest.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -41,8 +41,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Oleksiy Lysak
  */
-class ElasticSearch6RestBaseDAO {
-    private static final Logger logger = LoggerFactory.getLogger(ElasticSearch6RestBaseDAO.class);
+abstract class Elasticsearch6RestAbstractDAO {
+    private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestAbstractDAO.class);
     private final static String NAMESPACE_SEP = ".";
     private final static String DEFAULT = "_default_";
     private final static int BATCH_SIE = 1_000;
@@ -53,7 +53,7 @@ class ElasticSearch6RestBaseDAO {
     private String prefix;
     private String stack;
 
-    ElasticSearch6RestBaseDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper, String context) {
+    Elasticsearch6RestAbstractDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper, String context) {
         this.client = client;
         this.mapper = mapper;
         this.context = context;
@@ -156,7 +156,11 @@ class ElasticSearch6RestBaseDAO {
         }
     }
 
-    void ensureIndexExists(String indexName, String typeName, String ... suffix) {
+    void ensureIndexExists(String indexName, String typeName) {
+        ensureIndexExists(indexName, typeName, null);
+    }
+
+    void ensureIndexExists(String indexName, String typeName, String suffix) {
         if (indexCache.contains(indexName)) {
             return;
         }
@@ -170,10 +174,10 @@ class ElasticSearch6RestBaseDAO {
             }
 
             String resourceName = null;
-            if (suffix.length > 0) {
-                resourceName = "/" + context + "_" + suffix[0] + ".json";
+            if (StringUtils.isNotEmpty(suffix)) {
+                resourceName = "/es6" + context + "_" + suffix + ".json";
             } else {
-                resourceName = "/" + context + "_" + typeName + ".json";
+                resourceName = "/es6" + context + "_" + typeName + ".json";
             }
 
             InputStream stream = getClass().getResourceAsStream(resourceName);

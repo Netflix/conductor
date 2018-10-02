@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.es6rest;
+package com.netflix.conductor.dao.es6rest.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -41,8 +41,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch6RestQueueDAO extends ElasticSearch6RestBaseDAO implements QueueDAO {
-	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch6RestQueueDAO.class);
+public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO implements QueueDAO {
+	private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestQueueDAO.class);
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final int unackScheduleInMS = 60_000;
 	private static final int unackTime = 60_000;
@@ -51,7 +51,7 @@ public class ElasticSearch6RestQueueDAO extends ElasticSearch6RestBaseDAO implem
 	private String baseName;
 
 	@Inject
-	public ElasticSearch6RestQueueDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
+	public Elasticsearch6RestQueueDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
 		super(client, config, mapper, "queues");
 		this.baseName = toIndexName();
 		this.stalePeriod = config.getIntProperty("workflow.elasticsearch.stale.period.seconds", 60) * 1000;

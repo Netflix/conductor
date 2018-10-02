@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.netflix.conductor.dao.es6rest;
+package com.netflix.conductor.dao.es6rest.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -49,8 +49,8 @@ import java.util.stream.Collectors;
 /**
  * @author Oleksiy Lysak
  */
-public class ElasticSearch6RestExecutionDAO extends ElasticSearch6RestBaseDAO implements ExecutionDAO {
-	private static final Logger logger = LoggerFactory.getLogger(ElasticSearch6RestExecutionDAO.class);
+public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDAO implements ExecutionDAO {
+	private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestExecutionDAO.class);
 	private static final String ARCHIVED_FIELD = "archived";
 	private static final String RAW_JSON_FIELD = "rawJSON";
 	// Keys Families
@@ -69,7 +69,7 @@ public class ElasticSearch6RestExecutionDAO extends ElasticSearch6RestBaseDAO im
 	private IndexDAO indexer;
 
 	@Inject
-	public ElasticSearch6RestExecutionDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper, IndexDAO indexer, MetadataDAO metadata) {
+	public Elasticsearch6RestExecutionDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper, IndexDAO indexer, MetadataDAO metadata) {
 		super(client, config, mapper, "runtime");
 		this.indexer = indexer;
 		this.metadata = metadata;

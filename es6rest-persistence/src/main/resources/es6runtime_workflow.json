@@ -16,26 +16,22 @@
       "tasks": {
         "type": "object",
         "enabled": false,
-        "dynamic": false,
-        "include_in_all": false
+        "dynamic": false
       },
       "input": {
         "type": "object",
         "enabled": false,
-        "dynamic": false,
-        "include_in_all": false
+        "dynamic": false
       },
       "output": {
         "type": "object",
         "enabled": false,
-        "dynamic": false,
-        "include_in_all": false
+        "dynamic": false
       },
       "taskToDomain": {
         "type": "object",
         "enabled": false,
-        "dynamic": false,
-        "include_in_all": false
+        "dynamic": false
       },
       "reasonForIncompletion": {
         "type": "text"

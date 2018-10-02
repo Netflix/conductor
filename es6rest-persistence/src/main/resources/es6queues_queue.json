@@ -12,8 +12,7 @@
       },
       "payload": {
         "type": "text",
-        "index": "not_analyzed",
-        "include_in_all": false
+        "index": false
       }
     }
   }

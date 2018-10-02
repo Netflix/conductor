@@ -13,8 +13,7 @@
       "outputParameters": {
         "type": "object",
         "enabled": false,
-        "dynamic": false,
-        "include_in_all": false
+        "dynamic": false
       },
       "schemaVersion": {
         "type": "long"
@@ -22,8 +21,7 @@
       "tasks": {
         "type": "object",
         "enabled": false,
-        "dynamic": false,
-        "include_in_all": false
+        "dynamic": false
       },
       "version": {
         "type": "long"

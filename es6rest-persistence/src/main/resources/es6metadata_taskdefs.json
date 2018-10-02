@@ -31,8 +31,7 @@
       "inputTemplate": {
         "type": "object",
         "enabled": false,
-        "dynamic": false,
-        "include_in_all": false
+        "dynamic": false
       }
     }
   }

@@ -12,20 +12,17 @@
           "start_workflow": {
             "type": "object",
             "enabled": false,
-            "dynamic": false,
-            "include_in_all": false
+            "dynamic": false
           },
           "complete_task": {
             "type": "object",
             "enabled": false,
-            "dynamic": false,
-            "include_in_all": false
+            "dynamic": false
           },
           "fail_task": {
             "type": "object",
             "enabled": false,
-            "dynamic": false,
-            "include_in_all": false
+            "dynamic": false
           }
         }
       },

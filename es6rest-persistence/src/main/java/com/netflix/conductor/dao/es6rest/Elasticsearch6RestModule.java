@@ -9,11 +9,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Singleton;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class Elasticsearch6RestModule extends AbstractModule {
@@ -29,14 +33,16 @@ public class Elasticsearch6RestModule extends AbstractModule {
         }
 
         // Must be in format http://host:port or https://host
-        String url = config.getProperty("workflow.elasticsearch.url", "");
-        if (StringUtils.isEmpty(url)) {
+        String clusterAddress = config.getProperty("workflow.elasticsearch.url", "");
+        if (StringUtils.isEmpty(clusterAddress)) {
             throw new RuntimeException("No `workflow.elasticsearch.url` environment defined. Exiting");
         }
 
-        HttpHost httpHost = HttpHost.create(url);
-        RestClientBuilder builder = RestClient.builder(httpHost);
+        HttpHost[] hosts = Arrays.stream(clusterAddress.split(","))
+                .map(HttpHost::create)
+                .toArray(HttpHost[]::new);
 
+        RestClientBuilder builder = RestClient.builder(hosts);
         RestHighLevelClient client = new RestHighLevelClient(builder);
 
         int connectAttempts = config.getIntProperty("workflow.elasticsearch.connection.attempts", 60);
