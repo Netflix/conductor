@@ -78,23 +78,27 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         this.indexer = indexer;
         this.metadata = metadata;
 
-        // static indexes
-        initIndexType(IN_PROGRESS_TASKS);
-        initIndexType(WORKFLOW_TO_TASKS);
-        initIndexType(SCHEDULED_TASKS);
-        initIndexType(TASK);
-        initIndexType(WORKFLOW);
-        initIndexType(PENDING_WORKFLOWS);
-        initIndexType(WORKFLOW_DEF_TO_WORKFLOWS);
-        initIndexType(CORR_ID_TO_WORKFLOWS);
-        initIndexType(POLL_DATA);
-        initIndexType(EVENT_EXECUTION);
+        // Rest of static indexes
+        initIndexTypeNames(IN_PROGRESS_TASKS);
+        initIndexTypeNames(WORKFLOW_TO_TASKS);
+        initIndexTypeNames(SCHEDULED_TASKS);
+        initIndexTypeNames(TASK);
+        initIndexTypeNames(WORKFLOW);
+        initIndexTypeNames(PENDING_WORKFLOWS);
+        initIndexTypeNames(WORKFLOW_DEF_TO_WORKFLOWS);
+        initIndexTypeNames(CORR_ID_TO_WORKFLOWS);
+        initIndexTypeNames(POLL_DATA);
+        initIndexTypeNames(EVENT_EXECUTION);
+
+        // Explicitly init these indexes as they are using `es6runtime_***.json` resource file
+        ensureIndexExists(indexes.get(TASK), types.get(TASK));
+        ensureIndexExists(indexes.get(WORKFLOW), types.get(WORKFLOW));
+        ensureIndexExists(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION));
     }
 
-    private void initIndexType(String name) {
+    private void initIndexTypeNames(String name) {
         indexes.put(name, toIndexName(name));
         types.put(name, toTypeName(name));
-        ensureIndexExists(indexes.get(name), types.get(name));
     }
 
     @Override
@@ -102,7 +106,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         if (logger.isDebugEnabled())
             logger.debug("getPendingTasksByWorkflow: taskName={}, workflowId={}", taskName, workflowId);
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskName) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("taskDefName", taskName);
         List<HashMap> wraps = findAll(indexes.get(IN_PROGRESS_TASKS), types.get(IN_PROGRESS_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().filter(map -> workflowId.equals(map.get("workflowId")))
                 .map(map -> (String) map.get("taskId"))
@@ -222,7 +226,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
         String indexName = indexes.get(IN_PROGRESS_TASKS);
         String typeName = types.get(IN_PROGRESS_TASKS);
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(task.getTaskDefName()) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("taskDefName", task.getTaskDefName());
         List<HashMap> wraps = findAll(indexName, typeName, query, limit, HashMap.class);
         Set<String> ids = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         if (logger.isDebugEnabled())
@@ -312,7 +316,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             logger.debug("getPendingTasksForTaskType: taskDefName={}", taskDefName);
         Preconditions.checkNotNull(taskDefName, "task def name cannot be null");
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("taskDefName", taskDefName);
         List<HashMap> wraps = findAll(indexes.get(IN_PROGRESS_TASKS), types.get(IN_PROGRESS_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
@@ -328,7 +332,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             logger.debug("getTasksForWorkflow: workflowId={}", workflowId);
         Preconditions.checkNotNull(workflowId, "workflowId cannot be null");
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowId) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("workflowId", workflowId);
         List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TO_TASKS), types.get(WORKFLOW_TO_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
@@ -438,7 +442,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             logger.debug("getRunningWorkflowIds: workflowName={}", workflowName);
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("workflowType", workflowName);
         List<HashMap> wraps = findAll(indexes.get(PENDING_WORKFLOWS), types.get(PENDING_WORKFLOWS), query, HashMap.class);
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId"))
                 .filter(Objects::nonNull).collect(Collectors.toSet());
@@ -471,7 +475,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String indexName = indexes.get(PENDING_WORKFLOWS);
         ensureIndexExists(indexName);
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("workflowType", workflowName);
 
         long result = getCount(indexName, null, query);
 
@@ -490,7 +494,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String typeName = types.get(IN_PROGRESS_TASKS);
         ensureIndexExists(indexName);
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(taskDefName) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("taskDefName", taskDefName);
 
         long result = getCount(indexName, typeName, query);
 
@@ -512,7 +516,14 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
         List<String> dateStrs = dateStrBetweenDates(startTime, endTime);
         dateStrs.forEach(dateStr -> {
-            QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(workflowName, dateStr) + "*");
+            QueryBuilder query1 = QueryBuilders
+                    .matchQuery ("workflowType", workflowName);
+
+            QueryBuilder query2 = QueryBuilders
+                    .matchQuery ("dateStr", dateStr);
+
+            QueryBuilder query = QueryBuilders.boolQuery().must(query1).must(query2);
+
             List<HashMap> wraps = findAll(indexes.get(WORKFLOW_DEF_TO_WORKFLOWS), types.get(WORKFLOW_DEF_TO_WORKFLOWS), query, HashMap.class);
             Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
             workflowIds.forEach(wfId -> {
@@ -540,7 +551,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         Preconditions.checkNotNull(correlationId, "correlationId cannot be null");
 
         String sha256hex = DigestUtils.sha256Hex(correlationId);
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(sha256hex) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("sha256hex", sha256hex); // TODO Do not forget about data migration
         List<HashMap> wraps = findAll(indexes.get(CORR_ID_TO_WORKFLOWS), types.get(CORR_ID_TO_WORKFLOWS), query, HashMap.class);
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
         List<Workflow> workflows = workflowIds.stream().map(this::getWorkflow).collect(Collectors.toList());
@@ -668,7 +679,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
             logger.debug("getPollData: queueName={}", queueName);
         Preconditions.checkNotNull(queueName, "queueName name cannot be null");
 
-        QueryBuilder query = QueryBuilders.wildcardQuery("_id", toId(queueName) + "*");
+        QueryBuilder query = QueryBuilders.matchQuery("queueName", queueName);
         List<PollData> pollData = findAll(indexes.get(POLL_DATA), types.get(POLL_DATA), query, PollData.class);
 
         if (logger.isDebugEnabled())
@@ -857,7 +868,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String id = toId(sha256hex, workflow.getWorkflowId());
 
         Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
-                "correlationId", workflow.getCorrelationId());
+                "correlationId", workflow.getCorrelationId(),
+                "sha256hex", sha256hex);
         insert(indexName, typeName, id, payload);
     }
 
