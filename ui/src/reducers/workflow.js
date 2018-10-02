@@ -7,10 +7,12 @@ const initialState = {
   refetch: false,
   terminating: false,
   restarting: false,
+  starting: false,
   retrying: false,
   terminated: {},
   data: [],
-  hash: ''
+  hash: '',
+  res: null,
 };
 
 export default function workflows(state = initialState, action) {
@@ -74,6 +76,12 @@ export default function workflows(state = initialState, action) {
         fetching: true,
         restarting: true
       };
+    case 'REQUESTED_START_WORKFLOW':
+      return {
+        ...state,
+        fetching: true,
+        starting: true
+      }; 
     case 'REQUESTED_RETRY_WORKFLOW':
       return {
         ...state,
@@ -103,6 +111,16 @@ export default function workflows(state = initialState, action) {
         fetching: false,
         restarting: false,
         refetch: true
+      };
+    case 'RECEIVED_START_WORKFLOW':
+      return {
+        ...state,
+        error: false,
+        data:[],
+        fetching: false,
+        starting: false,
+        refetch: true,
+        res: action.data
       };
     case 'RECEIVED_RETRY_WORKFLOW':
       return {
@@ -147,6 +165,7 @@ export default function workflows(state = initialState, action) {
     case 'RECEIVED_LIST_WORKFLOWS':
       return {
         ...state,
+        res: null,
         workflows: action.workflows.result,
         error: false,
         fetching: false,

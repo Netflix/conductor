@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { getWorkflowMetaDetails } from '../../actions/WorkflowActions';
 import WorkflowMetaDia from './WorkflowMetaDia';
 import WorkflowMetaInput from './WorkflowMetaInput';
+import { getInputs, getDetails } from '../../actions/JSONActions';
 
 class WorkflowMetaDetails extends Component {
 
@@ -13,9 +14,11 @@ class WorkflowMetaDetails extends Component {
       name : props.params.name,
       version : props.params.version,
       workflowMeta: {tasks: []},
-      inputsArray: [],
-      desc: [],
-      value: []
+      workflowForm: {
+          labels: [],
+          descs: [],
+          values: []
+      }
     };
   }
 
@@ -23,89 +26,20 @@ class WorkflowMetaDetails extends Component {
     this.state.name = nextProps.params.name;
     this.state.version = nextProps.params.version;
     this.state.workflowMeta = nextProps.meta;
-    this.updateState();
+    this.getWorkflowInputDetails();
   }
 
   componentWillMount(){
     this.props.dispatch(getWorkflowMetaDetails(this.state.name, this.state.version)); 
   }
 
-  getDetails() {
-
-    var inputsArray = this.state.inputsArray;
-    var json = JSON.stringify(this.state.workflowMeta, null, 2);
-    var detailsArray = [];
-    var tmpDesc = [];
-    var tmpValue = [];
-    var desc = [];
-    var value = [];
-    var regex1 = /\[.*?\[/;
-    var regex2 = /\].*?\]/;
-    var regex3 = /[^[\]"]+/;
-    var regex4 = /\[(.*?)\]/;
-
-    if (inputsArray[0] != "") {
-      for (let i = 0; i < inputsArray.length; i++) {
-        var RegExp3 = new RegExp("\\b" + inputsArray[i] + "\\[.*?\\" + "\]" + "\"", 'igm');
-        detailsArray[i] = json.match(RegExp3);
+  getWorkflowInputDetails(){
+    this.setState({
+      workflowForm: {
+        labels: getInputs(this.state.workflowMeta),
+        ...getDetails(this.state.workflowMeta, this.state.workflowForm.labels)
       }
-    }
-
-    for (let i = 0; i < detailsArray.length; i++) {
-      if (detailsArray[i]) {
-
-        tmpDesc[i] = detailsArray[i][0].match(regex1);
-        tmpValue[i] = detailsArray[i][0].match(regex2);
-
-        if (tmpDesc[i] == null) {
-          tmpDesc[i] = detailsArray[i][0].match(regex4);
-          
-          desc[i] = tmpDesc[i][1];
-          value[i] = null;
-
-        } else {
-          tmpDesc[i] = tmpDesc[i][0].match(regex3);
-          tmpValue[i] = tmpValue[i][0].match(regex3);
-
-          desc[i] = tmpDesc[i][0];
-          value[i] = tmpValue[i][0];
-        }
-
-      } else {
-        desc[i] = null;
-        value[i] = null;
-      }
-    }
-
-    this.state.desc = desc;
-    this.state.value = value;
-
-    }
-
-  getInputs() {
-
-    var matchArray = [];
-    var rgxInput = /\workflow.input([\w.])+\}/igm
-    var rgxTrim = /[^\.]+(?=\})/igm
-
-    if (this.state.workflowMeta) {
-      var json = JSON.stringify(this.state.workflowMeta, null, 2);
-      matchArray = json.match(rgxInput);
-    }
-    if (matchArray) {
-      var matchString = matchArray.join();
-      var sortedArray = matchString.match(rgxTrim);
-      var inputsArray = _.uniq(sortedArray);
-      this.state.inputsArray = inputsArray;
-    } else {
-      this.state.inputsArray = [];
-    }
-
-  }
-
-  updateState() {
-    this.getInputs();
-    this.getDetails();
+    });
   }
 
   render() {
@@ -126,7 +60,7 @@ class WorkflowMetaDetails extends Component {
           </pre></div>
           </Tab>
           <Tab eventKey={3} title="Input">
-          <div><WorkflowMetaInput meta={this.state}/></div>
+          <div><WorkflowMetaInput workflowForm={this.state.workflowForm} name={this.state.name}/></div>
           </Tab>
         </Tabs>
 

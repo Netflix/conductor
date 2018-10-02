@@ -178,8 +178,8 @@ router.post('/restart/:workflowId', async (req, res, next) => {
 //CronJobs requests
 router.post('/workflow/:workflowName', async (req, res, next) => {
   if (!req.body.cronExp) {
-    http.post(baseURL2 + req.params.workflowName, JSON.stringify(req.body.json));
-    res.status(200).send("Workflow executed successully!");
+    const result = await http.post(baseURL2 + req.params.workflowName, JSON.stringify(req.body.json));
+    res.status(200).send(result);
   } else {
     let name = req.params.workflowName;
     let desc = req.body.cronDesc;
@@ -196,7 +196,7 @@ router.post('/workflow/:workflowName', async (req, res, next) => {
       ...job
     };
     cronJobs.push(jobData);
-    res.status(200).send("Workflow job ID: " + id + " scheduled successfuly!");
+    res.status(200).send("Workflow successfully scheduled.");
   }
 });
 

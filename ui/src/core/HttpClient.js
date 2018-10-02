@@ -41,8 +41,8 @@ const HttpClient = {
           console.error('Error on post! ' + res);
           reject(err);
         } else {
-          if(res.body){
-            resolve(res.body);
+          if(res){
+            resolve(res);
           }else{
             resolve(res);
           }

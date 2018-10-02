@@ -105,18 +105,19 @@ export function restartWorfklow(workflowId){
   }
 }
 
-/*export function startWorfklow(workflowName){
+export function startWorkflow(workflowName, data){
   return function (dispatch) {
     dispatch({
-      type: 'REQUESTED_RESTART_WORKFLOW',
-      workflowId
+      type: 'REQUESTED_START_WORKFLOW',
+      workflowName,
+      data
     });
 
 
-    return http.post('/api/workflow/' + workflowName).then((data) => {
+    return http.post('/api/wfe/workflow/' + workflowName, data).then((data) => {
       dispatch({
-        type: 'RECEIVED_RESTART_WORKFLOW',
-        workflowId
+        type: 'RECEIVED_START_WORKFLOW',
+        data: data
       });
     }).catch((e) => {
       dispatch({
@@ -125,7 +126,7 @@ export function restartWorfklow(workflowId){
       });
     });
   }
-}*/
+}
 
 export function retryWorfklow(workflowId){
   return function (dispatch) {
