@@ -119,8 +119,8 @@ const WorkflowScheduleList = React.createClass({
       <div className="ui-content">
         <h1>Scheduled Workflows</h1>
         <BootstrapTable ref="table" data={cronJobs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
-          <TableHeaderColumn dataField="name">Name</TableHeaderColumn>
-          <TableHeaderColumn dataField="id" isKey={true}>ID</TableHeaderColumn>
+          <TableHeaderColumn dataField="name">Workflow</TableHeaderColumn>
+          <TableHeaderColumn dataField="id" isKey={true}>Workflow ID</TableHeaderColumn>
           <TableHeaderColumn dataField="cronTime">Cron Time</TableHeaderColumn>
           <TableHeaderColumn dataField="desc" >Description</TableHeaderColumn>
           <TableHeaderColumn dataField="context" dataFormat={executionMaker}>Last Execution</TableHeaderColumn>
