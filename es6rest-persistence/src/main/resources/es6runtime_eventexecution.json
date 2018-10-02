@@ -14,10 +14,10 @@
         "type": "text"
       },
       "messageId": {
-        "type": "text"
+        "type": "keyword"
       },
       "name": {
-        "type": "text"
+        "type": "keyword"
       },
       "output": {
         "type": "object",
@@ -25,7 +25,7 @@
         "dynamic": false
       },
       "status": {
-        "type": "text"
+        "type": "keyword"
       }
     }
   }

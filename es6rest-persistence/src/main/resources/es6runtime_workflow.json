@@ -43,7 +43,7 @@
         "type": "long"
       },
       "status": {
-        "type": "text"
+        "type": "keyword"
       },
       "updateTime": {
         "type": "long"
@@ -52,19 +52,19 @@
         "type": "long"
       },
       "workflowId": {
-        "type": "text"
+        "type": "keyword"
       },
       "workflowType": {
-        "type": "text"
+        "type": "keyword"
       },
       "parentWorkflowId": {
-        "type": "text"
+        "type": "keyword"
       },
       "parentWorkflowTaskId": {
-        "type": "text"
+        "type": "keyword"
       },
       "reRunFromWorkflowId": {
-        "type": "text"
+        "type": "keyword"
       }
     }
   }

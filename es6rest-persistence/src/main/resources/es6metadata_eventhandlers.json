@@ -36,7 +36,7 @@
         "type": "text"
       },
       "name": {
-        "type": "text"
+        "type": "keyword"
       }
     }
   }

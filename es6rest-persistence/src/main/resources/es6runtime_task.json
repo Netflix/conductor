@@ -33,7 +33,7 @@
         "type": "text"
       },
       "referenceTaskName": {
-        "type": "text"
+        "type": "keyword"
       },
       "responseTimeoutSeconds": {
         "type": "long"
@@ -57,19 +57,19 @@
         "type": "long"
       },
       "status": {
-        "type": "text"
+        "type": "keyword"
       },
       "taskDefName": {
-        "type": "text"
+        "type": "keyword"
       },
       "taskId": {
-        "type": "text"
+        "type": "keyword"
       },
       "taskStatus": {
-        "type": "text"
+        "type": "keyword"
       },
       "taskType": {
-        "type": "text"
+        "type": "keyword"
       },
       "updateTime": {
         "type": "long"
@@ -78,7 +78,7 @@
         "type": "text"
       },
       "workflowInstanceId": {
-        "type": "text"
+        "type": "keyword"
       },
       "workflowTask": {
         "type": "object",
@@ -86,7 +86,7 @@
         "dynamic": false
       },
       "retriedTaskId": {
-        "type": "text"
+        "type": "keyword"
       },
       "domain": {
         "type": "text"

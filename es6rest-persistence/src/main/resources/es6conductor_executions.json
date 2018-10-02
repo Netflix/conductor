@@ -70,7 +70,7 @@
         "index": false
       },
       "reasonForIncompletion": {
-        "type": "keyword"
+        "type": "text"
       },
       "startTime": {
         "type": "date"
