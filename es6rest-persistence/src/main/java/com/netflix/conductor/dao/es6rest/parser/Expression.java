@@ -27,7 +27,6 @@ import java.io.InputStream;
 
 /**
  * @author Viren
- *
  */
 public class Expression extends AbstractNode implements FilterProvider {
 

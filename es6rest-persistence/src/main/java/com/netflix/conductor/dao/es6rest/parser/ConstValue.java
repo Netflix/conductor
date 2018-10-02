@@ -30,7 +30,6 @@ import java.io.InputStream;
  * <li>A value (x)
  * <li>A value is either a string or a number
  * </ol>
- *
  */
 public class ConstValue extends AbstractNode {
 
@@ -79,6 +78,7 @@ public class ConstValue extends AbstractNode {
 
     /**
      * Reads an escaped string
+     *
      * @throws Exception
      */
     private String readString(InputStream is) throws Exception {

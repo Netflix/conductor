@@ -24,7 +24,6 @@ import java.io.InputStream;
 
 /**
  * @author Viren
- *
  */
 public class GroupedExpression extends AbstractNode implements FilterProvider {
 

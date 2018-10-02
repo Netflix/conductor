@@ -20,7 +20,6 @@ package com.netflix.conductor.dao.es6rest.parser;
 
 /**
  * @author Viren
- *
  */
 @FunctionalInterface
 public interface FunctionThrowingException<T> {

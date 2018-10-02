@@ -68,7 +68,7 @@ import static com.netflix.conductor.dao.es6rest.dao.Elasticsearch6RestAbstractDA
 @Trace
 @Singleton
 public class Elasticsearch6RestIndexDAO implements IndexDAO {
-    private static Logger log = LoggerFactory.getLogger(Elasticsearch6RestIndexDAO.class);
+    private static final Logger log = LoggerFactory.getLogger(Elasticsearch6RestIndexDAO.class);
     private static final String className = Elasticsearch6RestIndexDAO.class.getSimpleName();
     private static final String WORKFLOW_DOC_TYPE = "workflow";
     private static final String TASK_DOC_TYPE = "task";
@@ -77,6 +77,13 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     private static final String MSG_DOC_TYPE = "message";
     private static final String RESOURCE_TASK_LOG = "/es6conductor_task_log.json";
     private static final String RESOURCE_EXECUTIONS = "/es6conductor_executions.json";
+    private static final TimeZone gmt = TimeZone.getTimeZone("GMT");
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMww");
+
+    static {
+        sdf.setTimeZone(gmt);
+    }
+
     private RestHighLevelClient client;
     private String execWorkflowIndexName;
     private String execTaskIndexName;
@@ -85,13 +92,6 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     private String logTaskIndexName;
     private String logIndexPrefix;
     private ObjectMapper om;
-
-    private static final TimeZone gmt = TimeZone.getTimeZone("GMT");
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMww");
-
-    static {
-        sdf.setTimeZone(gmt);
-    }
 
     @Inject
     public Elasticsearch6RestIndexDAO(RestHighLevelClient client, Configuration config, ObjectMapper om) {
@@ -137,7 +137,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
             });
 
             CreateIndexRequest createIndexRequest = new CreateIndexRequest(name, settings)
-                    .mapping(type, (Map)mapping.get(type));
+                    .mapping(type, (Map) mapping.get(type));
 
             client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
         } catch (Exception ex) {

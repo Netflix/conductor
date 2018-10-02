@@ -22,12 +22,10 @@ import org.elasticsearch.index.query.QueryBuilder;
 
 /**
  * @author Viren
- *
  */
 public interface FilterProvider {
 
     /**
-     *
      * @return FilterBuilder for elasticsearch
      */
     public QueryBuilder getFilterBuilder();

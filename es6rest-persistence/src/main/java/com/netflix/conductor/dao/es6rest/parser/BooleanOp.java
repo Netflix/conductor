@@ -22,7 +22,6 @@ import java.io.InputStream;
 
 /**
  * @author Viren
- *
  */
 public class BooleanOp extends AbstractNode {
 

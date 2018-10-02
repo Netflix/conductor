@@ -22,7 +22,7 @@ import java.io.InputStream;
 
 /**
  * @author Viren
- * Represents the name of the field to be searched against.  
+ * Represents the name of the field to be searched against.
  */
 public class Name extends AbstractNode {
 

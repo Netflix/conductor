@@ -42,63 +42,63 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Oleksiy Lysak
  */
 public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO implements QueueDAO {
-	private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestQueueDAO.class);
-	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
-	private static final int unackScheduleInMS = 60_000;
-	private static final int unackTime = 60_000;
-	private static final String QUEUE = "queue";
-	private final int stalePeriod;
-	private String baseName;
+    private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestQueueDAO.class);
+    private static final Set<String> queues = ConcurrentHashMap.newKeySet();
+    private static final int unackScheduleInMS = 60_000;
+    private static final int unackTime = 60_000;
+    private static final String QUEUE = "queue";
+    private final int stalePeriod;
+    private String baseName;
 
-	@Inject
-	public Elasticsearch6RestQueueDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
-		super(client, config, mapper, "queues");
-		this.baseName = toIndexName();
-		this.stalePeriod = config.getIntProperty("workflow.elasticsearch.stale.period.seconds", 60) * 1000;
+    @Inject
+    public Elasticsearch6RestQueueDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
+        super(client, config, mapper, "queues");
+        this.baseName = toIndexName();
+        this.stalePeriod = config.getIntProperty("workflow.elasticsearch.stale.period.seconds", 60) * 1000;
 
-		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::processUnacks, unackScheduleInMS, unackScheduleInMS, TimeUnit.MILLISECONDS);
-	}
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::processUnacks, unackScheduleInMS, unackScheduleInMS, TimeUnit.MILLISECONDS);
+    }
 
-	@Override
-	public void push(String queueName, String id, long offsetTimeInSecond) {
-		if (logger.isDebugEnabled())
-			logger.debug("push: {}/{}/{}", queueName, id, offsetTimeInSecond);
-		initQueue(queueName);
-		try {
-			pushMessage(queueName, id, null, offsetTimeInSecond);
-		} catch (Exception ex) {
-			logger.error("push: failed for {}/{}/{} with {}", queueName, id, offsetTimeInSecond, ex.getMessage(), ex);
-		}
-	}
+    @Override
+    public void push(String queueName, String id, long offsetTimeInSecond) {
+        if (logger.isDebugEnabled())
+            logger.debug("push: {}/{}/{}", queueName, id, offsetTimeInSecond);
+        initQueue(queueName);
+        try {
+            pushMessage(queueName, id, null, offsetTimeInSecond);
+        } catch (Exception ex) {
+            logger.error("push: failed for {}/{}/{} with {}", queueName, id, offsetTimeInSecond, ex.getMessage(), ex);
+        }
+    }
 
-	@Override
-	public void push(String queueName, List<Message> messages) {
-		if (logger.isDebugEnabled())
-			logger.debug("push: {}/{}", queueName, toJson(messages));
-		initQueue(queueName);
-		try {
-			messages.forEach(message -> pushMessage(queueName, message.getId(), message.getPayload(), 0));
-		} catch (Exception ex) {
-			logger.error("push: failed for {}/{} with {}", queueName, toJson(messages), ex.getMessage(), ex);
-		}
-	}
+    @Override
+    public void push(String queueName, List<Message> messages) {
+        if (logger.isDebugEnabled())
+            logger.debug("push: {}/{}", queueName, toJson(messages));
+        initQueue(queueName);
+        try {
+            messages.forEach(message -> pushMessage(queueName, message.getId(), message.getPayload(), 0));
+        } catch (Exception ex) {
+            logger.error("push: failed for {}/{} with {}", queueName, toJson(messages), ex.getMessage(), ex);
+        }
+    }
 
-	@Override
-	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
-		if (logger.isDebugEnabled())
-			logger.debug("pushIfNotExists: {}/{}/{}", queueName, id, offsetTimeInSecond);
-		initQueue(queueName);
-		try {
-			return pushMessage(queueName, id, null, offsetTimeInSecond);
-		} catch (Exception ex) {
-			logger.error("pushIfNotExists: failed for {}/{}/{} with {}", queueName, id, offsetTimeInSecond, ex.getMessage(), ex);
-			return false;
-		}
-	}
+    @Override
+    public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
+        if (logger.isDebugEnabled())
+            logger.debug("pushIfNotExists: {}/{}/{}", queueName, id, offsetTimeInSecond);
+        initQueue(queueName);
+        try {
+            return pushMessage(queueName, id, null, offsetTimeInSecond);
+        } catch (Exception ex) {
+            logger.error("pushIfNotExists: failed for {}/{}/{} with {}", queueName, id, offsetTimeInSecond, ex.getMessage(), ex);
+            return false;
+        }
+    }
 
-	@Override
-	public List<String> pop(String queueName, int count, int timeout) {
-		initQueue(queueName);
+    @Override
+    public List<String> pop(String queueName, int count, int timeout) {
+        initQueue(queueName);
         long session = System.nanoTime();
         if (logger.isDebugEnabled())
             logger.debug("pop ({}): {}/{}/{}", session, queueName, count, timeout);
@@ -184,45 +184,45 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             logger.error("pop ({}): failed for {} with {}", session, queueName, ex.getMessage(), ex);
         }
         return Collections.emptyList();
-	}
+    }
 
-	/**
-	 * Used by 'conductor' event type subscription. Should lock and read
-	 */
-	@Override
-	public List<Message> pollMessages(String queueName, int count, int timeout) {
-		if (logger.isDebugEnabled())
-			logger.debug("pollMessages: {}/{}/{}", queueName, count, timeout);
-		initQueue(queueName);
-		try {
-			List<String> ids = pop(queueName, count, timeout);
-			List<Message> messages = readMessages(queueName, ids);
+    /**
+     * Used by 'conductor' event type subscription. Should lock and read
+     */
+    @Override
+    public List<Message> pollMessages(String queueName, int count, int timeout) {
+        if (logger.isDebugEnabled())
+            logger.debug("pollMessages: {}/{}/{}", queueName, count, timeout);
+        initQueue(queueName);
+        try {
+            List<String> ids = pop(queueName, count, timeout);
+            List<Message> messages = readMessages(queueName, ids);
 
-			if (logger.isDebugEnabled())
-				logger.debug("pollMessages: {} result {}" + queueName, messages);
-			return messages;
-		} catch (Exception ex) {
-			logger.error("pollMessages: failed for {}/{}/{} with {}", queueName, count, timeout, ex.getMessage(), ex);
-		}
-		return Collections.emptyList();
-	}
+            if (logger.isDebugEnabled())
+                logger.debug("pollMessages: {} result {}" + queueName, messages);
+            return messages;
+        } catch (Exception ex) {
+            logger.error("pollMessages: failed for {}/{}/{} with {}", queueName, count, timeout, ex.getMessage(), ex);
+        }
+        return Collections.emptyList();
+    }
 
-	@Override
-	public void remove(String queueName, String id) {
-		if (logger.isDebugEnabled())
-			logger.debug("remove: {}/{}", queueName, id);
-		initQueue(queueName);
-		delete(toIndexName(queueName), toTypeName(queueName), id);
-		if (logger.isDebugEnabled())
-			logger.debug("remove: done for {}/{}", queueName, id);
-	}
+    @Override
+    public void remove(String queueName, String id) {
+        if (logger.isDebugEnabled())
+            logger.debug("remove: {}/{}", queueName, id);
+        initQueue(queueName);
+        delete(toIndexName(queueName), toTypeName(queueName), id);
+        if (logger.isDebugEnabled())
+            logger.debug("remove: done for {}/{}", queueName, id);
+    }
 
-	@Override
-	public int getSize(String queueName) {
-		if (logger.isDebugEnabled())
-			logger.debug("getSize: " + queueName);
-		initQueue(queueName);
-		try {
+    @Override
+    public int getSize(String queueName) {
+        if (logger.isDebugEnabled())
+            logger.debug("getSize: " + queueName);
+        initQueue(queueName);
+        try {
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.fetchSource(false);
             sourceBuilder.size(0);
@@ -232,50 +232,50 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             searchRequest.types(toTypeName(queueName));
             searchRequest.source(sourceBuilder);
 
-			Long total = client.search(searchRequest, RequestOptions.DEFAULT).getHits().getTotalHits();
-			return total.intValue();
-		} catch (Exception ex) {
-			logger.error("getSize: failed for {} with {}", queueName, ex.getMessage(), ex);
-		}
-		return 0;
-	}
+            Long total = client.search(searchRequest, RequestOptions.DEFAULT).getHits().getTotalHits();
+            return total.intValue();
+        } catch (Exception ex) {
+            logger.error("getSize: failed for {} with {}", queueName, ex.getMessage(), ex);
+        }
+        return 0;
+    }
 
-	@Override
-	public boolean ack(String queueName, String id) {
-		if (logger.isDebugEnabled())
-			logger.debug("ack: {}/{}", queueName, id);
-		initQueue(queueName);
-		GetResponse record = findMessage(queueName, id);
-		if (record.isExists()) {
-			delete(toIndexName(queueName), toTypeName(queueName), id);
+    @Override
+    public boolean ack(String queueName, String id) {
+        if (logger.isDebugEnabled())
+            logger.debug("ack: {}/{}", queueName, id);
+        initQueue(queueName);
+        GetResponse record = findMessage(queueName, id);
+        if (record.isExists()) {
+            delete(toIndexName(queueName), toTypeName(queueName), id);
 
-			if (logger.isDebugEnabled())
-				logger.debug("ack: true for {}/{}", queueName, id);
-			return true;
-		}
+            if (logger.isDebugEnabled())
+                logger.debug("ack: true for {}/{}", queueName, id);
+            return true;
+        }
 
-		if (logger.isDebugEnabled())
-			logger.debug("ack: false for {}/{}", queueName, id);
-		return false;
-	}
+        if (logger.isDebugEnabled())
+            logger.debug("ack: false for {}/{}", queueName, id);
+        return false;
+    }
 
-	@Override
-	public boolean setUnackTimeout(String queueName, String id, long unackTimeout) {
-		if (logger.isDebugEnabled())
-			logger.debug("setUnackTimeout: {}/{}/{}", queueName, id, unackTimeout);
-		initQueue(queueName);
+    @Override
+    public boolean setUnackTimeout(String queueName, String id, long unackTimeout) {
+        if (logger.isDebugEnabled())
+            logger.debug("setUnackTimeout: {}/{}/{}", queueName, id, unackTimeout);
+        initQueue(queueName);
 
-		try {
-			GetResponse record = findMessage(queueName, id);
-			if (!record.isExists()) {
-				if (logger.isDebugEnabled())
-					logger.debug("setUnackTimeout: false for {}/{}/{}", queueName, id, unackTimeout);
-				return false;
-			}
+        try {
+            GetResponse record = findMessage(queueName, id);
+            if (!record.isExists()) {
+                if (logger.isDebugEnabled())
+                    logger.debug("setUnackTimeout: false for {}/{}/{}", queueName, id, unackTimeout);
+                return false;
+            }
 
-			Map<String, Object> map = new HashMap<>();
-			map.put("popped", true);
-			map.put("unackOn", System.currentTimeMillis() + unackTimeout);
+            Map<String, Object> map = new HashMap<>();
+            map.put("popped", true);
+            map.put("unackOn", System.currentTimeMillis() + unackTimeout);
 
             UpdateRequest updateRequest = new UpdateRequest();
             updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
@@ -295,32 +295,32 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 }
             });
 
-		} catch (Exception ex) {
-			logger.error("setUnackTimeout: failed for {}/{}/{} with {}", queueName, id, unackTimeout, ex.getMessage(), ex);
-			return false;
-		}
+        } catch (Exception ex) {
+            logger.error("setUnackTimeout: failed for {}/{}/{} with {}", queueName, id, unackTimeout, ex.getMessage(), ex);
+            return false;
+        }
 
-		if (logger.isDebugEnabled())
-			logger.debug("setUnackTimeout: success for {}/{}/{}", queueName, id, unackTimeout);
-		return true;
-	}
+        if (logger.isDebugEnabled())
+            logger.debug("setUnackTimeout: success for {}/{}/{}", queueName, id, unackTimeout);
+        return true;
+    }
 
-	@Override
-	public void flush(String queueName) {
-		if (logger.isDebugEnabled())
-			logger.debug("flush: {}", queueName);
-		initQueue(queueName);
-		String indexName = toIndexName(queueName);
-		String typeName = toTypeName(queueName);
+    @Override
+    public void flush(String queueName) {
+        if (logger.isDebugEnabled())
+            logger.debug("flush: {}", queueName);
+        initQueue(queueName);
+        String indexName = toIndexName(queueName);
+        String typeName = toTypeName(queueName);
 
-		List<String> ids = findIds(indexName, typeName);
-		ids.forEach(id -> delete(indexName, typeName, id));
-		if (logger.isDebugEnabled())
-			logger.debug("flush: done for {}", queueName);
-	}
+        List<String> ids = findIds(indexName, typeName);
+        ids.forEach(id -> delete(indexName, typeName, id));
+        if (logger.isDebugEnabled())
+            logger.debug("flush: done for {}", queueName);
+    }
 
-	@Override
-	public Map<String, Long> queuesDetail() {
+    @Override
+    public Map<String, Long> queuesDetail() {
         Map<String, Long> result = new HashMap<>();
         try {
             TermsAggregationBuilder aggregationBuilder = AggregationBuilders
@@ -341,7 +341,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             if (aggregation instanceof ParsedStringTerms) {
                 ParsedStringTerms countByQueue = (ParsedStringTerms) aggregation;
                 for (Object item : countByQueue.getBuckets()) {
-                    ParsedStringTerms.ParsedBucket bucket = (ParsedStringTerms.ParsedBucket)item;
+                    ParsedStringTerms.ParsedBucket bucket = (ParsedStringTerms.ParsedBucket) item;
                     result.put(bucket.getKey().toString().replace(baseName, ""), bucket.getDocCount());
                 }
             }
@@ -353,7 +353,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         return result;
     }
 
-	@Override
+    @Override
     public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose() {
         Map<String, Map<String, Map<String, Long>>> result = new HashMap<>();
         try {
@@ -375,7 +375,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             if (aggregation instanceof ParsedStringTerms) {
                 ParsedStringTerms countByQueue = (ParsedStringTerms) aggregation;
                 for (Object item : countByQueue.getBuckets()) {
-                    ParsedStringTerms.ParsedBucket bucket = (ParsedStringTerms.ParsedBucket)item;
+                    ParsedStringTerms.ParsedBucket bucket = (ParsedStringTerms.ParsedBucket) item;
 
                     String queueName = bucket.getKey().toString().replace(baseName, "");
                     ParsedFilter size = bucket.getAggregations().get("size");
@@ -400,7 +400,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         return result;
     }
 
-	@Override
+    @Override
     public void processUnacks(String queueName) {
         if (logger.isDebugEnabled())
             logger.debug("processUnacks: {}", queueName);
@@ -432,7 +432,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             for (SearchHit record : response.getHits().getHits()) {
 
                 if (logger.isDebugEnabled()) {
-                    Long recUnackOn = (Long)record.getSourceAsMap().get("unackOn");
+                    Long recUnackOn = (Long) record.getSourceAsMap().get("unackOn");
                     logger.debug("processUnacks: stale unack {} for {}/{}",
                             ISODateTimeFormat.dateTime().withZoneUTC().print(recUnackOn), queueName, record.getId());
                 }
@@ -472,30 +472,30 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         }
     }
 
-	private boolean pushMessage(String queueName, String id, String payload, long offsetSeconds) {
-		if (logger.isDebugEnabled())
-			logger.debug("pushMessage: {}/{}/{}", queueName, id, payload);
-		String indexName = toIndexName(queueName);
-		String typeName = toTypeName(queueName);
-		try {
-			Long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
-			Map<String, Object> map = new HashMap<>();
-			map.put("popped", false);
-			map.put("payload", payload);
-			map.put("deliverOn", deliverOn);
-			insert(indexName, typeName, id, map);
-			return true;
-		} catch (Exception ex) {
-			logger.error("pushMessage: failed for {}/{}/{} with {}", queueName, id, payload, ex.getMessage(), ex);
-			return false;
-		}
-	}
+    private boolean pushMessage(String queueName, String id, String payload, long offsetSeconds) {
+        if (logger.isDebugEnabled())
+            logger.debug("pushMessage: {}/{}/{}", queueName, id, payload);
+        String indexName = toIndexName(queueName);
+        String typeName = toTypeName(queueName);
+        try {
+            Long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
+            Map<String, Object> map = new HashMap<>();
+            map.put("popped", false);
+            map.put("payload", payload);
+            map.put("deliverOn", deliverOn);
+            insert(indexName, typeName, id, map);
+            return true;
+        } catch (Exception ex) {
+            logger.error("pushMessage: failed for {}/{}/{} with {}", queueName, id, payload, ex.getMessage(), ex);
+            return false;
+        }
+    }
 
-	private List<Message> readMessages(String queueName, List<String> messageIds) {
-		if (messageIds.isEmpty()) return Collections.emptyList();
+    private List<Message> readMessages(String queueName, List<String> messageIds) {
+        if (messageIds.isEmpty()) return Collections.emptyList();
 
-		IdsQueryBuilder addIds = QueryBuilders.idsQuery();
-		addIds.ids().addAll(messageIds);
+        IdsQueryBuilder addIds = QueryBuilders.idsQuery();
+        addIds.ids().addAll(messageIds);
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.size(messageIds.size());
@@ -505,7 +505,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         request.source(sourceBuilder);
 
         AtomicReference<SearchResponse> reference = new AtomicReference<>();
-		doWithRetryNoisy(() -> {
+        doWithRetryNoisy(() -> {
             try {
                 reference.set(client.search(request, RequestOptions.DEFAULT));
             } catch (Exception ex) {
@@ -513,32 +513,32 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             }
         });
 
-		if (reference.get().getHits().totalHits != messageIds.size()) {
-			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, "readMessages: Could not read all messages for given ids: " + messageIds);
-		}
+        if (reference.get().getHits().totalHits != messageIds.size()) {
+            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, "readMessages: Could not read all messages for given ids: " + messageIds);
+        }
 
-		List<Message> messages = new ArrayList<>(reference.get().getHits().getHits().length);
-		for (SearchHit hit : reference.get().getHits().getHits()) {
-			Message message = new Message();
-			message.setId(hit.getId());
-			message.setPayload((String) hit.getSourceAsMap().get("payload"));
-			messages.add(message);
-		}
-		return messages;
-	}
+        List<Message> messages = new ArrayList<>(reference.get().getHits().getHits().length);
+        for (SearchHit hit : reference.get().getHits().getHits()) {
+            Message message = new Message();
+            message.setId(hit.getId());
+            message.setPayload((String) hit.getSourceAsMap().get("payload"));
+            messages.add(message);
+        }
+        return messages;
+    }
 
-	private void initQueue(String queueName) {
-		queues.add(queueName);
-		String indexName = toIndexName(queueName);
-		String typeName = toTypeName(queueName);
-		ensureIndexExists(indexName, typeName, QUEUE);
-	}
+    private void initQueue(String queueName) {
+        queues.add(queueName);
+        String indexName = toIndexName(queueName);
+        String typeName = toTypeName(queueName);
+        ensureIndexExists(indexName, typeName, QUEUE);
+    }
 
-	private GetResponse findMessage(String queueName, String id) {
-		return findOne(toIndexName(queueName), toTypeName(queueName), id);
-	}
+    private GetResponse findMessage(String queueName, String id) {
+        return findOne(toIndexName(queueName), toTypeName(queueName), id);
+    }
 
-	private void processUnacks() {
-		queues.forEach(this::processUnacks);
-	}
+    private void processUnacks() {
+        queues.forEach(this::processUnacks);
+    }
 }

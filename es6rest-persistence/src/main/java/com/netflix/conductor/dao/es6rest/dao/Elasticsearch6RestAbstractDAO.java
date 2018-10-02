@@ -12,7 +12,10 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.*;
+import org.elasticsearch.action.search.ClearScrollRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
@@ -46,8 +49,8 @@ abstract class Elasticsearch6RestAbstractDAO {
     private final static String NAMESPACE_SEP = ".";
     private final static String DEFAULT = "_default_";
     private final static int BATCH_SIE = 1_000;
-    private Set<String> indexCache = ConcurrentHashMap.newKeySet();
     RestHighLevelClient client;
+    private Set<String> indexCache = ConcurrentHashMap.newKeySet();
     private ObjectMapper mapper;
     private String context;
     private String prefix;
@@ -60,6 +63,18 @@ abstract class Elasticsearch6RestAbstractDAO {
 
         prefix = config.getProperty("workflow.namespace.prefix", "conductor");
         stack = config.getStack();
+    }
+
+    static boolean isVerConflictException(Exception ex) {
+        return ex.getMessage().contains("version_conflict_engine_exception");
+    }
+
+    static boolean isDocMissingException(Exception ex) {
+        return ex.getMessage().contains("document_missing_exception");
+    }
+
+    static boolean isConflictOrMissingException(Exception ex) {
+        return isVerConflictException(ex) || isDocMissingException(ex);
     }
 
     String toIndexName(String... nsValues) {
@@ -387,7 +402,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             SearchHit[] searchHits = searchResponse.getHits().getHits();
 
             while (searchHits != null && searchHits.length > 0) {
-                for(SearchHit hit : searchHits) {
+                for (SearchHit hit : searchHits) {
                     result.add(hit.getId());
                 }
 
@@ -434,7 +449,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             SearchHit[] searchHits = searchResponse.getHits().getHits();
 
             while (searchHits != null && searchHits.length > 0) {
-                for(SearchHit hit : searchHits) {
+                for (SearchHit hit : searchHits) {
                     result.add(convert(hit.getSourceAsMap(), clazz));
                 }
 
@@ -537,17 +552,5 @@ abstract class Elasticsearch6RestAbstractDAO {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    static boolean isVerConflictException(Exception ex) {
-        return ex.getMessage().contains("version_conflict_engine_exception");
-    }
-
-    static boolean isDocMissingException(Exception ex) {
-        return ex.getMessage().contains("document_missing_exception");
-    }
-
-    static boolean isConflictOrMissingException(Exception ex) {
-        return isVerConflictException(ex) || isDocMissingException(ex);
     }
 }
