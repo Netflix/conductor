@@ -1,0 +1,43 @@
+{
+  "eventhandlers": {
+    "properties": {
+      "actions": {
+        "properties": {
+          "action": {
+            "type": "text"
+          },
+          "expandInlineJSON": {
+            "type": "boolean"
+          },
+          "start_workflow": {
+            "type": "object",
+            "enabled": false,
+            "dynamic": false
+          },
+          "complete_task": {
+            "type": "object",
+            "enabled": false,
+            "dynamic": false
+          },
+          "fail_task": {
+            "type": "object",
+            "enabled": false,
+            "dynamic": false
+          }
+        }
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "condition": {
+        "type": "text"
+      },
+      "event": {
+        "type": "text"
+      },
+      "name": {
+        "type": "keyword"
+      }
+    }
+  }
+}

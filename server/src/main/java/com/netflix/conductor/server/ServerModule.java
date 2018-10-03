@@ -34,11 +34,11 @@ import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
-import com.netflix.conductor.dao.es5.ElasticSearch5ExecutionDAO;
-import com.netflix.conductor.dao.es5.ElasticSearch5MetadataDAO;
-import com.netflix.conductor.dao.es5.ElasticSearch5QueueDAO;
-import com.netflix.conductor.dao.es5.index.ElasticSearch5DAO;
-import com.netflix.conductor.dao.es5.index.Elasticsearch5Module;
+import com.netflix.conductor.dao.es6rest.Elasticsearch6RestModule;
+import com.netflix.conductor.dao.es6rest.dao.Elasticsearch6RestExecutionDAO;
+import com.netflix.conductor.dao.es6rest.dao.Elasticsearch6RestIndexDAO;
+import com.netflix.conductor.dao.es6rest.dao.Elasticsearch6RestMetadataDAO;
+import com.netflix.conductor.dao.es6rest.dao.Elasticsearch6RestQueueDAO;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.redis.DynoShardSupplier;
 import com.netflix.spectator.api.DefaultRegistry;
@@ -91,14 +91,18 @@ public class ServerModule extends AbstractModule {
 		bind(Configuration.class).toInstance(config);
 		bind(Registry.class).toInstance(registry);
 
-		install(new Elasticsearch5Module());
-		bind(IndexDAO.class).to(ElasticSearch5DAO.class);
 
 		if (ConductorServer.DB.elasticsearch.equals(db)) {
-			bind(ExecutionDAO.class).to(ElasticSearch5ExecutionDAO.class);
-			bind(MetadataDAO.class).to(ElasticSearch5MetadataDAO.class);
-			bind(QueueDAO.class).to(ElasticSearch5QueueDAO.class);
+			install(new Elasticsearch6RestModule());
+			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
+
+			bind(ExecutionDAO.class).to(Elasticsearch6RestExecutionDAO.class);
+			bind(MetadataDAO.class).to(Elasticsearch6RestMetadataDAO.class);
+			bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
 		} else {
+			install(new Elasticsearch6RestModule());
+			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
+
 			String localDC = localRack.replaceAll(region, "");
 			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
 			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);

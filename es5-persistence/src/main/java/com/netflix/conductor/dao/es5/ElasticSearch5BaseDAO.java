@@ -116,7 +116,9 @@ public class ElasticSearch5BaseDAO {
 			indexCache.add(indexName);
 		} catch (IndexNotFoundException notFound) {
 			try {
-				doWithRetryNoisy(() -> client.admin().indices().prepareCreate(indexName).get());
+				doWithRetryNoisy(() -> client.admin().indices()
+						.prepareCreate(indexName)
+						.get());
 				indexCache.add(indexName);
 			} catch (ResourceAlreadyExistsException ignore) {
 				indexCache.add(indexName);
@@ -153,7 +155,10 @@ public class ElasticSearch5BaseDAO {
 					source.remove(DEFAULT);
 				}
 
-				doWithRetryNoisy(() -> client.admin().indices().prepareCreate(indexName).addMapping(typeName, source).get());
+				doWithRetryNoisy(() -> client.admin().indices()
+						.prepareCreate(indexName)
+						.addMapping(typeName, source)
+						.get());
 				indexCache.add(indexName);
 			} catch (ResourceAlreadyExistsException ignore) {
 				indexCache.add(indexName);

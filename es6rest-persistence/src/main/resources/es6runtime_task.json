@@ -1,0 +1,96 @@
+{
+  "task": {
+    "properties": {
+      "callbackAfterSeconds": {
+        "type": "long"
+      },
+      "callbackFromWorker": {
+        "type": "boolean"
+      },
+      "correlationId": {
+        "type": "text"
+      },
+      "endTime": {
+        "type": "long"
+      },
+      "inputData": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false
+      },
+      "outputData": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false
+      },
+      "pollCount": {
+        "type": "long"
+      },
+      "queueWaitTime": {
+        "type": "long"
+      },
+      "reasonForIncompletion": {
+        "type": "text"
+      },
+      "referenceTaskName": {
+        "type": "keyword"
+      },
+      "responseTimeoutSeconds": {
+        "type": "long"
+      },
+      "retried": {
+        "type": "boolean"
+      },
+      "retryCount": {
+        "type": "long"
+      },
+      "scheduledTime": {
+        "type": "long"
+      },
+      "seq": {
+        "type": "long"
+      },
+      "startDelayInSeconds": {
+        "type": "long"
+      },
+      "startTime": {
+        "type": "long"
+      },
+      "status": {
+        "type": "keyword"
+      },
+      "taskDefName": {
+        "type": "keyword"
+      },
+      "taskId": {
+        "type": "keyword"
+      },
+      "taskStatus": {
+        "type": "keyword"
+      },
+      "taskType": {
+        "type": "keyword"
+      },
+      "updateTime": {
+        "type": "long"
+      },
+      "workerId": {
+        "type": "text"
+      },
+      "workflowInstanceId": {
+        "type": "keyword"
+      },
+      "workflowTask": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false
+      },
+      "retriedTaskId": {
+        "type": "keyword"
+      },
+      "domain": {
+        "type": "text"
+      }
+    }
+  }
+}

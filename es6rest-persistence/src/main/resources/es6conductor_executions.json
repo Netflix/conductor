@@ -1,0 +1,95 @@
+{
+  "task": {
+    "properties": {
+      "endTime": {
+        "type": "date"
+      },
+      "executionTime": {
+        "type": "long"
+      },
+      "input": {
+        "type": "text"
+      },
+      "log": {
+        "type": "text"
+      },
+      "logs": {
+        "type": "text"
+      },
+      "output": {
+        "type": "text"
+      },
+      "queueWaitTime": {
+        "type": "long"
+      },
+      "scheduledTime": {
+        "type": "date"
+      },
+      "startTime": {
+        "type": "date"
+      },
+      "status": {
+        "type": "keyword"
+      },
+      "taskDefName": {
+        "type": "keyword"
+      },
+      "taskType": {
+        "type": "keyword"
+      },
+      "updateTime": {
+        "type": "date"
+      },
+      "workflowId": {
+        "type": "keyword"
+      }
+    }
+  },
+  "workflow": {
+    "properties": {
+      "correlationId": {
+        "type": "keyword"
+      },
+      "endTime": {
+        "type": "date"
+      },
+      "event": {
+        "type": "keyword"
+      },
+      "executionTime": {
+        "type": "long"
+      },
+      "input": {
+        "type": "text"
+      },
+      "output": {
+        "type": "text"
+      },
+      "rawJSON": {
+        "type": "text",
+        "index": false
+      },
+      "reasonForIncompletion": {
+        "type": "text"
+      },
+      "startTime": {
+        "type": "date"
+      },
+      "status": {
+        "type": "keyword"
+      },
+      "updateTime": {
+        "type": "date"
+      },
+      "version": {
+        "type": "long"
+      },
+      "workflowId": {
+        "type": "keyword"
+      },
+      "workflowType": {
+        "type": "keyword"
+      }
+    }
+  }
+}

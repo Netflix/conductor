@@ -1,0 +1,32 @@
+{
+  "eventexecution": {
+    "properties": {
+      "action": {
+        "type": "text"
+      },
+      "created": {
+        "type": "long"
+      },
+      "event": {
+        "type": "text"
+      },
+      "id": {
+        "type": "text"
+      },
+      "messageId": {
+        "type": "keyword"
+      },
+      "name": {
+        "type": "keyword"
+      },
+      "output": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false
+      },
+      "status": {
+        "type": "keyword"
+      }
+    }
+  }
+}
