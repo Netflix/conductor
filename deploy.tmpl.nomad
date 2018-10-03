@@ -139,6 +139,7 @@ job "conductor" {
         }
       }
       env {
+        trigger = "1"
         TLD   = "<TLD>"
         STACK = "<ENV_TYPE>"
         APP_VERSION = "<APP_VERSION>"
