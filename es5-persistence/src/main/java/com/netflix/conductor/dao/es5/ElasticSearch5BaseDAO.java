@@ -29,7 +29,6 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
@@ -119,9 +118,6 @@ public class ElasticSearch5BaseDAO {
 			try {
 				doWithRetryNoisy(() -> client.admin().indices()
 						.prepareCreate(indexName)
-						.setSettings(Settings.builder()
-								.put("index.number_of_shards", 1)
-								.put("index.number_of_replicas", 1))
 						.get());
 				indexCache.add(indexName);
 			} catch (ResourceAlreadyExistsException ignore) {
@@ -161,9 +157,6 @@ public class ElasticSearch5BaseDAO {
 
 				doWithRetryNoisy(() -> client.admin().indices()
 						.prepareCreate(indexName)
-						.setSettings(Settings.builder()
-								.put("index.number_of_shards", 1)
-								.put("index.number_of_replicas", 1))
 						.addMapping(typeName, source)
 						.get());
 				indexCache.add(indexName);
