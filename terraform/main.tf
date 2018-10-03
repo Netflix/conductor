@@ -9,7 +9,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_elasticsearch_domain" "es-live" {
   domain_name           = "${var.domain}"
-  elasticsearch_version = "${var.AES_VER}"
+  elasticsearch_version = "6.3"
   cluster_config {
     instance_type = "m4.large.elasticsearch"
     instance_count = "2"
@@ -63,7 +63,7 @@ CONFIG
 
 resource "aws_elasticsearch_domain" "es-dev" {
   domain_name           = "${var.domain}"
-  elasticsearch_version = "${var.AES_VER}"
+  elasticsearch_version = "6.3"
   cluster_config {
     instance_type = "${var.INSTT}"
     instance_type = "m4.large.elasticsearch"
