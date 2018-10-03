@@ -1,11 +1,8 @@
 dependencies {
     compile project(':conductor-core')
-    compile 'com.google.inject:guice:3.0'
 
-    //ES5 Dependency
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
+    // ES6 Dependencies
+	compile group: 'org.elasticsearch', name: 'elasticsearch', version: '6.4.1'
+	compile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.4.1'
 	compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.4.1'
-
-    compile 'commons-io:commons-io:2.4'
 }

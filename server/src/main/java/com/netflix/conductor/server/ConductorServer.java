@@ -22,8 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.dao.es6rest.Elasticsearch6Embedded;
 import com.netflix.conductor.redis.utils.JedisMock;
-import com.netflix.conductor.dao.es5.es.EmbeddedElasticSearch;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.Host.Status;
 import com.netflix.dyno.connectionpool.HostSupplier;
@@ -166,9 +166,9 @@ public class ConductorServer {
 			case memory:
 
 				try {
-					EmbeddedElasticSearch.start();
+					Elasticsearch6Embedded.start();
 					if (cc.getProperty("workflow.elasticsearch.url", null) == null) {
-						System.setProperty("workflow.elasticsearch.url", "localhost:9300");
+						System.setProperty("workflow.elasticsearch.url", "http://localhost:9200");
 					}
 					if (cc.getProperty("workflow.elasticsearch.index.name", null) == null) {
 						System.setProperty("workflow.elasticsearch.index.name", "conductor");

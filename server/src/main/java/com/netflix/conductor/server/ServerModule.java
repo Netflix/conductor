@@ -34,9 +34,7 @@ import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
-import com.netflix.conductor.dao.es5.index.ElasticSearch5DAO;
-import com.netflix.conductor.dao.es5.index.Elasticsearch5Module;
-import com.netflix.conductor.dao.es6rest.*;
+import com.netflix.conductor.dao.es6rest.Elasticsearch6RestModule;
 import com.netflix.conductor.dao.es6rest.dao.Elasticsearch6RestExecutionDAO;
 import com.netflix.conductor.dao.es6rest.dao.Elasticsearch6RestIndexDAO;
 import com.netflix.conductor.dao.es6rest.dao.Elasticsearch6RestMetadataDAO;
@@ -102,8 +100,8 @@ public class ServerModule extends AbstractModule {
 			bind(MetadataDAO.class).to(Elasticsearch6RestMetadataDAO.class);
 			bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
 		} else {
-			install(new Elasticsearch5Module());
-			bind(IndexDAO.class).to(ElasticSearch5DAO.class);
+			install(new Elasticsearch6RestModule());
+			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
 
 			String localDC = localRack.replaceAll(region, "");
 			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
