@@ -251,4 +251,8 @@ public class Monitors {
 	public static void recordExternalPayloadStorageUsage(String name, String operation, String payloadType) {
 		counter(classQualifier, "external_payload_storage_usage", "name", name, "operation", operation, "payloadType", payloadType);
 	}
+
+	public static void recordException(String exceptionType, String category) {
+		counter(classQualifier, "exception", "exception_type", exceptionType, "category", category);
+	}
 }

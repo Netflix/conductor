@@ -13,6 +13,7 @@
 package com.netflix.conductor.dao.dynomite.queue;
 
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.discovery.DiscoveryClient;
 import com.netflix.dyno.connectionpool.Host;
@@ -24,6 +25,7 @@ import com.netflix.dyno.queues.ShardSupplier;
 import com.netflix.dyno.queues.redis.RedisDynoQueue;
 import com.netflix.dyno.queues.redis.RedisQueues;
 import com.netflix.dyno.queues.shard.DynoShardSupplier;
+import com.netflix.dyno.connectionpool.exception.NoAvailableHostsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCommands;
@@ -150,10 +152,15 @@ public class DynoQueueDAO implements QueueDAO {
 
     @Override
     public List<String> pop(String queueName, int count, int timeout) {
-        List<Message> msg = queues.get(queueName).pop(count, timeout, TimeUnit.MILLISECONDS);
-        return msg.stream()
-				.map(Message::getId)
-				.collect(Collectors.toList());
+        try {
+            List<Message> msg = queues.get(queueName).pop(count, timeout, TimeUnit.MILLISECONDS);
+            return msg.stream()
+                    .map(Message::getId)
+                    .collect(Collectors.toList());
+        } catch (NoAvailableHostsException ex) {
+            Monitors.recordException(ex.getClass().getCanonicalName(), "dyno.queue");
+            throw ex;
+        }
     }
 
     @Override
