@@ -33,7 +33,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.settings.Settings;
@@ -261,7 +260,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
-                searchResponse = client.scroll(scrollRequest);
+                searchResponse = client.searchScroll(scrollRequest);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
             }
@@ -428,8 +427,6 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         sourceBuilder.from(start);
         sourceBuilder.size(size);
 
-//        final SearchRequestBuilder srb = client.prepareSearch(indexName).setQuery(fq).setTypes(WORKFLOW_DOC_TYPE)
-//                .storedFields("_id").setFrom(start).setSize(size);
         if (sortOptions != null) {
             sortOptions.forEach(sortOption -> {
                 SortOrder order = SortOrder.ASC;
