@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {OverlayTrigger, Button, Popover, Panel, Table, Input, Well} from 'react-bootstrap';
+import {OverlayTrigger, Button, Popover, Panel, Table, Input, Well, Label} from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import {connect} from 'react-redux';
 import {getWorkflowDetails} from '../../../actions/WorkflowActions';
@@ -11,7 +11,8 @@ import Clipboard from 'clipboard';
 import map from "lodash/fp/map";
 import Tab from "../../common/Tab";
 import TabContainer from "../../common/TabContainer";
-import request from 'superagent';
+import { startWorkflow } from '../../../actions/WorkflowActions';
+import {Link} from "react-router";
 
 new Clipboard('.btn');
 
@@ -97,91 +98,23 @@ function showFailure(wf) {
     return 'none';
 }
 
-
-var isChanged = false;
-var globalInput = [];
-var globalObject = {}
-
-function handleChange(idx, index, names, event) {
-
-    var names = names;
-    globalObject = {};
-
-    globalInput.splice(idx, 1, event.target.value);
-
-    for (var i = 0; i < names.length; i++) {
-
-        if (globalInput[i]) {
-            if (globalInput[i].startsWith("{")) {
-                globalObject[names[i]] = JSON.parse(globalInput[i])
-            } else
-                globalObject[names[i]] = globalInput[i]
-        }
-    }
-
-    globalObject = globalObject;
-    console.log(globalObject);
-    isChanged = true;
-}
-
-function getObject(wf) {
-
-    if (wf) {
-
-        var inputObject = wf.input;
-        var names = [];
-        var inputs = [];
-        var index = 0;
-
-        for (let key in inputObject) {
-            names[index] = key;
-            if (typeof inputObject[key] == 'object') {
-                inputs[index] = JSON.stringify(inputObject[key]);
-            } else
-                inputs[index] = inputObject[key];
-
-            index++;
-        }
-    }
-
-     globalInput = inputs;
-
-     return (
-        inputs.map((item, idx) => <form onSubmit={(e) => {startWorfklow(e, wf) }}>
-        <Input type="text" label={names[idx]} defaultValue={item} onChange={handleChange.bind(this, idx, index, names)}/>
-            &nbsp;&nbsp;
-        </form>)
-     );
-}
-
-function startWorfklow(e, wf) {
-
-    e.preventDefault();
-
-    let wfname = wf.workflowType;
-    let data = {};
-
-    if (isChanged) {
-        data = globalObject;
-    } else
-        data = wf.input;
-
-    request
-        .post('/api/wfe/workflow/' + wfname)
-        .send(data)
-        .end(function (err, res) {
-            console.log(res);
-        });
-
-}
-
 class WorkflowDetails extends Component {
     constructor(props) {
         super(props);
 
+        this.startWorkflow1 = this.startWorkflow1.bind(this);
+
         this.state = {
-            loading: false,
-        }
+            loading: this.props.starting,
+            log: this.props.res,
+            jsonData: null,
+            show: false,
+            workflowForm: {
+                labels: [],
+                values: []
+            }
+
+        };
 
         http.get('/api/sys/').then((data) => {
             window.sys = data.sys;
@@ -189,9 +122,16 @@ class WorkflowDetails extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        this.getObject(nextProps.data);
         if (this.props.hash !== nextProps.hash) {
             this.props.dispatch(getWorkflowDetails(nextProps.params.workflowId));
+            this.setState({show: false});
         }
+
+        this.setState({
+            loading: nextProps.starting,
+            log: nextProps.res,
+        });
     }
 
     shouldComponentUpdate(nextProps) {
@@ -202,15 +142,77 @@ class WorkflowDetails extends Component {
         return true;
     }
 
-    wait() {
-        this.setState({ loading: true})
+    startWorkflow1(e) {
 
-        setTimeout(() => {
-            this.setState({ loading: false });
-               }, 400);
+        e.preventDefault();
+        let wfname = this.props.meta.name;
+        let data = {
+            json: this.state.jsonData
+        };
+
+        console.log(JSON.stringify(data, null, 2));
+
+        this.props.dispatch(startWorkflow(wfname, data));
+
+            this.setState({ show: true });
+
     }
 
+    getObject(wf) {
+        let inputObject;
+
+        if(!wf.input){
+            inputObject = {};
+        } else {
+            inputObject = wf.input;
+        }
+
+        let labels = [];
+        let values = [];
+        let index = 0;
+
+        if (wf) {
+
+            for (let key in inputObject) {
+                labels[index] = key;
+                if (typeof inputObject[key] === 'object') {
+                    values[index] = JSON.stringify(inputObject[key]);
+                } else
+                    values[index] = inputObject[key];
+
+                index++;
+            }
+
+            if(!this.state.jsonData){
+                this.state.jsonData = inputObject;
+            }
+            this.state.workflowForm.labels = labels;
+            this.state.workflowForm.values = values;
+        }
+
+    }
+
+    handleChange(idx, e) {
+
+        let dataObject = {};
+        let { labels, values } = this.state.workflowForm;
+
+            values.splice(idx, 1, e.target.value);
+
+        for (let i = 0; i < labels.length; i++) {
+            if (values[i] && values[i].startsWith("{")) {
+                dataObject[labels[i]] = JSON.parse(values[i]);
+            } else if (values[i])
+                dataObject[labels[i]] = values[i];
+        }
+        this.state.jsonData = dataObject;
+    }
+
+
     render() {
+
+        const { labels, values } = this.state.workflowForm;
+        const { log, show } = this.state;
 
         let wf = this.props.data;
         if (wf == null) {
@@ -223,6 +225,49 @@ class WorkflowDetails extends Component {
         tasks = tasks.sort(function (a, b) {
             return a.seq - b.seq;
         });
+
+        function consoleLog() {
+            if(show) {
+                if (log) {
+                    if (log.body && log.statusCode === 200) {
+                        return (
+                            <div>
+                                <Well>
+                                <span><h4>Workflow ID:</h4><Link
+                                    to={`/workflow/id/${log.body.text}`}>{log.body.text}</Link><br/></span>
+                                    <span><h4>Status code: </h4> <Label
+                                        bsStyle="success">{log.statusCode}</Label><br/></span>
+                                    <span><h4>Status text: </h4> <Label
+                                        bsStyle="success">{log.statusText}</Label><br/></span>
+                                </Well>
+                            </div>
+                        );
+                    }
+                    if (log.statusCode === 200) {
+                        return (
+                            <div>
+                                <Well>
+                                    <span><h4>{log.text}</h4><br/></span>
+                                    <span><h4>Status code: </h4> <Label
+                                        bsStyle="success">{log.statusCode}</Label><br/></span>
+                                    <span><h4>Status text: </h4> <Label
+                                        bsStyle="success">{log.statusText}</Label><br/></span>
+                                </Well>
+                            </div>
+                        );
+                    }
+                    else {
+                        return (
+                            <div>
+                                <Well>
+                                    <span><h4>Error: </h4> <Label bsStyle="danger">{log.toString()}</Label><br/></span>
+                                </Well>
+                            </div>
+                        )
+                    }
+                }
+            }
+        }
 
         return (
             <div className="ui-content">
@@ -304,8 +349,35 @@ class WorkflowDetails extends Component {
                     </Tab>
                     <Tab eventKey={5} title="Edit input">
                         &nbsp;&nbsp;
-                       {getObject(wf)}
-                       <Button bsStyle="primary" bsSize="large" disabled={this.state.loading} onClick={(e) => {startWorfklow(e, wf); this.wait() }}><i className="fa fa-repeat"/>&nbsp;&nbsp;Rerun workflow</Button>
+
+                        <div className="input-form">
+                            <Panel header="Rerun workflow">
+                                <h1>Inputs of <Label
+                                    bsStyle={log ? (log.error ? "danger" : "success") : "info"}>{this.props.meta ? this.props.meta.name : ""}</Label> workflow
+                                </h1>
+                                {labels.map((item, idx) =>
+                                    <form onSubmit={!this.state.loading ? this.startWorkflow1 : null}>
+                                        &nbsp;&nbsp;
+                                        <Input type="input" key={values}
+                                               label={item}
+                                               defaultValue={values[idx]}
+                                               placeholder="Enter the input"
+                                               onChange={this.handleChange.bind(this, idx)}/>
+                                        &nbsp;&nbsp;
+                                    </form>)}
+
+                                <Button bsStyle="primary" bsSize="large" disabled={this.state.loading}
+                                        onClick={!this.state.loading ? this.startWorkflow1 : null }>
+                                        <i className="fas fa-redo"/>
+                                        &nbsp;&nbsp;Rerun workflow
+                                </Button>
+
+                                <h3>Console log</h3>
+                                {consoleLog()}
+
+                            </Panel>
+                        </div>
+
                     </Tab>
                 </TabContainer>
             </div>
