@@ -12,7 +12,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -127,7 +126,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 AtomicReference<SearchResponse> reference = new AtomicReference<>();
                 doWithRetryNoisy(() -> {
                     try {
-                        reference.set(client.search(request, RequestOptions.DEFAULT));
+                        reference.set(client.search(request));
                     } catch (IOException e) {
                         throw new RuntimeException(e.getMessage(), e);
                     }
@@ -153,7 +152,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                         AtomicBoolean ignoreIdFlag = new AtomicBoolean(false);
                         doWithRetryNoisy(() -> {
                             try {
-                                client.update(updateRequest, RequestOptions.DEFAULT);
+                                client.update(updateRequest);
                             } catch (Exception ex) {
                                 if (isConflictOrMissingException(ex)) {
                                     ignoreIdFlag.set(true);
@@ -232,7 +231,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             searchRequest.types(toTypeName(queueName));
             searchRequest.source(sourceBuilder);
 
-            Long total = client.search(searchRequest, RequestOptions.DEFAULT).getHits().getTotalHits();
+            Long total = client.search(searchRequest).getHits().getTotalHits();
             return total.intValue();
         } catch (Exception ex) {
             logger.error("getSize: failed for {} with {}", queueName, ex.getMessage(), ex);
@@ -287,7 +286,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
 
             doWithRetryNoisy(() -> {
                 try {
-                    client.update(updateRequest, RequestOptions.DEFAULT);
+                    client.update(updateRequest);
                 } catch (Exception ex) {
                     if (!ex.getMessage().contains("version_conflict_engine_exception")) {
                         throw new RuntimeException(ex.getMessage(), ex);
@@ -335,7 +334,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             SearchRequest searchRequest = new SearchRequest(baseName + "*");
             searchRequest.source(sourceBuilder);
 
-            SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
+            SearchResponse response = client.search(searchRequest);
 
             Aggregation aggregation = response.getAggregations().get("countByQueue");
             if (aggregation instanceof ParsedStringTerms) {
@@ -369,7 +368,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             SearchRequest searchRequest = new SearchRequest(baseName + "*");
             searchRequest.source(sourceBuilder);
 
-            SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
+            SearchResponse response = client.search(searchRequest);
 
             Aggregation aggregation = response.getAggregations().get("countByQueue");
             if (aggregation instanceof ParsedStringTerms) {
@@ -423,7 +422,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             SearchRequest request = new SearchRequest(indexName).types(typeName);
             request.source(sourceBuilder);
 
-            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            SearchResponse response = client.search(request);
 
             if (logger.isDebugEnabled())
                 logger.debug("processUnacks: found {} for {}", response.getHits().totalHits, queueName);
@@ -452,7 +451,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
 
                     doWithRetryNoisy(() -> {
                         try {
-                            client.update(updateRequest, RequestOptions.DEFAULT);
+                            client.update(updateRequest);
                         } catch (Exception ex) {
                             if (!isConflictOrMissingException(ex)) {
                                 throw new RuntimeException(ex.getMessage(), ex);
@@ -507,7 +506,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         AtomicReference<SearchResponse> reference = new AtomicReference<>();
         doWithRetryNoisy(() -> {
             try {
-                reference.set(client.search(request, RequestOptions.DEFAULT));
+                reference.set(client.search(request));
             } catch (Exception ex) {
                 throw new RuntimeException(ex.getMessage(), ex);
             }
