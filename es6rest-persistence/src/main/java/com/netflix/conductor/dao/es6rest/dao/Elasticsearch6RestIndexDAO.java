@@ -33,7 +33,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.settings.Settings;
@@ -121,7 +120,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     private void ensureIndexExists(String name, String resourceFile, String type) {
         try {
             GetIndexRequest request = new GetIndexRequest().indices(name);
-            boolean exists = client.indices().exists(request, RequestOptions.DEFAULT);
+            boolean exists = client.indices().exists(request);
             if (exists) {
                 return;
             }
@@ -139,7 +138,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
             CreateIndexRequest createIndexRequest = new CreateIndexRequest(name, settings)
                     .mapping(type, (Map) mapping.get(type));
 
-            client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+            client.indices().create(createIndexRequest);
         } catch (Exception ex) {
             if (!ex.getMessage().contains("index_already_exists_exception")) {
                 log.error("ensureIndexExists failed for {} with {}", name, ex.getMessage(), ex);
@@ -211,7 +210,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
                     request.source(om.writeValueAsBytes(log), XContentType.JSON);
                     brb.add(request);
                 }
-                BulkResponse response = client.bulk(brb, RequestOptions.DEFAULT);
+                BulkResponse response = client.bulk(brb);
                 if (!response.hasFailures()) {
                     break;
                 }
@@ -249,7 +248,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
             searchRequest.source(sourceBuilder);
             searchRequest.scroll(scroll);
 
-            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            SearchResponse searchResponse = client.search(searchRequest);
             String scrollId = searchResponse.getScrollId();
             SearchHit[] searchHits = searchResponse.getHits().getHits();
 
@@ -261,14 +260,14 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
-                searchResponse = client.scroll(scrollRequest, RequestOptions.DEFAULT);
+                searchResponse = client.searchScroll(scrollRequest);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
             }
 
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
             clearScrollRequest.addScrollId(scrollId);
-            client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+            client.clearScroll(clearScrollRequest);
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -290,7 +289,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
                 doc.put("created", System.currentTimeMillis());
                 IndexRequest request = new IndexRequest(logMessageIndexName, MSG_DOC_TYPE);
                 request.source(doc);
-                client.index(request, RequestOptions.DEFAULT);
+                client.index(request);
                 break;
 
             } catch (Throwable e) {
@@ -323,7 +322,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         while (retry > 0) {
             try {
 
-                client.update(request, RequestOptions.DEFAULT);
+                client.update(request);
                 return;
 
             } catch (Exception e) {
@@ -355,7 +354,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         try {
 
             DeleteRequest req = new DeleteRequest(execWorkflowIndexName, WORKFLOW_DOC_TYPE, workflowId);
-            DeleteResponse response = client.delete(req, RequestOptions.DEFAULT);
+            DeleteResponse response = client.delete(req);
             if (response.getResult() == DocWriteResponse.Result.DELETED) {
                 log.error("Index removal failed - document not found by id " + workflowId);
             }
@@ -382,7 +381,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         }
         request.doc(source);
         try {
-            client.update(request, RequestOptions.DEFAULT);
+            client.update(request);
         } catch (IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
         }
@@ -394,7 +393,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         GetRequest request = new GetRequest(execWorkflowIndexName, WORKFLOW_DOC_TYPE, workflowInstanceId).storedFields(fieldToGet);
         GetResponse response = null;
         try {
-            response = client.get(request, RequestOptions.DEFAULT);
+            response = client.get(request);
         } catch (IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
         }
@@ -428,8 +427,6 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         sourceBuilder.from(start);
         sourceBuilder.size(size);
 
-//        final SearchRequestBuilder srb = client.prepareSearch(indexName).setQuery(fq).setTypes(WORKFLOW_DOC_TYPE)
-//                .storedFields("_id").setFrom(start).setSize(size);
         if (sortOptions != null) {
             sortOptions.forEach(sortOption -> {
                 SortOrder order = SortOrder.ASC;
@@ -446,7 +443,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         SearchRequest searchRequest = new SearchRequest(execWorkflowIndexName).types(WORKFLOW_DOC_TYPE);
         searchRequest.source(sourceBuilder);
 
-        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        SearchResponse searchResponse = client.search(searchRequest);
         SearchHits searchHits = searchResponse.getHits();
         long totalHits = searchHits.getTotalHits();
 

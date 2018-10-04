@@ -18,7 +18,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -123,7 +122,7 @@ abstract class Elasticsearch6RestAbstractDAO {
         doWithRetryNoisy(() -> {
             GetIndexRequest request = new GetIndexRequest().indices(indexName);
             try {
-                boolean result = client.indices().exists(request, RequestOptions.DEFAULT);
+                boolean result = client.indices().exists(request);
                 exists.set(result);
             } catch (IOException e) {
                 throw new RuntimeException(e.getMessage(), e);
@@ -155,7 +154,7 @@ abstract class Elasticsearch6RestAbstractDAO {
                             .build();
 
                     CreateIndexRequest request = new CreateIndexRequest(indexName, settings);
-                    client.indices().create(request, RequestOptions.DEFAULT);
+                    client.indices().create(request);
                     indexCache.add(indexName);
                 } catch (Exception ex) {
                     if (ex.getMessage().contains("index_already_exists_exception")) {
@@ -217,7 +216,7 @@ abstract class Elasticsearch6RestAbstractDAO {
                     CreateIndexRequest request = new CreateIndexRequest(indexName, settings)
                             .mapping(typeName, source);
 
-                    client.indices().create(request, RequestOptions.DEFAULT);
+                    client.indices().create(request);
                     indexCache.add(indexName);
                 } catch (Exception ex) {
                     if (ex.getMessage().contains("index_already_exists_exception")) {
@@ -255,7 +254,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
         doWithRetry(() -> {
             try {
-                client.delete(request, RequestOptions.DEFAULT);
+                client.delete(request);
             } catch (Exception ex) {
                 if (!isDocMissingException(ex)) {
                     logger.error("delete: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), ex);
@@ -279,7 +278,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
         doWithRetry(() -> {
             try {
-                client.index(request, RequestOptions.DEFAULT);
+                client.index(request);
                 result.set(true);
             } catch (Exception ex) {
                 if (!isVerConflictException(ex)) {
@@ -304,7 +303,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
         doWithRetry(() -> {
             try {
-                client.index(request, RequestOptions.DEFAULT);
+                client.index(request);
             } catch (Exception ex) {
                 if (!isConflictOrMissingException(ex)) {
                     logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
@@ -323,7 +322,7 @@ abstract class Elasticsearch6RestAbstractDAO {
                 .type(typeName)
                 .id(id);
         try {
-            client.update(request, RequestOptions.DEFAULT);
+            client.update(request);
         } catch (Exception ex) {
             if (!isConflictOrMissingException(ex)) {
                 logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
@@ -340,7 +339,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             AtomicReference<GetResponse> result = new AtomicReference<>();
             doWithRetryNoisy(() -> {
                 try {
-                    result.set(client.get(request, RequestOptions.DEFAULT));
+                    result.set(client.get(request));
                 } catch (IOException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
@@ -361,7 +360,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             AtomicReference<GetResponse> result = new AtomicReference<>();
             doWithRetryNoisy(() -> {
                 try {
-                    result.set(client.get(request, RequestOptions.DEFAULT));
+                    result.set(client.get(request));
                 } catch (IOException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
@@ -397,7 +396,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             searchRequest.source(sourceBuilder);
             searchRequest.scroll(scroll);
 
-            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            SearchResponse searchResponse = client.search(searchRequest);
             String scrollId = searchResponse.getScrollId();
             SearchHit[] searchHits = searchResponse.getHits().getHits();
 
@@ -408,14 +407,14 @@ abstract class Elasticsearch6RestAbstractDAO {
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
-                searchResponse = client.scroll(scrollRequest, RequestOptions.DEFAULT);
+                searchResponse = client.searchScroll(scrollRequest);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
             }
 
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
             clearScrollRequest.addScrollId(scrollId);
-            client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+            client.clearScroll(clearScrollRequest);
 
             if (logger.isDebugEnabled())
                 logger.debug("findIds: result={}", toJson(result));
@@ -444,7 +443,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             searchRequest.source(sourceBuilder);
             searchRequest.scroll(scroll);
 
-            SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            SearchResponse searchResponse = client.search(searchRequest);
             String scrollId = searchResponse.getScrollId();
             SearchHit[] searchHits = searchResponse.getHits().getHits();
 
@@ -455,14 +454,14 @@ abstract class Elasticsearch6RestAbstractDAO {
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
-                searchResponse = client.scroll(scrollRequest, RequestOptions.DEFAULT);
+                searchResponse = client.searchScroll(scrollRequest);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
             }
 
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
             clearScrollRequest.addScrollId(scrollId);
-            client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
+            client.clearScroll(clearScrollRequest);
 
             if (logger.isDebugEnabled())
                 logger.debug("findAll: result={}", toJson(result));
@@ -495,7 +494,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             }
             searchRequest.source(sourceBuilder);
 
-            return client.search(searchRequest, RequestOptions.DEFAULT).getHits().getTotalHits();
+            return client.search(searchRequest).getHits().getTotalHits();
         } catch (Exception ex) {
             logger.error("getCount: failed for {}/{} with {}", indexName, typeName, ex.getMessage(), ex);
             throw new RuntimeException(ex.getMessage(), ex);

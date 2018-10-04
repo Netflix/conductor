@@ -7,9 +7,6 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.utils.WaitUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -49,11 +46,8 @@ public class Elasticsearch6RestModule extends AbstractModule {
         int connectSleepSecs = config.getIntProperty("workflow.elasticsearch.connection.sleep.seconds", 1);
         WaitUtils.wait("elasticsearch", connectAttempts, connectSleepSecs, () -> {
             try {
-                // Get cluster health status
-                ClusterHealthRequest request = new ClusterHealthRequest();
-                ClusterHealthResponse response = client.cluster().health(request, RequestOptions.DEFAULT);
-
-                log.info("Cluster health " + response);
+                // Get cluster info
+                log.info("Cluster info " + client.info());
                 return true;
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);
