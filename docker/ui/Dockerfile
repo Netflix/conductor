@@ -1,36 +1,5 @@
-#
-# conductor:ui - Netflix conductor UI
-#
-FROM node:alpine
-MAINTAINER Netflix OSS <conductor@netflix.com>
-
-# Install the required packages for the node build
-# to run on alpine
-RUN apk update && apk add \
-  autoconf \
-  automake \
-  libtool \
-  build-base \
-  libstdc++ \
-  gcc \
-  abuild \
-  binutils \
-  nasm \
-  libpng \
-  libpng-dev \
-  libjpeg-turbo \
-  libjpeg-turbo-dev \
-  python
-
-# Make app folders
-RUN mkdir -p /app/ui
-
-# Install node modules
-COPY ./ui/package.json /app/ui
-COPY ./ui/package-lock.json /app/ui
-
-RUN cd app/ui \
-    && npm install
+# Base image alredy creates app folder and installs modules there
+FROM frinx/conductor-ui_base:latest
 
 # Copy the ui files onto the image
 COPY ./docker/ui/bin /app
