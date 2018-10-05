@@ -106,7 +106,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         if (logger.isDebugEnabled())
             logger.debug("getPendingTasksByWorkflow: taskName={}, workflowId={}", taskName, workflowId);
 
-        QueryBuilder query = QueryBuilders.matchQuery("taskDefName", taskName);
+        QueryBuilder query = QueryBuilders.termQuery("taskDefName.keyword", taskName);
         List<HashMap> wraps = findAll(indexes.get(IN_PROGRESS_TASKS), types.get(IN_PROGRESS_TASKS), query, HashMap.class);
         Set<String> taskIds = wraps.stream().filter(map -> workflowId.equals(map.get("workflowId")))
                 .map(map -> (String) map.get("taskId"))
@@ -226,7 +226,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
         String indexName = indexes.get(IN_PROGRESS_TASKS);
         String typeName = types.get(IN_PROGRESS_TASKS);
-        QueryBuilder query = QueryBuilders.matchQuery("taskDefName", task.getTaskDefName());
+        QueryBuilder query = QueryBuilders.termQuery("taskDefName.keyword", task.getTaskDefName());
         List<HashMap> wraps = findAll(indexName, typeName, query, limit, HashMap.class);
         Set<String> ids = wraps.stream().map(map -> (String) map.get("taskId")).collect(Collectors.toSet());
         if (logger.isDebugEnabled())
@@ -517,10 +517,10 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         List<String> dateStrs = dateStrBetweenDates(startTime, endTime);
         dateStrs.forEach(dateStr -> {
             QueryBuilder query1 = QueryBuilders
-                    .matchQuery ("workflowType", workflowName);
+                    .termQuery ("workflowType.keyword", workflowName);
 
             QueryBuilder query2 = QueryBuilders
-                    .matchQuery ("dateStr", dateStr);
+                    .termQuery ("dateStr.keyword", dateStr);
 
             QueryBuilder query = QueryBuilders.boolQuery().must(query1).must(query2);
 
