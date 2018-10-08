@@ -65,6 +65,11 @@
       },
       "reRunFromWorkflowId": {
         "type": "keyword"
+      },
+      "authorization": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false
       }
     }
   }
