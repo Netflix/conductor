@@ -66,16 +66,6 @@
       "reRunFromWorkflowId": {
         "type": "keyword"
       },
-      "headers": {
-        "type": "object",
-        "enabled": false,
-        "dynamic": false
-      },
-      "context": {
-        "type": "object",
-        "enabled": false,
-        "dynamic": false
-      },
       "authorization": {
         "type": "object",
         "enabled": false,
