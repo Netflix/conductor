@@ -45,7 +45,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     private static final Set<String> queues = ConcurrentHashMap.newKeySet();
     private static final int unackScheduleInMS = 60_000;
     private static final int unackTime = 60_000;
-    private static final String QUEUE = "queue";
+    private static final String DEFAULT = "default";
     private final int stalePeriod;
     private String baseName;
 
@@ -530,7 +530,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         queues.add(queueName);
         String indexName = toIndexName(queueName);
         String typeName = toTypeName(queueName);
-        ensureIndexExists(indexName, typeName, QUEUE);
+        ensureIndexExists(indexName, typeName, DEFAULT);
     }
 
     private GetResponse findMessage(String queueName, String id) {

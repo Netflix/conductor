@@ -47,6 +47,7 @@ abstract class Elasticsearch6RestAbstractDAO {
     private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestAbstractDAO.class);
     private static final TypeReference MAP_OBJECT_TYPE = new TypeReference<Map<String, Object>>() {};
     private static final TypeReference MAP_ALL_TYPE = new TypeReference<Map<String, ?>>() {};
+    private final static String DEFAULT = "_default_";
     private final static String NAMESPACE_SEP = ".";
     private final static int BATCH_SIE = 1_000;
     RestHighLevelClient client;
@@ -158,7 +159,7 @@ abstract class Elasticsearch6RestAbstractDAO {
                     client.indices().create(request);
                     indexCache.add(indexName);
                 } catch (Exception ex) {
-                    if (ex.getMessage().contains("index_already_exists_exception")) {
+                    if (ex.getMessage().contains("index_already_exists_exception") || ex.getMessage().contains("resource_already_exists_exception")) {
                         indexCache.add(indexName);
                     } else {
                         throw new RuntimeException(ex.getMessage(), ex);
@@ -198,6 +199,13 @@ abstract class Elasticsearch6RestAbstractDAO {
             InputStream stream = getClass().getResourceAsStream(resourceName);
             Map<String, Object> mapping = mapper.readValue(stream, MAP_OBJECT_TYPE);
 
+            // Means need to replace by type name
+            if (mapping.containsKey(DEFAULT)) {
+                Object object = mapping.get(DEFAULT);
+                mapping.put(typeName, object);
+                mapping.remove(DEFAULT);
+            }
+
             // Create it otherwise
             doWithRetryNoisy(() -> {
                 try {
@@ -212,7 +220,7 @@ abstract class Elasticsearch6RestAbstractDAO {
                     client.indices().create(request);
                     indexCache.add(indexName);
                 } catch (Exception ex) {
-                    if (ex.getMessage().contains("index_already_exists_exception")) {
+                    if (ex.getMessage().contains("index_already_exists_exception") || ex.getMessage().contains("resource_already_exists_exception")) {
                         indexCache.add(indexName);
                     } else {
                         throw new RuntimeException(ex.getMessage(), ex);
