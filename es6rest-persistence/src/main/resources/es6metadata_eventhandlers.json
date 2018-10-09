@@ -33,6 +33,11 @@
             "type": "object",
             "enabled": false,
             "dynamic": false
+          },
+          "update_task": {
+            "type": "object",
+            "enabled": false,
+            "dynamic": false
           }
         }
       },
