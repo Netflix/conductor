@@ -23,6 +23,21 @@
             "type": "object",
             "enabled": false,
             "dynamic": false
+          },
+          "find_update": {
+            "type": "object",
+            "enabled": false,
+            "dynamic": false
+          },
+          "java_action": {
+            "type": "object",
+            "enabled": false,
+            "dynamic": false
+          },
+          "update_task": {
+            "type": "object",
+            "enabled": false,
+            "dynamic": false
           }
         }
       },
