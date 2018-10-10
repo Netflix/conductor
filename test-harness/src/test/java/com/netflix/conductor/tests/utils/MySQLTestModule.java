@@ -20,8 +20,6 @@ import com.netflix.conductor.dao.mysql.MySQLQueueDAO;
 import com.netflix.conductor.mysql.MySQLConfiguration;
 import com.netflix.conductor.mysql.MySQLDataSourceProvider;
 import com.netflix.conductor.mysql.SystemPropertiesMySQLConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.util.concurrent.ExecutorService;

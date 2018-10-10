@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.netflix.conductor.tests.utils;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.dyno.DynomiteConfiguration;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -25,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class MockConfiguration implements Configuration {
+public class MockConfiguration implements DynomiteConfiguration {
 
     @Override
     public int getSweepFrequency() {

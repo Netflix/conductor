@@ -97,8 +97,8 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         String externalPayloadStorageString = configuration.getProperty("workflow.external.payload.storage", "");
         try {
             externalPayloadStorageType = ExternalPayloadStorageType.valueOf(externalPayloadStorageString);
-        } catch(IllegalArgumentException e) {
-            logger.info("External payload storage is not configured, provided: {}, supported values are: {}", externalPayloadStorageString, Arrays.toString(ExternalPayloadStorageType.values()), e);
+        } catch (IllegalArgumentException e) {
+            logger.info("External payload storage is not configured, provided: {}, supported values are: {}", externalPayloadStorageString, Arrays.toString(ExternalPayloadStorageType.values()));
         }
 
         if (externalPayloadStorageType == ExternalPayloadStorageType.S3) {
