@@ -39,11 +39,11 @@ public class MySQLTestModule extends AbstractModule {
 
         configureExecutorService();
 
-        bind(EmbeddedDatabase.class).toInstance(EmbeddedDatabase.INSTANCE);
         bind(Configuration.class).to(SystemPropertiesMySQLConfiguration.class).in(Singleton.class);
         bind(MySQLConfiguration.class).to(SystemPropertiesMySQLConfiguration.class).in(Singleton.class);
 
         bind(DataSource.class).toProvider(MySQLDataSourceProvider.class).in(Scopes.SINGLETON);
+        bind(EmbeddedDatabase.class).toInstance(EmbeddedDatabase.INSTANCE);
         bind(MetadataDAO.class).to(MySQLMetadataDAO.class);
         bind(ExecutionDAO.class).to(MySQLExecutionDAO.class);
         bind(QueueDAO.class).to(MySQLQueueDAO.class);
