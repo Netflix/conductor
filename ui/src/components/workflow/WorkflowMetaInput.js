@@ -15,7 +15,7 @@ class WorkflowMetaInput extends Component {
             jsonData: {},
             log: this.props.res,
             loading: this.props.starting,
-            label: "info"
+            label: "info",
         }
     }
 
@@ -30,7 +30,7 @@ class WorkflowMetaInput extends Component {
         var { labels, values } = this.props.workflowForm;
         var dataObject = {};
         
-        if (idx != -1) {
+        if (idx !== -1) {
             values.splice(idx, 1, e.target.value);
         }
 
@@ -62,19 +62,21 @@ class WorkflowMetaInput extends Component {
 
     render() {
         const { loading, log } = this.state;
-        const { values, descs, labels } = this.props.workflowForm;
+        const values = this.props.workflowForm.values || [];
+        const descs = this.props.workflowForm.descs || [];
+        const { labels } = this.props.workflowForm;
 
         function renderDesc(idx) {
             if(descs[idx]){
                 return (
-                    <Label>{descs[idx]}</Label> 
+                    <Label>{descs[idx]}</Label>
                 )
             }
         }
 
         function consoleLog() {
             if(log){
-                if(log.body && log.statusCode == 200){
+                if(log.body && log.statusCode === 200){
                     return (
                         <div>
                             <Well>
@@ -85,7 +87,7 @@ class WorkflowMetaInput extends Component {
                         </div>
                     );
                 }
-                if(log.statusCode == 200){
+                if(log.statusCode === 200){
                     return (
                         <div>
                             <Well>
@@ -116,16 +118,16 @@ class WorkflowMetaInput extends Component {
                          <form onSubmit={!loading ? this.startWorfklow : null}>
                             &nbsp;&nbsp;
                                 <Input type="input" key={values} 
-                                                    label={item} 
-                                                    defaultValue={values[idx]} 
-                                                    placeholder="Enter the input" 
+                                                    label={item}
+                                                    defaultValue={values[idx]}
+                                                    placeholder="Enter the input"
                                                     onChange={this.handleChange.bind(this, idx)}/>
-                                 {renderDesc(idx)} 
+                                 {renderDesc(idx)}
                                  &nbsp;&nbsp;
                          </form>)}
 
                     <WorkflowMetaCron ref="cronform"/><br/>
-                    
+
                     <Button bsStyle="primary" 
                             bsSize="large" 
                             disabled={loading} 
