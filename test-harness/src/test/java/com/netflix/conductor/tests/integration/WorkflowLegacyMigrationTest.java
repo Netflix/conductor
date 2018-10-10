@@ -25,7 +25,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.tests.utils.TestRunner;
+import com.netflix.conductor.tests.utils.RedisTestRunner;
 import org.apache.commons.io.Charsets;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -36,7 +36,7 @@ import java.util.Map;
 
 import static org.junit.Assert.fail;
 
-@RunWith(TestRunner.class)
+@RunWith(RedisTestRunner.class)
 public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
 
     private static final String WORKFLOW_SCENARIOS_PATH_PREFIX = "/integration/scenarios/legacy/";

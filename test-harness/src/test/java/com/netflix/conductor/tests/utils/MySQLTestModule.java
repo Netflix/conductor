@@ -31,16 +31,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author jvemugunta
  */
 public class MySQLTestModule extends AbstractModule {
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private int maxThreads = 50;
 
     private ExecutorService executorService;
-    protected final EmbeddedDatabase DB = EmbeddedDatabase.INSTANCE;
 
     @Override
     protected void configure() {
+        final EmbeddedDatabase DB = EmbeddedDatabase.INSTANCE;
 
+        configureExecutorService();
 
         bind(Configuration.class).to(SystemPropertiesMySQLConfiguration.class).in(Singleton.class);
         bind(MySQLConfiguration.class).to(SystemPropertiesMySQLConfiguration.class).in(Singleton.class);
@@ -55,9 +55,7 @@ public class MySQLTestModule extends AbstractModule {
         bind(UserTask.class).asEagerSingleton();
         bind(ObjectMapper.class).toProvider(JsonMapperProvider.class);
         bind(ExternalPayloadStorage.class).to(MockExternalPayloadStorage.class);
-
     }
-
 
     @Provides
     public ExecutorService getExecutorService() {

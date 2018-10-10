@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,19 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- *
- */
 package com.netflix.conductor.tests.utils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.junit.runners.BlockJUnit4ClassRunner;
 
-/**
- * @author Viren
- *
- */
 public class MySQLTestRunner extends BlockJUnit4ClassRunner {
 
     private Injector injector;

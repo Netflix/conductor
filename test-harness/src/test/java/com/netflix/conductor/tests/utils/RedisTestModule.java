@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Viren
  *
  */
-public class TestModule extends AbstractModule {
+public class RedisTestModule extends AbstractModule {
     private int maxThreads = 50;
 
     private ExecutorService executorService;
