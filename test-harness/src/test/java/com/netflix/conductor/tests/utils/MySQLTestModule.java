@@ -36,10 +36,10 @@ public class MySQLTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        final EmbeddedDatabase DB = EmbeddedDatabase.INSTANCE;
 
         configureExecutorService();
 
+        bind(EmbeddedDatabase.class).toInstance(EmbeddedDatabase.INSTANCE);
         bind(Configuration.class).to(SystemPropertiesMySQLConfiguration.class).in(Singleton.class);
         bind(MySQLConfiguration.class).to(SystemPropertiesMySQLConfiguration.class).in(Singleton.class);
 
