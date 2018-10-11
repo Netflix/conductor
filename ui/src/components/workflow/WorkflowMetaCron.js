@@ -9,14 +9,14 @@ class WorkflowMetaCron extends Component {
             setButton: true,
             cronExp: null,
             cronDesc: null,
-            cronArr: Array(6).fill('*')
+            cronArr: Array(6).fill('*'),
         }
     }
 
     handleCron(idx, e) {
         let cronArr = this.state.cronArr;
 
-        if (e.target.value == "") {
+        if (e.target.value === "") {
             cronArr.splice(idx, 1, "*");
         } else
             cronArr.splice(idx, 1, e.target.value);
@@ -49,7 +49,6 @@ class WorkflowMetaCron extends Component {
 
         return (
             <div>
-                <h3>Schedule workflow</h3>
                 <div className="input-grid">
                     <form>
                         <Grid>
