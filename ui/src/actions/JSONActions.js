@@ -22,6 +22,7 @@ export function getInputs(workflowMeta) {
 
   export function getDetails(workflowMeta, inputsArray) {
 
+    var inputsArray = inputsArray;
     var json = JSON.stringify(workflowMeta, null, 2);
     var detailsArray = [];
     var tmpDesc = [];
@@ -33,7 +34,7 @@ export function getInputs(workflowMeta) {
     var regex3 = /[^[\]"]+/;
     var regex4 = /\[(.*?)\]/;
 
-    if (inputsArray[0] !== "") {
+    if (inputsArray[0] != "") {
       for (let i = 0; i < inputsArray.length; i++) {
         var RegExp3 = new RegExp("\\b" + inputsArray[i] + "\\[.*?\\" + "\]" + "\"", 'igm');
         detailsArray[i] = json.match(RegExp3);

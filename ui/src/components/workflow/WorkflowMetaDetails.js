@@ -30,22 +30,16 @@ class WorkflowMetaDetails extends Component {
   }
 
   componentWillMount(){
-    this.props.dispatch(getWorkflowMetaDetails(this.state.name, this.state.version));
+    this.props.dispatch(getWorkflowMetaDetails(this.state.name, this.state.version)); 
   }
 
-  getWorkflowInputDetails() {
-      this.setState({
-          workflowForm: {
-              labels: getInputs(this.state.workflowMeta),
-          }
-      }, () => {
-          this.setState({
-              workflowForm: {
-                  labels: this.state.workflowForm.labels,
-                  ...getDetails(this.state.workflowMeta, this.state.workflowForm.labels)
-              }
-          })
-      });
+  getWorkflowInputDetails(){
+    this.setState({
+      workflowForm: {
+        labels: getInputs(this.state.workflowMeta),
+        ...getDetails(this.state.workflowMeta, this.state.workflowForm.labels)
+      }
+    });
   }
 
   render() {
