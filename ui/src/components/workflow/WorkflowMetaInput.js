@@ -4,6 +4,8 @@ import { Button, Input, Label, Well, Panel } from 'react-bootstrap';
 import WorkflowMetaCron from './WorkflowMetaCron';
 import { startWorkflow } from '../../actions/WorkflowActions';
 import { Link } from 'react-router';
+import { CSSTransitionGroup } from 'react-transition-group'; // ES6
+
 
 class WorkflowMetaInput extends Component {
     constructor(props) {
@@ -16,6 +18,7 @@ class WorkflowMetaInput extends Component {
             log: this.props.res,
             loading: this.props.starting,
             label: "info",
+            showCron: false
         }
     }
 
@@ -51,8 +54,10 @@ class WorkflowMetaInput extends Component {
         let wfname = this.props.meta.name;
         let data = {
             json: this.state.jsonData,
-            cronExp: this.refs.cronform.state.cronExp,
-            cronDesc: this.refs.cronform.state.cronDesc
+            ... (this.state.showCron ? {
+                cronExp: this.refs.cronform.state.cronExp,
+                cronDesc: this.refs.cronform.state.cronDesc
+            } : {cronExp: null, cronDesc: null})
         };
 
         console.log(JSON.stringify(data, null, 2));
@@ -60,8 +65,16 @@ class WorkflowMetaInput extends Component {
         this.props.dispatch(startWorkflow(wfname, data));        
     };
 
+    showCron(){
+        this.setState({ showCron: true })
+    }
+
+    hideCron(){
+        this.setState({ showCron: false})
+    }
+
     render() {
-        const { loading, log } = this.state;
+        const { loading, log, showCron } = this.state;
         const values = this.props.workflowForm.values || [];
         const descs = this.props.workflowForm.descs || [];
         const { labels } = this.props.workflowForm;
@@ -70,6 +83,14 @@ class WorkflowMetaInput extends Component {
             if(descs[idx]){
                 return (
                     <Label>{descs[idx]}</Label>
+                )
+            }
+        }
+
+        function renderCronComp() {
+            if(showCron){
+                return (
+                    <WorkflowMetaCron ref="cronform"/>
                 )
             }
         }
@@ -126,13 +147,25 @@ class WorkflowMetaInput extends Component {
                                  &nbsp;&nbsp;
                          </form>)}
 
-                    <WorkflowMetaCron ref="cronform"/><br/>
+                    <h3>Schedule workflow &nbsp;&nbsp;
+
+                        <Button className="btn btn-default btn-circle" bsSize="xsmall"
+                                onClick={showCron ? this.hideCron.bind(this) : this.showCron.bind(this)}>
+                            { showCron ?  <i className="fas fa-minus"/> : <i className="fas fa-plus"/> }
+                        </Button></h3>
+
+                    <CSSTransitionGroup
+                        transitionName="cronanim"
+                        transitionEnterTimeout={300}
+                        transitionLeaveTimeout={300}>
+                            {renderCronComp()}<br/>
+                    </CSSTransitionGroup>
 
                     <Button bsStyle="primary" 
                             bsSize="large" 
                             disabled={loading} 
                             onClick={!loading ? this.startWorfklow : null}>
-                            <i className="fa fa-play"/>
+                            { loading ? <i className="fas fa-spinner fa-spin"/> : <i className="fa fa-play"/>}
                             &nbsp;&nbsp;{loading ? 'Executing...' : 'Execute workflow'}
                     </Button>
 
