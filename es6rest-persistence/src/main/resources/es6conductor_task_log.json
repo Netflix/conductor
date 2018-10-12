@@ -23,7 +23,9 @@
         "type": "keyword"
       },
       "output": {
-        "type": "object"
+        "type": "object",
+        "dynamic": "false",
+        "enabled": false
       }
     }
   },
