@@ -30,4 +30,5 @@ services:
     image: v1r3n/dynomite
 
   elasticsearch:
-    image: elasticsearch:2.4
+    image: elasticsearch:5
+    command: "-Etransport.host=0.0.0.0"
