@@ -52,6 +52,8 @@ public class SystemTaskWorkerCoordinator {
 	
 	private int pollCount;
 
+	private int pollTimeout;
+
 	private long pollFrequency;
 
 	private LinkedBlockingQueue<Runnable> workerQueue;
@@ -74,6 +76,7 @@ public class SystemTaskWorkerCoordinator {
 		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
 		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 5);
 		this.pollCount = config.getIntProperty("workflow.system.task.worker.poll.count", 5);
+		this.pollTimeout = config.getIntProperty("workflow.system.task.worker.poll.timeout", 500);
 		this.pollFrequency = config.getIntProperty("workflow.system.task.worker.poll.frequency", 500);
 		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
 		this.workerQueue = new LinkedBlockingQueue<Runnable>(workerQueueSize);
@@ -129,7 +132,7 @@ public class SystemTaskWorkerCoordinator {
 			}
 			
 			String name = systemTask.getName();
-			List<String> polled = taskQueues.pop(name, pollCount, 200);
+			List<String> polled = taskQueues.pop(name, pollCount, pollTimeout);
 			Monitors.recordTaskPoll(name);
 			logger.debug("Polling for {}, got {}", name, polled.size());
 			for(String task : polled) {
