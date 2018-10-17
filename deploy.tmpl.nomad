@@ -100,12 +100,7 @@ job "conductor" {
   } // end ui group
 
   group "server" {
-    count = 3
-
-    constraint {
-      operator  = "distinct_property"
-      attribute = "${attr.platform.aws.placement.availability-zone}"
-    }
+    count = 8
 
     # vault declaration
     vault {
