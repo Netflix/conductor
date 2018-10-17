@@ -100,7 +100,7 @@ job "conductor" {
   } // end ui group
 
   group "server" {
-    count = 8
+    count = 3
 
     constraint {
       operator  = "distinct_property"
@@ -214,7 +214,7 @@ job "conductor" {
   } // end server group
 
   group "search" {
-    count = 6
+    count = 3
 
     constraint {
       operator  = "distinct_property"
