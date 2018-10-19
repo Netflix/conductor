@@ -1,5 +1,4 @@
 dependencies {
-
     compile project(':conductor-correlation')
 	compile project(':conductor-common')
 	compile project(':conductor-core')
@@ -14,6 +13,13 @@ dependencies {
 	compile 'com.sun.jersey.contribs.jersey-oauth:oauth-signature:1.19.+'
 	compile group: 'org.json', name: 'json', version: '20141113'
 	compile group: 'io.nats', name: 'java-nats-streaming', version: '2.0.2'
+
+	compile files('libs/one-mq-0.2.0.jar')
+	compile 'io.grpc:grpc-core:1.15.1'
+	compile 'io.grpc:grpc-netty-shaded:1.15.1'
+	compile 'io.grpc:grpc-protobuf:1.15.1'
+	compile 'io.grpc:grpc-stub:1.15.1'
+	compile 'io.grpc:protoc-gen-grpc-java:1.15.1'
 
 	provided 'javax.ws.rs:jsr311-api:1.1.1'
 	provided 'io.swagger:swagger-jaxrs:1.5.9'

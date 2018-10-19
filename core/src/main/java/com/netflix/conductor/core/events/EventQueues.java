@@ -39,7 +39,7 @@ public class EventQueues {
 	private static ParametersUtils pu = new ParametersUtils();
 
 	public enum QueueType {
-		sqs, conductor, nats, nats_stream
+		sqs, conductor, nats, nats_stream, shotgun
 	}
 
 	private static Map<QueueType, EventQueueProvider> providers = new HashMap<>();
