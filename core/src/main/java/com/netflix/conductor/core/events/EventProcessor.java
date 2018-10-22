@@ -60,12 +60,15 @@ public class EventProcessor {
 
 	private ObjectMapper om;
 
+	private String eventBus;
+
 	@Inject
 	public EventProcessor(ExecutionService es, MetadataService ms, ActionProcessor ap, Configuration config, ObjectMapper om) {
 		this.es = es;
 		this.ms = ms;
 		this.ap = ap;
 		this.om = om;
+		this.eventBus = config.getProperty("event_bus", null);
 
 		int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
 
@@ -102,7 +105,7 @@ public class EventProcessor {
 	}
 
 	public void refresh() {
-		Set<String> events = ms.getEventHandlers().stream().map(EventHandler::getEvent).collect(Collectors.toSet());
+		Set<String> events = ms.getEventHandlers().stream().map(EventHandler::getEvent).map(this::handleEventBus).collect(Collectors.toSet());
 		List<ObservableQueue> created = new LinkedList<>();
 		events.forEach(event -> queuesMap.computeIfAbsent(event, s -> {
 			ObservableQueue q = EventQueues.getQueue(event, false);
@@ -122,6 +125,13 @@ public class EventProcessor {
 			}
 		});
 		queuesMap.entrySet().removeIf(entry -> remove.contains(entry.getKey()));
+	}
+
+	private String handleEventBus(String event) {
+		if (StringUtils.isEmpty(eventBus)) {
+			return event;
+		}
+		return event.replace("${event_bus}", eventBus);
 	}
 
 	private void listen(ObservableQueue queue) {
