@@ -245,11 +245,11 @@ public class MetadataService {
 		if (existing == null) {
 			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
 		}
-		validateQueue(eventHandler);
 		// if event name was updated - close the old
 		if (!(existing.getEvent().equalsIgnoreCase(eventHandler.getEvent()))) {
 			closeEventQueue(existing.getEvent());
 		}
+		validateQueue(eventHandler);
 		metadata.updateEventHandler(eventHandler);
 	}
 	
