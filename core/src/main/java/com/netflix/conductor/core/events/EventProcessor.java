@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class EventProcessor {
-
+	private static String EVENT_BUS_VAR = "${event_bus}";
 	private static Logger logger = LoggerFactory.getLogger(EventProcessor.class);
 
 	private MetadataService ms;
@@ -131,7 +131,7 @@ public class EventProcessor {
 		if (StringUtils.isEmpty(eventBus)) {
 			return event;
 		}
-		return event.replace("${event_bus}", eventBus);
+		return event.replace(EVENT_BUS_VAR, eventBus);
 	}
 
 	private void listen(ObservableQueue queue) {
@@ -156,8 +156,15 @@ public class EventProcessor {
 
 			es.addMessage(queue.getName(), msg);
 
+			// Find event handlers with direct event bus name as the prefix based on queue type
 			String event = queue.getType() + ":" + queue.getName();
 			List<EventHandler> handlers = ms.getEventHandlersForEvent(event, true);
+
+			// Find additional event handler which starts with ${event_bus} ...
+			if (StringUtils.isNotEmpty(eventBus)) {
+				event = EVENT_BUS_VAR + ":" + queue.getName();
+				handlers.addAll(ms.getEventHandlersForEvent(event, true));
+			}
 
 			for (EventHandler handler : handlers) {
 
