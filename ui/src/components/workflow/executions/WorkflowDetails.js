@@ -183,7 +183,7 @@ class WorkflowDetails extends Component {
                 index++;
             }
 
-            if(!this.state.jsonData){
+            if (!this.state.jsonData || _.isEmpty(this.state.jsonData)) {
                 this.state.jsonData = inputObject;
             }
             this.state.workflowForm.labels = labels;
