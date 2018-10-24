@@ -130,15 +130,16 @@ class WorkflowMetaInput extends Component {
                 } 
             }
         }
-  
+
         return (
             <div className="input-form">
                 <Panel header="Execute workflow">
                     <h1>Inputs of <Label bsStyle={log ? (log.error ? "danger":"success"):"info"}>{this.props.name}</Label> workflow</h1>
-                        {labels.map((item, idx) => 
+                    <p>&nbsp;&nbsp;&nbsp;&nbsp;{this.props.meta ? this.props.meta.description : null}</p>
+                        {labels.map((item, idx) =>
                          <form onSubmit={!loading ? this.startWorfklow : null}>
                             &nbsp;&nbsp;
-                                <Input type="input" key={values} 
+                                <Input type="input" key={values}
                                                     label={item}
                                                     defaultValue={values[idx]}
                                                     placeholder="Enter the input"
@@ -161,18 +162,18 @@ class WorkflowMetaInput extends Component {
                             {renderCronComp()}<br/>
                     </CSSTransitionGroup>
 
-                    <Button bsStyle="primary" 
-                            bsSize="large" 
-                            disabled={loading} 
+                    <Button bsStyle="primary"
+                            bsSize="large"
+                            disabled={loading}
                             onClick={!loading ? this.startWorfklow : null}>
                             { loading ? <i className="fas fa-spinner fa-spin"/> : <i className="fa fa-play"/>}
                             &nbsp;&nbsp;{loading ? 'Executing...' : 'Execute workflow'}
                     </Button>
 
                     <h3>Console log</h3>
-                        {consoleLog()} 
+                        {consoleLog()}
 
-                </Panel>   
+                </Panel>
             </div>
         )
     }
