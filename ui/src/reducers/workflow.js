@@ -13,6 +13,10 @@ const initialState = {
   data: [],
   hash: '',
   res: null,
+  cronData: {
+      history: [],
+      jobs: [],
+    }
 };
 
 export default function workflows(state = initialState, action) {
@@ -81,7 +85,13 @@ export default function workflows(state = initialState, action) {
         ...state,
         fetching: true,
         starting: true
-      }; 
+      };
+    case 'REQUESTED_CRON_DATA':
+      return {
+        ...state,
+        fetching: true,
+        retrying: true
+      };
     case 'REQUESTED_RETRY_WORKFLOW':
       return {
         ...state,
@@ -112,6 +122,19 @@ export default function workflows(state = initialState, action) {
         restarting: false,
         refetch: true
       };
+      case 'RECEIVED_CRON_DATA':
+       return {
+         ...state,
+         error: false,
+         data:[],
+         fetching: false,
+         restarting: false,
+         refetch: true,
+         cronData: {
+             history: JSON.parse(action.data.history),
+             jobs: JSON.parse(action.data.scheduledJobs)
+         }
+       };
     case 'RECEIVED_START_WORKFLOW':
       return {
         ...state,

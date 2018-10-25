@@ -128,6 +128,27 @@ export function startWorkflow(workflowName, data){
   }
 }
 
+export function getCronData(){
+    return function (dispatch) {
+        dispatch({
+            type: 'REQUESTED_CRON_DATA'
+        });
+
+
+        return http.get('/api/wfe/crondata').then((data) => {
+            dispatch({
+                type: 'RECEIVED_CRON_DATA',
+                data: data
+            });
+        }).catch((e) => {
+            dispatch({
+                type: 'REQUEST_ERROR',
+                e
+            });
+        });
+    }
+}
+
 export function retryWorfklow(workflowId){
   return function (dispatch) {
     dispatch({

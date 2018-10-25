@@ -15,6 +15,7 @@ const baseURL2ByTasks = baseURL2 + 'search-by-task';
 const baseURLMeta = baseURL + 'metadata/';
 const baseURLTask = baseURL + 'tasks/';
 const cronJobs = [];
+const cronHistory = [];
 
 var CronJob = require('cron').CronJob
 router.use(bodyParser.urlencoded({ extended: true}));
@@ -184,10 +185,20 @@ router.post('/workflow/:workflowName', async (req, res, next) => {
     let name = req.params.workflowName;
     let desc = req.body.cronDesc;
     let id = Math.floor((1 + Math.random()) * 0x10000).toString();
-    let job = new CronJob(req.body.cronExp, function () {
-      console.log('Workflow job ID: %s executed', id);
-      http.post(baseURL2 + req.params.workflowName, JSON.stringify(req.body.json));
+    let job = new CronJob(req.body.cronExp, async function() {
+        console.log('Workflow job ID: %s executed', id);
+
+        const result = await http.post(baseURL2 + req.params.workflowName, JSON.stringify(req.body.json));
+
+        let history = {
+            id: id,
+            wfid: result.text
+        };
+
+        cronHistory.push(history);
+
     }, null, true);
+
 
     let jobData = {
       id: id,
@@ -197,10 +208,47 @@ router.post('/workflow/:workflowName', async (req, res, next) => {
     };
     cronJobs.push(jobData);
     res.status(200).send("Workflow successfully scheduled.");
+
   }
 });
 
-router.get('/cronjobs', async (req, res, next) => {
+router.get('/crondata', async (req, res, next) => {
+    try {
+        let cacheH = [];
+        let cacheS = [];
+        let history;
+        let scheduledJobs;
+
+        history = JSON.stringify(cronHistory, function (key, value) {
+            if (typeof value === 'object' && value !== null) {
+                if (cacheH.indexOf(value) !== -1) {
+                    return;
+                }
+                cacheH.push(value);
+            }
+            return value;
+        });
+        cacheH = null;
+
+        scheduledJobs = JSON.stringify(cronJobs, function (key, value) {
+            if (typeof value === 'object' && value !== null) {
+                if (cacheS.indexOf(value) !== -1) {
+                    return;
+                }
+                cacheS.push(value);
+            }
+            return value;
+        });
+        cacheS = null;
+
+
+        res.status(200).send({history: history, scheduledJobs: scheduledJobs});
+    } catch (err) {
+        next(err);
+    }
+});
+
+/*router.get('/cronjobs', async (req, res, next) => {
   try {
     var cache = [];
     var scheduledJobs = [];
@@ -220,7 +268,7 @@ router.get('/cronjobs', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+});*/
 
 router.post('/cronjobs/stop/:cronjobId', async (req, res, next) => {
   try {

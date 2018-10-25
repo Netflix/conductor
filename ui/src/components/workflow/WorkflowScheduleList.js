@@ -3,36 +3,26 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import { connect } from 'react-redux';
 import request from 'superagent';
+import {Link} from "react-router";
+import {getCronData} from "../../actions/WorkflowActions";
 
 const WorkflowScheduleList = React.createClass({
 
   getInitialState() {
     return {
-      cronJobs: []
+        cronJobs: this.props.cronData.jobs,
+        cronHistory: this.props.cronData.history
     }
   },
 
   componentWillMount(){
-    this.getCronJobs();
+    this.props.dispatch(getCronData());
   },
 
-  componentWillReceiveProps(){
-    this.getCronJobs();
-  },
-
-  getCronJobs() {
-    let self = this;
-    request
-      .get('/api/wfe/cronjobs')
-      .end(function (err, res) {
-        if (err) {
-          console.log(res)
-        } else {
-          console.log(res)
-          self.setState({
-            cronJobs: JSON.parse(res.text)
-          })
-        }
+  componentWillReceiveProps(nextProps){
+      this.setState({
+          cronJobs: nextProps.cronData.jobs,
+          cronHistory: nextProps.cronData.history
       });
   },
 
@@ -83,21 +73,25 @@ const WorkflowScheduleList = React.createClass({
   },
 
   render() {
-    var { cronJobs } = this.state;  
+    let { cronHistory } = this.state;
+    let cronJobs = this.state.cronJobs || [];
 
     function runningMaker(cell, row){
-      if(cell.running == true){
+      if(cell.running === true){
         return 'Running';
       }
       return 'Stopped';
-    };
+    }
 
     function executionMaker(cell, row){
-      if(cell.lastExecution == null){
-        return '';
-      }
-      return cell.lastExecution;
-    };
+        if(cronHistory.length > 0 && cell.lastExecution != null) {
+            for(let i = cronHistory.length-1; i >= 0; i-- ){
+                if(cronHistory[i].id === row.id){
+                    return (<Link to={`/workflow/id/${cronHistory[i].wfid}`}>{cell.lastExecution}</Link>);
+                }
+            }
+        }
+    }
 
     function miniDetails(cell, row){
       return (<ButtonGroup>
@@ -113,7 +107,7 @@ const WorkflowScheduleList = React.createClass({
                 onClick={ () => {this.deleteCronJob(row.id)} }>Delete</Button>
         </ButtonGroup>
       );
-     };
+     }
 
     return (
       <div className="ui-content">
