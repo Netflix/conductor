@@ -132,6 +132,7 @@ public class FindUpdateAction implements JavaEventAction {
 		// Let's find the sub-workflow in the current parent
 		List<Workflow> result = parent.getTasks().stream()
 				.filter(task -> SubWorkflow.NAME.equals(task.getTaskType()))
+				.filter(task -> task.getInputData().get("subWorkflowId") != null)
 				.filter(task -> workflowName.equals(task.getInputData().get("subWorkflowName")))
 				.map(task -> executor.getWorkflow(task.getInputData().get("subWorkflowId").toString(), true))
 				.collect(Collectors.toList());
@@ -142,6 +143,7 @@ public class FindUpdateAction implements JavaEventAction {
 		// If not found, then consider each child sub-workflow as parent recursively
 		return parent.getTasks().stream()
 				.filter(task -> SubWorkflow.NAME.equals(task.getTaskType()))
+				.filter(task -> task.getInputData().get("subWorkflowId") != null)
 				.map(task -> executor.getWorkflow(task.getInputData().get("subWorkflowId").toString(), true))
 				.map(workflow -> findChildSubWorkflow(workflow, workflowName))
 				.flatMap(Collection::stream)
