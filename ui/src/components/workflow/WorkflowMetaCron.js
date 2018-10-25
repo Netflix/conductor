@@ -22,31 +22,14 @@ class WorkflowMetaCron extends Component {
             cronArr.splice(idx, 1, e.target.value);
 
         this.state.cronArr = cronArr;
+        this.state.cronExp = cronArr.join(" ");
     };
 
     handleCronDesc(e) {
         this.state.cronDesc = e.target.value;
     };
-
-    submitCron(setButton) {
-        let cronArr = this.state.cronArr;
-        if (setButton) {
-            this.state.cronExp = cronArr.join(" ");
-            this.setState({
-                setButton: false
-            });
-        } else {
-            this.state.cronExp = null;
-            this.setState({
-                setButton: true
-            });
-        }
-    };
     
     render() {
-
-        const { setButton } = this.state;
-
         return (
             <div>
                 <div className="input-grid">
@@ -79,10 +62,6 @@ class WorkflowMetaCron extends Component {
                                 </Col>
 
                                 <ButtonToolbar>
-                                    <Button bsStyle={setButton ? "success" : "danger"} 
-                                            onClick={() => {this.submitCron(setButton)}}>
-                                            <i className="far fa-calendar-alt"/>&nbsp;&nbsp;{setButton ? 'Set' : 'Cancel'}</Button>
-
                                         <OverlayTrigger trigger="click" rootClose placement="right" overlay={
                                                 <Popover title="Cron Expression Help" width={500}>
                                                 <Panel header="Expression">

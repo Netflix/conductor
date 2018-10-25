@@ -166,8 +166,8 @@ class WorkflowMetaInput extends Component {
                             bsSize="large"
                             disabled={loading}
                             onClick={!loading ? this.startWorfklow : null}>
-                            { loading ? <i className="fas fa-spinner fa-spin"/> : <i className="fa fa-play"/>}
-                            &nbsp;&nbsp;{loading ? 'Executing...' : 'Execute workflow'}
+                            { showCron ? (loading ? <i className="fas fa-spinner fa-spin"/> : <i className="far fa-calendar-alt"/>) : (loading ? <i className="fas fa-spinner fa-spin"/> : <i className="fa fa-play"/>)}
+                            &nbsp;&nbsp;{ showCron ? ( loading ? 'Scheduling...' : 'Schedule workflow') : ( loading ? 'Executing...' : 'Execute workflow') }
                     </Button>
 
                     <h3>Console log</h3>
