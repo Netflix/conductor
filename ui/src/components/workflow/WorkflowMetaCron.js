@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import { Input, Button, ButtonToolbar, OverlayTrigger, Panel, Popover, Col, Row, Grid } from 'react-bootstrap';
+import CronParser from "./CronParser";
 
 class WorkflowMetaCron extends Component {
     constructor(props) {
@@ -21,14 +22,15 @@ class WorkflowMetaCron extends Component {
         } else
             cronArr.splice(idx, 1, e.target.value);
 
-        this.state.cronArr = cronArr;
+        this.setState({ cronArr: cronArr });
         this.state.cronExp = cronArr.join(" ");
+
     };
 
     handleCronDesc(e) {
         this.state.cronDesc = e.target.value;
     };
-    
+
     render() {
         return (
             <div>
@@ -38,27 +40,27 @@ class WorkflowMetaCron extends Component {
                             <Row className="show-grid">
                                 <Col md={1}>
                                     <Input type="input" placeholder="∗" className="input" onChange={this.handleCron.bind(this, 0)}/>
-                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Seconds</label>
+                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;&nbsp;<label className="small nobold">Seconds</label>
                                 </Col>
                                 <Col md={1}>
                                     <Input type="input" placeholder="∗" className="input" onChange={this.handleCron.bind(this, 1)}/>
-                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Minutes</label>
+                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;&nbsp;&nbsp;<label className="small nobold">Minutes</label>
                                 </Col>
                                 <Col md={1}>
                                     <Input type="input" placeholder="∗" className="input" onChange={this.handleCron.bind(this, 2)}/>
-                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Days</label>
+                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label className="small nobold">Hours</label>
                                 </Col>
                                 <Col md={1}>
                                     <Input type="input" placeholder="∗" className="input" onChange={this.handleCron.bind(this, 3)}/>
-                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Weeks</label>
+                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;&nbsp;<label className="small nobold">Day of Month</label>
                                 </Col>
                                 <Col md={1}>
                                     <Input type="input" placeholder="∗" className="input" onChange={this.handleCron.bind(this, 4)}/>
-                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Months</label>
+                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label className="small nobold">Months</label>
                                 </Col>
                                 <Col md={1}>
                                     <Input type="input" placeholder="∗" className="input" onChange={this.handleCron.bind(this, 5)}/>
-                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Years</label>
+                                    &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;&nbsp;<label className="small nobold">Day of Week</label>
                                 </Col>
 
                                 <ButtonToolbar>
@@ -79,7 +81,11 @@ class WorkflowMetaCron extends Component {
                         </Grid>
                     </form>
                 </div>
+
                 <Input type="input" placeholder="Description (optional)" onChange={this.handleCronDesc.bind(this)}/>
+                 <br/>
+                <CronParser cronArr={this.state.cronArr} ref="cronparser"/>
+
             </div>
         )
     }
