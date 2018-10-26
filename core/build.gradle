@@ -14,6 +14,7 @@ dependencies {
 	compile 'com.auth0:java-jwt:3.2.0'
 	compile 'commons-collections:commons-collections:3.2.2'
 	compile 'org.apache.commons:commons-lang3:3.2.1'
+	provided 'log4j:log4j:1.2.17'
 
 	testCompile 'org.eclipse.jetty:jetty-server:9.3.9.+'
 	testCompile 'org.eclipse.jetty:jetty-servlet:9.3.9.+'

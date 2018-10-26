@@ -23,6 +23,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,7 @@ import javax.inject.Singleton;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 /**
@@ -137,7 +139,14 @@ public class SystemTaskWorkerCoordinator {
 			logger.debug("Polling for {}, got {}", name, polled.size());
 			for(String task : polled) {
 				try {
-					es.submit(()->executor.executeSystemTask(systemTask, task, unackTimeout));
+					es.submit(()-> {
+						NDC.push("system-"+ UUID.randomUUID().toString());
+						try {
+							executor.executeSystemTask(systemTask, task, unackTimeout);
+						} finally {
+							NDC.remove();
+						}
+					});
 				}catch(RejectedExecutionException ree) {
 					logger.warn("Queue full for workers {}", workerQueue.size());
 				}

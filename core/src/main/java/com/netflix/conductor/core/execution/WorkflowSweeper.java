@@ -23,6 +23,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 /**
@@ -98,11 +100,15 @@ public class WorkflowSweeper {
         List<Future<?>> futures = new LinkedList<>();
         for (String workflowId : workflowIds) {
             Future<?> future = es.submit(() -> {
+
+                NDC.push("sweep-"+ UUID.randomUUID().toString());
                 try {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
                     WorkflowContext.set(ctx);
-                    logger.info("Running sweeper for workflow {}", workflowId);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Running sweeper for workflow {}", workflowId);
+                    }
                     boolean done = executor.decide(workflowId);
                     if (!done) {
                         if (logger.isDebugEnabled()) {
@@ -125,6 +131,8 @@ public class WorkflowSweeper {
                 } catch (Exception e) {
                     Monitors.error(className, "sweep");
                     logger.error("Error running sweep for " + workflowId, e);
+                } finally {
+                    NDC.remove();
                 }
             });
             futures.add(future);
