@@ -175,7 +175,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		handleCorrelationId(workflowId, headers, builder);
 
-		executor.removeWorkflow(workflowId);
+		NDC.push("rest-remove-"+ UUID.randomUUID().toString());
+		try {
+			executor.removeWorkflow(workflowId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -218,7 +223,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		executor.pauseWorkflow(workflowId, correlationId);
+		NDC.push("rest-pause-"+ UUID.randomUUID().toString());
+		try {
+			executor.pauseWorkflow(workflowId, correlationId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -233,7 +243,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		executor.resumeWorkflow(workflowId, correlationId);
+		NDC.push("rest-resume-"+ UUID.randomUUID().toString());
+		try {
+			executor.resumeWorkflow(workflowId, correlationId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -244,7 +259,12 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public void skipTaskFromWorkflow(@PathParam("workflowId") String workflowId, @PathParam("taskReferenceName") String taskReferenceName,
 									 SkipTaskRequest skipTaskRequest) throws Exception {
-		executor.skipTaskFromWorkflow(workflowId, taskReferenceName, skipTaskRequest);
+		NDC.push("rest-skipTask-"+ UUID.randomUUID().toString());
+		try {
+			executor.skipTaskFromWorkflow(workflowId, taskReferenceName, skipTaskRequest);
+		} finally {
+			NDC.remove();
+		}
 	}
 
 	@POST
