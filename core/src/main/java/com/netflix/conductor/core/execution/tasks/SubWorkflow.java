@@ -172,7 +172,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		return false;
 	}
 
-	private boolean handleRestart(Workflow subWorkflow, Task task, SubWorkflowParams param, WorkflowExecutor provider) throws Exception {
+	private boolean handleRestart(Workflow subWorkflow, Task task, SubWorkflowParams param, WorkflowExecutor provider) {
 		Integer restarted = (Integer) task.getOutputData().get(RESTARTED);
 		if (restarted == null) {
 			restarted = 0;
@@ -203,7 +203,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 				try {
 					provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getCorrelationId());
 				} catch (Exception ex) {
-					logger.error("Unable to restart the sub-workflow " + subWorkflow.getWorkflowId() + " due to " + ex.getMessage(), ex);
+					logger.error("Unable to restart the sub-workflow " + subWorkflow.getWorkflowId() +
+							", correlationId=" + subWorkflow.getCorrelationId() + " due to " + ex.getMessage(), ex);
 					task.setStatus(Status.FAILED);
 					task.setReasonForIncompletion(ex.getMessage());
 
@@ -213,8 +214,6 @@ public class SubWorkflow extends WorkflowSystemTask {
 						provider.terminateWorkflow(subWorkflow, ex.getMessage(), null);
 					} catch (Exception ignore) {
 					}
-
-					return true;
 				}
 			} else {
 				return false; // Do nothing as waiting for the RESTART_ON time

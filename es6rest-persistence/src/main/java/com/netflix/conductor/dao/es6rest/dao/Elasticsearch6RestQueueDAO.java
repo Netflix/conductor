@@ -288,7 +288,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 try {
                     client.update(updateRequest);
                 } catch (Exception ex) {
-                    if (!ex.getMessage().contains("version_conflict_engine_exception")) {
+                    if (!isConflictOrMissingException(ex)) {
                         throw new RuntimeException(ex.getMessage(), ex);
                     }
                 }
