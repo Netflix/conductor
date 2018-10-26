@@ -106,24 +106,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -239,24 +243,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -372,24 +380,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -515,24 +527,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -648,24 +664,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -785,24 +805,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -926,24 +950,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -1067,24 +1095,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -1208,24 +1240,28 @@
             "locked": "3.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1"
+            "locked": "2.11.1",
+            "requested": "2.11.1"
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",

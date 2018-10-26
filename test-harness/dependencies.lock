@@ -18,7 +18,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "1.11.428"
+            "locked": "1.11.437"
         },
         "com.amazonaws:aws-java-sdk-s3": {
             "firstLevelTransitive": [
@@ -30,7 +30,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.428"
+            "locked": "1.11.437"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -379,13 +379,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "2.9.1"
+            "locked": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "2.9.1"
+            "locked": "2.11.1"
         },
         "org.eclipse.jetty:jetty-server": {
             "firstLevelTransitive": [
@@ -401,24 +401,30 @@
             "locked": "9.3.9.v20160517",
             "requested": "9.3.9.v20160517"
         },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es5-persistence"
+            ],
+            "locked": "5.6.12"
+        },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8"
+            "locked": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8"
+            "locked": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.flywaydb:flyway-core": {
             "firstLevelTransitive": [
@@ -459,7 +465,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "1.11.428"
+            "locked": "1.11.437"
         },
         "com.amazonaws:aws-java-sdk-s3": {
             "firstLevelTransitive": [
@@ -471,7 +477,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.428"
+            "locked": "1.11.437"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -820,13 +826,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "2.9.1"
+            "locked": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "2.9.1"
+            "locked": "2.11.1"
         },
         "org.eclipse.jetty:jetty-server": {
             "firstLevelTransitive": [
@@ -842,24 +848,30 @@
             "locked": "9.3.9.v20160517",
             "requested": "9.3.9.v20160517"
         },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es5-persistence"
+            ],
+            "locked": "5.6.12"
+        },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8"
+            "locked": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8"
+            "locked": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.flywaydb:flyway-core": {
             "firstLevelTransitive": [
@@ -900,7 +912,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "1.11.428"
+            "locked": "1.11.437"
         },
         "com.amazonaws:aws-java-sdk-s3": {
             "firstLevelTransitive": [
@@ -912,7 +924,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.428"
+            "locked": "1.11.437"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -1261,13 +1273,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "2.9.1"
+            "locked": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "2.9.1"
+            "locked": "2.11.1"
         },
         "org.eclipse.jetty:jetty-server": {
             "firstLevelTransitive": [
@@ -1283,24 +1295,30 @@
             "locked": "9.3.9.v20160517",
             "requested": "9.3.9.v20160517"
         },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es5-persistence"
+            ],
+            "locked": "5.6.12"
+        },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8"
+            "locked": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8"
+            "locked": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.flywaydb:flyway-core": {
             "firstLevelTransitive": [
@@ -1341,7 +1359,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "1.11.428"
+            "locked": "1.11.437"
         },
         "com.amazonaws:aws-java-sdk-s3": {
             "firstLevelTransitive": [
@@ -1353,7 +1371,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.428"
+            "locked": "1.11.437"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -1702,13 +1720,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "2.9.1"
+            "locked": "2.11.1"
         },
         "org.apache.logging.log4j:log4j-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "2.9.1"
+            "locked": "2.11.1"
         },
         "org.eclipse.jetty:jetty-server": {
             "firstLevelTransitive": [
@@ -1724,24 +1742,30 @@
             "locked": "9.3.9.v20160517",
             "requested": "9.3.9.v20160517"
         },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-es5-persistence"
+            ],
+            "locked": "5.6.12"
+        },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8"
+            "locked": "5.6.12"
         },
         "org.elasticsearch.client:transport": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8"
+            "locked": "5.6.12"
         },
         "org.elasticsearch:elasticsearch": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
-            "locked": "5.6.8",
-            "requested": "5.6.8"
+            "locked": "5.6.12",
+            "requested": "5.6.12"
         },
         "org.flywaydb:flyway-core": {
             "firstLevelTransitive": [
