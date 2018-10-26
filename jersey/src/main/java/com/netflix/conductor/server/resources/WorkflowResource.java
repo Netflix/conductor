@@ -39,6 +39,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,10 +50,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -117,7 +115,12 @@ public class WorkflowResource {
 			request.setCorrelationId(correlationId);
 		}
 
-		executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth);
+		NDC.push("rest-start-"+ UUID.randomUUID().toString());
+		try {
+			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -172,7 +175,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		handleCorrelationId(workflowId, headers, builder);
 
-		executor.removeWorkflow(workflowId);
+		NDC.push("rest-remove-"+ UUID.randomUUID().toString());
+		try {
+			executor.removeWorkflow(workflowId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -196,7 +204,12 @@ public class WorkflowResource {
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public void decide(@PathParam("workflowId") String workflowId) throws Exception {
-		executor.decide(workflowId);
+		NDC.push("rest-decide-"+ UUID.randomUUID().toString());
+		try {
+			executor.decide(workflowId);
+		} finally {
+			NDC.remove();
+		}
 	}
 
 	@PUT
@@ -210,7 +223,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		executor.pauseWorkflow(workflowId, correlationId);
+		NDC.push("rest-pause-"+ UUID.randomUUID().toString());
+		try {
+			executor.pauseWorkflow(workflowId, correlationId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -225,7 +243,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		executor.resumeWorkflow(workflowId, correlationId);
+		NDC.push("rest-resume-"+ UUID.randomUUID().toString());
+		try {
+			executor.resumeWorkflow(workflowId, correlationId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -236,7 +259,12 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public void skipTaskFromWorkflow(@PathParam("workflowId") String workflowId, @PathParam("taskReferenceName") String taskReferenceName,
 									 SkipTaskRequest skipTaskRequest) throws Exception {
-		executor.skipTaskFromWorkflow(workflowId, taskReferenceName, skipTaskRequest);
+		NDC.push("rest-skipTask-"+ UUID.randomUUID().toString());
+		try {
+			executor.skipTaskFromWorkflow(workflowId, taskReferenceName, skipTaskRequest);
+		} finally {
+			NDC.remove();
+		}
 	}
 
 	@POST
@@ -253,7 +281,13 @@ public class WorkflowResource {
 		request.setReRunFromWorkflowId(workflowId);
 		request.setCorrelationId(correlationId);
 
-		executor.rerun(request);
+		NDC.push("rest-rerun-"+ UUID.randomUUID().toString());
+		try {
+			executor.rerun(request);
+		} finally {
+			NDC.remove();
+		}
+
 		return builder.build();
 	}
 
@@ -268,7 +302,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		executor.rewind(workflowId, correlationId);
+		NDC.push("rest-restart-"+ UUID.randomUUID().toString());
+		try {
+			executor.rewind(workflowId, correlationId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -283,7 +322,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		executor.retry(workflowId, correlationId);
+		NDC.push("rest-retry-"+ UUID.randomUUID().toString());
+		try {
+			executor.retry(workflowId, correlationId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 
@@ -298,7 +342,13 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		handleCorrelationId(workflowId, headers, builder);
 
-		executor.terminateWorkflow(workflowId, reason);
+		NDC.push("rest-terminate-"+ UUID.randomUUID().toString());
+		try {
+			executor.terminateWorkflow(workflowId, reason);
+		} finally {
+			NDC.remove();
+		}
+
 		return builder.build();
 	}
 
@@ -313,7 +363,12 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 		handleCorrelationId(workflowId, headers, builder);
 
-		executor.cancelWorkflow(workflowId);
+		NDC.push("rest-cancel-"+ UUID.randomUUID().toString());
+		try {
+			executor.cancelWorkflow(workflowId);
+		} finally {
+			NDC.remove();
+		}
 		return builder.build();
 	}
 

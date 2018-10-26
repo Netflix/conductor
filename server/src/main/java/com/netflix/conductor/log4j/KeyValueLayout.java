@@ -31,6 +31,7 @@ public class KeyValueLayout extends Layout {
         buf.append("log-level=").append(event.getLevel().toString().toLowerCase()).append(" ");
         buf.append("severity=").append(event.getLevel().toString().toLowerCase()).append(" ");
         buf.append("logger=").append(event.getLoggerName().toLowerCase()).append(" ");
+        buf.append("owner=").append(event.getNDC()).append(" ");
         buf.append("text=").append("\"").append(normalizeMessage(event.getMessage())).append("\"");
         if (event.getThrowableInformation() != null
                 && event.getThrowableInformation().getThrowable() != null) {

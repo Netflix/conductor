@@ -30,6 +30,7 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -225,6 +226,7 @@ public class EventProcessor {
 
 	private Future<Void> execute(EventExecution ee, Action action, String payload) {
 		return executors.submit(() -> {
+			NDC.push("event-"+ee.getMessageId());
 			try {
 
 				logger.debug("Executing {} with payload {}", action.getAction(), payload);
@@ -241,6 +243,8 @@ public class EventProcessor {
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
 				return null;
+			} finally {
+				NDC.remove();
 			}
 		});
 	}

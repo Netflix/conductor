@@ -9,4 +9,5 @@ dependencies {
 	compile 'com.sun.jersey:jersey-bundle:1.19.1'
 
 	provided 'javax.servlet:javax.servlet-api:3.1.0'
+	provided 'log4j:log4j:1.2.17'
 }

@@ -23,6 +23,7 @@ dependencies {
 
 	provided 'javax.ws.rs:jsr311-api:1.1.1'
 	provided 'io.swagger:swagger-jaxrs:1.5.9'
+	provided 'log4j:log4j:1.2.17'
 
 	testCompile 'org.eclipse.jetty:jetty-server:9.3.9.+'
 	testCompile 'org.eclipse.jetty:jetty-servlet:9.3.9.+'
