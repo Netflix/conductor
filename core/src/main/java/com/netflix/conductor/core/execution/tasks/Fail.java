@@ -61,7 +61,7 @@ public class Fail extends WorkflowSystemTask {
 
 	@Override
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-		return false;
+		return true;
 	}
 	
 	@Override

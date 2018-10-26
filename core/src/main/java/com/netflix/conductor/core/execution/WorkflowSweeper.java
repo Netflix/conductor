@@ -102,9 +102,7 @@ public class WorkflowSweeper {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
                     WorkflowContext.set(ctx);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Running sweeper for workflow {}", workflowId);
-                    }
+                    logger.info("Running sweeper for workflow {}", workflowId);
                     boolean done = executor.decide(workflowId);
                     if (!done) {
                         if (logger.isDebugEnabled()) {
