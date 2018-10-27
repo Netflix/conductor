@@ -976,6 +976,8 @@ public class WorkflowExecutor {
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int unackTimeout) {
 		try {
+			logger.info("Executing async taskId={}, unackTimeout={}", taskId, unackTimeout);
+
 			Task task = edao.getTask(taskId);
 			if (task == null) {
 				logger.warn("No task found for task id = " + taskId + ". System task is " + systemTask);
