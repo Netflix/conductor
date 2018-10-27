@@ -48,11 +48,13 @@ public class HttpTask extends GenericHttpTask {
 	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
+	private int unackTimeout;
 
 	@Inject
 	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager auth) {
 		super(NAME, config, rcm, om, auth);
 		logger.info("HttpTask initialized...");
+		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
 	}
 
 	@Override
@@ -156,7 +158,7 @@ public class HttpTask extends GenericHttpTask {
 
 	@Override
 	public int getRetryTimeInSecond() {
-		return 60;
+		return unackTimeout;
 	}
 
 	@SuppressWarnings("unchecked")
