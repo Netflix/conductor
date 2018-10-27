@@ -34,7 +34,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -112,17 +111,17 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             QueryBuilder deliverOn = QueryBuilders.rangeQuery("deliverOn").lte(System.currentTimeMillis());
             QueryBuilder query = QueryBuilders.boolQuery().must(popped).must(deliverOn);
 
-            // Find the suitable records
-            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-            sourceBuilder.sort("deliverOn", SortOrder.ASC);
-            sourceBuilder.query(query);
-            sourceBuilder.version(true);
-            sourceBuilder.size(count);
-
-            SearchRequest request = new SearchRequest(indexName).types(typeName);
-            request.source(sourceBuilder);
-
             while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
+                // Find the suitable records
+                SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+                sourceBuilder.sort("deliverOn", SortOrder.ASC);
+                sourceBuilder.query(query);
+                sourceBuilder.version(true);
+                sourceBuilder.size(count);
+
+                SearchRequest request = new SearchRequest(indexName).types(typeName);
+                request.source(sourceBuilder);
+
                 AtomicReference<SearchResponse> reference = new AtomicReference<>();
                 doWithRetryNoisy(() -> {
                     try {
@@ -149,23 +148,17 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                         updateRequest.version(record.getVersion());
                         updateRequest.doc(map);
 
-                        AtomicBoolean ignoreIdFlag = new AtomicBoolean(false);
                         doWithRetryNoisy(() -> {
                             try {
                                 client.update(updateRequest);
+                                foundIds.add(record.getId());
                             } catch (Exception ex) {
-                                if (isConflictOrMissingException(ex)) {
-                                    ignoreIdFlag.set(true);
-                                } else {
+                                if (!isConflictOrMissingException(ex)) {
                                     throw new RuntimeException(ex.getMessage(), ex);
                                 }
                             }
                         });
 
-                        // Add id to the final collection
-                        if (!ignoreIdFlag.get()) {
-                            foundIds.add(record.getId());
-                        }
                         if (logger.isDebugEnabled())
                             logger.debug("pop ({}): success for {}/{}", session, queueName, record.getId());
                     } catch (Exception ex) {
