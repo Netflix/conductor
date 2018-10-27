@@ -145,7 +145,7 @@ job "conductor" {
         // Workflow settings
         workflow_auth_validate = "true"
         workflow_failure_expandInline = "false"
-        decider_sweep_frequency_seconds = "5"
+        decider_sweep_frequency_seconds = "30"
         workflow_event_processor_refresh_seconds = "30"
         workflow_system_task_worker_poll_count = "50"
         workflow_system_task_worker_poll_timeout = "1000"
