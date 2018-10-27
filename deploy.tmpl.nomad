@@ -147,6 +147,7 @@ job "conductor" {
         workflow_failure_expandInline = "false"
         decider_sweep_frequency_seconds = "5"
         workflow_event_processor_refresh_seconds = "30"
+        workflow_system_task_worker_callback_seconds = "300"
         workflow_system_task_worker_poll_count = "50"
         workflow_system_task_worker_poll_timeout = "1000"
         workflow_system_task_worker_poll_frequency = "1000"
@@ -157,6 +158,7 @@ job "conductor" {
         // Elasticsearch settings.
         workflow_elasticsearch_mode = "elasticsearch"
         workflow_elasticsearch_initial_sleep_seconds = "30"
+        workflow_elasticsearch_stale_period_seconds = "600"
 
         // One MQ settings
         io_shotgun_dns = "shotgun.service.<TLD>"
