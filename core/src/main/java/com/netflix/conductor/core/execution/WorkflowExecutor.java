@@ -974,9 +974,9 @@ public class WorkflowExecutor {
 	}
 
 	//Executes the async system task
-	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int unackTimeout) {
+	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {
-			logger.info("Executing async taskId={}, unackTimeout={}", taskId, unackTimeout);
+			logger.info("Executing async taskId={}, callbackSeconds={}, unackTimeout={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
 
 			Task task = edao.getTask(taskId);
 			if (task == null) {
@@ -1044,7 +1044,7 @@ public class WorkflowExecutor {
 			}
 
 			if(!task.getStatus().isTerminal()) {
-				task.setCallbackAfterSeconds(unackTimeout);
+				task.setCallbackAfterSeconds(callbackSeconds);
 			}
 
 			updateTask(new TaskResult(task));
