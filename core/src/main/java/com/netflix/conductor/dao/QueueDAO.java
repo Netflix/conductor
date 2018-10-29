@@ -15,13 +15,13 @@
  */
 package com.netflix.conductor.dao;
 
+import com.netflix.conductor.core.events.queue.Message;
+
 import java.util.List;
 import java.util.Map;
 
-import com.netflix.conductor.core.events.queue.Message;
-
 /**
- * 
+ *
  * @author Viren
  * DAO responsible for managing queuing for the tasks.
  *
@@ -29,13 +29,13 @@ import com.netflix.conductor.core.events.queue.Message;
 public interface QueueDAO {
 
 	/**
-	 * 
+	 *
 	 * @param queueName name of the queue
 	 * @param id message id
 	 * @param offsetTimeInSecond time in seconds, after which the message should be marked visible.  (for timed queues)
 	 */
 	public void push(String queueName, String id, long offsetTimeInSecond);
-	
+
 	/**
 	 * @param queueName Name of the queue
 	 * @param messages messages to be pushed.
@@ -43,7 +43,7 @@ public interface QueueDAO {
 	public void push(String queueName, List<Message> messages);
 
 	/**
-	 * 
+	 *
 	 * @param queueName Name of the queue
 	 * @param id message id
 	 * @param offsetTimeInSecond time in seconds, after which the message should be marked visible.  (for timed queues)
@@ -52,7 +52,7 @@ public interface QueueDAO {
 	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond);
 
 	/**
-	 * 
+	 *
 	 * @param queueName Name of the queue
 	 * @param count number of messages to be read from the queue
 	 * @param timeout timeout in milliseconds
@@ -60,38 +60,38 @@ public interface QueueDAO {
 	 */
 	public List<String> pop(String queueName, int count, int timeout);
 
-	
+
 	/**
-	 * 
+	 *
 	 * @param queueName Name of the queue
 	 * @param count number of messages to be read from the queue
 	 * @param timeout timeout in milliseconds
 	 * @return list of elements from the named queue
 	 */
 	public List<Message> pollMessages(String queueName, int count, int timeout);
-	
+
 	/**
-	 * 
+	 *
 	 * @param queueName Name of the queue
 	 * @param messageId Message id
 	 */
 	public void remove(String queueName, String messageId);
 
 	/**
-	 * 
+	 *
 	 * @param queueName Name of the queue
 	 * @return size of the queue
 	 */
 	public int getSize(String queueName);
 
 	/**
-	 * 
+	 *
 	 * @param queueName Name of the queue
 	 * @param messageId Message Id
 	 * @return true if the message was found and ack'ed
 	 */
 	public boolean ack(String queueName, String messageId);
-	
+
 	/**
 	 * Extend the lease of the unacknowledged message for longer period.
 	 * @param queueName Name of the queue
@@ -102,26 +102,28 @@ public interface QueueDAO {
 	public boolean setUnackTimeout(String queueName, String messageId, long unackTimeout);
 
 	/**
-	 * 
+	 *
 	 * @param queueName Name of the queue
 	 */
 	public void flush(String queueName);
 
 	/**
-	 * 
+	 *
 	 * @return key : queue name, value: size of the queue
 	 */
 	public Map<String, Long> queuesDetail();
 
 	/**
-	 * 
+	 *
 	 * @return key : queue name, value: map of shard name to size and unack queue size
 	 */
 	public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose();
-	
-	public default void processUnacks(String queueName) {
-		
-	}
-	
 
+	public default void processUnacks(String queueName) {
+
+	}
+
+	public default boolean popped(String queueName, String id) {
+		throw new IllegalStateException("Not implemented");
+	}
 }

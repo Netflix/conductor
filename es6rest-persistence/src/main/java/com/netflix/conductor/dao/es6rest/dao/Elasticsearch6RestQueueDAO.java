@@ -140,29 +140,30 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                         map.put("popped", true);
                         map.put("unackOn", System.currentTimeMillis() + unackTime);
 
-                        UpdateRequest updateRequest = new UpdateRequest();
-                        updateRequest.index(indexName);
-                        updateRequest.type(typeName);
-                        updateRequest.id(record.getId());
-                        updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                        updateRequest.version(record.getVersion());
-                        updateRequest.doc(map);
-
                         doWithRetryNoisy(() -> {
                             try {
+                                UpdateRequest updateRequest = new UpdateRequest();
+                                updateRequest.index(indexName);
+                                updateRequest.type(typeName);
+                                updateRequest.id(record.getId());
+                                updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+                                updateRequest.version(record.getVersion());
+                                updateRequest.doc(map);
+
                                 client.update(updateRequest);
-                                foundIds.add(record.getId());
                             } catch (Exception ex) {
-                                if (!isConflictOrMissingException(ex)) {
-                                    throw new RuntimeException(ex.getMessage(), ex);
-                                }
+                                throw new RuntimeException(ex.getMessage(), ex);
                             }
                         });
 
+                        // Add id to the final collection
+                        foundIds.add(record.getId());
                         if (logger.isDebugEnabled())
                             logger.debug("pop ({}): success for {}/{}", session, queueName, record.getId());
                     } catch (Exception ex) {
-                        logger.error("pop ({}): unable to execute for {}/{}", session, queueName, record.getId(), ex);
+                        if (!isConflictOrMissingException(ex)) {
+                            logger.error("pop ({}): unable to execute for {}/{}", session, queueName, record.getId(), ex);
+                        }
                     }
                 }
 
@@ -269,26 +270,26 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             map.put("popped", true);
             map.put("unackOn", System.currentTimeMillis() + unackTimeout);
 
-            UpdateRequest updateRequest = new UpdateRequest();
-            updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-            updateRequest.index(toIndexName(queueName));
-            updateRequest.type(toTypeName(queueName));
-            updateRequest.id(record.getId());
-            updateRequest.version(record.getVersion());
-            updateRequest.doc(map);
-
             doWithRetryNoisy(() -> {
                 try {
+                    UpdateRequest updateRequest = new UpdateRequest();
+                    updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+                    updateRequest.index(toIndexName(queueName));
+                    updateRequest.type(toTypeName(queueName));
+                    updateRequest.id(record.getId());
+                    updateRequest.version(record.getVersion());
+                    updateRequest.doc(map);
+
                     client.update(updateRequest);
                 } catch (Exception ex) {
-                    if (!isConflictOrMissingException(ex)) {
-                        throw new RuntimeException(ex.getMessage(), ex);
-                    }
+                    throw new RuntimeException(ex.getMessage(), ex);
                 }
             });
 
         } catch (Exception ex) {
-            logger.error("setUnackTimeout: failed for {}/{}/{} with {}", queueName, id, unackTimeout, ex.getMessage(), ex);
+            if (!isConflictOrMissingException(ex)) {
+                logger.error("setUnackTimeout: failed for {}/{}/{} with {}", queueName, id, unackTimeout, ex.getMessage(), ex);
+            }
             return false;
         }
 
@@ -421,7 +422,12 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 logger.debug("processUnacks: found {} for {}", response.getHits().totalHits, queueName);
 
             // Walk over all of them and update back to un-popped
+            Set<String> processed = new HashSet<>();
             for (SearchHit record : response.getHits().getHits()) {
+                if (processed.contains(record.getId())) {
+                    logger.warn("processUnacks: {} already been processed by this session {}", record.getId(), queueName);
+                    continue;
+                }
 
                 if (logger.isDebugEnabled()) {
                     Long recUnackOn = (Long) record.getSourceAsMap().get("unackOn");
@@ -434,33 +440,44 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                     map.put("popped", false);
                     map.put("deliverOn", System.currentTimeMillis());
 
-                    UpdateRequest updateRequest = new UpdateRequest();
-                    updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                    updateRequest.version(record.getVersion());
-                    updateRequest.index(indexName);
-                    updateRequest.type(typeName);
-                    updateRequest.id(record.getId());
-                    updateRequest.doc(map);
-
                     doWithRetryNoisy(() -> {
                         try {
+                            UpdateRequest updateRequest = new UpdateRequest();
+                            updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+                            updateRequest.version(record.getVersion());
+                            updateRequest.index(indexName);
+                            updateRequest.type(typeName);
+                            updateRequest.id(record.getId());
+                            updateRequest.doc(map);
+
                             client.update(updateRequest);
                         } catch (Exception ex) {
-                            if (!isConflictOrMissingException(ex)) {
-                                throw new RuntimeException(ex.getMessage(), ex);
-                            }
+                            throw new RuntimeException(ex.getMessage(), ex);
                         }
                     });
 
                     logger.info("processUnacks: Re-queued {} for {}", record.getId(), queueName);
+                    processed.add(record.getId());
                 } catch (Exception ex) {
-                    logger.error("processUnacks: unable to execute for {}/{} with {}",
-                            queueName, record.getId(), ex.getMessage(), ex);
+                    if (!isConflictOrMissingException(ex)) {
+                        logger.error("processUnacks: unable to execute for {}/{} with {}",
+                                queueName, record.getId(), ex.getMessage(), ex);
+                    }
                 }
             }
         } catch (Exception ex) {
             logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
         }
+    }
+
+    @Override
+    public boolean popped(String queueName, String id) {
+        initQueue(queueName);
+        GetResponse record = findMessage(queueName, id);
+        if (record.isExists()) {
+            return (Boolean)record.getSourceAsMap().get("popped");
+        }
+        return false;
     }
 
     private boolean pushMessage(String queueName, String id, String payload, long offsetSeconds) {

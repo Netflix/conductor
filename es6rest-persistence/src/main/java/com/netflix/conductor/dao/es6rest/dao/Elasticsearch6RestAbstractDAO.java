@@ -246,15 +246,14 @@ abstract class Elasticsearch6RestAbstractDAO {
 
     void delete(String indexName, String typeName, String id) {
         ensureIndexExists(indexName);
-
-        DeleteRequest request = new DeleteRequest()
-                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .index(indexName)
-                .type(typeName)
-                .id(id);
-
         doWithRetry(() -> {
             try {
+                DeleteRequest request = new DeleteRequest()
+                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                        .index(indexName)
+                        .type(typeName)
+                        .id(id);
+
                 client.delete(request);
             } catch (Exception ex) {
                 if (!isDocMissingException(ex)) {
@@ -269,16 +268,16 @@ abstract class Elasticsearch6RestAbstractDAO {
         ensureIndexExists(indexName);
         AtomicBoolean result = new AtomicBoolean(false);
 
-        IndexRequest request = new IndexRequest()
-                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .source(payload)
-                .create(true)
-                .index(indexName)
-                .type(typeName)
-                .id(id);
-
         doWithRetry(() -> {
             try {
+                IndexRequest request = new IndexRequest()
+                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                        .source(payload)
+                        .create(true)
+                        .index(indexName)
+                        .type(typeName)
+                        .id(id);
+
                 client.index(request);
                 result.set(true);
             } catch (Exception ex) {
@@ -294,19 +293,18 @@ abstract class Elasticsearch6RestAbstractDAO {
 
     void update(String indexName, String typeName, String id, Map<String, ?> payload) {
         ensureIndexExists(indexName);
-
-        IndexRequest request = new IndexRequest()
-                .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .source(payload)
-                .index(indexName)
-                .type(typeName)
-                .id(id);
-
         doWithRetry(() -> {
             try {
+                IndexRequest request = new IndexRequest()
+                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                        .source(payload)
+                        .index(indexName)
+                        .type(typeName)
+                        .id(id);
+
                 client.index(request);
             } catch (Exception ex) {
-                if (!isConflictOrMissingException(ex)) {
+                if (!isVerConflictException(ex)) {
                     logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
                     throw new RuntimeException(ex.getMessage(), ex);
                 }
@@ -316,20 +314,23 @@ abstract class Elasticsearch6RestAbstractDAO {
 
     void upsert(String indexName, String typeName, String id, Map<String, ?> payload) {
         ensureIndexExists(indexName);
-        UpdateRequest request = new UpdateRequest().setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                .docAsUpsert(true)
-                .doc(payload)
-                .index(indexName)
-                .type(typeName)
-                .id(id);
-        try {
-            client.update(request);
-        } catch (Exception ex) {
-            if (!isConflictOrMissingException(ex)) {
-                logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-                throw new RuntimeException(ex.getMessage(), ex);
+        doWithRetry(() -> {
+            try {
+                UpdateRequest request = new UpdateRequest().setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                        .docAsUpsert(true)
+                        .doc(payload)
+                        .index(indexName)
+                        .type(typeName)
+                        .id(id);
+
+                client.update(request);
+            } catch (Exception ex) {
+                if (!isVerConflictException(ex)) {
+                    logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+                    throw new RuntimeException(ex.getMessage(), ex);
+                }
             }
-        }
+        });
     }
 
     GetResponse findOne(String indexName, String typeName, String id) {

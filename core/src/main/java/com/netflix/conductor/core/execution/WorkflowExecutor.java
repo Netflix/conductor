@@ -1018,7 +1018,24 @@ public class WorkflowExecutor {
 				}
 			}
 
-			logger.info("Executing {}/{}-{}", task.getTaskType(), task.getTaskId(), task.getStatus());
+			// Check is that in sweeper right now?
+			if (queue.popped(WorkflowExecutor.deciderQueue, workflowId)) {
+				logger.info("Skipping {}/{} due to sweeper for workflowId={}, correlationId={}",
+						task.getTaskType(), task.getTaskId(),
+						workflow.getWorkflowId(), workflow.getCorrelationId());
+				return;
+			}
+
+			// Setting unack timeout for workflow
+			boolean unacked = queue.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, 2 * config.getSweepFrequency() * 1000);
+			if (!unacked) {
+				logger.info("Unable to unack workflowId={}, correlationId={} due to sweeper. Skipping {}/{}",
+						workflow.getWorkflowId(), workflow.getCorrelationId(), task.getTaskType(), task.getTaskId());
+				return;
+			}
+
+			logger.info("Executing {}/{}-{} for workflowId={}, correlationId={}", task.getTaskType(), task.getTaskId(), task.getStatus(),
+					workflow.getWorkflowId(), workflow.getCorrelationId());
 
 			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 			task.setPollCount(task.getPollCount() + 1);
@@ -1048,7 +1065,9 @@ public class WorkflowExecutor {
 			}
 
 			updateTask(new TaskResult(task));
-			logger.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
+			logger.info("Done Executing {}/{}-{} op={} for workflowId={}, correlationId={}",
+					task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString(),
+					workflow.getWorkflowId(), workflow.getCorrelationId());
 
 		} catch (Exception e) {
 			logger.error("ExecuteSystemTask failed with " + e.getMessage() + " for task id=" + taskId + ", system task=" + systemTask, e);
