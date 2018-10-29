@@ -85,6 +85,7 @@ public class WorkflowExecutor {
 	private AuthManager auth;
 
 	public static final String deciderQueue = "_deciderQueue";
+	public static final String sweeperQueue = "_sweeperQueue";
 
 	private int activeWorkerLastPollnSecs;
 
@@ -1019,17 +1020,17 @@ public class WorkflowExecutor {
 			}
 
 			// Check is that in sweeper right now?
-			if (queue.popped(WorkflowExecutor.deciderQueue, workflowId)) {
+			if (queue.popped(WorkflowExecutor.sweeperQueue, workflowId)) {
 				logger.info("Skipping {}/{} due to sweeper for workflowId={}, correlationId={}",
 						task.getTaskType(), task.getTaskId(),
 						workflow.getWorkflowId(), workflow.getCorrelationId());
 				return;
 			}
 
-			// Setting unack timeout for workflow
-			boolean unacked = queue.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, 2 * config.getSweepFrequency() * 1000);
-			if (!unacked) {
-				logger.info("Unable to unack workflowId={}, correlationId={} due to sweeper. Skipping {}/{}",
+			// Setting unack timeout for workflow just in case sweeper wakes up
+			boolean unacked = queue.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
+			if (!unacked) { // The case when we missed the tiny moment to 'lock' record
+				logger.info("Missed unack workflowId={}, correlationId={} due to sweeper. Skipping {}/{}",
 						workflow.getWorkflowId(), workflow.getCorrelationId(), task.getTaskType(), task.getTaskId());
 				return;
 			}
