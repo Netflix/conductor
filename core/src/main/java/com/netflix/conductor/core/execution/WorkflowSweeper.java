@@ -106,9 +106,8 @@ public class WorkflowSweeper {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
                     WorkflowContext.set(ctx);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Running sweeper for workflow {}", workflowId);
-                    }
+                    logger.info("Running sweeper for workflow {}", workflowId);
+                    queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0);
                     boolean done = executor.decide(workflowId);
                     if (!done) {
                         if (logger.isDebugEnabled()) {
@@ -133,6 +132,7 @@ public class WorkflowSweeper {
                     logger.error("Error running sweep for " + workflowId, e);
                 } finally {
                     NDC.remove();
+                    queues.remove(WorkflowExecutor.sweeperQueue, workflowId);
                 }
             });
             futures.add(future);
