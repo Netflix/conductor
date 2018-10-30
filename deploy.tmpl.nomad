@@ -10,6 +10,7 @@ job "conductor" {
   constraint {
     attribute = "${meta.hood}"
     // Options: [ corp | prod | shared ]
+    //
     value     = "shared"
   }
 
