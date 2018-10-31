@@ -66,11 +66,21 @@ class WorkflowMetaCron extends Component {
                                 <ButtonToolbar>
                                         <OverlayTrigger trigger="click" rootClose placement="right" overlay={
                                                 <Popover title="Cron Expression Help" width={500}>
-                                                <Panel header="Expression">
-                                                    <span className="small"><pre id="input">
-                                                                                                                                      
-                                                    </pre></span>
-                                                </Panel>
+                                                            <b>Available Cron patterns:</b>
+                                                            <p>
+                                                                Asterisk. E.g. *<br/>
+                                                                Ranges. E.g. 1-3,5<br/>
+                                                                Steps. E.g. */2<br/>
+                                                            </p>
+                                                            <b>Cron Ranges</b>
+                                                            <p>
+                                                                Seconds: 0-59<br/>
+                                                                Minutes: 0-59<br/>
+                                                                Hours: 0-23<br/>
+                                                                Day of Month: 1-31<br/>
+                                                                Months: 0-11 (Jan-Dec)<br/>
+                                                                Day of Week: 0-6 (Sun-Sat)<br/>
+                                                            </p>
                                                 </Popover>
                                             }><Button bsStyle="info">
                                             <i className="fas fa-question-circle"/>&nbsp;&nbsp;Help</Button>
