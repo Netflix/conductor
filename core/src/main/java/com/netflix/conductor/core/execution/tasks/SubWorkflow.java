@@ -94,7 +94,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 		SubWorkflowParams param = task.getWorkflowTask().getSubWorkflowParam();
 		if (subWorkflowStatus == WorkflowStatus.RESET) {
-			logger.info("The sub-workflow " + subWorkflow.getWorkflowId() + " has been reset");
+			logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " has been reset");
 			return handleRestart(subWorkflow, task, param, provider);
 		} else if (subWorkflowStatus.isSuccessful()) {
 			task.setStatus(Status.COMPLETED);
@@ -185,7 +185,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else {
 			Long restartOn = (Long) task.getOutputData().get(RESTART_ON);
 			if (restartOn == null) { // Schedule restart
-				logger.info("Scheduled restart for the sub-workflow " + subWorkflow.getWorkflowId());
+				logger.debug("Scheduled restart for the sub-workflow " + subWorkflow.getWorkflowId());
 
 				// One second default delay if not specified
 				Long restartDelay = param.getRestartDelay();
@@ -196,7 +196,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 				restartOn = System.currentTimeMillis() + restartDelay;
 				task.getOutputData().put(RESTART_ON, restartOn);
 			} else if (restartOn <= System.currentTimeMillis()) {
-				logger.info("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
+				logger.debug("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
 				restarted++;
 				task.getOutputData().put(RESTARTED, restarted);
 				task.getOutputData().remove(RESTART_ON);

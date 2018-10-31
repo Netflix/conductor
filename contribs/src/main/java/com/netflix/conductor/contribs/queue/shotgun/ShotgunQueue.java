@@ -74,13 +74,13 @@ public class ShotgunQueue implements ObservableQueue {
             this.subject = queueURI;
             this.groupId = null;
         }
-        logger.info(String.format("Initialized with queueURI=%s, subject=%s, groupId=%s", queueURI, subject, groupId));
+        logger.debug(String.format("Initialized with queueURI=%s, subject=%s, groupId=%s", queueURI, subject, groupId));
         open();
     }
 
     @Override
     public Observable<Message> observe() {
-        logger.info("Observe invoked for queueURI " + queueURI);
+        logger.debug("Observe invoked for queueURI " + queueURI);
         listened.set(true);
 
         subscribe();
@@ -103,7 +103,7 @@ public class ShotgunQueue implements ObservableQueue {
                         }
                     });
 
-                    logger.info(String.format("Batch from %s to conductor is %s", subject, buffer.toString()));
+                    logger.debug(String.format("Batch from %s to conductor is %s", subject, buffer.toString()));
                 }
 
                 return Observable.from(available);
@@ -183,7 +183,7 @@ public class ShotgunQueue implements ObservableQueue {
 
     @Override
     public void close() {
-        logger.info("Closing connection for " + queueURI);
+        logger.debug("Closing connection for " + queueURI);
         if (execs != null) {
             execs.shutdownNow();
             execs = null;
@@ -281,7 +281,7 @@ public class ShotgunQueue implements ObservableQueue {
         try {
             OneMQClient temp = new OneMQ();
             temp.connect(dns);
-            logger.info("Successfully connected for " + queueURI);
+            logger.debug("Successfully connected for " + queueURI);
 
             conn.set(temp);
         } catch (Exception e) {
@@ -316,11 +316,11 @@ public class ShotgunQueue implements ObservableQueue {
 
             // Create subject/groupId subscription if the groupId has been provided
             if (StringUtils.isNotEmpty(groupId)) {
-                logger.info("No subscription. Creating subscription with subject={}, groupId={}", subject, groupId);
+                logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, groupId);
                 tmpSubs = conn.get().subscribe(subject, service, groupId, this::onMessage);
             } else {
                 String uuid = UUID.randomUUID().toString();
-                logger.info("No subscription. Creating subscription with subject={}, groupId={}", subject, uuid);
+                logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, uuid);
                 tmpSubs = conn.get().subscribe(subject, service, uuid, this::onMessage);
             }
 
@@ -332,7 +332,7 @@ public class ShotgunQueue implements ObservableQueue {
 
     private void onMessage(Subscription subscription, ShotgunOuterClass.Message message) {
         String payload = message.getContent().toStringUtf8();
-        logger.info(String.format("Received message for %s: %s", subscription.getSubject(), payload));
+        logger.debug(String.format("Received message for %s: %s", subscription.getSubject(), payload));
 
         Message dstMsg = new Message();
         dstMsg.setId(NUID.nextGlobal());

@@ -54,7 +54,7 @@ public class HttpTask extends GenericHttpTask {
 	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager auth) {
 		super(NAME, config, rcm, om, auth);
 		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
-		logger.info("HttpTask initialized...");
+		logger.debug("HttpTask initialized...");
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class HttpTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response = new HttpResponse();
-			logger.info("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
+			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
 					String json = new ObjectMapper().writeValueAsString(task.getInputData());

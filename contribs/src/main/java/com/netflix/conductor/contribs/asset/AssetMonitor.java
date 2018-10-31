@@ -108,7 +108,7 @@ public class AssetMonitor implements JavaEventAction {
 
 		// Make sure assetId present in the message
 		if (StringUtils.isEmpty(assetId)) {
-			logger.info("Doing noting as no assetId in the message " + messageId);
+			logger.debug("Doing noting as no assetId in the message " + messageId);
 			return;
 		}
 
@@ -175,7 +175,7 @@ public class AssetMonitor implements JavaEventAction {
 
 				// Do nothing if that sub-id presents in the list of recently updated
 				if (waitWfIds.contains(sourceWaitSubId)) {
-					logger.info("Asset has been recently updated in sub-workflow " + sourceWaitSubId);
+					logger.debug("Asset has been recently updated in sub-workflow " + sourceWaitSubId);
 					continue;
 				}
 			}
@@ -213,10 +213,10 @@ public class AssetMonitor implements JavaEventAction {
 
 			// reset sub-workflow, it will be restarted automatically
 			if (actionSubWorkflow.getStatus().equals(Workflow.WorkflowStatus.RUNNING)) {
-				logger.info("Asset matches. Resetting sub-workflow " + actionSubWorkflowId);
+				logger.debug("Asset matches. Resetting sub-workflow " + actionSubWorkflowId);
 				executor.reset(actionSubWorkflowId, "Asset matched. Has been reset by incoming message " + messageId);
 			} else {
-				logger.info("Asset matches. Restarting sub-workflow " + actionSubWorkflowId);
+				logger.debug("Asset matches. Restarting sub-workflow " + actionSubWorkflowId);
 				executor.rewind(actionSubWorkflowId, actionSubWorkflow.getCorrelationId());
 			}
 		}

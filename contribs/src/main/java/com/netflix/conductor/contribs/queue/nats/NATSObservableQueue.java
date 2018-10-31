@@ -56,7 +56,7 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 		try {
 			Options options = new Options.Builder(props).build();
 			Connection temp = Nats.connect(options);
-			logger.info("Successfully connected for " + queueURI);
+			logger.debug("Successfully connected for " + queueURI);
 
 			conn.set(temp);
 		} catch (Exception e) {
@@ -78,10 +78,10 @@ public class NATSObservableQueue extends NATSAbstractQueue {
 
 			// Create subject/queue subscription if the queue has been provided
 			if (StringUtils.isNotEmpty(queue)) {
-				logger.info("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
+				logger.debug("No subscription. Creating a queue subscription. subject={}, queue={}", subject, queue);
 				dispatcher.subscribe(subject, queue);
 			} else {
-				logger.info("No subscription. Creating a pub/sub subscription. subject={}", subject);
+				logger.debug("No subscription. Creating a pub/sub subscription. subject={}", subject);
 				dispatcher.subscribe(subject);
 			}
 

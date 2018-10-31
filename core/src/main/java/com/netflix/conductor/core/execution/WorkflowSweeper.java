@@ -64,7 +64,7 @@ public class WorkflowSweeper {
         if (this.executorThreadPoolSize > 0) {
             this.es = Executors.newFixedThreadPool(executorThreadPoolSize);
             init(executor);
-            logger.info("Workflow Sweeper Initialized");
+            logger.debug("Workflow Sweeper Initialized");
         } else {
             logger.warn("Workflow sweeper is DISABLED");
         }
@@ -80,7 +80,7 @@ public class WorkflowSweeper {
             try {
                 boolean disable = config.disableSweep();
                 if (disable) {
-                    logger.info("Workflow sweep is disabled.");
+                    logger.debug("Workflow sweep is disabled.");
                     return;
                 }
                 List<String> workflowIds = queues.pop(WorkflowExecutor.deciderQueue, 2 * executorThreadPoolSize, 2000);
@@ -106,7 +106,9 @@ public class WorkflowSweeper {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
                     WorkflowContext.set(ctx);
-                    logger.info("Running sweeper for workflow {}", workflowId);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Running sweeper for workflow {}", workflowId);
+                    }
                     queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0);
                     boolean done = executor.decide(workflowId);
                     if (!done) {

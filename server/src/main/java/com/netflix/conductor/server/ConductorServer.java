@@ -153,7 +153,7 @@ public class ConductorServer {
 						.withCPConfig(cp)
 						.build();
 
-				logger.info("Starting conductor server using dynomite cluster " + dynoClusterName);
+				logger.debug("Starting conductor server using dynomite cluster " + dynoClusterName);
 
 				break;
 
@@ -176,7 +176,7 @@ public class ConductorServer {
 				} catch (Exception e) {
 					logger.error("Error starting embedded elasticsearch.  Search functionality will be impacted: " + e.getMessage(), e);
 				}
-				logger.info("Starting conductor server using in memory data store");
+				logger.debug("Starting conductor server using in memory data store");
 				break;
 
 			case elasticsearch:

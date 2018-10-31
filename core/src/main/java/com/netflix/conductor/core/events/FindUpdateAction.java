@@ -107,7 +107,7 @@ public class FindUpdateAction implements JavaEventAction {
 				task.getOutputData().put("conductor.event.name", event);
 				task.getOutputData().put("conductor.event.payload", payload);
 				task.getOutputData().put("conductor.event.messageId", messageId);
-				logger.info("Updating task " + task + ". workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId());
+				logger.debug("Updating task " + task + ". workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId());
 
 				// Set the reason if task failed. It should be provided in the event
 				if (Task.Status.FAILED.equals(taskStatus)) {

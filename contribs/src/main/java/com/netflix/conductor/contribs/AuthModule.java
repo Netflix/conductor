@@ -35,6 +35,6 @@ public class AuthModule extends AbstractModule {
 	protected void configure() {
 		bind(AuthManager.class).asEagerSingleton();
 		bind(AuthTask.class).asEagerSingleton();
-		logger.info("Auth Module configured ...");
+		logger.debug("Auth Module configured ...");
 	}
 }

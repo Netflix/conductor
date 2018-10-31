@@ -33,6 +33,6 @@ public class AssetModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(AssetMonitor.class).asEagerSingleton();
-		logger.info("Asset Module configured ...");
+		logger.debug("Asset Module configured ...");
 	}
 }

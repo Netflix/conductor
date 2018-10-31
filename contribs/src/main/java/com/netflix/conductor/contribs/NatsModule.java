@@ -34,7 +34,7 @@ public class NatsModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(NATSEventQueueProvider.class).asEagerSingleton();
-		logger.info("NATS Module configured ...");
+		logger.debug("NATS Module configured ...");
 	}
 
 }

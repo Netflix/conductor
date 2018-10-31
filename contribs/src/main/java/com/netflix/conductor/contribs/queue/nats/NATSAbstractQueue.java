@@ -63,7 +63,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 			this.subject = queueURI;
 			this.queue = null;
 		}
-		logger.info(String.format("Initialized with queueURI=%s, subject=%s, queue=%s", queueURI, subject, queue));
+		logger.debug(String.format("Initialized with queueURI=%s, subject=%s, queue=%s", queueURI, subject, queue));
 	}
 
 	void onMessage(String subject, byte[] data) {
@@ -80,7 +80,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 
 	@Override
 	public Observable<Message> observe() {
-		logger.info("Observe invoked for queueURI " + queueURI);
+		logger.debug("Observe invoked for queueURI " + queueURI);
 		listened.set(true);
 
 		subscribe();
@@ -103,7 +103,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 						}
 					});
 
-					logger.info(String.format("Batch from %s to conductor is %s", subject, buffer.toString()));
+					logger.debug(String.format("Batch from %s to conductor is %s", subject, buffer.toString()));
 				}
 
 				return Observable.from(available);
@@ -183,7 +183,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 
 	@Override
 	public void close() {
-		logger.info("Closing connection for " + queueURI);
+		logger.debug("Closing connection for " + queueURI);
 		if (execs != null) {
 			execs.shutdownNow();
 			execs = null;

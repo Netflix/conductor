@@ -136,7 +136,7 @@ public class AuthManager {
 				} else {
 					boolean success = Boolean.parseBoolean(result.iterator().next().toString());
 					if (!success) {
-						logger.info("Verify failed for " + rule + " rule");
+						logger.debug("Verify failed for " + rule + " rule");
 						failed.put(rule, false);
 					}
 				}

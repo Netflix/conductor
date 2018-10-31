@@ -33,7 +33,7 @@ public class ShotgunModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(ShotgunEventQueueProvider.class).asEagerSingleton();
-		logger.info("Shotgun Module configured ...");
+		logger.debug("Shotgun Module configured ...");
 	}
 
 }

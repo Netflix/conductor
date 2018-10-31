@@ -113,7 +113,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		Client client = rcm.getClient(input);
 
 		if (input.getOauthConsumerKey() != null) {
-			logger.info("Configuring OAuth filter");
+			logger.debug("Configuring OAuth filter");
 			OAuthParameters params = new OAuthParameters().consumerKey(input.getOauthConsumerKey()).signatureMethod("HMAC-SHA1").version("1.0");
 			OAuthSecrets secrets = new OAuthSecrets().consumerSecret(input.getOauthConsumerSecret());
 			client.addFilter(new OAuthClientFilter(client.getProviders(), params, secrets));
@@ -146,7 +146,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
 			headers.put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
 		}
-		logger.info("http task headers " + headers);
+		logger.debug("http task headers " + headers);
 
 		// Store input headers back to the input request
 		if (MapUtils.isNotEmpty(input.getHeaders())) {

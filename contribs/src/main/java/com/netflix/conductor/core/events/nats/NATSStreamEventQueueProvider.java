@@ -49,7 +49,7 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 
 	@Inject
 	public NATSStreamEventQueueProvider(Configuration config) {
-		logger.info("NATS Stream Event Queue Provider init");
+		logger.debug("NATS Stream Event Queue Provider init");
 
 		// Get NATS Streaming options
 		clusterId = config.getProperty("io.nats.streaming.clusterId", "test-cluster");
@@ -59,11 +59,11 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 		String[] arr = config.getProperty("io.nats.streaming.publishRetryIn", ",").split(",");
 		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
 
-		logger.info("NATS Streaming clusterId=" + clusterId +
+		logger.debug("NATS Streaming clusterId=" + clusterId +
 				", natsUrl=" + natsUrl + ", durableName=" + durableName + ", publishRetryIn=" + ArrayUtils.toString(publishRetryIn));
 
 		EventQueues.registerProvider(QueueType.nats_stream, this);
-		logger.info("NATS Stream Event Queue Provider initialized...");
+		logger.debug("NATS Stream Event Queue Provider initialized...");
 	}
 
 	@Override
