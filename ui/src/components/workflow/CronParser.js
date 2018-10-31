@@ -85,7 +85,7 @@ class CronParser extends Component {
                 if(cronArr[2].match(/^[0-9]$/)){
                     this.setState({ seconds: " 0" + cronArr[2] + ":" })
                 } else
-                    this.setState({ seconds: cronArr[2] + ":" })
+                    this.setState({ seconds: " " + cronArr[2] + ":" })
             } else
                 this.setState({ hours: " past hour " + cronArr[2] })
         }
