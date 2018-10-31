@@ -221,7 +221,7 @@ public class ExecutionService {
 				continue;
 			}
 			if (pending.getUpdateTime() < threshold) {
-				logger.info("Requeuing Task: workflowId=" + workflow.getWorkflowId() + ", taskType=" + pending.getTaskType() + ", taskId="
+				logger.debug("Requeuing Task: workflowId=" + workflow.getWorkflowId() + ", taskType=" + pending.getTaskType() + ", taskId="
 						+ pending.getTaskId());
 				long callback = pending.getCallbackAfterSeconds();
 				if (callback < 0) {
@@ -250,7 +250,7 @@ public class ExecutionService {
 				continue;
 			}
 
-			logger.info("Requeuing Task: workflowId=" + pending.getWorkflowInstanceId() + ", taskType=" + pending.getTaskType() + ", taskId=" + pending.getTaskId());
+			logger.debug("Requeuing Task: workflowId=" + pending.getWorkflowInstanceId() + ", taskType=" + pending.getTaskType() + ", taskId=" + pending.getTaskId());
 			boolean pushed = requeue(pending);
 			if (pushed) {
 				count++;

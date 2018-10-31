@@ -50,7 +50,7 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 
 	@Inject
 	public ShotgunEventQueueProvider(Configuration config) {
-		logger.info("Shotgun Event Queue Provider init");
+		logger.debug("Shotgun Event Queue Provider init");
 
 		service = config.getProperty(PROP_SERVICE, null);
 		if (StringUtils.isEmpty(service)) {
@@ -65,11 +65,11 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 		String[] arr = config.getProperty("io.shotgun.publishRetryIn", ",").split(",");
 		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
 
-		logger.info("Shotgun Event Queue Provider settings are dns=" + dns + ", service=" + service
+		logger.debug("Shotgun Event Queue Provider settings are dns=" + dns + ", service=" + service
 				+ ", publishRetryIn=" + ArrayUtils.toString(publishRetryIn));
 
 		EventQueues.registerProvider(QueueType.shotgun, this);
-		logger.info("Shotgun Event Queue Provider initialized...");
+		logger.debug("Shotgun Event Queue Provider initialized...");
 	}
 
 	@Override

@@ -22,7 +22,7 @@ public class WaitUtils {
      * @param supplier Function should return true if service is up, false if not or throw an exception.
      */
     public static void wait(String service, int attempts, int sleep, Supplier<Boolean> supplier) {
-        logger.info("Initializing {} waiter. Connection attempts {}, sleep time {} seconds", service, attempts, sleep);
+        logger.debug("Initializing {} waiter. Connection attempts {}, sleep time {} seconds", service, attempts, sleep);
 
         int attemptsMade = 0;
         boolean connected = false;

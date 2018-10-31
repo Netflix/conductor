@@ -34,7 +34,7 @@ public class NatsStreamModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(NATSStreamEventQueueProvider.class).asEagerSingleton();
-		logger.info("NATS Streaming Module configured ...");
+		logger.debug("NATS Streaming Module configured ...");
 	}
 
 }

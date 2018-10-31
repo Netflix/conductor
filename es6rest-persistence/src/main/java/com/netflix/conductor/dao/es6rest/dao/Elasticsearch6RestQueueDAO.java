@@ -456,7 +456,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                         }
                     });
 
-                    logger.info("processUnacks: Re-queued {} for {}", record.getId(), queueName);
+                    if (logger.isDebugEnabled())
+                        logger.debug("processUnacks: Re-queued {} for {}", record.getId(), queueName);
                     processed.add(record.getId());
                 } catch (Exception ex) {
                     if (!isConflictOrMissingException(ex)) {

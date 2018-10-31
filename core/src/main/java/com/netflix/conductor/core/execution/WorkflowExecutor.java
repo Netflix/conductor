@@ -205,7 +205,7 @@ public class WorkflowExecutor {
 			notifyWorkflowStatus(wf, StartEndState.start);
 
 			decide(workflowId);
-			logger.info("Workflow has started.Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()+",CorrelationId=" + wf.getCorrelationId()+",input="+wf.getInput());
+			logger.debug("Workflow has started.Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()+",CorrelationId=" + wf.getCorrelationId()+",input="+wf.getInput());
 			return workflowId;
 
 		}catch (Exception e) {
@@ -316,7 +316,7 @@ public class WorkflowExecutor {
 			decide(workflowId);
 			return true;
 		}
-		logger.info("Workflow rerun.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
+		logger.debug("Workflow rerun.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
 		return false;
 	}
 
@@ -347,7 +347,7 @@ public class WorkflowExecutor {
 		notifyWorkflowStatus(workflow, StartEndState.start);
 
 		decide(workflowId);
-		logger.info("Workflow rewind.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
+		logger.debug("Workflow rewind.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
 	}
 
 	public void retry(String workflowId, String correlationId) throws Exception {
@@ -454,7 +454,7 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowRetry(workflow.getWorkflowType());
 
 		decide(workflowId);
-		logger.info("Workflow retry.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
+		logger.debug("Workflow retry.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
 	}
 
 	public List<Workflow> getStatusByCorrelationId(String workflowName, String correlationId, boolean includeClosed) throws Exception {
@@ -511,7 +511,7 @@ public class WorkflowExecutor {
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
 
-		logger.info("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
+		logger.debug("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
 
 	public String cancelWorkflow(String workflowId) throws Exception {
@@ -578,7 +578,7 @@ public class WorkflowExecutor {
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
 
-		logger.info("Workflow has cancelled, workflowId=" + workflow.getWorkflowId()+",input="+workflow.getInput()+",CorrelationId="+workflow.getCorrelationId()+",output="+workflow.getOutput());
+		logger.debug("Workflow has cancelled, workflowId=" + workflow.getWorkflowId()+",input="+workflow.getInput()+",CorrelationId="+workflow.getCorrelationId()+",output="+workflow.getOutput());
 		return workflowId;
 	}
 
@@ -977,7 +977,7 @@ public class WorkflowExecutor {
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {
-			logger.info("Executing async taskId={}, callbackSeconds={}, unackTimeout={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
+			logger.debug("Executing async taskId={}, callbackSeconds={}, unackTimeout={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
 
 			Task task = edao.getTask(taskId);
 			if (task == null) {
@@ -1021,7 +1021,7 @@ public class WorkflowExecutor {
 
 			// Check is that in sweeper right now?
 			if (queue.popped(WorkflowExecutor.sweeperQueue, workflowId)) {
-				logger.info("Skipping {}/{} due to sweeper for workflowId={}, correlationId={}",
+				logger.debug("Skipping {}/{} due to sweeper for workflowId={}, correlationId={}",
 						task.getTaskType(), task.getTaskId(),
 						workflow.getWorkflowId(), workflow.getCorrelationId());
 				return;
@@ -1032,7 +1032,7 @@ public class WorkflowExecutor {
 			if (!unacked) { // The case when we missed the tiny moment to 'lock' record
 				boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
 				if (exists)  {
-					logger.info("Missed unack workflowId={}, correlationId={} due to sweeper. Skipping {}/{}",
+					logger.debug("Missed unack workflowId={}, correlationId={} due to sweeper. Skipping {}/{}",
 							workflow.getWorkflowId(), workflow.getCorrelationId(), task.getTaskType(), task.getTaskId());
 					return;
 				}
@@ -1040,7 +1040,7 @@ public class WorkflowExecutor {
 				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency()); // seconds here!
 			}
 
-			logger.info("Executing {}/{}-{} for workflowId={}, correlationId={}", task.getTaskType(), task.getTaskId(), task.getStatus(),
+			logger.debug("Executing {}/{}-{} for workflowId={}, correlationId={}", task.getTaskType(), task.getTaskId(), task.getStatus(),
 					workflow.getWorkflowId(), workflow.getCorrelationId());
 
 			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
@@ -1071,7 +1071,7 @@ public class WorkflowExecutor {
 			}
 
 			updateTask(new TaskResult(task));
-			logger.info("Done Executing {}/{}-{} op={} for workflowId={}, correlationId={}",
+			logger.debug("Done Executing {}/{}-{} op={} for workflowId={}, correlationId={}",
 					task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString(),
 					workflow.getWorkflowId(), workflow.getCorrelationId());
 

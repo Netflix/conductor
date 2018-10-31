@@ -18,19 +18,6 @@
  */
 package com.netflix.conductor.contribs.queue;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,6 +31,12 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.service.ExecutionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.*;
 
 /**
  * @author Viren
@@ -140,7 +133,7 @@ public class QueueManager {
 		}, (Throwable t) -> {
 			logger.error(t.getMessage(), t);
 		});
-		logger.info("QueueListener::STARTED...listening for " + queue.getName());
+		logger.debug("QueueListener::STARTED...listening for " + queue.getName());
 	}
 	
 	private String getValue(String fieldName, JsonNode json) {

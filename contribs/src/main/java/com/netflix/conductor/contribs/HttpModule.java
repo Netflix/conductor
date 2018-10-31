@@ -38,6 +38,6 @@ public class HttpModule extends AbstractModule {
 		bind(RestClientManager.class).asEagerSingleton();
 		bind(HttpTask.class).asEagerSingleton();
 		bind(HttpWaitTask.class).asEagerSingleton();
-		logger.info("Http Module configured ...");
+		logger.debug("Http Module configured ...");
 	}
 }

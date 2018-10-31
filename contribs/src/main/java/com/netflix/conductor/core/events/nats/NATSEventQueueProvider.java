@@ -46,7 +46,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
 	@Inject
 	public NATSEventQueueProvider(Configuration config) {
-		logger.info("NATS Event Queue Provider init");
+		logger.debug("NATS Event Queue Provider init");
 
 		// Init NATS API. Handle "io_nats" and "io.nats" ways to specify parameters
 		Properties temp = new Properties();
@@ -66,7 +66,7 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
 
 		EventQueues.registerProvider(QueueType.nats, this);
-		logger.info("NATS Event Queue Provider initialized...");
+		logger.debug("NATS Event Queue Provider initialized...");
 	}
 
 	@Override

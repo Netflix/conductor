@@ -26,13 +26,13 @@ public class Correlator implements ICorrelator {
 	public Correlator(Logger logger, String correlationId) {
 		this(logger);
 		this.context = parseCorrelationId(correlationId);
-		logger.info("Context from correlationId is " + context);
+		logger.debug("Context from correlationId is " + context);
 	}
 
 	public Correlator(Logger logger, HttpHeaders headers) {
 		this(logger);
 		this.context = parseHeader(headers);
-		logger.info("Context from headers is " + context);
+		logger.debug("Context from headers is " + context);
 	}
 
 	public String asCorrelationId() throws JsonProcessingException {
@@ -51,7 +51,7 @@ public class Correlator implements ICorrelator {
 			return;
 		}
 		context.getUrns().add(urn);
-		logger.info("Context after urn set is " + context);
+		logger.debug("Context after urn set is " + context);
 	}
 
 

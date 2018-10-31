@@ -90,14 +90,14 @@ public class SystemTaskWorkerCoordinator {
 	                tf);
 
 			new Thread(()->listen()).start();
-			logger.info("System Task Worker Initialized with {} threads and a callback time of {} second and queue size {} with pollCount {}", threadCount, unackTimeout, workerQueueSize, pollCount);
+			logger.debug("System Task Worker Initialized with {} threads and a callback time of {} second and queue size {} with pollCount {}", threadCount, unackTimeout, workerQueueSize, pollCount);
 		} else {
-			logger.info("System Task Worker DISABLED");
+			logger.warn("System Task Worker DISABLED");
 		}
 	}
 
 	static synchronized void add(WorkflowSystemTask systemTask) {
-		logger.info("Adding system task {}", systemTask.getName());
+		logger.debug("Adding system task {}", systemTask.getName());
 		queue.add(systemTask);
 	}
 	
@@ -117,7 +117,7 @@ public class SystemTaskWorkerCoordinator {
 	
 	private void listen(WorkflowSystemTask systemTask) {
 		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, pollFrequency, TimeUnit.MILLISECONDS);
-		logger.info("Started listening {}", systemTask.getName());
+		logger.debug("Started listening {}", systemTask.getName());
 	}
 
 	private void pollAndExecute(WorkflowSystemTask systemTask) {

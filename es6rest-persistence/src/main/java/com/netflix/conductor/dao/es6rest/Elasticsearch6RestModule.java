@@ -47,7 +47,7 @@ public class Elasticsearch6RestModule extends AbstractModule {
         WaitUtils.wait("elasticsearch", connectAttempts, connectSleepSecs, () -> {
             try {
                 // Get cluster info
-                log.info("Cluster info " + client.info());
+                log.debug("Cluster info " + client.info());
                 return true;
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage(), e);

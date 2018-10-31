@@ -35,7 +35,7 @@ public class HttpWaitTask extends GenericHttpTask {
 		this.processor = processor;
 		this.metadata = metadata;
 
-		logger.info("Http Event Wait Task initialized ...");
+		logger.debug("Http Event Wait Task initialized ...");
 	}
 
 	@Override
@@ -103,7 +103,7 @@ public class HttpWaitTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response;
-			logger.info("http wait task started.workflowId=" + workflow.getWorkflowId()
+			logger.debug("http wait task started.workflowId=" + workflow.getWorkflowId()
 					+ ",CorrelationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
 					+ ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
