@@ -480,6 +480,13 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         return false;
     }
 
+    @Override
+    public boolean exists(String queueName, String id) {
+        initQueue(queueName);
+        GetResponse record = findMessage(queueName, id);
+        return record.isExists();
+    }
+
     private boolean pushMessage(String queueName, String id, String payload, long offsetSeconds) {
         if (logger.isDebugEnabled())
             logger.debug("pushMessage: {}/{}/{}", queueName, id, payload);

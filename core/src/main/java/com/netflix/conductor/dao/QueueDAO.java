@@ -123,6 +123,10 @@ public interface QueueDAO {
 
 	}
 
+	public default boolean exists(String queueName, String id) {
+		throw new IllegalStateException("Not implemented");
+	}
+
 	public default boolean popped(String queueName, String id) {
 		throw new IllegalStateException("Not implemented");
 	}

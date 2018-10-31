@@ -1030,9 +1030,14 @@ public class WorkflowExecutor {
 			// Setting unack timeout for workflow just in case sweeper wakes up
 			boolean unacked = queue.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
 			if (!unacked) { // The case when we missed the tiny moment to 'lock' record
-				logger.info("Missed unack workflowId={}, correlationId={} due to sweeper. Skipping {}/{}",
-						workflow.getWorkflowId(), workflow.getCorrelationId(), task.getTaskType(), task.getTaskId());
-				return;
+				boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
+				if (exists)  {
+					logger.info("Missed unack workflowId={}, correlationId={} due to sweeper. Skipping {}/{}",
+							workflow.getWorkflowId(), workflow.getCorrelationId(), task.getTaskType(), task.getTaskId());
+					return;
+				}
+				// If not exists then need place back
+				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency()); // seconds here!
 			}
 
 			logger.info("Executing {}/{}-{} for workflowId={}, correlationId={}", task.getTaskType(), task.getTaskId(), task.getStatus(),
