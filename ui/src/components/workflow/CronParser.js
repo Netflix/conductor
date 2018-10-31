@@ -30,8 +30,16 @@ class CronParser extends Component {
         if(cronArr[0] === "*"){
             this.setState({ seconds: " every second" })
         }
-        if(cronArr[0].match(/[0-9]+/)){
-            this.setState({ seconds: " second " + cronArr[0] })
+        if(cronArr[0].match(/^[0-9]+/)){
+
+            if(cronArr[1].match(/^[0-9]+/) && cronArr[2].match(/^[0-9]+/)){
+                if(cronArr[0].match(/^[0-9]$/)){
+                    this.setState({ hours: "0" + cronArr[0] })
+                } else
+                    this.setState({ hours: cronArr[0] })
+            } else
+                this.setState({ seconds: " second " + cronArr[0] })
+
         }
         if(cronArr[0].startsWith("*/")){
             let num = cronArr[0].substr(2,cronArr[0].length - 1);
@@ -48,8 +56,14 @@ class CronParser extends Component {
         if(cronArr[1] === "*"){
             this.setState({ minutes: "" })
         }
-        if(cronArr[1].match(/[0-9]+/)){
-            this.setState({ minutes: " past minute " + cronArr[1] })
+        if(cronArr[1].match(/^[0-9]+/)){
+            if(cronArr[0].match(/^[0-9]+/) && cronArr[2].match(/^[0-9]+/)){
+                if(cronArr[1].match(/^[0-9]$/)){
+                    this.setState({ minutes: "0" + cronArr[1] + ":" })
+                } else
+                    this.setState({ minutes: cronArr[1] + ":" })
+            } else
+                this.setState({ minutes: " past minute " + cronArr[1] })
         }
         if(cronArr[1].startsWith("*/")){
             let num = cronArr[1].substr(2,cronArr[1].length - 1);
@@ -66,8 +80,14 @@ class CronParser extends Component {
         if(cronArr[2] === "*"){
             this.setState({ hours: "" })
         }
-        if(cronArr[2].match(/[0-9]+/)){
-            this.setState({ hours: " past hour " + cronArr[2] })
+        if(cronArr[2].match(/^[0-9]+/)){
+            if(cronArr[0].match(/^[0-9]+/) && cronArr[1].match(/^[0-9]+/)){
+                if(cronArr[2].match(/^[0-9]$/)){
+                    this.setState({ seconds: " 0" + cronArr[2] + ":" })
+                } else
+                    this.setState({ seconds: cronArr[2] + ":" })
+            } else
+                this.setState({ hours: " past hour " + cronArr[2] })
         }
         if(cronArr[2].startsWith("*/")){
             let num = cronArr[2].substr(2,cronArr[2].length - 1);
@@ -84,7 +104,7 @@ class CronParser extends Component {
         if(cronArr[3] === "*"){
             this.setState({ dayofmonth: "" })
         }
-        if(cronArr[3].match(/[0-9]+/)){
+        if(cronArr[3].match(/^[0-9]+/)){
             this.setState({ dayofmonth: " on day-of-month " + cronArr[3] })
         }
         if(cronArr[3].startsWith("*/")){
@@ -102,7 +122,7 @@ class CronParser extends Component {
         if(cronArr[4] === "*"){
             this.setState({ month: "" })
         }
-        if(cronArr[4].match(/[0-9]+/)){
+        if(cronArr[4].match(/^[0-9]+/)){
             this.setState({ month: " in " + this.getMonth(cronArr[4]) })
         }
         if(cronArr[4].startsWith("*/")){
@@ -121,7 +141,7 @@ class CronParser extends Component {
             this.setState({ dayofweek: "" })
         }
         if(cronArr[3] !== "*"){
-            if(cronArr[5].match(/[0-9]+/)){
+            if(cronArr[5].match(/^[0-9]+/)){
                 this.setState({ dayofweek: " and on " + this.getDay(cronArr[5]) })
             }
             if(cronArr[5].startsWith("*/")){
@@ -138,7 +158,7 @@ class CronParser extends Component {
             }
         }
         else {
-            if(cronArr[5].match(/[0-9]+/)){
+            if(cronArr[5].match(/^[0-9]+/)){
                 this.setState({ dayofweek: " on " + this.getDay(cronArr[5]) })
             }
             if(cronArr[5].startsWith("*/")){
