@@ -22,7 +22,9 @@ import com.google.inject.AbstractModule;
 import com.netflix.conductor.core.events.ActionProcessor;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
+import com.netflix.conductor.core.execution.batch.BatchSweeper;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
+import com.netflix.conductor.core.execution.batch.SherlockBatchProcessor;
 import com.netflix.conductor.core.execution.tasks.*;
 
 
@@ -45,6 +47,9 @@ public class CoreModule extends AbstractModule {
 		bind(Fail.class).asEagerSingleton();
 		bind(Output.class).asEagerSingleton();
 		bind(UpdateTask.class).asEagerSingleton();
+		bind(SherlockBatchProcessor.class).asEagerSingleton();
+		bind(BatchSweeper.class).asEagerSingleton();
+		bind(Batch.class).asEagerSingleton();
 	}
 	
 }

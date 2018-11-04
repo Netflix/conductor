@@ -21,6 +21,7 @@ package com.netflix.conductor.core.execution;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -57,6 +58,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 /**
@@ -692,6 +694,43 @@ public class WorkflowExecutor {
 
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
+	}
+
+	public QueueDAO getQueueDao() {
+		return queue;
+	}
+
+	public void updateTask(Task task)  {
+		edao.updateTask(task);
+	}
+
+	/**
+	 * Deluxe added.
+	 *
+	 * This method checks the sweeper queue, sets unack timeout, updates task.
+	 *
+	 * @param result Teh task update result
+	 * @throws Exception if something bad happens
+	 */
+	public void updateTaskUnack(TaskResult result) throws Exception {
+		Task task = edao.getTask(result.getTaskId());
+
+		// Need to wait a little if the workflow in sweeper right now
+		boolean activeSweeper = queue.popped(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
+		while (activeSweeper) {
+			logger.info("Sweeper is active for " + task.getWorkflowInstanceId());
+			Uninterruptibles.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
+			activeSweeper = queue.popped(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
+		}
+
+		// Setting unack timeout for workflow just in case sweeper wakes up
+		boolean exists = queue.exists(WorkflowExecutor.deciderQueue, task.getWorkflowInstanceId());
+		if (exists)  {
+			queue.setUnackTimeout(WorkflowExecutor.deciderQueue, task.getWorkflowInstanceId(), config.getSweepFrequency() * 1000);
+		}
+
+		// finally update the task with decider invoked inside
+		updateTask(result);
 	}
 
 	public void updateTask(TaskResult result) throws Exception {

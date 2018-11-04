@@ -546,6 +546,17 @@ public class DeciderService {
 				Task waitTask = SystemTask.waitTask(workflow, taskId, taskToSchedule, waitTaskInput);
 				tasks.add(waitTask);
 				break;
+			case BATCH:
+				taskDef = metadata.getTaskDef(taskToSchedule.getName());
+				if(taskDef == null){
+					String reason = "Invalid task specified.  Cannot find task by name " + taskToSchedule.getName() + " in the task definitions";
+					throw new TerminateWorkflow(reason);
+				}
+				input = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, taskDef, taskToSchedule);
+				task = SystemTask.userDefined(workflow, taskId, taskToSchedule, input, taskDef, retryCount);
+				task.setResponseTimeoutSeconds(taskDef.getResponseTimeoutSeconds());
+				tasks.add(task);
+				break;
 			default:
 				break;
 		}

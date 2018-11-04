@@ -103,6 +103,7 @@ public class ExecutionService {
 		for(String taskId : taskIds) {
 			Task task = getTask(taskId);
 			if(task == null) {
+				queue.remove(queueName, taskId); // We should remove the entry if no task found
 				continue;
 			}
 
@@ -117,8 +118,8 @@ public class ExecutionService {
 			}
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
-			executor.notifyTaskStatus(task, WorkflowExecutor.StartEndState.start);
 			edao.updateTask(task);
+			executor.notifyTaskStatus(task, WorkflowExecutor.StartEndState.start);
 			tasks.add(task);
 		}
 		edao.updateLastPoll(taskType, domain, workerId);
@@ -291,7 +292,7 @@ public class ExecutionService {
 		return workflows;
 	}
 
-	public Workflow getExecutionStatus(String workflowId, boolean includeTasks) throws Exception {
+	public Workflow getExecutionStatus(String workflowId, boolean includeTasks) {
 		return edao.getWorkflow(workflowId, includeTasks);
 	}
 

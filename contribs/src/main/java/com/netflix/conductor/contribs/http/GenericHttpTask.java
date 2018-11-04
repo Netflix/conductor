@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.auth.AuthResponse;
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.DNSLookup;
@@ -157,7 +156,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 			}
 
 			task.getInputData().put(REQUEST_PARAMETER_NAME, input);
-			executor.updateTask(new TaskResult(task));
+			executor.updateTask(task);
 		}
 
 		HttpResponse response = new HttpResponse();

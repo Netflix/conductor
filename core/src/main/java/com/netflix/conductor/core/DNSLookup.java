@@ -1,4 +1,5 @@
 package com.netflix.conductor.core;
+import org.apache.commons.lang3.ArrayUtils;
 import org.xbill.DNS.*;
 
 import java.net.InetAddress;
@@ -10,6 +11,17 @@ import java.util.Arrays;
  */
 public class DNSLookup {
     public DNSLookup(){}
+
+    public static String lookup(String service) {
+        DNSLookup lookup = new DNSLookup();
+        DNSLookup.DNSResponses responses = lookup.lookupService(service);
+        if (responses != null && ArrayUtils.isNotEmpty(responses.getResponses())) {
+            String address = responses.getResponses()[0].getAddress();
+            int port = responses.getResponses()[0].getPort();
+            return "http://" + address + ":" + port;
+        }
+        return null;
+    }
 
     public DNSResponses lookupService(String query) {
         DNSResponses responses = new DNSResponses();
