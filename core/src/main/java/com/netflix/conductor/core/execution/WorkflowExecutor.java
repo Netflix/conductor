@@ -716,18 +716,15 @@ public class WorkflowExecutor {
 		Task task = edao.getTask(result.getTaskId());
 
 		// Need to wait a little if the workflow in sweeper right now
-		boolean activeSweeper = queue.popped(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
+		boolean activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
 		while (activeSweeper) {
-			logger.info("Sweeper is active for " + task.getWorkflowInstanceId());
-			Uninterruptibles.sleepUninterruptibly(50, TimeUnit.MILLISECONDS);
-			activeSweeper = queue.popped(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
+			logger.debug("Sweeper is active for " + task.getWorkflowInstanceId());
+			Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+			activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
 		}
 
 		// Setting unack timeout for workflow just in case sweeper wakes up
-		boolean exists = queue.exists(WorkflowExecutor.deciderQueue, task.getWorkflowInstanceId());
-		if (exists)  {
-			queue.setUnackTimeout(WorkflowExecutor.deciderQueue, task.getWorkflowInstanceId(), config.getSweepFrequency() * 1000);
-		}
+		queue.setUnackTimeout(WorkflowExecutor.deciderQueue, task.getWorkflowInstanceId(), config.getSweepFrequency() * 1000);
 
 		// finally update the task with decider invoked inside
 		updateTask(result);
@@ -1059,7 +1056,7 @@ public class WorkflowExecutor {
 			}
 
 			// Check is that in sweeper right now?
-			if (queue.popped(WorkflowExecutor.sweeperQueue, workflowId)) {
+			if (queue.exists(WorkflowExecutor.sweeperQueue, workflowId)) {
 				logger.debug("Skipping {}/{} due to sweeper for workflowId={}, correlationId={}",
 						task.getTaskType(), task.getTaskId(),
 						workflow.getWorkflowId(), workflow.getCorrelationId());
