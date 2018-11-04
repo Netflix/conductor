@@ -717,13 +717,24 @@ public class WorkflowExecutor {
 
 		// Need to wait a little if the workflow in sweeper right now
 		boolean activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
-		while (activeSweeper) {
-			logger.debug("Sweeper is active for " + task.getWorkflowInstanceId());
-			Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
-			activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
+		if (activeSweeper) {
+			long start = System.currentTimeMillis();
+			long timeout = config.getSweepFrequency() * 1000;
+
+			// Wait until not active or wait timed out
+			while (activeSweeper && (System.currentTimeMillis() - start) < timeout) {
+				Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+				activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
+			}
+
+			// Report if still active
+			if (activeSweeper) {
+				logger.warn("Sweeper is active for workflowId=" + task.getWorkflowInstanceId() +
+						", correlationId=" + task.getCorrelationId());
+			}
 		}
 
-		// Setting unack timeout for workflow just in case sweeper wakes up
+		// Setting unack timeout for workflow just in case sweeper triggers
 		queue.setUnackTimeout(WorkflowExecutor.deciderQueue, task.getWorkflowInstanceId(), config.getSweepFrequency() * 1000);
 
 		// finally update the task with decider invoked inside
