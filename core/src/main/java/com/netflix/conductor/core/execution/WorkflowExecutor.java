@@ -21,6 +21,7 @@ package com.netflix.conductor.core.execution;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -57,6 +58,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.ws.rs.core.HttpHeaders;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 /**
@@ -694,6 +696,51 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
 	}
 
+	public QueueDAO getQueueDao() {
+		return queue;
+	}
+
+	public void updateTask(Task task)  {
+		edao.updateTask(task);
+	}
+
+	/**
+	 * Deluxe added.
+	 *
+	 * This method checks the sweeper queue, sets unack timeout, updates task.
+	 *
+	 * @param result Teh task update result
+	 * @throws Exception if something bad happens
+	 */
+	public void updateTaskUnack(TaskResult result) throws Exception {
+		Task task = edao.getTask(result.getTaskId());
+
+		// Need to wait a little if the workflow in sweeper right now
+		boolean activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
+		if (activeSweeper) {
+			long start = System.currentTimeMillis();
+			long timeout = config.getSweepFrequency() * 1000;
+
+			// Wait until not active or wait timed out
+			while (activeSweeper && (System.currentTimeMillis() - start) < timeout) {
+				Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+				activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
+			}
+
+			// Report if still active
+			if (activeSweeper) {
+				logger.warn("Sweeper is active for workflowId=" + task.getWorkflowInstanceId() +
+						", correlationId=" + task.getCorrelationId());
+			}
+		}
+
+		// Setting unack timeout for workflow just in case sweeper triggers
+		queue.setUnackTimeout(WorkflowExecutor.deciderQueue, task.getWorkflowInstanceId(), config.getSweepFrequency() * 1000);
+
+		// finally update the task with decider invoked inside
+		updateTask(result);
+	}
+
 	public void updateTask(TaskResult result) throws Exception {
 		if (result == null) {
 			logger.error("null task given for update..." + result);
@@ -1020,7 +1067,7 @@ public class WorkflowExecutor {
 			}
 
 			// Check is that in sweeper right now?
-			if (queue.popped(WorkflowExecutor.sweeperQueue, workflowId)) {
+			if (queue.exists(WorkflowExecutor.sweeperQueue, workflowId)) {
 				logger.debug("Skipping {}/{} due to sweeper for workflowId={}, correlationId={}",
 						task.getTaskType(), task.getTaskId(),
 						workflow.getWorkflowId(), workflow.getCorrelationId());

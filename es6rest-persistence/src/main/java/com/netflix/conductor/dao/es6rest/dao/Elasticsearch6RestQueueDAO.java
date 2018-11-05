@@ -472,16 +472,6 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     @Override
-    public boolean popped(String queueName, String id) {
-        initQueue(queueName);
-        GetResponse record = findMessage(queueName, id);
-        if (record.isExists()) {
-            return (Boolean)record.getSourceAsMap().get("popped");
-        }
-        return false;
-    }
-
-    @Override
     public boolean exists(String queueName, String id) {
         initQueue(queueName);
         GetResponse record = findMessage(queueName, id);
