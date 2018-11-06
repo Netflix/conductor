@@ -42,19 +42,15 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO implements QueueDAO {
     private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestQueueDAO.class);
     private static final Set<String> queues = ConcurrentHashMap.newKeySet();
-    private static final int unackScheduleInMS = 60_000;
-    private static final int unackTime = 60_000;
     private static final String DEFAULT = "default";
-    private final int stalePeriod;
+    private Configuration config;
     private String baseName;
 
     @Inject
     public Elasticsearch6RestQueueDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
         super(client, config, mapper, "queues");
+        this.config = config;
         this.baseName = toIndexName();
-        this.stalePeriod = config.getIntProperty("workflow.elasticsearch.stale.period.seconds", 60) * 1000;
-
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::processUnacks, unackScheduleInMS, unackScheduleInMS, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -103,6 +99,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         try {
             String indexName = toIndexName(queueName);
             String typeName = toTypeName(queueName);
+            int unackTime = config.getIntProperty("workflow.elasticsearch.queue." + typeName + ".unack.timeout", 60_000);
 
             // Read ids. For each: read object, try to lock - if success - add to ids
             long start = System.currentTimeMillis();
@@ -401,6 +398,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         try {
             String indexName = toIndexName(queueName);
             String typeName = toTypeName(queueName);
+            int stalePeriod = config.getIntProperty("workflow.elasticsearch.queue." + typeName + ".stale.period.seconds", 60) * 1000;
 
             QueryBuilder popped = QueryBuilders.termQuery("popped", true);
             QueryBuilder unackOn = QueryBuilders.rangeQuery("unackOn").lte(System.currentTimeMillis() - stalePeriod);
@@ -411,7 +409,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             sourceBuilder.sort("unackOn", SortOrder.ASC);
             sourceBuilder.query(query);
             sourceBuilder.version(true);
-            sourceBuilder.size(100);
+            sourceBuilder.size(1000);
 
             SearchRequest request = new SearchRequest(indexName).types(typeName);
             request.source(sourceBuilder);
@@ -478,6 +476,48 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         return record.isExists();
     }
 
+    @Override
+    public boolean wakeup(String queueName, String id) {
+        initQueue(queueName);
+        String indexName = toIndexName(queueName);
+        String typeName = toTypeName(queueName);
+        GetResponse record = findMessage(queueName, id);
+        if (!record.isExists()) {
+            return pushIfNotExists(queueName, id, 0);
+        }
+
+        boolean result = false;
+        try {
+            Map<String, Object> map = new HashMap<>();
+            map.put("popped", false);
+            map.put("deliverOn", System.currentTimeMillis());
+
+            try {
+                UpdateRequest updateRequest = new UpdateRequest();
+                updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+                updateRequest.version(record.getVersion());
+                updateRequest.index(indexName);
+                updateRequest.type(typeName);
+                updateRequest.id(id);
+                updateRequest.doc(map);
+
+                client.update(updateRequest);
+                result = true;
+            } catch (Exception ex) {
+                if (!isVerConflictException(ex)) {
+                    logger.error("wakeup: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(),  ex);
+                }
+            }
+
+            if (logger.isDebugEnabled())
+                logger.debug("wakeup: Re-queued {} for {}", record.getId(), queueName);
+        } catch (Exception ex) {
+            logger.error("wakeup: unable to execute for {}/{} with {}", queueName, id, ex.getMessage(), ex);
+        }
+        return result;
+    }
+
+
     private boolean pushMessage(String queueName, String id, String payload, long offsetSeconds) {
         if (logger.isDebugEnabled())
             logger.debug("pushMessage: {}/{}/{}", queueName, id, payload);
@@ -489,8 +529,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             map.put("popped", false);
             map.put("payload", payload);
             map.put("deliverOn", deliverOn);
-            insert(indexName, typeName, id, map);
-            return true;
+            return insert(indexName, typeName, id, map);
         } catch (Exception ex) {
             logger.error("pushMessage: failed for {}/{}/{} with {}", queueName, id, payload, ex.getMessage(), ex);
             return false;
@@ -534,17 +573,21 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     private void initQueue(String queueName) {
+        if (queues.contains(queueName)) {
+            return;
+        }
         queues.add(queueName);
         String indexName = toIndexName(queueName);
         String typeName = toTypeName(queueName);
         ensureIndexExists(indexName, typeName, DEFAULT);
+
+        int unackFrequency = config.getIntProperty("workflow.elasticsearch.queue." + typeName + ".processUnacks.frequency", 60_000);
+
+        Executors.newScheduledThreadPool(1)
+                .scheduleAtFixedRate(() -> processUnacks(queueName), 0, unackFrequency, TimeUnit.MILLISECONDS);
     }
 
     private GetResponse findMessage(String queueName, String id) {
         return findOne(toIndexName(queueName), toTypeName(queueName), id);
-    }
-
-    private void processUnacks() {
-        queues.forEach(this::processUnacks);
     }
 }

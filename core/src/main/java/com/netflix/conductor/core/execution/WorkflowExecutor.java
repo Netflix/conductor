@@ -696,51 +696,6 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
 	}
 
-	public QueueDAO getQueueDao() {
-		return queue;
-	}
-
-	public void updateTask(Task task)  {
-		edao.updateTask(task);
-	}
-
-	/**
-	 * Deluxe added.
-	 *
-	 * This method checks the sweeper queue, sets unack timeout, updates task.
-	 *
-	 * @param result Teh task update result
-	 * @throws Exception if something bad happens
-	 */
-	public void updateTaskUnack(TaskResult result) throws Exception {
-		Task task = edao.getTask(result.getTaskId());
-
-		// Need to wait a little if the workflow in sweeper right now
-		boolean activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
-		if (activeSweeper) {
-			long start = System.currentTimeMillis();
-			long timeout = config.getSweepFrequency() * 1000;
-
-			// Wait until not active or wait timed out
-			while (activeSweeper && (System.currentTimeMillis() - start) < timeout) {
-				Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
-				activeSweeper = queue.exists(WorkflowExecutor.sweeperQueue, task.getWorkflowInstanceId());
-			}
-
-			// Report if still active
-			if (activeSweeper) {
-				logger.warn("Sweeper is active for workflowId=" + task.getWorkflowInstanceId() +
-						", correlationId=" + task.getCorrelationId());
-			}
-		}
-
-		// Setting unack timeout for workflow just in case sweeper triggers
-		queue.setUnackTimeout(WorkflowExecutor.deciderQueue, task.getWorkflowInstanceId(), config.getSweepFrequency() * 1000);
-
-		// finally update the task with decider invoked inside
-		updateTask(result);
-	}
-
 	public void updateTask(TaskResult result) throws Exception {
 		if (result == null) {
 			logger.error("null task given for update..." + result);
@@ -829,7 +784,9 @@ public class WorkflowExecutor {
 				break;
 		}
 
-		decide(workflowId);
+		// Should not the sweeper do this job to avoid collisions ?
+		// decide(workflowId);
+		wakeUpSweeper(workflowId);
 
 		if (task.getStatus().isTerminal()) {
 			long duration = getTaskDuration(0, task);
@@ -837,6 +794,26 @@ public class WorkflowExecutor {
 			Monitors.recordTaskExecutionTime(task.getTaskDefName(), duration, true, task.getStatus());
 			Monitors.recordTaskExecutionTime(task.getTaskDefName(), lastDuration, false, task.getStatus());
 		}
+	}
+
+	private void wakeUpSweeper(String workflowId) {
+		boolean active = queue.exists(WorkflowExecutor.sweeperQueue, workflowId);
+		if (active) {
+			// Wait a little bit. If the current sweeper call is empty
+			// then it will exit soon and we can wake it up again
+			Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+
+			// Check again
+			active = queue.exists(WorkflowExecutor.sweeperQueue, workflowId);
+
+			// Exit if it still active
+			if (active) {
+				return;
+			}
+		}
+
+		// Otherwise wake it up by unacking message via queue
+		queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
 	}
 
 	public List<Task> getTasks(String taskType, String startKey, int count) throws Exception {
@@ -1066,25 +1043,11 @@ public class WorkflowExecutor {
 				}
 			}
 
-			// Check is that in sweeper right now?
-			if (queue.exists(WorkflowExecutor.sweeperQueue, workflowId)) {
-				logger.debug("Skipping {}/{} due to sweeper for workflowId={}, correlationId={}",
-						task.getTaskType(), task.getTaskId(),
-						workflow.getWorkflowId(), workflow.getCorrelationId());
-				return;
-			}
-
-			// Setting unack timeout for workflow just in case sweeper wakes up
-			boolean unacked = queue.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
-			if (!unacked) { // The case when we missed the tiny moment to 'lock' record
-				boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
-				if (exists)  {
-					logger.debug("Missed unack workflowId={}, correlationId={} due to sweeper. Skipping {}/{}",
-							workflow.getWorkflowId(), workflow.getCorrelationId(), task.getTaskType(), task.getTaskId());
-					return;
-				}
+            // Workaround when workflow id disappears from the queue
+			boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
+			if (!exists)  {
 				// If not exists then need place back
-				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency()); // seconds here!
+				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
 			}
 
 			logger.debug("Executing {}/{}-{} for workflowId={}, correlationId={}", task.getTaskType(), task.getTaskId(), task.getStatus(),

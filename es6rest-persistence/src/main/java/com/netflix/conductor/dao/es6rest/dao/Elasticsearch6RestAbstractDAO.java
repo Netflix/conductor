@@ -520,7 +520,7 @@ abstract class Elasticsearch6RestAbstractDAO {
         }
     }
 
-    private void doWithRetry(Runnable runnable) {
+    void doWithRetry(Runnable runnable) {
         try {
             doWithRetryNoisy(runnable);
         } catch (Exception ignore) {
