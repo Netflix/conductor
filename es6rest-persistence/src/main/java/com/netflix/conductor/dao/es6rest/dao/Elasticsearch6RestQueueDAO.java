@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -122,17 +121,10 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 SearchRequest request = new SearchRequest(indexName).types(typeName);
                 request.source(sourceBuilder);
 
-                AtomicReference<SearchResponse> reference = new AtomicReference<>();
-                doWithRetryNoisy(() -> {
-                    try {
-                        reference.set(client.search(request));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e.getMessage(), e);
-                    }
-                });
+                SearchResponse response = client.search(request);
 
                 // Walk over all of them and 'lock'
-                for (SearchHit record : reference.get().getHits().getHits()) {
+                for (SearchHit record : response.getHits().getHits()) {
                     try {
                         if (logger.isDebugEnabled())
                             logger.debug("pop ({}): attempt for {}/{}", session, queueName, record.getId());
@@ -140,21 +132,15 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                         map.put("popped", true);
                         map.put("unackOn", System.currentTimeMillis() + unackTime);
 
-                        doWithRetryNoisy(() -> {
-                            try {
-                                UpdateRequest updateRequest = new UpdateRequest();
-                                updateRequest.index(indexName);
-                                updateRequest.type(typeName);
-                                updateRequest.id(record.getId());
-                                updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                                updateRequest.version(record.getVersion());
-                                updateRequest.doc(map);
+                        UpdateRequest updateRequest = new UpdateRequest();
+                        updateRequest.index(indexName);
+                        updateRequest.type(typeName);
+                        updateRequest.id(record.getId());
+                        updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+                        updateRequest.version(record.getVersion());
+                        updateRequest.doc(map);
 
-                                client.update(updateRequest);
-                            } catch (Exception ex) {
-                                throw new RuntimeException(ex.getMessage(), ex);
-                            }
-                        });
+                        client.update(updateRequest);
 
                         // Add id to the final collection
                         foundIds.add(record.getId());
@@ -270,22 +256,15 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             map.put("popped", true);
             map.put("unackOn", System.currentTimeMillis() + unackTimeout);
 
-            doWithRetryNoisy(() -> {
-                try {
-                    UpdateRequest updateRequest = new UpdateRequest();
-                    updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                    updateRequest.index(toIndexName(queueName));
-                    updateRequest.type(toTypeName(queueName));
-                    updateRequest.id(record.getId());
-                    updateRequest.version(record.getVersion());
-                    updateRequest.doc(map);
+            UpdateRequest updateRequest = new UpdateRequest();
+            updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+            updateRequest.index(toIndexName(queueName));
+            updateRequest.type(toTypeName(queueName));
+            updateRequest.id(record.getId());
+            updateRequest.version(record.getVersion());
+            updateRequest.doc(map);
 
-                    client.update(updateRequest);
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex.getMessage(), ex);
-                }
-            });
-
+            client.update(updateRequest);
         } catch (Exception ex) {
             if (!isConflictOrMissingException(ex)) {
                 logger.error("setUnackTimeout: failed for {}/{}/{} with {}", queueName, id, unackTimeout, ex.getMessage(), ex);
@@ -440,25 +419,19 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                     map.put("popped", false);
                     map.put("deliverOn", System.currentTimeMillis());
 
-                    doWithRetryNoisy(() -> {
-                        try {
-                            UpdateRequest updateRequest = new UpdateRequest();
-                            updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                            updateRequest.version(record.getVersion());
-                            updateRequest.index(indexName);
-                            updateRequest.type(typeName);
-                            updateRequest.id(record.getId());
-                            updateRequest.doc(map);
+                    UpdateRequest updateRequest = new UpdateRequest();
+                    updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+                    updateRequest.version(record.getVersion());
+                    updateRequest.index(indexName);
+                    updateRequest.type(typeName);
+                    updateRequest.id(record.getId());
+                    updateRequest.doc(map);
 
-                            client.update(updateRequest);
-                        } catch (Exception ex) {
-                            throw new RuntimeException(ex.getMessage(), ex);
-                        }
-                    });
+                    client.update(updateRequest);
+                    processed.add(record.getId());
 
                     if (logger.isDebugEnabled())
                         logger.debug("processUnacks: Re-queued {} for {}", record.getId(), queueName);
-                    processed.add(record.getId());
                 } catch (Exception ex) {
                     if (!isConflictOrMissingException(ex)) {
                         logger.error("processUnacks: unable to execute for {}/{} with {}",
