@@ -291,7 +291,7 @@ public class ShotgunQueue implements ObservableQueue {
     }
 
     private boolean isConnected() {
-        return (conn.get() != null && !conn.get().isConnected());
+        return (conn.get() != null && conn.get().isConnected());
     }
 
     private boolean isSubscribed() {
