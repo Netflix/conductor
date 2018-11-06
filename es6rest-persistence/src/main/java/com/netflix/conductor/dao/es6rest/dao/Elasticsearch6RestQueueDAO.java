@@ -477,17 +477,17 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     @Override
-    public boolean wakeup(String queueName, String id) {
+    public void wakeup(String queueName, String id) {
         initQueue(queueName);
-        String indexName = toIndexName(queueName);
-        String typeName = toTypeName(queueName);
-        GetResponse record = findMessage(queueName, id);
-        if (!record.isExists()) {
-            return pushIfNotExists(queueName, id, 0);
-        }
-
-        boolean result = false;
         try {
+            String indexName = toIndexName(queueName);
+            String typeName = toTypeName(queueName);
+            GetResponse record = findMessage(queueName, id);
+            if (!record.isExists()) {
+                pushIfNotExists(queueName, id, 0);
+                return;
+            }
+
             Map<String, Object> map = new HashMap<>();
             map.put("popped", false);
             map.put("deliverOn", System.currentTimeMillis());
@@ -502,21 +502,15 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 updateRequest.doc(map);
 
                 client.update(updateRequest);
-                result = true;
             } catch (Exception ex) {
                 if (!isVerConflictException(ex)) {
                     logger.error("wakeup: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(),  ex);
                 }
             }
-
-            if (logger.isDebugEnabled())
-                logger.debug("wakeup: Re-queued {} for {}", record.getId(), queueName);
         } catch (Exception ex) {
             logger.error("wakeup: unable to execute for {}/{} with {}", queueName, id, ex.getMessage(), ex);
         }
-        return result;
     }
-
 
     private boolean pushMessage(String queueName, String id, String payload, long offsetSeconds) {
         if (logger.isDebugEnabled())
