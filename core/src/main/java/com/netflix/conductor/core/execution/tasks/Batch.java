@@ -21,12 +21,9 @@ package com.netflix.conductor.core.execution.tasks;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.QueueUtils;
 import org.apache.commons.lang3.StringUtils;
-
-import java.util.Collections;
 
 /**
  * @author Oleksiy Lysak
@@ -42,20 +39,17 @@ public class Batch extends WorkflowSystemTask {
 
     @Override
     public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-        task.setStatus(Status.IN_PROGRESS);
         try {
             String queueName = getQueueName(task);
 
-            Message message = new Message();
-            message.setId(task.getTaskId());
-            executor.getQueueDao().push(queueName, Collections.singletonList(message));
-
+            executor.getQueueDao().pushIfNotExists(queueName, task.getTaskId(), task.getCallbackAfterSeconds());
         } catch (Exception ex) {
             task.setStatus(Status.FAILED);
             task.setReasonForIncompletion(ex.getMessage());
         }
     }
 
+    @Override
     public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
         return false;
     }

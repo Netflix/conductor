@@ -1380,6 +1380,10 @@ public class WorkflowExecutor {
 		return decoded;
 	}
 
+	public Task getTask(String taskId) {
+		return edao.getTask(taskId);
+	}
+
 	private void cancelTasks(Workflow workflow, List<Task> tasks) throws Exception {
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {
