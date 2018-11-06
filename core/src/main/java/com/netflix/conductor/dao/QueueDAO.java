@@ -126,4 +126,8 @@ public interface QueueDAO {
 	public default boolean exists(String queueName, String id) {
 		throw new IllegalStateException("Not implemented");
 	}
+
+	public default void wakeup(String queueName, String id) {
+		throw new IllegalStateException("Not implemented");
+	}
 }

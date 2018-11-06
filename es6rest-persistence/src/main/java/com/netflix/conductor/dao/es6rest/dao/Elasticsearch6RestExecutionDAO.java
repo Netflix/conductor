@@ -765,15 +765,11 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
         String id = toId(task.getWorkflowInstanceId(), taskKey); // Do not add taskId here!!!
 
-        boolean exists = exists(indexName, typeName, id);
-        if (!exists) {
-            Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
-                    "taskRefName", task.getReferenceTaskName(),
-                    "taskId", task.getTaskId());
+        Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
+                "taskRefName", task.getReferenceTaskName(),
+                "taskId", task.getTaskId());
 
-            return insert(indexName, typeName, id, payload);
-        }
-        return false;
+        return insert(indexName, typeName, id, payload);
     }
 
     private void deleteScheduledTask(Task task) {

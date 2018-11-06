@@ -52,6 +52,7 @@ public class WorkflowSweeper {
 
     private int executorThreadPoolSize;
     private long sweeperFrequency;
+    private int poolTimeout;
 
     private static final String className = WorkflowSweeper.class.getSimpleName();
 
@@ -61,6 +62,7 @@ public class WorkflowSweeper {
         this.queues = queues;
         this.executorThreadPoolSize = config.getIntProperty("workflow.sweeper.thread.count", 5);
         this.sweeperFrequency = config.getIntProperty("workflow.sweeper.frequency", 500);
+        this.poolTimeout = config.getIntProperty("workflow.sweeper.pool.timeout", 2000);
         if (this.executorThreadPoolSize > 0) {
             this.es = Executors.newFixedThreadPool(executorThreadPoolSize);
             init(executor);
@@ -83,7 +85,7 @@ public class WorkflowSweeper {
                     logger.debug("Workflow sweep is disabled.");
                     return;
                 }
-                List<String> workflowIds = queues.pop(WorkflowExecutor.deciderQueue, 2 * executorThreadPoolSize, 2000);
+                List<String> workflowIds = queues.pop(WorkflowExecutor.deciderQueue, 2 * executorThreadPoolSize, poolTimeout);
                 sweep(workflowIds, executor);
 
             } catch (Exception e) {
@@ -133,8 +135,8 @@ public class WorkflowSweeper {
                     Monitors.error(className, "sweep");
                     logger.error("Error running sweep for " + workflowId, e);
                 } finally {
-                    NDC.remove();
                     queues.remove(WorkflowExecutor.sweeperQueue, workflowId);
+                    NDC.remove();
                 }
             });
             futures.add(future);
