@@ -92,6 +92,7 @@ public class WorkflowExecutor {
 	private int activeWorkerLastPollnSecs;
 
 	private boolean validateAuth;
+	private boolean lazyDecider;
 
 	private ParametersUtils pu = new ParametersUtils();
 
@@ -105,6 +106,7 @@ public class WorkflowExecutor {
 		activeWorkerLastPollnSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
 		this.decider = new DeciderService(metadata, om);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
+		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input) throws Exception {
@@ -500,6 +502,7 @@ public class WorkflowExecutor {
 		workflow.setStatus(WorkflowStatus.COMPLETED);
 		workflow.setOutput(wf.getOutput());
 		edao.updateWorkflow(workflow);
+		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
 		// If the following task, for some reason fails, the sweep will take
 		// care of this again!
@@ -508,7 +511,6 @@ public class WorkflowExecutor {
 			decide(parent.getWorkflowId());
 		}
 		Monitors.recordWorkflowCompletion(workflow.getWorkflowType(), workflow.getEndTime() - workflow.getStartTime());
-		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -533,6 +535,7 @@ public class WorkflowExecutor {
 		String workflowId = workflow.getWorkflowId();
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
+		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 		logger.error("Workflow is cancelled.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
 		cancelTasks(workflow, workflow.getTasks());
 
@@ -572,8 +575,6 @@ public class WorkflowExecutor {
 			}
 		}
 
-		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
-
 		// metrics
 		Monitors.recordWorkflowCancel(workflow.getWorkflowType());
 
@@ -593,6 +594,7 @@ public class WorkflowExecutor {
 
 		workflow.setReasonForIncompletion(reason);
 		edao.updateWorkflow(workflow);
+		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 		logger.error("Workflow has been reset.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
 		cancelTasks(workflow, workflow.getTasks());
 
@@ -602,8 +604,6 @@ public class WorkflowExecutor {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
 			decide(parent.getWorkflowId());
 		}
-
-		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
 		// metrics
 		Monitors.recordWorkflowReset(workflow.getWorkflowType());
@@ -696,6 +696,14 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
 	}
 
+	public QueueDAO getQueueDao() {
+		return queue;
+	}
+
+	public void updateTask(Task task)  {
+		edao.updateTask(task);
+	}
+
 	public void updateTask(TaskResult result) throws Exception {
 		if (result == null) {
 			logger.error("null task given for update..." + result);
@@ -784,9 +792,12 @@ public class WorkflowExecutor {
 				break;
 		}
 
-		// Should not the sweeper do this job to avoid collisions ?
-		// decide(workflowId);
-		wakeUpSweeper(workflowId);
+		// Who calls decider ? Sweeper or current thread?
+		if (lazyDecider) {
+			wakeUpSweeper(workflowId);
+		} else {
+			decide(workflowId);
+		}
 
 		if (task.getStatus().isTerminal()) {
 			long duration = getTaskDuration(0, task);
@@ -1043,7 +1054,7 @@ public class WorkflowExecutor {
 				}
 			}
 
-            // Workaround when workflow id disappears from the queue
+			// Workaround when workflow id disappears from the queue
 			boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
 			if (!exists)  {
 				// If not exists then need place back
@@ -1388,9 +1399,9 @@ public class WorkflowExecutor {
 	}
 
 	private void removeQuietly(String workflowId) {
-        try {
-            edao.removeWorkflow(workflowId);
-        } catch (Exception ignore) {
-        }
-    }
+		try {
+			edao.removeWorkflow(workflowId);
+		} catch (Exception ignore) {
+		}
+	}
 }

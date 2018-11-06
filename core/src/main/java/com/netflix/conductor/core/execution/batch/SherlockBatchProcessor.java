@@ -199,7 +199,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
                     }
                     task.getOutputData().put("response", response.asMap());
 
-                    workflowExecutor.updateTaskUnack(new TaskResult(task));
+                    workflowExecutor.updateTask(new TaskResult(task));
                 } catch (Exception ex) {
                     logger.error("Update {} failed with {}", task, ex.getMessage(), ex);
                 } finally {
