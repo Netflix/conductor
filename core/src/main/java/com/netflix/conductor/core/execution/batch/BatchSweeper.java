@@ -21,10 +21,10 @@ package com.netflix.conductor.core.execution.batch;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
-import com.netflix.conductor.service.ExecutionService;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -47,14 +48,14 @@ public class BatchSweeper {
     private static Logger logger = LoggerFactory.getLogger(BatchSweeper.class);
 
     private Map<String, AbstractBatchProcessor> processors = new HashMap<>();
-    private ExecutionService executionService;
+    private WorkflowExecutor workflowExecutor;
     private Configuration config;
     private QueueDAO queues;
 
     @Inject
-    public BatchSweeper(ExecutionService executionService, Configuration config, QueueDAO queues,
+    public BatchSweeper(WorkflowExecutor workflowExecutor, Configuration config, QueueDAO queues,
                         SherlockBatchProcessor sherlockBatchProcessor) {
-        this.executionService = executionService;
+        this.workflowExecutor = workflowExecutor;
         this.config = config;
         this.queues = queues;
 
@@ -86,17 +87,17 @@ public class BatchSweeper {
         int timeout = config.getIntProperty("workflow.sweeper.batch." + name + ".timeout", 1000);
 
         try {
-            String taskType = "batch." + name;
             String workerId = InetAddress.getLocalHost().getHostName();
-            List<Task> tasks = executionService.poll(taskType, workerId, count, timeout);
+            String queueName = QueueUtils.getQueueName("batch." + name, null);
+
+            List<Task> tasks = poll(queueName, workerId, count, timeout);
             if (tasks.isEmpty()) {
                 return;
             }
-            String queueName = QueueUtils.getQueueName(taskType, null);
 
             // Check workflow status and ack received task
             tasks.forEach(task -> {
-                Workflow wf = executionService.getExecutionStatus(task.getWorkflowInstanceId(), false);
+                Workflow wf = workflowExecutor.getWorkflow(task.getWorkflowInstanceId(), false);
                 if (wf.getStatus().isTerminal()) {
                     String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() +
                             ", task=" + task.getTaskType() + ", reason=" + wf.getReasonForIncompletion() +
@@ -108,10 +109,10 @@ public class BatchSweeper {
 
                 try {
                     if (!ackTaskReceived(queueName, task.getTaskId(), task.getResponseTimeoutSeconds())) {
-                        logger.error("Ack failed for {}, id {}", taskType, task.getTaskId());
+                        logger.error("Ack failed for {}, id {}", queueName, task.getTaskId());
                     }
                 } catch (Exception e) {
-                    logger.error("Ack failed for {}, id {} with {}", taskType, task.getTaskId(), e.getMessage(), e);
+                    logger.error("Ack failed for {}, id {} with {}", queueName, task.getTaskId(), e.getMessage(), e);
                 }
             });
 
@@ -124,6 +125,31 @@ public class BatchSweeper {
         } catch (Exception ex) {
             logger.error("Batch {} pool failed with {}", name, ex.getMessage(), ex);
         }
+    }
+
+    private List<Task> poll(String queueName, String workerId, int count, int timeout) {
+        List<Task> tasks = new LinkedList<>();
+        List<String> taskIds = queues.pop(queueName, count, timeout);
+        for (String taskId : taskIds) {
+            Task task = workflowExecutor.getTask(taskId);
+            if (task == null) {
+                queues.remove(queueName, taskId); // We should remove the entry if no task found
+                continue;
+            }
+
+            task.setStatus(Task.Status.IN_PROGRESS);
+            if (task.getStartTime() == 0) {
+                task.setStartTime(System.currentTimeMillis());
+                Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
+            }
+            task.setWorkerId(workerId);
+            task.setPollCount(task.getPollCount() + 1);
+            workflowExecutor.updateTask(task);
+            workflowExecutor.notifyTaskStatus(task, WorkflowExecutor.StartEndState.start);
+
+            tasks.add(task);
+        }
+        return tasks;
     }
 
     private boolean ackTaskReceived(String queueName, String taskId, int responseTimeoutSeconds) {
