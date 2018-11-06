@@ -280,7 +280,7 @@ public class ShotgunQueue implements ObservableQueue {
     private void connect() {
         try {
             OneMQClient temp = new OneMQ();
-            temp.connect(dns);
+            temp.connect(dns, null, null);
             logger.debug("Successfully connected for " + queueURI);
 
             conn.set(temp);
@@ -291,7 +291,7 @@ public class ShotgunQueue implements ObservableQueue {
     }
 
     private boolean isConnected() {
-        return (conn.get() != null && !conn.get().isClosed());
+        return (conn.get() != null && !conn.get().isConnected());
     }
 
     private boolean isSubscribed() {
