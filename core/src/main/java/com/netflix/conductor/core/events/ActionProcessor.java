@@ -197,19 +197,17 @@ public class ActionProcessor {
 			Workflow workflow = executor.getWorkflow(workflowId, true);
 			if (workflow == null)
 				throw new RuntimeException("No workflow found with id " + workflowId);
-			Task targetTask=null;
-            if(StringUtils.isNotEmpty(taskId)) {
+			Task targetTask = null;
+			if (StringUtils.isNotEmpty(taskId)) {
 				targetTask = workflow.getTasks().stream().filter(item -> taskId.equals(item.getTaskId()))
 						.findFirst().orElse(null);
-			}
-			else if(StringUtils.isNotEmpty(taskRef))
-			{
-				 targetTask = workflow.getTasks().stream().filter(item -> taskRef.equals(item.getReferenceTaskName()))
+			} else if (StringUtils.isNotEmpty(taskRef)) {
+				targetTask = workflow.getTasks().stream().filter(item -> taskRef.equals(item.getReferenceTaskName()))
 						.findFirst().orElse(null);
 			}
 
 			if (targetTask == null)
-				throw new RuntimeException("No task found with id " + taskId + " for workflow " + workflowId);
+				throw new RuntimeException("No task found with id/ref " + taskId + "/" + taskRef + " for workflow " + workflowId);
 
 			targetTask.getOutputData().put("conductor.event.name", event);
 			targetTask.getOutputData().put("conductor.event.payload", payload);
@@ -284,7 +282,7 @@ public class ActionProcessor {
 
 			Class clazz = Class.forName(params.getClassName());
 			Object object = injector.getInstance(clazz);
-			JavaEventAction javaEventAction = (JavaEventAction)object;
+			JavaEventAction javaEventAction = (JavaEventAction) object;
 			javaEventAction.handle(action, payload, event, messageId);
 
 			op.put("conductor.event.name", event);
