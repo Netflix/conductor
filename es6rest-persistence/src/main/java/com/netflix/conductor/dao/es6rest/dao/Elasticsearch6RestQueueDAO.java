@@ -42,6 +42,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestQueueDAO.class);
     private static final Set<String> queues = ConcurrentHashMap.newKeySet();
     private static final int unackScheduleInMS = 60_000;
+    private static final long poppedThreshold = 500; // TODO What is the best value ?
     private static final int unackTime = 60_000;
     private static final String DEFAULT = "default";
     private final int stalePeriod;
@@ -130,7 +131,9 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                             logger.debug("pop ({}): attempt for {}/{}", session, queueName, record.getId());
                         Map<String, Object> map = new HashMap<>();
                         map.put("popped", true);
+                        map.put("poppedOn", System.currentTimeMillis());
                         map.put("unackOn", System.currentTimeMillis() + unackTime);
+                        map.put("deliverOn", 0);
 
                         UpdateRequest updateRequest = new UpdateRequest();
                         updateRequest.index(indexName);
@@ -255,6 +258,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             Map<String, Object> map = new HashMap<>();
             map.put("popped", true);
             map.put("unackOn", System.currentTimeMillis() + unackTimeout);
+            map.put("poppedOn", System.currentTimeMillis());
+            map.put("deliverOn", 0);
 
             UpdateRequest updateRequest = new UpdateRequest();
             updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
@@ -390,7 +395,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             sourceBuilder.sort("unackOn", SortOrder.ASC);
             sourceBuilder.query(query);
             sourceBuilder.version(true);
-            sourceBuilder.size(100);
+            sourceBuilder.size(1000);
 
             SearchRequest request = new SearchRequest(indexName).types(typeName);
             request.source(sourceBuilder);
@@ -418,6 +423,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                     Map<String, Object> map = new HashMap<>();
                     map.put("popped", false);
                     map.put("deliverOn", System.currentTimeMillis());
+                    map.put("poppedOn", 0);
+                    map.put("unackOn", 0);
 
                     UpdateRequest updateRequest = new UpdateRequest();
                     updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
@@ -451,6 +458,11 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         return record.isExists();
     }
 
+    public static void main(String[] args) {
+        Long l1 = null;
+        System.out.println("l1 = " + l1);
+
+    }
     @Override
     public void wakeup(String queueName, String id) {
         initQueue(queueName);
@@ -463,9 +475,28 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 return;
             }
 
+            // This method used on conjunction with checking of sweeper queue (see workflow executor)
+            // If no record in sweeper queue then this method will be invoked to wake up sweeper for this record
+            // But at this time, the record might already been pulled. Tiny moment, but possible to happen
+            // So, need to check poppedOn + threshold period.
+            Long poppedOn = (Long)record.getSourceAsMap().get("poppedOn");
+
+            // Migration case when existing records do not have poppedOn yet
+            if (poppedOn == null) {
+                poppedOn = System.currentTimeMillis();
+            }
+
+            // If the record pulled within threshold period - do nothing as it might be in sweeper right now
+            if (System.currentTimeMillis() - poppedOn < poppedThreshold) {
+                return;
+            }
+
+            // Otherwise make record visible for pulling
             Map<String, Object> map = new HashMap<>();
             map.put("popped", false);
             map.put("deliverOn", System.currentTimeMillis());
+            map.put("poppedOn", 0);
+            map.put("unackOn", 0);
 
             try {
                 UpdateRequest updateRequest = new UpdateRequest();
@@ -477,6 +508,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 updateRequest.doc(map);
 
                 client.update(updateRequest);
+
+                logger.info("wakeup success for {}/{}/{}", indexName, typeName, id);
             } catch (Exception ex) {
                 if (!isVerConflictException(ex)) {
                     logger.error("wakeup: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
@@ -498,6 +531,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             map.put("popped", false);
             map.put("payload", payload);
             map.put("deliverOn", deliverOn);
+            map.put("poppedOn", 0);
+            map.put("unackOn", 0);
             return insert(indexName, typeName, id, map);
         } catch (Exception ex) {
             logger.error("pushMessage: failed for {}/{}/{} with {}", queueName, id, payload, ex.getMessage(), ex);
