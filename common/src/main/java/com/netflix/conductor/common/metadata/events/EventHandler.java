@@ -382,6 +382,8 @@ public class EventHandler {
 
 		private String taskId;
 
+		private String taskRef;
+
 		private String status;
 
 		private String failedReason;
@@ -414,6 +416,14 @@ public class EventHandler {
 
 		public void setTaskId(String taskId) {
 			this.taskId = taskId;
+		}
+
+		public String getTaskRef() {
+			return taskRef;
+		}
+
+		public void setTaskRef(String taskRef) {
+			this.taskRef = taskRef;
 		}
 
 		public boolean getResetStartTime() {
@@ -453,6 +463,7 @@ public class EventHandler {
 			return "UpdateTask{" +
 					"workflowId='" + workflowId + '\'' +
 					", taskId='" + taskId + '\'' +
+					", taskRef='" + taskRef + '\'' +
 					", status='" + status + '\'' +
 					", resetStartTime=" + resetStartTime +
 					", failedReason='" + failedReason + '\'' +
