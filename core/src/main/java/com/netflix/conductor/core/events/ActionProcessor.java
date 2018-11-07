@@ -171,8 +171,9 @@ public class ActionProcessor {
 				throw new RuntimeException("workflowId evaluating is empty");
 
 			String taskId = ScriptEvaluator.evalJq(updateTask.getTaskId(), payload);
-			if (StringUtils.isEmpty(taskId))
-				throw new RuntimeException("taskId evaluating is empty");
+			String taskRef = ScriptEvaluator.evalJq(updateTask.getTaskRef(), payload);
+			if (StringUtils.isEmpty(taskId) && StringUtils.isEmpty(taskRef))
+				throw new RuntimeException("No task found with id/ref " + taskId + "/" + taskRef + " for workflow " + workflowId);
 
 			String status = ScriptEvaluator.evalJq(updateTask.getStatus(), payload);
 			if (StringUtils.isEmpty(status))
@@ -196,9 +197,17 @@ public class ActionProcessor {
 			Workflow workflow = executor.getWorkflow(workflowId, true);
 			if (workflow == null)
 				throw new RuntimeException("No workflow found with id " + workflowId);
+			Task targetTask=null;
+            if(StringUtils.isNotEmpty(taskId)) {
+				targetTask = workflow.getTasks().stream().filter(item -> taskId.equals(item.getTaskId()))
+						.findFirst().orElse(null);
+			}
+			else if(StringUtils.isNotEmpty(taskRef))
+			{
+				 targetTask = workflow.getTasks().stream().filter(item -> taskRef.equals(item.getReferenceTaskName()))
+						.findFirst().orElse(null);
+			}
 
-			Task targetTask = workflow.getTasks().stream().filter(item -> taskId.equals(item.getTaskId()))
-					.findFirst().orElse(null);
 			if (targetTask == null)
 				throw new RuntimeException("No task found with id " + taskId + " for workflow " + workflowId);
 
