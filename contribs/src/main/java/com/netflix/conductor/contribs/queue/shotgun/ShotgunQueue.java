@@ -332,7 +332,7 @@ public class ShotgunQueue implements ObservableQueue {
 
     private void onMessage(Subscription subscription, ShotgunOuterClass.Message message) {
         String payload = message.getContent().toStringUtf8();
-        logger.debug(String.format("Received message for %s: %s", subscription.getSubject(), payload));
+        logger.info(String.format("Received message for %s: %s", subscription.getSubject(), payload));
 
         Message dstMsg = new Message();
         dstMsg.setId(NUID.nextGlobal());
