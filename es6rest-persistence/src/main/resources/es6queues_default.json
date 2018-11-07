@@ -13,6 +13,9 @@
       "payload": {
         "type": "text",
         "index": false
+      },
+      "poppedOn": {
+        "type": "long"
       }
     }
   }
