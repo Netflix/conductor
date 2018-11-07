@@ -374,9 +374,6 @@ public class DeciderService {
 			return;
 		}
 
-		logger.error("Task {} timed out after {} millisecond. Timeout configured as {}, workflowId={}, correlationId={}",
-				task.getReferenceTaskName(), elapsedTime, timeout, task.getWorkflowInstanceId(), task.getCorrelationId());
-
 		String reason = "Task timed out after " + elapsedTime + " millisecond.  Timeout configured as " + timeout;
 		Monitors.recordTaskTimeout(task.getTaskDefName());
 		
