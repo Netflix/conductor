@@ -463,6 +463,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         System.out.println("l1 = " + l1);
 
     }
+
     @Override
     public void wakeup(String queueName, String id) {
         initQueue(queueName);
@@ -479,7 +480,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             // If no record in sweeper queue then this method will be invoked to wake up sweeper for this record
             // But at this time, the record might already been pulled. Tiny moment, but possible to happen
             // So, need to check poppedOn + threshold period.
-            Long poppedOn = (Long)record.getSourceAsMap().get("poppedOn");
+            Long poppedOn = (Long) record.getSourceAsMap().get("poppedOn");
 
             // Migration case when existing records do not have poppedOn yet
             if (poppedOn == null) {
