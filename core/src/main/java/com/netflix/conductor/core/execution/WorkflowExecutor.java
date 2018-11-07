@@ -904,7 +904,12 @@ public class WorkflowExecutor {
 			}
 
 		} catch (TerminateWorkflow tw) {
-			logger.error("Error in workflow execution:"+tw.getMessage(), tw);
+			String error = "Error in workflow execution: " + tw.getMessage() +
+					", workflowId=" + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId();
+			if (tw.task != null) {
+				error += ", taskId=" + tw.task.getTaskId() + ", taskRefName=" + tw.task.getReferenceTaskName();
+			}
+			logger.error(error, tw);
 			terminate(def, workflow, tw);
 			return true;
 		}
