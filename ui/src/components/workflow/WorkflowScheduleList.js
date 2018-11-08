@@ -95,15 +95,15 @@ const WorkflowScheduleList = React.createClass({
 
     function miniDetails(cell, row){
       return (<ButtonGroup>
-        <Button bsSize="xsmall" 
-                bsStyle={ row.context.running ? "default" : "success" } 
-                onClick={ row.context.running ? 
-                () => {this.stopCronJob(row.id)} 
-                : 
+        <Button bsSize="xsmall"
+                bsStyle={ row.context.running ? "default" : "success" }
+                onClick={ row.context.running ?
+                () => {this.stopCronJob(row.id)}
+                :
                 () => {this.startCronJob(row.id)} }>
                 { row.context.running ? "Stop" : "Start" }</Button>
-        <Button bsStyle="danger" 
-                bsSize="xsmall" 
+        <Button bsStyle="danger"
+                bsSize="xsmall"
                 onClick={ () => {this.deleteCronJob(row.id)} }>Delete</Button>
         </ButtonGroup>
       );

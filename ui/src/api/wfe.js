@@ -248,28 +248,6 @@ router.get('/crondata', async (req, res, next) => {
     }
 });
 
-/*router.get('/cronjobs', async (req, res, next) => {
-  try {
-    var cache = [];
-    var scheduledJobs = [];
-
-    scheduledJobs = JSON.stringify(cronJobs, function (key, value) {
-      if (typeof value === 'object' && value !== null) {
-        if (cache.indexOf(value) !== -1) {
-          return;
-        }
-        cache.push(value);
-      }
-      return value;
-    });
-    cache = null;
-
-    res.status(200).send(scheduledJobs);
-  } catch (err) {
-    next(err);
-  }
-});*/
-
 router.post('/cronjobs/stop/:cronjobId', async (req, res, next) => {
   try {
     let index = cronJobs.findIndex(obj => obj.id == req.params.cronjobId);

@@ -141,11 +141,7 @@ export function getCronData(){
                 data: data
             });
         }).catch((e) => {
-            dispatch({
-                type: 'REQUEST_ERROR',
-                e
-            });
-        });
+         });
     }
 }
 
