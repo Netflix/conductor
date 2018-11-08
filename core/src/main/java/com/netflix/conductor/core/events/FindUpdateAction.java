@@ -37,11 +37,11 @@ public class FindUpdateAction implements JavaEventAction {
 		// Name of the workflow ot be looked for. Performance consideration.
 		String workflowName = findUpdate.getWorkflowName();
 		if (StringUtils.isEmpty(workflowName))
-			throw new RuntimeException("workflowName is empty");
+			throw new RuntimeException("Unable to determine workflowName. Check mapping and payload");
 
 		Map<String, String> inputParameters = findUpdate.getInputParameters();
 		if (MapUtils.isEmpty(inputParameters))
-			throw new RuntimeException("inputParameters is empty");
+			throw new RuntimeException("No inputParameters defined in the action");
 
 		// Convert map value field=expression to the map of field=value
 		inputParameters = ScriptEvaluator.evaluateMap(inputParameters, payload);
@@ -52,7 +52,7 @@ public class FindUpdateAction implements JavaEventAction {
 			// Get an evaluating which might result in error or empty response
 			String status = ScriptEvaluator.evalJq(findUpdate.getStatus(), payload);
 			if (StringUtils.isEmpty(status))
-				throw new RuntimeException("status evaluating is empty");
+				throw new RuntimeException("Unable to determine status. Check mapping and payload");
 
 			// If mapping exists - take the task status from mapping
 			if (MapUtils.isNotEmpty(findUpdate.getStatuses())) {
@@ -67,7 +67,7 @@ public class FindUpdateAction implements JavaEventAction {
 		if (StringUtils.isNotEmpty(findUpdate.getMainWorkflowId())) {
 			String workflowId = ScriptEvaluator.evalJq(findUpdate.getMainWorkflowId(), payload);
 			if (StringUtils.isEmpty(workflowId))
-				throw new RuntimeException("mainWorkflowId evaluating is empty");
+				throw new RuntimeException("Unable to determine mainWorkflowId. Check mapping and payload");
 
 			Workflow workflow = executor.getWorkflow(workflowId, true);
 
