@@ -191,6 +191,22 @@ public class EventProcessor {
 				List<Action> actions = handler.getActions();
 				for (Action action : actions) {
 					String id = msg.getId() + "_" + i++;
+					if (StringUtils.isNotEmpty(action.getCondition())) {
+						Boolean success = ScriptEvaluator.evalBool(action.getCondition(), payloadObj);
+						if (!success) {
+							logger.debug("{} condition {} did not match payload {}", action, condition, payloadObj);
+							EventExecution ee = new EventExecution(id, msg.getId());
+							ee.setCreated(System.currentTimeMillis());
+							ee.setEvent(handler.getEvent());
+							ee.setName(handler.getName());
+							ee.setAction(action.getAction());
+							ee.setStatus(Status.SKIPPED);
+							ee.getOutput().put("msg", payload);
+							ee.getOutput().put("condition", condition);
+							es.addEventExecution(ee);
+							continue;
+						}
+					}
 
 					EventExecution ee = new EventExecution(id, msg.getId());
 					ee.setCreated(System.currentTimeMillis());
