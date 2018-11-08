@@ -113,13 +113,13 @@ const WorkflowScheduleList = React.createClass({
       <div className="ui-content">
         <h1>Scheduled Workflows</h1>
         <BootstrapTable ref="table" data={cronJobs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
-          <TableHeaderColumn dataField="name">Workflow</TableHeaderColumn>
-          <TableHeaderColumn dataField="id" isKey={true}>Workflow ID</TableHeaderColumn>
-          <TableHeaderColumn dataField="cronTime">Cron Time</TableHeaderColumn>
-          <TableHeaderColumn dataField="desc" >Description</TableHeaderColumn>
-          <TableHeaderColumn dataField="context" dataFormat={executionMaker}>Last Execution</TableHeaderColumn>
-          <TableHeaderColumn dataField="context" dataFormat={runningMaker}>Status</TableHeaderColumn>
-          <TableHeaderColumn dataField="" dataFormat={miniDetails.bind(this)}>Actions</TableHeaderColumn>
+          <TableHeaderColumn dataField="name" width="350">Workflow</TableHeaderColumn>
+          <TableHeaderColumn dataField="id" width="120" isKey={true}>Workflow ID</TableHeaderColumn>
+          <TableHeaderColumn dataField="cronTime" width="200">Cron Time</TableHeaderColumn>
+          <TableHeaderColumn dataField="desc">Description</TableHeaderColumn>
+          <TableHeaderColumn dataField="context" width="200" dataFormat={executionMaker}>Last Execution</TableHeaderColumn>
+          <TableHeaderColumn dataField="context" width="100" dataFormat={runningMaker}>Status</TableHeaderColumn>
+          <TableHeaderColumn dataField="" width="100" dataFormat={miniDetails.bind(this)}>Actions</TableHeaderColumn>
         </BootstrapTable>
       </div>
     );
