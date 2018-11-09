@@ -5,7 +5,6 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.utils.TaskUtils;
 import org.apache.commons.collections.CollectionUtils;
@@ -15,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class FindUpdateAction implements JavaEventAction {
 	private static Logger logger = LoggerFactory.getLogger(FindUpdateAction.class);
@@ -31,23 +29,17 @@ public class FindUpdateAction implements JavaEventAction {
 	}
 
 	public List<String> handleInternal(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
-		List<String> output = new LinkedList<>();
+		Set<String> output = new HashSet<>();
 		EventHandler.FindUpdate findUpdate = action.getFind_update();
 
-		// Name of the workflow ot be looked for. Performance consideration.
-		String workflowName = findUpdate.getWorkflowName();
-		if (StringUtils.isEmpty(workflowName))
-			throw new RuntimeException("Unable to determine workflowName. Check mapping and payload");
-
-		Map<String, String> inputParameters = findUpdate.getInputParameters();
-		if (MapUtils.isEmpty(inputParameters))
+		if (MapUtils.isEmpty(findUpdate.getInputParameters()))
 			throw new RuntimeException("No inputParameters defined in the action");
 
 		// Convert map value field=expression to the map of field=value
-		inputParameters = ScriptEvaluator.evaluateMap(inputParameters, payload);
+		Map<String, String> inputParameters = ScriptEvaluator.evaluateMap(findUpdate.getInputParameters(), payload);
 
 		// Task status is completed by default. It either can be a constant or expression
-		Task.Status taskStatus = Task.Status.COMPLETED;
+		Task.Status taskStatus;
 		if (StringUtils.isNotEmpty(findUpdate.getStatus())) {
 			// Get an evaluating which might result in error or empty response
 			String status = ScriptEvaluator.evalJq(findUpdate.getStatus(), payload);
@@ -61,45 +53,46 @@ public class FindUpdateAction implements JavaEventAction {
 			} else {
 				taskStatus = TaskUtils.getTaskStatus(status);
 			}
-		}
-
-		List<Workflow> workflows;
-		if (StringUtils.isNotEmpty(findUpdate.getMainWorkflowId())) {
-			String workflowId = ScriptEvaluator.evalJq(findUpdate.getMainWorkflowId(), payload);
-			if (StringUtils.isEmpty(workflowId))
-				throw new RuntimeException("Unable to determine mainWorkflowId. Check mapping and payload");
-
-			Workflow workflow = executor.getWorkflow(workflowId, true);
-
-			// Let's find the sub-workflow
-			workflows = findChildSubWorkflow(workflow, workflowName);
 		} else {
-			workflows = executor.getRunningWorkflows(workflowName);
+			taskStatus = Task.Status.COMPLETED;
 		}
 
-		// Working with running workflows only.
-		for (Workflow workflow : workflows) {
-			// Move on if workflow completed/failed hence no need to update
-			if (workflow.getStatus().isTerminal()) {
-				continue;
-			}
+		String mainWorkflowId;
+		if (StringUtils.isNotEmpty(findUpdate.getMainWorkflowId())) {
+			mainWorkflowId = ScriptEvaluator.evalJq(findUpdate.getMainWorkflowId(), payload);
+			if (StringUtils.isEmpty(mainWorkflowId))
+				throw new RuntimeException("Unable to determine mainWorkflowId. Check mapping and payload");
+		} else {
+			mainWorkflowId = null;
+		}
 
-			// Go over all tasks in workflow
-			for (Task task : workflow.getTasks()) {
-				// Skip not in progress tasks
-				if (!task.getStatus().equals(Task.Status.IN_PROGRESS)) {
-					continue;
+		// Lets find WAIT + IN_PROGRESS tasks directly via edao
+		boolean taskNamesDefined = CollectionUtils.isNotEmpty(findUpdate.getTaskRefNames());
+		List<Task> tasks = executor.getPendingSystemTasks(Wait.NAME);
+		tasks.parallelStream().forEach(task -> {
+			try {
+				Workflow workflow = executor.getWorkflow(task.getWorkflowInstanceId(), false);
+				if (workflow.getStatus().isTerminal()) {
+					return;
 				}
 
-				// Skip all except wait
-				if (!task.getTaskType().equalsIgnoreCase(Wait.NAME)) {
-					continue;
+				if (taskNamesDefined && !findUpdate.getTaskRefNames().contains(task.getReferenceTaskName())) {
+					return;
+				}
+
+				// Find the root level workflow
+				if (StringUtils.isNotEmpty(mainWorkflowId)) {
+					String rootWorkflowId = findMainWorkflowId(workflow);
+					// Move on if does not match
+					if (!mainWorkflowId.equals(rootWorkflowId)) {
+						return;
+					}
 				}
 
 				// Complex match - either legacy mode (compare maps) or the JQ expression against two maps
 				boolean matches = matches(task.getInputData(), inputParameters, findUpdate.getExpression());
 				if (!matches) {
-					continue;
+					return;
 				}
 
 				// Otherwise update the task as we found it
@@ -122,32 +115,26 @@ public class FindUpdateAction implements JavaEventAction {
 				TaskResult taskResult = new TaskResult(task);
 				executor.updateTask(taskResult);
 				output.add(workflow.getWorkflowId());
-			}
-		}
 
-		return output;
+			} catch (Exception ex) {
+				logger.error("Find update failed for taskId={}, messageId={}, event={}, workflowId={}, correlationId={}, payload={}",
+						task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload, ex);
+			}
+		});
+
+		return new ArrayList<>(output);
 	}
 
-	private List<Workflow> findChildSubWorkflow(Workflow parent, String workflowName) {
-		// Let's find the sub-workflow in the current parent
-		List<Workflow> result = parent.getTasks().stream()
-				.filter(task -> SubWorkflow.NAME.equals(task.getTaskType()))
-				.filter(task -> task.getInputData().get("subWorkflowId") != null)
-				.filter(task -> workflowName.equals(task.getInputData().get("subWorkflowName")))
-				.map(task -> executor.getWorkflow(task.getInputData().get("subWorkflowId").toString(), true))
-				.collect(Collectors.toList());
-		// Exit if found anything ?
-		if (CollectionUtils.isNotEmpty(result)) {
-			return result;
+	private String findMainWorkflowId(Workflow workflow) {
+		if (workflow == null)
+			return null;
+
+		if (StringUtils.isNotEmpty(workflow.getParentWorkflowId())) {
+			Workflow parent = executor.getWorkflow(workflow.getParentWorkflowId(), false);
+			return findMainWorkflowId(parent);
+		} else {
+			return workflow.getWorkflowId();
 		}
-		// If not found, then consider each child sub-workflow as parent recursively
-		return parent.getTasks().stream()
-				.filter(task -> SubWorkflow.NAME.equals(task.getTaskType()))
-				.filter(task -> task.getInputData().get("subWorkflowId") != null)
-				.map(task -> executor.getWorkflow(task.getInputData().get("subWorkflowId").toString(), true))
-				.map(workflow -> findChildSubWorkflow(workflow, workflowName))
-				.flatMap(Collection::stream)
-				.collect(Collectors.toList());
 	}
 
 	private boolean matches(Map<String, Object> task, Map<String, String> event, String expression) throws Exception {

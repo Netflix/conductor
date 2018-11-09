@@ -18,10 +18,7 @@
  */
 package com.netflix.conductor.common.metadata.events;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Viren
@@ -501,21 +498,13 @@ public class EventHandler {
 	}
 
 	public static class FindUpdate {
-		private String workflowName;
 		private String status;
 		private String failedReason;
 		private String expression;
+		private Set<String> taskRefNames = new HashSet<>();
 		private Map<String, String> statuses = new HashMap<>();
 		private Map<String, String> inputParameters = new HashMap<>();
 		private String mainWorkflowId;
-
-		public String getWorkflowName() {
-			return workflowName;
-		}
-
-		public void setWorkflowName(String workflowName) {
-			this.workflowName = workflowName;
-		}
 
 		public String getStatus() {
 			return status;
@@ -565,10 +554,18 @@ public class EventHandler {
 			this.mainWorkflowId = mainWorkflowId;
 		}
 
+		public Set<String> getTaskRefNames() {
+			return taskRefNames;
+		}
+
+		public void setTaskRefNames(Set<String> taskRefNames) {
+			this.taskRefNames = taskRefNames;
+		}
+
 		@Override
 		public String toString() {
 			return "FindUpdate{" +
-					"workflowName='" + workflowName + '\'' +
+					"taskRefNames=" + taskRefNames +
 					", status='" + status + '\'' +
 					", statuses=" + statuses +
 					", expression='" + expression + '\'' +

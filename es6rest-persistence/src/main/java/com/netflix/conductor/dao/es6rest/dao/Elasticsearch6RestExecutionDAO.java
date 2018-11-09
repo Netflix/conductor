@@ -327,6 +327,19 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     }
 
     @Override
+    public List<Task> getPendingSystemTasks(String taskType) {
+        if (logger.isDebugEnabled())
+            logger.debug("getPendingSystemTasks: taskName={}", taskType);
+        Preconditions.checkNotNull(taskType, "task type cannot be null");
+
+        QueryBuilder termType = QueryBuilders.termQuery("taskType", taskType);
+        QueryBuilder termStatus = QueryBuilders.termQuery("status", "IN_PROGRESS");
+        QueryBuilder query = QueryBuilders.boolQuery().must(termType).must(termStatus);
+
+        return findAll(indexes.get(TASK), types.get(TASK), query, Task.class);
+    }
+
+    @Override
     public List<Task> getTasksForWorkflow(String workflowId) {
         if (logger.isDebugEnabled())
             logger.debug("getTasksForWorkflow: workflowId={}", workflowId);
