@@ -510,7 +510,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
 
                 client.update(updateRequest);
 
-                logger.info("wakeup success for {}/{}/{}", indexName, typeName, id);
+                logger.info("wakeup success for " + id);
             } catch (Exception ex) {
                 if (!isVerConflictException(ex)) {
                     logger.error("wakeup: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
