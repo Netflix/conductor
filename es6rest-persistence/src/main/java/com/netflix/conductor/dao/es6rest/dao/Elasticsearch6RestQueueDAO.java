@@ -133,7 +133,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                         map.put("popped", true);
                         map.put("poppedOn", System.currentTimeMillis());
                         map.put("unackOn", System.currentTimeMillis() + unackTime);
-                        map.put("deliverOn", 0);
+                        map.put("deliverOn", 0L);
 
                         UpdateRequest updateRequest = new UpdateRequest();
                         updateRequest.index(indexName);
@@ -259,7 +259,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             map.put("popped", true);
             map.put("unackOn", System.currentTimeMillis() + unackTimeout);
             map.put("poppedOn", System.currentTimeMillis());
-            map.put("deliverOn", 0);
+            map.put("deliverOn", 0L);
 
             UpdateRequest updateRequest = new UpdateRequest();
             updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
@@ -423,8 +423,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                     Map<String, Object> map = new HashMap<>();
                     map.put("popped", false);
                     map.put("deliverOn", System.currentTimeMillis());
-                    map.put("poppedOn", 0);
-                    map.put("unackOn", 0);
+                    map.put("poppedOn", 0L);
+                    map.put("unackOn", 0L);
 
                     UpdateRequest updateRequest = new UpdateRequest();
                     updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
@@ -496,8 +496,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             Map<String, Object> map = new HashMap<>();
             map.put("popped", false);
             map.put("deliverOn", System.currentTimeMillis());
-            map.put("poppedOn", 0);
-            map.put("unackOn", 0);
+            map.put("poppedOn", 0L);
+            map.put("unackOn", 0L);
 
             try {
                 UpdateRequest updateRequest = new UpdateRequest();
@@ -532,8 +532,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             map.put("popped", false);
             map.put("payload", payload);
             map.put("deliverOn", deliverOn);
-            map.put("poppedOn", 0);
-            map.put("unackOn", 0);
+            map.put("poppedOn", 0L);
+            map.put("unackOn", 0L);
             return insert(indexName, typeName, id, map);
         } catch (Exception ex) {
             logger.error("pushMessage: failed for {}/{}/{} with {}", queueName, id, payload, ex.getMessage(), ex);
