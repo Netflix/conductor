@@ -57,15 +57,6 @@ public class FindUpdateAction implements JavaEventAction {
 			taskStatus = Task.Status.COMPLETED;
 		}
 
-		String mainWorkflowId;
-		if (StringUtils.isNotEmpty(findUpdate.getMainWorkflowId())) {
-			mainWorkflowId = ScriptEvaluator.evalJq(findUpdate.getMainWorkflowId(), payload);
-			if (StringUtils.isEmpty(mainWorkflowId))
-				throw new RuntimeException("Unable to determine mainWorkflowId. Check mapping and payload");
-		} else {
-			mainWorkflowId = null;
-		}
-
 		// Lets find WAIT + IN_PROGRESS tasks directly via edao
 		boolean taskNamesDefined = CollectionUtils.isNotEmpty(findUpdate.getTaskRefNames());
 		List<Task> tasks = executor.getPendingSystemTasks(Wait.NAME);
@@ -78,15 +69,6 @@ public class FindUpdateAction implements JavaEventAction {
 
 				if (taskNamesDefined && !findUpdate.getTaskRefNames().contains(task.getReferenceTaskName())) {
 					return;
-				}
-
-				// Find the root level workflow
-				if (StringUtils.isNotEmpty(mainWorkflowId)) {
-					String rootWorkflowId = findMainWorkflowId(workflow);
-					// Move on if does not match
-					if (!mainWorkflowId.equals(rootWorkflowId)) {
-						return;
-					}
 				}
 
 				// Complex match - either legacy mode (compare maps) or the JQ expression against two maps
@@ -123,18 +105,6 @@ public class FindUpdateAction implements JavaEventAction {
 		});
 
 		return new ArrayList<>(output);
-	}
-
-	private String findMainWorkflowId(Workflow workflow) {
-		if (workflow == null)
-			return null;
-
-		if (StringUtils.isNotEmpty(workflow.getParentWorkflowId())) {
-			Workflow parent = executor.getWorkflow(workflow.getParentWorkflowId(), false);
-			return findMainWorkflowId(parent);
-		} else {
-			return workflow.getWorkflowId();
-		}
 	}
 
 	private boolean matches(Map<String, Object> task, Map<String, String> event, String expression) throws Exception {

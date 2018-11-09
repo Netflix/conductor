@@ -504,7 +504,6 @@ public class EventHandler {
 		private Set<String> taskRefNames = new HashSet<>();
 		private Map<String, String> statuses = new HashMap<>();
 		private Map<String, String> inputParameters = new HashMap<>();
-		private String mainWorkflowId;
 
 		public String getStatus() {
 			return status;
@@ -546,14 +545,6 @@ public class EventHandler {
 			this.inputParameters = inputParameters;
 		}
 
-		public String getMainWorkflowId() {
-			return mainWorkflowId;
-		}
-
-		public void setMainWorkflowId(String mainWorkflowId) {
-			this.mainWorkflowId = mainWorkflowId;
-		}
-
 		public Set<String> getTaskRefNames() {
 			return taskRefNames;
 		}
@@ -570,7 +561,6 @@ public class EventHandler {
 					", statuses=" + statuses +
 					", expression='" + expression + '\'' +
 					", failedReason='" + failedReason + '\'' +
-					", mainWorkflowId='" + mainWorkflowId + '\'' +
 					", inputParameters='" + inputParameters + '\'' +
 					'}';
 		}
