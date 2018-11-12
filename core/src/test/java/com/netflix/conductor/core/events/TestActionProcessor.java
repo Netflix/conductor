@@ -168,7 +168,7 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("1", op.get("conductor.event.name"));
 		assertEquals("2", op.get("conductor.event.messageId"));
-		assertEquals("taskId evaluating is empty", op.get("error"));
+		assertNull(op.get("error"));
 
 		//status evaluating is empty
 		payload.put("workflowId", "1");
@@ -178,7 +178,7 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("1", op.get("conductor.event.name"));
 		assertEquals("2", op.get("conductor.event.messageId"));
-		assertEquals("status evaluating is empty", op.get("error"));
+		assertNull(op.get("error"));
 
 		//Unable to determine task status. 1
 		payload.put("workflowId", "1");
@@ -453,7 +453,6 @@ public class TestActionProcessor {
 		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
-		action.getFind_update().setMainWorkflowId(".workflowId");
 
 		Map<String, Object> payload = new HashMap<>();
 		payload.put("workflowId", "1");
@@ -547,7 +546,6 @@ public class TestActionProcessor {
 		ActionProcessor ap = new ActionProcessor(executor, metadata, null);
 
 		EventHandler.Action action = newFindUpdateAction();
-		action.getFind_update().setWorkflowName(null);
 
 		Map<String, Object> payload = new HashMap<>();
 		payload.put("featureId", "f");
@@ -638,8 +636,8 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
-		assertEquals("versionId evaluating is empty", op.get("error"));
-		assertEquals(action.getFind_update(), op.get("action"));
+		assertNull(op.get("error"));
+		assertNull(op.get("action"));
 	}
 
 	@Test
@@ -716,9 +714,10 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
-		assertEquals("status evaluating is empty", op.get("error"));
+		assertEquals("Unable to determine status. Check mapping and payload", op.get("error"));
 		assertEquals(action.getFind_update(), op.get("action"));
 	}
+
 
 	@Test
 	public void findUpdate_skip_wf() throws Exception {
@@ -953,7 +952,6 @@ public class TestActionProcessor {
 
 	private EventHandler.Action newFindUpdateAction() {
 		EventHandler.FindUpdate findUpdate = new EventHandler.FindUpdate();
-		findUpdate.setWorkflowName("junit");
 		findUpdate.getInputParameters().put("featureId", ".featureId");
 		findUpdate.getInputParameters().put("versionId", ".versionId");
 
