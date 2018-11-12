@@ -168,7 +168,7 @@ public class ActionProcessor {
 		try {
 			String workflowId = ScriptEvaluator.evalJq(updateTask.getWorkflowId(), payload);
 			if (StringUtils.isEmpty(workflowId))
-				throw new RuntimeException("workflowId evaluating is empty");
+				throw new RuntimeException("Unable to determine workflowId. Check mapping and payload");
 
 			String taskId;
 			if (StringUtils.isNotEmpty(updateTask.getTaskId())) {
@@ -184,11 +184,11 @@ public class ActionProcessor {
 				taskRef = null;
 			}
 			if (StringUtils.isEmpty(taskId) && StringUtils.isEmpty(taskRef))
-				throw new RuntimeException("No task found with id/ref " + taskId + "/" + taskRef + " for workflow " + workflowId);
+				throw new RuntimeException("Unable to determine taskId/taskRef " + taskId + "/" + taskRef + ". Check mapping and payload");
 
 			String status = ScriptEvaluator.evalJq(updateTask.getStatus(), payload);
 			if (StringUtils.isEmpty(status))
-				throw new RuntimeException("status evaluating is empty");
+				throw new RuntimeException("Unable to determine status. Check mapping and payload");
 
 			String failedReason = null;
 			if (StringUtils.isNotEmpty(updateTask.getFailedReason())) {
@@ -203,7 +203,7 @@ public class ActionProcessor {
 				taskStatus = TaskUtils.getTaskStatus(status);
 			}
 			if (taskStatus == null)
-				throw new RuntimeException("Unable to determine task status");
+				throw new RuntimeException("Unable to determine task status. Check mapping and payload");
 
 			Workflow workflow = executor.getWorkflow(workflowId, true);
 			if (workflow == null)
