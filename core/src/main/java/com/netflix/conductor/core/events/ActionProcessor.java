@@ -51,7 +51,7 @@ import java.util.Map;
 @Singleton
 public class ActionProcessor {
 
-	private static Logger logger = LoggerFactory.getLogger(ActionProcessor.class);
+	private static Logger logger = LoggerFactory.getLogger(EventProcessor.class);
 
 	private WorkflowExecutor executor;
 
@@ -170,8 +170,19 @@ public class ActionProcessor {
 			if (StringUtils.isEmpty(workflowId))
 				throw new RuntimeException("workflowId evaluating is empty");
 
-			String taskId = ScriptEvaluator.evalJq(updateTask.getTaskId(), payload);
-			String taskRef = ScriptEvaluator.evalJq(updateTask.getTaskRef(), payload);
+			String taskId;
+			if (StringUtils.isNotEmpty(updateTask.getTaskId())) {
+				taskId = ScriptEvaluator.evalJq(updateTask.getTaskId(), payload);
+			} else {
+				taskId = null;
+			}
+
+			String taskRef;
+			if (StringUtils.isNotEmpty(updateTask.getTaskRef())) {
+				taskRef = ScriptEvaluator.evalJq(updateTask.getTaskRef(), payload);
+			} else {
+				taskRef = null;
+			}
 			if (StringUtils.isEmpty(taskId) && StringUtils.isEmpty(taskRef))
 				throw new RuntimeException("No task found with id/ref " + taskId + "/" + taskRef + " for workflow " + workflowId);
 
