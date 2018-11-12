@@ -68,11 +68,17 @@ public class NATSStreamEventQueueProvider implements EventQueueProvider {
 
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
-		NATSStreamObservableQueue queue = queues.computeIfAbsent(queueURI, q ->
+		return queues.computeIfAbsent(queueURI, q ->
 				new NATSStreamObservableQueue(clusterId, natsUrl, durableName, queueURI, publishRetryIn));
-		if (queue.isClosed()) {
-			queue.open();
-		}
-		return queue;
 	}
+
+	@Override
+	public void remove(String queueURI) {
+		NATSStreamObservableQueue queue = queues.get(queueURI);
+		if (queue != null) {
+			queue.close();
+			queues.remove(queueURI);
+		}
+	}
+
 }

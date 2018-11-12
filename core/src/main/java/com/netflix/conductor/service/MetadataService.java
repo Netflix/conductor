@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.service;
 
@@ -28,7 +28,6 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.events.EventQueues;
-import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -40,8 +39,7 @@ import javax.inject.Singleton;
 import java.util.List;
 
 /**
- * @author Viren 
- * 
+ * @author Viren
  */
 @Singleton
 @Trace
@@ -61,21 +59,19 @@ public class MetadataService {
 	}
 
 	/**
-	 * 
 	 * @param taskDefs Task Definitions to register
 	 */
 	public void registerTaskDef(List<TaskDef> taskDefs) {
 		for (TaskDef taskDef : taskDefs) {
 			taskDef.setCreatedBy(WorkflowContext.get().getClientApp());
-	   		taskDef.setCreateTime(System.currentTimeMillis());
-	   		taskDef.setUpdatedBy(null);
-	   		taskDef.setUpdateTime(null);
+			taskDef.setCreateTime(System.currentTimeMillis());
+			taskDef.setUpdatedBy(null);
+			taskDef.setUpdateTime(null);
 			metadata.createTaskDef(taskDef);
 		}
 	}
 
 	/**
-	 * 
 	 * @param taskDef Task Definition to be updated
 	 */
 	public void updateTaskDef(TaskDef taskDef) {
@@ -83,13 +79,12 @@ public class MetadataService {
 		if (existing == null) {
 			throw new ApplicationException(Code.NOT_FOUND, "No such task by name " + taskDef.getName());
 		}
-   		taskDef.setUpdatedBy(WorkflowContext.get().getClientApp());
-   		taskDef.setUpdateTime(System.currentTimeMillis());
+		taskDef.setUpdatedBy(WorkflowContext.get().getClientApp());
+		taskDef.setUpdateTime(System.currentTimeMillis());
 		metadata.updateTaskDef(taskDef);
 	}
 
 	/**
-	 * 
 	 * @param taskType Remove task definition
 	 */
 	public void unregisterTaskDef(String taskType) {
@@ -97,7 +92,6 @@ public class MetadataService {
 	}
 
 	/**
-	 * 
 	 * @return List of all the registered tasks
 	 */
 	public List<TaskDef> getTaskDefs() {
@@ -105,7 +99,6 @@ public class MetadataService {
 	}
 
 	/**
-	 * 
 	 * @param taskType Task to retrieve
 	 * @return Task Definition
 	 */
@@ -114,15 +107,13 @@ public class MetadataService {
 	}
 
 	/**
-	 * 
 	 * @param def Workflow definition to be updated
 	 */
 	public void updateWorkflowDef(WorkflowDef def) {
-		metadata.update(def);		
+		metadata.update(def);
 	}
-	
+
 	/**
-	 * 
 	 * @param wfs Workflow definitions to be updated.
 	 */
 	public void updateWorkflowDef(List<WorkflowDef> wfs) {
@@ -132,8 +123,7 @@ public class MetadataService {
 	}
 
 	/**
-	 * 
-	 * @param name Name of the workflow to retrieve
+	 * @param name    Name of the workflow to retrieve
 	 * @param version Optional.  Version.  If null, then retrieves the latest
 	 * @return Workflow definition
 	 */
@@ -147,7 +137,7 @@ public class MetadataService {
 	/**
 	 * Remove workflow definition
 	 *
-	 * @param name workflow name
+	 * @param name    workflow name
 	 * @param version workflow version
 	 */
 	public void unregisterWorkflow(String name, Integer version) {
@@ -178,18 +168,21 @@ public class MetadataService {
 				if (Workflow.WorkflowStatus.RUNNING == workflow.getStatus()) {
 					try {
 						executor.terminateWorkflow(workflow.getWorkflowId(), "Metadata deleting requested");
-					} catch (Exception ignore) { }
+					} catch (Exception ignore) {
+					}
 				}
 
 				// remove workflow
 				try {
 					service.removeWorkflow(workflow.getWorkflowId());
-				} catch (Exception ignore) { }
+				} catch (Exception ignore) {
+				}
 
 				// remove from index
 				try {
 					indexer.remove(workflow.getWorkflowId());
-				} catch (Exception ignore) { }
+				} catch (Exception ignore) {
+				}
 			});
 		}
 
@@ -198,7 +191,6 @@ public class MetadataService {
 	}
 
 	/**
-	 * 
 	 * @param name Name of the workflow to retrieve
 	 * @return Latest version of the workflow definition
 	 */
@@ -211,19 +203,18 @@ public class MetadataService {
 	}
 
 	public void registerWorkflowDef(WorkflowDef def) {
-		if(def.getName().contains(":")) {
+		if (def.getName().contains(":")) {
 			throw new ApplicationException(Code.INVALID_INPUT, "Workflow name cannot contain the following set of characters: ':'");
 		}
-		if(def.getSchemaVersion() < 1 || def.getSchemaVersion() > 2) {
+		if (def.getSchemaVersion() < 1 || def.getSchemaVersion() > 2) {
 			def.setSchemaVersion(2);
 		}
 		metadata.create(def);
 	}
 
 	/**
-	 * 
-	 * @param eventHandler Event handler to be added.  
-	 * Will throw an exception if an event handler already exists with the name
+	 * @param eventHandler Event handler to be added.
+	 *                     Will throw an exception if an event handler already exists with the name
 	 */
 	public void addEventHandler(EventHandler eventHandler) {
 		validateEvent(eventHandler);
@@ -236,7 +227,6 @@ public class MetadataService {
 	}
 
 	/**
-	 * 
 	 * @param eventHandler Event handler to be updated.
 	 */
 	public void updateEventHandler(EventHandler eventHandler) {
@@ -245,16 +235,16 @@ public class MetadataService {
 		if (existing == null) {
 			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
 		}
-		// if event name was updated - close the old
-		if (!(existing.getEvent().equalsIgnoreCase(eventHandler.getEvent()))) {
-			closeEventQueue(existing.getEvent());
+		boolean eventEquals = existing.getEvent().equalsIgnoreCase(eventHandler.getEvent());
+		// if event name was updated or the new is disabled - close old queue
+		if (!eventEquals || !eventHandler.isActive()) {
+			EventQueues.remove(existing.getEvent());
 		}
 		validateQueue(eventHandler);
 		metadata.updateEventHandler(eventHandler);
 	}
-	
+
 	/**
-	 * 
 	 * @param name Removes the event handler from the system
 	 */
 	public void removeEventHandlerStatus(String name) {
@@ -262,21 +252,19 @@ public class MetadataService {
 		if (existing == null) {
 			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
 		}
-		closeEventQueue(existing.getEvent());
+		EventQueues.remove(existing.getEvent());
 		metadata.removeEventHandlerStatus(name);
 	}
 
 	/**
-	 * 
 	 * @return All the event handlers registered in the system
 	 */
 	public List<EventHandler> getEventHandlers() {
 		return metadata.getEventHandlers();
 	}
-	
+
 	/**
-	 * 
-	 * @param event name of the event
+	 * @param event      name of the event
 	 * @param activeOnly if true, returns only the active handlers
 	 * @return Returns the list of all the event handlers for a given event
 	 */
@@ -292,7 +280,7 @@ public class MetadataService {
 	private void validateEvent(EventHandler eh) {
 		Preconditions.checkNotNull(eh.getName(), "Missing event handler name");
 		Preconditions.checkNotNull(eh.getEvent(), "Missing event location");
-		Preconditions.checkNotNull(eh.getActions().isEmpty(), "No actions specified.  Please specify at-least one action");
+		Preconditions.checkNotNull(eh.getActions(), "No actions specified.  Please specify at-least one action");
 	}
 
 	/**
@@ -303,19 +291,14 @@ public class MetadataService {
 	 */
 	private void validateQueue(EventHandler eh) {
 		String event = eh.getEvent();
-		EventQueues.getQueue(event, true);
+		if (eh.isActive()) {
+			EventQueues.getQueue(event, true);
+		}
 	}
 
 	private EventHandler getEventHandler(String name) {
 		return getEventHandlers().stream()
 				.filter(eh -> eh.getName().equalsIgnoreCase(name))
 				.findFirst().orElse(null);
-	}
-
-	private void closeEventQueue(String event) {
-		ObservableQueue queue = EventQueues.getQueue(event, true);
-		if (queue != null) {
-			queue.close();
-		}
 	}
 }

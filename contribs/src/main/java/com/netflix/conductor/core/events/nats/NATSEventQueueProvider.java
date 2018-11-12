@@ -71,10 +71,15 @@ public class NATSEventQueueProvider implements EventQueueProvider {
 
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
-		NATSObservableQueue queue = queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(props, queueURI, publishRetryIn));
-		if (queue.isClosed()) {
-			queue.open();
+		return queues.computeIfAbsent(queueURI, q -> new NATSObservableQueue(props, queueURI, publishRetryIn));
+	}
+
+	@Override
+	public void remove(String queueURI) {
+		NATSObservableQueue queue = queues.get(queueURI);
+		if (queue != null) {
+			queue.close();
+			queues.remove(queueURI);
 		}
-		return queue;
 	}
 }

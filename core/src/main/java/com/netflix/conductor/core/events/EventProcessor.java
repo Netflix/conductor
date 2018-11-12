@@ -106,7 +106,8 @@ public class EventProcessor {
 	}
 
 	public void refresh() {
-		Set<String> events = ms.getEventHandlers().stream().map(EventHandler::getEvent).map(this::handleEventBus).collect(Collectors.toSet());
+		Set<String> events = ms.getEventHandlers().stream().filter(EventHandler::isActive).map(EventHandler::getEvent).map(this::handleEventBus).collect(Collectors.toSet());
+
 		List<ObservableQueue> created = new LinkedList<>();
 		events.forEach(event -> queuesMap.computeIfAbsent(event, s -> {
 			ObservableQueue q = EventQueues.getQueue(event, false);
@@ -116,16 +117,16 @@ public class EventProcessor {
 		if (!created.isEmpty()) {
 			created.stream().filter(Objects::nonNull).forEach(this::listen);
 		}
-		// close which exists in queuesMap but does not exist in db (events)
-		List<String> remove = new LinkedList<>();
-		queuesMap.entrySet().stream().filter(entry -> !events.contains(entry.getKey())).forEach(entry -> {
-			remove.add(entry.getKey());
-			ObservableQueue queue = entry.getValue();
-			if (queue != null) {
-				queue.close();
-			}
+
+		// Find events which present in queuesMap but does not exist in the db (disabled/removed)
+		List<String> removed = new LinkedList<>();
+		queuesMap.keySet().stream().filter(event -> !events.contains(event)).forEach(removed::add);
+
+		// Close found entries
+		removed.forEach(event -> {
+			queuesMap.remove(event);
+			EventQueues.remove(event);
 		});
-		queuesMap.entrySet().removeIf(entry -> remove.contains(entry.getKey()));
 	}
 
 	private String handleEventBus(String event) {
