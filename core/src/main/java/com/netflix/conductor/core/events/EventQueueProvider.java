@@ -27,4 +27,7 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 public interface EventQueueProvider {
 
 	public ObservableQueue getQueue(String queueURI);
+
+	public default void remove(String queueURI) {
+	}
 }

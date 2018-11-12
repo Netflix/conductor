@@ -51,7 +51,7 @@ import java.util.Map;
 @Singleton
 public class ActionProcessor {
 
-	private static Logger logger = LoggerFactory.getLogger(EventProcessor.class);
+	private static Logger logger = LoggerFactory.getLogger(ActionProcessor.class);
 
 	private WorkflowExecutor executor;
 

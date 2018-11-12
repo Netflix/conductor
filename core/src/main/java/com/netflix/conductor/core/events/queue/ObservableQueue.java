@@ -81,6 +81,6 @@ public interface ObservableQueue {
 	/**
 	 *  Used to close queue instance prior to remove from queues
 	 */
-	default  void close() { }
+	default void close() { }
 
 }

@@ -75,4 +75,15 @@ public class EventQueues {
 
 		return null;
 	}
+
+	public static void remove(String eventt) {
+		String event = pu.replace(eventt).toString();
+		String typeVal = event.substring(0, event.indexOf(':'));
+		String queueURI = event.substring(event.indexOf(':') + 1);
+		QueueType type = QueueType.valueOf(typeVal);
+		EventQueueProvider provider = providers.get(type);
+		if (provider != null) {
+			provider.remove(queueURI);
+		}
+	}
 }
