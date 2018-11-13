@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -246,7 +247,8 @@ public class ShotgunQueue implements ObservableQueue {
 
         Runnable task = () -> {
             try {
-                publish(subject, payload.getBytes());
+                ensureConnected();
+                conn.get().publish(subject, payload.getBytes(), Duration.ZERO);
                 queue.add(Boolean.TRUE);
             } catch (Exception ex) {
                 queue.add(ex);
@@ -297,11 +299,6 @@ public class ShotgunQueue implements ObservableQueue {
     private boolean isSubscribed() {
         return subs.get() != null;
 
-    }
-
-    private void publish(String subject, byte[] data) throws Exception {
-        ensureConnected();
-        conn.get().publish(subject, data);
     }
 
     private void subscribe() {
