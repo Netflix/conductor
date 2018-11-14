@@ -27,7 +27,11 @@ public class RerunWorkflowRequest {
 
 	private Map<String, Object> taskInput;
 
+	private Map<String, Object> taskOutput;
+
 	private String correlationId;
+
+	private Boolean resumeParents;
 
 	public String getReRunFromWorkflowId() {
 		return reRunFromWorkflowId;
@@ -67,5 +71,21 @@ public class RerunWorkflowRequest {
 
 	public void setCorrelationId(String correlationId) {
 		this.correlationId = correlationId;
+	}
+
+	public Boolean getResumeParents() {
+		return resumeParents;
+	}
+
+	public void setResumeParents(Boolean resumeParents) {
+		this.resumeParents = resumeParents;
+	}
+
+	public Map<String, Object> getTaskOutput() {
+		return taskOutput;
+	}
+
+	public void setTaskOutput(Map<String, Object> taskOutput) {
+		this.taskOutput = taskOutput;
 	}
 }
