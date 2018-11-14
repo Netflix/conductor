@@ -8,13 +8,13 @@
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 400;
-  src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url('../fonts/sourcesanspro.woff') format('woff');
+  src: local('Source Sans Pro'), local('SourceSansPro-Regular');
 }
 @font-face {
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 700;
-  src: local('Source Sans Pro Bold'), local('SourceSansPro-Bold'), url('../fonts/sourcesanspro-bold.woff') format('woff');
+  src: local('Source Sans Pro Bold'), local('SourceSansPro-Bold');
 }
 
 *, *:before, *:after {
