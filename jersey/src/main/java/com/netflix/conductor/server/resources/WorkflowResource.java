@@ -357,7 +357,7 @@ public class WorkflowResource {
 	@ApiOperation("Cancel workflow execution")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.validateAuth(workflowId, headers);
 
 		Response.ResponseBuilder builder = Response.ok(workflowId);
@@ -365,7 +365,7 @@ public class WorkflowResource {
 
 		NDC.push("rest-cancel-"+ UUID.randomUUID().toString());
 		try {
-			executor.cancelWorkflow(workflowId);
+			executor.cancelWorkflow(workflowId,reason);
 		} finally {
 			NDC.remove();
 		}
