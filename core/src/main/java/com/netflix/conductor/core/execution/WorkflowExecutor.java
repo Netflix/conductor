@@ -578,6 +578,10 @@ public class WorkflowExecutor {
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
+		else
+		{
+			throw new ApplicationException(Code.CONFLICT, "Can not cancel the workflow since workflow is already "+workflow.getStatus());
+		}
 		return cancelWorkflow(workflow, null);
 	}
 
