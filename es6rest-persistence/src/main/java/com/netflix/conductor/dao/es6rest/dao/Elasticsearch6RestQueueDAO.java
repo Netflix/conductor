@@ -480,10 +480,11 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             // If no record in sweeper queue then this method will be invoked to wake up sweeper for this record
             // But at this time, the record might already been pulled. Tiny moment, but possible to happen
             // So, need to check poppedOn + threshold period.
-            Long poppedOn = (Long) record.getSourceAsMap().get("poppedOn");
-
-            // Migration case when existing records do not have poppedOn yet
-            if (poppedOn == null) {
+            Object objPoppedOn = record.getSourceAsMap().get("poppedOn");
+            long poppedOn;
+            if (objPoppedOn != null) {
+                poppedOn = Long.parseLong(objPoppedOn.toString());
+            } else {
                 poppedOn = System.currentTimeMillis();
             }
 
