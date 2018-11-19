@@ -75,6 +75,8 @@ public class ShotgunQueue implements ObservableQueue {
         }
         logger.debug(String.format("Initialized with queueURI=%s, subject=%s, groupId=%s", queueURI, subject, groupId));
         open();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     @Override
