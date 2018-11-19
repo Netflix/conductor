@@ -502,7 +502,8 @@ public class WorkflowExecutor {
 		});
 
 		scheduleTask(workflow, rescheduledTasks);
-
+                //reset the ReasonForIncompletion
+		workflow.setReasonForIncompletion("");
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
