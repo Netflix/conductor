@@ -199,7 +199,23 @@ public class ShotgunQueue implements ObservableQueue {
         }
     }
 
-    public void open() {
+    private void connect() {
+        if (isConnected()) {
+            return;
+        }
+        try {
+            OneMQClient temp = new OneMQ();
+            temp.connect(dns, null, null);
+            logger.debug("Successfully connected for " + queueURI);
+
+            conn.set(temp);
+        } catch (Exception e) {
+            logger.error("Unable to establish shotgun connection for " + queueURI, e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private void open() {
         try {
             connect();
 
@@ -240,22 +256,6 @@ public class ShotgunQueue implements ObservableQueue {
         } else if (result instanceof Exception) {
             Exception ex = (Exception) result;
             throw new RuntimeException(ex.getMessage(), ex);
-        }
-    }
-
-    private void connect() {
-        if (isConnected()) {
-            return;
-        }
-        try {
-            OneMQClient temp = new OneMQ();
-            temp.connect(dns, null, null);
-            logger.debug("Successfully connected for " + queueURI);
-
-            conn.set(temp);
-        } catch (Exception e) {
-            logger.error("Unable to establish shotgun connection for " + queueURI, e);
-            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
