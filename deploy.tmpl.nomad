@@ -159,7 +159,7 @@ job "conductor" {
         workflow_sweeper_batch_sherlock_service = "sherlock.service.<TLD>"
         workflow_sweeper_batch_sherlock_worker_count = 100
         workflow_sweeper_batch_names = "sherlock"
-        workflow_lazy_decider = "true"
+        workflow_lazy_decider = "false"
 
         // Elasticsearch settings.
         workflow_elasticsearch_mode = "elasticsearch"
@@ -170,6 +170,7 @@ job "conductor" {
         io_shotgun_dns = "shotgun.service.<TLD>"
         io_shotgun_service = "conductor-server-<TLD>"
         io_shotgun_publishRetryIn = "5,10,15"
+        com_bydeluxe_onemq_log = "false"
 
         // NATS settings
         io_nats_streaming_url = "nats://nats.service.<TLD>:4222"

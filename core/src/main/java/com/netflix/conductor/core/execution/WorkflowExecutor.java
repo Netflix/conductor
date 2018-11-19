@@ -502,7 +502,8 @@ public class WorkflowExecutor {
 		});
 
 		scheduleTask(workflow, rescheduledTasks);
-
+                //reset the ReasonForIncompletion
+		workflow.setReasonForIncompletion("");
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
@@ -573,16 +574,18 @@ public class WorkflowExecutor {
 		logger.debug("Workflow has completed, workflowId=" + wf.getWorkflowId()+",input="+wf.getInput()+",CorrelationId="+wf.getCorrelationId()+",output="+wf.getOutput());
 	}
 
-	public String cancelWorkflow(String workflowId) throws Exception {
+	public String cancelWorkflow(String workflowId , String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
+
 		else
 		{
 			throw new ApplicationException(Code.CONFLICT, "Can not cancel the workflow since workflow is already "+workflow.getStatus());
 		}
 		return cancelWorkflow(workflow, null);
+
 	}
 
 	public String cancelWorkflow(Workflow workflow, String reason) throws Exception {
@@ -591,8 +594,15 @@ public class WorkflowExecutor {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
 
+
 		String workflowId = workflow.getWorkflowId();
-		workflow.setReasonForIncompletion(reason);
+		if(StringUtils.isNotEmpty(reason)) {
+			workflow.setReasonForIncompletion(reason);
+		}
+		else
+		{
+			workflow.setReasonForIncompletion("workflow cancel called from api");
+		}
 		edao.updateWorkflow(workflow);
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 		logger.error("Workflow is cancelled.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
