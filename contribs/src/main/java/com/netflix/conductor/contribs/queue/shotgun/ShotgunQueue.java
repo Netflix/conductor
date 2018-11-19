@@ -51,15 +51,13 @@ public class ShotgunQueue implements ObservableQueue {
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     private AtomicReference<OneMQClient> conn = new AtomicReference<>();
     private AtomicReference<Subscription> subs = new AtomicReference<>();
-    private AtomicBoolean listened = new AtomicBoolean();
-    private AtomicBoolean closed = new AtomicBoolean(true);
-    private ScheduledExecutorService execs;
+    private AtomicBoolean listened = new AtomicBoolean(false);
     private int[] publishRetryIn;
-    final String queueURI;
-    final String service;
-    final String subject;
-    final String groupId;
-    final String dns;
+    private final String queueURI;
+    private final String service;
+    private final String subject;
+    private final String groupId;
+    private final String dns;
 
     public ShotgunQueue(String dns, String service, String queueURI, int[] publishRetryIn) {
         this.dns = dns;
@@ -77,6 +75,8 @@ public class ShotgunQueue implements ObservableQueue {
         }
         logger.debug(String.format("Initialized with queueURI=%s, subject=%s, groupId=%s", queueURI, subject, groupId));
         open();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     @Override
@@ -152,7 +152,7 @@ public class ShotgunQueue implements ObservableQueue {
                 logger.info(String.format("Published to %s: %s", subject, payload));
             } catch (Exception eo) {
                 logger.error(String.format("Failed to publish to %s: %s", subject, payload), eo);
-                closeConn();
+                reopen();
                 if (ArrayUtils.isEmpty(publishRetryIn)) {
                     throw new RuntimeException(eo);
                 }
@@ -170,7 +170,7 @@ public class ShotgunQueue implements ObservableQueue {
                         break;
                     } catch (Exception ex) {
                         logger.error(String.format("Failed to publish to %s: %s", subject, payload), ex);
-                        closeConn();
+                        reopen();
                         // Latest attempt
                         if (i == (publishRetryIn.length - 1)) {
                             logger.error(String.format("Publish gave up for %s: %s", subject, payload));
@@ -185,20 +185,39 @@ public class ShotgunQueue implements ObservableQueue {
     @Override
     public void close() {
         logger.debug("Closing connection for " + queueURI);
-        if (execs != null) {
-            execs.shutdownNow();
-            execs = null;
+        if (subs.get() != null) {
+            try {
+                conn.get().unsubscribe(subs.get());
+            } catch (Exception ignore) {
+            }
+            subs.set(null);
         }
-        closeConn();
-        closed.set(true);
+        if (conn.get() != null) {
+            try {
+                conn.get().close();
+            } catch (Exception ignore) {
+            }
+            conn.set(null);
+        }
     }
 
-    public void open() {
-        // do nothing if not closed
-        if (!closed.get()) {
+    private void connect() {
+        if (isConnected()) {
             return;
         }
+        try {
+            OneMQClient temp = new OneMQ();
+            temp.connect(dns, null, null);
+            logger.debug("Successfully connected for " + queueURI);
 
+            conn.set(temp);
+        } catch (Exception e) {
+            logger.error("Unable to establish shotgun connection for " + queueURI, e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private void open() {
         try {
             connect();
 
@@ -208,38 +227,11 @@ public class ShotgunQueue implements ObservableQueue {
             }
         } catch (Exception ignore) {
         }
-
-        execs = Executors.newScheduledThreadPool(1);
-        execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
-        closed.set(false);
     }
 
-    private void monitor() {
-        try {
-            boolean observed = listened.get();
-            boolean connected = isConnected();
-            boolean subscribed = isSubscribed();
-
-            // All conditions are met
-            if (connected && observed && subscribed) {
-                return;
-            } else if (connected && !observed && !subscribed) {
-                return;
-            }
-
-            logger.error("Monitor invoked for " + queueURI);
-            closeConn();
-
-            // Connect
-            connect();
-
-            // Re-initiated subscription if existed
-            if (observed) {
-                subscribe();
-            }
-        } catch (Exception ex) {
-            logger.error("Monitor failed with " + ex.getMessage() + " for " + queueURI, ex);
-        }
+    private void reopen() {
+        close();
+        open();
     }
 
     private void publishWait(String subject, String payload) throws Exception {
@@ -267,38 +259,6 @@ public class ShotgunQueue implements ObservableQueue {
             Exception ex = (Exception) result;
             throw new RuntimeException(ex.getMessage(), ex);
         }
-    }
-
-    public boolean isClosed() {
-        return closed.get();
-    }
-
-    private void ensureConnected() {
-        if (!isConnected()) {
-            throw new RuntimeException("No OneMQ connection");
-        }
-    }
-
-    private void connect() {
-        try {
-            OneMQClient temp = new OneMQ();
-            temp.connect(dns, null, null);
-            logger.debug("Successfully connected for " + queueURI);
-
-            conn.set(temp);
-        } catch (Exception e) {
-            logger.error("Unable to establish shotgun connection for " + queueURI, e);
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-    private boolean isConnected() {
-        return (conn.get() != null && conn.get().isConnected());
-    }
-
-    private boolean isSubscribed() {
-        return subs.get() != null;
-
     }
 
     private void subscribe() {
@@ -339,20 +299,18 @@ public class ShotgunQueue implements ObservableQueue {
         Monitors.recordEventQueueMessagesReceived(EventQueues.QueueType.shotgun.name(), queueURI);
     }
 
-    private void closeConn() {
-        if (subs.get() != null) {
-            try {
-                conn.get().unsubscribe(subs.get());
-            } catch (Exception ignore) {
-            }
-            subs.set(null);
-        }
-        if (conn.get() != null) {
-            try {
-                conn.get().close();
-            } catch (Exception ignore) {
-            }
-            conn.set(null);
+    private boolean isConnected() {
+        return (conn.get() != null && conn.get().isConnected());
+    }
+
+    private boolean isSubscribed() {
+        return subs.get() != null;
+
+    }
+
+    private void ensureConnected() {
+        if (!isConnected()) {
+            throw new RuntimeException("No OneMQ connection");
         }
     }
 }
