@@ -580,7 +580,12 @@ public class WorkflowExecutor {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
 
-		return cancelWorkflow(workflow, reason);
+		else
+		{
+			throw new ApplicationException(Code.CONFLICT, "Can not cancel the workflow since workflow is already "+workflow.getStatus());
+		}
+		return cancelWorkflow(workflow, null);
+
 	}
 
 	public String cancelWorkflow(Workflow workflow, String reason) throws Exception {
