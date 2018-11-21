@@ -18,7 +18,6 @@
  */
 package com.netflix.conductor.contribs.queue.shotgun;
 
-import com.bydeluxe.onemq.OneMQ;
 import com.bydeluxe.onemq.OneMQClient;
 import com.bydeluxe.onemq.Subscription;
 import com.netflix.conductor.core.events.EventQueues;
@@ -37,30 +36,26 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Oleksiy Lysak
  */
-public class ShotgunQueue implements ObservableQueue {
+public class SharedShotgunQueue implements ObservableQueue {
     private static Logger logger = LoggerFactory.getLogger(ShotgunQueue.class);
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
-    private ScheduledExecutorService execs;
     private Duration[] publishRetryIn;
     private final String queueURI;
     private final String service;
     private final String subject;
     private final String groupId;
-    private final String dns;
-    private Subscription subs;
     private OneMQClient conn;
+    private Subscription subs;
 
-    public ShotgunQueue(String dns, String service, String queueURI, Duration[] publishRetryIn) {
-        this.dns = dns;
+    public SharedShotgunQueue(OneMQClient conn, String service, String queueURI, Duration[] publishRetryIn) {
+        this.conn = conn;
         this.service = service;
         this.queueURI = queueURI;
         this.publishRetryIn = publishRetryIn;
@@ -74,22 +69,6 @@ public class ShotgunQueue implements ObservableQueue {
             this.groupId = null;
         }
         logger.debug(String.format("Initialized with queueURI=%s, subject=%s, groupId=%s", queueURI, subject, groupId));
-
-        conn = new OneMQ();
-        execs = Executors.newScheduledThreadPool(1);
-        execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
-    }
-
-    private void monitor() {
-        if (conn.isConnected()) {
-            return;
-        }
-        try {
-            conn.close();
-            conn.connect(dns, null, null);
-        } catch (Exception ex) {
-            logger.error("OneMQ client connect failed {}", ex.getMessage(), ex);
-        }
     }
 
     @Override
@@ -171,23 +150,12 @@ public class ShotgunQueue implements ObservableQueue {
     @Override
     public void close() {
         logger.debug("Closing connection for " + queueURI);
-        if (execs != null) {
-            execs.shutdownNow();
-            execs = null;
-        }
         if (subs != null) {
             try {
                 conn.unsubscribe(subs);
             } catch (Exception ignore) {
             }
             subs = null;
-        }
-        if (conn != null) {
-            try {
-                conn.close();
-            } catch (Exception ignore) {
-            }
-            conn = null;
         }
     }
 
@@ -199,11 +167,11 @@ public class ShotgunQueue implements ObservableQueue {
         try {
             // Create subject/groupId subscription if the groupId has been provided
             if (StringUtils.isNotEmpty(groupId)) {
-                logger.debug("Creating subscription with subject={}, groupId={}", subject, groupId);
+                logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, groupId);
                 subs = conn.subscribe(subject, service, groupId, this::onMessage);
             } else {
                 String uuid = UUID.randomUUID().toString();
-                logger.debug("Creating subscription with subject={}, groupId={}", subject, uuid);
+                logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, uuid);
                 subs = conn.subscribe(subject, service, uuid, this::onMessage);
             }
         } catch (Exception ex) {

@@ -18,6 +18,9 @@
  */
 package com.netflix.conductor.core.events.shotgun;
 
+import com.bydeluxe.onemq.OneMQ;
+import com.bydeluxe.onemq.OneMQClient;
+import com.netflix.conductor.contribs.queue.shotgun.SharedShotgunQueue;
 import com.netflix.conductor.contribs.queue.shotgun.ShotgunQueue;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueueProvider;
@@ -31,9 +34,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Oleksiy Lysak
@@ -41,16 +47,22 @@ import java.util.stream.Stream;
 @Singleton
 public class ShotgunEventQueueProvider implements EventQueueProvider {
 	private static Logger logger = LoggerFactory.getLogger(ShotgunEventQueueProvider.class);
+	private static final String PROP_SHARED = "io.shotgun.shared";
 	private static final String PROP_SERVICE = "io.shotgun.service";
 	private static final String PROP_DNS = "io.shotgun.dns";
-	protected Map<String, ShotgunQueue> queues = new ConcurrentHashMap<>();
-	private int[] publishRetryIn;
+	private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
+	private ScheduledExecutorService execs;
+	private Duration[] publishRetryIn;
+	private OneMQClient mqClient;
+	private boolean shared;
 	private String service;
 	private String dns;
 
 	@Inject
 	public ShotgunEventQueueProvider(Configuration config) {
 		logger.debug("Shotgun Event Queue Provider init");
+
+		shared = Boolean.parseBoolean(config.getProperty(PROP_SHARED, "false"));
 
 		service = config.getProperty(PROP_SERVICE, null);
 		if (StringUtils.isEmpty(service)) {
@@ -63,10 +75,19 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 		}
 
 		String[] arr = config.getProperty("io.shotgun.publishRetryIn", ",").split(",");
-		publishRetryIn = Stream.of(arr).mapToInt(Integer::parseInt).toArray();
+		Duration[] publishRetryIn = new Duration[arr.length];
+		for (int i = 0; i < arr.length; i++) {
+			publishRetryIn[i] = Duration.ofSeconds(Long.parseLong(arr[i]));
+		}
 
 		logger.debug("Shotgun Event Queue Provider settings are dns=" + dns + ", service=" + service
 				+ ", publishRetryIn=" + ArrayUtils.toString(publishRetryIn));
+
+		if (shared) {
+			mqClient = new OneMQ();
+			execs = Executors.newScheduledThreadPool(1);
+			execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
+		}
 
 		EventQueues.registerProvider(QueueType.shotgun, this);
 		logger.debug("Shotgun Event Queue Provider initialized...");
@@ -74,15 +95,31 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
-		return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI, publishRetryIn));
+		if (shared) {
+			return queues.computeIfAbsent(queueURI, q -> new SharedShotgunQueue(mqClient, service, queueURI, publishRetryIn));
+		} else {
+			return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI, publishRetryIn));
+		}
 	}
 
 	@Override
 	public void remove(String queueURI) {
-		ShotgunQueue queue = queues.get(queueURI);
+		ObservableQueue queue = queues.get(queueURI);
 		if (queue != null) {
 			queue.close();
 			queues.remove(queueURI);
+		}
+	}
+
+	private void monitor() {
+		if (mqClient.isConnected()) {
+			return;
+		}
+		try {
+			mqClient.close();
+			mqClient.connect(dns, null, null);
+		} catch (Exception ex) {
+			logger.error("OneMQ client connect failed {}", ex.getMessage(), ex);
 		}
 	}
 }
