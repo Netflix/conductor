@@ -111,8 +111,8 @@ class Grapher extends Component {
             g.setNode(v.ref, {
                 label: l,
                 shape: v.shape,
-                style: v.style,
-                labelStyle: v.labelStyle + '; font-weight:normal; font-size: 11px'
+                style: v.style + ';cursor: pointer;',
+                labelStyle: v.labelStyle + '; font-weight:normal; font-size: 11px; cursor: pointer;'
             });
         }
 
@@ -195,7 +195,7 @@ class Grapher extends Component {
                 <div className="right-prop-overlay" ref={this.setPropsDivRef}
                      style={{overflowX: 'scroll', display: this.state.showSideBar ? '' : 'none', padding: '5px 5px 10px 10px'}}>
                     <h4 className="propsheader">
-                        <i className="fa fa-close fa-1x close-btn" onClick={hideProps}/>
+                        <i className="far fa-times-circle fa-1x close-btn" onClick={hideProps}/>
                         {this.state.selectedTask.taskType} ({this.state.selectedTask.status})
                     </h4>
                     <div style={{

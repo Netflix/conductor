@@ -82,7 +82,7 @@ const WorkflowMetaList = React.createClass({
         {this.filterLabels()}
         <BootstrapTable ref="table" data={wfs} striped={true} hover={true} search={true} exportCSV={false} pagination={false}>
           <TableHeaderColumn dataField="name" isKey={true} dataAlign="left" dataSort={true} dataFormat={nameMaker}>Name/Version</TableHeaderColumn>
-          <TableHeaderColumn dataField="inputParameters" dataSort={true} dataFormat={jsonMaker}>Input Parameters</TableHeaderColumn>
+          <TableHeaderColumn dataField="inputParameters" width="500" dataSort={true} dataFormat={jsonMaker}>Input Parameters</TableHeaderColumn>
           <TableHeaderColumn dataField="tasks" hidden={false} dataFormat={taskMaker}>Tasks</TableHeaderColumn>
           </BootstrapTable>
       </div>
