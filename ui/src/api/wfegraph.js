@@ -62,6 +62,7 @@ class Workflow2Graph {
       switch (status) {
         case 'RESET':
         case 'FAILED':
+        case 'FAILED_NO_RETRY':
         case 'TIMED_OUT':
         case 'CANCELLED':
         case 'CANCELED':
@@ -96,7 +97,7 @@ class Workflow2Graph {
         this.vertices[v].labelStyle = labelStyle;
         let tooltip = '<p><strong>Input</strong></p>' + JSON.stringify(et.input, null, 2) + '<p></p><p><strong>Output</strong></p>' + JSON.stringify(et.output, null, 2);
         tooltip += '<p></p><p><strong>Status</strong> : ' + et.status + '</p>';
-        if (status == 'FAILED' || status == 'RESET') {
+        if (status == 'FAILED' || status == 'RESET' || status == 'FAILED_NO_RETRY') {
           tooltip += '<p><strong>Failure Reason</strong></p><p>' + et.reasonForIncompletion + '</p>';
         }
         this.vertices[v].data = et;

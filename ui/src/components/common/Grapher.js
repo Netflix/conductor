@@ -245,7 +245,7 @@ class Grapher extends Component {
                 {this.state.selectedTask.taskType} ({this.state.selectedTask.status})
               </h4>
             </div>
-            <div style={{color: '#ff0000', display: this.state.selectedTask.status == 'FAILED' || this.state.selectedTask.status == 'RESET'?'':'none'}}>{this.state.selectedTask.reasonForIncompletion}</div>
+            <div style={{color: '#ff0000', display: this.state.selectedTask.status == 'FAILED' || this.state.selectedTask.status == 'RESET' || this.state.selectedTask.status == 'FAILED_NO_RETRY'?'':'none'}}>{this.state.selectedTask.reasonForIncompletion}</div>
             <Tabs defaultActiveKey={1}>
               <Tab eventKey={1} title="Summary">
                 <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}><tbody>
