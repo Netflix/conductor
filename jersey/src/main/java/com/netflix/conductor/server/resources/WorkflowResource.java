@@ -114,10 +114,19 @@ public class WorkflowResource {
 		if (StringUtils.isNotEmpty(correlationId)) {
 			request.setCorrelationId(correlationId);
 		}
-
+		Map<String, Object> authContext=null;
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+				authContext = executor.validateAuthContext(def, headers);
+		}
 		NDC.push("rest-start-"+ UUID.randomUUID().toString());
 		try {
-			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth);
+			if(authContext!=null && !authContext.isEmpty()) {
+				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth,authContext);
+			}
+			else
+			{
+				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth);
+			}
 		} finally {
 			NDC.remove();
 		}
@@ -171,7 +180,9 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response delete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+			 executor.validateAuthContext(workflowId, headers);
+		}
 		Response.ResponseBuilder builder = Response.noContent();
 		handleCorrelationId(workflowId, headers, builder);
 
@@ -219,7 +230,9 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response pauseWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+			executor.validateAuthContext(workflowId, headers);
+		}
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
@@ -239,7 +252,9 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response resumeWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+			executor.validateAuthContext(workflowId, headers);
+		}
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
@@ -275,7 +290,9 @@ public class WorkflowResource {
 	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
 	public Response rerun(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+			executor.validateAuthContext(workflowId, headers);
+		}
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 		request.setReRunFromWorkflowId(workflowId);
@@ -298,7 +315,9 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+			executor.validateAuthContext(workflowId, headers);
+		}
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
@@ -318,7 +337,9 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+			executor.validateAuthContext(workflowId, headers);
+		}
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
@@ -338,7 +359,9 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response terminate(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+			executor.validateAuthContext(workflowId, headers);
+		}
 		Response.ResponseBuilder builder = Response.noContent();
 		handleCorrelationId(workflowId, headers, builder);
 
@@ -359,7 +382,9 @@ public class WorkflowResource {
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
+		if(headers.getRequestHeader("Authorization-Context")!= null) {
+			executor.validateAuthContext(workflowId, headers);
+		}
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 		handleCorrelationId(workflowId, headers, builder);
 

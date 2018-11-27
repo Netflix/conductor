@@ -94,6 +94,7 @@ public class WorkflowExecutor {
 	private int activeWorkerLastPollnSecs;
 
 	private boolean validateAuth;
+	private boolean validateAuthContext;
 	private boolean lazyDecider;
 
 	private ParametersUtils pu = new ParametersUtils();
@@ -108,6 +109,7 @@ public class WorkflowExecutor {
 		activeWorkerLastPollnSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
 		this.decider = new DeciderService(metadata, om);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
+		this.validateAuthContext = Boolean.parseBoolean(config.getProperty("workflow.authcontext.validate", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 	}
 
@@ -120,22 +122,24 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null,null);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization);
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization,null);
 	}
-
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization,Map<String, Object> authorizationContext) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization,authorizationContext);
+	}
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null,null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null,null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization) throws Exception {
+	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, Map<String, Object> authorizationcontext) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
@@ -173,6 +177,12 @@ public class WorkflowExecutor {
 			wf.setStatus(WorkflowStatus.RUNNING);
 			wf.setParentWorkflowId(parentWorkflowId);
 			wf.setAuthorization(authorization);
+			if(authorizationcontext!=null)
+			{
+				if(!MapUtils.isEmpty(authorizationcontext)) {
+					wf.setAuthorizationContext(authorizationcontext);
+				}
+			}
 
 			// Add other ids if passed
 			if (CollectionUtils.isNotEmpty(workflowIds)) {
@@ -502,8 +512,7 @@ public class WorkflowExecutor {
 		});
 
 		scheduleTask(workflow, rescheduledTasks);
-                //reset the ReasonForIncompletion
-		workflow.setReasonForIncompletion("");
+
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
@@ -580,12 +589,7 @@ public class WorkflowExecutor {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
 
-		else
-		{
-			throw new ApplicationException(Code.CONFLICT, "Can not cancel the workflow since workflow is already "+workflow.getStatus());
-		}
-		return cancelWorkflow(workflow, null);
-
+		return cancelWorkflow(workflow, reason);
 	}
 
 	public String cancelWorkflow(Workflow workflow, String reason) throws Exception {
@@ -1453,6 +1457,51 @@ public class WorkflowExecutor {
 
 		if (!failedList.isEmpty()) {
 			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: at least one of the verify conditions failed");
+		}
+
+		return decoded;
+	}
+
+	public void validateAuthContext(String workflowId, HttpHeaders headers) {
+		Workflow workflow = edao.getWorkflow(workflowId, false);
+		if (workflow == null) {
+			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found for workflowId=" + workflowId);
+		}
+
+		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+		if (workflowDef == null) {
+			throw new ApplicationException(Code.NOT_FOUND, "No such workflow definition found by name=" + workflow.getWorkflowType() + ", version=" + workflow.getVersion());
+		}
+
+		validateAuthContext(workflowDef, headers);
+	}
+
+	public Map<String, Object> validateAuthContext(WorkflowDef workflowDef, HttpHeaders headers) {
+		if (!this.validateAuth || MapUtils.isEmpty(workflowDef.getAuthValidation())) {
+			return null;
+		}
+
+
+		String authString = headers.getRequestHeader("Authorization-Context").get(0);
+		if (authString == null || authString.isEmpty())
+			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
+
+		if (StringUtils.isEmpty(authString))
+			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
+
+		Map<String, Object> decoded = auth.decode(authString);
+
+		// Do a validation
+		Map<String, Object> failedList;
+		try {
+			failedList = auth.validate(decoded, workflowDef.getAuthValidation());
+		} catch (Exception ex) {
+			logger.error("Auth Context validation failed with " + ex.getMessage(), ex);
+			throw new ApplicationException(Code.UNAUTHORIZED, ex.getMessage());
+		}
+
+		if (!failedList.isEmpty()) {
+			throw new ApplicationException(Code.UNAUTHORIZED, "Auth Context validation failed: at least one of the verify conditions failed");
 		}
 
 		return decoded;
