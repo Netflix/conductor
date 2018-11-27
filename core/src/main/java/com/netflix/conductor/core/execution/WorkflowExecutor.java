@@ -1477,7 +1477,7 @@ public class WorkflowExecutor {
 	}
 
 	public Map<String, Object> validateAuthContext(WorkflowDef workflowDef, HttpHeaders headers) {
-		if (!this.validateAuthContext || MapUtils.isEmpty(workflowDef.getAuthValidation())) {
+		if (!this.validateAuthContext ) {
 			return null;
 		}
 
