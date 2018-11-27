@@ -1491,19 +1491,6 @@ public class WorkflowExecutor {
 
 		Map<String, Object> decoded = auth.decode(authString);
 
-		// Do a validation
-		Map<String, Object> failedList;
-		try {
-			failedList = auth.validate(decoded, workflowDef.getAuthValidation());
-		} catch (Exception ex) {
-			logger.error("Auth Context validation failed with " + ex.getMessage(), ex);
-			throw new ApplicationException(Code.UNAUTHORIZED, ex.getMessage());
-		}
-
-		if (!failedList.isEmpty()) {
-			throw new ApplicationException(Code.UNAUTHORIZED, "Auth Context validation failed: at least one of the verify conditions failed");
-		}
-
 		return decoded;
 	}
 
