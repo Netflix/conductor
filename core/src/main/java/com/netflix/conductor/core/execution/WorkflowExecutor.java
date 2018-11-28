@@ -177,13 +177,7 @@ public class WorkflowExecutor {
 			wf.setStatus(WorkflowStatus.RUNNING);
 			wf.setParentWorkflowId(parentWorkflowId);
 			wf.setAuthorization(authorization);
-			if(authorizationcontext!=null)
-			{
-				if(!MapUtils.isEmpty(authorizationcontext)) {
-					wf.setAuthorizationContext(authorizationcontext);
-				}
-			}
-
+			wf.setAuthorizationContext(authorizationcontext);
 			// Add other ids if passed
 			if (CollectionUtils.isNotEmpty(workflowIds)) {
 				workflowIds.forEach(id -> {
@@ -1462,35 +1456,13 @@ public class WorkflowExecutor {
 		return decoded;
 	}
 
-	public void validateAuthContext(String workflowId, HttpHeaders headers) {
-		Workflow workflow = edao.getWorkflow(workflowId, false);
-		if (workflow == null) {
-			throw new ApplicationException(Code.NOT_FOUND, "No such workflow found for workflowId=" + workflowId);
-		}
 
-		WorkflowDef workflowDef = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
-		if (workflowDef == null) {
-			throw new ApplicationException(Code.NOT_FOUND, "No such workflow definition found by name=" + workflow.getWorkflowType() + ", version=" + workflow.getVersion());
-		}
-
-		validateAuthContext(workflowDef, headers);
-	}
-
-	public Map<String, Object> validateAuthContext(WorkflowDef workflowDef, HttpHeaders headers) {
+	public Map<String, Object> validateAuthContext(HttpHeaders headers) {
 		if (!this.validateAuthContext ) {
 			return null;
 		}
-
-
 		String authString = headers.getRequestHeader("Authorization-Context").get(0);
-		if (authString == null || authString.isEmpty())
-			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
-
-		if (StringUtils.isEmpty(authString))
-			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
-
 		Map<String, Object> decoded = auth.decode(authString);
-
 		return decoded;
 	}
 
