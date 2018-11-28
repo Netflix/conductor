@@ -127,6 +127,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		// Attach the Authorization header by adding entry to the input's headers
 		if (input.isAuthorize()) {
 			setAuthorization(input);
+			setAuthorizationContext(input,workflow.getAuthorizationContext());
 		}
 
 		// Attach Deluxe Owf Context header
@@ -145,6 +146,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
 			headers.put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
 		}
+		if (headers.containsKey("Authorization-Context")) {
+			headers.put("Authorization-Context", "xxxxxxxxxxxxxxxxxxx");
+		}
 		logger.debug("http task headers " + headers);
 
 		// Store input headers back to the input request
@@ -153,6 +157,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 			// Escaping the auth
 			if (input.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
 				input.getHeaders().put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
+			}
+			if (input.getHeaders().containsKey("Authorization-Context")) {
+				input.getHeaders().put("Authorization-Context", "xxxxxxxxxxxxxxxxxxx");
 			}
 
 			task.getInputData().put(REQUEST_PARAMETER_NAME, input);
@@ -228,7 +235,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 		AuthResponse response = auth.authorize();
 		input.getHeaders().put(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
 	}
-
+	private void setAuthorizationContext(Input input,Map<String, Object> authorizationContext) throws Exception {
+		input.getHeaders().put("Authorization-Context",  authorizationContext.get("Authorization-Context"));
+	}
 	void setReasonForIncompletion(HttpResponse response, Task task) {
 		if (response.body != null) {
 			task.setReasonForIncompletion(response.body.toString());
