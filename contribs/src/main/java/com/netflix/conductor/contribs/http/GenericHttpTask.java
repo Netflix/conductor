@@ -236,7 +236,13 @@ class GenericHttpTask extends WorkflowSystemTask {
 		input.getHeaders().put(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
 	}
 	private void setAuthorizationContext(Input input,Map<String, Object> authorizationContext) throws Exception {
-		input.getHeaders().put("Authorization-Context",  authorizationContext.get("Authorization-Context"));
+		if(MapUtils.isNotEmpty(authorizationContext)) {
+			input.getHeaders().put("Authorization-Context", authorizationContext);
+		}
+		else
+		{
+			input.getHeaders().put("Authorization-Context", "");
+		}
 	}
 	void setReasonForIncompletion(HttpResponse response, Task task) {
 		if (response.body != null) {
