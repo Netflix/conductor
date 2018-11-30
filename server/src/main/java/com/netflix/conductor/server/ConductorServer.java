@@ -32,6 +32,10 @@ import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.sun.jersey.api.client.Client;
+
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -213,6 +217,14 @@ public class ConductorServer {
 		context.setWelcomeFiles(new String[]{"index.html"});
 
 		server.setHandler(context);
+
+
+		// ONECOND-758: Increase default request and response header size from 8kb to 64kb
+		final int max = 64 * 1024;
+		for (Connector conn : server.getConnectors()) {
+			conn.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setRequestHeaderSize(max);
+			conn.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setResponseHeaderSize(max);
+		}
 
 
 		DefaultServlet staticServlet = new DefaultServlet();
