@@ -24,6 +24,9 @@ public interface Configuration {
     String DB_PROPERTY_NAME = "db";
     String DB_DEFAULT_VALUE = "memory";
 
+    String ES_VERSION_PROPERTY_NAME = "workflow.elasticsearch.version";
+    String ES_VERSION_DEFAULT_VALUE = "6";
+
     String SWEEP_FREQUENCY_PROPERTY_NAME = "decider.sweep.frequency.seconds";
     int SWEEP_FREQUENCY_DEFAULT_VALUE = 30;
 
@@ -63,6 +66,10 @@ public interface Configuration {
 
     default String getDBString() {
         return getProperty(DB_PROPERTY_NAME, DB_DEFAULT_VALUE).toUpperCase();
+    }
+
+    default String getElasticSearchVersion() {
+        return getProperty(ES_VERSION_PROPERTY_NAME, ES_VERSION_DEFAULT_VALUE);
     }
 
     /**
@@ -213,5 +220,22 @@ public interface Configuration {
 
     enum DB {
         REDIS, DYNOMITE, MEMORY, REDIS_CLUSTER, MYSQL
+    }
+
+    enum ElasticSearchVersion {
+        VERSION_5("5"), VERSION_6("6");
+        private final String version;
+        ElasticSearchVersion(String version) {
+            this.version = version;
+        }
+
+        public static ElasticSearchVersion version(String version) {
+            return valueOf("VERSION_" + version);
+        }
+
+        @Override
+        public String toString() {
+            return version;
+        }
     }
 }
