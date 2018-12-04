@@ -159,7 +159,7 @@ job "conductor" {
         workflow_sweeper_batch_sherlock_worker_count = 100
         workflow_sweeper_batch_names = "sherlock"
         workflow_batch_sherlock_enabled = "true"
-        workflow_lazy_decider = "false"
+        workflow_lazy_decider = "true"
 
         // Elasticsearch settings.
         workflow_elasticsearch_mode = "elasticsearch"
