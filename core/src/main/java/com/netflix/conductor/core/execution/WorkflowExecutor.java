@@ -982,7 +982,7 @@ public class WorkflowExecutor {
 			if (tw.task != null) {
 				error += ", taskId=" + tw.task.getTaskId() + ", taskRefName=" + tw.task.getReferenceTaskName();
 			}
-			logger.error(error, tw);
+
 			terminate(def, workflow, tw);
 			return true;
 		}
