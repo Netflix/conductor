@@ -1,6 +1,7 @@
 package com.netflix.conductor.dao.es6.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
@@ -51,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -70,6 +72,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Trace
+@Singleton
 public class ElasticSearchDAOV6 implements IndexDAO {
 
     private static Logger logger = LoggerFactory.getLogger(ElasticSearchDAOV6.class);
@@ -93,6 +97,10 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     private String workflowIndexName;
 
     private String taskIndexName;
+
+    private String eventIndexName;
+
+    private String messageIndexName;
 
     private String logIndexName;
 
@@ -119,7 +127,7 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         this.indexPrefix = config.getIndexName();
         this.workflowIndexName = indexName(WORKFLOW_DOC_TYPE);
         this.taskIndexName = indexName(TASK_DOC_TYPE);
-        this.logIndexPrefix = config.getTasklogIndexName();
+        this.logIndexPrefix = this.indexPrefix + "_" + LOG_DOC_TYPE;
 
         int corePoolSize = 6;
         int maximumPoolSize = 12;
@@ -135,52 +143,66 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     public void setup() throws Exception {
         elasticSearchClient.admin().cluster().prepareHealth().setWaitForGreenStatus().execute().get();
 
-        setupTaskLogsIndex();
+        setupIndexesTemplates();
 
-        createWorkflowIndex();
+        setupWorkflowIndex();
 
-        createTaskIndex();
+        setupTaskIndex();
+
     }
 
     /**
-     * Initializes the indexes tasks_logs with required templates and mappings.
+     * Initializes the indexes templates task_log, message and event, and mappings.
      */
-    private void setupTaskLogsIndex() {
+    private void setupIndexesTemplates() {
         try {
-            initTaskLogsIndex();
-            updateTaskLogsIndexName();
+            initIndexesTemplates();
+            updateIndexesNames();
             Executors.newScheduledThreadPool(1)
-                    .scheduleAtFixedRate(this::updateTaskLogsIndexName, 0, 1, TimeUnit.HOURS);
+                    .scheduleAtFixedRate(this::updateIndexesNames, 0, 1, TimeUnit.HOURS);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
 
-    private void initTaskLogsIndex() throws Exception {
-        GetIndexTemplatesResponse result = elasticSearchClient.admin().indices().prepareGetTemplates("tasklog_template").execute().actionGet();
+    private void initIndexesTemplates() {
+        initIndexTemplate(LOG_DOC_TYPE);
+        initIndexTemplate(EVENT_DOC_TYPE);
+        initIndexTemplate(MSG_DOC_TYPE);
+    }
+
+    private void initIndexTemplate(String type) {
+        String template = "template_" + type;
+        GetIndexTemplatesResponse result = elasticSearchClient.admin().indices().prepareGetTemplates(template).execute().actionGet();
         if (result.getIndexTemplates().isEmpty()) {
-            logger.info("Creating the index template 'tasklog_template'");
-            String templateSource = loadTypeMappingSource("/template_tasklog.json");
+            logger.info("Creating the index template '{}'", template);
             try {
-                elasticSearchClient.admin().indices().preparePutTemplate("tasklog_template").setSource(templateSource.getBytes(), XContentType.JSON).execute().actionGet();
+                String templateSource = loadTypeMappingSource("/" + template + ".json");
+                elasticSearchClient.admin().indices().preparePutTemplate(template).setSource(templateSource.getBytes(), XContentType.JSON).execute().actionGet();
             } catch (Exception e) {
-                logger.error("Failed to init tasklog_template", e);
+                logger.error("Failed to init " + template, e);
             }
         }
     }
 
-    private void updateTaskLogsIndexName() {
-        this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
-        createIndex(logIndexName);
+    private void updateIndexesNames() {
+        logIndexName = updateIndexName(LOG_DOC_TYPE);
+        eventIndexName = updateIndexName(EVENT_DOC_TYPE);
+        messageIndexName = updateIndexName(MSG_DOC_TYPE);
     }
 
-    private void createWorkflowIndex() throws Exception {
+    private String updateIndexName(String type) {
+        String indexName = this.indexPrefix + "_" + type + "_" + SIMPLE_DATE_FORMAT.format(new Date());
+        createIndex(indexName);
+        return indexName;
+    }
+
+    private void setupWorkflowIndex() throws Exception {
         createIndex(workflowIndexName);
         addTypeMapping(workflowIndexName, WORKFLOW_DOC_TYPE, "/mappings_docType_workflow.json");
-
     }
 
-    private void createTaskIndex() throws Exception {
+    private void setupTaskIndex() throws Exception {
         createIndex(taskIndexName);
         addTypeMapping(taskIndexName, TASK_DOC_TYPE, "/mappings_docType_task.json");
     }
@@ -203,7 +225,7 @@ public class ElasticSearchDAOV6 implements IndexDAO {
             logger.info("Adding the {} type mappings", indexName);
             try {
                 String source = loadTypeMappingSource(sourcePath);
-                elasticSearchClient.admin().indices().preparePutMapping(indexName).setType(type).setSource(source).execute().actionGet();
+                elasticSearchClient.admin().indices().preparePutMapping(indexName).setType(type).setSource(source, XContentType.JSON).execute().actionGet();
             } catch (Exception e) {
                 logger.error("Failed to init index " + indexName + " mappings", e);
             }
@@ -323,7 +345,7 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         doc.put("payload", message.getPayload());
         doc.put("queue", queue);
         doc.put("created", System.currentTimeMillis());
-        IndexRequest request = new IndexRequest(logIndexName, MSG_DOC_TYPE);
+        IndexRequest request = new IndexRequest(messageIndexName, MSG_DOC_TYPE);
         request.source(doc);
         try {
             new RetryUtil<>().retryOnException(() -> elasticSearchClient.index(request).actionGet(), null,
@@ -338,7 +360,7 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         try {
             byte[] doc = objectMapper.writeValueAsBytes(eventExecution);
             String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
-            UpdateRequest req = buildUpdateRequest(id, doc, logIndexName, EVENT_DOC_TYPE);
+            UpdateRequest req = buildUpdateRequest(id, doc, eventIndexName, EVENT_DOC_TYPE);
             updateWithRetry(req, "Update Event execution for doc_type event");
         } catch (Throwable e) {
             logger.error("Failed to index event execution: {}", eventExecution.getId(), e);

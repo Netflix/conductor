@@ -12,10 +12,10 @@ export config_file=
 if [ -z "$CONFIG_PROP" ];
   then
     echo "Using an in-memory instance of conductor";
-    export config_file=/app/config/config-local.properties
+    export config_file=/app/config/config.properties
   else
     echo "Using '$CONFIG_PROP'";
-    export config_file=/app/config/$CONFIG_PROP
+    export config_file=$CONFIG_PROP
 fi
 
 java -jar conductor-server-*-all.jar $config_file
