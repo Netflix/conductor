@@ -185,6 +185,16 @@ job "conductor" {
         // Exclude demo workflows
         loadSample = "false"
 
+        // Loggers
+        log4j_logger_com_netflix_conductor_dao_es6rest="INFO"
+        log4j_logger_com_netflix_conductor_core_events_nats="DEBUG"
+        log4j_logger_com_netflix_conductor_core_events_shotgun="DEBUG"
+        log4j_logger_com_netflix_conductor_contribs_queue_nats="DEBUG"
+        log4j_logger_com_netflix_conductor_contribs_queue_shotgun="DEBUG"
+        log4j_logger_com_netflix_conductor_core_events_EventProcessor="INFO"
+        log4j_logger_com_netflix_conductor_core_execution_DeciderService="DEBUG"
+        log4j_logger_com_netflix_conductor_core_execution_WorkflowExecutor="DEBUG"
+
         // The following will be provided by secret/conductor
         //  - conductor_auth_url
         //  - conductor_auth_clientId
