@@ -89,7 +89,6 @@ public class WorkflowSweeper {
 				sweep(workflowIds, executor);
 				
 			}catch(Exception e){
-				logger.error("Error running sweep: ", e);
 				Monitors.error(className, "sweep");
 				logger.error(e.getMessage(), e);
 				
@@ -108,7 +107,9 @@ public class WorkflowSweeper {
 					
 					WorkflowContext ctx = new WorkflowContext(config.getAppId());
 					WorkflowContext.set(ctx);
-					logger.error("Running sweeper for workflow {}", workflowId);
+					if(logger.isDebugEnabled()) {
+						logger.debug("Running sweeper for workflow {}", workflowId);
+					}
 					boolean done = executor.decide(workflowId);
 					if(!done) {
 						queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
