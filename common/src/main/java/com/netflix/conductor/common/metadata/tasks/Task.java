@@ -123,6 +123,8 @@ public class Task {
 	private WorkflowTask workflowTask;
 	
 	private String domain;
+
+        private String taskDescription; 
 	
 	public Task(){
 		
@@ -528,7 +530,20 @@ public class Task {
 	public void setDomain(String domain) {
 		this.domain = domain;
 	}
+        /**
+         * @return the task description
+         */
+        public String getTaskDescription() {
+                return taskDescription;
+        }
 
+        /**
+         * @param taskDescription - the task description
+         * 
+         */
+        public void setTaskDescription(String taskDescription) {
+                this.taskDescription = taskDescription;
+        }
 	public Task copy() {
 		
 		Task copy = new Task();
@@ -551,6 +566,7 @@ public class Task {
 		copy.setWorkerId(workerId);
 		copy.setWorkflowTask(workflowTask);
 		copy.setDomain(domain);
+                copy.setTaskDescription(taskDescription);
 		return copy;
 	}
 	

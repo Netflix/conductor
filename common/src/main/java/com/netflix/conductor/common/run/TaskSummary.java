@@ -69,8 +69,10 @@ public class TaskSummary {
 	
 	private String taskId;
 	
-    private String referenceTaskName;
+        private String referenceTaskName;
     
+        private String taskDescription;
+
 	private int retryCount;
 
 	public TaskSummary(Task task) {
@@ -82,6 +84,7 @@ public class TaskSummary {
     	this.taskDefName = task.getTaskDefName();
     	this.taskType = task.getTaskType();
     	this.referenceTaskName = task.getReferenceTaskName();
+        this.taskDescription = task.getTaskDescription();
 		this.workflowId = task.getWorkflowInstanceId();
 		this.correlationId = task.getCorrelationId();
 		this.scheduledTime = sdf.format(new Date(task.getScheduledTime()));
@@ -348,6 +351,20 @@ public class TaskSummary {
 	public void setReferenceTaskName(String referenceTaskName) {
 		this.referenceTaskName = referenceTaskName;
 	}
+
+        /** 
+         * @return the taskDescription
+         */
+        public String getTaskDescription() {
+                return taskDescription;
+        }
+
+        /**
+         * @param taskDescription the taskDescription to set
+         */
+        public void setTaskDescription(String taskDescription) {
+                this.taskDescription = taskDescription;
+        }
 	
 	/**
 	 * @return the retryCount
