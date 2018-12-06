@@ -226,6 +226,7 @@ public class ElasticSearchDAO implements IndexDAO {
 
 			String id = task.getTaskId();
 			TaskSummary summary = new TaskSummary(task);
+			log.error("Task Summary description %s", summary.getTaskDescription());
 			byte[] doc = om.writeValueAsBytes(summary);
 			
 			UpdateRequest req = new UpdateRequest(indexName, TASK_DOC_TYPE, id);
