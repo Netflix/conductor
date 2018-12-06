@@ -338,6 +338,7 @@ public class ExecutionService {
 			try {
 				
 				TaskSummary summary = new TaskSummary(edao.getTask(taskId));
+				logger.error("Task Summary description %s", summary.getTaskDescription());
 				return summary;
 				
 			} catch(Exception e) {
