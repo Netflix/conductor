@@ -1,6 +1,7 @@
 package com.netflix.conductor.dao.es6.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -13,7 +14,7 @@ import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.es6.index.query.parser.Expression;
+import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
@@ -449,7 +450,7 @@ public class ElasticSearchDAOV6 implements IndexDAO {
 
         if (response.isExists()) {
             Map<String, Object> sourceAsMap = response.getSourceAsMap();
-            if (sourceAsMap.containsKey(fieldToGet)) {
+            if (sourceAsMap.get(fieldToGet) != null) {
                 return sourceAsMap.get(fieldToGet).toString();
             }
         }

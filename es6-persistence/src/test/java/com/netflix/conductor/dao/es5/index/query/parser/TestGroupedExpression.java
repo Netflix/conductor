@@ -16,7 +16,7 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es6.index.query.parser;
+package com.netflix.conductor.dao.es5.index.query.parser;
 
 import org.junit.Test;
 

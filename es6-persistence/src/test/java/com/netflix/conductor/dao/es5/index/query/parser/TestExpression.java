@@ -16,11 +16,8 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.es6.index.query.parser;
+package com.netflix.conductor.dao.es5.index.query.parser;
 
-import com.netflix.conductor.dao.es6.index.query.parser.Expression;
-import com.netflix.conductor.dao.es6.index.query.parser.GroupedExpression;
-import com.netflix.conductor.dao.es6.index.query.parser.NameValue;
 import com.netflix.conductor.elasticsearch.query.parser.AbstractParserTest;
 import com.netflix.conductor.elasticsearch.query.parser.ConstValue;
 
