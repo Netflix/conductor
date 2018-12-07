@@ -460,22 +460,12 @@ public class ElasticSearchDAOV6 implements IndexDAO {
 
     @Override
     public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
-        try {
-
-            return search(query, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
-
-        } catch (ParserException e) {
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, e.getMessage(), e);
-        }
+        return search(query, start, count, sort, freeText, WORKFLOW_DOC_TYPE);
     }
 
     @Override
     public SearchResult<String> searchTasks(String query, String freeText, int start, int count, List<String> sort) {
-        try {
-            return search(query, start, count, sort, freeText, TASK_DOC_TYPE);
-        } catch (ParserException e) {
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, e.getMessage(), e);
-        }
+        return search(query, start, count, sort, freeText, TASK_DOC_TYPE);
     }
 
     @Override
@@ -534,36 +524,40 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         return null;
     }
 
-    private SearchResult<String> search(String structuredQuery, int start, int size, List<String> sortOptions, String freeTextQuery, String docType) throws ParserException {
-        QueryBuilder queryBuilder = QueryBuilders.matchAllQuery();
-        if (StringUtils.isNotEmpty(structuredQuery)) {
-            Expression expression = Expression.fromString(structuredQuery);
-            queryBuilder = expression.getFilterBuilder();
-        }
+    private SearchResult<String> search(String structuredQuery, int start, int size, List<String> sortOptions, String freeTextQuery, String docType) {
+        try {
+            QueryBuilder queryBuilder = QueryBuilders.matchAllQuery();
+            if (StringUtils.isNotEmpty(structuredQuery)) {
+                Expression expression = Expression.fromString(structuredQuery);
+                queryBuilder = expression.getFilterBuilder();
+            }
 
-        BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
-        QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(freeTextQuery);
-        BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
-        final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(indexName(docType)).setQuery(fq).setTypes(docType).storedFields("_id").setFrom(start).setSize(size);
-        if (sortOptions != null) {
-            sortOptions.forEach(sortOption -> {
-                SortOrder order = SortOrder.ASC;
-                String field = sortOption;
-                int indx = sortOption.indexOf(':');
-                if (indx > 0) {    //Can't be 0, need the field name at-least
-                    field = sortOption.substring(0, indx);
-                    order = SortOrder.valueOf(sortOption.substring(indx + 1));
-                }
-                srb.addSort(field, order);
+            BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
+            QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(freeTextQuery);
+            BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
+            final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(indexName(docType)).setQuery(fq).setTypes(docType).storedFields("_id").setFrom(start).setSize(size);
+            if (sortOptions != null) {
+                sortOptions.forEach(sortOption -> {
+                    SortOrder order = SortOrder.ASC;
+                    String field = sortOption;
+                    int indx = sortOption.indexOf(':');
+                    if (indx > 0) {    //Can't be 0, need the field name at-least
+                        field = sortOption.substring(0, indx);
+                        order = SortOrder.valueOf(sortOption.substring(indx + 1));
+                    }
+                    srb.addSort(field, order);
+                });
+            }
+            List<String> result = new LinkedList<String>();
+            SearchResponse response = srb.get();
+            response.getHits().forEach(hit -> {
+                result.add(hit.getId());
             });
+            long count = response.getHits().getTotalHits();
+            return new SearchResult<>(count, result);
+        } catch (ParserException e) {
+            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, e.getMessage(), e);
         }
-        List<String> result = new LinkedList<String>();
-        SearchResponse response = srb.get();
-        response.getHits().forEach(hit -> {
-            result.add(hit.getId());
-        });
-        long count = response.getHits().getTotalHits();
-        return new SearchResult<String>(count, result);
     }
 
     @Override

@@ -38,7 +38,7 @@ public class ElasticSearchDAOV6Test {
 
         dao.indexWorkflow(workflow);
 
-        assertWorkflowSummary(workflow, summary);
+        assertWorkflowSummary(workflow.getWorkflowId(), summary);
     }
 
     @Test
@@ -48,7 +48,65 @@ public class ElasticSearchDAOV6Test {
 
         dao.asyncIndexWorkflow(workflow).get();
 
-        assertWorkflowSummary(workflow, summary);
+        assertWorkflowSummary(workflow.getWorkflowId(), summary);
+    }
+
+    @Test
+    public void shouldRemoveWorkflow() {
+        Workflow workflow = TestUtils.loadWorkflowSnapshot("workflow");
+        dao.indexWorkflow(workflow);
+
+        // wait for workflow to be indexed
+        List<String> workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 1);
+        assertEquals(1, workflows.size());
+
+        dao.removeWorkflow(workflow.getWorkflowId());
+
+        workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 0);
+
+        assertTrue("Workflow was not removed.", workflows.isEmpty());
+    }
+
+    @Test
+    public void shouldAsyncRemoveWorkflow() throws Exception {
+        Workflow workflow = TestUtils.loadWorkflowSnapshot("workflow");
+        dao.indexWorkflow(workflow);
+
+        // wait for workflow to be indexed
+        List<String> workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 1);
+        assertEquals(1, workflows.size());
+
+        dao.asyncRemoveWorkflow(workflow.getWorkflowId()).get();
+
+        workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 0);
+
+        assertTrue("Workflow was not removed.", workflows.isEmpty());
+    }
+
+    @Test
+    public void shouldUpdateWorkflow() {
+        Workflow workflow = TestUtils.loadWorkflowSnapshot("workflow");
+        WorkflowSummary summary = new WorkflowSummary(workflow);
+
+        dao.indexWorkflow(workflow);
+
+        dao.updateWorkflow(workflow.getWorkflowId(), new String[]{"status"}, new Object[]{Workflow.WorkflowStatus.COMPLETED});
+
+        summary.setStatus(Workflow.WorkflowStatus.COMPLETED);
+        assertWorkflowSummary(workflow.getWorkflowId(), summary);
+    }
+
+    @Test
+    public void shouldAsyncUpdateWorkflow() throws Exception {
+        Workflow workflow = TestUtils.loadWorkflowSnapshot("workflow");
+        WorkflowSummary summary = new WorkflowSummary(workflow);
+
+        dao.indexWorkflow(workflow);
+
+        dao.asyncUpdateWorkflow(workflow.getWorkflowId(), new String[]{"status"}, new Object[]{Workflow.WorkflowStatus.FAILED}).get();
+
+        summary.setStatus(Workflow.WorkflowStatus.FAILED);
+        assertWorkflowSummary(workflow.getWorkflowId(), summary);
     }
 
     @Test
@@ -60,7 +118,7 @@ public class ElasticSearchDAOV6Test {
 
         dao.indexTask(task);
 
-        List<String> tasks = tryFindResults(() -> getTasks(workflow));
+        List<String> tasks = tryFindResults(() -> searchTasks(workflow));
 
         assertEquals(summary.getTaskId(), tasks.get(0));
     }
@@ -74,7 +132,7 @@ public class ElasticSearchDAOV6Test {
 
         dao.asyncIndexTask(task).get();
 
-        List<String> tasks = tryFindResults(() -> getTasks(workflow));
+        List<String> tasks = tryFindResults(() -> searchTasks(workflow));
 
         assertEquals(summary.getTaskId(), tasks.get(0));
     }
@@ -161,21 +219,21 @@ public class ElasticSearchDAOV6Test {
         assertTrue("Not all event executions was indexed", indexedExecutions.containsAll(Arrays.asList(execution1, execution2)));
     }
 
-    private void assertWorkflowSummary(Workflow workflow, WorkflowSummary summary) {
-        assertEquals(summary.getWorkflowType(), dao.get(workflow.getWorkflowId(), "workflowType"));
-        assertEquals(String.valueOf(summary.getVersion()), dao.get(workflow.getWorkflowId(), "version"));
-        assertEquals(summary.getWorkflowId(), dao.get(workflow.getWorkflowId(), "workflowId"));
-        assertEquals(summary.getCorrelationId(), dao.get(workflow.getWorkflowId(), "correlationId"));
-        assertEquals(summary.getStartTime(), dao.get(workflow.getWorkflowId(), "startTime"));
-        assertEquals(summary.getUpdateTime(), dao.get(workflow.getWorkflowId(), "updateTime"));
-        assertEquals(summary.getEndTime(), dao.get(workflow.getWorkflowId(), "endTime"));
-        assertEquals(summary.getStatus().name(), dao.get(workflow.getWorkflowId(), "status"));
-        assertEquals(summary.getInput(), dao.get(workflow.getWorkflowId(), "input"));
-        assertEquals(summary.getOutput(), dao.get(workflow.getWorkflowId(), "output"));
-        assertEquals(summary.getReasonForIncompletion(), dao.get(workflow.getWorkflowId(), "reasonForIncompletion"));
-        assertEquals(String.valueOf(summary.getExecutionTime()), dao.get(workflow.getWorkflowId(), "executionTime"));
-        assertEquals(summary.getEvent(), dao.get(workflow.getWorkflowId(), "event"));
-        assertEquals(summary.getFailedReferenceTaskNames(), dao.get(workflow.getWorkflowId(), "failedReferenceTaskNames"));
+    private void assertWorkflowSummary(String workflowId, WorkflowSummary summary) {
+        assertEquals(summary.getWorkflowType(), dao.get(workflowId, "workflowType"));
+        assertEquals(String.valueOf(summary.getVersion()), dao.get(workflowId, "version"));
+        assertEquals(summary.getWorkflowId(), dao.get(workflowId, "workflowId"));
+        assertEquals(summary.getCorrelationId(), dao.get(workflowId, "correlationId"));
+        assertEquals(summary.getStartTime(), dao.get(workflowId, "startTime"));
+        assertEquals(summary.getUpdateTime(), dao.get(workflowId, "updateTime"));
+        assertEquals(summary.getEndTime(), dao.get(workflowId, "endTime"));
+        assertEquals(summary.getStatus().name(), dao.get(workflowId, "status"));
+        assertEquals(summary.getInput(), dao.get(workflowId, "input"));
+        assertEquals(summary.getOutput(), dao.get(workflowId, "output"));
+        assertEquals(summary.getReasonForIncompletion(), dao.get(workflowId, "reasonForIncompletion"));
+        assertEquals(String.valueOf(summary.getExecutionTime()), dao.get(workflowId, "executionTime"));
+        assertEquals(summary.getEvent(), dao.get(workflowId, "event"));
+        assertEquals(summary.getFailedReferenceTaskNames(), dao.get(workflowId, "failedReferenceTaskNames"));
     }
 
     private <T> List<T> tryFindResults(Supplier<List<T>> searchFunction) {
@@ -183,9 +241,10 @@ public class ElasticSearchDAOV6Test {
     }
 
     private <T> List<T> tryFindResults(Supplier<List<T>> searchFunction, int resultsCount) {
+        List<T> result = Collections.emptyList();
         for (int i = 0; i < 20; i++) {
-            List<T> result = searchFunction.get();
-            if (result.size() >= resultsCount) {
+            result = searchFunction.get();
+            if (result.size() == resultsCount) {
                 return result;
             }
             try {
@@ -194,10 +253,14 @@ public class ElasticSearchDAOV6Test {
                 throw new RuntimeException(e.getMessage(), e);
             }
         }
-        return Collections.emptyList();
+        return result;
     }
 
-    private List<String> getTasks(Workflow workflow) {
+    private List<String> searchWorkflows(String workflowId) {
+        return dao.searchWorkflows("", "workflowId:\"" + workflowId + "\"", 0, 100, Collections.emptyList()).getResults();
+    }
+
+    private List<String> searchTasks(Workflow workflow) {
         return dao.searchTasks("", "workflowId:\"" + workflow.getWorkflowId() + "\"", 0, 100, Collections.emptyList()).getResults();
     }
 
