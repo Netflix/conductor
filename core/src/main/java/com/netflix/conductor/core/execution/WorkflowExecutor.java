@@ -33,6 +33,7 @@ import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
@@ -98,6 +99,8 @@ public class WorkflowExecutor {
 	private boolean lazyDecider;
 
 	private ParametersUtils pu = new ParametersUtils();
+
+	private CommonParams commonparams;
 
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ObjectMapper om, AuthManager auth, Configuration config) {
@@ -1458,10 +1461,10 @@ public class WorkflowExecutor {
 
 
 	public Map<String, Object> validateAuthContext(HttpHeaders headers) {
-		if (!this.validateAuthContext ) {
+		if (!this.validateAuth ) {
 			return null;
 		}
-		String authString = headers.getRequestHeader("Authorization-Context").get(0);
+		String authString = headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0);
 		Map<String, Object> decoded = auth.decode(authString);
 		return decoded;
 	}

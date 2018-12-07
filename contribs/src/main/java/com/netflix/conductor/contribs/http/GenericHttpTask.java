@@ -8,6 +8,7 @@ import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.auth.AuthResponse;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
@@ -42,7 +43,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	static final String REQUEST_PARAMETER_NAME = "http_request";
 	static final String RESPONSE_PARAMETER_NAME = "http_response";
 	static final String STATUS_MAPPING_PARAMETER_NAME = "status_mapping";
-
+	private CommonParams commonparams;
 	protected Configuration config;
 	protected ObjectMapper om;
 	private AuthManager auth;
@@ -146,8 +147,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
 			headers.put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
 		}
-		if (headers.containsKey("Authorization-Context")) {
-			headers.put("Authorization-Context", "xxxxxxxxxxxxxxxxxxx");
+		if (headers.containsKey(commonparams.AUTH_CONTEXT)) {
+			headers.put(commonparams.AUTH_CONTEXT, "xxxxxxxxxxxxxxxxxxx");
 		}
 		logger.debug("http task headers " + headers);
 
@@ -158,8 +159,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 			if (input.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
 				input.getHeaders().put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
 			}
-			if (input.getHeaders().containsKey("Authorization-Context")) {
-				input.getHeaders().put("Authorization-Context", "xxxxxxxxxxxxxxxxxxx");
+			if (input.getHeaders().containsKey(commonparams.AUTH_CONTEXT)) {
+				input.getHeaders().put(commonparams.AUTH_CONTEXT, "xxxxxxxxxxxxxxxxxxx");
 			}
 
 			task.getInputData().put(REQUEST_PARAMETER_NAME, input);
@@ -237,11 +238,9 @@ class GenericHttpTask extends WorkflowSystemTask {
 	}
 	private void setAuthorizationContext(Input input,Map<String, Object> authorizationContext) throws Exception {
 		if(MapUtils.isNotEmpty(authorizationContext)) {
-			input.getHeaders().put("Authorization-Context", authorizationContext);
-		}
-		else
-		{
-			input.getHeaders().put("Authorization-Context", "");
+			input.getHeaders().put(commonparams.AUTH_CONTEXT, authorizationContext);
+		} else {
+			input.getHeaders().put(commonparams.AUTH_CONTEXT, "");
 		}
 	}
 	void setReasonForIncompletion(HttpResponse response, Task task) {

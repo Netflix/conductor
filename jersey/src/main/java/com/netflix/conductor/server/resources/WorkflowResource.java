@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
@@ -72,6 +73,8 @@ public class WorkflowResource {
 
 	private int maxSearchSize;
 
+	private CommonParams commonparams;
+
 	@Inject
 	public WorkflowResource(WorkflowExecutor executor, ExecutionService service,
 							MetadataService metadata, Configuration config) {
@@ -115,8 +118,8 @@ public class WorkflowResource {
 			request.setCorrelationId(correlationId);
 		}
 		Map<String, Object> authContext=null;
-		if(headers.getRequestHeader("Authorization-Context")!= null ) {
-			if(StringUtils.isNotEmpty(headers.getRequestHeader("Authorization-Context").get(0)))
+		if(headers.getRequestHeader(commonparams.AUTH_CONTEXT)!= null ) {
+			if(StringUtils.isNotEmpty(headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0)))
 				{
 					authContext = executor.validateAuthContext(headers);
 				}
