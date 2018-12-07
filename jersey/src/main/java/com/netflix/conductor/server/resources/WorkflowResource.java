@@ -118,6 +118,7 @@ public class WorkflowResource {
 			request.setCorrelationId(correlationId);
 		}
 		Map<String, Object> authContext=null;
+
 		if(headers.getRequestHeader(commonparams.AUTH_CONTEXT)!= null ) {
 			if(StringUtils.isNotEmpty(headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0)))
 				{
