@@ -828,6 +828,14 @@ public class WorkflowExecutor {
 				}
 			}
 		}
+		Task task2 = edao.getTask(result.getTaskId());
+		if (task2.getStatus().isTerminal()) {
+			// Task was already updated....
+			queue.remove(QueueUtils.getQueueName(task2), result.getTaskId());
+			String msg = "Task is already terminal as " + task2.getStatus() + "@" + task2.getEndTime() + ", workflow status=" + wf.getStatus() + ", workflowId=" + wf.getWorkflowId() + ", taskId=" + task2.getTaskId()+",correlationId="+wf.getCorrelationId();
+			logger.warn(msg);
+			return;
+		}
 		edao.updateTask(task);
 
 		result.getLogs().forEach(tl -> tl.setTaskId(task.getTaskId()));
@@ -1471,6 +1479,22 @@ public class WorkflowExecutor {
 
 	public Task getTask(String taskId) {
 		return edao.getTask(taskId);
+	}
+
+	public void resetStartTime(String workflowId, String taskRefName) {
+		Workflow workflow = edao.getWorkflow(workflowId, true);
+		Task task = workflow.getTasks().stream()
+				.filter(t -> t.getReferenceTaskName().equalsIgnoreCase(taskRefName))
+				.filter(t -> t.getStatus().equals(Status.IN_PROGRESS))
+				.findFirst().orElse(null);
+		if (task != null) {
+			task.setStartTime(System.currentTimeMillis());
+			// We must reset endtime only when it is set
+			if (task.getEndTime() > 0) {
+				task.setEndTime(System.currentTimeMillis());
+			}
+			edao.updateTask(task);
+		}
 	}
 
 	private void cancelTasks(Workflow workflow, List<Task> tasks) throws Exception {

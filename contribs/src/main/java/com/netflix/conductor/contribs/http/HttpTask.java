@@ -117,18 +117,24 @@ public class HttpTask extends GenericHttpTask {
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
 			if (!handled) {
-				if (response.statusCode > 199 && response.statusCode < 300) {
-					task.setStatus(Status.COMPLETED);
-				} else {
-					task.setStatus(Task.Status.FAILED);
+				handled = handleResponseMapping(task, response);
+				if (!handled) {
+					if (response.statusCode > 199 && response.statusCode < 300) {
+						task.setStatus(Status.COMPLETED);
+					} else {
+						task.setStatus(Task.Status.FAILED);
+					}
 				}
 			}
+
 			// Check the http response validation. It will overwrite the task status if needed
 			if (task.getStatus() == Status.COMPLETED) {
 				checkHttpResponseValidation(task, response);
 			} else {
 				setReasonForIncompletion(response, task);
 			}
+			handleResetStartTime(task, executor);
+
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {
 			logger.error("http task failed for workflowId=" + workflow.getWorkflowId()

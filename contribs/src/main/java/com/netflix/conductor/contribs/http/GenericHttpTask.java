@@ -12,6 +12,7 @@ import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.sun.jersey.api.client.Client;
@@ -44,6 +45,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 	static final String RESPONSE_PARAMETER_NAME = "http_response";
 	static final String STATUS_MAPPING_PARAMETER_NAME = "status_mapping";
 	private CommonParams commonparams;
+	static final String RESPONSE_MAPPING_PARAMETER_NAME = "response_mapping";
+	static final String RESET_START_TIME_PARAMETER_NAME = "reset_startTime";
 	protected Configuration config;
 	protected ObjectMapper om;
 	private AuthManager auth;
@@ -253,7 +256,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	boolean handleStatusMapping(Task task, HttpResponse response) {
 		Object param = task.getInputData().get(STATUS_MAPPING_PARAMETER_NAME);
 		if (param == null) {
@@ -275,5 +277,57 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 		task.setStatus(taskStatus);
 		return true;
+	}
+
+	boolean handleResponseMapping(Task task, HttpResponse response) {
+		Object param = task.getInputData().get(RESPONSE_MAPPING_PARAMETER_NAME);
+		if (param == null) {
+			return false;
+		}
+		if (!(param instanceof Map)) {
+			throw new RuntimeException("The " + RESPONSE_MAPPING_PARAMETER_NAME + " is not an object");
+		}
+		Map<String, Task.Status> responseMapping = om.convertValue(param, new TypeReference<Map<String, Task.Status>>() {
+		});
+		if (responseMapping.isEmpty()) {
+			return false;
+		}
+		for (Map.Entry<String, Task.Status> entry : responseMapping.entrySet()) {
+			String condition = entry.getKey();
+			Task.Status status = entry.getValue();
+			try {
+				Boolean success = ScriptEvaluator.evalBool(condition, response);
+				if (success) {
+					task.setStatus(status);
+					return true;
+				}
+			} catch (Exception ex) {
+				logger.error("Evaluation failed for " + condition + " with " + ex.getMessage(), ex);
+			}
+		}
+		return false;
+	}
+
+	void handleResetStartTime(Task task, WorkflowExecutor executor) {
+		if (!Task.Status.FAILED.equals(task.getStatus())) {
+			return;
+		}
+		Object param = task.getInputData().get(RESET_START_TIME_PARAMETER_NAME);
+		if (param == null) {
+			return;
+		}
+		if (!(param instanceof Map)) {
+			throw new RuntimeException("The " + RESET_START_TIME_PARAMETER_NAME + " is not an object");
+		}
+		Map<String, Object> resetStartTime = om.convertValue(param, new TypeReference<Map<String, Object>>() {
+		});
+		if (resetStartTime.isEmpty()) {
+			return;
+		}
+		String workflowId = (String)resetStartTime.get("workflowId");
+		String taskRefName = (String)resetStartTime.get("taskRefName");
+		if (StringUtils.isNoneEmpty(workflowId, taskRefName)) {
+			executor.resetStartTime(workflowId, taskRefName);
+		}
 	}
 }

@@ -141,7 +141,7 @@ class WorkflowDetails extends Component {
       return wf.reasonForIncompletion;
     }
     function showFailure(){
-      if(wf.status == 'FAILED' || wf.status == 'CANCELLED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT' || wf.status == 'RESET'){
+      if(wf.status == 'FAILED' || wf.status == 'CANCELLED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT' || wf.status == 'RESET' || wf.status == 'FAILED_NO_RETRY'){
         return '';
       }
       return 'none';
@@ -150,7 +150,7 @@ class WorkflowDetails extends Component {
       <div className="ui-content">
       <h4>
         {wf.workflowType}/{wf.version}
-        <span className={(wf.status == 'FAILED' || wf.status == 'CANCELLED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT' || wf.status == 'RESET') ? "red":"green"}>
+        <span className={(wf.status == 'FAILED' || wf.status == 'CANCELLED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT' || wf.status == 'RESET' || wf.status == 'FAILED_NO_RETRY') ? "red":"green"}>
           {wf.status}
         </span>
         <span>
@@ -204,7 +204,7 @@ class WorkflowDetails extends Component {
             <pre style={{height:'200px'}} id="wfinput">{JSON.stringify(wf.input, null, 3)}</pre>
             <strong>Workflow Output <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#wfoutput"></i></strong>
             <pre style={{height:'200px'}} id="wfoutput">{JSON.stringify(wf.output==null?{}:wf.output, null, 3)}</pre>
-            {wf.status == 'FAILED' || wf.status == 'RESET'?<div><strong>Workflow Failure Reason (if any)</strong><pre>{wf.reasonForIncompletion?JSON.stringify(wf.reasonForIncompletion, null, 3):''}</pre></div>:''}
+            {wf.status == 'FAILED' || wf.status == 'RESET' || wf.status == 'FAILED_NO_RETRY'?<div><strong>Workflow Failure Reason (if any)</strong><pre>{wf.reasonForIncompletion?JSON.stringify(wf.reasonForIncompletion, null, 3):''}</pre></div>:''}
           </div>
           </Tab>
           <Tab eventKey={4} title="JSON">

@@ -89,7 +89,7 @@ public class KeyValueLayout extends Layout {
 
     @Override
     public boolean ignoresThrowable() {
-        return true;
+        return false; // See ONECOND-708: https://jira.d3nw.com/browse/ONECOND-708
     }
 
     @Override

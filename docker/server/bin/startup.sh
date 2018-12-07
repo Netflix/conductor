@@ -26,5 +26,11 @@ fi
 # Log the configuration settings as defaults
 echo "Starting conductor server with the following defaults: $(cat $config_file | grep = | grep -v '#' | sed ':a;N;$!ba;s/\n/ /g')"
 
+# Add loggers
+for logger in $(env | grep log4j_logger | sed 's/_/./g');
+do
+    echo ${logger} >> /app/config/log4j.properties
+done
+
 # Run java in the foreground and stream messages directly to stdout
-exec java -jar conductor-server-*-all.jar $config_file
+exec java -Dlog4j.configuration="file:/app/config/log4j.properties" -jar conductor-server-*-all.jar $config_file
