@@ -1,7 +1,8 @@
 package com.netflix.conductor.dao.es6.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
+import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -14,7 +15,7 @@ import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.es5.index.query.parser.Expression;
+import com.netflix.conductor.dao.es6.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
@@ -99,7 +100,11 @@ public class ElasticSearchDAOV6 implements IndexDAO {
 
     private String taskIndexName;
 
+    private String eventIndexPrefix;
+
     private String eventIndexName;
+
+    private String messageIndexPrefix;
 
     private String messageIndexName;
 
@@ -129,6 +134,8 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         this.workflowIndexName = indexName(WORKFLOW_DOC_TYPE);
         this.taskIndexName = indexName(TASK_DOC_TYPE);
         this.logIndexPrefix = this.indexPrefix + "_" + LOG_DOC_TYPE;
+        this.messageIndexPrefix = this.indexPrefix + "_" + MSG_DOC_TYPE;
+        this.eventIndexPrefix = this.indexPrefix + "_" + EVENT_DOC_TYPE;
 
         int corePoolSize = 6;
         int maximumPoolSize = 12;
@@ -357,6 +364,43 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     }
 
     @Override
+    public List<Message> getMessages(String queue) {
+        try {
+            Expression expression = Expression.fromString("queue='" + queue + "'");
+            QueryBuilder queryBuilder = expression.getFilterBuilder();
+
+            BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
+            QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery("*");
+            BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
+
+            final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(messageIndexPrefix + "*")
+                    .setQuery(fq).setTypes(MSG_DOC_TYPE)
+                    .addSort(SortBuilders.fieldSort("created")
+                            .order(SortOrder.ASC));
+
+            SearchResponse response = srb.execute().actionGet();
+            SearchHit[] hits = response.getHits().getHits();
+            return extractMessages(hits);
+        } catch (Exception e) {
+            logger.error("Failed to get messages for queue: {}", queue, e);
+        }
+        return null;
+    }
+
+    private List<Message> extractMessages(SearchHit[] hits) throws IOException {
+        TypeFactory factory = TypeFactory.defaultInstance();
+        MapType type = factory.constructMapType(HashMap.class, String.class, String.class);
+        List<Message> messages = new ArrayList<>(hits.length);
+        for (SearchHit hit : hits) {
+            String source = hit.getSourceAsString();
+            Map<String, String> mapSource = objectMapper.readValue(source, type);
+            Message msg = new Message(mapSource.get("messageId"), mapSource.get("payload"), null);
+            messages.add(msg);
+        }
+        return messages;
+    }
+
+    @Override
     public void addEventExecution(EventExecution eventExecution) {
         try {
             byte[] doc = objectMapper.writeValueAsBytes(eventExecution);
@@ -366,6 +410,37 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         } catch (Throwable e) {
             logger.error("Failed to index event execution: {}", eventExecution.getId(), e);
         }
+    }
+
+    @Override
+    public List<EventExecution> getEventExecutions(String event) {
+        try {
+            Expression expression = Expression.fromString("event='" + event + "'");
+            QueryBuilder queryBuilder = expression.getFilterBuilder();
+
+            BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
+            QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery("*");
+            BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
+
+            final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(eventIndexPrefix + "*")
+                    .setQuery(fq).setTypes(EVENT_DOC_TYPE)
+                    .addSort(SortBuilders.fieldSort("created")
+                            .order(SortOrder.ASC));
+
+            SearchResponse response = srb.execute().actionGet();
+            SearchHit[] hits = response.getHits().getHits();
+            List<EventExecution> executions = new ArrayList<>(hits.length);
+            for (SearchHit hit : hits) {
+                String source = hit.getSourceAsString();
+                EventExecution tel = objectMapper.readValue(source, EventExecution.class);
+                executions.add(tel);
+            }
+            return executions;
+
+        } catch (Exception e) {
+            logger.error("Failed to get executions for event: {}", event, e);
+        }
+        return null;
     }
 
     @Override
