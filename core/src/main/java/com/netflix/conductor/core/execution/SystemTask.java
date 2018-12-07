@@ -185,6 +185,7 @@ public class SystemTask extends Task {
 	    theTask.setStatus(Status.SCHEDULED);
 	    theTask.setTaskType(taskToSchedule.getName());
 	    theTask.setTaskDefName(taskToSchedule.getName());
+            theTask.setTaskDescription(taskToSchedule.getDescription());
 	    theTask.setCorrelationId(workflow.getCorrelationId());
 	    theTask.setScheduledTime(System.currentTimeMillis());
 	    theTask.setRetryCount(retryCount);
