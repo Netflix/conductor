@@ -33,4 +33,4 @@ do
 done
 
 # Run java in the foreground and stream messages directly to stdout
-exec java -Dlog4j.configuration="file:/app/config/log4j.properties" -jar conductor-server-*-all.jar $config_file
+exec java $JAVA_OPTS -Dlog4j.configuration="file:/app/config/log4j.properties" -jar conductor-server-*-all.jar $config_file
