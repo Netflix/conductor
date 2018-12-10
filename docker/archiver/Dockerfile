@@ -15,7 +15,6 @@ RUN rm conductor-archiver.zip
 RUN mv conductor-archiver/* /app
 RUN rm -rf conductor-archiver
 
-RUN chmod +x /app/bin/conductor-archiver
 RUN chmod +x /app/startup.sh
 
 CMD [ "/app/startup.sh" ]
