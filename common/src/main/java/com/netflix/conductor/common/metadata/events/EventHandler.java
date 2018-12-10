@@ -36,6 +36,8 @@ public class EventHandler {
 
 	private boolean active;
 
+	private Map<String, String> tags = new HashMap<>();
+
 	public EventHandler() {
 
 	}
@@ -108,6 +110,14 @@ public class EventHandler {
 	 */
 	public void setActive(boolean active) {
 		this.active = active;
+	}
+
+	public Map<String, String> getTags() {
+		return tags;
+	}
+
+	public void setTags(Map<String, String> tags) {
+		this.tags = tags;
 	}
 
 	public static class Action {

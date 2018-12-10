@@ -202,6 +202,16 @@ public class WorkflowExecutor {
 			wf.setUpdateTime(null);
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
+
+			if (MapUtils.isNotEmpty(exists.getTags())) {
+				Map<String, Object> tagMap = pu.getTaskInputV2(exists.getTags(), wf, null, null);
+
+				Set<String> tags = tagMap.entrySet().stream()
+						.filter(e -> Objects.nonNull(e.getValue()) && StringUtils.isNotEmpty(e.getValue().toString()))
+						.map(e -> e.getKey() + e.getValue())
+						.collect(Collectors.toSet());
+				wf.setTags(tags);
+			}
 			edao.createWorkflow(wf);
 
 			// metrics

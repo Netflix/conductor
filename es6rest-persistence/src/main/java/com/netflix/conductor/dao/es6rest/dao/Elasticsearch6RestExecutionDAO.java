@@ -64,6 +64,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     private final static String CORR_ID_TO_WORKFLOWS = "CORRID_TO_WORKFLOW";
     private final static String POLL_DATA = "POLL_DATA";
     private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
+    private final static String WORKFLOW_TAGS = "WORKFLOW_TAGS";
 
     // static indexes and types
     private final Map<String, String> indexes = new HashMap<>();
@@ -89,6 +90,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         initIndexTypeNames(CORR_ID_TO_WORKFLOWS);
         initIndexTypeNames(POLL_DATA);
         initIndexTypeNames(EVENT_EXECUTION);
+        initIndexTypeNames(WORKFLOW_TAGS);
 
         // Explicitly init these indexes as they are using `es6runtime_***.json` resource file
         ensureIndexExists(indexes.get(TASK), types.get(TASK));
@@ -530,10 +532,10 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         List<String> dateStrs = dateStrBetweenDates(startTime, endTime);
         dateStrs.forEach(dateStr -> {
             QueryBuilder query1 = QueryBuilders
-                    .termQuery ("workflowType.keyword", workflowName);
+                    .termQuery("workflowType.keyword", workflowName);
 
             QueryBuilder query2 = QueryBuilders
-                    .termQuery ("dateStr.keyword", dateStr);
+                    .termQuery("dateStr.keyword", dateStr);
 
             QueryBuilder query = QueryBuilders.boolQuery().must(query1).must(query2);
 
@@ -700,6 +702,30 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         return pollData;
     }
 
+    @Override
+    public List<Workflow> getWorkflowsByTags(Set<String> tags) {
+        QueryBuilder query = QueryBuilders.termsQuery("tags.keyword", tags);
+
+        List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
+
+        return wraps.stream()
+                .map(map -> {
+                    String workflowId = (String) map.get("workflowId");
+                    return findOne(indexes.get(WORKFLOW), types.get(WORKFLOW), toId(workflowId), Workflow.class);
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean runningWorkflowsByTags(Set<String> tags) {
+        QueryBuilder query = QueryBuilders.termsQuery("tags.keyword", tags);
+
+        List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
+
+        return !wraps.isEmpty();
+    }
+
     private List<String> dateStrBetweenDates(Long startdatems, Long enddatems) {
         if (logger.isDebugEnabled())
             logger.debug("dateStrBetweenDates: startdatems={}, enddatems={}", startdatems, enddatems);
@@ -742,8 +768,10 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         // Add or remove from the pending workflows
         if (workflow.getStatus().isTerminal()) {
             deletePendingWorkflow(workflow);
+            addOrDeleteWorkflowTags(workflow, false);
         } else {
             addPendingWorkflow(workflow);
+            addOrDeleteWorkflowTags(workflow, true);
         }
 
         workflow.setTasks(tasks);
@@ -901,6 +929,21 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
                 "workflowType", workflow.getWorkflowType());
         insert(indexName, typeName, id, payload);
+    }
+
+    private void addOrDeleteWorkflowTags(Workflow workflow, boolean add) {
+        String indexName = indexes.get(WORKFLOW_TAGS);
+        String typeName = types.get(WORKFLOW_TAGS);
+        String id = toId(workflow.getWorkflowId());
+
+        if (add) {
+            Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
+                    "tags", workflow.getTags());
+
+            insert(indexName, typeName, id, payload);
+        } else {
+            delete(indexName, typeName, id);
+        }
     }
 
     private void deletePendingWorkflow(String workflowType, String workflowId) {

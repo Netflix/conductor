@@ -29,6 +29,7 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
@@ -171,11 +172,11 @@ public class EventProcessor {
 			for (EventHandler handler : handlers) {
 
 				String condition = handler.getCondition();
-				logger.debug("condition: {}", condition);
-				if (!StringUtils.isEmpty(condition)) {
+				if (StringUtils.isNotEmpty(condition)) {
+					logger.debug("condition: {}", condition);
 					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
 					if (!success) {
-						logger.error("handler {} condition {} did not match payload {}", handler.getName(), condition, payloadObj);
+						logger.debug("handler {} condition {} did not match payload {}", handler.getName(), condition, payloadObj);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setEvent(handler.getEvent());
@@ -188,6 +189,29 @@ public class EventProcessor {
 					}
 				}
 
+				if (MapUtils.isNotEmpty(handler.getTags())) {
+					Map<String, String> map = ScriptEvaluator.evaluateMap(handler.getTags(), payloadObj);
+					Set<String> tags = map.entrySet().stream()
+							.filter(e -> StringUtils.isNotEmpty(e.getValue()))
+							.map(e -> e.getKey() + e.getValue())
+							.collect(Collectors.toSet());
+					logger.debug("tags: {}", tags);
+
+					boolean anyRunning = es.runningWorkflowsByTags(tags);
+					if (!anyRunning) {
+						logger.debug("handler {} tags {} did not match payload {}", handler.getName(), tags, payloadObj);
+						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
+						ee.setCreated(System.currentTimeMillis());
+						ee.setEvent(handler.getEvent());
+						ee.setName(handler.getName());
+						ee.setStatus(Status.SKIPPED);
+						ee.getOutput().put("msg", payload);
+						ee.getOutput().put("tags", tags);
+						es.addEventExecution(ee);
+						continue;
+					}
+				}
+
 				int i = 0;
 				List<Action> actions = handler.getActions();
 				for (Action action : actions) {
@@ -195,7 +219,7 @@ public class EventProcessor {
 					if (StringUtils.isNotEmpty(action.getCondition())) {
 						Boolean success = ScriptEvaluator.evalBool(action.getCondition(), payloadObj);
 						if (!success) {
-							logger.debug("{} condition {} did not match payload {}", action, condition, payloadObj);
+							logger.debug("{} condition {} did not match payload {}", action, action.getCondition(), payloadObj);
 							EventExecution ee = new EventExecution(id, msg.getId());
 							ee.setCreated(System.currentTimeMillis());
 							ee.setEvent(handler.getEvent());
@@ -203,7 +227,7 @@ public class EventProcessor {
 							ee.setAction(action.getAction());
 							ee.setStatus(Status.SKIPPED);
 							ee.getOutput().put("msg", payload);
-							ee.getOutput().put("condition", condition);
+							ee.getOutput().put("condition", action.getCondition());
 							es.addEventExecution(ee);
 							continue;
 						}

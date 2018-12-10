@@ -368,5 +368,14 @@ public class ExecutionService {
 	public List<TaskExecLog> getTaskLogs(String taskId) {
 		return indexer.getTaskLogs(taskId);		
 	}
-	
+
+
+	public boolean runningWorkflowsByTags(Set<String> tags) {
+		return edao.runningWorkflowsByTags(tags);
+	}
+
+	public List<Workflow> getWorkflowsByTags(Set<String> tags) {
+		return edao.getWorkflowsByTags(tags);
+	}
+
 }
