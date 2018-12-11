@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.spectator.api.Counter;
+import com.netflix.spectator.api.histogram.PercentileTimer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -133,6 +135,7 @@ public class InfoResource {
 
 		return output;
 	}
+
 	@GET
 	@Path("/metrics")
 	@ApiOperation(value = "Get the metrics")
@@ -140,16 +143,32 @@ public class InfoResource {
 	public Map<String, Object> metrics() {
 		Map<String, Object> output = new TreeMap<>();
 
+		// Counters
 		Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
+
 		counters.forEach((name, map) -> {
 			map.forEach((tags, counter) -> {
-				// Concatenate all tags into single line: tag1.tag2.tagX excluding class name
-				String joined = tags.entrySet().stream()
-						.filter(entry -> !entry.getKey().equals("class"))
-						.map(Map.Entry::getValue).collect(Collectors.joining("."));
+				output.put(name + "|" + joinTags(tags) + ".counter", counter.count());
+			});
+		});
 
-				// Emit the counter name
-				output.put(name + "." + joined + ".counter", counter.count());
+		// Gauges
+		Map<String, Map<Map<String, String>, AtomicLong>> gauges = Monitors.getGauges();
+
+		gauges.forEach((name, map) -> {
+			map.forEach((tags, value) -> {
+				output.put(name + "|" + joinTags(tags) + ".value", value.get());
+			});
+		});
+
+		// Timers
+		Map<String, Map<Map<String, String>, PercentileTimer>> timers = Monitors.getTimers();
+
+		timers.forEach((name, map) -> {
+			map.forEach((tags, timer) -> {
+				String key = joinTags(tags);
+				output.put(name + "|" + key + ".count", timer.count());
+				output.put(name + "|" + key + ".totalTime", timer.totalTime());
 			});
 		});
 
