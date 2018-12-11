@@ -256,7 +256,7 @@ public class EventProcessor {
 				}
 			}
 
-			//queue.ack(Arrays.asList(msg));
+			queue.ack(Arrays.asList(msg));
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
