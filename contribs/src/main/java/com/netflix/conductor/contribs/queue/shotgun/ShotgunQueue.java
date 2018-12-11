@@ -156,7 +156,6 @@ public class ShotgunQueue implements ObservableQueue {
     public void unack(List<Message> messages) {
         messages.forEach(msg -> {
             try {
-                System.out.println("unack for " + msg.getReceipt());
                 conn.unack(msg.getReceipt());
             } catch (Exception e) {
                 logger.error("unack failed with " + e.getMessage() + " for " + msg.getId());
