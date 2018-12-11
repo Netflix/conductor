@@ -2,7 +2,9 @@ import React from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { getWorkflowMetaDetails } from '../../actions/WorkflowActions';
+
 import WorkflowMetaDia from './WorkflowMetaDia'
+import WorkflowForm from './WorkflowForm'
 
 class WorkflowMetaDetails extends React.Component {
 
@@ -27,11 +29,14 @@ class WorkflowMetaDetails extends React.Component {
 
   render() {
     let wf = this.state.workflowMeta;
+    let name = this.state.name;
+    let version = this.state.version;
+
     if(wf == null) {
       wf = {tasks: []};
     }
     return (
-      <div className="ui-content">
+      <div className="ui-content" style={{marginTop: "5 em"}}>
         <Tabs>
           <Tab eventKey={1} title="Diagram">
             <div><WorkflowMetaDia meta={wf} tasks={[]}/></div>
@@ -41,10 +46,15 @@ class WorkflowMetaDetails extends React.Component {
               {JSON.stringify(this.state.workflowMeta, null, 2)}
           </pre></div>
           </Tab>
+          <Tab eventKey={3} title="Trigger">
+            <div style={{margin: "30 em"}}>
+              <WorkflowForm workflowDef = {wf} name = {name} version = {version}/>
+            </div>
+          </Tab>
         </Tabs>
       </div>
     );
   }
-};
+}
 
 export default connect(state => state.workflow)(WorkflowMetaDetails);
