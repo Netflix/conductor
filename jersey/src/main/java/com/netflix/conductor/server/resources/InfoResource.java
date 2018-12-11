@@ -155,4 +155,11 @@ public class InfoResource {
 
 		return output;
 	}
+
+	private String joinTags(Map<String, String> tags) {
+		// Concatenate all tags into single line: tag1.tag2.tagX excluding class name
+		return tags.entrySet().stream()
+			.filter(entry -> !entry.getKey().equals("class"))
+			.map(Map.Entry::getValue).collect(Collectors.joining("."));
+	}
 }
