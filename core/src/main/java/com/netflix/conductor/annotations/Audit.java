@@ -25,8 +25,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Audit for the API and gRPC calls
- * Annotation 
+ * Audit annotation for the API and gRPC calls.
+ * Could be used to create custom AOP interceptor for audit purposes.
  */
 @Target({TYPE})
 @Retention(RUNTIME)
