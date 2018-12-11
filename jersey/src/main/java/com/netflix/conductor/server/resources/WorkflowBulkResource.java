@@ -19,6 +19,7 @@
 package com.netflix.conductor.server.resources;
 
 import com.google.common.base.Preconditions;
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.server.common.BulkResponse;
 import io.swagger.annotations.Api;
@@ -48,6 +49,7 @@ import java.util.List;
 @Produces({MediaType.APPLICATION_JSON})
 @Consumes({MediaType.APPLICATION_JSON})
 @Singleton
+@Audit
 public class WorkflowBulkResource {
 
     private static final int MAX_REQUEST_ITEMS = 1000;

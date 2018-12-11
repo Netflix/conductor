@@ -1,27 +1,25 @@
 package com.netflix.conductor.grpc.server.service;
 
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.grpc.MetadataServiceGrpc;
 import com.netflix.conductor.grpc.MetadataServicePb;
 import com.netflix.conductor.grpc.ProtoMapper;
-import com.netflix.conductor.grpc.WorkflowServicePb;
 import com.netflix.conductor.proto.TaskDefPb;
 import com.netflix.conductor.proto.WorkflowDefPb;
 import com.netflix.conductor.service.MetadataService;
-
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
-
+@Audit
 public class MetadataServiceImpl extends MetadataServiceGrpc.MetadataServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataServiceImpl.class);
     private static final ProtoMapper PROTO_MAPPER = ProtoMapper.INSTANCE;

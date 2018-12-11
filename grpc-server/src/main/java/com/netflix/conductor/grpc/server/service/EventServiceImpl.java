@@ -1,5 +1,6 @@
 package com.netflix.conductor.grpc.server.service;
 
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.grpc.EventServiceGrpc;
@@ -7,15 +8,14 @@ import com.netflix.conductor.grpc.EventServicePb;
 import com.netflix.conductor.grpc.ProtoMapper;
 import com.netflix.conductor.proto.EventHandlerPb;
 import com.netflix.conductor.service.MetadataService;
-
-import java.util.Map;
-
-import javax.inject.Inject;
-
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import java.util.Map;
+
+@Audit
 public class EventServiceImpl extends EventServiceGrpc.EventServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventServiceImpl.class);
     private static final ProtoMapper PROTO_MAPPER = ProtoMapper.INSTANCE;

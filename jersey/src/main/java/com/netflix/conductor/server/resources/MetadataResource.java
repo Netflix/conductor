@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.server.resources;
 
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.service.MetadataService;
@@ -42,6 +43,7 @@ import java.util.List;
 @Path("/metadata")
 @Produces({MediaType.APPLICATION_JSON})
 @Consumes({MediaType.APPLICATION_JSON})
+@Audit
 public class MetadataResource {
 	private final MetadataService metadataService;
 	

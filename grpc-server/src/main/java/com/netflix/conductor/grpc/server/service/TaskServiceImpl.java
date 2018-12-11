@@ -1,30 +1,29 @@
 package com.netflix.conductor.grpc.server.service;
 
+import com.netflix.conductor.annotations.Audit;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.grpc.ProtoMapper;
+import com.netflix.conductor.grpc.TaskServiceGrpc;
+import com.netflix.conductor.grpc.TaskServicePb;
+import com.netflix.conductor.proto.TaskPb;
+import com.netflix.conductor.service.ExecutionService;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
-import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.netflix.conductor.grpc.ProtoMapper;
-import com.netflix.conductor.proto.TaskPb;
-import com.netflix.conductor.grpc.TaskServiceGrpc;
-import com.netflix.conductor.grpc.TaskServicePb;
-import io.grpc.Status;
-import io.grpc.stub.StreamObserver;
-
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.service.ExecutionService;
-import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.dao.QueueDAO;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-
+@Audit
 public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskServiceImpl.class);
     private static final ProtoMapper PROTO_MAPPER = ProtoMapper.INSTANCE;

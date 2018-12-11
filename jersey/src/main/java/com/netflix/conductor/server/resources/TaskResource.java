@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.server.resources;
 
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
@@ -51,6 +52,7 @@ import java.util.Map;
 @Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ MediaType.APPLICATION_JSON })
 @Singleton
+@Audit
 public class TaskResource {
 	private final TaskService taskService;
 

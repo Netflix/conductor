@@ -1,17 +1,17 @@
 package com.netflix.conductor.grpc.server.service;
 
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.runtime.health.api.HealthCheckAggregator;
-
+import io.grpc.health.v1.HealthCheckRequest;
+import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.health.v1.HealthGrpc;
+import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
-import io.grpc.health.v1.HealthCheckRequest;
-import io.grpc.health.v1.HealthCheckResponse;
-import io.grpc.health.v1.HealthGrpc;
-import io.grpc.stub.StreamObserver;
-
+@Audit
 public class HealthServiceImpl extends HealthGrpc.HealthImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthServiceImpl.class);
     private static final GRPCHelper GRPC_HELPER = new GRPCHelper(LOGGER);

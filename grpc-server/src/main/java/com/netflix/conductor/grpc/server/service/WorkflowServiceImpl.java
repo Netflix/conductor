@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.grpc.server.service;
 
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.run.SearchResult;
@@ -42,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Audit
 public class WorkflowServiceImpl extends WorkflowServiceGrpc.WorkflowServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskServiceImpl.class);
     private static final ProtoMapper PROTO_MAPPER = ProtoMapper.INSTANCE;

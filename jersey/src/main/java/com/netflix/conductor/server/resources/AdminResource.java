@@ -16,6 +16,7 @@
 
 package com.netflix.conductor.server.resources;
 
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.service.AdminService;
 import io.swagger.annotations.Api;
@@ -44,6 +45,7 @@ import java.util.Map;
 @Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ MediaType.APPLICATION_JSON })
 @Singleton
+@Audit
 public class AdminResource {
 	private final AdminService adminService;
 

@@ -19,6 +19,7 @@
 package com.netflix.conductor.server.resources;
 
 import com.google.common.base.Preconditions;
+import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
@@ -56,6 +57,7 @@ import java.util.Map;
 @Produces({MediaType.APPLICATION_JSON})
 @Consumes({MediaType.APPLICATION_JSON})
 @Singleton
+@Audit
 public class WorkflowResource {
 
     private final WorkflowService workflowService;
