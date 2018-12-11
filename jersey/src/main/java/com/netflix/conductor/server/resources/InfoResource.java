@@ -117,6 +117,23 @@ public class InfoResource {
 	}
 
 	@GET
+	@Path("/metrics/counters")
+	@ApiOperation(value = "Get the counter metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> counters() {
+		Map<String, Object> output = new TreeMap<>();
+
+		Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
+		counters.forEach((name, map) -> {
+			map.forEach((tags, counter) -> {
+				// Emit the counter name
+				output.put(name + "." + joinTags(tags) + ".counter", counter.count());
+			});
+		});
+
+		return output;
+	}
+	@GET
 	@Path("/metrics")
 	@ApiOperation(value = "Get the metrics")
 	@Produces(MediaType.APPLICATION_JSON)
