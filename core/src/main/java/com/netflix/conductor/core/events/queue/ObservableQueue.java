@@ -83,4 +83,6 @@ public interface ObservableQueue {
 	 */
 	default void close() { }
 
+	default void unack(List<Message> messages) {}
+
 }

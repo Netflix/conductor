@@ -142,7 +142,26 @@ public class ShotgunQueue implements ObservableQueue {
 
     @Override
     public List<String> ack(List<Message> messages) {
+        messages.forEach(msg -> {
+            try {
+                conn.ack(msg.getReceipt());
+            } catch (Exception e) {
+                logger.error("ack failed with " + e.getMessage() + " for " + msg.getId());
+            }
+        });
         return Collections.emptyList();
+    }
+
+    @Override
+    public void unack(List<Message> messages) {
+        messages.forEach(msg -> {
+            try {
+                System.out.println("unack for " + msg.getReceipt());
+                conn.unack(msg.getReceipt());
+            } catch (Exception e) {
+                logger.error("unack failed with " + e.getMessage() + " for " + msg.getId());
+            }
+        });
     }
 
     @Override
@@ -201,10 +220,12 @@ public class ShotgunQueue implements ObservableQueue {
             if (StringUtils.isNotEmpty(groupId)) {
                 logger.debug("Creating subscription with subject={}, groupId={}", subject, groupId);
                 subs = conn.subscribe(subject, service, groupId, this::onMessage);
+                subs.setManualAck(true);
             } else {
                 String uuid = UUID.randomUUID().toString();
                 logger.debug("Creating subscription with subject={}, groupId={}", subject, uuid);
                 subs = conn.subscribe(subject, service, uuid, this::onMessage);
+                subs.setManualAck(true);
             }
         } catch (Exception ex) {
             logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
@@ -217,6 +238,7 @@ public class ShotgunQueue implements ObservableQueue {
 
         Message dstMsg = new Message();
         dstMsg.setId(NUID.nextGlobal());
+        dstMsg.setReceipt(message.getID());
         dstMsg.setPayload(payload);
 
         messages.add(dstMsg);
