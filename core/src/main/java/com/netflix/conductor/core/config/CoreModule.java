@@ -28,6 +28,7 @@ import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.ParametersUtils;
+import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
@@ -76,6 +77,7 @@ public class CoreModule extends AbstractModule {
         bind(SubWorkflow.class).asEagerSingleton();
         bind(Wait.class).asEagerSingleton();
         bind(Event.class).asEagerSingleton();
+        bind(WorkflowSweeper.class).asEagerSingleton();
     }
 
     @Provides
