@@ -164,25 +164,6 @@ public class WorkflowResource {
 		return service.getExecutionStatus(workflowId, includeTasks);
 	}
 
-	@DELETE
-	@Path("/{workflowId}/remove")
-	@ApiOperation("Removes the workflow from the system")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
-	@Consumes(MediaType.WILDCARD)
-	public Response delete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
-		executor.validateAuth(workflowId, headers);
-
-		Response.ResponseBuilder builder = Response.noContent();
-		handleCorrelationId(workflowId, headers, builder);
-
-		NDC.push("rest-remove-"+ UUID.randomUUID().toString());
-		try {
-			executor.removeWorkflow(workflowId);
-		} finally {
-			NDC.remove();
-		}
-		return builder.build();
-	}
 
 	@GET
 	@Path("/running/{name}")
