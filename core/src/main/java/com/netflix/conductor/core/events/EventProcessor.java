@@ -260,6 +260,7 @@ public class EventProcessor {
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
+			queue.unack(Collections.singletonList(msg));
 		} finally {
 			Monitors.recordEventQueueMessagesProcessed(queue.getType(), queue.getName(), 1);
 		}

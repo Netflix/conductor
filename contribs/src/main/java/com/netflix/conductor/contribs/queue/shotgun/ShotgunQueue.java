@@ -58,12 +58,14 @@ public class ShotgunQueue implements ObservableQueue {
     private final String dns;
     private Subscription subs;
     private OneMQClient conn;
+    private boolean manualAck;
 
-    public ShotgunQueue(String dns, String service, String queueURI, Duration[] publishRetryIn) {
+    public ShotgunQueue(String dns, String service, String queueURI, Duration[] publishRetryIn, boolean manualAck) {
         this.dns = dns;
         this.service = service;
         this.queueURI = queueURI;
         this.publishRetryIn = publishRetryIn;
+        this.manualAck = manualAck;
 
         // If groupId specified (e.g. subject:groupId) - split to subject & groupId
         if (queueURI.contains(":")) {
@@ -142,11 +144,14 @@ public class ShotgunQueue implements ObservableQueue {
 
     @Override
     public List<String> ack(List<Message> messages) {
+        if (!manualAck) {
+            return Collections.emptyList();
+        }
         messages.forEach(msg -> {
             try {
                 conn.ack(msg.getReceipt());
             } catch (Exception e) {
-                logger.error("ack failed with " + e.getMessage() + " for " + msg.getId());
+                logger.error("ack failed with " + e.getMessage() + " for " + msg.getId(), e);
             }
         });
         return Collections.emptyList();
@@ -158,7 +163,7 @@ public class ShotgunQueue implements ObservableQueue {
             try {
                 conn.unack(msg.getReceipt());
             } catch (Exception e) {
-                logger.error("unack failed with " + e.getMessage() + " for " + msg.getId());
+                logger.error("unack failed with " + e.getMessage() + " for " + msg.getId(), e);
             }
         });
     }
@@ -219,12 +224,12 @@ public class ShotgunQueue implements ObservableQueue {
             if (StringUtils.isNotEmpty(groupId)) {
                 logger.debug("Creating subscription with subject={}, groupId={}", subject, groupId);
                 subs = conn.subscribe(subject, service, groupId, this::onMessage);
-                subs.setManualAck(true);
+                subs.setManualAck(manualAck);
             } else {
                 String uuid = UUID.randomUUID().toString();
                 logger.debug("Creating subscription with subject={}, groupId={}", subject, uuid);
                 subs = conn.subscribe(subject, service, uuid, this::onMessage);
-                subs.setManualAck(true);
+                subs.setManualAck(manualAck);
             }
         } catch (Exception ex) {
             logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
