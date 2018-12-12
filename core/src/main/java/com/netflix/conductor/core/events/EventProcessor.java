@@ -30,6 +30,7 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
@@ -145,7 +146,7 @@ public class EventProcessor {
 
 		try {
 
-			List<Future<Void>> futures = new LinkedList<>();
+			List<Future<Boolean>> futures = new LinkedList<>();
 
 			String payload = msg.getPayload();
 			Object payloadObj = null;
@@ -199,7 +200,7 @@ public class EventProcessor {
 
 					boolean anyRunning = es.runningWorkflowsByTags(tags);
 					if (!anyRunning) {
-						logger.debug("handler {} tags {} did not match payload {}", handler.getName(), tags, payloadObj);
+						logger.debug("handler {} for payload {} did not match workflows with tags {}", handler.getName(), payloadObj, tags);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setEvent(handler.getEvent());
@@ -240,7 +241,7 @@ public class EventProcessor {
 					ee.setAction(action.getAction());
 					ee.setStatus(Status.IN_PROGRESS);
 					if (es.addEventExecution(ee)) {
-						Future<Void> future = execute(ee, action, payload);
+						Future<Boolean> future = execute(ee, action, payload);
 						futures.add(future);
 					} else {
 						logger.warn("Duplicate delivery/execution? {}", id);
@@ -248,15 +249,22 @@ public class EventProcessor {
 				}
 			}
 
-			for (Future<Void> future : futures) {
+			boolean anySuccess = false;
+			for (Future<Boolean> future : futures) {
 				try {
-					future.get();
+					if (BooleanUtils.isTrue(future.get())) {
+						anySuccess = true;
+					}
 				} catch (Exception e) {
 					logger.error(e.getMessage(), e);
 				}
 			}
 
-			queue.ack(Arrays.asList(msg));
+			if (anySuccess) {
+				queue.ack(Collections.singletonList(msg));
+			} else {
+				queue.unack(Collections.singletonList(msg));
+			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -266,8 +274,9 @@ public class EventProcessor {
 		}
 	}
 
-	private Future<Void> execute(EventExecution ee, Action action, String payload) {
+	private Future<Boolean> execute(EventExecution ee, Action action, String payload) {
 		return executors.submit(() -> {
+			boolean success = false;
 			NDC.push("event-"+ee.getMessageId());
 			try {
 
@@ -275,16 +284,17 @@ public class EventProcessor {
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);
+					success = (Boolean) output.get("conductor.event.success");
 				}
 				ee.setStatus(Status.COMPLETED);
 				es.updateEventExecution(ee);
 
-				return null;
+				return success;
 			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
-				return null;
+				return success;
 			} finally {
 				NDC.remove();
 			}

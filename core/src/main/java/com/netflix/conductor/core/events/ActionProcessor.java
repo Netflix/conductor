@@ -32,6 +32,7 @@ import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.TaskUtils;
 import com.netflix.conductor.service.MetadataService;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -263,12 +264,13 @@ public class ActionProcessor {
 		EventHandler.FindUpdate params = action.getFind_update();
 		Map<String, Object> op = new HashMap<>();
 		try {
-			JavaEventAction javaEventAction = new FindUpdateAction(executor);
-			javaEventAction.handle(action, payload, event, messageId);
+			FindUpdateAction findUpdateAction = new FindUpdateAction(executor);
+			List<String> ids = findUpdateAction.handleInternal(action, payload, event, messageId);
 
 			op.put("conductor.event.name", event);
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.success", CollectionUtils.isNotEmpty(ids));
 
 		} catch (Exception e) {
 			logger.error("find_update: failed with " + e.getMessage() + " for action=" + params + ", payload=" + payload, e);
