@@ -116,8 +116,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         this.logIndexPrefix = config.getTasklogIndexName();
 
         // Set up a workerpool for performing async operations.
-        int corePoolSize = 6;
-        int maximumPoolSize = 12;
+        int corePoolSize = 10;
+        int maximumPoolSize = 20;
         long keepAliveTime = 1L;
         this.executorService = new ThreadPoolExecutor(corePoolSize,
                 maximumPoolSize,
