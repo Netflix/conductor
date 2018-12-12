@@ -35,6 +35,7 @@ import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -727,7 +728,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
     @Override
     public boolean runningWorkflowsByTags(Set<String> tags) {
-        QueryBuilder query = QueryBuilders.termsQuery("tags.keyword", tags);
+        BoolQueryBuilder query = QueryBuilders.boolQuery();
+        tags.forEach(tag -> query.must(QueryBuilders.termQuery("tags.keyword", tag)));
 
         List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
 
