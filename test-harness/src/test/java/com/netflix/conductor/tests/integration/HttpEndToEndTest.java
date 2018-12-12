@@ -31,7 +31,7 @@ import org.junit.BeforeClass;
  */
 public class HttpEndToEndTest extends AbstractHttpEndToEndTest {
 
-    private static final int SERVER_PORT = 8080;
+    private static final int SERVER_PORT = 8079;
 
     @BeforeClass
     public static void setup() throws Exception {
