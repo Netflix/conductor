@@ -7,36 +7,43 @@ class WorkflowForm extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      title: props.title,
       name: props.name,
       version: props.version,
       workflowDef: props.workflowDef,
-      request: {
-        correlationId: "",
-        input: {},
-        taskToDomain: {},
-        externalInputPayloadStoragePath: ""
-      }
+      correlationId: "",
+      input: {},
+      taskToDomain: {},
+      externalInputPayloadStoragePath: ""
     };
 
-    this.handleRequestChange = this.handleRequestChange.bind(this);
+    this.handleFormChange = this.handleFormChange.bind(this);
     this.handleFormSubmit = this.handleFormSubmit.bind(this);
     this.renderWorkflowInputs = this.renderWorkflowInputs.bind(this);
-    this.renderWorkflowInputs = this.renderWorkflowInputs.bind(this);
+    this.renderWorkflowTasks = this.renderWorkflowTasks.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.state.title = nextProps.title;
     this.state.name = nextProps.name;
     this.state.version = nextProps.version;
     this.state.workflowDef = nextProps.workflowDef;
   }
 
-  handleRequestChange(event) {
-    try {
-      this.state.request = JSON.parse(event.target.value);
-    } catch (err) {
-      console.error(err);
+  handleFormChange(callback, as) {
+    return (event) => {
+      if (typeof as === 'undefined') {
+        as = "string";
+      }
+      let value = event.target.value;
+      if (as === "json|string" || as === "json") {
+        try {
+          value = JSON.parse(event.target.value)
+        } catch (err) {
+          if (as === "json") {
+            throw err;
+          }
+        }
+      }
+      callback(value, event.target.name, event);
     }
   }
 
@@ -46,10 +53,12 @@ class WorkflowForm extends React.Component {
   }
 
   renderWorkflowInputs() {
-    const inputList = this.state.workflowDef && this.state.workflowDef.inputParameters ? this.state.workflowDef.inputParameters.map((inputParameter) =>
+    const inputList = this.state.workflowDef && this.state.workflowDef.inputParameters
+      ? this.state.workflowDef.inputParameters.map((inputParameter) =>
       <tr>
         <td>{inputParameter}</td>
-        <td><input className="form-control" type="text" name={inputParameter} placeholder={"input parameter"}/></td>
+        <td><input className="form-control" type="text" name={inputParameter} placeholder={"input parameter"}
+                   onChange={this.handleFormChange((value, name) => this.state.input[name] = value, "json|string")}/></td>
       </tr>
     ) : [];
     return (
@@ -68,12 +77,15 @@ class WorkflowForm extends React.Component {
   }
 
   renderWorkflowTasks() {
-    const taskList = this.state.workflowDef && this.state.workflowDef.tasks ? this.state.workflowDef.tasks.map((task) =>
-      <tr>
-        <td>{task.name}</td>
-        <td><input className="form-control" type="text" name={task.name} placeholder="task domain "/></td>
-      </tr>
-    ) : [];
+    const taskList = this.state.workflowDef && this.state.workflowDef.tasks ?
+      this.state.workflowDef.tasks.map((task) =>
+        <tr>
+          <td>{task.name}</td>
+          <td><input className="form-control" type="text" name={task.name} placeholder="task domain "
+                     onChange={this.handleFormChange((value, name) => this.state.taskToDomain[name] = value)}/></td>
+        </tr>
+      ) : [];
+
     return (
       <table className="table table-responsive">
         <thead>
@@ -91,7 +103,7 @@ class WorkflowForm extends React.Component {
 
   render() {
     return <div>
-      <Panel header={this.state.title}>
+      <Panel>
         <form onSubmit={this.handleFormSubmit}>
           <div className="form-group">
             <label className="control-label">Workflow/Version</label>
@@ -119,7 +131,8 @@ class WorkflowForm extends React.Component {
                 <span className="control-label">Correlation ID</span>
               </div>
               <div className="col-lg-8">
-                <input className="form-control" type="text" name="correlationId" placeholder="correlation id"/>
+                <input className="form-control" type="text" name="correlationId" placeholder="correlation id"
+                       onChange={this.handleFormChange((value) => this.state.correlationId = value)}/>
               </div>
             </div>
             <div className="row">
@@ -128,7 +141,8 @@ class WorkflowForm extends React.Component {
               </div>
               <div className="col-lg-8">
                 <input className="form-control" type="text" name="externalInputPayloadStoragePath"
-                       placeholder="External input payload storage path"/>
+                       placeholder="External input payload storage path"
+                       onChange={this.handleFormChange((value) => this.state.externalInputPayloadStoragePath = value)}/>
               </div>
             </div>
           </div>
