@@ -96,6 +96,14 @@ public class ElasticSearchDAOV6 implements IndexDAO {
 
     private static final int RETRY_COUNT = 3;
 
+    private static final int CORE_POOL_SIZE = 6;
+
+    private static final int MAXIMUM_POOL_SIZE = 12;
+
+    private static final long KEEP_ALIVE_TIME = 1L;
+
+    private static final int UPDATE_REQUEST_RETRY_COUNT = 5;
+
     private String indexPrefix;
 
     private String workflowIndexName;
@@ -138,15 +146,7 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         this.logIndexPrefix = this.indexPrefix + "_" + LOG_DOC_TYPE;
         this.messageIndexPrefix = this.indexPrefix + "_" + MSG_DOC_TYPE;
         this.eventIndexPrefix = this.indexPrefix + "_" + EVENT_DOC_TYPE;
-
-        int corePoolSize = 6;
-        int maximumPoolSize = 12;
-        long keepAliveTime = 1L;
-        this.executorService = new ThreadPoolExecutor(corePoolSize,
-                maximumPoolSize,
-                keepAliveTime,
-                TimeUnit.MINUTES,
-                new LinkedBlockingQueue<>());
+        this.executorService = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.MINUTES, new LinkedBlockingQueue<>());
     }
 
     @Override
@@ -273,14 +273,6 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         }
     }
 
-    private UpdateRequest buildUpdateRequest(String id, byte[] doc, String indexName, String workflowDocType) {
-        UpdateRequest req = new UpdateRequest(indexName, workflowDocType, id);
-        req.doc(doc, XContentType.JSON);
-        req.upsert(doc, XContentType.JSON);
-        req.retryOnConflict(5);
-        return req;
-    }
-
     @Override
     public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
         return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
@@ -334,30 +326,29 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     @Override
     public List<TaskExecLog> getTaskExecutionLogs(String taskId) {
         try {
-            Expression expression = Expression.fromString("taskId='" + taskId + "'");
-            QueryBuilder queryBuilder = expression.getFilterBuilder();
-
-            BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
-            QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery("*");
-            BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
+            BoolQueryBuilder query = boolQueryBuilder("taskId='" + taskId + "'", "*");
 
             final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(logIndexPrefix + "*")
-                    .setQuery(fq).setTypes(LOG_DOC_TYPE)
-                    .addSort(SortBuilders.fieldSort("createdTime")
-                            .order(SortOrder.ASC));
-            SearchResponse response = srb.execute().actionGet();
-            SearchHit[] hits = response.getHits().getHits();
-            List<TaskExecLog> logs = new ArrayList<>(hits.length);
-            for (SearchHit hit : hits) {
-                String source = hit.getSourceAsString();
-                TaskExecLog tel = objectMapper.readValue(source, TaskExecLog.class);
-                logs.add(tel);
-            }
-            return logs;
+                    .setQuery(query)
+                    .setTypes(LOG_DOC_TYPE)
+                    .addSort(SortBuilders.fieldSort("createdTime").order(SortOrder.ASC));
+
+            return mapTaskExecLogsResponse(srb.execute().actionGet());
         } catch (Exception e) {
             logger.error("Failed to get task execution logs for task: {}", taskId, e);
         }
         return null;
+    }
+
+    private List<TaskExecLog> mapTaskExecLogsResponse(SearchResponse response) throws IOException {
+        SearchHit[] hits = response.getHits().getHits();
+        List<TaskExecLog> logs = new ArrayList<>(hits.length);
+        for (SearchHit hit : hits) {
+            String source = hit.getSourceAsString();
+            TaskExecLog tel = objectMapper.readValue(source, TaskExecLog.class);
+            logs.add(tel);
+        }
+        return logs;
     }
 
     @Override
@@ -380,28 +371,22 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     @Override
     public List<Message> getMessages(String queue) {
         try {
-            Expression expression = Expression.fromString("queue='" + queue + "'");
-            QueryBuilder queryBuilder = expression.getFilterBuilder();
-
-            BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
-            QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery("*");
-            BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
+            BoolQueryBuilder fq = boolQueryBuilder("queue='" + queue + "'", "*");
 
             final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(messageIndexPrefix + "*")
-                    .setQuery(fq).setTypes(MSG_DOC_TYPE)
-                    .addSort(SortBuilders.fieldSort("created")
-                            .order(SortOrder.ASC));
+                    .setQuery(fq)
+                    .setTypes(MSG_DOC_TYPE)
+                    .addSort(SortBuilders.fieldSort("created").order(SortOrder.ASC));
 
-            SearchResponse response = srb.execute().actionGet();
-            SearchHit[] hits = response.getHits().getHits();
-            return extractMessages(hits);
+            return mapGetMessagesResponse(srb.execute().actionGet());
         } catch (Exception e) {
             logger.error("Failed to get messages for queue: {}", queue, e);
         }
         return null;
     }
 
-    private List<Message> extractMessages(SearchHit[] hits) throws IOException {
+    private List<Message> mapGetMessagesResponse(SearchResponse response) throws IOException {
+        SearchHit[] hits = response.getHits().getHits();
         TypeFactory factory = TypeFactory.defaultInstance();
         MapType type = factory.constructMapType(HashMap.class, String.class, String.class);
         List<Message> messages = new ArrayList<>(hits.length);
@@ -429,32 +414,29 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     @Override
     public List<EventExecution> getEventExecutions(String event) {
         try {
-            Expression expression = Expression.fromString("event='" + event + "'");
-            QueryBuilder queryBuilder = expression.getFilterBuilder();
-
-            BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
-            QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery("*");
-            BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
+            BoolQueryBuilder fq = boolQueryBuilder("event='" + event + "'", "*");
 
             final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(eventIndexPrefix + "*")
                     .setQuery(fq).setTypes(EVENT_DOC_TYPE)
                     .addSort(SortBuilders.fieldSort("created")
                             .order(SortOrder.ASC));
 
-            SearchResponse response = srb.execute().actionGet();
-            SearchHit[] hits = response.getHits().getHits();
-            List<EventExecution> executions = new ArrayList<>(hits.length);
-            for (SearchHit hit : hits) {
-                String source = hit.getSourceAsString();
-                EventExecution tel = objectMapper.readValue(source, EventExecution.class);
-                executions.add(tel);
-            }
-            return executions;
-
+            return mapEventExecutionsResponse(srb.execute().actionGet());
         } catch (Exception e) {
             logger.error("Failed to get executions for event: {}", event, e);
         }
         return null;
+    }
+
+    private List<EventExecution> mapEventExecutionsResponse(SearchResponse response) throws IOException {
+        SearchHit[] hits = response.getHits().getHits();
+        List<EventExecution> executions = new ArrayList<>(hits.length);
+        for (SearchHit hit : hits) {
+            String source = hit.getSourceAsString();
+            EventExecution tel = objectMapper.readValue(source, EventExecution.class);
+            executions.add(tel);
+        }
+        return executions;
     }
 
     @Override
@@ -540,39 +522,45 @@ public class ElasticSearchDAOV6 implements IndexDAO {
 
     private SearchResult<String> search(String structuredQuery, int start, int size, List<String> sortOptions, String freeTextQuery, String docType) {
         try {
-            QueryBuilder queryBuilder = QueryBuilders.matchAllQuery();
-            if (StringUtils.isNotEmpty(structuredQuery)) {
-                Expression expression = Expression.fromString(structuredQuery);
-                queryBuilder = expression.getFilterBuilder();
-            }
+            BoolQueryBuilder fq = boolQueryBuilder(structuredQuery, freeTextQuery);
+            final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(indexName(docType))
+                    .setQuery(fq)
+                    .setTypes(docType)
+                    .storedFields("_id")
+                    .setFrom(start)
+                    .setSize(size);
 
-            BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
-            QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(freeTextQuery);
-            BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
-            final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(indexName(docType)).setQuery(fq).setTypes(docType).storedFields("_id").setFrom(start).setSize(size);
-            if (sortOptions != null) {
-                sortOptions.forEach(sortOption -> {
-                    SortOrder order = SortOrder.ASC;
-                    String field = sortOption;
-                    int indx = sortOption.indexOf(':');
-                    if (indx > 0) {    //Can't be 0, need the field name at-least
-                        field = sortOption.substring(0, indx);
-                        order = SortOrder.valueOf(sortOption.substring(indx + 1));
-                    }
-                    srb.addSort(field, order);
-                });
-            }
-            List<String> result = new LinkedList<String>();
-            SearchResponse response = srb.get();
-            response.getHits().forEach(hit -> {
-                result.add(hit.getId());
-            });
-            long count = response.getHits().getTotalHits();
-            return new SearchResult<>(count, result);
+            addSortOptions(srb, sortOptions);
+
+            return mapSearchResult(srb.get());
         } catch (ParserException e) {
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, e.getMessage(), e);
         }
     }
+
+    private void addSortOptions(SearchRequestBuilder srb, List<String> sortOptions) {
+        if (sortOptions != null) {
+            sortOptions.forEach(sortOption -> {
+                SortOrder order = SortOrder.ASC;
+                String field = sortOption;
+                int indx = sortOption.indexOf(':');
+                //Can't be 0, need the field name at-least
+                if (indx > 0) {
+                    field = sortOption.substring(0, indx);
+                    order = SortOrder.valueOf(sortOption.substring(indx + 1));
+                }
+                srb.addSort(field, order);
+            });
+        }
+    }
+
+    private SearchResult<String> mapSearchResult(SearchResponse response) {
+        List<String> result = new LinkedList<>();
+        response.getHits().forEach(hit -> result.add(hit.getId()));
+        long count = response.getHits().getTotalHits();
+        return new SearchResult<>(count, result);
+    }
+
 
     @Override
     public List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays) {
@@ -607,6 +595,14 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         return extractSearchIds(s);
     }
 
+    private UpdateRequest buildUpdateRequest(String id, byte[] doc, String indexName, String workflowDocType) {
+        UpdateRequest req = new UpdateRequest(indexName, workflowDocType, id);
+        req.doc(doc, XContentType.JSON);
+        req.upsert(doc, XContentType.JSON);
+        req.retryOnConflict(UPDATE_REQUEST_RETRY_COUNT);
+        return req;
+    }
+
     private List<String> extractSearchIds(SearchRequestBuilder s) {
         SearchResponse response = s.execute().actionGet();
         SearchHits hits = response.getHits();
@@ -615,6 +611,17 @@ public class ElasticSearchDAOV6 implements IndexDAO {
             ids.add(hit.getId());
         }
         return ids;
+    }
+
+    private BoolQueryBuilder boolQueryBuilder(String expression, String queryString) throws ParserException {
+        QueryBuilder queryBuilder = QueryBuilders.matchAllQuery();
+        if (StringUtils.isNotEmpty(expression)) {
+            Expression exp = Expression.fromString(expression);
+            queryBuilder = exp.getFilterBuilder();
+        }
+        BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
+        QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(queryString);
+        return QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
     }
 
     private String indexName(String documentType) {

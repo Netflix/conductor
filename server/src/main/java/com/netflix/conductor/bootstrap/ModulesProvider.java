@@ -56,7 +56,6 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
     private List<AbstractModule> selectModulesToLoad() {
         Configuration.DB database;
         List<AbstractModule> modules = new ArrayList<>();
-        Configuration.ElasticSearchVersion elasticSearchVersion;
 
         try {
             database = configuration.getDB();
@@ -65,15 +64,6 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                     + ", supported values are: " + Arrays.toString(Configuration.DB.values());
             logger.error(message);
             throw new ProvisionException(message, ie);
-        }
-
-        try {
-            elasticSearchVersion = Configuration.ElasticSearchVersion.version(configuration.getElasticSearchVersion());
-        } catch (IllegalArgumentException e) {
-            final String message = "Invalid elastic search version: " + configuration.getElasticSearchVersion()
-                    + ", supported values are: " + Arrays.toString(Configuration.ElasticSearchVersion.values());
-            logger.error(message);
-            throw new ProvisionException(message, e);
         }
 
         switch (database) {
@@ -100,16 +90,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 break;
         }
 
-        switch (elasticSearchVersion) {
-            case VERSION_5:
-                // TODO modules.add(new ElasticSearchV5Module());
-                logger.info("Starting conductor server using elasticsearch V5.");
-                break;
-            case VERSION_6:
-                modules.add(new ElasticSearchV6Module());
-                logger.info("Starting conductor server using elasticsearch V6.");
-                break;
-        }
+        modules.add(new ElasticSearchV6Module());
 
         modules.add(new WorkflowExecutorModule());
 

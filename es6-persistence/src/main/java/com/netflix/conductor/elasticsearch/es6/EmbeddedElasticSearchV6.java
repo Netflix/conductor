@@ -103,8 +103,6 @@ public class EmbeddedElasticSearchV6 implements EmbeddedElasticSearch {
                 .put(ElasticSearchConfiguration.EMBEDDED_DATA_PATH_DEFAULT_VALUE, dataDir.getAbsolutePath())
                 .put(ElasticSearchConfiguration.EMBEDDED_HOME_PATH_DEFAULT_VALUE, homeDir.getAbsolutePath())
                 .put("http.enabled", true)
-                // .put("script.inline", true)
-                // .put("script.stored", true)
                 .put("node.data", true)
                 .put("http.enabled", true)
                 .put("http.type", "netty4")
