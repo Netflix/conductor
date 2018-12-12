@@ -16,7 +16,7 @@ public class TestUtils {
 
     public static Workflow loadWorkflowSnapshot(String resourceFileName) {
         try {
-            String content = Resources.toString(TestUtils.class.getResource("/" + resourceFileName + WORKFLOW_SCENARIO_EXTENSION), Charsets.UTF_8);
+            String content = loadJsonResource(resourceFileName);
             String workflowId = IDGenerator.generate();
             content = content.replace(WORKFLOW_INSTANCE_ID_PLACEHOLDER, workflowId);
 
@@ -29,5 +29,12 @@ public class TestUtils {
         }
     }
 
+    public static String loadJsonResource(String resourceFileName) {
+        try {
+            return Resources.toString(TestUtils.class.getResource("/" + resourceFileName + WORKFLOW_SCENARIO_EXTENSION), Charsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
 }
 

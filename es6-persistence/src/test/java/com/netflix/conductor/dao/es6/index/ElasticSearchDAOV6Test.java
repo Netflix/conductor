@@ -219,6 +219,15 @@ public class ElasticSearchDAOV6Test {
         assertTrue("Not all event executions was indexed", indexedExecutions.containsAll(Arrays.asList(execution1, execution2)));
     }
 
+    @Test
+    public void shouldAddIndexPrefixToIndexTemplate() throws Exception {
+        String json = TestUtils.loadJsonResource("expected_template_task_log");
+
+        String content = dao.loadTypeMappingSource("/template_task_log.json");
+
+        assertEquals(json, content);
+    }
+
     private void assertWorkflowSummary(String workflowId, WorkflowSummary summary) {
         assertEquals(summary.getWorkflowType(), dao.get(workflowId, "workflowType"));
         assertEquals(String.valueOf(summary.getVersion()), dao.get(workflowId, "version"));

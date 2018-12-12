@@ -71,6 +71,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -240,8 +242,20 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         }
     }
 
-    private String loadTypeMappingSource(String path) throws IOException {
-        return IOUtils.toString(ElasticSearchDAOV6.class.getResourceAsStream(path));
+    String loadTypeMappingSource(String path) throws IOException {
+        return applyIndexPrefixToTemplate(IOUtils.toString(ElasticSearchDAOV6.class.getResourceAsStream(path)));
+    }
+
+    private String applyIndexPrefixToTemplate(String text) {
+        String pattern = "\"template\": \"\\*(.*)\\*\"";
+        Pattern r = Pattern.compile(pattern);
+        Matcher m = r.matcher(text);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            m.appendReplacement(sb, m.group(0).replaceFirst(Pattern.quote(m.group(1)), indexPrefix + "_" + m.group(1)));
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 
     @Override
