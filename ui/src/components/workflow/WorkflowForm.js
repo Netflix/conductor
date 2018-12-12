@@ -3,6 +3,8 @@ import React from "react";
 import {connect} from "react-redux";
 import { Panel } from 'react-bootstrap';
 
+import {getWorkflowMetaDetails, startWorkflow} from '../../actions/WorkflowActions';
+
 class WorkflowForm extends React.Component {
   constructor(props) {
     super(props);
@@ -49,7 +51,7 @@ class WorkflowForm extends React.Component {
 
   handleFormSubmit(event) {
     event.preventDefault();
-    console.log(event, this.state);
+    this.props.dispatch(startWorkflow(this.state));
   }
 
   renderWorkflowInputs() {
@@ -57,7 +59,7 @@ class WorkflowForm extends React.Component {
       ? this.state.workflowDef.inputParameters.map((inputParameter) =>
       <tr>
         <td>{inputParameter}</td>
-        <td><input className="form-control" type="text" name={inputParameter} placeholder={"input parameter"}
+        <td><input className="form-control" type="text" name={inputParameter} placeholder={"Input parameter in json or string"}
                    onChange={this.handleFormChange((value, name) => this.state.input[name] = value, "json|string")}/></td>
       </tr>
     ) : [];
@@ -81,7 +83,7 @@ class WorkflowForm extends React.Component {
       this.state.workflowDef.tasks.map((task) =>
         <tr>
           <td>{task.name}</td>
-          <td><input className="form-control" type="text" name={task.name} placeholder="task domain "
+          <td><input className="form-control" type="text" name={task.name} placeholder="Task domain in string"
                      onChange={this.handleFormChange((value, name) => this.state.taskToDomain[name] = value)}/></td>
         </tr>
       ) : [];
@@ -131,13 +133,13 @@ class WorkflowForm extends React.Component {
                 <span className="control-label">Correlation ID</span>
               </div>
               <div className="col-lg-8">
-                <input className="form-control" type="text" name="correlationId" placeholder="correlation id"
+                <input className="form-control" type="text" name="correlationId" placeholder="Correlation ID"
                        onChange={this.handleFormChange((value) => this.state.correlationId = value)}/>
               </div>
             </div>
             <div className="row">
               <div className="col-lg-3">
-                <span className="control-label">ExternalInputPayloadStoragePath</span>
+                <span className="control-label">InputPayloadStoragePath</span>
               </div>
               <div className="col-lg-8">
                 <input className="form-control" type="text" name="externalInputPayloadStoragePath"

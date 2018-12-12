@@ -61,6 +61,35 @@ export function getWorkflowDetails(workflowId){
   }
 }
 
+export function startWorkflow(workflow) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_START_WORKFLOW',
+      workflow
+    });
+
+    return http.post("/api/wfe", workflow).then((data) => {
+      var {code, message, retryable, instance, errorResults, successResults} = data;
+      dispatch({
+        type: "RECEIVED_START_WORKFLOW",
+        workflow,
+        data: {serverError:code,
+          serverErrorMessage:message,
+          retryable:retryable,
+          instance:instance,
+          errorResults,
+          successResults
+        }
+      })
+    }).catch((e) => {
+      dispatch({
+        type: "REQUEST_ERROR",
+        e
+      })
+    });
+  }
+}
+
 export function bulkTerminateWorkflow(workflows){
   return function (dispatch) {
     dispatch({

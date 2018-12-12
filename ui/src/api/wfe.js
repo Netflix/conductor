@@ -53,6 +53,15 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+router.post('/', async (req, res, next) => {
+  try {
+    const result = await http.post(baseURL2, req.body, req.token);
+    res.status(200).send({result: result});
+  } catch (err) {
+    next(err);
+  }
+});
+
 const LOG_DATE_FORMAT = 'MM/DD/YY, HH:mm:ss:SSS';
 
 router.get('/search-by-task/:taskId', async (req, res, next) => {
@@ -211,6 +220,7 @@ router.delete('/bulk/terminate', async (req, res, next) => {
     next(err);
   }
 });
+
 
 router.delete('/terminate/:workflowId', async (req, res, next) => {
   try {
