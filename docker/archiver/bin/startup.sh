@@ -4,6 +4,11 @@ cd /app
 
 chmod +x ./bin/conductor-archiver
 
+if [ -f /app/config/secrets.env ]; then
+    secrets=$(cat /app/config/secrets.env | grep =)
+    export $secrets
+fi
+
 echo "source="${workflow_elasticsearch_url} > /app/archiver.properties
 echo "env="${env_type} >> /app/archiver.properties
 

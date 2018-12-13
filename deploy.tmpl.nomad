@@ -278,7 +278,7 @@ job "conductor-archiver" {
       config {
         image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-archiver"
         volumes = [
-          "local/secrets/conductor-archiver.env:/app/config/archiver.env"
+          "local/secrets/conductor-archiver.env:/app/config/secrets.env"
         ]
         labels {
           service = "${NOMAD_JOB_NAME}"
