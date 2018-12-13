@@ -11,6 +11,7 @@ import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -73,10 +74,16 @@ public abstract class AbstractExport {
         sourceBuilder.query(query);
         sourceBuilder.size(config.batchSize());
 
+        // The same as SearchRequest.DEFAULT_INDICES_OPTIONS but true for ignoreUnavailable
+        IndicesOptions options = IndicesOptions.fromOptions(true, true,
+                true, false,
+                true,true, false);
+
         Scroll scroll = new Scroll(TimeValue.timeValueHours(1L));
         SearchRequest searchRequest = new SearchRequest(indices);
         searchRequest.source(sourceBuilder);
         searchRequest.scroll(scroll);
+        searchRequest.indicesOptions(options);
 
         return findAll(searchRequest);
     }
