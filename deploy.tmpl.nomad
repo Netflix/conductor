@@ -267,7 +267,7 @@ job "conductor-archiver" {
     task "archiver" {
       meta {
         product-class = "custom"
-        stack-role = "api"
+        stack-role = "daemon"
       }
       driver = "docker"
       config {
