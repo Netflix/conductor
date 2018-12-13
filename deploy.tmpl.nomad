@@ -234,6 +234,7 @@ job "conductor-archiver" {
 
   periodic {
     cron = "@daily"
+    time_zone = "America/Los_Angeles"
     prohibit_overlap = true
   }
 
