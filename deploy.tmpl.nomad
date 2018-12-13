@@ -135,7 +135,6 @@ job "conductor" {
         }
       }
       env {
-        trigger = "1"
         TLD   = "<TLD>"
         STACK = "<ENV_TYPE>"
         APP_VERSION = "<APP_VERSION>"
@@ -186,17 +185,6 @@ job "conductor" {
         // Exclude demo workflows
         loadSample = "false"
 
-        // Loggers
-        log4j_logger_com_netflix_conductor_dao_es6rest="INFO"
-        log4j_logger_com_netflix_conductor_core_events_nats="DEBUG"
-        log4j_logger_com_netflix_conductor_core_events_shotgun="DEBUG"
-        log4j_logger_com_netflix_conductor_core_events_EventProcessor="INFO"
-        log4j_logger_com_netflix_conductor_core_execution_DeciderService="DEBUG"
-        log4j_logger_com_netflix_conductor_core_execution_WorkflowExecutor="DEBUG"
-        log4j_logger_com_netflix_conductor_contribs_http="DEBUG"
-        log4j_logger_com_netflix_conductor_contribs_queue_nats="DEBUG"
-        log4j_logger_com_netflix_conductor_contribs_queue_shotgun="DEBUG"
-
         // The following will be provided by secret/conductor
         //  - conductor_auth_url
         //  - conductor_auth_clientId
@@ -236,4 +224,94 @@ job "conductor" {
       }
     } // end server task
   } // end server group
+
 } // end job
+
+job "conductor-archiver" {
+  type        = "batch"
+  region      = "us-west-2"
+  datacenters = ["us-west-2"]
+
+  periodic {
+    cron = "@daily"
+    prohibit_overlap = true
+  }
+
+  meta {
+    service-class = "platform"
+  }
+
+  constraint {
+    attribute = "${meta.hood}"
+    //
+    // Options: [ corp | prod | shared ]
+    value     = "shared"
+  }
+
+  constraint {
+    attribute = "${meta.env_type}"
+    // Options: [ test | int | live ]
+    value     = "<ENV_TYPE>"
+  }
+
+  update {
+    stagger      = "15s"
+    max_parallel = 1
+  }
+
+  group "archiver" {
+    count = 1
+
+    # vault declaration
+    vault {
+      change_mode = "noop"
+      env = false
+      policies = ["read-secrets"]
+    }
+
+    task "archiver" {
+      meta {
+        product-class = "custom"
+        stack-role = "api"
+      }
+      driver = "docker"
+      config {
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-archiver"
+        volumes = [
+          "local/secrets/conductor-archiver.env:/app/config/secrets.env"
+        ]
+        labels {
+          service = "${NOMAD_JOB_NAME}"
+        }
+        logging {
+          type = "syslog"
+          config {
+            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
+          }
+        }
+      }
+      env {
+        env_type = "<ENV_TYPE>"
+      }
+
+      # Write secrets to the file that can be mounted as volume
+      template {
+        data = <<EOF
+        {{ with printf "secret/conductor" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
+        EOF
+        destination   = "local/secrets/conductor-archiver.env"
+        change_mode   = "signal"
+        change_signal = "SIGINT"
+      }
+
+      resources {
+        cpu    = 512  # MHz
+        memory = 2048 # MB
+        network {
+          mbits = 4
+        }
+      }
+    } // end archiver task
+  } // end archiver group
+} // end archiver job
