@@ -254,11 +254,6 @@ job "conductor-archiver" {
     value     = "<ENV_TYPE>"
   }
 
-  update {
-    stagger      = "15s"
-    max_parallel = 1
-  }
-
   group "archiver" {
     count = 1
 
