@@ -5,10 +5,9 @@ export default class PostMiddleware {
       app.log.error(err);
       res.status(err.status || 500);
       if (err.response) {
+        res.status(err.response.status || 500);
         if (err.response.text) {
           res.send(err.response.text);
-        } else if (err.response.body) {
-          res.send(err.response.body);
         } else {
           next(err);
         }
