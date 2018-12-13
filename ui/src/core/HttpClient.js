@@ -28,11 +28,16 @@ const HttpClient = {
         }
       });
     }),
-  post: (path, data, token) =>
+  post: (path, data, token, header) =>
     new Promise((resolve, reject) => {
       const req = request.post(path, data).set('Accept', 'application/json');
       if (token) {
         req.set('Authorization', token);
+      }
+      if (header) {
+        for (let name in header) {
+          req.set(name, header[name]);
+        }
       }
       req.end((err, res) => {
         if (err || !res.ok) {

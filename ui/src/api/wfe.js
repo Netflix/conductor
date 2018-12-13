@@ -55,7 +55,7 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const result = await http.post(baseURL2, req.body, req.token);
+    const result = await http.post(baseURL2, req.body, req.token, {"Accept": "text/plain"});
     res.status(200).send({result: result});
   } catch (err) {
     next(err);
