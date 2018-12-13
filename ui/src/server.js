@@ -13,7 +13,8 @@ const eventsAPI = require('./api/events');
 class Main {
   init() {
     const app = express();
-    const middlewareIndex = new MiddlewareIndex();
+    app.log = log;
+    const middlewareIndex = new MiddlewareIndex(log);
 
     this.preMiddlewareConfig(app, middlewareIndex);
     this.routesConfig(app);
@@ -32,7 +33,7 @@ class Main {
     app.use('/api/wfe', bodyParser.json(), wfeAPI);
     app.use('/api/sys', sysAPI);
     app.use('/api/events', eventsAPI);
-  };
+  }
 
   postMiddlewareConfig = (app, middlewareIndex) => {
     middlewareIndex.after(app);
