@@ -7,7 +7,6 @@ RUN mkdir -p /app
 
 # Copy the project directly onto the image
 COPY ./docker/archiver/bin/startup.sh /app
-COPY ./docker/archiver/config/archiver.properties /app
 COPY ./archiver/build/distributions/conductor-archiver.zip /
 
 RUN unzip conductor-archiver.zip

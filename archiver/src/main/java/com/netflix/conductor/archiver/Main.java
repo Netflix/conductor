@@ -54,7 +54,19 @@ public class Main {
         }
     }
 
+    private void checkConfig(String value, String config) {
+        if (StringUtils.isEmpty(value))
+            throw new RuntimeException("No '" + config + "' configuration provided");
+    }
+
     private void start() {
+        checkConfig(AppConfig.getInstance().source(), "source");
+        checkConfig(AppConfig.getInstance().env(), "env");
+        checkConfig(AppConfig.getInstance().bucketName(), "bucket_name");
+        checkConfig(AppConfig.getInstance().region(), "region");
+        checkConfig(AppConfig.getInstance().accessKey(), "access_key");
+        checkConfig(AppConfig.getInstance().accessSecret(), "access_secret");
+
         boolean startFrom = StringUtils.isNotEmpty(AppConfig.getInstance().sessionId());
         if (startFrom) {
             this.sessionId = AppConfig.getInstance().sessionId();
@@ -62,10 +74,11 @@ public class Main {
             this.sessionId = sdf.format(new Date());
         }
         logger.info("Starting archiver with sessionId=" + sessionId);
+
         try {
             FileUtils.forceMkdir(new File(sessionId));
 
-            String clusterAddress = AppConfig.getInstance().dbAddress();
+            String clusterAddress = AppConfig.getInstance().source();
             logger.info("Creating ElasticSearch client for " + clusterAddress + ". SessionId=" + sessionId);
             if (StringUtils.isEmpty(clusterAddress)) {
                 throw new RuntimeException("No ElasticSearch Url defined. Exiting");

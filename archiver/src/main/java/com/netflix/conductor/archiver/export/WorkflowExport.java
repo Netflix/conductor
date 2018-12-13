@@ -52,8 +52,8 @@ public class WorkflowExport extends AbstractExport {
         // Grab root level workflows
         QueryBuilder query = QueryBuilders.boolQuery()
                 .must(QueryBuilders.rangeQuery("endTime").lte(endTime))
-                .mustNot(QueryBuilders.existsQuery("parentWorkflowId"))
-                .mustNot(QueryBuilders.termQuery("status", "RUNNING"));
+                .mustNot(QueryBuilders.termsQuery("status", "RESET", "RUNNING"))
+                .mustNot(QueryBuilders.existsQuery("parentWorkflowId"));
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(query);
@@ -180,6 +180,7 @@ public class WorkflowExport extends AbstractExport {
             String[] indices = new String[]{config.rootIndexName() + ".runtime." + config.env() + ".corrid_to_workflow",
                     config.rootIndexName() + ".runtime." + config.env() + ".workflow_def_to_workflows",
                     config.rootIndexName() + ".runtime." + config.env() + ".workflow_to_tasks",
+                    config.rootIndexName() + ".runtime." + config.env() + ".workflow_tags",
                     config.rootIndexName() + ".runtime." + config.env() + ".scheduled_tasks"};
 
             List<SearchHit> hits = findAll(query, indices);

@@ -29,7 +29,7 @@ public class AppConfig {
         return INSTANCE;
     }
 
-    public String dbAddress() {
+    public String source() {
         return config.getString("source");
     }
 
