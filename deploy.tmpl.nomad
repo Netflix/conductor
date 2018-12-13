@@ -9,6 +9,7 @@ job "conductor" {
 
   constraint {
     attribute = "${meta.hood}"
+    //
     // Options: [ corp | prod | shared ]
     value     = "shared"
   }
@@ -170,7 +171,7 @@ job "conductor" {
         io_shotgun_dns = "shotgun.service.<TLD>"
         io_shotgun_service = "conductor-server-<TLD>"
         io_shotgun_publishRetryIn = "5,10,15"
-        io_shotgun_shared = "true"
+        io_shotgun_shared = "false"
         com_bydeluxe_onemq_log = "false"
 
         // NATS settings
@@ -226,7 +227,7 @@ job "conductor" {
       }
 
       resources {
-        cpu    = 256  # MHz
+        cpu    = 512  # MHz
         memory = 2048 # MB
         network {
           mbits = 4
