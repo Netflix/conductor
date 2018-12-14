@@ -14,7 +14,11 @@ class ErrorPage extends React.Component {
     let details = '';
     if (nextProps.exception != null && nextProps.exception.response != null) {
       status = `${nextProps.exception.response.status} - ${nextProps.exception.response.statusText}`;
-      details = JSON.stringify(nextProps.exception.response.text);
+      if (typeof nextProps.exception.response.text === 'string') {
+        details = nextProps.exception.response.text;
+      } else {
+        details = JSON.stringify(nextProps.exception.response.text);
+      }
     } else {
       details = nextProps.exception;
     }
