@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+mainClassName = 'com.netflix.conductor.archiver.Main'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Log4j
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+
+    // ES6 Dependencies
+    compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.3.1'
+
+    // Jackson
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.10'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.10'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.8.0'
+
+    // AWS S3
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.428'
+
+    // Tools
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
+    compile group: 'org.apache.commons', name: 'commons-configuration2', version: '2.2'
+    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
+    compile group: 'com.google.guava', name: 'guava', version: '19.0'
+    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+}
+
+distZip {
+    archiveName 'conductor-archiver.zip'
+}
