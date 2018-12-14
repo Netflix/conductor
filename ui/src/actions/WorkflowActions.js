@@ -22,7 +22,6 @@ export function startWorkflow(workflow) {
   }
 }
 
-
 export function getWorkflowDetails(workflowId){
   return function (dispatch) {
     dispatch({

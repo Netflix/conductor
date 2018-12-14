@@ -1,9 +1,9 @@
 import React from "react";
 
-import {connect} from "react-redux";
+import { connect } from "react-redux";
 import { Panel } from 'react-bootstrap';
 
-import {getWorkflowMetaDetails, startWorkflow} from '../../actions/WorkflowActions';
+import { startWorkflow } from '../../actions/WorkflowActions';
 
 class WorkflowForm extends React.Component {
   constructor(props) {
