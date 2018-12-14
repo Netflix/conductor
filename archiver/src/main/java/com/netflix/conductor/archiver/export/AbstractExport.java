@@ -35,7 +35,7 @@ public abstract class AbstractExport {
         this.writers = writers;
     }
 
-    GetResponse findOne(String indexName, String typeName, String id) throws IOException, InterruptedException {
+    GetResponse findOne(String indexName, String typeName, String id) throws IOException {
         GetRequest request = new GetRequest().index(indexName).type(typeName).id(id);
         GetResponse record = client.get(request);
         return record.isExists() ? record : null;
