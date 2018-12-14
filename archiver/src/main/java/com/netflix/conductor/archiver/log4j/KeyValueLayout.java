@@ -39,7 +39,7 @@ public class KeyValueLayout extends AbstractStringLayout {
     public String toSerializable(LogEvent event) {
         StringBuilder buf = new StringBuilder();
         buf.append("timestamp=").append(timestamp()).append(" ");
-        buf.append("service=").append("archiver").append(" ");
+        buf.append("service=").append("conductor-archiver").append(" ");
         buf.append("hostname=").append(hostname).append(" ");
         buf.append("fromhost=").append(fromhost).append(" ");
         buf.append("log-level=").append(event.getLevel().toString().toLowerCase()).append(" ");
