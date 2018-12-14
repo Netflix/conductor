@@ -1,6 +1,7 @@
 package com.netflix.conductor.core.execution;
 
 import com.google.inject.AbstractModule;
+import com.netflix.conductor.core.execution.ArchiveWorkflowStatusListener;
 
 /**
  * Default implementation for the workflow status listener
@@ -9,6 +10,6 @@ import com.google.inject.AbstractModule;
 public class WorkflowExecutorModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(WorkflowStatusListener.class).to(WorkflowStatusListenerStub.class);//default implementation
+        bind(WorkflowStatusListener.class).to(ArchiveWorkflowListener.class);
     }
 }
