@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { getWorkflowMetaDetails } from '../../actions/WorkflowActions';
 
 import WorkflowMetaDia from './WorkflowMetaDia'
-import WorkflowForm from './WorkflowForm'
+import WorkflowForm from './WorkflowCreation'
 
 class WorkflowMetaDetails extends React.Component {
 

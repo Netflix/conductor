@@ -5,7 +5,7 @@ import { Panel } from 'react-bootstrap';
 
 import { startWorkflow } from '../../actions/WorkflowActions';
 
-class WorkflowForm extends React.Component {
+class WorkflowCreation extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -160,4 +160,4 @@ class WorkflowForm extends React.Component {
   }
 }
 
-export default connect(state => state.workflow)(WorkflowForm);
+export default connect(state => state.workflow)(WorkflowCreation);
