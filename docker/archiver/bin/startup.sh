@@ -29,4 +29,4 @@ addParam "${archiver_region}" "region" "us-west-2"
 addParam "${archiver_access_key}" "access_key" ""
 addParam "${archiver_access_secret}" "access_secret" ""
 
-./bin/conductor-archiver
+exec /app/bin/conductor-archiver
