@@ -49,7 +49,7 @@ public class Main {
         try {
             Main main = new Main();
             main.start();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             logger.error("main failed with " + ex.getMessage(), ex);
         }
     }
@@ -100,7 +100,7 @@ public class Main {
             logger.info("Finishing archiver for sessionId=" + sessionId);
             System.exit(0);
 
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             logger.error("Global exception " + ex.getMessage() + " for sessionId=" + sessionId, ex);
             System.exit(-1);
         }
@@ -118,7 +118,7 @@ public class Main {
             new Thread(() -> {
                 try {
                     purger.export();
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     logger.error(purger.getClass().getName() + " failed with " + e.getMessage(), e);
                 } finally {
                     countDown.countDown();
