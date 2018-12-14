@@ -234,6 +234,7 @@ job "conductor-archiver" {
 
   periodic {
     cron = "@daily"
+    time_zone = "America/Los_Angeles"
     prohibit_overlap = true
   }
 
@@ -267,7 +268,7 @@ job "conductor-archiver" {
     task "archiver" {
       meta {
         product-class = "custom"
-        stack-role = "api"
+        stack-role = "daemon"
       }
       driver = "docker"
       config {
