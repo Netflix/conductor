@@ -10,6 +10,6 @@ import com.netflix.conductor.core.execution.ArchiveWorkflowStatusListener;
 public class WorkflowExecutorModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(WorkflowStatusListener.class).to(ArchiveWorkflowListener.class);
+        bind(WorkflowStatusListener.class).to(ArchiveWorkflowStatusListener.class);
     }
 }
