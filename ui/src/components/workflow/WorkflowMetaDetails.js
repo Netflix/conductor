@@ -46,7 +46,7 @@ class WorkflowMetaDetails extends React.Component {
               {JSON.stringify(this.state.workflowMeta, null, 2)}
           </pre></div>
           </Tab>
-          <Tab eventKey={3} title="Trigger">
+          <Tab eventKey={3} title="Create">
             <div style={{margin: "30 em"}}>
               <WorkflowForm workflowDef = {wf} name = {name} version = {version}/>
             </div>
