@@ -1,9 +1,8 @@
 plugins {
+    id 'de.sebastianboegl.shadow.transformer.log4j' version '2.1.1'
+    id 'com.github.johnrengelman.shadow' version '1.2.4'
     id 'java'
-    id 'application'
 }
-
-mainClassName = 'com.netflix.conductor.archiver.Main'
 
 repositories {
     mavenCentral()
@@ -11,8 +10,8 @@ repositories {
 
 dependencies {
     // Log4j
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+    compile 'org.apache.logging.log4j:log4j-api:2.11.1'
+    compile 'org.apache.logging.log4j:log4j-core:2.11.1'
 
     // ES6 Dependencies
     compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.3.1'
@@ -28,6 +27,12 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
 }
 
-distZip {
-    archiveName 'conductor-archiver.zip'
+shadowJar {
+    configurations = [project.configurations.compile]
+    manifest {
+        attributes 'Description': 'Self contained conductor archiver jar'
+        attributes 'Main-Class': 'com.netflix.conductor.archiver.Main'
+    }
 }
+
+build.dependsOn('shadowJar')
