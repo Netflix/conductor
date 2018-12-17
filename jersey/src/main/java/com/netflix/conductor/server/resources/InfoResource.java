@@ -143,7 +143,7 @@ public class InfoResource {
 	public Map<String, Object> metrics() {
 		Map<String, Object> output = new TreeMap<>();
 
-		final boolean debug = false;
+		final boolean debug = true;
 
 		// TODO(hueys): This code could probably be cleaned up with some helper methods or lambdas.
 
@@ -153,7 +153,7 @@ public class InfoResource {
 		if (debug) {
 			counters.forEach((name, map) -> {
 				map.forEach((tags, counter) -> {
-					output.put(name + "|" + joinTags(tags) + ".counter", counter.count());
+					output.put("debug|" + name + "|" + joinTags(tags) + ".counter", counter.count());
 				});
 			});	
 		}
@@ -164,7 +164,7 @@ public class InfoResource {
 		if (debug) {
 			gauges.forEach((name, map) -> {
 				map.forEach((tags, value) -> {
-					output.put(name + "|" + joinTags(tags) + ".value", value.get());
+					output.put("debug|" + name + "|" + joinTags(tags) + ".value", value.get());
 				});
 			});	
 		}
@@ -176,38 +176,47 @@ public class InfoResource {
 			timers.forEach((name, map) -> {
 				map.forEach((tags, timer) -> {
 					String key = joinTags(tags);
-					output.put(name + "|" + key + ".count", timer.count());
-					output.put(name + "|" + key + ".totalTime", timer.totalTime());
+					output.put("debug|" + name + "|" + key + ".count", timer.count());
+					output.put("debug|" + name + "|" + key + ".totalTime", timer.totalTime());
 				});
 			});	
 		}
 
-		// Workflow Counters
+		// Workflow and Event Counters
 		CounterSum total = (m) -> {
-			int sum = 0;
-
-			for (Counter counter : m.values()) {
-				sum += counter.count();
-			}
-
-			return sum;
+			return m.values().stream().map(c -> {return c.count();}).mapToLong(i -> i).sum();
 		};
 
 		counters.forEach((name, map) -> {
-			// Completed
+			// Workflows
 			if (name.equals("workflow_completion")) {
 				output.put("deluxe.conductor.workflows_completed", total.sum(map));
 			}
 
-			// Failed
 			if (name.equals("workflow_failure")) {
 				output.put("deluxe.conductor.workflows_failed", total.sum(map));
 			}
 
-			// Started
 			if (name.equals("workflow_start")) {
 				output.put("deluxe.conductor.workflows_started", total.sum(map));
-			}			
+			}
+
+			if (name.equals("workflow_cancel")) {
+				output.put("deluxe.conductor.workflows_canceled", total.sum(map));
+			}
+
+			if (name.equals("workflow_restart")) {
+				output.put("deluxe.conductor.workflows_restarted", total.sum(map));
+			}
+
+			// Messages
+			if (name.equals("event_queue_messages_received")) {
+				output.put("deluxe.conductor.messages_received", total.sum(map));
+			}
+
+			if (name.equals("event_queue_messages_processed")) {
+				output.put("deluxe.conductor.messages_processed", total.sum(map));
+			}
 		});
 
 		return output;
@@ -222,5 +231,5 @@ public class InfoResource {
 }
 
 interface CounterSum {
-	public int sum(Map<Map<String, String>, Counter> counterMap);
+	public long sum(Map<Map<String, String>, Counter> counterMap);
 }
