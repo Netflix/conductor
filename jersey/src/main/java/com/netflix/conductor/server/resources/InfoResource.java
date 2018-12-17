@@ -143,33 +143,71 @@ public class InfoResource {
 	public Map<String, Object> metrics() {
 		Map<String, Object> output = new TreeMap<>();
 
-		// Counters
+		final boolean debug = false;
+
+		// TODO(hueys): This code could probably be cleaned up with some helper methods or lambdas.
+
+		// Debug: Counters
 		Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
 
-		counters.forEach((name, map) -> {
-			map.forEach((tags, counter) -> {
-				output.put(name + "|" + joinTags(tags) + ".counter", counter.count());
-			});
-		});
+		if (debug) {
+			counters.forEach((name, map) -> {
+				map.forEach((tags, counter) -> {
+					output.put(name + "|" + joinTags(tags) + ".counter", counter.count());
+				});
+			});	
+		}
 
-		// Gauges
+		// Debug: Gauges
 		Map<String, Map<Map<String, String>, AtomicLong>> gauges = Monitors.getGauges();
 
-		gauges.forEach((name, map) -> {
-			map.forEach((tags, value) -> {
-				output.put(name + "|" + joinTags(tags) + ".value", value.get());
-			});
-		});
+		if (debug) {
+			gauges.forEach((name, map) -> {
+				map.forEach((tags, value) -> {
+					output.put(name + "|" + joinTags(tags) + ".value", value.get());
+				});
+			});	
+		}
 
-		// Timers
+		// Debug: Timers
 		Map<String, Map<Map<String, String>, PercentileTimer>> timers = Monitors.getTimers();
 
-		timers.forEach((name, map) -> {
-			map.forEach((tags, timer) -> {
-				String key = joinTags(tags);
-				output.put(name + "|" + key + ".count", timer.count());
-				output.put(name + "|" + key + ".totalTime", timer.totalTime());
-			});
+		if (debug) {
+			timers.forEach((name, map) -> {
+				map.forEach((tags, timer) -> {
+					String key = joinTags(tags);
+					output.put(name + "|" + key + ".count", timer.count());
+					output.put(name + "|" + key + ".totalTime", timer.totalTime());
+				});
+			});	
+		}
+
+		// Workflow Counters
+		CounterSum total = (m) -> {
+			int sum = 0;
+
+			for (Counter counter : m.values()) {
+				sum += counter.count();
+			}
+
+			return sum;
+		};
+
+		counters.forEach((name, map) -> {
+			// Completed
+			if (name.equals("workflow_completion")) {
+				output.put("deluxe.conductor.workflows_completed", total.sum(map));
+			}
+
+			// Failed
+			if (name.equals("workflow_failure")) {
+				output.put("deluxe.conductor.workflows_failed", total.sum(map));
+			}
+
+			// Started
+			if (name.equals("workflow_start")) {
+				output.put("deluxe.conductor.workflows_started", total.sum(map));
+			}			
 		});
 
 		return output;
@@ -181,4 +219,8 @@ public class InfoResource {
 			.filter(entry -> !entry.getKey().equals("class"))
 			.map(Map.Entry::getValue).collect(Collectors.joining("."));
 	}
+}
+
+interface CounterSum {
+	public int sum(Map<Map<String, String>, Counter> counterMap);
 }
