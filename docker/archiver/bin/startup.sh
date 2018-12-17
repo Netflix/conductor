@@ -2,8 +2,6 @@
 
 cd /app
 
-chmod +x ./bin/conductor-archiver
-
 if [ -f /app/config/secrets.env ]; then
     secrets=$(cat /app/config/secrets.env | grep =)
     export $secrets
@@ -29,4 +27,4 @@ addParam "${archiver_region}" "region" "us-west-2"
 addParam "${archiver_access_key}" "access_key" ""
 addParam "${archiver_access_secret}" "access_secret" ""
 
-exec /app/bin/conductor-archiver
+exec java -jar conductor-archiver-*-all.jar
