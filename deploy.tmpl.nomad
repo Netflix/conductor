@@ -233,7 +233,7 @@ job "conductor-archiver" {
   datacenters = ["us-west-2"]
 
   periodic {
-    cron = "@daily"
+    cron = "@weekly"
     time_zone = "America/Los_Angeles"
     prohibit_overlap = true
   }
