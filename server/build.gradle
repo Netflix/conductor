@@ -25,7 +25,7 @@ dependencies {
     compile project(':conductor-redis-persistence')
     compile project(':conductor-mysql-persistence')
     compile project(':conductor-contribs')
-    compile project(':conductor-es5-persistence')
+    compile project(':conductor-es6-persistence')
     compile project(':conductor-grpc-server')
 
     compile "com.netflix.runtime:health-guice:${revHealth}"

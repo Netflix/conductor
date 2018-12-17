@@ -364,6 +364,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 
     @Override
+    public List<Message> getMessages(String queue) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
     public void addEventExecution(EventExecution eventExecution) {
         try {
             byte[] doc = objectMapper.writeValueAsBytes(eventExecution);
@@ -376,6 +381,10 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         } catch (Throwable e) {
             logger.error("Failed to index event execution: {}", eventExecution.getId(), e);
         }
+    }
+
+    public List<EventExecution> getEventExecutions(String event) {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
