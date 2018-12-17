@@ -148,6 +148,9 @@ public class HttpTask extends WorkflowSystemTask {
 	protected HttpResponse httpCall(Input input) throws Exception {
 		Client client = rcm.getClient(input);
 
+		client.setReadTimeout(config.getIntProperty("http.task.read.timeout", 150));
+		client.setConnectTimeout(config.getIntProperty("http.task.connect.timeout", 100));
+
 		if(input.oauthConsumerKey != null) {
 			logger.info("Configuring OAuth filter");
 			OAuthParameters params = new OAuthParameters().consumerKey(input.oauthConsumerKey).signatureMethod("HMAC-SHA1").version("1.0");
