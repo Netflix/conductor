@@ -14,6 +14,17 @@ import javax.inject.Provider;
 import java.io.IOException;
 
 public class JsonMapperProvider implements Provider<ObjectMapper> {
+
+    public static final ObjectMapper objectMapper = new JsonMapperProvider().get();
+
+    public static String toJson(Object object) {
+        try {
+            return objectMapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     public JsonMapperProvider() {}
 
     /**
