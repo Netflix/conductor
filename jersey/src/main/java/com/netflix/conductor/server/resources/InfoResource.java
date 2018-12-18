@@ -183,39 +183,35 @@ public class InfoResource {
 		}
 
 		// Workflow and Event Counters
-		CounterSum total = (m) -> {
-			return m.values().stream().map(c -> {return c.count();}).mapToLong(i -> i).sum();
-		};
-
 		counters.forEach((name, map) -> {
 			// Workflows
 			if (name.equals("workflow_completion")) {
-				output.put("deluxe.conductor.workflows_completed", total.sum(map));
+				output.put("deluxe.conductor.workflows_completed", sum(map));
 			}
 
 			if (name.equals("workflow_failure")) {
-				output.put("deluxe.conductor.workflows_failed", total.sum(map));
+				output.put("deluxe.conductor.workflows_failed", sum(map));
 			}
 
 			if (name.equals("workflow_start")) {
-				output.put("deluxe.conductor.workflows_started", total.sum(map));
+				output.put("deluxe.conductor.workflows_started", sum(map));
 			}
 
 			if (name.equals("workflow_cancel")) {
-				output.put("deluxe.conductor.workflows_canceled", total.sum(map));
+				output.put("deluxe.conductor.workflows_canceled", sum(map));
 			}
 
 			if (name.equals("workflow_restart")) {
-				output.put("deluxe.conductor.workflows_restarted", total.sum(map));
+				output.put("deluxe.conductor.workflows_restarted", sum(map));
 			}
 
 			// Messages
 			if (name.equals("event_queue_messages_received")) {
-				output.put("deluxe.conductor.messages_received", total.sum(map));
+				output.put("deluxe.conductor.messages_received", sum(map));
 			}
 
 			if (name.equals("event_queue_messages_processed")) {
-				output.put("deluxe.conductor.messages_processed", total.sum(map));
+				output.put("deluxe.conductor.messages_processed", sum(map));
 			}
 		});
 
@@ -228,8 +224,9 @@ public class InfoResource {
 			.filter(entry -> !entry.getKey().equals("class"))
 			.map(Map.Entry::getValue).collect(Collectors.joining("."));
 	}
-}
 
-interface CounterSum {
-	public long sum(Map<Map<String, String>, Counter> counterMap);
+	// Return the sum of the Counter values in m
+	private long sum(Map<Map<String, String>, Counter> m) {
+		return m.values().stream().map(c -> {return c.count();}).mapToLong(i -> i).sum();
+	}
 }
