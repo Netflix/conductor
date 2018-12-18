@@ -2,6 +2,7 @@ dependencies {
 	
 	compile project(':conductor-common')
 	compile project(':conductor-core')
+	compile project(':conductor-redis-persistence')
 
 	compile 'com.amazonaws:aws-java-sdk-sqs:latest.release'
 	compile "com.google.inject:guice:${revGuice}"
