@@ -144,6 +144,7 @@ job "conductor" {
 
         // Workflow settings
         workflow_auth_validate = "true"
+        workflow_authcontext_validate = "true"
         workflow_failure_expandInline = "false"
         decider_sweep_frequency_seconds = "30"
         workflow_event_processor_thread_count = "10"
@@ -172,7 +173,7 @@ job "conductor" {
         io_shotgun_publishRetryIn = "5,10,15"
         io_shotgun_shared = "false"
         com_bydeluxe_onemq_log = "false"
-
++
         // NATS settings
         io_nats_streaming_url = "nats://nats.service.<TLD>:4222"
         io_nats_streaming_clusterId = "events-streaming"
