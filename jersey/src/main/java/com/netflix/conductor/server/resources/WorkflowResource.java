@@ -164,6 +164,21 @@ public class WorkflowResource {
 		return service.getExecutionStatus(workflowId, includeTasks);
 	}
 
+	@DELETE
+	@Path("/{workflowId}/remove")
+	@ApiOperation("Removes the workflow from the system")
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@Consumes(MediaType.WILDCARD)
+	public Response delete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		Response.ResponseBuilder builder = Response.noContent();
+		NDC.push("rest-remove-"+ UUID.randomUUID().toString());
+		try {
+			executor.removeWorkflowNotImplemented(workflowId);
+		} finally {
+			NDC.remove();
+		}
+		return builder.build();
+	}
 
 	@GET
 	@Path("/running/{name}")
