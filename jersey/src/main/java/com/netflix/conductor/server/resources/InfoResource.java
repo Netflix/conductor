@@ -143,9 +143,8 @@ public class InfoResource {
 	public Map<String, Object> metrics() {
 		Map<String, Object> output = new TreeMap<>();
 
+		// TODO(hueys): Remove this debug code once the set of metrics is finalized.
 		final boolean debug = true;
-
-		// TODO(hueys): This code could probably be cleaned up with some helper methods or lambdas.
 
 		// Debug: Counters
 		Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
