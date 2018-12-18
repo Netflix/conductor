@@ -70,6 +70,14 @@ public class Monitors {
 		return counters;
 	}
 
+	public static Map<String, Map<Map<String, String>, AtomicLong>> getGauges() {
+		return gauges;
+	}
+
+	public static Map<String, Map<Map<String, String>, PercentileTimer>> getTimers() {
+		return timers;
+	}
+
 	/**
 	 * Increment a counter that is used to measure the rate at which some event
 	 * is occurring. Consider a simple queue, counters would be used to measure
