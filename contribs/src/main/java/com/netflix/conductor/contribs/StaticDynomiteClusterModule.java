@@ -8,7 +8,7 @@ import com.netflix.conductor.contribs.dynomite.TokenMapSupplierProvider;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
 
-public class DynomiteClusterModule extends AbstractModule {
+public class StaticDynomiteClusterModule extends AbstractModule {
 
     @Override
     protected void configure() {
