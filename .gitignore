@@ -3,7 +3,6 @@
 ui/dist
 .gradle
 .project
-bin
 out
 build
 client/python/conductor.egg-info
