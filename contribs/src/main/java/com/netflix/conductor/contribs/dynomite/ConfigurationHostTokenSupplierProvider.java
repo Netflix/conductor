@@ -31,7 +31,6 @@ public class ConfigurationHostTokenSupplierProvider implements Provider<HostToke
     private List<HostToken> parseHostsFromConfig(DynomiteConfiguration configuration) {
         String hosts = configuration.getHosts();
         if(hosts == null) {
-            // FIXME This type of validation probably doesn't belong here.
             String message = String.format(
                     "Missing dynomite/redis hosts.  Ensure '%s' has been set in the supplied configuration.",
                     DynomiteConfiguration.HOSTS_PROPERTY_NAME
