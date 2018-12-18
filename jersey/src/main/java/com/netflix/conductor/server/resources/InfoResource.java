@@ -183,35 +183,22 @@ public class InfoResource {
 		}
 
 		// Workflow and Event Counters
+		Map<String, String> counterMap = new HashMap<>();
+
+		// Workflows
+		counterMap.put("workflow_completion", "workflows_completed");
+		counterMap.put("workflow_failure", "workflows_failed");
+		counterMap.put("workflow_start", "workflows_started");
+		counterMap.put("workflow_cancel", "workflows_canceled");
+		counterMap.put("workflow_restart", "workflows_restarted");
+
+		// Messages
+		counterMap.put("event_queue_messages_received", "messages_received");
+		counterMap.put("event_queue_messages_processed", "messages_processed");
+
 		counters.forEach((name, map) -> {
-			// Workflows
-			if (name.equals("workflow_completion")) {
-				output.put("deluxe.conductor.workflows_completed", sum(map));
-			}
-
-			if (name.equals("workflow_failure")) {
-				output.put("deluxe.conductor.workflows_failed", sum(map));
-			}
-
-			if (name.equals("workflow_start")) {
-				output.put("deluxe.conductor.workflows_started", sum(map));
-			}
-
-			if (name.equals("workflow_cancel")) {
-				output.put("deluxe.conductor.workflows_canceled", sum(map));
-			}
-
-			if (name.equals("workflow_restart")) {
-				output.put("deluxe.conductor.workflows_restarted", sum(map));
-			}
-
-			// Messages
-			if (name.equals("event_queue_messages_received")) {
-				output.put("deluxe.conductor.messages_received", sum(map));
-			}
-
-			if (name.equals("event_queue_messages_processed")) {
-				output.put("deluxe.conductor.messages_processed", sum(map));
+			if (counterMap.containsKey(name)) {
+				output.put("deluxe.conductor." + counterMap.get(name), sum(map));
 			}
 		});
 
