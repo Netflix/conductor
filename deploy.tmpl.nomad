@@ -173,7 +173,7 @@ job "conductor" {
         io_shotgun_publishRetryIn = "5,10,15"
         io_shotgun_shared = "false"
         com_bydeluxe_onemq_log = "false"
-+
+
         // NATS settings
         io_nats_streaming_url = "nats://nats.service.<TLD>:4222"
         io_nats_streaming_clusterId = "events-streaming"
