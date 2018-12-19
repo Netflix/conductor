@@ -18,12 +18,10 @@
  */
 package com.netflix.conductor.common.run;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
-import com.netflix.conductor.common.utils.JsonMapperProvider;
+import com.netflix.conductor.common.utils.JsonParser;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -108,8 +106,8 @@ public class WorkflowSummary {
             this.updateTime = sdf.format(new Date(workflow.getUpdateTime()));
         }
         this.status = workflow.getStatus();
-        this.input = JsonMapperProvider.toJson(workflow.getInput());
-        this.output = JsonMapperProvider.toJson(workflow.getOutput());
+        this.input = JsonParser.toJson(workflow.getInput());
+        this.output = JsonParser.toJson(workflow.getOutput());
         this.reasonForIncompletion = workflow.getReasonForIncompletion();
         if (workflow.getEndTime() > 0) {
             this.executionTime = workflow.getEndTime() - workflow.getStartTime();
