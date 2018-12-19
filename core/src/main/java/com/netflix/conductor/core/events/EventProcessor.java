@@ -170,6 +170,8 @@ public class EventProcessor {
 				handlers.addAll(ms.getEventHandlersForEvent(event, true));
 			}
 
+			int tagsMatchCounter = 0;
+			int tagsNotMatchCounter = 0;
 			for (EventHandler handler : handlers) {
 
 				String condition = handler.getCondition();
@@ -200,7 +202,7 @@ public class EventProcessor {
 
 					boolean anyRunning = es.runningWorkflowsByTags(tags);
 					if (!anyRunning) {
-						logger.debug("handler {} for payload {} did not match workflows with tags {}", handler.getName(), payloadObj, tags);
+						logger.debug("handler {} for payload {} did not find running workflows with tags {}", handler.getName(), payloadObj, tags);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setEvent(handler.getEvent());
@@ -209,7 +211,10 @@ public class EventProcessor {
 						ee.getOutput().put("msg", payload);
 						ee.getOutput().put("tags", tags);
 						es.addEventExecution(ee);
+						tagsNotMatchCounter++;
 						continue;
+					} else  {
+						tagsMatchCounter++;
 					}
 				}
 
@@ -247,6 +252,12 @@ public class EventProcessor {
 						logger.warn("Duplicate delivery/execution? {}", id);
 					}
 				}
+			}
+
+			// if no tags for all handlers - ack message
+			if (tagsNotMatchCounter > 0 && tagsMatchCounter == 0) {
+				queue.ack(Collections.singletonList(msg));
+				return;
 			}
 
 			boolean anySuccess = false;
