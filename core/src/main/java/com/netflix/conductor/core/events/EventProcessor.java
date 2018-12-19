@@ -87,7 +87,9 @@ public class EventProcessor {
         if (executorThreadCount > 0) {
             executorService = Executors.newFixedThreadPool(executorThreadCount);
             refresh();
-            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::refresh, 60, 60, TimeUnit.SECONDS);
+            int initialDelay = config.getIntProperty("workflow.event.processor.initialDelay", 60);
+            int period = config.getIntProperty("workflow.event.processor.interval", 60);
+            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::refresh, initialDelay, period, TimeUnit.SECONDS);
             logger.info("Event Processing is ENABLED. executorThreadCount set to {}", executorThreadCount);
         } else {
             logger.warn("Event processing is DISABLED. executorThreadCount set to {}", executorThreadCount);
