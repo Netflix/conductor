@@ -8,9 +8,12 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.MetadataDAO;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.jcodings.util.Hash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO implements MetadataDAO {
     private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestMetadataDAO.class);
     // Keys Families
+    private final static String CONFIG = "CONFIG";
     private final static String TASK_DEFS = "TASK_DEFS";
     private final static String WORKFLOW_DEFS = "WORKFLOW_DEFS";
     private final static String EVENT_HANDLERS = "EVENT_HANDLERS";
@@ -35,6 +39,7 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
     public Elasticsearch6RestMetadataDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
         super(client, config, mapper, "metadata");
 
+        ensureIndexExists(toIndexName(CONFIG), toTypeName(CONFIG));
         ensureIndexExists(toIndexName(TASK_DEFS), toTypeName(TASK_DEFS));
         ensureIndexExists(toIndexName(WORKFLOW_DEFS), toTypeName(WORKFLOW_DEFS));
         ensureIndexExists(toIndexName(EVENT_HANDLERS), toTypeName(EVENT_HANDLERS));
@@ -409,5 +414,4 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
         if (logger.isDebugEnabled())
             logger.debug("refreshTaskDefs: task defs={}", map);
     }
-
 }

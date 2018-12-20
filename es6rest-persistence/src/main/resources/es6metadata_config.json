@@ -1,0 +1,12 @@
+{
+  "config": {
+    "properties": {
+      "name": {
+        "type": "keyword"
+      },
+      "value": {
+        "type": "text"
+      }
+    }
+  }
+}
