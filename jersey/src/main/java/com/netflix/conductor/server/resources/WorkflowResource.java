@@ -122,7 +122,7 @@ public class WorkflowResource {
 		if(headers.getRequestHeader(commonparams.AUTH_CONTEXT)!= null ) {
 			if(StringUtils.isNotEmpty(headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0)))
 				{
-					authContext = executor.validateAuthContext(headers);
+					authContext = executor.validateAuthContext(def,headers);
 				}
 		}
 		NDC.push("rest-start-"+ UUID.randomUUID().toString());

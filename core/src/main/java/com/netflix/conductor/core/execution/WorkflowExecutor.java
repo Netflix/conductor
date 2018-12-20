@@ -1468,8 +1468,8 @@ public class WorkflowExecutor {
 	}
 
 
-	public Map<String, Object> validateAuthContext(HttpHeaders headers) {
-		if (!this.validateAuth ) {
+	public Map<String, Object> validateAuthContext(WorkflowDef workflowDef,HttpHeaders headers) {
+		if (!this.validateAuthContext  || MapUtils.isEmpty(workflowDef.getAuthValidation()) ) {
 			return null;
 		}
 		String authString = headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0);
