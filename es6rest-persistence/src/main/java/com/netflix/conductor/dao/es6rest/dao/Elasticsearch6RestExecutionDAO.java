@@ -186,7 +186,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
         // Do nothing if the task already updated by other thread
         if (existing != null && existing.getUpdateTime() != task.getUpdateTime()) {
-            throw new IllegalStateException("Update conflict detected for " + task);
+            logger.warn("Update conflict detected for " + task);
         }
 
         task.setUpdateTime(System.currentTimeMillis());
