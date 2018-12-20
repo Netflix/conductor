@@ -144,7 +144,6 @@ job "conductor" {
 
         // Workflow settings
         workflow_auth_validate = "true"
-        workflow_authcontext_validate = "true"
         workflow_failure_expandInline = "false"
         decider_sweep_frequency_seconds = "30"
         workflow_event_processor_thread_count = "10"
