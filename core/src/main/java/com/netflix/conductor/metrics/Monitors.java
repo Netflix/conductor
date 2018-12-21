@@ -20,6 +20,7 @@ package com.netflix.conductor.metrics;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.servo.monitor.BasicStopwatch;
 import com.netflix.servo.monitor.Stopwatch;
@@ -195,8 +196,9 @@ public class Monitors {
 		counter(classQualifier, "task_response_timeout", "taskType", taskType);
 	}
 
-	public static void recordWorkflowTermination(String workflowType, WorkflowStatus status) {
-		counter(classQualifier, "workflow_failure", "workflowName", workflowType, "status", status.name());
+	public static void recordWorkflowTermination(Workflow workflow) {
+		final String name = prefixName("workflow_failure", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType(), "status", workflow.getStatus().name());
 	}
 
 	public static void recordWorkflowStartError(String workflowType) {
@@ -211,9 +213,15 @@ public class Monitors {
 		counter(classQualifier, "task_update_conflict", "workflowName", workflowType, "taskType", taskType, "workflowStatus", status.name());
 	}
 
-	public static void recordWorkflowCompletion(String workflowType, long duration) {
-		getTimer(classQualifier, "workflow_execution", "workflowName", workflowType).record(duration, TimeUnit.MILLISECONDS);
-		recordWorkflowCompletion(workflowType); // counter
+	public static void recordWorkflowCompletion(Workflow workflow) {
+		final String type = workflow.getWorkflowType();
+		final String name = prefixName("workflow_execution", "sub", workflow.isSubWorkflow());
+		getTimer(classQualifier, name, "workflowName", type).record(workflow.getDuration(), TimeUnit.MILLISECONDS);
+		recordWorkflowCompletion(type); // counter
+	}
+
+	public static void recordWorkflowCompletion(String workflowType) {
+		counter(classQualifier, "workflow_completion", "workflowName", workflowType);
 	}
 
 	public static void recordTaskRateLimited(String taskDefName, int limit) {
@@ -244,43 +252,56 @@ public class Monitors {
 		gauge(classQualifier, "dao_payload_size", size, "dao", dao, "action", action);
 	}
 
-	public static void recordWorkflowStart(String workflowType) {
-		counter(classQualifier, "workflow_start", "workflowName", workflowType);
+	public static void recordWorkflowStart(Workflow workflow) {
+		final String name = prefixName("workflow_start", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowCompletion(String workflowType) {
-		counter(classQualifier, "workflow_completion", "workflowName", workflowType);
+	public static void recordWorkflowPause(Workflow workflow) {
+		final String name = prefixName("workflow_pause", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowPause(String workflowType) {
-		counter(classQualifier, "workflow_pause", "workflowName", workflowType);
+	public static void recordWorkflowResume(Workflow workflow) {
+		final String name = prefixName("workflow_resume", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowResume(String workflowType) {
-		counter(classQualifier, "workflow_resume", "workflowName", workflowType);
+	public static void recordWorkflowCancel(Workflow workflow) {
+		final String name = prefixName("workflow_cancel", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowCancel(String workflowType) {
-		counter(classQualifier, "workflow_cancel", "workflowName", workflowType);
+	public static void recordWorkflowReset(Workflow workflow) {
+		final String name = prefixName("workflow_reset", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowReset(String workflowType) {
-		counter(classQualifier, "workflow_reset", "workflowName", workflowType);
+	public static void recordWorkflowRerun(Workflow workflow) {
+		final String name = prefixName("workflow_rerun", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowRerun(String workflowType) {
-		counter(classQualifier, "workflow_rerun", "workflowName", workflowType);
+	public static void recordWorkflowRetry(Workflow workflow) {
+		final String name = prefixName("workflow_retry", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowRetry(String workflowType) {
-		counter(classQualifier, "workflow_retry", "workflowName", workflowType);
+	public static void recordWorkflowRestart(Workflow workflow) {
+		final String name = prefixName("workflow_restart", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowRestart(String workflowType) {
-		counter(classQualifier, "workflow_restart", "workflowName", workflowType);
+	public static void recordWorkflowRemove(Workflow workflow) {
+		final String name = prefixName("workflow_remove", "sub", workflow.isSubWorkflow());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
 	}
 
-	public static void recordWorkflowRemove(String workflowType) {
-		counter(classQualifier, "workflow_remove", "workflowName", workflowType);
+	private static String prefixName(String name, String prefix, boolean condition) {
+		if (condition) {
+			return prefix + name;
+		}
+
+		return name;
 	}
 }
