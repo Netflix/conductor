@@ -24,13 +24,18 @@ class HostTokenHelper {
     private static final long TOKEN_3 = 1383429733L;
 
     static List<HostToken> buildHostTokens() {
-        Host host1 = new Host(HOST_1, null, PORT_1, RACK_1, DATACENTER_1, Host.Status.Up);
-        Host host2 = new Host(HOST_2, null, PORT_2, RACK_2, DATACENTER_2, Host.Status.Up);
-        Host host3 = new Host(HOST_3, null, PORT_3, RACK_3, DATACENTER_3, Host.Status.Up);
+        List<Host> hosts = buildHosts();
         return Arrays.asList(
-                new HostToken(TOKEN_1, host1),
-                new HostToken(TOKEN_2, host2),
-                new HostToken(TOKEN_3, host3));
+                new HostToken(TOKEN_1, hosts.get(0)),
+                new HostToken(TOKEN_2, hosts.get(1)),
+                new HostToken(TOKEN_3, hosts.get(2)));
+    }
+
+    static List<Host> buildHosts() {
+        return Arrays.asList(
+                new Host(HOST_1, null, PORT_1, RACK_1, DATACENTER_1, Host.Status.Up),
+                new Host(HOST_2, null, PORT_2, RACK_2, DATACENTER_2, Host.Status.Up),
+                new Host(HOST_3, null, PORT_3, RACK_3, DATACENTER_3, Host.Status.Up));
     }
 
     static String buildHostTokensConfiguration() {
