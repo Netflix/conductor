@@ -125,6 +125,13 @@ public class Workflow extends Auditable{
 	}
 
 	/**
+	 * @return the duration of the workflow
+	 */
+	public long getDuration() {
+		return getEndTime() - getStartTime();
+	}
+
+	/**
 	 * @return the workflowId
 	 */
 	public String getWorkflowId() {
