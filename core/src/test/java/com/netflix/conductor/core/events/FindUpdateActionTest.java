@@ -3,6 +3,7 @@ package com.netflix.conductor.core.events;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ public class FindUpdateActionTest {
         Map<String, Object> task = new HashMap<>();
         task.put("p", "1");
 
-        Map<String, String> event = new HashMap<>();
+        Map<String, Object> event = new HashMap<>();
         event.put("p", "1");
 
         boolean matches = findUpdateAction.matches(task, event, null);
@@ -30,14 +31,18 @@ public class FindUpdateActionTest {
     @Test
     public void compare_objects() throws Exception {
         Map<String, Object> task = new HashMap<>();
-        task.put("p", 1);
+        task.put("p", Collections.singletonMap("foo", "bar"));
 
-        Map<String, String> event = new HashMap<>();
-        event.put("p", "1");
+        Map<String, Object> event = new HashMap<>();
+        event.put("p", Collections.singletonMap("foo", "bar"));
 
         boolean matches = findUpdateAction.matches(task, event, null);
-        assertFalse(matches);
+        assertTrue(matches);
 
+        matches = findUpdateAction.matches(task, event, ".task.p == .event.p");
+        assertTrue(matches);
+
+        event.put("p", Collections.singletonMap("foo", "bar2"));
         matches = findUpdateAction.matches(task, event, ".task.p == .event.p");
         assertFalse(matches);
     }
@@ -45,7 +50,7 @@ public class FindUpdateActionTest {
     @Test
     public void compare_nulls() throws Exception {
         Map<String, Object> task = new HashMap<>();
-        Map<String, String> event = new HashMap<>();
+        Map<String, Object> event = new HashMap<>();
 
         boolean matches = findUpdateAction.matches(task, event, null);
         assertFalse(matches);
@@ -58,7 +63,7 @@ public class FindUpdateActionTest {
     public void all_false() throws Exception {
         Map<String, Object> task = new HashMap<>();
 
-        Map<String, String> event = new HashMap<>();
+        Map<String, Object> event = new HashMap<>();
         event.put("p", "1");
 
         boolean matches = findUpdateAction.matches(task, event, null);
@@ -76,7 +81,7 @@ public class FindUpdateActionTest {
         task.put("p", "1");
         task.put("v", "1");
 
-        Map<String, String> event = new HashMap<>();
+        Map<String, Object> event = new HashMap<>();
         event.put("p", "1");
 
         boolean matches = findUpdateAction.matches(task, event, null);
