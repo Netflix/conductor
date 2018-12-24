@@ -107,7 +107,7 @@ public class FindUpdateAction implements JavaEventAction {
 		return new ArrayList<>(output);
 	}
 
-	private boolean matches(Map<String, Object> task, Map<String, String> event, String expression) throws Exception {
+	boolean matches(Map<String, Object> task, Map<String, String> event, String expression) throws Exception {
 
 		// Use JQ expression
 		if (StringUtils.isNotEmpty(expression)) {
