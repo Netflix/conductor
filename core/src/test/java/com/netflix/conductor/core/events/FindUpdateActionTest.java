@@ -10,11 +10,10 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 public class FindUpdateActionTest {
+    private FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
 
     @Test
     public void simple() throws Exception {
-        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
-
         Map<String, Object> task = new HashMap<>();
         task.put("p", "1");
 
@@ -30,8 +29,6 @@ public class FindUpdateActionTest {
 
     @Test
     public void compare_objects() throws Exception {
-        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
-
         Map<String, Object> task = new HashMap<>();
         task.put("p", 1);
 
@@ -47,8 +44,6 @@ public class FindUpdateActionTest {
 
     @Test
     public void compare_nulls() throws Exception {
-        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
-
         Map<String, Object> task = new HashMap<>();
         Map<String, String> event = new HashMap<>();
 
@@ -61,8 +56,6 @@ public class FindUpdateActionTest {
 
     @Test
     public void all_false() throws Exception {
-        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
-
         Map<String, Object> task = new HashMap<>();
 
         Map<String, String> event = new HashMap<>();
