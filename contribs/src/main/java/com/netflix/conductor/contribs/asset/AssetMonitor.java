@@ -152,7 +152,7 @@ public class AssetMonitor implements JavaEventAction {
 				.collect(Collectors.toList());
 
 		// Evaluate the message against the message match fields
-		Map<String, String> messageParameters = ScriptEvaluator.evaluateMap(rerunWorkflow.getMessageParameters(), payload);
+		Map<String, Object> messageParameters = ScriptEvaluator.evaluateMap(rerunWorkflow.getMessageParameters(), payload);
 		if (MapUtils.isEmpty(messageParameters)) {
 			logger.error("No message parameters evaluated for " + messageId);
 			return;
@@ -181,7 +181,7 @@ public class AssetMonitor implements JavaEventAction {
 			}
 
 			// Evaluate the workflow input map against the workflow match fields
-			Map<String, String> workflowParameters = ScriptEvaluator.evaluateMap(rerunWorkflow.getWorkflowParameters(), task.getInputData());
+			Map<String, Object> workflowParameters = ScriptEvaluator.evaluateMap(rerunWorkflow.getWorkflowParameters(), task.getInputData());
 			if (MapUtils.isEmpty(workflowParameters)) {
 				continue;
 			}
@@ -194,10 +194,10 @@ public class AssetMonitor implements JavaEventAction {
 
 			// Skip if any of the messageParameters does not match the workflowParameters
 			boolean anyNotEqual = messageParameters.entrySet().stream().anyMatch(entry -> {
-				String wfValue = workflowParameters.get(entry.getKey());
-				String msgValue = entry.getValue();
-				return !(StringUtils.isNotEmpty(wfValue)
-						&& StringUtils.isNotEmpty(msgValue)
+				Object wfValue = workflowParameters.get(entry.getKey());
+				Object msgValue = entry.getValue();
+				return !(Objects.nonNull(wfValue)
+						&& Objects.nonNull(msgValue)
 						&& msgValue.equals(wfValue));
 			});
 			if (anyNotEqual) {
