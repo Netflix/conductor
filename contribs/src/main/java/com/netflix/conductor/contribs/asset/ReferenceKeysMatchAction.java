@@ -65,7 +65,8 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
         if (!(eventReferenceKeys instanceof List)) {
             throw new IllegalArgumentException("Event data.referenceKeys is not a list");
         }
-        List<ReferenceKey> eventRefKeys = toReferenceKeyList(eventReferenceKeys);
+        List<ReferenceKey> eventRefKeys = mapper.convertValue(eventReferenceKeys, new TypeReference<List<ReferenceKey>>() {
+        });
 
         // Lets find WAIT + IN_PROGRESS tasks directly via edao
         boolean taskNamesDefined = CollectionUtils.isNotEmpty(params.taskRefNames);
@@ -92,7 +93,8 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                     logger.warn("Task input referenceKeys is not a list for " + task);
                     return;
                 }
-                List<ReferenceKey> taskRefKeys = toReferenceKeyList(taskReferenceKeys);
+                List<ReferenceKey> taskRefKeys = mapper.convertValue(taskReferenceKeys, new TypeReference<List<ReferenceKey>>() {
+                });
 
                 // Array match
                 if (!matches(taskRefKeys, eventRefKeys)) {
@@ -197,11 +199,6 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                 }
                 return false;
             });
-        });
-    }
-
-    private List<ReferenceKey> toReferenceKeyList(Object referenceKeys) {
-        return mapper.convertValue(referenceKeys, new TypeReference<List<ReferenceKey>>() {
         });
     }
 
