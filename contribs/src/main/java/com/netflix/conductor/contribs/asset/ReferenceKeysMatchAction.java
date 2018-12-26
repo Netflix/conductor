@@ -40,7 +40,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
     @Override
     public List<String> handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
         Set<String> output = new HashSet<>();
-        ActionParameters params = mapper.convertValue(action.getJava_action().getInputParameters(), ActionParameters.class);
+        ActionParams params = mapper.convertValue(action.getJava_action().getInputParameters(), ActionParams.class);
 
         // Task status is completed by default. It either can be a constant or expression
         Task.Status taskStatus;
@@ -61,12 +61,12 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
             taskStatus = Task.Status.COMPLETED;
         }
 
-        Object eventReferenceKeys = ScriptEvaluator.evalJqRaw(".data.referenceKeys[]", payload);
-        if (!(eventReferenceKeys instanceof List)) {
-            throw new IllegalArgumentException("Event data.referenceKeys is not a list");
-        }
-        List<ReferenceKey> eventRefKeys = mapper.convertValue(eventReferenceKeys, new TypeReference<List<ReferenceKey>>() {
-        });
+        Map<String, Object> titleKeysMap = ScriptEvaluator.evaluateMap(params.titleKeys, payload);
+        Map<String, Object> titleVersionMap = ScriptEvaluator.evaluateMap(params.titleVersion, payload);
+
+        ReferenceKey eventRefKeys = new ReferenceKey();
+        eventRefKeys.titleKeys = mapper.convertValue(titleKeysMap, TitleKeys.class);
+        eventRefKeys.titleVersion = mapper.convertValue(titleVersionMap, TitleVersion.class);
 
         // Lets find WAIT + IN_PROGRESS tasks directly via edao
         boolean taskNamesDefined = CollectionUtils.isNotEmpty(params.taskRefNames);
@@ -132,7 +132,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
         return new ArrayList<>(output);
     }
 
-    private boolean matches(List<ReferenceKey> taskRefKeys, List<ReferenceKey> eventRefKeys) {
+    private boolean matches(List<ReferenceKey> taskRefKeys, ReferenceKey erk) {
         return taskRefKeys.stream().anyMatch(trk -> {
 			/* Feature match logic:
 				if .task.supplementalSubType != null and .task.supplementalSubType != ""
@@ -173,33 +173,46 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
             boolean isEpisodic = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.episodeId);
             boolean isSupplemental = nonNull(trk.titleVersion) && isNoneEmpty(trk.titleVersion.supplementalSubType, trk.titleVersion.type);
 
-            return eventRefKeys.stream().anyMatch(erk -> {
-                if (isFeature && isSupplemental) {
-                    return isNotEmpty(trk.titleKeys.featureId) &&
-                            Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-                            Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId) &&
-                            Objects.equals(trk.titleVersion.type, erk.titleVersion.type);
-                } else if (isEpisodic && isSupplemental) {
-                    return isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId) &&
-                            Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-                            Objects.equals(trk.titleVersion.type, erk.titleVersion.type) &&
-                            Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId) &&
-                            Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
-                            Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId);
-                } else if (isFeature) {
-                    return isNoneEmpty(trk.titleKeys.featureId, trk.titleKeys.featureVersionId) &&
-                            Objects.equals(trk.titleKeys.featureVersionId, erk.titleKeys.featureVersionId) &&
-                            Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId);
-                } else if (isEpisodic) {
-                    return isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.episodeVersionId) &&
-                            Objects.equals(trk.titleKeys.episodeVersionId, erk.titleKeys.episodeVersionId) &&
-                            Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
-                            Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
-                            Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId);
-                }
-                return false;
-            });
+            if (isFeature && isSupplemental) {
+                return isNotEmpty(trk.titleKeys.featureId) &&
+                        Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+                        Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId) &&
+                        Objects.equals(trk.titleVersion.type, erk.titleVersion.type);
+            } else if (isEpisodic && isSupplemental) {
+                return isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+                        Objects.equals(trk.titleVersion.type, erk.titleVersion.type) &&
+                        Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId) &&
+                        Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId);
+            } else if (isFeature) {
+                return isNoneEmpty(trk.titleKeys.featureId, trk.titleKeys.featureVersionId) &&
+                        Objects.equals(trk.titleKeys.featureVersionId, erk.titleKeys.featureVersionId) &&
+                        Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId);
+            } else if (isEpisodic) {
+                return isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.episodeVersionId) &&
+                        Objects.equals(trk.titleKeys.episodeVersionId, erk.titleKeys.episodeVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
+                        Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId);
+            }
+            return false;
         });
+    }
+
+    private static class ActionParams {
+        public String status;
+        public String failedReason;
+        public String expression;
+        public Set<String> taskRefNames;
+        public Map<String, String> statuses;
+        public Map<String, String> titleKeys;
+        public Map<String, String> titleVersion;
+    }
+
+    private static class ReferenceKey {
+        public TitleKeys titleKeys;
+        public TitleVersion titleVersion;
     }
 
     private static class TitleKeys {
@@ -215,17 +228,5 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
     private static class TitleVersion {
         public String type;
         public String supplementalSubType;
-    }
-
-    private static class ReferenceKey {
-        public TitleKeys titleKeys = new TitleKeys();
-        public TitleVersion titleVersion = new TitleVersion();
-    }
-
-    private static class ActionParameters {
-        public String status;
-        public String failedReason;
-        public Map<String, String> statuses = new HashMap<>();
-        public Set<String> taskRefNames = new HashSet<>();
     }
 }
