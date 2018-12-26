@@ -80,27 +80,40 @@ public class ScriptEvaluator {
 		}
 	}
 
+	public static Object evalJqAsObject(String expression, Object payload) throws Exception {
+		JsonNode input = om.valueToTree(payload);
+		JsonQuery query = queryCache.get(expression);
+		List<JsonNode> result = query.apply(input);
+		if (result == null || result.isEmpty()) {
+			return null;
+		}
+		JsonNode node = result.get(0);
+		if (node.isObject()) {
+			return om.convertValue(node, Object.class);
+		}
+		return node.asText(null);
+	}
+
 	public static List<Object> evalJqAsList(String expression, Object payload) throws Exception {
 		JsonNode input = om.valueToTree(payload);
 		JsonQuery query = queryCache.get(expression);
 		List<JsonNode> result = query.apply(input);
 		if (result == null || result.isEmpty()) {
 			return Collections.emptyList();
-		} else {
-			return om.convertValue(result, new TypeReference<List<Object>>(){});
 		}
+		return om.convertValue(result, new TypeReference<List<Object>>(){});
 	}
 
-	public static Map<String, String> evaluateMap(Map<String, String> map, Object payload) {
+	public static Map<String, Object> evaluateMap(Map<String, String> map, Object payload) {
 		return map.entrySet().stream().map(entry -> {
 			String fieldName = entry.getKey();
 			String expression = entry.getValue();
 			if (StringUtils.isEmpty(expression))
 				throw new RuntimeException(fieldName + " expression is empty");
 
-			String fieldValue;
+			Object fieldValue;
 			try {
-				fieldValue = evalJq(expression, payload);
+				fieldValue = evalJqAsObject(expression, payload);
 			} catch (Exception e) {
 				throw new RuntimeException(fieldName + " evaluating failed with " + e.getMessage(), e);
 			}

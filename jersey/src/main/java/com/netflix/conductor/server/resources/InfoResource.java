@@ -119,72 +119,16 @@ public class InfoResource {
 	}
 
 	@GET
-	@Path("/metrics/counters")
-	@ApiOperation(value = "Get the counter metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> counters() {
-		Map<String, Object> output = new TreeMap<>();
-
-		Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
-		counters.forEach((name, map) -> {
-			map.forEach((tags, counter) -> {
-				// Emit the counter name
-				output.put(name + "." + joinTags(tags) + ".counter", counter.count());
-			});
-		});
-
-		return output;
-	}
-
-	@GET
 	@Path("/metrics")
 	@ApiOperation(value = "Get the metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
 		Map<String, Object> output = new TreeMap<>();
 
-		// TODO(hueys): Remove this debug code once the set of metrics is finalized.
-		final boolean debug = true;
-
-		// Debug: Counters
-		Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
-
-		if (debug) {
-			counters.forEach((name, map) -> {
-				map.forEach((tags, counter) -> {
-					output.put("debug|" + name + "|" + joinTags(tags) + ".counter", counter.count());
-				});
-			});	
-		}
-
-		// Debug: Gauges
-		Map<String, Map<Map<String, String>, AtomicLong>> gauges = Monitors.getGauges();
-
-		if (debug) {
-			gauges.forEach((name, map) -> {
-				map.forEach((tags, value) -> {
-					output.put("debug|" + name + "|" + joinTags(tags) + ".value", value.get());
-				});
-			});	
-		}
-
-		// Debug: Timers
-		Map<String, Map<Map<String, String>, PercentileTimer>> timers = Monitors.getTimers();
-
-		if (debug) {
-			timers.forEach((name, map) -> {
-				map.forEach((tags, timer) -> {
-					String key = joinTags(tags);
-					output.put("debug|" + name + "|" + key + ".count", timer.count());
-					output.put("debug|" + name + "|" + key + ".totalTime", timer.totalTime());
-				});
-			});	
-		}
-
 		// Workflow and Event Counters
 		Map<String, String> counterMap = new HashMap<>();
 
-		// Workflows
+		// Map counter names to metric names
 		counterMap.put("workflow_completion", "workflows_completed");
 		counterMap.put("workflow_failure", "workflows_failed");
 		counterMap.put("workflow_start", "workflows_started");
@@ -195,10 +139,91 @@ public class InfoResource {
 		counterMap.put("event_queue_messages_received", "messages_received");
 		counterMap.put("event_queue_messages_processed", "messages_processed");
 
+		// Counters
+		final Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
 		counters.forEach((name, map) -> {
 			if (counterMap.containsKey(name)) {
 				output.put("deluxe.conductor." + counterMap.get(name), sum(map));
 			}
+		});
+
+		return output;
+	}
+
+	@GET
+	@Path("/metrics/all")
+	@ApiOperation(value = "Get all available metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> debugMetrics() {
+		Map<String, Object> output = new TreeMap<>();
+
+		output.putAll(getCounters());
+		output.putAll(getGauges());
+		output.putAll(getTimers());
+
+		return output;
+	}
+
+	@GET
+	@Path("/metrics/counters")
+	@ApiOperation(value = "Get the counter metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> counters() {
+		return new TreeMap<>(getCounters());
+	}
+
+	@GET
+	@Path("/metrics/gauges")
+	@ApiOperation(value = "Get the gauge metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> gauges() {
+		return new TreeMap<>(getGauges());
+	}
+
+	@GET
+	@Path("/metrics/timers")
+	@ApiOperation(value = "Get the timer metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> timers() {
+		return new TreeMap<>(getTimers());
+	}
+
+	private Map<String, Object> getCounters() {
+		Map<String, Object> output = new HashMap<>();
+
+		final Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
+		counters.forEach((name, map) -> {
+			map.forEach((tags, counter) -> {
+				output.put(name + "." + joinTags(tags) + ".counter", counter.count());
+			});
+		});
+
+		return output;
+	}
+
+	private Map<String, Object> getGauges() {
+		Map<String, Object> output = new HashMap<>();
+
+		final Map<String, Map<Map<String, String>, AtomicLong>> gauges = Monitors.getGauges();
+		gauges.forEach((name, map) -> {
+			map.forEach((tags, value) -> {
+				output.put(name + "." + joinTags(tags) + ".value", value.get());
+			});
+		});
+
+		return output;
+	}
+
+	private Map<String, Object> getTimers() {
+		Map<String, Object> output = new HashMap<>();
+
+		final Map<String, Map<Map<String, String>, PercentileTimer>> timers = Monitors.getTimers();
+		timers.forEach((name, map) -> {
+			map.forEach((tags, timer) -> {
+				String key = joinTags(tags);
+				output.put(name + "." + key + ".count", timer.count());
+				output.put(name + "." + key + ".totalTime", timer.totalTime());
+			});
 		});
 
 		return output;
