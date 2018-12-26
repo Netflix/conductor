@@ -36,7 +36,7 @@ public class FindUpdateAction implements JavaEventAction {
 			throw new RuntimeException("No inputParameters defined in the action");
 
 		// Convert map value field=expression to the map of field=value
-		Map<String, String> inputParameters = ScriptEvaluator.evaluateMap(findUpdate.getInputParameters(), payload);
+		Map<String, Object> inputParameters = ScriptEvaluator.evaluateMap(findUpdate.getInputParameters(), payload);
 
 		// Task status is completed by default. It either can be a constant or expression
 		Task.Status taskStatus;
@@ -107,7 +107,7 @@ public class FindUpdateAction implements JavaEventAction {
 		return new ArrayList<>(output);
 	}
 
-	private boolean matches(Map<String, Object> task, Map<String, String> event, String expression) throws Exception {
+	boolean matches(Map<String, Object> task, Map<String, Object> event, String expression) throws Exception {
 
 		// Use JQ expression
 		if (StringUtils.isNotEmpty(expression)) {
@@ -132,10 +132,8 @@ public class FindUpdateAction implements JavaEventAction {
 			// Skip if values do not match totally
 			boolean anyNotEqual = event.entrySet().stream().anyMatch(entry -> {
 				Object taskValue = task.get(entry.getKey());
-				String msgValue = entry.getValue();
-				return !(Objects.nonNull(taskValue)
-						&& StringUtils.isNotEmpty(msgValue)
-						&& taskValue.equals(msgValue));
+				Object msgValue = entry.getValue();
+				return !(Objects.nonNull(taskValue) && Objects.nonNull(msgValue) && taskValue.equals(msgValue));
 			});
 
 			// anyNotEqual is true if any of values does not match. false means all match
