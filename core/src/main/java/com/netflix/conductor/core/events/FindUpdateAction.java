@@ -24,8 +24,8 @@ public class FindUpdateAction implements JavaEventAction {
 	}
 
 	@Override
-	public void handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
-		handleInternal(action, payload, event, messageId);
+	public List<String> handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
+		return handleInternal(action, payload, event, messageId);
 	}
 
 	public List<String> handleInternal(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {

@@ -20,6 +20,7 @@ package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
 import com.netflix.conductor.contribs.asset.AssetMonitor;
+import com.netflix.conductor.contribs.asset.ReferenceKeysMatchAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +34,7 @@ public class AssetModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(AssetMonitor.class).asEagerSingleton();
+		bind(ReferenceKeysMatchAction.class).asEagerSingleton();
 		logger.debug("Asset Module configured ...");
 	}
 }

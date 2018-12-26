@@ -33,9 +33,11 @@ import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * @author Viren
@@ -102,6 +104,16 @@ public class ScriptEvaluator {
 			return Collections.emptyList();
 		}
 		return om.convertValue(result, new TypeReference<List<Object>>(){});
+	}
+
+	public static Object evalJqRaw(String expression, Object payload) throws Exception {
+		JsonNode input = om.valueToTree(payload);
+		JsonQuery query = queryCache.get(expression);
+		List<JsonNode> result = query.apply(input);
+		if (result == null || result.isEmpty()) {
+			return null;
+		}
+		return om.convertValue(result, Object.class);
 	}
 
 	public static Map<String, Object> evaluateMap(Map<String, String> map, Object payload) {
