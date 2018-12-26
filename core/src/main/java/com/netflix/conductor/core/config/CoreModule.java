@@ -77,7 +77,6 @@ public class CoreModule extends AbstractModule {
         bind(SubWorkflow.class).asEagerSingleton();
         bind(Wait.class).asEagerSingleton();
         bind(Event.class).asEagerSingleton();
-        bind(WorkflowSweeper.class).asEagerSingleton();
     }
 
     @Provides
