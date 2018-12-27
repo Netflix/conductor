@@ -193,9 +193,9 @@ public class EventProcessor {
 				}
 
 				if (MapUtils.isNotEmpty(handler.getTags())) {
-					Map<String, String> map = ScriptEvaluator.evaluateMap(handler.getTags(), payloadObj);
+					Map<String, Object> map = ScriptEvaluator.evaluateMap(handler.getTags(), payloadObj);
 					Set<String> tags = map.entrySet().stream()
-							.filter(e -> StringUtils.isNotEmpty(e.getValue()))
+							.filter(e -> Objects.nonNull(e.getValue()))
 							.map(e -> e.getKey() + e.getValue())
 							.collect(Collectors.toSet());
 					logger.debug("tags: {}", tags);
