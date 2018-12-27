@@ -59,7 +59,7 @@ public class AssetMonitor implements JavaEventAction {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public void handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
+	public List<Object> handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
 		ActionParameters params = om.convertValue(action.getJava_action().getInputParameters(), ActionParameters.class);
 
 		// TODO Validate parameters
@@ -98,6 +98,7 @@ public class AssetMonitor implements JavaEventAction {
 				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + ", messageId=" + messageId);
 			}
 		}
+		return Collections.emptyList();
 	}
 
 	// Step 4
