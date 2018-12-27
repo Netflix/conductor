@@ -296,11 +296,12 @@ public class ActionProcessor {
 			Class clazz = Class.forName(params.getClassName());
 			Object object = injector.getInstance(clazz);
 			JavaEventAction javaEventAction = (JavaEventAction) object;
-			javaEventAction.handle(action, payload, event, messageId);
+			List<?> ids = javaEventAction.handle(action, payload, event, messageId);
 
 			op.put("conductor.event.name", event);
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.success", CollectionUtils.isNotEmpty(ids));
 		} catch (Exception e) {
 			logger.error("javaAction: failed with " + e.getMessage() + " for action=" + params + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
