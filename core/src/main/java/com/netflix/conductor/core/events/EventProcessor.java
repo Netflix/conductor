@@ -29,7 +29,6 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.NDC;
@@ -192,12 +191,9 @@ public class EventProcessor {
 					}
 				}
 
-				if (MapUtils.isNotEmpty(handler.getTags())) {
-					Map<String, Object> map = ScriptEvaluator.evaluateMap(handler.getTags(), payloadObj);
-					Set<String> tags = map.entrySet().stream()
-							.filter(e -> Objects.nonNull(e.getValue()))
-							.map(e -> e.getKey() + e.getValue())
-							.collect(Collectors.toSet());
+				if (StringUtils.isNotEmpty(handler.getTags())) {
+					List<Object> candidates = ScriptEvaluator.evalJqAsList(handler.getTags(), payloadObj);
+					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
 					logger.debug("tags: {}", tags);
 
 					boolean anyRunning = es.runningWorkflowsByTags(tags);

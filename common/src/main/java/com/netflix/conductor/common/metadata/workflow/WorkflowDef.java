@@ -54,7 +54,7 @@ public class WorkflowDef extends Auditable {
 
 	private List<String> retryForbidden = new LinkedList<String>();
 
-	private Map<String, Object> tags = new HashMap<>();
+	private String tags;
 	
 	/**
 	 * @return the name
@@ -250,11 +250,11 @@ public class WorkflowDef extends Auditable {
 		this.retryForbidden = retryForbidden;
 	}
 
-	public Map<String, Object> getTags() {
+	public String getTags() {
 		return tags;
 	}
 
-	public void setTags(Map<String, Object> tags) {
+	public void setTags(String tags) {
 		this.tags = tags;
 	}
 
