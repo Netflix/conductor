@@ -291,7 +291,7 @@ public class EventProcessor {
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);
-					success = (Boolean) output.get("conductor.event.success");
+					success = BooleanUtils.isTrue((Boolean) output.get("conductor.event.success"));
 				}
 				ee.setStatus(Status.COMPLETED);
 				es.updateEventExecution(ee);
