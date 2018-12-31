@@ -70,7 +70,8 @@ public class ExecutionService {
 	private MetadataDAO metadata;
 	
 	private int taskRequeueTimeout;
-	
+
+	private Configuration config;
 
 	@Inject
 	public ExecutionService(WorkflowExecutor wfProvider, ExecutionDAO edao, QueueDAO queue, MetadataDAO metadata, IndexDAO indexer, Configuration config) {
@@ -79,6 +80,7 @@ public class ExecutionService {
 		this.queue = queue;
 		this.metadata = metadata;
 		this.indexer = indexer;
+		this.config = config;
 		this.taskRequeueTimeout = config.getIntProperty("task.requeue.timeout", 60_000);
 	}
 
@@ -375,9 +377,9 @@ public class ExecutionService {
 	public void reloadConfig() {
 		List<Pair<String, String>> pairs = metadata.getConfigs();
 		pairs.forEach(pair -> {
-			String name = pair.getKey();
-			if (name.startsWith("log4j_logger_")) {
-				name = name.replace("log4j_logger_", "").replaceAll("_", ".");
+			config.override(pair.getKey(), pair.getValue());
+			if (pair.getKey().startsWith("log4j_logger_")) {
+				String name = pair.getKey().replace("log4j_logger_", "").replaceAll("_", ".");
 				Logger targetLogger = LoggerFactory.getLogger(name);
 				Level targetLevel = Level.toLevel(pair.getValue());
 
