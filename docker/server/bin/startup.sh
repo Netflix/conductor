@@ -26,10 +26,10 @@ fi
 if [[ "$workflow_elasticsearch_url" != "" ]];
 then
     config_url=$workflow_elasticsearch_url/conductor.metadata.${STACK}.config/_search?size=1000
-    for e in $(curl --silent --fail $config_url | jq -c '.hits.hits[]._source');
+    for e in $(curl --silent --fail $config_url | jq -c '.hits.hits[]');
     do
-        name=$(echo $e | jq '.name' | sed 's/"//g')
-        value=$(echo $e | jq '.value' | sed 's/"//g')
+        name=$(echo $e | jq '._id' | sed 's/"//g')
+        value=$(echo $e | jq '._source.value' | sed 's/"//g')
         export $(echo $name"="$value)
     done
 fi

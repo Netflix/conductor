@@ -36,11 +36,14 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -368,5 +371,30 @@ public class ExecutionService {
 	public List<TaskExecLog> getTaskLogs(String taskId) {
 		return indexer.getTaskLogs(taskId);		
 	}
-	
+
+	public void reloadConfig() {
+		List<Pair<String, String>> pairs = metadata.getConfigs();
+		pairs.forEach(pair -> {
+			String name = pair.getKey();
+			if (name.startsWith("log4j_logger_")) {
+				name = name.replace("log4j_logger_", "").replaceAll("_", ".");
+				Logger targetLogger = LoggerFactory.getLogger(name);
+				Level targetLevel = Level.toLevel(pair.getValue());
+
+				try {
+					setLevel(targetLogger, targetLevel);
+				} catch (Exception e) {
+					logger.error("set log level failed with {} for {}", e.getMessage(), pair.toString(), e);
+				}
+			}
+		});
+	}
+
+	private void setLevel(Logger logger, Level level) throws Exception {
+		Field field = logger.getClass().getDeclaredField("logger");
+		field.setAccessible(true);
+
+		org.apache.log4j.Logger object = (org.apache.log4j.Logger)field.get(logger);
+		object.setLevel(level);
+	}
 }
