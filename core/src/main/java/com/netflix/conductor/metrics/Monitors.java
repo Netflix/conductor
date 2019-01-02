@@ -188,6 +188,22 @@ public class Monitors {
 		gauge(classQualifier, "workflow_running", count, "workflowName", name, "version", version, "ownerApp", ""+ownerApp);
 	}
 
+	public static void recordWorkflowInProgress(Workflow workflow) {
+		final long measurement = 1;
+
+		if (!workflow.isSubWorkflow()) {
+			gauge(classQualifier, "workflow_in_progress", measurement, "workflowName", workflow.getWorkflowType());
+		}
+	}
+
+	public static void recordWorkflowCompleteProgress(Workflow workflow) {
+		final long measurement = -1;
+		
+		if (!workflow.isSubWorkflow()) {
+			gauge(classQualifier, "workflow_in_progress", measurement, "workflowName", workflow.getWorkflowType());
+		}
+	}
+
 	public static void recordTaskTimeout(String taskType) {
 		counter(classQualifier, "task_timeout", "taskType", taskType);
 	}
