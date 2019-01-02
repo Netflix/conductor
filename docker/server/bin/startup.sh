@@ -23,8 +23,7 @@ if [ -f $secrets ]; then
     export $secrets
 fi
 
-if [[ "$workflow_elasticsearch_url" != "" ]];
-then
+if [[ "$workflow_elasticsearch_url" != "" ]]; then
     config_url=$workflow_elasticsearch_url/conductor.metadata.${STACK}.config/_search?size=1000
     for e in $(curl --silent --fail $config_url | jq -c '.hits.hits[]');
     do
