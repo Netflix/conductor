@@ -33,6 +33,7 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -956,6 +957,10 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String id = toId(workflow.getWorkflowId());
 
         if (add) {
+            if (CollectionUtils.isEmpty(workflow.getTags())) {
+                return;
+            }
+
             Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
                     "tags", workflow.getTags());
 
