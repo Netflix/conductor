@@ -15,3 +15,5 @@ ui/.settings
 dump.rdb
 .idea
 deploy.nomad
+bin
+.vscode
