@@ -93,6 +93,16 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         initIndexTypeNames(EVENT_EXECUTION);
         initIndexTypeNames(WORKFLOW_TAGS);
 
+        // Explicitly init these indexes
+        ensureIndexExists(indexes.get(IN_PROGRESS_TASKS));
+        ensureIndexExists(indexes.get(WORKFLOW_TO_TASKS));
+        ensureIndexExists(indexes.get(SCHEDULED_TASKS));
+        ensureIndexExists(indexes.get(PENDING_WORKFLOWS));
+        ensureIndexExists(indexes.get(WORKFLOW_DEF_TO_WORKFLOWS));
+        ensureIndexExists(indexes.get(CORR_ID_TO_WORKFLOWS));
+        ensureIndexExists(indexes.get(POLL_DATA));
+        ensureIndexExists(indexes.get(WORKFLOW_TAGS));
+
         // Explicitly init these indexes as they are using `es6runtime_***.json` resource file
         ensureIndexExists(indexes.get(TASK), types.get(TASK));
         ensureIndexExists(indexes.get(WORKFLOW), types.get(WORKFLOW));
