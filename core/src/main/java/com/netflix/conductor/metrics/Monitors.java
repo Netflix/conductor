@@ -215,6 +215,7 @@ public class Monitors {
 	public static void recordWorkflowTermination(Workflow workflow) {
 		final String name = prefixName("workflow_failure", "sub", workflow.isSubWorkflow());
 		counter(classQualifier, name, "workflowName", workflow.getWorkflowType(), "status", workflow.getStatus().name());
+		recordWorkflowCompleteProgress(workflow);
 	}
 
 	public static void recordWorkflowStartError(String workflowType) {
@@ -234,6 +235,7 @@ public class Monitors {
 		final String name = prefixName("workflow_execution", "sub", workflow.isSubWorkflow());
 		getTimer(classQualifier, name, "workflowName", type).record(workflow.getDuration(), TimeUnit.MILLISECONDS);
 		recordWorkflowCompletion(type); // counter
+		recordWorkflowCompleteProgress(workflow);
 	}
 
 	public static void recordWorkflowCompletion(String workflowType) {
@@ -271,6 +273,7 @@ public class Monitors {
 	public static void recordWorkflowStart(Workflow workflow) {
 		final String name = prefixName("workflow_start", "sub", workflow.isSubWorkflow());
 		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
+		recordWorkflowInProgress(workflow);
 	}
 
 	public static void recordWorkflowPause(Workflow workflow) {
@@ -286,6 +289,7 @@ public class Monitors {
 	public static void recordWorkflowCancel(Workflow workflow) {
 		final String name = prefixName("workflow_cancel", "sub", workflow.isSubWorkflow());
 		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
+		recordWorkflowCompleteProgress(workflow);
 	}
 
 	public static void recordWorkflowReset(Workflow workflow) {
@@ -306,6 +310,7 @@ public class Monitors {
 	public static void recordWorkflowRestart(Workflow workflow) {
 		final String name = prefixName("workflow_restart", "sub", workflow.isSubWorkflow());
 		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
+		recordWorkflowInProgress(workflow);
 	}
 
 	public static void recordWorkflowRemove(Workflow workflow) {

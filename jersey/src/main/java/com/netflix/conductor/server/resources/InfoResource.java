@@ -147,6 +147,19 @@ public class InfoResource {
 			}
 		});
 
+		// Gauges to track in progress tasks, workflows, etc...
+		Map<String, String> gaugeMap = new HashMap<>();
+
+		// Map gauge names to metric names
+		gaugeMap.put("workflow_in_progress", "workflows_in_progress");
+		gaugeMap.put("task_in_progress", "tasks_in_progress");
+
+		// Gauges
+		final Map<String, Object> gauges = getGauges();
+		gauges.forEach((k, v) -> {
+			output.put("deluxe.conductor." + k, v);
+		});
+
 		return output;
 	}
 
