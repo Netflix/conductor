@@ -33,6 +33,7 @@ import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
@@ -94,9 +95,12 @@ public class WorkflowExecutor {
 	private int activeWorkerLastPollnSecs;
 
 	private boolean validateAuth;
+	private boolean validateAuthContext;
 	private boolean lazyDecider;
 
 	private ParametersUtils pu = new ParametersUtils();
+
+	private CommonParams commonparams;
 
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ObjectMapper om, AuthManager auth, Configuration config) {
@@ -108,6 +112,7 @@ public class WorkflowExecutor {
 		activeWorkerLastPollnSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
 		this.decider = new DeciderService(metadata, om);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
+		this.validateAuthContext = Boolean.parseBoolean(config.getProperty("workflow.authcontext.validate", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 	}
 
@@ -120,22 +125,24 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null,null);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization);
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization,null);
 	}
-
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization,Map<String, Object> authorizationContext) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization,authorizationContext);
+	}
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null,null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null,null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization) throws Exception {
+	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, Map<String, Object> authorizationcontext) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
@@ -173,7 +180,7 @@ public class WorkflowExecutor {
 			wf.setStatus(WorkflowStatus.RUNNING);
 			wf.setParentWorkflowId(parentWorkflowId);
 			wf.setAuthorization(authorization);
-
+			wf.setAuthorizationContext(authorizationcontext);
 			// Add other ids if passed
 			if (CollectionUtils.isNotEmpty(workflowIds)) {
 				workflowIds.forEach(id -> {
@@ -509,8 +516,7 @@ public class WorkflowExecutor {
 		});
 
 		scheduleTask(workflow, rescheduledTasks);
-                //reset the ReasonForIncompletion
-		workflow.setReasonForIncompletion("");
+
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
@@ -587,12 +593,7 @@ public class WorkflowExecutor {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
 
-		else
-		{
-			throw new ApplicationException(Code.CONFLICT, "Can not cancel the workflow since workflow is already "+workflow.getStatus());
-		}
-		return cancelWorkflow(workflow, null);
-
+		return cancelWorkflow(workflow, reason);
 	}
 
 	public String cancelWorkflow(Workflow workflow, String reason) throws Exception {
@@ -1462,6 +1463,16 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: at least one of the verify conditions failed");
 		}
 
+		return decoded;
+	}
+
+
+	public Map<String, Object> validateAuthContext(WorkflowDef workflowDef,HttpHeaders headers) {
+		if (!this.validateAuthContext  || MapUtils.isEmpty(workflowDef.getAuthValidation()) ) {
+			return null;
+		}
+		String authString = headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0);
+		Map<String, Object> decoded = auth.decode(authString);
 		return decoded;
 	}
 

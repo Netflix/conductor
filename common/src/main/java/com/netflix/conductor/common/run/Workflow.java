@@ -79,6 +79,8 @@ public class Workflow extends Auditable{
 
 	private Map<String, Object> authorization = new HashMap<>();
 
+	private Map<String, Object> authorizationContext = new HashMap<>();
+
 	private Set<String> tags = new HashSet<>();
 
 	public Workflow(){
@@ -318,6 +320,14 @@ public class Workflow extends Auditable{
 
 	public void setAuthorization(Map<String, Object> authorization) {
 		this.authorization = authorization;
+	}
+
+	public Map<String, Object> getAuthorizationContext() {
+		return authorizationContext;
+	}
+
+	public void setAuthorizationContext(Map<String, Object> authorizationContext) {
+		this.authorizationContext = authorizationContext;
 	}
 
     public Set<String> getTags() {
