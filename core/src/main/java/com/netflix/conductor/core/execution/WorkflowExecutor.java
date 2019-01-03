@@ -1096,6 +1096,10 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowRemove(workflow.getWorkflowType());
 	}
 
+
+	public void removeWorkflowNotImplemented(String workflowId) {
+		throw new ApplicationException(Code.NOT_IMPLEMENTED, "Method not implemented");
+	}
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {

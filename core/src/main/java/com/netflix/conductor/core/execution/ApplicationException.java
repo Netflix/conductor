@@ -33,7 +33,7 @@ import java.util.Map;
 public class ApplicationException extends RuntimeException {
 
 	public static enum Code {
-		INVALID_INPUT(400), INTERNAL_ERROR(500), NOT_FOUND(404), CONFLICT(409), UNAUTHORIZED(401), BACKEND_ERROR(500);
+		INVALID_INPUT(400), INTERNAL_ERROR(500), NOT_FOUND(404), CONFLICT(409), UNAUTHORIZED(401), BACKEND_ERROR(500) ,NOT_IMPLEMENTED(501);
 		
 		private int statusCode;
 		
