@@ -23,6 +23,16 @@ if [ -f $secrets ]; then
     export $secrets
 fi
 
+if [[ "$workflow_elasticsearch_url" != "" ]]; then
+    config_url=$workflow_elasticsearch_url/conductor.metadata.${STACK}.config/_search?size=1000
+    for e in $(curl --silent --fail $config_url | jq -c '.hits.hits[]');
+    do
+        name=$(echo $e | jq '._id' | sed 's/"//g')
+        value=$(echo $e | jq '._source.value' | sed 's/"//g')
+        export $(echo $name"="$value)
+    done
+fi
+
 # Log the configuration settings as defaults
 echo "Starting conductor server with the following defaults: $(cat $config_file | grep = | grep -v '#' | sed ':a;N;$!ba;s/\n/ /g')"
 

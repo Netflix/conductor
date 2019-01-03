@@ -8,9 +8,18 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.MetadataDAO;
+import org.apache.commons.lang3.tuple.Pair;
+import org.elasticsearch.action.search.ClearScrollRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.Scroll;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +35,7 @@ import java.util.stream.Collectors;
 public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO implements MetadataDAO {
     private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestMetadataDAO.class);
     // Keys Families
+    private final static String CONFIG = "CONFIG";
     private final static String TASK_DEFS = "TASK_DEFS";
     private final static String WORKFLOW_DEFS = "WORKFLOW_DEFS";
     private final static String EVENT_HANDLERS = "EVENT_HANDLERS";
@@ -35,6 +45,7 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
     public Elasticsearch6RestMetadataDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
         super(client, config, mapper, "metadata");
 
+        ensureIndexExists(toIndexName(CONFIG), toTypeName(CONFIG));
         ensureIndexExists(toIndexName(TASK_DEFS), toTypeName(TASK_DEFS));
         ensureIndexExists(toIndexName(WORKFLOW_DEFS), toTypeName(WORKFLOW_DEFS));
         ensureIndexExists(toIndexName(EVENT_HANDLERS), toTypeName(EVENT_HANDLERS));
@@ -410,4 +421,48 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
             logger.debug("refreshTaskDefs: task defs={}", map);
     }
 
+    @Override
+    public List<Pair<String, String>> getConfigs() {
+        String indexName = toIndexName(CONFIG);
+        String typeName = toTypeName(CONFIG);
+        ensureIndexExists(indexName);
+
+        List<Pair<String, String>> result = new LinkedList<>();
+        try {
+
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            sourceBuilder.query(QueryBuilders.matchAllQuery());
+            sourceBuilder.size(1000);
+
+            Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
+            searchRequest.source(sourceBuilder);
+            searchRequest.scroll(scroll);
+
+            SearchResponse searchResponse = client.search(searchRequest);
+            String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+
+            while (searchHits != null && searchHits.length > 0) {
+                for (SearchHit hit : searchHits) {
+                    String value = (String)hit.getSourceAsMap().get("value");
+                    result.add(Pair.of(hit.getId(), value));
+                }
+
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+                searchResponse = client.searchScroll(scrollRequest);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+            }
+
+            ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+            clearScrollRequest.addScrollId(scrollId);
+            client.clearScroll(clearScrollRequest);
+
+        } catch (Exception ex) {
+            logger.error("getConfigs: failed for {}/{} with {}", indexName, typeName, ex.getMessage(), ex);
+        }
+        return result;
+    }
 }
