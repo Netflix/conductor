@@ -190,7 +190,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 				// One second default delay if not specified
 				Long restartDelay = param.getRestartDelay();
 				if (restartDelay == null) {
-					restartDelay = 1000L;
+					restartDelay = 500L;
 				}
 
 				restartOn = System.currentTimeMillis() + restartDelay;
