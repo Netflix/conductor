@@ -180,13 +180,10 @@ public class WorkflowResource {
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Response delete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
-		executor.validateAuth(workflowId, headers);
 		Response.ResponseBuilder builder = Response.noContent();
-		handleCorrelationId(workflowId, headers, builder);
-
 		NDC.push("rest-remove-"+ UUID.randomUUID().toString());
 		try {
-			executor.removeWorkflow(workflowId);
+			executor.removeWorkflowNotImplemented(workflowId);
 		} finally {
 			NDC.remove();
 		}
