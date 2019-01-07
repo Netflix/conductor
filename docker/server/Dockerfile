@@ -1,17 +1,34 @@
+FROM openjdk:8-jdk AS base
+
+RUN git clone https://github.com/FRINXio/conductor.git
+
+# Conductor project version. Needed to pull additional .jar files.
+# Following command returns the version, if run in conductor repo:
+# git describe | grep -oP "\d+\.\d+\.\d+"
+# Needs to be changed accordingly to actual version.
+ARG version=1.10.10
+RUN echo $version
+
+# Create gradle properties file
+RUN cd conductor && echo 'git.root=../../' > gradle.properties
+RUN cd conductor && echo "submodVersion=$version" >> gradle.properties
+
+# Download and build .jar files needed
+RUN cd conductor/server && ../gradlew build --no-daemon -x test
+
 #
 # conductor:server - Netflix conductor server
 #
-FROM java:8-jre-alpine
 
-MAINTAINER Netflix OSS <conductor@netflix.com>
+FROM java:8-jre-alpine
 
 # Make app folders
 RUN mkdir -p /app/config /app/logs /app/libs
 
 # Copy the project directly onto the image
-COPY ./docker/server/bin /app
-COPY ./docker/server/config /app/config
-COPY ./server/build/libs/conductor-server-*-all.jar /app/libs
+COPY --from=base /conductor/docker/server/bin /app
+COPY --from=base /conductor/docker/server/config /app/config
+COPY --from=base /conductor/server/build/libs/conductor-server-*-all.jar /app/libs
 
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh
