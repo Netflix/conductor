@@ -20,12 +20,11 @@ package com.netflix.conductor.common.run;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.TimeZone;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.github.vmg.protogen.annotations.*;
+import com.github.vmg.protogen.annotations.ProtoField;
+import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 
@@ -88,23 +87,26 @@ public class TaskSummary {
 
 	@ProtoField(id = 16)
 	private String taskId;
-        private String referenceTaskName;
-    
-        private String taskDescription;
+	
+	@ProtoField(id = 17)
+	private String referenceTaskName;
 
+	@ProtoField(id = 18)
+	private String taskDescription;
+
+	@ProtoField(id = 18)
 	private int retryCount;
 
-    }
-
+    
 	public TaskSummary(Task task) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    	sdf.setTimeZone(gmt);
-    	
-    	this.taskId = task.getTaskId();
-    	this.taskDefName = task.getTaskDefName();
-    	this.taskType = task.getTaskType();
-    	this.referenceTaskName = task.getReferenceTaskName();
-        this.taskDescription = task.getTaskDescription();
+		sdf.setTimeZone(gmt);
+
+		this.taskId = task.getTaskId();
+		this.taskDefName = task.getTaskDefName();
+		this.taskType = task.getTaskType();
+		this.referenceTaskName = task.getReferenceTaskName();
+		this.taskDescription = task.getTaskDescription();
 		this.workflowId = task.getWorkflowInstanceId();
 		this.workflowType = task.getWorkflowType();
 		this.correlationId = task.getCorrelationId();
@@ -116,6 +118,7 @@ public class TaskSummary {
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
 		this.retryCount = task.getRetryCount();
+		
 		if (task.getInputData() != null) {
 			ObjectMapper om = new ObjectMapper();
 			try {
@@ -124,13 +127,12 @@ public class TaskSummary {
 				this.input = task.getInputData().toString();
 			}
 		}
-		
+
 		if (task.getOutputData() != null) {
 			this.output = task.getOutputData().toString();
 		}
-		
-		
-		if(task.getEndTime() > 0){
+
+		if (task.getEndTime() > 0) {
 			this.executionTime = task.getEndTime() - task.getStartTime();
 		}
 	}

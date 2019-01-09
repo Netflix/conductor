@@ -187,6 +187,9 @@ public class Task {
     @ProtoField(id = 35)
     private String externalOutputPayloadStoragePath;
 
+    @ProtoField(id = 36)
+    private String taskDescription; 
+    
     public Task() {
     }
 
@@ -666,6 +669,21 @@ public class Task {
         this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
     }
 
+    /**
+     * @return the task description
+     */
+    public String getTaskDescription() {
+            return taskDescription;
+    }
+
+    /**
+     * @param taskDescription - the task description
+     * 
+     */
+    public void setTaskDescription(String taskDescription) {
+            this.taskDescription = taskDescription;
+    }
+    
     public Task copy() {
         Task copy = new Task();
         copy.setCallbackAfterSeconds(callbackAfterSeconds);
@@ -692,7 +710,8 @@ public class Task {
         copy.setRateLimitFrequencyInSeconds(rateLimitFrequencyInSeconds);
         copy.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
         copy.setExternalOutputPayloadStoragePath(externalOutputPayloadStoragePath);
-
+        copy.setTaskDescription(taskDescription);
+        
         return copy;
     }
 
@@ -734,6 +753,7 @@ public class Task {
                 ", rateLimitFrequencyInSeconds=" + rateLimitFrequencyInSeconds +
                 ", externalInputPayloadStoragePath='" + externalInputPayloadStoragePath + '\'' +
                 ", externalOutputPayloadStoragePath='" + externalOutputPayloadStoragePath + '\'' +
+                ", taskDescription='" + taskDescription + '\'' +
                 '}';
     }
 
@@ -775,11 +795,17 @@ public class Task {
                 Objects.equals(getInputMessage(), task.getInputMessage()) &&
                 Objects.equals(getOutputMessage(), task.getOutputMessage()) &&
                 Objects.equals(getExternalInputPayloadStoragePath(), task.getExternalInputPayloadStoragePath()) &&
-                Objects.equals(getExternalOutputPayloadStoragePath(), task.getExternalOutputPayloadStoragePath());
+                Objects.equals(getExternalOutputPayloadStoragePath(), task.getExternalOutputPayloadStoragePath())&&
+                Objects.equals(getTaskDescription(), task.getTaskDescription());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTaskType(), getStatus(), getInputData(), getReferenceTaskName(), getRetryCount(), getSeq(), getCorrelationId(), getPollCount(), getTaskDefName(), getScheduledTime(), getStartTime(), getEndTime(), getUpdateTime(), getStartDelayInSeconds(), getRetriedTaskId(), isRetried(), isExecuted(), isCallbackFromWorker(), getResponseTimeoutSeconds(), getWorkflowInstanceId(), getWorkflowType(), getTaskId(), getReasonForIncompletion(), getCallbackAfterSeconds(), getWorkerId(), getOutputData(), getWorkflowTask(), getDomain(), getInputMessage(), getOutputMessage(), getRateLimitPerFrequency(), getRateLimitFrequencyInSeconds(), getExternalInputPayloadStoragePath(), getExternalOutputPayloadStoragePath());
+        return Objects.hash(getTaskType(), getStatus(), getInputData(), getReferenceTaskName(), getRetryCount(), getSeq(), getCorrelationId(), 
+        		getPollCount(), getTaskDefName(), getScheduledTime(), getStartTime(), getEndTime(), getUpdateTime(), getStartDelayInSeconds(), 
+        		getRetriedTaskId(), isRetried(), isExecuted(), isCallbackFromWorker(), getResponseTimeoutSeconds(), getWorkflowInstanceId(), 
+        		getWorkflowType(), getTaskId(), getReasonForIncompletion(), getCallbackAfterSeconds(), getWorkerId(), getOutputData(), getWorkflowTask(), 
+        		getDomain(), getInputMessage(), getOutputMessage(), getRateLimitPerFrequency(), getRateLimitFrequencyInSeconds(), getExternalInputPayloadStoragePath(), 
+        		getExternalOutputPayloadStoragePath(), getTaskDescription());
     }
 }
