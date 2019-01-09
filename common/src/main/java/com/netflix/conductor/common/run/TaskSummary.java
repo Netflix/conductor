@@ -92,11 +92,12 @@ public class TaskSummary {
 	private String referenceTaskName;
 
 	@ProtoField(id = 18)
-	private String taskDescription;
-
-	@ProtoField(id = 18)
 	private int retryCount;
 
+	@ProtoField(id = 19)
+	private String taskDescription;
+
+	
     
 	public TaskSummary(Task task) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
