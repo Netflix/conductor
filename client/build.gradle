@@ -1,12 +1,26 @@
+apply plugin: 'findbugs'
+apply plugin: 'pmd'
+
+configurations.all {
+    exclude group: 'amazon', module: 'aws-java-sdk'
+}
+
 dependencies {
 
-	compile project (':conductor-common')
-	compile 'com.sun.jersey:jersey-client:1.19.+'
-	compile 'org.slf4j:slf4j-api:1.7.+'
-	compile 'com.netflix.spectator:spectator-api:0.40.0'
-	compile 'com.netflix.eureka:eureka-client:1.8.8'
-	compile 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.7.5'
-	compile 'com.netflix.archaius:archaius-core:0.7.5' 
-	
-	testCompile 'org.slf4j:slf4j-log4j12:1.8.0-alpha1'
+    compile project(':conductor-common')
+    compile "com.sun.jersey:jersey-client:${revJerseyClient}"
+    compile "com.netflix.spectator:spectator-api:${revSpectator}"
+    compile "com.netflix.eureka:eureka-client:${revEurekaClient}"
+    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${revJaxrsJackson}"
+    compile "com.netflix.archaius:archaius-core:${revArchaius}"
+    compile "com.amazonaws:aws-java-sdk-core:${revAwsSdk}"
+
+    testCompile "org.slf4j:slf4j-log4j12:${revSlf4jlog4j}"
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
 }

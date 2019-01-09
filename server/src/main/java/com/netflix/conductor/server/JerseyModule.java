@@ -28,8 +28,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.inject.Provides;
@@ -44,11 +42,10 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
  *
  */
 public final class JerseyModule extends JerseyServletModule {
+
 	
     @Override
     protected void configureServlets() {
-   
-
     	filter("/*").through(apiOriginFilter());
         
         Map<String, String> jerseyParams = new HashMap<>();	
@@ -59,21 +56,7 @@ public final class JerseyModule extends JerseyServletModule {
 		serve("/api/*").with(GuiceContainer.class, jerseyParams);
     }
     
-    @Provides 
-	@Singleton
-	public ObjectMapper objectMapper() {
-	    final ObjectMapper om = new ObjectMapper();
-        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        om.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-        om.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-        om.setSerializationInclusion(Include.NON_NULL);
-        om.setSerializationInclusion(Include.NON_EMPTY);
-	    return om;
-	}
-	
-    
-    
-	@Provides 
+	@Provides
 	@Singleton
 	JacksonJsonProvider jacksonJsonProvider(ObjectMapper mapper) {
 	    return new JacksonJsonProvider(mapper);
@@ -112,6 +95,6 @@ public final class JerseyModule extends JerseyServletModule {
     public int hashCode() {
         return getClass().hashCode();
     }
-    
-    
+
+
 }

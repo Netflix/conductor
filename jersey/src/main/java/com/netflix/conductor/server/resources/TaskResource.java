@@ -57,7 +57,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 /**
- * 
+ *
  * @author visingh
  *
  */
@@ -67,15 +67,10 @@ import io.swagger.annotations.ApiOperation;
 @Consumes({ MediaType.APPLICATION_JSON })
 @Singleton
 public class TaskResource {
-
-	private ExecutionService taskService;
-
-	private QueueDAO queues;
-	
-	private int maxSearchSize;
+	private final TaskService taskService;
 
 	@Inject
-	public TaskResource(ExecutionService taskService, QueueDAO queues, Configuration config) {
+	public TaskResource(TaskService taskService) {
 		this.taskService = taskService;
 		this.queues = queues;
 		this.maxSearchSize = config.getIntProperty("task.max.search.size", 5_000);
@@ -84,165 +79,150 @@ public class TaskResource {
 	@GET
 	@Path("/poll/{tasktype}")
 	@ApiOperation("Poll for a task of a certain type")
-	@Consumes({ MediaType.WILDCARD })
-	public Task poll(@PathParam("tasktype") String taskType, @QueryParam("workerid") String workerId, @QueryParam("domain") String domain) throws Exception {
-		List<Task> tasks = taskService.poll(taskType, workerId, domain, 1, 100);
-		if(tasks.isEmpty()) {
-			return null;
-		}
-		return tasks.get(0);
+	@Consumes({MediaType.WILDCARD})
+	public Task poll(@PathParam("tasktype") String taskType,
+					 @QueryParam("workerid") String workerId,
+					 @QueryParam("domain") String domain) {
+		return taskService.poll(taskType, workerId, domain);
 	}
-	
+
 	@GET
 	@Path("/poll/batch/{tasktype}")
 	@ApiOperation("batch Poll for a task of a certain type")
-	@Consumes({ MediaType.WILDCARD })
-	public List<Task> batchPoll(
-			@PathParam("tasktype") String taskType, 
-			@QueryParam("workerid") String workerId,
-			@QueryParam("domain") String domain,
-			@DefaultValue("1") @QueryParam("count") Integer count,
-			@DefaultValue("100") @QueryParam("timeout") Integer timeout
-			
-			) throws Exception {
-		return taskService.poll(taskType, workerId, domain, count, timeout);
+	@Consumes({MediaType.WILDCARD})
+	public List<Task> batchPoll(@PathParam("tasktype") String taskType,
+								@QueryParam("workerid") String workerId,
+								@QueryParam("domain") String domain,
+								@DefaultValue("1") @QueryParam("count") Integer count,
+								@DefaultValue("100") @QueryParam("timeout") Integer timeout) {
+		return taskService.batchPoll(taskType, workerId, domain, count, timeout);
 	}
 
 	@GET
 	@Path("/in_progress/{tasktype}")
-	@ApiOperation("Get in progress tasks.  The results are paginated.")
-	@Consumes({ MediaType.WILDCARD })
-	public List<Task> getTasks(@PathParam("tasktype") String taskType, @QueryParam("startKey") String startKey,
-			@QueryParam("count") @DefaultValue("100") Integer count) throws Exception {
+	@ApiOperation("Get in progress tasks. The results are paginated.")
+	@Consumes({MediaType.WILDCARD})
+	public List<Task> getTasks(@PathParam("tasktype") String taskType,
+							   @QueryParam("startKey") String startKey,
+							   @QueryParam("count") @DefaultValue("100") Integer count) {
 		return taskService.getTasks(taskType, startKey, count);
 	}
 
 	@GET
 	@Path("/in_progress/{workflowId}/{taskRefName}")
 	@ApiOperation("Get in progress task for a given workflow id.")
-	@Consumes({ MediaType.WILDCARD })
-	public Task getPendingTaskForWorkflow(@PathParam("workflowId") String workflowId, @PathParam("taskRefName") String taskReferenceName)
-			throws Exception {
-		return taskService.getPendingTaskForWorkflow(taskReferenceName, workflowId);
+	@Consumes({MediaType.WILDCARD})
+	public Task getPendingTaskForWorkflow(@PathParam("workflowId") String workflowId,
+										  @PathParam("taskRefName") String taskReferenceName) {
+		return taskService.getPendingTaskForWorkflow(workflowId, taskReferenceName);
 	}
 
 	@POST
 	@ApiOperation("Update a task")
-	public String updateTask(TaskResult task) throws Exception {
-		taskService.updateTask(task);
-		return "\"" + task.getTaskId() + "\"";
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+	public String updateTask(TaskResult taskResult) {
+		return taskService.updateTask(taskResult);
 	}
 
 	@POST
 	@Path("/{taskId}/ack")
-	@ApiOperation("Ack Task is recieved")
-	@Consumes({ MediaType.WILDCARD })
-	public String ack(@PathParam("taskId") String taskId, @QueryParam("workerid") String workerId) throws Exception {
-		return "" + taskService.ackTaskRecieved(taskId, workerId);
+	@ApiOperation("Ack Task is received")
+	@Consumes({MediaType.WILDCARD})
+	public String ack(@PathParam("taskId") String taskId,
+					  @QueryParam("workerid") String workerId) {
+		return taskService.ackTaskReceived(taskId, workerId);
 	}
-	
+
 	@POST
 	@Path("/{taskId}/log")
 	@ApiOperation("Log Task Execution Details")
-	public void log(@PathParam("taskId") String taskId, String log) throws Exception {
-		taskService.log(taskId, log);		
+	public void log(@PathParam("taskId") String taskId, String log) {
+		taskService.log(taskId, log);
 	}
-	
+
 	@GET
 	@Path("/{taskId}/log")
 	@ApiOperation("Get Task Execution Logs")
-	public List<TaskExecLog> getTaskLogs(@PathParam("taskId") String taskId) throws Exception {
-		return taskService.getTaskLogs(taskId);		
+	public List<TaskExecLog> getTaskLogs(@PathParam("taskId") String taskId) {
+		return taskService.getTaskLogs(taskId);
 	}
 
 	@GET
 	@Path("/{taskId}")
 	@ApiOperation("Get task by Id")
-	@Consumes({ MediaType.WILDCARD })
-	public Task getTask(@PathParam("taskId") String taskId) throws Exception {
+	@Consumes(MediaType.WILDCARD)
+	public Task getTask(@PathParam("taskId") String taskId) {
 		return taskService.getTask(taskId);
 	}
 
 	@DELETE
 	@Path("/queue/{taskType}/{taskId}")
 	@ApiOperation("Remove Task from a Task type queue")
-	@Consumes({ MediaType.WILDCARD })
-	public void remvoeTaskFromQueue(@PathParam("taskType") String taskType, @PathParam("taskId") String taskId) throws Exception {
-		taskService.removeTaskfromQueue(taskType, taskId);
+	@Consumes({MediaType.WILDCARD})
+	public void removeTaskFromQueue(@PathParam("taskType") String taskType,
+									@PathParam("taskId") String taskId) {
+		taskService.removeTaskFromQueue(taskType, taskId);
 	}
 
 	@GET
 	@Path("/queue/sizes")
 	@ApiOperation("Get Task type queue sizes")
-	@Consumes({ MediaType.WILDCARD })
-	public Map<String, Integer> size(@QueryParam("taskType") List<String> taskTypes) throws Exception {
+	@Consumes({MediaType.WILDCARD})
+	public Map<String, Integer> size(@QueryParam("taskType") List<String> taskTypes) {
 		return taskService.getTaskQueueSizes(taskTypes);
 	}
 
 	@GET
 	@Path("/queue/all/verbose")
 	@ApiOperation("Get the details about each queue")
-	@Consumes({ MediaType.WILDCARD })
-	public Map<String, Map<String, Map<String, Long>>> allVerbose() throws Exception {
-		return queues.queuesDetailVerbose();
+	@Consumes({MediaType.WILDCARD})
+	public Map<String, Map<String, Map<String, Long>>> allVerbose() {
+		return taskService.allVerbose();
 	}
 
 	@GET
 	@Path("/queue/all")
 	@ApiOperation("Get the details about each queue")
-	@Consumes({ MediaType.WILDCARD })
-	public Map<String, Long> all() throws Exception {
-		Map<String, Long> all = queues.queuesDetail();
-		Set<Entry<String, Long>> entries = all.entrySet();
-		Set<Entry<String, Long>> sorted = new TreeSet<>(new Comparator<Entry<String, Long>>() {
-
-			@Override
-			public int compare(Entry<String, Long> o1, Entry<String, Long> o2) {
-				return o1.getKey().compareTo(o2.getKey());
-			}
-		});
-		sorted.addAll(entries);
-		LinkedHashMap<String, Long> sortedMap = new LinkedHashMap<>();
-		sorted.stream().forEach(e -> sortedMap.put(e.getKey(), e.getValue()));
-		return sortedMap;
+	@Consumes({MediaType.WILDCARD})
+	public Map<String, Long> all() {
+		return taskService.getAllQueueDetails();
 	}
 
 	@GET
 	@Path("/queue/polldata")
 	@ApiOperation("Get the last poll data for a given task type")
-	@Consumes({ MediaType.WILDCARD })
-	public List<PollData> getPollData(@QueryParam("taskType") String taskType) throws Exception {
+	@Consumes({MediaType.WILDCARD})
+	public List<PollData> getPollData(@QueryParam("taskType") String taskType) {
 		return taskService.getPollData(taskType);
 	}
-	
 
 	@GET
 	@Path("/queue/polldata/all")
-	@ApiOperation("Get the last poll data for a given task type")
-	@Consumes({ MediaType.WILDCARD })
-	public List<PollData> getAllPollData() throws Exception {
+	@ApiOperation("Get the last poll data for all task types")
+	@Consumes(MediaType.WILDCARD)
+	public List<PollData> getAllPollData() {
 		return taskService.getAllPollData();
 	}
 
 	@POST
 	@Path("/queue/requeue")
 	@ApiOperation("Requeue pending tasks for all the running workflows")
-	@Consumes({ MediaType.WILDCARD })
-	@Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
-	public String requeue() throws Exception {
-		return "" + taskService.requeuePendingTasks();
+	public String requeue() {
+		return taskService.requeue();
 	}
-	
+
 	@POST
 	@Path("/queue/requeue/{taskType}")
 	@ApiOperation("Requeue pending tasks")
-	@Consumes({ MediaType.WILDCARD })
+	@Consumes(MediaType.WILDCARD)
 	@Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
-	public String requeue(@PathParam("taskType") String taskType) throws Exception {
-		return "" + taskService.requeuePendingTasks(taskType);
+	public String requeuePendingTask(@PathParam("taskType") String taskType) {
+		return taskService.requeuePendingTask(taskType);
 	}
 
-	@ApiOperation(value="Search for tasks based in payload and other parameters", notes="use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC.  If order is not specified, defaults to ASC")
+	@ApiOperation(value="Search for tasks based in payload and other parameters",
+			notes="use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC." +
+					" If order is not specified, defaults to ASC")
 	@GET
 	@Consumes(MediaType.WILDCARD)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -261,11 +241,11 @@ public class TaskResource {
 		return taskService.searchTasks(query , freeText, start, size, convert(sort));
 	}
 
-	private List<String> convert(String sortStr) {
-		List<String> list = new ArrayList<String>();
-		if(sortStr != null && sortStr.length() != 0){
-			list = Arrays.asList(sortStr.split("\\|"));
-		}
-		return list;
+	@GET
+	@ApiOperation("Get the external uri where the task output payload is to be stored")
+	@Consumes(MediaType.WILDCARD)
+	@Path("/externalstoragelocation")
+	public ExternalStorageLocation getExternalStorageLocation(@QueryParam("path") String path) {
+		return taskService.getExternalStorageLocation(path);
 	}
 }

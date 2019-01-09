@@ -159,8 +159,8 @@ CREATE TABLE queue (
 
 CREATE TABLE queue_message (
   id int(11) unsigned NOT NULL AUTO_INCREMENT,
-  created_on TIMESTAMP,
-  deliver_on TIMESTAMP,
+  created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deliver_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   queue_name varchar(255) NOT NULL,
   message_id varchar(255) NOT NULL,
   popped boolean DEFAULT false,
@@ -168,5 +168,5 @@ CREATE TABLE queue_message (
   payload mediumtext,
   PRIMARY KEY (id),
   UNIQUE KEY unique_queue_name_message_id (queue_name,message_id),
-  KEY queue_name_index (queue_name)
+  KEY combo_queue_message (queue_name,popped,deliver_on,created_on)
 );

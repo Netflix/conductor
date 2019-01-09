@@ -19,19 +19,6 @@
 package com.netflix.conductor.contribs.http;
 
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -50,6 +37,17 @@ import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.oauth.client.OAuthClientFilter;
 import com.sun.jersey.oauth.signature.OAuthParameters;
 import com.sun.jersey.oauth.signature.OAuthSecrets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Viren
@@ -60,7 +58,7 @@ public class HttpTask extends WorkflowSystemTask {
 
 	public static final String REQUEST_PARAMETER_NAME = "http_request";
 	
-	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
+	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key with HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
 	
@@ -92,12 +90,11 @@ public class HttpTask extends WorkflowSystemTask {
 	}
 	
 	@Override
-	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+	public void start(Workflow workflow, Task task, WorkflowExecutor executor) {
 		Object request = task.getInputData().get(requestParameter);
 		task.setWorkerId(config.getServerId());
 		if(request == null) {
-			String reason = MISSING_REQUEST;
-			task.setReasonForIncompletion(reason);
+			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
 			return;
 		}
@@ -118,7 +115,6 @@ public class HttpTask extends WorkflowSystemTask {
 		}
 		
 		try {
-			
 			HttpResponse response = httpCall(input);
 			logger.info("response {}, {}", response.statusCode, response.body);
 			if(response.statusCode > 199 && response.statusCode < 300) {
@@ -136,19 +132,18 @@ public class HttpTask extends WorkflowSystemTask {
 			}
 			
 		}catch(Exception e) {
-			
-			logger.error(e.getMessage(), e);
+			logger.error(String.format("Failed to invoke http task - uri: %s, vipAddress: %s", input.getUri(), input.getVipAddress()), e);
 			task.setStatus(Status.FAILED);
-			task.setReasonForIncompletion(e.getMessage());
-			task.getOutputData().put("response", e.getMessage());
+			task.setReasonForIncompletion("Failed to invoke http task due to: " + e.toString());
+			task.getOutputData().put("response", e.toString());
 		}
 	}
 
 	/**
-	 * 
 	 * @param input HTTP Request
 	 * @return Response of the http call
 	 * @throws Exception If there was an error making http call
+	 * Note: protected access is so that tasks extended from this task can re-use this to make http calls
 	 */
 	protected HttpResponse httpCall(Input input) throws Exception {
 		Client client = rcm.getClient(input);
@@ -160,14 +155,12 @@ public class HttpTask extends WorkflowSystemTask {
 			client.addFilter(new OAuthClientFilter(client.getProviders(), params, secrets));
 		}
 
-		Builder builder = client.resource(input.uri).type(MediaType.APPLICATION_JSON);
+		Builder builder = client.resource(input.uri).type(input.contentType);
 
 		if(input.body != null) {
 			builder.entity(input.body);
 		}
-		input.headers.entrySet().forEach(e -> {
-			builder.header(e.getKey(), e.getValue());
-		});
+		input.headers.forEach(builder::header);
 		
 		HttpResponse response = new HttpResponse();
 		try {
@@ -182,11 +175,9 @@ public class HttpTask extends WorkflowSystemTask {
 			return response;
 
 		} catch(UniformInterfaceException ex) {
-			logger.error(ex.getMessage(), ex);
 			ClientResponse cr = ex.getResponse();
-			logger.error("Status Code: {}", cr.getStatus());
+			logger.error(String.format("Got unexpected http response - uri: %s, vipAddress: %s, status code: %s", input.getUri(), input.getVipAddress(), cr.getStatus()), ex);
 			if(cr.getStatus() > 199 && cr.getStatus() < 300) {
-				
 				if(cr.getStatus() != 204 && cr.hasEntity()) {
 					response.body = extractBody(cr);
 				}
@@ -194,7 +185,6 @@ public class HttpTask extends WorkflowSystemTask {
 				response.statusCode = cr.getStatus();
 				response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
 				return response;
-				
 			}else {
 				String reason = cr.getEntity(String.class);
 				logger.error(reason, ex);
@@ -228,12 +218,12 @@ public class HttpTask extends WorkflowSystemTask {
 	}
 
 	@Override
-	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) {
 		return false;
 	}
 	
 	@Override
-	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
+	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) {
 		task.setStatus(Status.CANCELED);
 	}
 	
@@ -289,6 +279,8 @@ public class HttpTask extends WorkflowSystemTask {
 		private String method;	//PUT, POST, GET, DELETE, OPTIONS, HEAD
 		
 		private String vipAddress;
+
+		private String appName;
 		
 		private Map<String, Object> headers = new HashMap<>();
 		
@@ -297,6 +289,8 @@ public class HttpTask extends WorkflowSystemTask {
 		private Object body;
 		
 		private String accept = MediaType.APPLICATION_JSON;
+
+		private String contentType = MediaType.APPLICATION_JSON;
 		
 		private String oauthConsumerKey;
 
@@ -387,7 +381,21 @@ public class HttpTask extends WorkflowSystemTask {
 		public void setAccept(String accept) {
 			this.accept = accept;
 		}
-		
+
+		/**
+		 * @return the MIME content type to use for the request
+		 */
+		public String getContentType() {
+			return contentType;
+		}
+
+		/**
+		 * @param contentType the MIME content type to set
+		 */
+		public void setContentType(String contentType) {
+			this.contentType = contentType;
+		}
+
 		/**
 		 * @return the OAuth consumer Key
 		 */
@@ -414,6 +422,14 @@ public class HttpTask extends WorkflowSystemTask {
 		 */
 		public void setOauthConsumerSecret(String oauthConsumerSecret) {
 			this.oauthConsumerSecret = oauthConsumerSecret;
+		}
+
+		public String getAppName() {
+			return appName;
+		}
+
+		public void setAppName(String appName) {
+			this.appName = appName;
 		}
 	}
 }

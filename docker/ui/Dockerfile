@@ -1,7 +1,7 @@
 #
 # conductor:ui - Netflix conductor UI
 #
-FROM node:alpine
+FROM node:9-alpine
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
 # Install the required packages for the node build
@@ -19,7 +19,8 @@ RUN apk update && apk add \
   libpng \
   libpng-dev \
   libjpeg-turbo \
-  libjpeg-turbo-dev 
+  libjpeg-turbo-dev \
+  python
 
 # Make app folders
 RUN mkdir -p /app/ui

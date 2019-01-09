@@ -1,6 +1,7 @@
 **/node_modules
 **/npm-debug.log
 ui/dist
+ui/package-lock.json
 .gradle
 .project
 bin
@@ -14,4 +15,9 @@ ui/.settings
 .settings
 dump.rdb
 .idea
+*.iml
 out/
+bin/
+target/
+.DS_Store
+target/

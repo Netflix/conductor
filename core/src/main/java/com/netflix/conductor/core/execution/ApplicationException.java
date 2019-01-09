@@ -32,7 +32,7 @@ import java.util.Map;
 @SuppressWarnings("serial")
 public class ApplicationException extends RuntimeException {
 
-	public static enum Code {
+	public enum Code {
 		INVALID_INPUT(400), INTERNAL_ERROR(500), NOT_FOUND(404), CONFLICT(409), UNAUTHORIZED(403), BACKEND_ERROR(500);
 		
 		private int statusCode;
@@ -47,7 +47,11 @@ public class ApplicationException extends RuntimeException {
 	}
 	
 	private Code code;
-	
+
+    public boolean isRetryable() {
+        return this.code == Code.BACKEND_ERROR;
+    }
+
 	public ApplicationException(String msg, Throwable t){
 		this(Code.INTERNAL_ERROR, msg, t);
 	}
@@ -87,6 +91,7 @@ public class ApplicationException extends RuntimeException {
 		HashMap<String, Object> map = new LinkedHashMap<>();
 		map.put("code", code.name());
 		map.put("message", super.getMessage());
+		map.put("retryable", isRetryable());
 		return map;
 	}
 }

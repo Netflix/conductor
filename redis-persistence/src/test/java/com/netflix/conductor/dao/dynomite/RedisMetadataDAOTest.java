@@ -14,26 +14,10 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.dao.dynomite;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
@@ -43,12 +27,28 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskDef.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.TaskDef.TimeoutPolicy;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.config.TestConfiguration;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.redis.JedisMock;
-
+import com.netflix.conductor.dyno.DynoProxy;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.junit.Before;
+import org.junit.Test;
 import redis.clients.jedis.JedisCommands;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Viren
@@ -58,16 +58,8 @@ public class RedisMetadataDAOTest {
 
 	private RedisMetadataDAO dao;
 	
-	private static ObjectMapper om = new ObjectMapper();
+	private static ObjectMapper om = new JsonMapperProvider().get();
 
-	static {
-		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		om.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-		om.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-		om.setSerializationInclusion(Include.NON_NULL);
-		om.setSerializationInclusion(Include.NON_EMPTY);
-	}
-	
 	@Before
 	public void init() {
 		Configuration config = new TestConfiguration();
@@ -76,14 +68,8 @@ public class RedisMetadataDAOTest {
 		
 		dao = new RedisMetadataDAO(dynoClient, om, config);
 	}
-	
-	@Test(expected=NullPointerException.class)
-	public void testMissingName() throws Exception {
-		WorkflowDef def = new WorkflowDef();
-		dao.create(def);
-	}
-	
-	@Test(expected=ApplicationException.class)
+
+    @Test(expected = ApplicationException.class)
 	public void testDup() throws Exception {
 		WorkflowDef def = new WorkflowDef();
 		def.setName("testDup");
@@ -114,7 +100,7 @@ public class RedisMetadataDAOTest {
 		assertEquals("test", all.get(0).getName());
 		assertEquals(1, all.get(0).getVersion());
 		
-		WorkflowDef found = dao.get("test", 1);
+		WorkflowDef found = dao.get("test", 1).get();
 		assertTrue(EqualsBuilder.reflectionEquals(def, found));
 		
 		def.setVersion(2);
@@ -126,17 +112,11 @@ public class RedisMetadataDAOTest {
 		assertEquals("test", all.get(0).getName());
 		assertEquals(1, all.get(0).getVersion());
 		
-		found = dao.getLatest(def.getName());
+		found = dao.getLatest(def.getName()).get();
 		assertEquals(def.getName(), found.getName());
 		assertEquals(def.getVersion(), found.getVersion());
 		assertEquals(2, found.getVersion());
-		
-		all = dao.getAllLatest();
-		assertNotNull(all);
-		assertEquals(1, all.size());
-		assertEquals("test", all.get(0).getName());
-		assertEquals(2, all.get(0).getVersion());
-		
+
 		all = dao.getAllVersions(def.getName());
 		assertNotNull(all);
 		assertEquals(2, all.size());
@@ -147,13 +127,44 @@ public class RedisMetadataDAOTest {
 		
 		def.setDescription("updated");
 		dao.update(def);
-		found = dao.get(def.getName(), def.getVersion());
+		found = dao.get(def.getName(), def.getVersion()).get();
 		assertEquals(def.getDescription(), found.getDescription());
 		
 		List<String> allnames = dao.findAll();
 		assertNotNull(allnames);
 		assertEquals(1, allnames.size());
 		assertEquals(def.getName(), allnames.get(0));
+
+		dao.removeWorkflowDef("test", 1);
+		Optional<WorkflowDef> deleted = dao.get("test", 1);
+		assertFalse(deleted.isPresent());
+		dao.removeWorkflowDef("test", 2);
+		Optional<WorkflowDef> latestDef = dao.getLatest("test");
+		assertFalse(latestDef.isPresent());
+
+		WorkflowDef[] workflowDefsArray = new WorkflowDef[3];
+		for(int i=1; i <=3; i++) {
+			workflowDefsArray[i-1] = new WorkflowDef();
+			workflowDefsArray[i-1].setName("test");
+			workflowDefsArray[i-1].setVersion(i);
+			workflowDefsArray[i-1].setDescription("description");
+			workflowDefsArray[i-1].setCreatedBy("unit_test");
+			workflowDefsArray[i-1].setCreateTime(1L);
+			workflowDefsArray[i-1].setOwnerApp("ownerApp");
+			workflowDefsArray[i-1].setUpdatedBy("unit_test2");
+			workflowDefsArray[i-1].setUpdateTime(2L);
+			dao.create( workflowDefsArray[i-1]);
+		}
+		dao.removeWorkflowDef("test", 1);
+		dao.removeWorkflowDef("test", 2);
+		WorkflowDef workflow = dao.getLatest("test").get();
+		assertEquals(workflow.getVersion(), 3);
+	}
+
+	@Test(expected = ApplicationException.class)
+	public void removeInvalidWorkflowDef() throws Exception {
+		WorkflowDef def = new WorkflowDef();
+		dao.removeWorkflowDef("hello", 1);
 	}
 	
 	@Test
@@ -172,7 +183,9 @@ public class RedisMetadataDAOTest {
 		def.setTimeoutPolicy(TimeoutPolicy.ALERT_ONLY);
 		def.setUpdatedBy("unit_test2");
 		def.setUpdateTime(2L);
-		
+		def.setRateLimitPerFrequency(50);
+		def.setRateLimitFrequencyInSeconds(1);
+
 		dao.createTaskDef(def);
 		
 		TaskDef found = dao.getTaskDef(def.getName());
@@ -209,8 +222,8 @@ public class RedisMetadataDAOTest {
 		assertEquals(1, all.size());
 		assertEquals(def.getName(), all.get(0).getName());
 	}
-	
-	@Test(expected=ApplicationException.class)
+
+	@Test(expected = ApplicationException.class)
 	public void testRemoveTaskDef() throws Exception {
 		dao.removeTaskDef("test" + UUID.randomUUID().toString());
 	}

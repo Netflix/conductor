@@ -29,8 +29,17 @@ html {
   height: 100%;
 }
 
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background-color: rgba(0,0,0,.5);
+    box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
 body {
-  xfont-family: 'Open Sans',sans-serif;
   font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: #333;
   background-color: #ffff;
@@ -176,7 +185,7 @@ body {
   padding: 0.8em;
 }
 
-.bm-item-list a:link, a:visited  {
+.bm-item-list a:link, .bm-item-list a:visited  {
   color: #b8b7ad;
   padding: 0.8em;
   text-decoration: none;
@@ -373,7 +382,6 @@ iframe {
 }
 a:hover {
   text-decoration: none;
-  cursor: default;
 }
 
 
@@ -487,7 +495,7 @@ a:hover {
 }
 
 .menuList {
-  margin-top: 100px;
+  margin-top: 70px;
 }
 
 .menuHeader {
@@ -609,7 +617,8 @@ table tbody {
   padding: 10px 5px 5px 15px;
   z-index: 1000;
 }
-#propsdiv {
+
+.right-prop-overlay {
   min-height: 100%;
   min-width: 600px;
   top: 5px;
@@ -617,6 +626,12 @@ table tbody {
   background-color: #ffffff;
   box-shadow: 0 5px 55px rgba(0,0,0,.7);
   padding-right: 10px;
+}
+
+
+
+#propsdiv {
+
 }
 #abcd {
   min-height: 100%;

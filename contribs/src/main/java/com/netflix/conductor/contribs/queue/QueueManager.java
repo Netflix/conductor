@@ -28,6 +28,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,16 +57,16 @@ public class QueueManager {
 	
 	private Map<Task.Status, ObservableQueue> queues;
 	
-	private ExecutionService es;
+	private ExecutionService executionService;
 	
 	private static final TypeReference<Map<String, Object>> _mapType = new TypeReference<Map<String, Object>>() {};
 	
-	private ObjectMapper om = new ObjectMapper();
+	private ObjectMapper objectMapper = new ObjectMapper();
 	
 	@Inject
-	public QueueManager(Map<Task.Status, ObservableQueue> queues, ExecutionService es) {
+	public QueueManager(Map<Task.Status, ObservableQueue> queues, ExecutionService executionService) {
 		this.queues = queues;
-		this.es = es;
+		this.executionService = executionService;
 		queues.entrySet().forEach(e -> {
 			Status status = e.getKey();
 			ObservableQueue queue = e.getValue();
@@ -82,7 +83,7 @@ public class QueueManager {
 				logger.debug("Got message {}", msg.getPayload());
 				
 				String payload = msg.getPayload();
-				JsonNode payloadJSON = om.readTree(payload);
+				JsonNode payloadJSON = objectMapper.readTree(payload);
 				String externalId = getValue("externalId", payloadJSON);
 				if(externalId == null || "".equals(externalId)) {
 					logger.error("No external Id found in the payload {}", payload);
@@ -90,33 +91,37 @@ public class QueueManager {
 					return;
 				}
 				
-				JsonNode json = om.readTree(externalId);
+				JsonNode json = objectMapper.readTree(externalId);
 				String workflowId = getValue("workflowId", json);
 				String taskRefName = getValue("taskRefName", json);
+				String taskId = getValue("taskId", json);
 				if(workflowId == null || "".equals(workflowId)) {
 					//This is a bad message, we cannot process it
 					logger.error("No workflow id found in the message. {}", payload);
 					queue.ack(Arrays.asList(msg));
 					return;
 				}
-				Workflow workflow = es.getExecutionStatus(workflowId, true);
-				Optional<Task> ot = Optional.empty();
-				if(taskRefName == null || "".equals(taskRefName)) {
+				Workflow workflow = executionService.getExecutionStatus(workflowId, true);
+				Optional<Task> taskOptional;
+				if (StringUtils.isNotEmpty(taskId)) {
+					taskOptional = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getTaskId().equals(taskId)).findFirst();
+				} else if(StringUtils.isEmpty(taskRefName)) {
 					logger.error("No taskRefName found in the message. If there is only one WAIT task, will mark it as completed. {}", payload);
-					ot = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getTaskType().equals(Wait.NAME)).findFirst();
+					taskOptional = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getTaskType().equals(Wait.NAME)).findFirst();
 				} else {
-					ot = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getReferenceTaskName().equals(taskRefName)).findFirst();
+					taskOptional = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getReferenceTaskName().equals(taskRefName)).findFirst();
 				}
 				
-				if(!ot.isPresent()) {
-					logger.error("No matching tasks to be found to be marked as completed for workflow {}", workflowId);
+				if(!taskOptional.isPresent()) {
+					logger.error("No matching tasks to be found to be marked as completed for workflow {}, taskRefName {}, taskId {}", workflowId, taskRefName, taskId);
+					queue.ack(Arrays.asList(msg));
 					return;
 				}
 				
-				Task task = ot.get();
+				Task task = taskOptional.get();
 				task.setStatus(status);
-				task.getOutputData().putAll(om.convertValue(payloadJSON, _mapType));
-				es.updateTask(task);
+				task.getOutputData().putAll(objectMapper.convertValue(payloadJSON, _mapType));
+				executionService.updateTask(task);
 				
 				List<String> failures = queue.ack(Arrays.asList(msg));
 				if(!failures.isEmpty()) {
@@ -169,17 +174,29 @@ public class QueueManager {
 		return size;
 	}
 
-	public void update(String workflowId, String taskRefName, Map<String, Object> output, Status status) throws Exception {
-		Map<String, Object> outputMap = new HashMap<>();
-		
+	public void updateByTaskRefName(String workflowId, String taskRefName, Map<String, Object> output, Status status) throws Exception {
 		Map<String, Object> externalIdMap = new HashMap<>();
 		externalIdMap.put("workflowId", workflowId);
 		externalIdMap.put("taskRefName", taskRefName);
-		
-		outputMap.put("externalId", om.writeValueAsString(externalIdMap));
+
+		update(externalIdMap, output, status);
+	}
+
+	public void updateByTaskId(String workflowId, String taskId, Map<String, Object> output, Status status) throws Exception {
+		Map<String, Object> externalIdMap = new HashMap<>();
+		externalIdMap.put("workflowId", workflowId);
+		externalIdMap.put("taskId", taskId);
+
+		update(externalIdMap, output, status);
+	}
+
+	private void update(Map<String, Object> externalIdMap, Map<String, Object> output, Status status) throws Exception {
+		Map<String, Object> outputMap = new HashMap<>();
+
+		outputMap.put("externalId", objectMapper.writeValueAsString(externalIdMap));
 		outputMap.putAll(output);
-		
-		Message msg = new Message(UUID.randomUUID().toString(), om.writeValueAsString(outputMap), null);
+
+		Message msg = new Message(UUID.randomUUID().toString(), objectMapper.writeValueAsString(outputMap), null);
 		ObservableQueue queue = queues.get(status);
 		if(queue == null) {
 			throw new IllegalArgumentException("There is no queue for handling " + status.toString() + " status");
