@@ -97,6 +97,8 @@ public class TaskSummary {
 	@ProtoField(id = 19)
 	private String taskDescription;
 
+	public TaskSummary() {
+    }
 	
     
 	public TaskSummary(Task task) {
