@@ -203,42 +203,6 @@ public class SubWorkflow extends WorkflowSystemTask {
 			} catch (Exception ignore) {
 			}
 		}
-
-//		Long restartOn = (Long) task.getOutputData().get(RESTART_ON);
-//		if (restartOn == null) { // Schedule restart
-//			logger.debug("Scheduled restart for the sub-workflow " + subWorkflow.getWorkflowId());
-//
-//			// One second default delay if not specified
-//			Long restartDelay = param.getRestartDelay();
-//			if (restartDelay == null) {
-//				restartDelay = 500L;
-//			}
-//
-//			restartOn = System.currentTimeMillis() + restartDelay;
-//			task.getOutputData().put(RESTART_ON, restartOn);
-//		} else if (restartOn <= System.currentTimeMillis()) {
-//			logger.debug("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
-//			restarted++;
-//			task.getOutputData().put(RESTARTED, restarted);
-//			task.getOutputData().remove(RESTART_ON);
-//			try {
-//				provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getCorrelationId());
-//			} catch (Exception ex) {
-//				logger.error("Unable to restart the sub-workflow " + subWorkflow.getWorkflowId() +
-//						", correlationId=" + subWorkflow.getCorrelationId() + " due to " + ex.getMessage(), ex);
-//				task.setStatus(Status.FAILED);
-//				task.setReasonForIncompletion(ex.getMessage());
-//
-//				subWorkflow.setStatus(WorkflowStatus.FAILED);
-//				subWorkflow.setReasonForIncompletion(ex.getMessage());
-//				try {
-//					provider.terminateWorkflow(subWorkflow, ex.getMessage(), null);
-//				} catch (Exception ignore) {
-//				}
-//			}
-//		} else {
-//			return false; // Do nothing as waiting for the RESTART_ON time
-//		}
 		return true;
 	}
 
