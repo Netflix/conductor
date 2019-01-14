@@ -764,10 +764,6 @@ public class WorkflowExecutor {
 
 		// Send to atlas
 		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
-
-		if (lazyDecider && workflow.getStatus() == WorkflowStatus.RESET && StringUtils.isNotEmpty(workflow.getParentWorkflowId())) {
-			wakeUpSweeper(workflow.getParentWorkflowId());
-		}
 	}
 
 	public QueueDAO getQueueDao() {
