@@ -1,6 +1,9 @@
+import de.sebastianboegl.gradle.plugins.shadow.transformers.Log4j2PluginsFileTransformer
+
 buildscript {
     dependencies {
         classpath "org.akhikhl.gretty:gretty:1.2.4"
+        classpath 'de.sebastianboegl.gradle.plugins:shadow-log4j-transformer:2.2.0'
     }
 }
 
@@ -16,6 +19,7 @@ configurations.all {
 
 apply plugin: 'war'
 apply plugin: "org.akhikhl.gretty"
+apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
 
@@ -41,6 +45,9 @@ dependencies {
 
     //Swagger
     compile "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
+
+    //Graylog gelf logger
+    compile("biz.paluch.logging:logstash-gelf:${revGelfLogger}")
 }
 
 shadowJar {
@@ -50,6 +57,7 @@ shadowJar {
         attributes 'Description': 'Self contained Conductor server jar'
         attributes 'Main-Class': 'com.netflix.conductor.bootstrap.Main'
     }
+    transform(Log4j2PluginsFileTransformer)
 }
 publishing {
     publications {
