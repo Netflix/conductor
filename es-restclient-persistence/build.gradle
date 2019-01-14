@@ -6,6 +6,10 @@ dependencies {
 	//ES5 Dependency
 	compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.9.1'
 	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.9.1'
+	
+	// build failing error: package org.apache.commons.lang does not exist. import org.apache.commons.lang.StringUtils;
+	// included version with hint from https://www.labkey.org/home/Support/Developer%20Forum/announcements-thread.view?rowId=17362
+	compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
 
 	compile 'org.elasticsearch:elasticsearch:5.6.0'
 	compile 'org.elasticsearch.client:transport:5.6.0'

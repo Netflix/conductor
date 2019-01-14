@@ -21,7 +21,6 @@ import com.netflix.dyno.jedis.DynoJedisClient;
 import com.netflix.dyno.queues.DynoQueue;
 import com.netflix.dyno.queues.Message;
 import com.netflix.dyno.queues.ShardSupplier;
-import com.netflix.dyno.queues.redis.SingleShardSupplier;
 import com.netflix.dyno.queues.redis.RedisDynoQueue;
 import com.netflix.dyno.queues.redis.RedisQueues;
 import com.netflix.dyno.queues.shard.DynoShardSupplier;

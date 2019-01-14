@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -80,7 +81,7 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
-import com.netflix.conductor.dao.es5.index.query.parser.ParserException;
+import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
 
 /**
@@ -202,7 +203,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	@Override
-	public void index(Workflow workflow) {
+	public void indexWorkflow(Workflow workflow) {
 		try {
 
 			String id = workflow.getWorkflowId();
@@ -221,7 +222,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	@Override
-	public void index(Task task) {
+	public void indexTask(Task task) {
 		try {
 
 			String id = task.getTaskId();
@@ -240,7 +241,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	
 
 	@Override
-	public void add(List<TaskExecLog> logs) {
+	public void addTaskExecutionLogs(List<TaskExecLog> logs) {
 		int retry = 3;
 		while(retry > 0) {
 			try {
@@ -269,7 +270,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 
 	@Override
-	public List<TaskExecLog> getTaskLogs(String taskId) {
+	public List<TaskExecLog> getTaskExecutionLogs(String taskId) {
 		try {
 
 			QueryBuilder qf = QueryBuilders.matchAllQuery();
@@ -328,7 +329,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	@Override
-	public void add(EventExecution ee) {
+	public void addEventExecution(EventExecution ee) {
 
 		try {
 
@@ -391,7 +392,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 
 	@Override
-	public void remove(String workflowId) {
+	public void removeWorkflow(String workflowId) {
 		try {
 
 			DeleteRequest req = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
@@ -404,7 +405,7 @@ public class ElasticSearchDAO implements IndexDAO {
 			Monitors.error(className, "remove");
 		}
 	}
-        @Override
+	// @Override: commenting since IndexDAO no longer has removeTask method defined
         public void removeTask(String taskId) {
                 try {
 
@@ -421,7 +422,7 @@ public class ElasticSearchDAO implements IndexDAO {
 
 	
 	@Override
-	public void update(String workflowInstanceId, String[] keys, Object[] values) {
+	public void updateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
 		if(keys.length != values.length) {
 			throw new IllegalArgumentException("Number of keys and values should be same.");
 		}
@@ -487,6 +488,64 @@ public class ElasticSearchDAO implements IndexDAO {
 		});
 		long count = response.getHits().getTotalHits();
 		return new SearchResult<String>(count, result);
+	}
+
+	
+	/** have to implement these new IndexDAO methods
+	 *  or probably use ElasticSearchDAOV5 class
+	 */
+	@Override
+	public void setup() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncIndexTask(Task task) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncUpdateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	

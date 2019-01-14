@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -39,14 +40,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.nio.entity.NStringEntity;
-import org.apache.http.util.EntityUtils;
-import org.elasticsearch.ResourceAlreadyExistsException;
-import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -54,16 +49,11 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.get.GetField;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -71,7 +61,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +81,6 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.esrest.index.query.parser.Expression;
-import com.netflix.conductor.dao.esrest.index.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
 
 @Trace
@@ -236,7 +224,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	
 	// TESTED
 	@Override
-	public void index(Workflow workflow) {
+	public void indexWorkflow(Workflow workflow) {
 		String id = workflow.getWorkflowId();
 		try {
 			WorkflowSummary summary = new WorkflowSummary(workflow);
@@ -255,7 +243,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	
 	//TESTED
 	@Override
-	public void index(Task task) {
+	public void indexTask(Task task) {
 		String id = task.getTaskId();
 		try {
 			TaskSummary summary = new TaskSummary(task);
@@ -273,7 +261,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	
 
 	@Override
-	public void add(List<TaskExecLog> taskExecLogs) {
+	public void addTaskExecutionLogs(List<TaskExecLog> taskExecLogs) {
 		
 		if (taskExecLogs.isEmpty()) {
 			return;
@@ -307,7 +295,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 
 	@Override
-	public List<TaskExecLog> getTaskLogs(String taskId) {
+	public List<TaskExecLog> getTaskExecutionLogs(String taskId) {
 		try {
 
 			QueryBuilder qf = QueryBuilders.matchAllQuery();
@@ -369,7 +357,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	@Override
-	public void add(EventExecution ee) {
+	public void addEventExecution(EventExecution ee) {
 		try {
 
 			byte[] doc = om.writeValueAsBytes(ee);
@@ -433,7 +421,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 
 	@Override
-	public void remove(String workflowId) {
+	public void removeWorkflow(String workflowId) {
 		int retry = 5;
 		while(retry > 0) {
 			try {
@@ -454,7 +442,7 @@ public class ElasticSearchDAO implements IndexDAO {
 		}
 	}
 
-        @Override
+        // @Override: commenting since IndexDAO no longer has removeTask method defined 
         public void removeTask(String taskId) {
     		int retry = 5;
     		while(retry > 0) {
@@ -479,7 +467,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	
 	// TESTED
 	@Override
-	public void update(String workflowInstanceId, String[] keys, Object[] values) {
+	public void updateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
 		if(keys.length != values.length) {
 			throw new IllegalArgumentException("Number of keys and values should be same.");
 		}
@@ -569,6 +557,65 @@ public class ElasticSearchDAO implements IndexDAO {
 			log.error(e.getMessage());
 			throw e;
 		}
+	}
+
+	
+	
+	/** have to implement these new IndexDAO methods
+	 *  or probably use ElasticSearchDAOV5 class
+	 */
+	@Override
+	public void setup() throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncIndexTask(Task task) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncUpdateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	

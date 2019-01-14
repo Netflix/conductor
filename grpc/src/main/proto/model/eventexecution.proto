@@ -14,6 +14,7 @@ message EventExecution {
         COMPLETED = 1;
         FAILED = 2;
         SKIPPED = 3;
+        NO_OP = 4;
     }
     string id = 1;
     string message_id = 2;

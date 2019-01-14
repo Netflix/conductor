@@ -151,6 +151,7 @@ public abstract class AbstractProtoMapper {
             case COMPLETED: to = EventExecutionPb.EventExecution.Status.COMPLETED; break;
             case FAILED: to = EventExecutionPb.EventExecution.Status.FAILED; break;
             case SKIPPED: to = EventExecutionPb.EventExecution.Status.SKIPPED; break;
+            case NO_OP: to = EventExecutionPb.EventExecution.Status.NO_OP; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -163,6 +164,7 @@ public abstract class AbstractProtoMapper {
             case COMPLETED: to = EventExecution.Status.COMPLETED; break;
             case FAILED: to = EventExecution.Status.FAILED; break;
             case SKIPPED: to = EventExecution.Status.SKIPPED; break;
+            case NO_OP: to = EventExecution.Status.NO_OP; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -541,6 +543,9 @@ public abstract class AbstractProtoMapper {
         if (from.getExternalOutputPayloadStoragePath() != null) {
             to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
         }
+        if (from.getTaskDescription() != null) {
+            to.setTaskDescription( from.getTaskDescription() );
+        }
         return to.build();
     }
 
@@ -594,6 +599,7 @@ public abstract class AbstractProtoMapper {
         to.setRateLimitFrequencyInSeconds( from.getRateLimitFrequencyInSeconds() );
         to.setExternalInputPayloadStoragePath( from.getExternalInputPayloadStoragePath() );
         to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
+        to.setTaskDescription( from.getTaskDescription() );
         return to;
     }
 
@@ -870,6 +876,13 @@ public abstract class AbstractProtoMapper {
         }
         if (from.getTaskId() != null) {
             to.setTaskId( from.getTaskId() );
+        }
+        if (from.getReferenceTaskName() != null) {
+            to.setReferenceTaskName( from.getReferenceTaskName() );
+        }
+        to.setRetryCount( from.getRetryCount() );
+        if (from.getTaskDescription() != null) {
+            to.setTaskDescription( from.getTaskDescription() );
         }
         return to.build();
     }

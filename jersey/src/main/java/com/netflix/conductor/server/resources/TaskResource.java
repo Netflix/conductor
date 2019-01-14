@@ -44,6 +44,7 @@ import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.common.run.ExternalStorageLocation;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.core.config.Configuration;
@@ -51,7 +52,7 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionService;
-
+import com.netflix.conductor.service.TaskService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -67,13 +68,15 @@ import io.swagger.annotations.ApiOperation;
 @Consumes({ MediaType.APPLICATION_JSON })
 @Singleton
 public class TaskResource {
-	private final TaskService taskService;
 
+	private final TaskService taskService;
+	private QueueDAO queues;
+	private int maxSearchSize;
+
+	
 	@Inject
 	public TaskResource(TaskService taskService) {
 		this.taskService = taskService;
-		this.queues = queues;
-		this.maxSearchSize = config.getIntProperty("task.max.search.size", 5_000);
 	}
 
 	@GET
@@ -227,18 +230,12 @@ public class TaskResource {
 	@Consumes(MediaType.WILDCARD)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/search")
-    public SearchResult<TaskSummary> search(
-    		@QueryParam("start") @DefaultValue("0") int start,
-    		@QueryParam("size") @DefaultValue("100") int size,
-    		@QueryParam("sort") String sort,
-    		@QueryParam("freeText") @DefaultValue("*") String freeText,
-    		@QueryParam("query") String query
-    		){
-
-		if(size > maxSearchSize) {
-			throw new ApplicationException(Code.INVALID_INPUT, "Cannot return more than " + maxSearchSize + " tasks.  Please use pagination");
-		}
-		return taskService.searchTasks(query , freeText, start, size, convert(sort));
+	public SearchResult<TaskSummary> search(@QueryParam("start") @DefaultValue("0") int start,
+											@QueryParam("size") @DefaultValue("100") int size,
+											@QueryParam("sort") String sort,
+											@QueryParam("freeText") @DefaultValue("*") String freeText,
+											@QueryParam("query") String query) {
+		return taskService.search(start, size, sort, freeText, query);
 	}
 
 	@GET

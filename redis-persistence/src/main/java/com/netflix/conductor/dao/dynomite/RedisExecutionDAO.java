@@ -55,10 +55,10 @@ import java.util.stream.Collectors;
 @Trace
 public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
-	
+
 	private static final String ARCHIVED_FIELD = "archived";
 	private static final String RAW_JSON_FIELD = "rawJSON";
-        private static final int MAX_RAW_JSON = 1024 * 32 - 10; // Based on string limit in Elastic Search 
+        private static final int MAX_RAW_JSON = 1024 * 32 - 10; // Based on string limit in Elastic Search
 	public static final Logger logger = LoggerFactory.getLogger(RedisExecutionDAO.class);
 
 	// Keys Families
@@ -379,14 +379,15 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	@Override
 	public void removeWorkflow(String workflowId) {
 			Workflow wf = getWorkflow(workflowId, true);
-                        
-                        String rawJson = om.writeValueAsString(wf);
-                        if (rawJson.length() > MAX_RAW_JSON) {
-                            rawJson = rawJson.substring(0, MAX_RAW_JSON); 
-                        }
+
+//            String rawJson = objectMapper.writeValueAsString(wf);
+//            if (rawJson.length() > MAX_RAW_JSON) {
+//                rawJson = rawJson.substring(0, MAX_RAW_JSON);
+//            }
+
 			//Add to elasticsearch
-			indexer.update(workflowId, new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD}, new Object[]{rawJson, true});
-			
+			//indexer.update(workflowId, new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD}, new Object[]{rawJson, true});
+
 			recordRedisDaoRequests("removeWorkflow");
 
 			// Remove from lists
