@@ -36,11 +36,14 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -67,7 +70,8 @@ public class ExecutionService {
 	private MetadataDAO metadata;
 	
 	private int taskRequeueTimeout;
-	
+
+	private Configuration config;
 
 	@Inject
 	public ExecutionService(WorkflowExecutor wfProvider, ExecutionDAO edao, QueueDAO queue, MetadataDAO metadata, IndexDAO indexer, Configuration config) {
@@ -76,6 +80,7 @@ public class ExecutionService {
 		this.queue = queue;
 		this.metadata = metadata;
 		this.indexer = indexer;
+		this.config = config;
 		this.taskRequeueTimeout = config.getIntProperty("task.requeue.timeout", 60_000);
 	}
 
@@ -368,5 +373,30 @@ public class ExecutionService {
 	public List<TaskExecLog> getTaskLogs(String taskId) {
 		return indexer.getTaskLogs(taskId);		
 	}
-	
+
+	public void reloadConfig() {
+		List<Pair<String, String>> pairs = metadata.getConfigs();
+		pairs.forEach(pair -> {
+			config.override(pair.getKey(), pair.getValue());
+			if (pair.getKey().startsWith("log4j_logger_")) {
+				String name = pair.getKey().replace("log4j_logger_", "").replaceAll("_", ".");
+				Logger targetLogger = LoggerFactory.getLogger(name);
+				Level targetLevel = Level.toLevel(pair.getValue());
+
+				try {
+					setLevel(targetLogger, targetLevel);
+				} catch (Exception e) {
+					logger.error("set log level failed with {} for {}", e.getMessage(), pair.toString(), e);
+				}
+			}
+		});
+	}
+
+	private void setLevel(Logger logger, Level level) throws Exception {
+		Field field = logger.getClass().getDeclaredField("logger");
+		field.setAccessible(true);
+
+		org.apache.log4j.Logger object = (org.apache.log4j.Logger)field.get(logger);
+		object.setLevel(level);
+	}
 }

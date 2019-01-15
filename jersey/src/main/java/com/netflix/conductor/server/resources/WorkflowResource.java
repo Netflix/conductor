@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
@@ -72,6 +73,8 @@ public class WorkflowResource {
 
 	private int maxSearchSize;
 
+	private CommonParams commonparams;
+
 	@Inject
 	public WorkflowResource(WorkflowExecutor executor, ExecutionService service,
 							MetadataService metadata, Configuration config) {
@@ -114,10 +117,17 @@ public class WorkflowResource {
 		if (StringUtils.isNotEmpty(correlationId)) {
 			request.setCorrelationId(correlationId);
 		}
+		Map<String, Object> authContext=null;
 
+		if(headers.getRequestHeader(commonparams.AUTH_CONTEXT)!= null ) {
+			if(StringUtils.isNotEmpty(headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0)))
+				{
+					authContext = executor.validateAuthContext(def,headers);
+				}
+		}
 		NDC.push("rest-start-"+ UUID.randomUUID().toString());
 		try {
-			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth);
+				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth,authContext);
 		} finally {
 			NDC.remove();
 		}
@@ -170,14 +180,10 @@ public class WorkflowResource {
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Response delete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
-		executor.validateAuth(workflowId, headers);
-
 		Response.ResponseBuilder builder = Response.noContent();
-		handleCorrelationId(workflowId, headers, builder);
-
 		NDC.push("rest-remove-"+ UUID.randomUUID().toString());
 		try {
-			executor.removeWorkflow(workflowId);
+			executor.removeWorkflowNotImplemented(workflowId);
 		} finally {
 			NDC.remove();
 		}
@@ -219,7 +225,6 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response pauseWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
@@ -239,7 +244,6 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response resumeWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
@@ -275,7 +279,6 @@ public class WorkflowResource {
 	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
 	public Response rerun(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 		request.setReRunFromWorkflowId(workflowId);
@@ -298,7 +301,6 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
@@ -318,7 +320,6 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
@@ -338,7 +339,6 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response terminate(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
 		Response.ResponseBuilder builder = Response.noContent();
 		handleCorrelationId(workflowId, headers, builder);
 
@@ -359,7 +359,6 @@ public class WorkflowResource {
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.validateAuth(workflowId, headers);
-
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 		handleCorrelationId(workflowId, headers, builder);
 

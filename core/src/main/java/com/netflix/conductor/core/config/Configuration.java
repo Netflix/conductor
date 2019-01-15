@@ -18,10 +18,10 @@
  */
 package com.netflix.conductor.core.config;
 
+import com.google.inject.AbstractModule;
+
 import java.util.List;
 import java.util.Map;
-
-import com.google.inject.AbstractModule;
 
 /**
  * @author Viren
@@ -117,5 +117,7 @@ public interface Configuration {
 	public default List<AbstractModule> getAdditionalModules() {
 		return null;
 	}
+
+	public default void override(String name, String value) { }
 
 }

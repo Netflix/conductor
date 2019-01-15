@@ -21,7 +21,9 @@ package com.netflix.conductor.dao;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -166,4 +168,8 @@ public interface MetadataDAO {
 	 * @return Returns the list of all the event handlers for a given event
 	 */
 	public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly);
+
+	public default List<Pair<String, String>> getConfigs() {
+		return Collections.emptyList();
+	}
 }

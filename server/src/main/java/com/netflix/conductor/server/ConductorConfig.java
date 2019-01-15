@@ -18,21 +18,15 @@
  */
 package com.netflix.conductor.server;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
-
+import com.google.inject.AbstractModule;
+import com.netflix.conductor.core.config.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.AbstractModule;
-import com.netflix.conductor.core.config.Configuration;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.*;
 
 /**
  * @author Viren
@@ -41,7 +35,10 @@ import com.netflix.conductor.core.config.Configuration;
 public class ConductorConfig implements Configuration {
 
 	private static Logger logger = LoggerFactory.getLogger(ConductorConfig.class);
-	
+
+	private final Map<String,String> envs = new HashMap<>(System.getenv());
+
+
 	@Override
 	public int getSweepFrequency() {
 		return getIntProperty("decider.sweep.frequency.seconds", 30);
@@ -107,7 +104,7 @@ public class ConductorConfig implements Configuration {
 
 		String val = null;
 		try{
-			val = System.getenv(key.replace('.','_'));
+			val = envs.get(key.replace('.','_'));
 			if (val == null || val.isEmpty()) {
 				val = Optional.ofNullable(System.getProperty(key)).orElse(defaultValue);
 			}
@@ -152,5 +149,10 @@ public class ConductorConfig implements Configuration {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public void override(String name, String value) {
+		envs.put(name, value);
 	}
 }

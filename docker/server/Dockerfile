@@ -5,6 +5,8 @@ FROM java:8-jre-alpine
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
+RUN apk update && apk add jq curl
+
 # Make app folders
 RUN mkdir -p /app/config /app/logs /app/libs
 

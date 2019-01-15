@@ -1,0 +1,9 @@
+{
+  "config": {
+    "properties": {
+      "value": {
+        "type": "text"
+      }
+    }
+  }
+}
