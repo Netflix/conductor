@@ -35,6 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -154,10 +155,52 @@ public class InfoResource {
 		gaugeMap.put("workflow_in_progress", "workflows_in_progress");
 		gaugeMap.put("task_in_progress", "tasks_in_progress");
 
-		// Gauges
+		// Output gauges
 		final Map<String, Object> gauges = getGauges();
 		gauges.forEach((k, v) -> {
 			output.put("deluxe.conductor." + k, v);
+		});
+
+		// Timers
+		Map<String, String> timerMap = new HashMap<>();
+
+		// Map timer names to metric names
+		timerMap.put("task_queue_wait", "avg_task_queue_wait_ms");
+
+		final Map<String, Map<Map<String, String>, PercentileTimer>> timers = Monitors.getTimers();
+
+		// Basic timers
+		timers.forEach((name, map) -> {
+			map.forEach((tags, timer) -> {
+				if (timerMap.containsKey(name)) {
+					final long avgMs = Duration.ofNanos(timer.totalTime()).toMillis() / timer.count();
+					output.put("deluxe.conductor." + timerMap.get(name), avgMs);
+				}
+			});
+		});
+
+		// Average Execution Times
+		Map<String, String> executionMap = new HashMap<>();
+
+		executionMap.put("task_execution", "avg_task_execution_ms");
+		executionMap.put("workflow_execution", "avg_workflow_execution_ms");
+
+		timers.forEach((name, map) -> {
+			if (executionMap.containsKey(name)) {
+				long totalCount = 0;
+				long totalTime = 0;
+
+				Iterator<Map.Entry<Map<String, String>, PercentileTimer>> iterator = map.entrySet().iterator();
+				while (iterator.hasNext()) {
+					Map.Entry<Map<String, String>, PercentileTimer> entry = iterator.next();
+					PercentileTimer timer = entry.getValue();
+
+					totalCount += timer.count();
+					totalTime += Duration.ofNanos(timer.totalTime()).toMillis();
+				}
+				
+				output.put("deluxe.conductor." + executionMap.get(name), totalTime / totalCount);
+			}
 		});
 
 		return output;
