@@ -3,15 +3,13 @@ FROM openjdk:8-jdk AS base
 RUN git clone https://github.com/FRINXio/conductor.git
 
 # Conductor project version. Needed to pull additional .jar files.
-# Following command returns the version, if run in conductor repo:
+# One of the following commands run in conductor repo folder returns the version number:
 # git describe | grep -oP "\d+\.\d+\.\d+"
-# Needs to be changed accordingly to actual version.
-ARG version=1.10.10
-RUN echo $version
+# git for-each-ref refs/tags --sort=-taggerdate --format='%(tag)' --count=1 | cut -d "v" -f 2
 
 # Create gradle properties file
 RUN cd conductor && echo 'git.root=../../' > gradle.properties
-RUN cd conductor && echo "submodVersion=$version" >> gradle.properties
+RUN cd conductor && echo "submodVersion=$(git for-each-ref refs/tags --sort=-taggerdate --format='%(tag)' --count=1 | cut -d "v" -f 2)" >> gradle.properties
 
 # Download and build .jar files needed
 RUN cd conductor/server && ../gradlew build --no-daemon -x test
