@@ -479,6 +479,16 @@ public class WorkflowExecutor {
     }
 
 
+    public Task getInProgressWaitTaskByWorkflow(String workflowId) {
+        return executionDAOFacade.getTasksForWorkflow(workflowId)
+                .stream()
+                .filter(task -> task.getTaskType().equals(TaskType.WAIT.name()))
+                .filter(task -> task.getStatus() == Task.Status.IN_PROGRESS)
+                .findFirst() // There can only be one task by a given reference name running at a time.
+                .orElse(null);
+    }
+
+
     /**
      * @param wf the workflow to be completed
      * @throws ApplicationException if workflow is not in terminal state
