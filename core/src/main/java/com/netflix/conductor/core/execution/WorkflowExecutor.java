@@ -378,6 +378,7 @@ public class WorkflowExecutor {
         workflow.setEndTime(0);
         // Change the status to running
         workflow.setStatus(WorkflowStatus.RUNNING);
+        workflow.setOutput(null);
         executionDAOFacade.updateWorkflow(workflow);
         decide(workflowId);
     }
