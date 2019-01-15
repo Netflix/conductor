@@ -274,7 +274,9 @@ public class Workflow extends Auditable{
 	 * @return whether this workflow is a sub-workflow.
 	 */
 	public boolean isSubWorkflow() {
-		return !getParentWorkflowId().isEmpty();
+		final String parentId = getParentWorkflowId();
+
+		return parentId != null ? !parentId.isEmpty() : false;
 	}
 
 	/**
