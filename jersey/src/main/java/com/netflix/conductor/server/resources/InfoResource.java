@@ -156,9 +156,12 @@ public class InfoResource {
 		gaugeMap.put("task_in_progress", "tasks_in_progress");
 
 		// Output gauges
-		final Map<String, Object> gauges = getGauges();
-		gauges.forEach((k, v) -> {
-			output.put("deluxe.conductor." + k, v);
+		final Map<String, Map<Map<String, String>, AtomicLong>> gauges = Monitors.getGauges();
+		gauges.forEach((name, map) -> {
+			if (gaugeMap.containsKey(name)) {
+				final long value = map.values().stream().mapToLong(v -> v.get()).sum();
+				output.put("deluxe.conductor." + name, value);
+			}
 		});
 
 		// Timers
