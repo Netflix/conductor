@@ -234,14 +234,12 @@ public class Monitors {
 
 	public static void recordWorkflowCompletion(Workflow workflow) {
 		final String type = workflow.getWorkflowType();
-		final String name = prefixName("workflow_execution", "sub", workflow.isSubWorkflow());
-		getTimer(classQualifier, name, "workflowName", type).record(workflow.getDuration(), TimeUnit.MILLISECONDS);
-		recordWorkflowCompletion(type); // counter
+		final String timerName = prefixName("workflow_execution", "sub", workflow.isSubWorkflow());
+		final String counterName = prefixName("workflow_completion", "sub", workflow.isSubWorkflow());
+		
+		getTimer(classQualifier, timerName, "workflowName", type).record(workflow.getDuration(), TimeUnit.MILLISECONDS);
+		counter(classQualifier, counterName, "workflowName", type, "date", LocalDate.now().toString());
 		recordWorkflowCompleteProgress(workflow);
-	}
-
-	public static void recordWorkflowCompletion(String workflowType) {
-		counter(classQualifier, "workflow_completion", "workflowName", workflowType);
 	}
 
 	public static void recordTaskRateLimited(String taskDefName, int limit) {
