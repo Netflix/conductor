@@ -25,6 +25,7 @@ import com.netflix.spectator.api.Counter;
 import com.netflix.spectator.api.histogram.PercentileTimer;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -129,6 +131,7 @@ public class InfoResource {
 
 		// Workflow and Event Counters
 		Map<String, String> counterMap = new HashMap<>();
+		Map<String, String> todayMap = new HashMap<>();
 
 		// Map counter names to metric names
 		counterMap.put("workflow_completion", "workflows_completed");
@@ -136,6 +139,8 @@ public class InfoResource {
 		counterMap.put("workflow_start", "workflows_started");
 		counterMap.put("workflow_cancel", "workflows_canceled");
 		counterMap.put("workflow_restart", "workflows_restarted");
+		todayMap.put("workflow_completion", "workflows_completed_today");
+		todayMap.put("workflow_start", "workflows_started_today");
 
 		// Messages
 		counterMap.put("event_queue_messages_received", "messages_received");
@@ -143,11 +148,25 @@ public class InfoResource {
 
 		// Counters
 		final Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
+		final LocalDate today = LocalDate.now();
 		counters.forEach((name, map) -> {
 			if (counterMap.containsKey(name)) {
 				output.put(prefix + counterMap.get(name), sum(map));
 			}
+
+			// Workflows Started or Completed Today
+			if (todayMap.containsKey(name)) {
+				final long sum = map.entrySet().stream()
+					.filter(e -> e.getKey().containsKey("date"))
+					.mapToLong(e -> {
+						final LocalDate value = LocalDate.parse(e.getKey().get("date"));
+						return today.isEqual(value) ? e.getValue().count() : 0;
+					})
+					.sum();
+				output.put(prefix + todayMap.get(name), sum);
+			}
 		});
+
 
 		// Gauges to track in progress tasks, workflows, etc...
 		Map<String, String> gaugeMap = new HashMap<>();
@@ -164,6 +183,7 @@ public class InfoResource {
 				output.put(prefix + gaugeMap.get(name), value);
 			}
 		});
+
 
 		// Timers
 		Map<String, String> timerMap = new HashMap<>();
