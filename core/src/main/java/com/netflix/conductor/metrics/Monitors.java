@@ -27,6 +27,7 @@ import com.netflix.servo.monitor.Stopwatch;
 import com.netflix.spectator.api.*;
 import com.netflix.spectator.api.histogram.PercentileTimer;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -273,7 +274,7 @@ public class Monitors {
 
 	public static void recordWorkflowStart(Workflow workflow) {
 		final String name = prefixName("workflow_start", "sub", workflow.isSubWorkflow());
-		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType(), "date", LocalDate.now().toString());
 		recordWorkflowInProgress(workflow);
 	}
 
