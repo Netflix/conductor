@@ -125,6 +125,7 @@ public class InfoResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
 		Map<String, Object> output = new TreeMap<>();
+		final String prefix = "deluxe.conductor.";
 
 		// Workflow and Event Counters
 		Map<String, String> counterMap = new HashMap<>();
@@ -144,7 +145,7 @@ public class InfoResource {
 		final Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
 		counters.forEach((name, map) -> {
 			if (counterMap.containsKey(name)) {
-				output.put("deluxe.conductor." + counterMap.get(name), sum(map));
+				output.put(prefix + counterMap.get(name), sum(map));
 			}
 		});
 
@@ -160,7 +161,7 @@ public class InfoResource {
 		gauges.forEach((name, map) -> {
 			if (gaugeMap.containsKey(name)) {
 				final long value = map.values().stream().mapToLong(v -> v.get()).sum();
-				output.put("deluxe.conductor." + name, value);
+				output.put(prefix + gaugeMap.get(name), value);
 			}
 		});
 
@@ -177,7 +178,7 @@ public class InfoResource {
 			map.forEach((tags, timer) -> {
 				if (timerMap.containsKey(name)) {
 					final long avgMs = Duration.ofNanos(timer.totalTime()).toMillis() / timer.count();
-					output.put("deluxe.conductor." + timerMap.get(name), avgMs);
+					output.put(prefix + timerMap.get(name), avgMs);
 				}
 			});
 		});
@@ -202,7 +203,7 @@ public class InfoResource {
 					totalTime += Duration.ofNanos(timer.totalTime()).toMillis();
 				}
 				
-				output.put("deluxe.conductor." + executionMap.get(name), totalTime / totalCount);
+				output.put(prefix + executionMap.get(name), totalTime / totalCount);
 			}
 		});
 
