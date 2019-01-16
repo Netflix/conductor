@@ -178,7 +178,7 @@ public class Monitors {
 
 	public static void recordQueueDepth(String taskType, long size, String ownerApp) {
 		gauge(classQualifier, "task_queue_depth", size, "taskType", taskType, "ownerApp", ""+ownerApp);
-	}
+	}	
 
 	public static void recordTaskInProgress(String taskType, long size, String ownerApp) {
 		gauge(classQualifier, "task_in_progress", size, "taskType", taskType, "ownerApp", ""+ownerApp);
@@ -189,18 +189,19 @@ public class Monitors {
 	}
 
 	public static void recordWorkflowInProgress(Workflow workflow) {
-		final long measurement = 1;
-
 		if (!workflow.isSubWorkflow()) {
-			gauge(classQualifier, "workflow_in_progress", measurement, "workflowName", workflow.getWorkflowType());
+			getGauge(classQualifier, "workflow_in_progress", "workflowName", workflow.getWorkflowType()).getAndIncrement();
 		}
 	}
 
 	public static void recordWorkflowCompleteProgress(Workflow workflow) {
-		final long measurement = -1;
-		
 		if (!workflow.isSubWorkflow()) {
-			gauge(classQualifier, "workflow_in_progress", measurement, "workflowName", workflow.getWorkflowType());
+			AtomicLong gauge = getGauge(classQualifier, "workflow_in_progress", "workflowName", workflow.getWorkflowType());
+			final long value = gauge.get();
+
+			if (value > 0) {
+				gauge.set(value - 1);
+			}
 		}
 	}
 
