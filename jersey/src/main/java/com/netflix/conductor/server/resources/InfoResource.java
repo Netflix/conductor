@@ -206,6 +206,7 @@ public class InfoResource {
 		// Average Execution Times
 		Map<String, String> executionMap = new HashMap<>();
 
+		executionMap.put("http_task_execution", "avg_http_task_execution_ms");
 		executionMap.put("task_execution", "avg_task_execution_ms");
 		executionMap.put("workflow_execution", "avg_workflow_execution_ms");
 
