@@ -41,10 +41,10 @@ import java.util.Map;
 
 class GenericHttpTask extends WorkflowSystemTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
+	static final String GET_ACCESS_TOKEN_FAILED = "Generate access token failed. %s: %s";
 	static final String REQUEST_PARAMETER_NAME = "http_request";
 	static final String RESPONSE_PARAMETER_NAME = "http_response";
 	static final String STATUS_MAPPING_PARAMETER_NAME = "status_mapping";
-	private CommonParams commonparams;
 	static final String RESPONSE_MAPPING_PARAMETER_NAME = "response_mapping";
 	static final String RESET_START_TIME_PARAMETER_NAME = "reset_startTime";
 	protected Configuration config;
@@ -131,7 +131,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		// Attach the Authorization header by adding entry to the input's headers
 		if (input.isAuthorize()) {
 			setAuthorization(input);
-			setAuthorizationContext(input,workflow.getAuthorizationContext());
+			setAuthorizationContext(input, workflow.getAuthorizationContext());
 		}
 
 		// Attach Deluxe Owf Context header
@@ -150,8 +150,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (headers.containsKey(HttpHeaders.AUTHORIZATION)) {
 			headers.put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
 		}
-		if (headers.containsKey(commonparams.AUTH_CONTEXT)) {
-			headers.put(commonparams.AUTH_CONTEXT, "xxxxxxxxxxxxxxxxxxx");
+		if (headers.containsKey(CommonParams.AUTH_CONTEXT)) {
+			headers.put(CommonParams.AUTH_CONTEXT, "xxxxxxxxxxxxxxxxxxx");
 		}
 		logger.debug("http task headers " + headers);
 
@@ -162,8 +162,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 			if (input.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
 				input.getHeaders().put(HttpHeaders.AUTHORIZATION, "xxxxxxxxxxxxxxxxxxx");
 			}
-			if (input.getHeaders().containsKey(commonparams.AUTH_CONTEXT)) {
-				input.getHeaders().put(commonparams.AUTH_CONTEXT, "xxxxxxxxxxxxxxxxxxx");
+			if (input.getHeaders().containsKey(CommonParams.AUTH_CONTEXT)) {
+				input.getHeaders().put(CommonParams.AUTH_CONTEXT, "xxxxxxxxxxxxxxxxxxx");
 			}
 
 			task.getInputData().put(REQUEST_PARAMETER_NAME, input);
@@ -222,12 +222,11 @@ class GenericHttpTask extends WorkflowSystemTask {
 			}
 
 		} catch (IOException jpe) {
-			logger.error(jpe.getMessage(), jpe);
+			logger.error("Extract body failed " + jpe.getMessage() + " for " + json, jpe);
 			return json;
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void setCorrelation(Input input, Workflow workflow) throws JsonProcessingException {
 		if (workflow.getCorrelationId() != null) {
 			Correlator correlator = new Correlator(logger, workflow.getCorrelationId());
@@ -237,15 +236,32 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 	private void setAuthorization(Input input) throws Exception {
 		AuthResponse response = auth.authorize();
+		if (!response.hasAccessToken()) {
+			// Just log first time
+			String error = String.format(GET_ACCESS_TOKEN_FAILED, response.getError(), response.getErrorDescription());
+			logger.error(error);
+
+			// Repeat authorize
+			response = auth.authorize();
+
+			// This time need to throw exception
+			if (!response.hasAccessToken()) {
+				error = String.format(GET_ACCESS_TOKEN_FAILED, response.getError(), response.getErrorDescription());
+				throw new RuntimeException(error);
+			}
+		}
+
 		input.getHeaders().put(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
 	}
-	private void setAuthorizationContext(Input input,Map<String, Object> authorizationContext) throws Exception {
+
+	private void setAuthorizationContext(Input input, Map<String, Object> authorizationContext) {
 		if(MapUtils.isNotEmpty(authorizationContext)) {
-			input.getHeaders().put(commonparams.AUTH_CONTEXT, authorizationContext);
+			input.getHeaders().put(CommonParams.AUTH_CONTEXT, authorizationContext);
 		} else {
-			input.getHeaders().put(commonparams.AUTH_CONTEXT, "");
+			input.getHeaders().put(CommonParams.AUTH_CONTEXT, "");
 		}
 	}
+
 	void setReasonForIncompletion(HttpResponse response, Task task) {
 		if (response.body != null) {
 			task.setReasonForIncompletion(response.body.toString());

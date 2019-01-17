@@ -20,6 +20,7 @@ package com.netflix.conductor.auth;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -74,6 +75,10 @@ public class AuthResponse {
 
 	public void setRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
+	}
+
+	public boolean hasAccessToken() {
+		return StringUtils.isNotEmpty(accessToken);
 	}
 
 	@Override
