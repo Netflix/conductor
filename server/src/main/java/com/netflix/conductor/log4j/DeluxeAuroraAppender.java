@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author Oleksiy Lysak
  */
-public class PostgreSQLAppender extends AppenderSkeleton {
+public class DeluxeAuroraAppender extends AppenderSkeleton {
     /*
     create table log4j_logs
     (
@@ -65,7 +65,7 @@ public class PostgreSQLAppender extends AppenderSkeleton {
     private String user;
     private String password;
 
-    public PostgreSQLAppender() {
+    public DeluxeAuroraAppender() {
         super();
         hostname = getHostName();
         fromhost = getHostIp();
