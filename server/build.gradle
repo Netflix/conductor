@@ -48,6 +48,10 @@ dependencies {
 
     // JNA library for EmbeddedElasticSearch
     compile 'net.java.dev.jna:jna:4.1.0'
+
+    // PostgreSQL + Hikari Connection Pool
+    compile 'org.postgresql:postgresql:42.2.2'
+    compile 'com.zaxxer:HikariCP:3.3.0'
 }
 
 shadowJar {

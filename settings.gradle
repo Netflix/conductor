@@ -1,3 +1,3 @@
 rootProject.name='conductor'
-include 'archiver', 'correlation', 'common', 'core', 'redis-persistence','es5-persistence','es6rest-persistence', 'jersey', 'client', 'test-harness', 'ui', 'contribs', 'server'
+include 'aurora-persistence', 'archiver', 'correlation', 'common', 'core', 'redis-persistence','es5-persistence','es6rest-persistence', 'jersey', 'client', 'test-harness', 'ui', 'contribs', 'server'
 rootProject.children.each {it.name="conductor-${it.name}"}
