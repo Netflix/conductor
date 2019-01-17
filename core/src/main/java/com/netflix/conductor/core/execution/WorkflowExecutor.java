@@ -32,8 +32,8 @@ import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.CommonParams;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
@@ -100,8 +100,6 @@ public class WorkflowExecutor {
 
 	private ParametersUtils pu = new ParametersUtils();
 
-	private CommonParams commonparams;
-
 	@Inject
 	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ObjectMapper om, AuthManager auth, Configuration config) {
 		this.metadata = metadata;
@@ -132,7 +130,7 @@ public class WorkflowExecutor {
 		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization,null);
 	}
 	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization,Map<String, Object> authorizationContext) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization,authorizationContext);
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, authorizationContext);
 	}
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
 		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null,null);
@@ -142,7 +140,7 @@ public class WorkflowExecutor {
 		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null,null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, Map<String, Object> authorizationcontext) throws Exception {
+	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, Map<String, Object> authorizationContext) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
@@ -180,7 +178,7 @@ public class WorkflowExecutor {
 			wf.setStatus(WorkflowStatus.RUNNING);
 			wf.setParentWorkflowId(parentWorkflowId);
 			wf.setAuthorization(authorization);
-			wf.setAuthorizationContext(authorizationcontext);
+			wf.setAuthorizationContext(authorizationContext);
 			// Add other ids if passed
 			if (CollectionUtils.isNotEmpty(workflowIds)) {
 				workflowIds.forEach(id -> {
@@ -1473,12 +1471,11 @@ public class WorkflowExecutor {
 
 
 	public Map<String, Object> validateAuthContext(WorkflowDef workflowDef,HttpHeaders headers) {
-		if (!this.validateAuthContext  || MapUtils.isEmpty(workflowDef.getAuthValidation()) ) {
+		if (!this.validateAuthContext || MapUtils.isEmpty(workflowDef.getAuthValidation()) ) {
 			return null;
 		}
-		String authString = headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0);
-		Map<String, Object> decoded = auth.decode(authString);
-		return decoded;
+		String authString = headers.getRequestHeader(CommonParams.AUTH_CONTEXT).get(0);
+		return auth.decode(authString);
 	}
 
 	public Task getTask(String taskId) {
