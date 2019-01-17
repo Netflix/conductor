@@ -210,7 +210,7 @@ public class WorkflowExecutor {
 			edao.createWorkflow(wf);
 
 			// metrics
-			Monitors.recordWorkflowStart(wf.getWorkflowType());
+			Monitors.recordWorkflowStart(wf);
 
 			// send wf start message
 			notifyWorkflowStatus(wf, StartEndState.start);
@@ -259,7 +259,7 @@ public class WorkflowExecutor {
 			edao.updateWorkflow(workflow);
 
 			// metrics
-			Monitors.recordWorkflowRerun(workflow.getWorkflowType());
+			Monitors.recordWorkflowRerun(workflow);
 
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
@@ -307,7 +307,7 @@ public class WorkflowExecutor {
 			edao.updateWorkflow(workflow);
 
 			// metrics
-			Monitors.recordWorkflowRerun(workflow.getWorkflowType());
+			Monitors.recordWorkflowRerun(workflow);
 
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
@@ -405,7 +405,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		// metrics
-		Monitors.recordWorkflowRestart(workflow.getWorkflowType());
+		Monitors.recordWorkflowRestart(workflow);
 
 		// send wf start message
 		notifyWorkflowStatus(workflow, StartEndState.start);
@@ -515,7 +515,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		// metrics
-		Monitors.recordWorkflowRetry(workflow.getWorkflowType());
+		Monitors.recordWorkflowRetry(workflow);
 
 		decide(workflowId);
 		logger.debug("Workflow retry.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
@@ -570,7 +570,7 @@ public class WorkflowExecutor {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
 			decide(parent.getWorkflowId());
 		}
-		Monitors.recordWorkflowCompletion(workflow.getWorkflowType(), workflow.getEndTime() - workflow.getStartTime());
+		Monitors.recordWorkflowCompletion(workflow);
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -644,7 +644,7 @@ public class WorkflowExecutor {
 		}
 
 		// metrics
-		Monitors.recordWorkflowCancel(workflow.getWorkflowType());
+		Monitors.recordWorkflowCancel(workflow);
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -674,7 +674,7 @@ public class WorkflowExecutor {
 		}
 
 		// metrics
-		Monitors.recordWorkflowReset(workflow.getWorkflowType());
+		Monitors.recordWorkflowReset(workflow);
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -761,7 +761,7 @@ public class WorkflowExecutor {
 		notifyWorkflowStatus(workflow, StartEndState.end);
 
 		// Send to atlas
-		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
+		Monitors.recordWorkflowTermination(workflow);
 	}
 
 	public QueueDAO getQueueDao() {
@@ -878,8 +878,8 @@ public class WorkflowExecutor {
 		if (task.getStatus().isTerminal()) {
 			long duration = getTaskDuration(0, task);
 			long lastDuration = task.getEndTime() - task.getStartTime();
-			Monitors.recordTaskExecutionTime(task.getTaskDefName(), duration, true, task.getStatus());
-			Monitors.recordTaskExecutionTime(task.getTaskDefName(), lastDuration, false, task.getStatus());
+			Monitors.recordTaskExecutionTime(task, duration, true);
+			Monitors.recordTaskExecutionTime(task, lastDuration, false);
 		}
 	}
 
@@ -1012,7 +1012,7 @@ public class WorkflowExecutor {
 
 		edao.updateWorkflow(workflow);
 		// metrics
-		Monitors.recordWorkflowPause(workflow.getWorkflowType());
+		Monitors.recordWorkflowPause(workflow);
 	}
 
 	public void resumeWorkflow(String workflowId,String correlationId) throws Exception{
@@ -1027,7 +1027,7 @@ public class WorkflowExecutor {
 		}
 		edao.updateWorkflow(workflow);
 		// metrics
-		Monitors.recordWorkflowResume(workflow.getWorkflowType());
+		Monitors.recordWorkflowResume(workflow);
 		decide(workflowId);
 	}
 
@@ -1091,7 +1091,7 @@ public class WorkflowExecutor {
 		Workflow workflow = getWorkflow(workflowId, false);
 		edao.removeWorkflow(workflowId);
 		// metrics
-		Monitors.recordWorkflowRemove(workflow.getWorkflowType());
+		Monitors.recordWorkflowRemove(workflow);
 	}
 
 

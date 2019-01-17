@@ -127,6 +127,13 @@ public class Workflow extends Auditable{
 	}
 
 	/**
+	 * @return the duration of the workflow
+	 */
+	public long getDuration() {
+		return getEndTime() - getStartTime();
+	}
+
+	/**
 	 * @return the workflowId
 	 */
 	public String getWorkflowId() {
@@ -262,7 +269,16 @@ public class Workflow extends Auditable{
 	public void setParentWorkflowId(String parentWorkflowId) {
 		this.parentWorkflowId = parentWorkflowId;
 	}
-	
+
+	/**
+	 * @return whether this workflow is a sub-workflow.
+	 */
+	public boolean isSubWorkflow() {
+		final String parentId = getParentWorkflowId();
+
+		return parentId != null ? !parentId.isEmpty() : false;
+	}
+
 	/**
 	 * @return the parentWorkflowTaskId
 	 */
@@ -351,5 +367,5 @@ public class Workflow extends Auditable{
 		}
 		return found.getLast();
 	}
-	
+
 }
