@@ -23,9 +23,9 @@ import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
@@ -73,8 +73,6 @@ public class WorkflowResource {
 
 	private int maxSearchSize;
 
-	private CommonParams commonparams;
-
 	@Inject
 	public WorkflowResource(WorkflowExecutor executor, ExecutionService service,
 							MetadataService metadata, Configuration config) {
@@ -117,17 +115,16 @@ public class WorkflowResource {
 		if (StringUtils.isNotEmpty(correlationId)) {
 			request.setCorrelationId(correlationId);
 		}
-		Map<String, Object> authContext=null;
+		Map<String, Object> authContext = null;
 
-		if(headers.getRequestHeader(commonparams.AUTH_CONTEXT)!= null ) {
-			if(StringUtils.isNotEmpty(headers.getRequestHeader(commonparams.AUTH_CONTEXT).get(0)))
-				{
-					authContext = executor.validateAuthContext(def,headers);
-				}
+		if (headers.getRequestHeader(CommonParams.AUTH_CONTEXT) != null) {
+			if (StringUtils.isNotEmpty(headers.getRequestHeader(CommonParams.AUTH_CONTEXT).get(0))) {
+				authContext = executor.validateAuthContext(def, headers);
+			}
 		}
-		NDC.push("rest-start-"+ UUID.randomUUID().toString());
+		NDC.push("rest-start-" + UUID.randomUUID().toString());
 		try {
-				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth,authContext);
+			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth, authContext);
 		} finally {
 			NDC.remove();
 		}
@@ -181,7 +178,7 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public Response delete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		Response.ResponseBuilder builder = Response.noContent();
-		NDC.push("rest-remove-"+ UUID.randomUUID().toString());
+		NDC.push("rest-remove-" + UUID.randomUUID().toString());
 		try {
 			executor.removeWorkflowNotImplemented(workflowId);
 		} finally {
@@ -210,7 +207,7 @@ public class WorkflowResource {
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public void decide(@PathParam("workflowId") String workflowId) throws Exception {
-		NDC.push("rest-decide-"+ UUID.randomUUID().toString());
+		NDC.push("rest-decide-" + UUID.randomUUID().toString());
 		try {
 			executor.decide(workflowId);
 		} finally {
@@ -228,7 +225,7 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		NDC.push("rest-pause-"+ UUID.randomUUID().toString());
+		NDC.push("rest-pause-" + UUID.randomUUID().toString());
 		try {
 			executor.pauseWorkflow(workflowId, correlationId);
 		} finally {
@@ -247,7 +244,7 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		NDC.push("rest-resume-"+ UUID.randomUUID().toString());
+		NDC.push("rest-resume-" + UUID.randomUUID().toString());
 		try {
 			executor.resumeWorkflow(workflowId, correlationId);
 		} finally {
@@ -263,7 +260,7 @@ public class WorkflowResource {
 	@Consumes(MediaType.WILDCARD)
 	public void skipTaskFromWorkflow(@PathParam("workflowId") String workflowId, @PathParam("taskReferenceName") String taskReferenceName,
 									 SkipTaskRequest skipTaskRequest) throws Exception {
-		NDC.push("rest-skipTask-"+ UUID.randomUUID().toString());
+		NDC.push("rest-skipTask-" + UUID.randomUUID().toString());
 		try {
 			executor.skipTaskFromWorkflow(workflowId, taskReferenceName, skipTaskRequest);
 		} finally {
@@ -284,7 +281,7 @@ public class WorkflowResource {
 		request.setReRunFromWorkflowId(workflowId);
 		request.setCorrelationId(correlationId);
 
-		NDC.push("rest-rerun-"+ UUID.randomUUID().toString());
+		NDC.push("rest-rerun-" + UUID.randomUUID().toString());
 		try {
 			executor.rerun(request);
 		} finally {
@@ -304,7 +301,7 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		NDC.push("rest-restart-"+ UUID.randomUUID().toString());
+		NDC.push("rest-restart-" + UUID.randomUUID().toString());
 		try {
 			executor.rewind(workflowId, correlationId);
 		} finally {
@@ -323,7 +320,7 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		String correlationId = handleCorrelationId(workflowId, headers, builder);
 
-		NDC.push("rest-retry-"+ UUID.randomUUID().toString());
+		NDC.push("rest-retry-" + UUID.randomUUID().toString());
 		try {
 			executor.retry(workflowId, correlationId);
 		} finally {
@@ -342,7 +339,7 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.noContent();
 		handleCorrelationId(workflowId, headers, builder);
 
-		NDC.push("rest-terminate-"+ UUID.randomUUID().toString());
+		NDC.push("rest-terminate-" + UUID.randomUUID().toString());
 		try {
 			executor.terminateWorkflow(workflowId, reason);
 		} finally {
@@ -362,9 +359,9 @@ public class WorkflowResource {
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 		handleCorrelationId(workflowId, headers, builder);
 
-		NDC.push("rest-cancel-"+ UUID.randomUUID().toString());
+		NDC.push("rest-cancel-" + UUID.randomUUID().toString());
 		try {
-			executor.cancelWorkflow(workflowId,reason);
+			executor.cancelWorkflow(workflowId, reason);
 		} finally {
 			NDC.remove();
 		}
