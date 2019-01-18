@@ -135,6 +135,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 			setAuthToken(input);
 		}
 
+		// Attach Authorization-Context: {SSO token} if present and enabled
 		if (authContextEnabled) {
 			if(StringUtils.isNotEmpty(workflow.getContextToken())) {
 				input.getHeaders().put(CommonParams.AUTH_CONTEXT, workflow.getContextToken());
