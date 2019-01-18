@@ -62,6 +62,7 @@
     "redux-thunk": "^1.0.3",
     "superagent": "^1.7.2",
     "underscore": "^1.8.3",
+    "unescape-js": "^1.1.1",
     "webpack": "^1.12.10"
   },
   "devDependencies": {
