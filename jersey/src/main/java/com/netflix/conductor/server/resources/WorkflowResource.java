@@ -115,16 +115,18 @@ public class WorkflowResource {
 		if (StringUtils.isNotEmpty(correlationId)) {
 			request.setCorrelationId(correlationId);
 		}
-		Map<String, Object> authContext = null;
 
+		String contextToken = null;
+		Map<String, Object> authContext = null;
 		if (headers.getRequestHeader(CommonParams.AUTH_CONTEXT) != null) {
-			if (StringUtils.isNotEmpty(headers.getRequestHeader(CommonParams.AUTH_CONTEXT).get(0))) {
-				authContext = executor.validateAuthContext(def, headers);
+			contextToken = headers.getRequestHeader(CommonParams.AUTH_CONTEXT).get(0);
+			if (StringUtils.isNotEmpty(contextToken)) {
+				authContext = executor.validateAuthContext(contextToken);
 			}
 		}
 		NDC.push("rest-start-" + UUID.randomUUID().toString());
 		try {
-			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth, authContext);
+			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth, authContext, contextToken);
 		} finally {
 			NDC.remove();
 		}

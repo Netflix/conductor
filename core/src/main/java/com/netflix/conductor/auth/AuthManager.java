@@ -19,8 +19,8 @@
 package com.netflix.conductor.auth;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
@@ -34,6 +34,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,11 +132,10 @@ public class AuthManager {
 	}
 
 	public Map<String, Object> validate(Map<String, Object> decoded, Map<String, String> rules) {
-		Long exp = (Long)decoded.get("exp");
-		if (exp == null) {
+		if (decoded.get("exp") == null) {
 			throw new IllegalArgumentException("Invalid token. No expiration claim present");
 		}
-		exp *= 1000; // Convert to milliseconds
+		long exp = Long.valueOf(decoded.get("exp").toString()) * 1000;
 		if (System.currentTimeMillis() >= exp) {
 			throw new IllegalArgumentException("Invalid token. Token is expired");
 		}
@@ -167,31 +168,14 @@ public class AuthManager {
 	}
 
 	public Map<String, Object> decode(String token) {
-		DecodedJWT decoded = JWT.decode(token);
-		Map<String, Claim> claims = decoded.getClaims();
+		try {
+			DecodedJWT decodedJWT = JWT.decode(token);
+			String decodedPayload = new String(Base64.decodeBase64(decodedJWT.getPayload()), StandardCharsets.UTF_8);
 
-		Map<String, Object> payload = new HashMap<>();
-		claims.forEach((key, value) -> {
-			if (value.isNull()) {
-				payload.put(key, null);
-			} else if (value.asMap() != null) {
-				payload.put(key, value.asMap());
-			} else if (value.asLong() != null) {
-				payload.put(key, value.asLong());
-			} else if (value.asBoolean() != null) {
-				payload.put(key, value.asBoolean());
-			} else if (value.asDate() != null) {
-				payload.put(key, value.asDate());
-			} else if (value.asDouble() != null) {
-				payload.put(key, value.asDouble());
-			} else if (value.asInt() != null) {
-				payload.put(key, value.asInt());
-			} else {
-				payload.put(key, value.asString());
-			}
-		});
-
-		return payload;
+			return mapper.readValue(decodedPayload, new TypeReference<HashMap<String, Object>>() {});
+		} catch (Exception ex) {
+			throw new RuntimeException("Token decode failed: " + ex.getMessage(), ex);
+		}
 	}
 
 	private LoadingCache<String, JsonQuery> createQueryCache() {
