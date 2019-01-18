@@ -27,6 +27,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.DNSLookup;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -85,7 +86,19 @@ public class AuthManager {
 		data.add("client_id", this.clientId);
 		data.add("client_secret", this.clientSecret);
 
-		WebResource webResource = client.resource(this.authUrl);
+		String url = this.authUrl;
+
+		if (shouldUseServiceDiscovery()) { // ONECOND-803: Add Service Discovery
+			final String uri = DNSLookup.lookup(this.authService);
+
+			if (StringUtils.isEmpty(uri)) {
+				logger.error("Service lookup failed for " + this.authUrl + " falling back to: " + this.authUrl);
+			} else {
+				url = uri + "/v1/tenant/deluxe/auth/token";
+			}
+		}
+
+		WebResource webResource = client.resource(url);
 
 		ClientResponse response = webResource
 				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
@@ -189,5 +202,9 @@ public class AuthManager {
 			}
 		};
 		return CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(1000).build(loader);
+	}
+
+	private boolean shouldUseServiceDiscovery() {
+		return StringUtils.isNotEmpty(this.authService);
 	}
 }
