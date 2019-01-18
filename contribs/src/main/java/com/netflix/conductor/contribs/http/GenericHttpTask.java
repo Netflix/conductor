@@ -51,6 +51,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	protected ObjectMapper om;
 	private AuthManager auth;
 	private RestClientManager rcm;
+	private boolean authContextEnabled;
 
 	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
 	};
@@ -64,6 +65,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		this.rcm = rcm;
 		this.om = om;
 		this.auth = auth;
+		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 	}
 
 	String lookup(String service) {
@@ -130,8 +132,15 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 		// Attach the Authorization header by adding entry to the input's headers
 		if (input.isAuthorize()) {
-			setAuthorization(input);
-			setAuthorizationContext(input, workflow.getAuthorizationContext());
+			setAuthToken(input);
+		}
+
+		if (authContextEnabled) {
+			if(StringUtils.isNotEmpty(workflow.getContextToken())) {
+				input.getHeaders().put(CommonParams.AUTH_CONTEXT, workflow.getContextToken());
+			} else {
+				input.getHeaders().put(CommonParams.AUTH_CONTEXT, "");
+			}
 		}
 
 		// Attach Deluxe Owf Context header
@@ -234,7 +243,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		}
 	}
 
-	private void setAuthorization(Input input) throws Exception {
+	private void setAuthToken(Input input) throws Exception {
 		AuthResponse response = auth.authorize();
 		if (!response.hasAccessToken()) {
 			// Just log first time
@@ -252,14 +261,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 		}
 
 		input.getHeaders().put(HttpHeaders.AUTHORIZATION, "Bearer " + response.getAccessToken());
-	}
-
-	private void setAuthorizationContext(Input input, Map<String, Object> authorizationContext) {
-		if(MapUtils.isNotEmpty(authorizationContext)) {
-			input.getHeaders().put(CommonParams.AUTH_CONTEXT, authorizationContext);
-		} else {
-			input.getHeaders().put(CommonParams.AUTH_CONTEXT, "");
-		}
 	}
 
 	void setReasonForIncompletion(HttpResponse response, Task task) {
