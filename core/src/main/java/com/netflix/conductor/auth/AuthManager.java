@@ -52,12 +52,14 @@ public class AuthManager {
 	private static final Logger logger = LoggerFactory.getLogger(AuthManager.class);
 	public static final String MISSING_PROPERTY = "Missing system property: ";
 	public static final String PROPERTY_URL = "conductor.auth.url";
+	public static final String PROPERTY_SERVICE = "conductor.auth.service";
 	public static final String PROPERTY_CLIENT = "conductor.auth.clientId";
 	public static final String PROPERTY_SECRET = "conductor.auth.clientSecret";
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final String clientSecret;
 	private final String clientId;
 	private final String authUrl;
+	private final String authService;
 
 	@Inject
 	public AuthManager(Configuration config) {
@@ -65,6 +67,8 @@ public class AuthManager {
 		if (StringUtils.isEmpty(authUrl))
 			throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_URL);
 
+		authService = config.getProperty(PROPERTY_SERVICE, null);
+	
 		clientId = config.getProperty(PROPERTY_CLIENT, null);
 		if (StringUtils.isEmpty(clientId))
 			throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_CLIENT);
