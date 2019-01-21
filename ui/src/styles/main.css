@@ -294,6 +294,7 @@ body {
   max-width: 69em;
   margin: 0 auto;
   margin-top:10px;
+  background: transparent;
 }
 
 .button-pill {
@@ -464,7 +465,7 @@ iframe {
 }
 a:hover {
   text-decoration: none;
-  cursor: default;
+  cursor: pointer;
 }
 
 

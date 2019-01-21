@@ -125,6 +125,7 @@ public class ConductorServer {
 					.setLocalRack(conductorConfig.getAvailabilityZone())
 					.setLocalDataCenter(conductorConfig.getRegion())
 					.setSocketTimeout(0)
+					.setMaxTimeoutWhenExhausted(3000)
 					.setConnectTimeout(0)
 					.setMaxConnsPerHost(conductorConfig.getIntProperty("workflow.dynomite.connection.maxConnsPerHost", 10));
 
