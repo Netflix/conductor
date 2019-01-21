@@ -358,4 +358,15 @@ router.get('/queue/data', async (req, res, next) => {
     next(err);
   }
 });
+
+//metadata post
+router.put('/metadata/workflow/',  (req, res, next) => {
+  try {
+    http.put(baseURLMeta + 'workflow/', req);
+    res.status(200).send(req.body);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

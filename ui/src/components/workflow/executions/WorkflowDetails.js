@@ -13,7 +13,6 @@ import Tab from "../../common/Tab";
 import TabContainer from "../../common/TabContainer";
 import { startWorkflow } from '../../../actions/WorkflowActions';
 import {Link} from "react-router";
-import unescapeJs from "unescape-js";
 
 new Clipboard('.btn');
 
@@ -104,7 +103,6 @@ class WorkflowDetails extends Component {
         super(props);
 
         this.startWorkflow1 = this.startWorkflow1.bind(this);
-        this.doUnescape = this.doUnescape.bind(this);
 
         this.state = {
             loading: this.props.starting,
@@ -114,9 +112,8 @@ class WorkflowDetails extends Component {
             workflowForm: {
                 labels: [],
                 values: []
-            },
-            unescapeInput: false,
-            unescapeOutput: false
+            }
+
         };
 
         http.get('/api/sys/').then((data) => {
@@ -211,16 +208,6 @@ class WorkflowDetails extends Component {
         this.state.jsonData = dataObject;
     }
 
-    doUnescape(e, option) {
-        if(option == 1) {
-            let newval = !this.state.unescapeInput;
-            this.setState({unescapeInput: newval});
-        } else {
-            let newval = !this.state.unescapeOutput;
-            this.setState({unescapeOutput: newval});
-        }
-        this.forceUpdate();
-    }
 
     render() {
 
@@ -345,13 +332,11 @@ class WorkflowDetails extends Component {
                         <div>
                             <strong>Workflow Input <i title="copy to clipboard" className="btn fa fa-clipboard"
                                                       data-clipboard-target="#wfinput"/></strong>
-                                                      <button onClick={(e) => this.doUnescape(e, 1)} className='btn btn-default btn-xs'>{this.state.unescapeInput ? 'Escape' : 'Unescape'}</button>
-                            <pre style={{height: '200px'}} id="wfinput">{this.state.unescapeInput ? unescapeJs(JSON.stringify(wf.input, null, 3)) : JSON.stringify(wf.input, null, 3)}</pre>
+                            <pre style={{height: '200px'}} id="wfinput">{JSON.stringify(wf.input, null, 3)}</pre>
                             <strong>Workflow Output <i title="copy to clipboard" className="btn fa fa-clipboard"
                                                        data-clipboard-target="#wfoutput"/></strong>
-                                                       <button onClick={(e) => this.doUnescape(e, 2)} className='btn btn-default btn-xs'>{this.state.unescapeOutput ? 'Escape' : 'Unescape'}</button>
                             <pre style={{height: '200px'}}
-                                 id="wfoutput">{this.state.unescapeOutput ? unescapeJs(JSON.stringify((wf.output) == null ? {} : wf.output, null, 3)) : JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
+                                 id="wfoutput">{JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
                             {wf.status === 'FAILED' ? <div><strong>Workflow Faiure Reason (if any)</strong>
                                 <pre>{wf.reasonForIncompletion ? JSON.stringify(wf.reasonForIncompletion, null, 3) : ''}</pre>
                             </div> : ''}
