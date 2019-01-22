@@ -81,6 +81,8 @@ public class Workflow extends Auditable{
 
 	private Map<String, Object> authorizationContext = new HashMap<>();
 
+	private String contextToken;
+
 	public Workflow(){
 		
 	}
@@ -124,6 +126,13 @@ public class Workflow extends Auditable{
 	 */
 	public void setEndTime(long endTime) {
 		this.endTime = endTime;
+	}
+
+	/**
+	 * @return the duration of the workflow
+	 */
+	public long getDuration() {
+		return getEndTime() - getStartTime();
 	}
 
 	/**
@@ -262,7 +271,16 @@ public class Workflow extends Auditable{
 	public void setParentWorkflowId(String parentWorkflowId) {
 		this.parentWorkflowId = parentWorkflowId;
 	}
-	
+
+	/**
+	 * @return whether this workflow is a sub-workflow.
+	 */
+	public boolean isSubWorkflow() {
+		final String parentId = getParentWorkflowId();
+
+		return parentId != null ? !parentId.isEmpty() : false;
+	}
+
 	/**
 	 * @return the parentWorkflowTaskId
 	 */
@@ -328,6 +346,14 @@ public class Workflow extends Auditable{
 		this.authorizationContext = authorizationContext;
 	}
 
+	public String getContextToken() {
+		return contextToken;
+	}
+
+	public void setContextToken(String contextToken) {
+		this.contextToken = contextToken;
+	}
+
 	@Override
 	public String toString() {
 		return workflowType + "." + version + "/" + workflowId + "." + status; 
@@ -351,5 +377,5 @@ public class Workflow extends Auditable{
 		}
 		return found.getLast();
 	}
-	
+
 }

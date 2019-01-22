@@ -32,7 +32,6 @@ import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.WorkflowContext;
@@ -95,7 +94,7 @@ public class WorkflowExecutor {
 	private int activeWorkerLastPollnSecs;
 
 	private boolean validateAuth;
-	private boolean validateAuthContext;
+	private boolean authContextEnabled;
 	private boolean lazyDecider;
 
 	private ParametersUtils pu = new ParametersUtils();
@@ -110,7 +109,7 @@ public class WorkflowExecutor {
 		activeWorkerLastPollnSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
 		this.decider = new DeciderService(metadata, om);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
-		this.validateAuthContext = Boolean.parseBoolean(config.getProperty("workflow.authcontext.validate", "false"));
+		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 	}
 
@@ -123,24 +122,28 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null,null);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null, null);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization,null);
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, null, null);
 	}
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization,Map<String, Object> authorizationContext) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, authorizationContext);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization,Map<String, Object> authorizationContext, String contextToken) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, authorizationContext, contextToken);
 	}
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null,null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null, null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null,null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, Map<String, Object> authorizationContext) throws Exception {
+	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input,
+								String correlationId, String parentWorkflowId, String parentWorkflowTaskId,
+								String event, Map<String, String> taskToDomain, List<String> workflowIds,
+								Map<String, Object> authorization, Map<String, Object> authorizationContext,
+								String contextToken) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
@@ -177,6 +180,7 @@ public class WorkflowExecutor {
 			wf.setInput(input);
 			wf.setStatus(WorkflowStatus.RUNNING);
 			wf.setParentWorkflowId(parentWorkflowId);
+			wf.setContextToken(contextToken);
 			wf.setAuthorization(authorization);
 			wf.setAuthorizationContext(authorizationContext);
 			// Add other ids if passed
@@ -210,7 +214,7 @@ public class WorkflowExecutor {
 			edao.createWorkflow(wf);
 
 			// metrics
-			Monitors.recordWorkflowStart(wf.getWorkflowType());
+			Monitors.recordWorkflowStart(wf);
 
 			// send wf start message
 			notifyWorkflowStatus(wf, StartEndState.start);
@@ -259,7 +263,7 @@ public class WorkflowExecutor {
 			edao.updateWorkflow(workflow);
 
 			// metrics
-			Monitors.recordWorkflowRerun(workflow.getWorkflowType());
+			Monitors.recordWorkflowRerun(workflow);
 
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
@@ -307,7 +311,7 @@ public class WorkflowExecutor {
 			edao.updateWorkflow(workflow);
 
 			// metrics
-			Monitors.recordWorkflowRerun(workflow.getWorkflowType());
+			Monitors.recordWorkflowRerun(workflow);
 
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
@@ -405,7 +409,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		// metrics
-		Monitors.recordWorkflowRestart(workflow.getWorkflowType());
+		Monitors.recordWorkflowRestart(workflow);
 
 		// send wf start message
 		notifyWorkflowStatus(workflow, StartEndState.start);
@@ -515,7 +519,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		// metrics
-		Monitors.recordWorkflowRetry(workflow.getWorkflowType());
+		Monitors.recordWorkflowRetry(workflow);
 
 		decide(workflowId);
 		logger.debug("Workflow retry.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",CorrelationId=" + workflow.getCorrelationId()+",input="+workflow.getInput());
@@ -570,7 +574,7 @@ public class WorkflowExecutor {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
 			decide(parent.getWorkflowId());
 		}
-		Monitors.recordWorkflowCompletion(workflow.getWorkflowType(), workflow.getEndTime() - workflow.getStartTime());
+		Monitors.recordWorkflowCompletion(workflow);
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -644,7 +648,7 @@ public class WorkflowExecutor {
 		}
 
 		// metrics
-		Monitors.recordWorkflowCancel(workflow.getWorkflowType());
+		Monitors.recordWorkflowCancel(workflow);
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -674,7 +678,7 @@ public class WorkflowExecutor {
 		}
 
 		// metrics
-		Monitors.recordWorkflowReset(workflow.getWorkflowType());
+		Monitors.recordWorkflowReset(workflow);
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -761,7 +765,7 @@ public class WorkflowExecutor {
 		notifyWorkflowStatus(workflow, StartEndState.end);
 
 		// Send to atlas
-		Monitors.recordWorkflowTermination(workflow.getWorkflowType(), workflow.getStatus());
+		Monitors.recordWorkflowTermination(workflow);
 	}
 
 	public QueueDAO getQueueDao() {
@@ -878,8 +882,8 @@ public class WorkflowExecutor {
 		if (task.getStatus().isTerminal()) {
 			long duration = getTaskDuration(0, task);
 			long lastDuration = task.getEndTime() - task.getStartTime();
-			Monitors.recordTaskExecutionTime(task.getTaskDefName(), duration, true, task.getStatus());
-			Monitors.recordTaskExecutionTime(task.getTaskDefName(), lastDuration, false, task.getStatus());
+			Monitors.recordTaskExecutionTime(task, duration, true);
+			Monitors.recordTaskExecutionTime(task, lastDuration, false);
 		}
 	}
 
@@ -1012,7 +1016,7 @@ public class WorkflowExecutor {
 
 		edao.updateWorkflow(workflow);
 		// metrics
-		Monitors.recordWorkflowPause(workflow.getWorkflowType());
+		Monitors.recordWorkflowPause(workflow);
 	}
 
 	public void resumeWorkflow(String workflowId,String correlationId) throws Exception{
@@ -1027,7 +1031,7 @@ public class WorkflowExecutor {
 		}
 		edao.updateWorkflow(workflow);
 		// metrics
-		Monitors.recordWorkflowResume(workflow.getWorkflowType());
+		Monitors.recordWorkflowResume(workflow);
 		decide(workflowId);
 	}
 
@@ -1091,7 +1095,7 @@ public class WorkflowExecutor {
 		Workflow workflow = getWorkflow(workflowId, false);
 		edao.removeWorkflow(workflowId);
 		// metrics
-		Monitors.recordWorkflowRemove(workflow.getWorkflowType());
+		Monitors.recordWorkflowRemove(workflow);
 	}
 
 
@@ -1431,7 +1435,7 @@ public class WorkflowExecutor {
 	}
 
 	public Map<String, Object> validateAuth(WorkflowDef workflowDef, HttpHeaders headers) {
-		if (!this.validateAuth || MapUtils.isEmpty(workflowDef.getAuthValidation())) {
+		if (!validateAuth || MapUtils.isEmpty(workflowDef.getAuthValidation())) {
 			return null;
 		}
 
@@ -1451,15 +1455,16 @@ public class WorkflowExecutor {
 		// Get the access token
 		String token = bearer.substring(BEARER.length());
 
-		Map<String, Object> decoded = auth.decode(token);
+		Map<String, Object> decoded;
 
 		// Do a validation
 		Map<String, Object> failedList;
 		try {
+			decoded = auth.decode(token);
 			failedList = auth.validate(decoded, workflowDef.getAuthValidation());
 		} catch (Exception ex) {
-			logger.error("Auth validation failed with " + ex.getMessage(), ex);
-			throw new ApplicationException(Code.UNAUTHORIZED, ex.getMessage());
+			logger.error("Auth validation failed: " + ex.getMessage(), ex);
+			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: " + ex.getMessage());
 		}
 
 		if (!failedList.isEmpty()) {
@@ -1469,13 +1474,17 @@ public class WorkflowExecutor {
 		return decoded;
 	}
 
-
-	public Map<String, Object> validateAuthContext(WorkflowDef workflowDef,HttpHeaders headers) {
-		if (!this.validateAuthContext || MapUtils.isEmpty(workflowDef.getAuthValidation()) ) {
+	public Map<String, Object> validateAuthContext(String contextToken) {
+		if (!authContextEnabled) {
 			return null;
 		}
-		String authString = headers.getRequestHeader(CommonParams.AUTH_CONTEXT).get(0);
-		return auth.decode(authString);
+
+		try {
+			return auth.decode(contextToken);
+		} catch (Exception ex) {
+			logger.error("Auth context validation failed: " + ex.getMessage(), ex);
+			throw new ApplicationException(Code.UNAUTHORIZED, "Auth context validation failed: " + ex.getMessage());
+		}
 	}
 
 	public Task getTask(String taskId) {
