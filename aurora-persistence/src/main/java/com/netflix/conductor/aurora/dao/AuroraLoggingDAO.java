@@ -1,6 +1,7 @@
 package com.netflix.conductor.aurora.dao;
 
 import com.netflix.conductor.dao.LoggingDAO;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.log4j.Level;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
@@ -8,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.sql.DataSource;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Connection;
@@ -21,15 +21,21 @@ public class AuroraLoggingDAO implements LoggingDAO {
 
     private static final String INSERT_QUERY = "INSERT INTO logs (log_time, severity, hostname, fromhost, logger, owner, message) " +
             " VALUES (?, ?, ?, ?, ?, ?, ?)";
-    private DataSource dataSource;
+    private HikariDataSource dataSource;
     private String hostname;
     private String fromhost;
 
     @Inject
-    public AuroraLoggingDAO(DataSource dataSource) {
+    public AuroraLoggingDAO(HikariDataSource dataSource) {
         this.dataSource = dataSource;
         hostname = getHostName();
         fromhost = getHostIp();
+        try(Connection tx = dataSource.getConnection()) {
+            PreparedStatement st = tx.prepareStatement("");
+
+        } catch (Exception ex) {
+
+        }
     }
 
     @Override

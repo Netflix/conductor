@@ -6,9 +6,8 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.sql.DataSource;
 
-public class AuroraDataSourceProvider implements Provider<DataSource> {
+public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
     private Configuration config;
 
     @Inject
@@ -17,7 +16,7 @@ public class AuroraDataSourceProvider implements Provider<DataSource> {
     }
 
     @Override
-    public DataSource get() {
+    public HikariDataSource get() {
         String db = config.getProperty("aurora.db", null);
         String host = config.getProperty("aurora.host", null);
         String port = config.getProperty("aurora.port", "5432");
