@@ -18,6 +18,7 @@ package com.netflix.conductor.elasticsearch.es5;
 import com.google.inject.AbstractModule;
 
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.dao.es5.index.ElasticSearchDAO;
 import com.netflix.conductor.dao.es5.index.ElasticSearchDAOV5;
 import com.netflix.conductor.dao.es5.index.ElasticSearchRestDAOV5;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
@@ -52,7 +53,9 @@ public class ElasticSearchV5Module extends AbstractModule {
         if (restTransport) {
             bind(IndexDAO.class).to(ElasticSearchRestDAOV5.class);
         } else {
-            bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
+        		// Anish: using old ES DAO object since failing while initializing
+            //bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
+            bind(IndexDAO.class).to(ElasticSearchDAO.class);
         }
 
         bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);
