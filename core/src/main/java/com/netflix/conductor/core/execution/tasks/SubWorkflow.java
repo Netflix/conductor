@@ -191,6 +191,11 @@ public class SubWorkflow extends WorkflowSystemTask {
 		try {
 			provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getCorrelationId());
 		} catch (Exception ex) {
+			// Do nothing due to conflict situation when this task already been taken care of
+			if (ex.getMessage().contains("Workflow is still running")) {
+				return false;
+			}
+
 			logger.error("Unable to restart the sub-workflow " + subWorkflow.getWorkflowId() +
 					", correlationId=" + subWorkflow.getCorrelationId() + " due to " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
