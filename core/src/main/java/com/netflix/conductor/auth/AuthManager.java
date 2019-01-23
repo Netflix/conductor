@@ -57,6 +57,7 @@ public class AuthManager {
 	public static final String MISSING_PROPERTY = "Missing system property: ";
 	public static final String PROPERTY_URL = "conductor.auth.url";
 	public static final String PROPERTY_SERVICE = "conductor.auth.service";
+	public static final String PROPERTY_ENDPOINT = "conductor.auth.endpoint";
 	public static final String PROPERTY_CLIENT = "conductor.auth.clientId";
 	public static final String PROPERTY_SECRET = "conductor.auth.clientSecret";
 	private final ObjectMapper mapper = new ObjectMapper();
@@ -64,6 +65,7 @@ public class AuthManager {
 	private final String clientId;
 	private final String authUrl;
 	private final String authService;
+	private String authEndpoint;
 
 	@Inject
 	public AuthManager(Configuration config) {
@@ -72,6 +74,13 @@ public class AuthManager {
 			throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_URL);
 
 		authService = config.getProperty(PROPERTY_SERVICE, null);
+		if (StringUtils.isNotEmpty(authService)) {
+			authEndpoint = config.getProperty(PROPERTY_ENDPOINT, null);
+
+			if (StringUtils.isEmpty(authEndpoint)) {
+				throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_ENDPOINT);
+			}
+		}
 	
 		clientId = config.getProperty(PROPERTY_CLIENT, null);
 		if (StringUtils.isEmpty(clientId))
@@ -102,10 +111,9 @@ public class AuthManager {
 			if (StringUtils.isEmpty(uri)) {
 				logger.error("Service lookup failed for " + this.authUrl + " falling back to: " + this.authUrl);
 			} else {
-				url = uri + "/v1/tenant/deluxe/auth/token";
+				url = getAuthURL(uri);
 			}
 		}
-
 
 		WebResource webResource = client.resource(url);
 		ClientResponse response;
@@ -208,5 +216,9 @@ public class AuthManager {
 
 	private boolean shouldUseServiceDiscovery() {
 		return StringUtils.isNotEmpty(this.authService);
+	}
+
+	private String getAuthURL(String uri) {
+		return uri + authEndpoint;
 	}
 }

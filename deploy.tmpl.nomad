@@ -167,6 +167,7 @@ job "conductor" {
 
         // Auth settings
         conductor_auth_service = "auth.service.<TLD>"
+        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token";
 
         // One MQ settings
         io_shotgun_dns = "shotgun.service.<TLD>"
