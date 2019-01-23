@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.DNSLookup;
 import com.sun.jersey.api.client.Client;
@@ -82,6 +83,10 @@ public class AuthManager {
 	}
 
 	public AuthResponse authorize() throws Exception {
+		return authorize(null);
+	}
+
+	public AuthResponse authorize(String correlationId) throws Exception {
 		Client client = Client.create();
 		MultivaluedMap<String, String> data = new MultivaluedMapImpl();
 		data.add("grant_type", "client_credentials");
@@ -90,7 +95,8 @@ public class AuthManager {
 
 		String url = this.authUrl;
 
-		if (shouldUseServiceDiscovery()) { // ONECOND-803: Add Service Discovery
+		// ONECOND-803: Add Service Discovery
+		if (shouldUseServiceDiscovery()) { 
 			final String uri = DNSLookup.lookup(this.authService);
 
 			if (StringUtils.isEmpty(uri)) {
@@ -100,11 +106,23 @@ public class AuthManager {
 			}
 		}
 
-		WebResource webResource = client.resource(url);
 
-		ClientResponse response = webResource
+		WebResource webResource = client.resource(url);
+		ClientResponse response;
+
+		if (StringUtils.isNotEmpty(correlationId)) {
+			Correlator correlator = new Correlator(logger, correlationId);
+			correlator.updateSequenceNo();
+
+			response = webResource
 				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-				.post(ClientResponse.class, data);
+				.header("Deluxe-Owf-Context", correlator.asCorrelationId())
+				.post(ClientResponse.class, data);			
+		} else {
+			response = webResource
+				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+				.post(ClientResponse.class, data);			
+		}
 
 		if (response.getStatus() == 200) {
 			String entity = response.getEntity(String.class);
@@ -123,7 +141,7 @@ public class AuthManager {
 			} else {
 				return mapper.readValue(entity, AuthResponse.class);
 			}
-		}
+		}		
 	}
 
 	public Map<String, Object> validate(String token, Map<String, String> rules) {

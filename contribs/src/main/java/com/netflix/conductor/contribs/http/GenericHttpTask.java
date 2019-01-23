@@ -132,7 +132,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 		// Attach the Authorization header by adding entry to the input's headers
 		if (input.isAuthorize()) {
-			setAuthToken(input);
+			setAuthToken(input, workflow);
 		}
 
 		// Attach Authorization-Context: {SSO token} if present and enabled
@@ -240,15 +240,15 @@ class GenericHttpTask extends WorkflowSystemTask {
 		}
 	}
 
-	private void setAuthToken(Input input) throws Exception {
-		AuthResponse response = auth.authorize();
+	private void setAuthToken(Input input, Workflow workflow) throws Exception {
+		AuthResponse response = auth.authorize(workflow.getCorrelationId());
 		if (!response.hasAccessToken()) {
 			// Just log first time
 			String error = String.format(GET_ACCESS_TOKEN_FAILED, response.getError(), response.getErrorDescription());
 			logger.error(error);
 
 			// Repeat authorize
-			response = auth.authorize();
+			response = auth.authorize(workflow.getCorrelationId());
 
 			// This time need to throw exception
 			if (!response.hasAccessToken()) {
