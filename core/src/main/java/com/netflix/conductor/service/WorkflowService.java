@@ -16,9 +16,6 @@
 package com.netflix.conductor.service;
 
 import com.netflix.conductor.annotations.Trace;
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
@@ -329,38 +326,5 @@ public class WorkflowService {
      */
     public ExternalStorageLocation getExternalStorageLocation(String path) {
         return executionService.getExternalStorageLocation(ExternalPayloadStorage.Operation.WRITE, ExternalPayloadStorage.PayloadType.WORKFLOW_INPUT, path);
-    }
-
-
-    public String completeWaitStateTask(String workflowId, String instanceState, String unblockedBy) {
-        ServiceUtils.checkNotNullOrEmpty(workflowId, "WorkflowId cannot be null or empty.");
-        ServiceUtils.checkNotNullOrEmpty(instanceState, "instanceState cannot be null or empty.");
-        ServiceUtils.checkNotNullOrEmpty(unblockedBy, "unblockedBy cannot be null or empty.");
-
-        String taskStateDelimiter = ":__:";
-        String unBlockedByKey = "unblocked_by";
-        StringBuilder sb = new StringBuilder();
-
-        Task runningTask = executionService.getInProgressWaitTaskForWorkflow(workflowId);
-
-        if (runningTask != null) {
-            String taskName = runningTask.getTaskDefName();
-            String taskInstanceState = taskName.split(taskStateDelimiter)[0].toUpperCase();
-            if (taskInstanceState.equals(instanceState)) {
-                Map<String, Object> outputData = new HashMap<>();
-                outputData.put(unBlockedByKey, unblockedBy);
-                // set outputData and status
-                runningTask.setOutputData(outputData);
-                runningTask.setStatus(Status.COMPLETED);
-                executionService.updateTask(new TaskResult(runningTask));
-                sb.append("waitTask=").append(runningTask);
-            } else {
-                sb.append("No IN_PROGRESS WAIT task found for state=").append(instanceState).append("\n");
-                sb.append("Current IN_PROGRESS WAIT task=").append(taskInstanceState);
-            }
-        } else {
-            sb.append("No IN_PROGRESS WAIT task found in workflowId=").append(workflowId);
-        }
-        return sb.toString();
     }
 }

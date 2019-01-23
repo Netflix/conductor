@@ -201,8 +201,8 @@ public class ExecutionService {
 		return workflowExecutor.getPendingTaskByWorkflow(taskReferenceName, workflowId);
 	}
 
-	public Task getInProgressWaitTaskForWorkflow(String workflowId) {
-		return workflowExecutor.getInProgressWaitTaskByWorkflow(workflowId);
+	public List<Task> getInProgressWaitTasksForWorkflow(String workflowId) {
+		return workflowExecutor.getInProgressWaitTasksByWorkflow(workflowId);
 	}
 
 	/**

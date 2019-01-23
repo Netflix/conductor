@@ -249,18 +249,4 @@ public class WorkflowResource {
     public ExternalStorageLocation getExternalStorageLocation(@QueryParam("path") String path) {
         return workflowService.getExternalStorageLocation(path);
     }
-
-    //TODO: Replace with PUT once Reminder service supports PUT/Perf is done, whichever is earlier
-    //    @PUT
-    //    @Path("/{workflowId}/completewaitstatetask/{instanceState}/{unblockedBy}")
-    @GET
-    @Path("/completewaitstatetask")
-    @ApiOperation("Completes a WAIT task from given running workflow")
-    @Consumes(MediaType.WILDCARD)
-    public String completeWaitStateTask(@QueryParam("workflowId") String workflowId,
-                                     @QueryParam("instanceState") String instanceState,
-                                     @QueryParam("unblockedBy") String unblockedBy) {
-        return workflowService.completeWaitStateTask(workflowId, instanceState, unblockedBy);
-    }
-
 }
