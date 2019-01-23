@@ -165,6 +165,10 @@ job "conductor" {
         workflow_elasticsearch_initial_sleep_seconds = "30"
         workflow_elasticsearch_stale_period_seconds = "300"
 
+        // Auth settings
+        conductor_auth_service = "auth.service.<TLD>"
+        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token";
+
         // One MQ settings
         io_shotgun_dns = "shotgun.service.<TLD>"
         io_shotgun_service = "conductor-server-<TLD>"

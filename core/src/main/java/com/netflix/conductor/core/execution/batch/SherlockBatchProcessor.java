@@ -117,7 +117,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
             // Attach the Authorization header
             Object authorize = carried.getInputData().get("authorize");
             if (Boolean.TRUE.equals(authorize)) {
-                AuthResponse auth = authManager.authorize();
+                AuthResponse auth = authManager.authorize(carried.getCorrelationId());
                 builder.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth.getAccessToken());
             }
 

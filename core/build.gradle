@@ -1,6 +1,7 @@
 dependencies {
 
 	compile project(':conductor-common')
+	compile project(':conductor-correlation')
 
 	compile 'io.reactivex:rxjava:1.2.2'
 	compile 'com.google.inject:guice:4.0+'
