@@ -94,6 +94,7 @@ public class WorkflowExecutor {
 	private int activeWorkerLastPollnSecs;
 
 	private boolean validateAuth;
+	private boolean authContextEnabled;
 	private boolean lazyDecider;
 
 	private ParametersUtils pu = new ParametersUtils();
@@ -108,6 +109,7 @@ public class WorkflowExecutor {
 		activeWorkerLastPollnSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
 		this.decider = new DeciderService(metadata, om);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
+		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 	}
 
@@ -1473,6 +1475,10 @@ public class WorkflowExecutor {
 	}
 
 	public Map<String, Object> validateAuthContext(String contextToken) {
+		if (!authContextEnabled) {
+			return null;
+		}
+
 		try {
 			return auth.decode(contextToken);
 		} catch (Exception ex) {
