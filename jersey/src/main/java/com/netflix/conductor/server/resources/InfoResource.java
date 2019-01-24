@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 @Produces({MediaType.APPLICATION_JSON})
 public class InfoResource {
 	private static Logger logger = LoggerFactory.getLogger(InfoResource.class);
+	private final String prefix = "deluxe.conductor.";
 	private String fullVersion;
 	private Configuration config;
 
@@ -127,33 +128,55 @@ public class InfoResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
 		Map<String, Object> output = new TreeMap<>();
-		final String prefix = "deluxe.conductor.";
 
-		// Workflow and Event Counters
-		Map<String, String> counterMap = new HashMap<>();
-		Map<String, String> todayMap = new HashMap<>();
+		// Counters
+		output.putAll(getCounters());
+		output.putAll(getTodayCounters());
+
+		// Gauges to track in progress tasks, workflows, etc...
+		output.putAll(getGauges());
+
+		// Timers
+		output.putAll(getTimers());
+		output.putAll(getAverageExecutionTimes());
+
+		return output;
+	}
+
+	private Map<String, Object> getCounters() {
+		Map<String, Object> output = new HashMap<>();
 
 		// Map counter names to metric names
+		Map<String, String> counterMap = new HashMap<>();
 		counterMap.put("workflow_completion", "workflows_completed");
 		counterMap.put("workflow_failure", "workflows_failed");
 		counterMap.put("workflow_start", "workflows_started");
 		counterMap.put("workflow_cancel", "workflows_canceled");
 		counterMap.put("workflow_restart", "workflows_restarted");
+
+		// Counters
+		final Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
+		counters.forEach((name, map) -> {
+			if (counterMap.containsKey(name)) {
+				output.put(prefix + counterMap.get(name), sum(map));
+			}
+		});
+
+		return output;
+	}
+
+	private Map<String, Object> getTodayCounters() {
+		Map<String, Object> output = new HashMap<>();
+
+		// Map counter names to metric names
+		Map<String, String> todayMap = new HashMap<>();
 		todayMap.put("workflow_completion", "workflows_completed_today");
 		todayMap.put("workflow_start", "workflows_started_today");
-
-		// Messages
-		counterMap.put("event_queue_messages_received", "messages_received");
-		counterMap.put("event_queue_messages_processed", "messages_processed");
 
 		// Counters
 		final Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
 		final LocalDate today = LocalDate.now();
 		counters.forEach((name, map) -> {
-			if (counterMap.containsKey(name)) {
-				output.put(prefix + counterMap.get(name), sum(map));
-			}
-
 			// Workflows Started or Completed Today
 			if (todayMap.containsKey(name)) {
 				final long sum = map.entrySet().stream()
@@ -167,11 +190,14 @@ public class InfoResource {
 			}
 		});
 
+		return output;
+	}
 
-		// Gauges to track in progress tasks, workflows, etc...
-		Map<String, String> gaugeMap = new HashMap<>();
+	private Map<String, Object> getGauges() {
+		Map<String, Object> output = new HashMap<>();
 
 		// Map gauge names to metric names
+		Map<String, String> gaugeMap = new HashMap<>();
 		gaugeMap.put("workflow_in_progress", "workflows_in_progress");
 		gaugeMap.put("task_in_progress", "tasks_in_progress");
 
@@ -184,11 +210,14 @@ public class InfoResource {
 			}
 		});
 
+		return output;
+	}
 
-		// Timers
-		Map<String, String> timerMap = new HashMap<>();
-
+	private Map<String, Object> getTimers() {
+		Map<String, Object> output = new HashMap<>();
+		
 		// Map timer names to metric names
+		Map<String, String> timerMap = new HashMap<>();
 		timerMap.put("task_queue_wait", "avg_task_queue_wait_ms");
 
 		final Map<String, Map<Map<String, String>, PercentileTimer>> timers = Monitors.getTimers();
@@ -203,13 +232,18 @@ public class InfoResource {
 			});
 		});
 
-		// Average Execution Times
-		Map<String, String> executionMap = new HashMap<>();
+		return output;
+	}
 
+	private Map<String, Object> getAverageExecutionTimes() {
+		Map<String, Object> output = new HashMap<>();
+
+		Map<String, String> executionMap = new HashMap<>();
 		executionMap.put("http_task_execution", "avg_http_task_execution_ms");
 		executionMap.put("task_execution", "avg_task_execution_ms");
 		executionMap.put("workflow_execution", "avg_workflow_execution_ms");
 
+		final Map<String, Map<Map<String, String>, PercentileTimer>> timers = Monitors.getTimers();
 		timers.forEach((name, map) -> {
 			if (executionMap.containsKey(name)) {
 				long totalCount = 0;
