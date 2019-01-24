@@ -238,9 +238,9 @@ public class InfoResource {
 	public Map<String, Object> debugMetrics() {
 		Map<String, Object> output = new TreeMap<>();
 
-		output.putAll(getCounters());
-		output.putAll(getGauges());
-		output.putAll(getTimers());
+		output.putAll(getAllCounterData());
+		output.putAll(getAllGaugeData());
+		output.putAll(getAllTimerData());
 
 		return output;
 	}
@@ -250,7 +250,7 @@ public class InfoResource {
 	@ApiOperation(value = "Get the counter metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> counters() {
-		return new TreeMap<>(getCounters());
+		return new TreeMap<>(getAllCounterData());
 	}
 
 	@GET
@@ -258,7 +258,7 @@ public class InfoResource {
 	@ApiOperation(value = "Get the gauge metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> gauges() {
-		return new TreeMap<>(getGauges());
+		return new TreeMap<>(getAllGaugeData());
 	}
 
 	@GET
@@ -266,10 +266,10 @@ public class InfoResource {
 	@ApiOperation(value = "Get the timer metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> timers() {
-		return new TreeMap<>(getTimers());
+		return new TreeMap<>(getAllTimerData());
 	}
 
-	private Map<String, Object> getCounters() {
+	private Map<String, Object> getAllCounterData() {
 		Map<String, Object> output = new HashMap<>();
 
 		final Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
@@ -282,7 +282,7 @@ public class InfoResource {
 		return output;
 	}
 
-	private Map<String, Object> getGauges() {
+	private Map<String, Object> getAllGaugeData() {
 		Map<String, Object> output = new HashMap<>();
 
 		final Map<String, Map<Map<String, String>, AtomicLong>> gauges = Monitors.getGauges();
@@ -295,7 +295,7 @@ public class InfoResource {
 		return output;
 	}
 
-	private Map<String, Object> getTimers() {
+	private Map<String, Object> getAllTimerData() {
 		Map<String, Object> output = new HashMap<>();
 
 		final Map<String, Map<Map<String, String>, PercentileTimer>> timers = Monitors.getTimers();
