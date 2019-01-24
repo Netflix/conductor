@@ -126,7 +126,7 @@ public class AuthTask extends WorkflowSystemTask {
 	}
 
 	private void doAuth(Task task, boolean failOnError) throws Exception {
-		AuthResponse auth = manger.authorize();
+		AuthResponse auth = manger.authorize(task.getCorrelationId());
 
 		if (!StringUtils.isEmpty(auth.getAccessToken())) {
 			task.getOutputData().put("success", true);
