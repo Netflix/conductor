@@ -116,7 +116,8 @@ class WorkflowDetails extends Component {
                 values: []
             },
             unescapeInput: false,
-            unescapeOutput: false
+            unescapeOutput: false,
+            unescapeJSON: false
         };
 
         http.get('/api/sys/').then((data) => {
@@ -212,14 +213,22 @@ class WorkflowDetails extends Component {
     }
 
     doUnescape(e, option) {
-        if(option == 1) {
-            let newval = !this.state.unescapeInput;
-            this.setState({unescapeInput: newval});
-        } else {
-            let newval = !this.state.unescapeOutput;
-            this.setState({unescapeOutput: newval});
+        let newval;
+        switch(option) {
+            case 1: {
+                newval = !this.state.unescapeInput;
+                this.setState({unescapeInput: newval});
+            }
+            case 2: {
+                newval = !this.state.unescapeOutput;
+                this.setState({unescapeOutput: newval});
+            }
+            case 3: {
+                newval = !this.state.unescapeJSON;
+                this.setState({unescapeJSON: newval});
+            }
         }
-        this.forceUpdate();
+            //this.forceUpdate();
     }
 
     render() {
@@ -359,8 +368,8 @@ class WorkflowDetails extends Component {
                     </Tab>
                     <Tab eventKey={4} title="JSON">
                         <i title="copy to clipboard" className="btn fa fa-clipboard"
-                           data-clipboard-target="#fulljson"/>
-                        <pre style={{height: '80%'}} id="fulljson">{JSON.stringify(wf, null, 3)}</pre>
+                           data-clipboard-target="#fulljson"/><button onClick={(e) => this.doUnescape(e, 3)} className='btn btn-default btn-xs'>{this.state.unescapeJSON ? 'Escape' : 'Unescape'}</button>
+                        <pre style={{height: '80%'}} id="fulljson">{this.state.unescapeJSON ? unescapeJs(JSON.stringify(wf, null, 3)) : JSON.stringify(wf, null, 3)}</pre>
                     </Tab>
                     <Tab eventKey={5} title="Edit input">
                         &nbsp;&nbsp;
