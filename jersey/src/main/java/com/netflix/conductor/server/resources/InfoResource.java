@@ -355,4 +355,15 @@ public class InfoResource {
 	private long sum(Map<Map<String, String>, Counter> m) {
 		return m.values().stream().map(c -> {return c.count();}).mapToLong(i -> i).sum();
 	}
+
+	private Set<String> getMainWorkfowNames() {
+		return Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
+			"deluxe.dependencygraph.assembly.conformancegroup.process", // Sherlock V1 Assembly Conformance
+			"deluxe.dependencygraph.conformancegroup.process",			// Sherlock V1 Conformance
+			"deluxe.dependencygraph.sourcewait.process",				// Sherlock V2 Sourcewait
+			"deluxe.dependencygraph.execute.process",					// Sherlock V2 Execute
+			"deluxe.deluxeone.sky.compliance.process",					// Sky Compliance
+			"deluxe.delivery.itune.process"								// iTune
+		)));
+	}
 }
