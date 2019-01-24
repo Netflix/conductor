@@ -207,6 +207,12 @@ public class InfoResource {
 		Map<String, String> executionMap = new HashMap<>();
 
 		executionMap.put("http_task_execution", "avg_http_task_execution_ms");
+		executionMap.put("waitchecksum_task_execution", "avg_task_queue_waitchecksum_ms");
+		executionMap.put("waittranscode_task_execution", "avg_task_queue_waittranscode_ms");
+		executionMap.put("waittransfer_task_execution", "avg_task_queue_waittransfer_ms");
+		executionMap.put("waitsherlock_task_execution", "avg_task_queue_waitsherlock_ms");
+		executionMap.put("episodicwaitpending_task_execution", "avg_task_queue_episodicwaitpending_ms");
+		executionMap.put("waitpending_task_execution", "waitpending_task_execution");
 		executionMap.put("task_execution", "avg_task_execution_ms");
 		executionMap.put("workflow_execution", "avg_workflow_execution_ms");
 

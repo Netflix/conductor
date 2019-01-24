@@ -174,7 +174,37 @@ public class Monitors {
 			getTimer(classQualifier, "http_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
 			//counter(classQualifier, "http_task_execution", "taskType", task.getTaskDefName(), "status", task.getStatus().name());
 		}
-			
+
+		if(task.getReferenceTaskName().equals("waitchecksum") && task.getTaskType().equals("WAIT"))
+		{
+			getTimer(classQualifier, "waitchecksum_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+		}
+
+		if(task.getReferenceTaskName().equals("waittranscode") && task.getTaskType().equals("WAIT"))
+		{
+			getTimer(classQualifier, "waittranscode_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+		}
+
+		if(task.getReferenceTaskName().equals("waittransfer") && task.getTaskType().equals("WAIT"))
+		{
+			getTimer(classQualifier, "waittransfer_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+		}
+
+		if(task.getReferenceTaskName().equals("waitsherlock") && task.getTaskType().equals("WAIT"))
+		{
+			getTimer(classQualifier, "waitsherlock_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+		}
+
+		if(task.getReferenceTaskName().equals("episodicwaitpending") && task.getTaskType().equals("WAIT"))
+		{
+			getTimer(classQualifier, "episodicwaitpending_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+		}
+
+		if(task.getReferenceTaskName().equals("waitpending") && task.getTaskType().equals("WAIT"))
+		{
+			getTimer(classQualifier, "waitpending_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+		}
+
 		getTimer(classQualifier, "task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
 	}
 
