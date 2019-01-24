@@ -16,7 +16,7 @@
 /**
  *
  */
-package com.netflix.conductor.log4j;
+package com.netflix.conductor.aurora.log4j;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
