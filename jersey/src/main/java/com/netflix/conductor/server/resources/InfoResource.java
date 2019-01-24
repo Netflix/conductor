@@ -40,6 +40,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -365,5 +367,22 @@ public class InfoResource {
 			"deluxe.deluxeone.sky.compliance.process",					// Sky Compliance
 			"deluxe.delivery.itune.process"								// iTune
 		)));
+	}
+
+	private String trimWorkflowVersion(String workflowName) {
+		Pattern pattern = Pattern.compile("([a-zA-Z.]+)*");
+		Matcher matcher = pattern.matcher(workflowName);
+
+		if (matcher.find()) {
+			String match = matcher.group(1);
+
+			if (match.endsWith(".")) {
+				match = match.substring(0, match.length() - 1);
+			}
+
+			return match;
+		} else {
+			return workflowName;
+		}
 	}
 }
