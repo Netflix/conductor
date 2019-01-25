@@ -137,7 +137,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 		// Attach Authorization-Context: {SSO token} if present and enabled
 		if (authContextEnabled) {
-			input.getHeaders().put(CommonParams.AUTH_CONTEXT, StringUtils.defaultIfEmpty(workflow.getContextToken(), ""));
+			input.getHeaders().put(CommonParams.AUTH_CONTEXT,
+					StringUtils.defaultIfEmpty(workflow.getContextToken(), ""));
 		}
 
 		// Attach Deluxe Owf Context header
