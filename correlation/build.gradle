@@ -1,4 +1,10 @@
 dependencies {
-    compile project(':conductor-core')
+    compile ('com.fasterxml.jackson.core:jackson-databind:2.7.5') {force=true}
+	compile ('com.fasterxml.jackson.core:jackson-core:2.7.5') {force=true}    
+    compile 'com.sun.jersey:jersey-client:1.19.+'
+    compile 'org.apache.commons:commons-lang3:3.2.1'
     compile 'org.json:json:20141113'
+	compile 'org.slf4j:slf4j-api:1.7.+'
+    
+    provided 'log4j:log4j:1.2.17'
 }
