@@ -18,4 +18,4 @@ if [ -z "$CONFIG_PROP" ];
     export config_file=/app/config/$CONFIG_PROP
 fi
 
-java -jar conductor-server-*-all.jar $config_file
+java $CONDUCTOR_JAVA_OPTS -jar conductor-server-*-all.jar $config_file
