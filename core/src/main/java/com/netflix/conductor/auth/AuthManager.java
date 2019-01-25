@@ -26,7 +26,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.DNSLookup;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -54,12 +56,16 @@ public class AuthManager {
 	private static final Logger logger = LoggerFactory.getLogger(AuthManager.class);
 	public static final String MISSING_PROPERTY = "Missing system property: ";
 	public static final String PROPERTY_URL = "conductor.auth.url";
+	public static final String PROPERTY_SERVICE = "conductor.auth.service";
+	public static final String PROPERTY_ENDPOINT = "conductor.auth.endpoint";
 	public static final String PROPERTY_CLIENT = "conductor.auth.clientId";
 	public static final String PROPERTY_SECRET = "conductor.auth.clientSecret";
 	private final ObjectMapper mapper = new ObjectMapper();
 	private final String clientSecret;
 	private final String clientId;
 	private final String authUrl;
+	private final String authService;
+	private String authEndpoint;
 
 	@Inject
 	public AuthManager(Configuration config) {
@@ -67,6 +73,15 @@ public class AuthManager {
 		if (StringUtils.isEmpty(authUrl))
 			throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_URL);
 
+		authService = config.getProperty(PROPERTY_SERVICE, null);
+		if (StringUtils.isNotEmpty(authService)) {
+			authEndpoint = config.getProperty(PROPERTY_ENDPOINT, null);
+
+			if (StringUtils.isEmpty(authEndpoint)) {
+				throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_ENDPOINT);
+			}
+		}
+	
 		clientId = config.getProperty(PROPERTY_CLIENT, null);
 		if (StringUtils.isEmpty(clientId))
 			throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_CLIENT);
@@ -77,17 +92,45 @@ public class AuthManager {
 	}
 
 	public AuthResponse authorize() throws Exception {
+		return authorize(null);
+	}
+
+	public AuthResponse authorize(String correlationId) throws Exception {
 		Client client = Client.create();
 		MultivaluedMap<String, String> data = new MultivaluedMapImpl();
 		data.add("grant_type", "client_credentials");
 		data.add("client_id", this.clientId);
 		data.add("client_secret", this.clientSecret);
 
-		WebResource webResource = client.resource(this.authUrl);
+		String url = this.authUrl;
 
-		ClientResponse response = webResource
+		// ONECOND-803: Add Service Discovery
+		if (shouldUseServiceDiscovery()) { 
+			final String uri = DNSLookup.lookup(this.authService);
+
+			if (StringUtils.isEmpty(uri)) {
+				logger.error("Service lookup failed for " + this.authUrl + " falling back to: " + this.authUrl);
+			} else {
+				url = getAuthURL(uri);
+			}
+		}
+
+		WebResource webResource = client.resource(url);
+		ClientResponse response;
+
+		if (StringUtils.isNotEmpty(correlationId)) {
+			Correlator correlator = new Correlator(logger, correlationId);
+			correlator.updateSequenceNo();
+
+			response = webResource
 				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-				.post(ClientResponse.class, data);
+				.header("Deluxe-Owf-Context", correlator.asCorrelationId())
+				.post(ClientResponse.class, data);			
+		} else {
+			response = webResource
+				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+				.post(ClientResponse.class, data);			
+		}
 
 		if (response.getStatus() == 200) {
 			String entity = response.getEntity(String.class);
@@ -106,7 +149,7 @@ public class AuthManager {
 			} else {
 				return mapper.readValue(entity, AuthResponse.class);
 			}
-		}
+		}		
 	}
 
 	public Map<String, Object> validate(String token, Map<String, String> rules) {
@@ -169,5 +212,13 @@ public class AuthManager {
 			}
 		};
 		return CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(1000).build(loader);
+	}
+
+	private boolean shouldUseServiceDiscovery() {
+		return StringUtils.isNotEmpty(this.authService);
+	}
+
+	private String getAuthURL(String uri) {
+		return uri + authEndpoint;
 	}
 }
