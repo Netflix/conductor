@@ -57,9 +57,5 @@ do
     echo ${logger} >> /app/config/log4j.properties
 done
 
-echo "/app/config/log4j.properties begin:"
-cat /app/config/log4j.properties
-echo "/app/config/log4j.properties end"
-
 # Run java in the foreground and stream messages directly to stdout
 exec java $JAVA_OPTS -Dlog4j.configuration="file:/app/config/log4j.properties" -Dlog4j.configurationFile="file:/app/config/log4j.properties" -jar conductor-server-*-all.jar $config_file
