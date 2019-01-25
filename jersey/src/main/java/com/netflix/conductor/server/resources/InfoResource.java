@@ -412,7 +412,7 @@ public class InfoResource {
 		return m.values().stream().map(c -> c.count()).mapToLong(i -> i).sum();
 	}
 
-	private Set<String> getMainWorkfowNames() {
+	private Set<String> getMainWorkflowNames() {
 		return Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
 			"deluxe.dependencygraph.assembly.conformancegroup.process", // Sherlock V1 Assembly Conformance
 			"deluxe.dependencygraph.conformancegroup.process",			// Sherlock V1 Conformance
