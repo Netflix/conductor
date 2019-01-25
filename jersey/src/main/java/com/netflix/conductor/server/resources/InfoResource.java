@@ -426,6 +426,7 @@ public class InfoResource {
 	}
 
 	private Set<String> getMainWorkflowNames() {
+		// TODO: Use the lookup service instead of this list
 		return Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
 			"deluxe.dependencygraph.assembly.conformancegroup.process", // Sherlock V1 Assembly Conformance
 			"deluxe.dependencygraph.conformancegroup.process",			// Sherlock V1 Conformance
