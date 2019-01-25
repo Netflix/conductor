@@ -369,8 +369,10 @@ public class InfoResource {
 		)));
 	}
 
+	// Given a workflow name such as deluxe.eventhandler.delivery.itunes.subscribemsg.datamovement.1.0.0
+	// return the name with the version number trimmed, as deluxe.eventhandler.delivery.itunes.subscribemsg.datamovement
 	private String trimWorkflowVersion(String workflowName) {
-		Pattern pattern = Pattern.compile("([a-zA-Z.]+)*");
+		Pattern pattern = Pattern.compile("([a-zA-Z_.]+)*");
 		Matcher matcher = pattern.matcher(workflowName);
 
 		if (matcher.find()) {
