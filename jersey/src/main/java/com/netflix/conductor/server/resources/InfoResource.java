@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -161,6 +162,7 @@ public class InfoResource {
 		counters.forEach((name, map) -> {
 			if (counterMap.containsKey(name)) {
 				output.put(prefix + counterMap.get(name), sum(map));
+				output.putAll(getMainWorkflowCounters(name, map));
 			}
 		});
 
@@ -174,24 +176,76 @@ public class InfoResource {
 		Map<String, String> todayMap = new HashMap<>();
 		todayMap.put("workflow_completion", "workflows_completed_today");
 		todayMap.put("workflow_start", "workflows_started_today");
+		todayMap.put("workflow_cancel", "workflows_canceled_today");
 
 		// Counters
 		final Map<String, Map<Map<String, String>, Counter>> counters = Monitors.getCounters();
-		final LocalDate today = LocalDate.now();
 		counters.forEach((name, map) -> {
-			// Workflows Started or Completed Today
 			if (todayMap.containsKey(name)) {
-				final long sum = map.entrySet().stream()
-					.filter(e -> e.getKey().containsKey("date"))
-					.mapToLong(e -> {
-						final LocalDate value = LocalDate.parse(e.getKey().get("date"));
-						return today.isEqual(value) ? e.getValue().count() : 0;
-					})
-					.sum();
+				final long sum = sumTodayCounters(map, e -> e.getKey().containsKey("date"));
 				output.put(prefix + todayMap.get(name), sum);
+				output.putAll(getMainWorkflowTodayCounters(todayMap.get(name), map));
+			}
+
+			if (name.equals("workflow_failure")) {
+				final long sum = sumTodayCounters(map, e -> {
+					return e.getKey().containsKey("date") && 
+						Optional.ofNullable(e.getKey().get("status")).orElse("").equals("FAILED");
+				});
+
+				output.put(prefix + "workflows_failed_today", sum);
+				output.putAll(getMainWorkflowTodayCounters("workflows_failed_today", map));
 			}
 		});
 
+		return output;
+	}
+
+	private long sumTodayCounters(Map<Map<String, String>, Counter> map, Predicate<Map.Entry<Map<String, String>, Counter>> predicate) {
+		final LocalDate today = LocalDate.now();
+
+		return map.entrySet().stream()
+			.filter(predicate)
+			.mapToLong(e -> {
+				final String date = e.getKey().getOrDefault("date", "1970-01-01");
+				final LocalDate value = LocalDate.parse(date);
+				return today.isEqual(value) ? e.getValue().count() : 0;
+			})
+			.sum();
+	}
+
+	private Map<String, Object> getMainWorkflowCounters(String name, Map<Map<String, String>, Counter> map) {
+		Map<String, Object> output = new HashMap<>();
+
+		final Set<String> mainWorkflows = getMainWorkflowNames();
+		
+		map.forEach((m, counter) -> {
+			String wfName = trimWorkflowVersion(m.getOrDefault("workflowName", ""));
+
+			if (mainWorkflows.contains(wfName)) {
+				output.put(prefix + name + "." + wfName, counter.count());
+			}
+		});
+	
+		return output;
+	}
+
+	private Map<String, Object> getMainWorkflowTodayCounters(String name, Map<Map<String, String>, Counter> map) {
+		Map<String, Object> output = new HashMap<>();
+
+		final Set<String> mainWorkflows = getMainWorkflowNames();
+		final LocalDate today = LocalDate.now();
+		
+		map.forEach((m, counter) -> {
+			String wfName = trimWorkflowVersion(m.getOrDefault("workflowName", ""));
+
+			if (mainWorkflows.contains(wfName)) {
+				if (today.isEqual(LocalDate.parse(m.getOrDefault("date", "1970-01-01")))) {
+					output.put(prefix + name + "." + wfName, counter.count());
+				}
+			}
+		});
+	
 		return output;
 	}
 
