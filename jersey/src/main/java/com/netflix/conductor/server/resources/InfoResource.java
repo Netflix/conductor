@@ -355,7 +355,7 @@ public class InfoResource {
 
 	// Return the sum of the Counter values in m
 	private long sum(Map<Map<String, String>, Counter> m) {
-		return m.values().stream().map(c -> {return c.count();}).mapToLong(i -> i).sum();
+		return m.values().stream().map(c -> c.count()).mapToLong(i -> i).sum();
 	}
 
 	private Set<String> getMainWorkfowNames() {
