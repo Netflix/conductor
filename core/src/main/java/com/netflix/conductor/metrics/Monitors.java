@@ -29,6 +29,9 @@ import com.netflix.spectator.api.histogram.PercentileTimer;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -175,37 +178,39 @@ public class Monitors {
 			//counter(classQualifier, "http_task_execution", "taskType", task.getTaskDefName(), "status", task.getStatus().name());
 		}
 
-		if(task.getReferenceTaskName().equals("waitchecksum") && task.getTaskType().equals("WAIT"))
-		{
-			getTimer(classQualifier, "waitchecksum_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
-		}
+		if (task.getTaskType().equals("WAIT")) {
+			Set<String> names = new HashSet<String>(Arrays.asList("waitchecksum", "waittranscode", "waittransfer", "waitsherlock", "episodicwaitpending", "waitpending"));
+			final String refName = task.getReferenceTaskName();
 
-		if(task.getReferenceTaskName().equals("waittranscode") && task.getTaskType().equals("WAIT"))
-		{
-			getTimer(classQualifier, "waittranscode_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
-		}
-
-		if(task.getReferenceTaskName().equals("waittransfer") && task.getTaskType().equals("WAIT"))
-		{
-			getTimer(classQualifier, "waittransfer_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
-		}
-
-		if(task.getReferenceTaskName().equals("waitsherlock") && task.getTaskType().equals("WAIT"))
-		{
-			getTimer(classQualifier, "waitsherlock_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
-		}
-
-		if(task.getReferenceTaskName().equals("episodicwaitpending") && task.getTaskType().equals("WAIT"))
-		{
-			getTimer(classQualifier, "episodicwaitpending_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
-		}
-
-		if(task.getReferenceTaskName().equals("waitpending") && task.getTaskType().equals("WAIT"))
-		{
-			getTimer(classQualifier, "waitpending_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+			if (names.contains(refName)) {
+				getTimer(classQualifier, refName + "_task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries,
+						"status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+			}
 		}
 
 		getTimer(classQualifier, "task_execution", "taskType", task.getTaskDefName(), "includeRetries", "" + includesRetries, "status", task.getStatus().name()).record(duration, TimeUnit.MILLISECONDS);
+	}
+
+	public static void recordTasksCompleted(Task task) {
+		if (task.getTaskType().equals("WAIT")) {
+			Set<String> names = new HashSet<String>(Arrays.asList("waitchecksum", "waittranscode", "waittransfer", "waitsherlock", "episodicwaitpending", "waitpending"));
+			final String refName = task.getReferenceTaskName();
+			if (names.contains(refName)) {
+				counter(classQualifier, refName+"_task_completed", "taskname", task.getReferenceTaskName(), "date", LocalDate.now().toString());
+			}
+		}
+		counter(classQualifier, "task_completed", "taskname", task.getReferenceTaskName(), "date", LocalDate.now().toString());
+	}
+
+	public static void recordTasksFailed(Task task) {
+		if (task.getTaskType().equals("WAIT")) {
+			Set<String> names = new HashSet<String>(Arrays.asList("waitchecksum", "waittranscode", "waittransfer", "waitsherlock", "episodicwaitpending", "waitpending"));
+			final String refName = task.getReferenceTaskName();
+			if (names.contains(refName)) {
+				counter(classQualifier, refName+"_task_failed", "taskname", task.getReferenceTaskName(), "date", LocalDate.now().toString());
+			}
+		}
+		counter(classQualifier, "task_failed", "taskname", task.getReferenceTaskName(), "date", LocalDate.now().toString());
 	}
 
 	public static void recordTaskPoll(String taskType) {

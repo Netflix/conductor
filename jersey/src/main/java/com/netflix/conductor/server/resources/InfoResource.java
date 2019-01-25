@@ -139,8 +139,25 @@ public class InfoResource {
 		counterMap.put("workflow_start", "workflows_started");
 		counterMap.put("workflow_cancel", "workflows_canceled");
 		counterMap.put("workflow_restart", "workflows_restarted");
+
+
 		todayMap.put("workflow_completion", "workflows_completed_today");
 		todayMap.put("workflow_start", "workflows_started_today");
+
+
+		todayMap.put("waitchecksum_task_completed", "waitchecksum_completed_today");
+		todayMap.put("waittranscode_task_completed", "waittranscode_completed_today");
+		todayMap.put("waittransfer_task_completed", "waittransfer_completed_today");
+		todayMap.put("waitsherlock_task_completed", "waitsherlock_completed_today");
+		todayMap.put("episodicwaitpending_task_completed", "episodicwaitpending_completed_today");
+		todayMap.put("waitpending_task_completed", "waitpending_completed_today");
+
+		todayMap.put("waitchecksum_task_failed", "waitchecksum_failed_today");
+		todayMap.put("waittranscode_task_failed", "waittranscode_failed_today");
+		todayMap.put("waittransfer_task_failed", "waittransfer_failed_today");
+		todayMap.put("waitsherlock_task_failed", "waitsherlock_failed_today");
+		todayMap.put("episodicwaitpending_task_failed", "episodicwaitpending_failed_today");
+		todayMap.put("waitpending_task_failed", "waitpending_failed_today");
 
 		// Messages
 		counterMap.put("event_queue_messages_received", "messages_received");
