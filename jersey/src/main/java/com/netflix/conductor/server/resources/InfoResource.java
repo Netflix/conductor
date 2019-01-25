@@ -258,11 +258,24 @@ public class InfoResource {
 		gaugeMap.put("task_in_progress", "tasks_in_progress");
 
 		// Output gauges
+		final Set<String> mainWorkflows = getMainWorkflowNames();
+
 		final Map<String, Map<Map<String, String>, AtomicLong>> gauges = Monitors.getGauges();
 		gauges.forEach((name, map) -> {
 			if (gaugeMap.containsKey(name)) {
 				final long value = map.values().stream().mapToLong(v -> v.get()).sum();
 				output.put(prefix + gaugeMap.get(name), value);
+
+
+				if (name.equals("workflow_in_progress")) {
+					map.forEach((m, v) -> {
+						String wfName = trimWorkflowVersion(m.getOrDefault("workflowName", ""));
+
+						if (mainWorkflows.contains(wfName)) {
+							output.put(prefix + name + "." + wfName, v.get());
+						}
+					});	
+				}
 			}
 		});
 
