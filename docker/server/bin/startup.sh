@@ -33,6 +33,21 @@ if [[ "$workflow_elasticsearch_url" != "" ]]; then
     done
 fi
 
+if [[ "$log4j_aurora_appender" == "true" ]]; then
+    echo "log4j.rootLogger=ALL, CN, DB" > /app/config/log4j.properties
+
+    echo "log4j.appender.CN=org.apache.log4j.ConsoleAppender" >> /app/config/log4j.properties
+    echo "log4j.appender.CN.threshold=ERROR" >> /app/config/log4j.properties
+    echo "log4j.appender.CN.layout=com.netflix.conductor.log4j.KeyValueLayout" >> /app/config/log4j.properties
+
+    echo "log4j.appender.DB=com.netflix.conductor.aurora.log4j.DeluxeAuroraAppender" >> /app/config/log4j.properties
+    echo "log4j.appender.DB.url=jdbc:postgresql://"${aurora_host}":"${aurora_port}"/"${aurora_db} >> /app/config/log4j.properties
+    echo "log4j.appender.DB.user="${aurora_user} >> /app/config/log4j.properties
+    echo "log4j.appender.DB.password="${aurora_password} >> /app/config/log4j.properties
+    echo "log4j.appender.DB.threshold=DEBUG" >> /app/config/log4j.properties
+fi
+
+
 # Log the configuration settings as defaults
 echo "Starting conductor server with the following defaults: $(cat $config_file | grep = | grep -v '#' | sed ':a;N;$!ba;s/\n/ /g')"
 
@@ -41,6 +56,10 @@ for logger in $(env | grep log4j_logger | sed 's/_/./g');
 do
     echo ${logger} >> /app/config/log4j.properties
 done
+
+echo "/app/config/log4j.properties begin:"
+cat /app/config/log4j.properties
+echo "/app/config/log4j.properties end"
 
 # Run java in the foreground and stream messages directly to stdout
 exec java $JAVA_OPTS -Dlog4j.configuration="file:/app/config/log4j.properties" -Dlog4j.configurationFile="file:/app/config/log4j.properties" -jar conductor-server-*-all.jar $config_file

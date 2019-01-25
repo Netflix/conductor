@@ -40,19 +40,17 @@ import java.util.concurrent.TimeUnit;
  * @author Oleksiy Lysak
  */
 public class DeluxeAuroraAppender extends AppenderSkeleton {
-    /*
-    create table log4j_logs
-    (
-      log_time timestamp,
-      logger varchar,
-      level varchar,
-      owner varchar,
-      hostname varchar,
-      fromhost varchar,
-      message varchar,
-      stack varchar
-    );
-     */
+    private static final String CREATE_TABLE = "create table log4j_logs(\n" +
+            "  log_time timestamp,\n" +
+            "  logger varchar,\n" +
+            "  level varchar,\n" +
+            "  owner varchar,\n" +
+            "  hostname varchar,\n" +
+            "  fromhost varchar,\n" +
+            "  message varchar,\n" +
+            "  stack varchar\n" +
+            ")";
+
     private static final String INSERT_QUERY = "INSERT INTO log4j_logs " +
             "(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -106,6 +104,14 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
                 poolConfig.setAutoCommit(true);
 
                 dataSource = new HikariDataSource(poolConfig);
+
+                try (Connection tx = dataSource.getConnection()) {
+                    tx.prepareCall(CREATE_TABLE).execute();
+                } catch (Exception ex) {
+                    if (!ex.getMessage().contains("already exists")) {
+                        ex.printStackTrace();
+                    }
+                }
             }
 
             try (Connection tx = dataSource.getConnection()) {

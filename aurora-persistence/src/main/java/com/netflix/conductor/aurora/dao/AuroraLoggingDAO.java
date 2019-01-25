@@ -30,12 +30,6 @@ public class AuroraLoggingDAO implements LoggingDAO {
         this.dataSource = dataSource;
         hostname = getHostName();
         fromhost = getHostIp();
-        try(Connection tx = dataSource.getConnection()) {
-            PreparedStatement st = tx.prepareStatement("");
-
-        } catch (Exception ex) {
-
-        }
     }
 
     @Override
