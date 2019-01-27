@@ -53,9 +53,7 @@ public class ElasticSearchV5Module extends AbstractModule {
         if (restTransport) {
             bind(IndexDAO.class).to(ElasticSearchRestDAOV5.class);
         } else {
-        		// Anish: using old ES DAO object since failing while initializing
-            //bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
-            bind(IndexDAO.class).to(ElasticSearchDAO.class);
+            bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
         }
 
         bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);

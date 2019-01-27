@@ -116,7 +116,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         this.elasticSearchClient = new RestHighLevelClient(lowLevelRestClient);
         this.indexName = config.getIndexName();
         this.logIndexPrefix = config.getTasklogIndexName();
-        this.clusterHealthColor = config.getClusterHealthColor();
+        this.clusterHealthColor = "yellow"; // Anish: changing this to yellow for now to carry on within on-prem
 
         // Set up a workerpool for performing async operations.
         int corePoolSize = 6;
