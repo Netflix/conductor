@@ -20,8 +20,6 @@ package com.netflix.conductor.aurora;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.netflix.conductor.aurora.dao.AuroraLoggingDAO;
-import com.netflix.conductor.dao.LoggingDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +36,6 @@ public class AuroraModule extends AbstractModule {
 	@Override
 	protected void configure() {
         bind(DataSource.class).toProvider(AuroraDataSourceProvider.class).in(Scopes.SINGLETON);
-        bind(LoggingDAO.class).to(AuroraLoggingDAO.class);
 		logger.debug("Aurora Module configured ...");
 	}
 }
