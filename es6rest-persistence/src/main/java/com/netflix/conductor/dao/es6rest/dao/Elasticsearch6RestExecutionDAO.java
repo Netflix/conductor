@@ -193,7 +193,6 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     public void updateTask(Task task) {
         if (logger.isDebugEnabled())
             logger.debug("updateTask: task={}", toJson(task));
-
         task.setUpdateTime(System.currentTimeMillis());
         if (task.getStatus() != null && task.getStatus().isTerminal()) {
             task.setEndTime(System.currentTimeMillis());
