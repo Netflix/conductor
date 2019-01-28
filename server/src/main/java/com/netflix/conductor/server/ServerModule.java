@@ -91,6 +91,7 @@ public class ServerModule extends AbstractModule {
 		bind(Configuration.class).toInstance(config);
 		bind(Registry.class).toInstance(registry);
 
+
 		if (ConductorServer.DB.elasticsearch.equals(db)) {
 			install(new Elasticsearch6RestModule());
 			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
