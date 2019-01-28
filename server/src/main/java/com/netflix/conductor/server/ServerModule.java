@@ -20,7 +20,6 @@ package com.netflix.conductor.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.netflix.conductor.aurora.AuroraModule;
 import com.netflix.conductor.contribs.AuthModule;
 import com.netflix.conductor.contribs.HttpModule;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
@@ -91,7 +90,6 @@ public class ServerModule extends AbstractModule {
 		configureExecutorService();
 		bind(Configuration.class).toInstance(config);
 		bind(Registry.class).toInstance(registry);
-		install(new AuroraModule());
 
 		if (ConductorServer.DB.elasticsearch.equals(db)) {
 			install(new Elasticsearch6RestModule());
