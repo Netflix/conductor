@@ -193,12 +193,6 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
     public void updateTask(Task task) {
         if (logger.isDebugEnabled())
             logger.debug("updateTask: task={}", toJson(task));
-        Task existing = getTask(task.getTaskId());
-
-        // Do nothing if the task already updated by other thread
-        if (existing != null && existing.getUpdateTime() != task.getUpdateTime()) {
-            logger.warn("Update conflict detected for " + task);
-        }
 
         task.setUpdateTime(System.currentTimeMillis());
         if (task.getStatus() != null && task.getStatus().isTerminal()) {
