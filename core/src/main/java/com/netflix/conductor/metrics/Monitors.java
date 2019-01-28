@@ -256,7 +256,7 @@ public class Monitors {
 
 	public static void recordWorkflowTermination(Workflow workflow) {
 		final String name = prefixName("workflow_failure", "sub", workflow.isSubWorkflow());
-		counter(classQualifier, name, "workflowName", workflow.getWorkflowType(), "status", workflow.getStatus().name());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType(), "date", LocalDate.now().toString(), "status", workflow.getStatus().name());
 		recordWorkflowCompleteProgress(workflow);
 	}
 
@@ -328,7 +328,7 @@ public class Monitors {
 
 	public static void recordWorkflowCancel(Workflow workflow) {
 		final String name = prefixName("workflow_cancel", "sub", workflow.isSubWorkflow());
-		counter(classQualifier, name, "workflowName", workflow.getWorkflowType());
+		counter(classQualifier, name, "workflowName", workflow.getWorkflowType(), "date", LocalDate.now().toString());
 		recordWorkflowCompleteProgress(workflow);
 	}
 
