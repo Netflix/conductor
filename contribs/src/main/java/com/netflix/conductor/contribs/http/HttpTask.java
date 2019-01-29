@@ -93,7 +93,7 @@ public class HttpTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response = new HttpResponse();
-			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
+			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request + ", contextInfo=" + workflow.getContextInfo());
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
 					String json = new ObjectMapper().writeValueAsString(task.getInputData());
@@ -112,7 +112,7 @@ public class HttpTask extends GenericHttpTask {
 				response = httpCall(input, task, workflow, executor);
 			}
 
-			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
+			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body + ", contextInfo=" + workflow.getContextInfo());
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -139,6 +139,7 @@ public class HttpTask extends GenericHttpTask {
 		} catch (Exception ex) {
 			logger.error("http task failed for workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId=" + workflow.getCorrelationId()
+					+ ",contextInfo=" + workflow.getContextInfo()
 					+ ",taskId=" + task.getTaskId()
 					+ ",taskreference name=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);

@@ -81,6 +81,8 @@ public class Workflow extends Auditable{
 
 	private String contextToken;
 
+	private String contextInfo;
+
 	public Workflow(){
 		
 	}
@@ -342,6 +344,14 @@ public class Workflow extends Auditable{
 
 	public void setContextToken(String contextToken) {
 		this.contextToken = contextToken;
+	}
+
+	public String getContextInfo() {
+		return contextInfo;
+	}
+
+	public void setContextInfo(String contextInfo) {
+		this.contextInfo = contextInfo;
 	}
 
 	@Override
