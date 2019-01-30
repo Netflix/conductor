@@ -22,6 +22,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -87,6 +88,13 @@ public class UpdateTask extends WorkflowSystemTask {
 			Workflow targetWorkflow = executor.getWorkflow(workflowId, true);
 			if (targetWorkflow == null) {
 				task.setReasonForIncompletion("No workflow found with id " + workflowId);
+				task.setStatus(Status.FAILED);
+				return;
+			}
+
+			//check if the targetworkflow status is failed/completed/cancelled
+			if (targetWorkflow.getStatus().equals(WorkflowStatus.FAILED) || targetWorkflow.getStatus().equals(WorkflowStatus.CANCELLED) || targetWorkflow.getStatus().equals(WorkflowStatus.COMPLETED)) {
+				task.setReasonForIncompletion("Target workflow "+workflowId+" is already "+targetWorkflow.getStatus());
 				task.setStatus(Status.FAILED);
 				return;
 			}
