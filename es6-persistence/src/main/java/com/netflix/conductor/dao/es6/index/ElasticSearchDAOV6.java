@@ -258,8 +258,7 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         return sb.toString();
     }
 
-    @Override
-    public void indexWorkflow(Workflow workflow) {
+    private void executeIndexWorflow(Workflow workflow) {
         try {
             String id = workflow.getWorkflowId();
             WorkflowSummary summary = new WorkflowSummary(workflow);
@@ -274,12 +273,16 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     }
 
     @Override
-    public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
-        return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
+    public void indexWorkflow(Workflow workflow) {
+        CompletableFuture.runAsync(() -> executeIndexWorflow(workflow), executorService);
     }
 
     @Override
-    public void indexTask(Task task) {
+    public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
+        return CompletableFuture.runAsync(() -> executeIndexWorflow(workflow), executorService);
+    }
+
+    private void executeIndexTask(Task task) {
         try {
             String id = task.getTaskId();
             TaskSummary summary = new TaskSummary(task);
@@ -294,8 +297,13 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     }
 
     @Override
+    public void indexTask(Task task) {
+        CompletableFuture.runAsync(() -> executeIndexTask(task), executorService);
+    }
+
+    @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
-        return CompletableFuture.runAsync(() -> indexTask(task), executorService);
+        return CompletableFuture.runAsync(() -> executeIndexTask(task), executorService);
     }
 
     @Override

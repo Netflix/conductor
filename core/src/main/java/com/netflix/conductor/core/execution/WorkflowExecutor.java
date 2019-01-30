@@ -38,6 +38,7 @@ import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -277,11 +278,20 @@ public class WorkflowExecutor {
         workflow.setEvent(event);
         workflow.setTaskToDomain(taskToDomain);
 
+        StopWatch watch = new StopWatch();
+        watch.start();
         executionDAOFacade.createWorkflow(workflow);
+        watch.stop();
+        LOGGER.info("--- Create workflow {} took {} milliseconds ---", workflowId, watch.getTime());
+
         LOGGER.info("A new instance of workflow {} created with workflow id {}", workflow.getWorkflowName(), workflowId);
 
         //then decide to see if anything needs to be done as part of the workflow
+        watch.reset();
+        watch.start();
         decide(workflowId);
+        watch.stop();
+        LOGGER.info("--- Decide workflow {} took {} milliseconds ---", workflowId, watch.getTime());
         return workflowId;
     }
 
