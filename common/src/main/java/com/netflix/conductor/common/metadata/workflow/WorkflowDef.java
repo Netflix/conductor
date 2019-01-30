@@ -74,8 +74,8 @@ public class WorkflowDef extends Auditable {
 	private String failureWorkflow;
 
 	@ProtoField(id = 8)
-    @Min(value = 1, message = "workflowDef schemaVersion: ${validatedValue} should be >= {value}")
-    private int schemaVersion = 1;
+    @Min(value = 2, message = "workflowDef schemaVersion: ${validatedValue} should be >= {value}")
+    private int schemaVersion = 2;
 
 	//By default a workflow is restartable
 	@ProtoField(id = 9)
