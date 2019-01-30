@@ -343,7 +343,7 @@ public class WorkflowResource {
 
 		NDC.push("rest-terminate-" + UUID.randomUUID().toString());
 		try {
-			executor.terminateWorkflow(workflowId, reason);
+			executor.terminateWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Terminated from api"));
 		} finally {
 			NDC.remove();
 		}
@@ -363,7 +363,7 @@ public class WorkflowResource {
 
 		NDC.push("rest-cancel-" + UUID.randomUUID().toString());
 		try {
-			executor.cancelWorkflow(workflowId, reason);
+			executor.cancelWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
 		} finally {
 			NDC.remove();
 		}

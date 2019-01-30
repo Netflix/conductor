@@ -313,11 +313,13 @@ public class DeciderService {
 		int retryCount = task.getRetryCount();
 		if (!task.getStatus().isRetriable() || SystemTaskType.isBuiltIn(task.getTaskType()) || taskDef == null || taskDef.getRetryCount() <= retryCount) {
 			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
-			WorkflowStatus status = task.getStatus().equals(Status.TIMED_OUT) ? WorkflowStatus.TIMED_OUT :
-					task.getStatus().equals(Status.RESET) ? WorkflowStatus.RESET : WorkflowStatus.FAILED;
+
+            WorkflowStatus status = task.getStatus().equals(Status.TIMED_OUT) ? WorkflowStatus.TIMED_OUT :
+                            task.getStatus().equals(Status.RESET) ? WorkflowStatus.RESET : WorkflowStatus.FAILED;
+
 			task.setRetried(true);
 			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId()+",taskId"+task.getTaskId()+",CorrelationId="+workflow.getCorrelationId()+",Reason="+reason+",workflowstatus="+status);
-			throw new TerminateWorkflow(reason, status, task);
+			throw new TerminateWorkflow(reason, status, task, task.getStatus().equals(Status.CANCELED));
 		}
 
 		// retry... - but not immediately - put a delay...
