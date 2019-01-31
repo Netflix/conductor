@@ -674,9 +674,9 @@ public class WorkflowExecutor {
 
 		edao.updateWorkflow(workflow);
 		cancelTasks(workflow, workflow.getTasks());
-        queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
-        logger.error("Workflow has been reset.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
+		logger.error("Workflow has been reset.workflowId="+workflowId+",correlationId="+workflow.getCorrelationId());
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -996,9 +996,9 @@ public class WorkflowExecutor {
 			}
 
 		} catch (TerminateWorkflow tw) {
-		    if (tw.cancelled) {
-		        return true;
-            }
+			if (tw.cancelled) {
+				return true;
+			}
 
 			String error = "Error in workflow execution: " + tw.getMessage() +
 					", workflowId=" + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId();
