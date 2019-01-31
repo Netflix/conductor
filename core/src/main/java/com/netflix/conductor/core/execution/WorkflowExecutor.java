@@ -219,14 +219,8 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(wf, StartEndState.start);
 
-			// Do not run decider right away
-			// The decider might block the thread until some task of the sub workflow
-			// (and their sub workflow, and so on) releases it
-			if (lazyDecider) {
-				wakeUpSweeper(workflowId);
-			} else {
-				decide(workflowId);
-			}
+			// Invoke decider or wake up sweeper
+			decideOrSweeper(workflowId);
 
 			logger.debug("Workflow has started.workflowId=" + wf.getWorkflowId()+",correlationId=" + wf.getCorrelationId());
 			return workflowId;
@@ -276,14 +270,8 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
 
-			// Do not run decider right away
-			// The decider might block the thread until some task of the sub workflow
-			// (and their sub workflow, and so on) releases it
-			if (lazyDecider) {
-				wakeUpSweeper(workflowId);
-			} else {
-				decide(workflowId);
-			}
+			// Invoke decider or wake up sweeper
+			decideOrSweeper(workflowId);
 			return true;
 		}
 
@@ -396,14 +384,8 @@ public class WorkflowExecutor {
 				}
 			}
 
-			// Do not run decider right away
-			// The decider might block the thread until some task of the sub workflow
-			// (and their sub workflow, and so on) releases it
-			if (lazyDecider) {
-				wakeUpSweeper(workflowId);
-			} else {
-				decide(workflowId);
-			}
+			// Invoke decider or wake up sweeper
+			decideOrSweeper(workflowId);
 			return true;
 		}
 		logger.debug("Workflow rerun.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",input=" + workflow.getInput());
@@ -436,14 +418,9 @@ public class WorkflowExecutor {
 		// send wf start message
 		notifyWorkflowStatus(workflow, StartEndState.start);
 
-		// Do not run decider right away
-		// The decider might block the thread until some task of the sub workflow
-		// (and their sub workflow, and so on) releases it
-		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
-		} else {
-			decide(workflowId);
-		}
+		// Invoke decider or wake up sweeper
+		decideOrSweeper(workflowId);
+
 		logger.debug("Workflow rewind.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId());
 	}
 
@@ -550,14 +527,9 @@ public class WorkflowExecutor {
 		// metrics
 		Monitors.recordWorkflowRetry(workflow);
 
-		// Do not run decider right away
-		// The decider might block the thread until some task of the sub workflow
-		// (and their sub workflow, and so on) releases it
-		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
-		} else {
-			decide(workflowId);
-		}
+		// Invoke decider or wake up sweeper
+		decideOrSweeper(workflowId);
+
 		logger.debug("Workflow retry.Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId());
 	}
 
@@ -905,12 +877,8 @@ public class WorkflowExecutor {
 				break;
 		}
 
-		// Who calls decider ? Sweeper or current thread?
-		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
-		} else {
-			decide(workflowId);
-		}
+		// Invoke decider or wake up sweeper
+		decideOrSweeper(workflowId);
 
 		if (task.getStatus().isTerminal()) {
 			long duration = getTaskDuration(0, task);
@@ -1076,14 +1044,9 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 		// metrics
 		Monitors.recordWorkflowResume(workflow);
-		// Do not run decider right away
-		// The decider might block the thread until some task of the sub workflow
-		// (and their sub workflow, and so on) releases it
-		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
-		} else {
-			decide(workflowId);
-		}
+
+		// Invoke decider or wake up sweeper
+		decideOrSweeper(workflowId);
 	}
 
 	public void skipTaskFromWorkflow(String workflowId, String taskReferenceName, SkipTaskRequest skipTaskRequest)  throws Exception {
@@ -1149,10 +1112,10 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowRemove(workflow);
 	}
 
-
 	public void removeWorkflowNotImplemented(String workflowId) {
 		throw new ApplicationException(Code.NOT_IMPLEMENTED, "Method not implemented");
 	}
+
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {
@@ -1665,6 +1628,13 @@ public class WorkflowExecutor {
 			rerunWF(workflowId, cancelled, null, null, null, null, null);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+	private void decideOrSweeper(String workflowId) throws Exception {
+		if (lazyDecider) {
+			wakeUpSweeper(workflowId);
+		} else {
+			decide(workflowId);
 		}
 	}
 }
