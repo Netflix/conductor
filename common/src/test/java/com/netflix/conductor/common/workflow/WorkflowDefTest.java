@@ -318,7 +318,7 @@ public class WorkflowDefTest {
 		workflowDef.setSchemaVersion(3);
 		workflowDef.setName("test_env");
 
-		WorkflowTask workflowTask = new WorkflowTask();//name is null
+		WorkflowTask workflowTask = new WorkflowTask();
 
 		workflowTask.setName("t1");
 		workflowTask.setWorkflowTaskType(TaskType.SIMPLE);
