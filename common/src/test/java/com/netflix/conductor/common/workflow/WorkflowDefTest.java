@@ -315,7 +315,7 @@ public class WorkflowDefTest {
 	@Test
 	public void testWorkflowSchemaVersion1() {
 		WorkflowDef workflowDef = new WorkflowDef();//name is null
-		workflowDef.setSchemaVersion(1);
+		workflowDef.setSchemaVersion(3);
 		workflowDef.setName("test_env");
 
 		WorkflowTask workflowTask = new WorkflowTask();//name is null
@@ -338,6 +338,6 @@ public class WorkflowDefTest {
 		List<String> validationErrors = new ArrayList<>();
 		result.forEach(e -> validationErrors.add(e.getMessage()));
 
-		assertTrue(validationErrors.contains("workflowDef schemaVersion: 1 should be >= 2"));
+		assertTrue(validationErrors.contains("workflowDef schemaVersion: 2 is only supported"));
 	}
 }
