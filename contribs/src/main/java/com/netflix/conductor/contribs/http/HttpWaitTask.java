@@ -104,7 +104,7 @@ public class HttpWaitTask extends GenericHttpTask {
 		try {
 			HttpResponse response;
 			logger.debug("http wait task started.workflowId=" + workflow.getWorkflowId()
-					+ ",CorrelationId=" + workflow.getCorrelationId()
+					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
 					+ ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
 
@@ -120,7 +120,7 @@ public class HttpWaitTask extends GenericHttpTask {
 				response = httpCall(input, task, workflow, executor);
 			}
 
-			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
+			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);

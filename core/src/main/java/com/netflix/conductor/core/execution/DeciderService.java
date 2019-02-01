@@ -86,13 +86,13 @@ public class DeciderService {
 		DeciderOutcome outcome = new DeciderOutcome();
 		
  		if (workflow.getStatus().equals(WorkflowStatus.PAUSED)) {
-			logger.debug("Workflow " + workflow.getWorkflowId() +",CorrelationId="+workflow.getCorrelationId()+" is paused");	
+			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + " is paused");
 			return outcome;
 		}
 		
 		if (workflow.getStatus().isTerminal()) {
 			//you cannot evaluate a terminal workflow
-			logger.debug("Workflow " + workflow.getWorkflowId() +",CorrelationId="+workflow.getCorrelationId()+" is already finished.  status=" + workflow.getStatus() + ", reason=" + workflow.getReasonForIncompletion());
+			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + " is already finished. status=" + workflow.getStatus() + ",reason=" + workflow.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			return outcome;
 		}
 		
@@ -163,18 +163,18 @@ public class DeciderService {
 				List<Task> nextTasks = getNextTask(def, workflow, task);
 				nextTasks.forEach(rt -> tasksToBeScheduled.put(rt.getReferenceTaskName(), rt));
 				outcome.tasksToBeUpdated.add(task);
-				logger.debug("Scheduling Tasks from " + task.getTaskDefName() + ", next = " + nextTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId());				
+				logger.debug("Scheduling Tasks from " + task.getTaskDefName() + ", next = " + nextTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
 			}
 		}
 		
 		List<Task> unScheduledTasks = tasksToBeScheduled.values().stream().filter(tt -> !executedTaskRefNames.contains(tt.getReferenceTaskName())).collect(Collectors.toList());
 		if (!unScheduledTasks.isEmpty()) {
-			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId());
+			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			outcome.tasksToBeScheduled.addAll(unScheduledTasks);
 		}
 		updateOutput(def, workflow);
 		if (outcome.tasksToBeScheduled.isEmpty() && checkForWorkflowCompletion(def, workflow)) {
-			logger.debug("Marking workflow as complete.  workflow=" + workflow.getWorkflowId() +",CorrelationId="+workflow.getCorrelationId()+", tasks=" + workflow.getTasks()+"output=",workflow.getOutput());
+			logger.debug("Marking workflow as complete. workflow=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",tasks=" + workflow.getTasks() + ",contextUser=" + workflow.getContextUser());
 			outcome.isComplete = true;
 		}
 
@@ -184,7 +184,7 @@ public class DeciderService {
 	
 	private List<Task> startWorkflow(Workflow workflow, WorkflowDef def) throws TerminateWorkflow {
 
-		logger.debug("Starting workflow " + def.getName() + "/" + workflow.getWorkflowId()+",CorrelationId="+workflow.getCorrelationId());
+		logger.debug("Starting workflow " + def.getName() + "/" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 		
 		List<Task> tasks = workflow.getTasks();
 		// Check if the workflow is a re-run case
@@ -267,7 +267,7 @@ public class DeciderService {
 		}
 
 		if (noPendingTasks && noPendingSchedule) {
-			logger.warn("Workflow might have a stuck state. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
+			logger.warn("Workflow might have a stuck state. workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 		}
 
 		return false;
@@ -315,7 +315,7 @@ public class DeciderService {
 			WorkflowStatus status = task.getStatus().equals(Status.TIMED_OUT) ? WorkflowStatus.TIMED_OUT :
 					task.getStatus().equals(Status.RESET) ? WorkflowStatus.RESET : WorkflowStatus.FAILED;
 			task.setRetried(true);
-			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId()+",taskId"+task.getTaskId()+",CorrelationId="+workflow.getCorrelationId()+",Reason="+task.getReasonForIncompletion()+",workflowstatus="+status);
+			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId() + ",taskId" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId() + ",reason=" + task.getReasonForIncompletion() + ",status=" + status + ",contextUser=" + workflow.getContextUser());
 			throw new TerminateWorkflow(task.getReasonForIncompletion(), status, task);
 		}
 
