@@ -109,6 +109,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else if (isSuppressRestart(subWorkflow)) {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
+			task.getOutputData().put("originalFailedTask", subWorkflow.getOutput().get("originalFailedTask"));
 			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else {
 			// Note: StandbyOnFail and RestartOnFail are Boolean objects and not primitives
@@ -124,6 +125,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 			} else {
 				task.setStatus(Status.FAILED);
 				task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
+				task.getOutputData().put("originalFailedTask", subWorkflow.getOutput().get("originalFailedTask"));
 			}
 		}
 		if (task.getStatus() == Status.COMPLETED) {
