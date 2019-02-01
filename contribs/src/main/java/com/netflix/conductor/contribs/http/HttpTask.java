@@ -141,7 +141,7 @@ public class HttpTask extends GenericHttpTask {
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",contextUser=" + workflow.getContextUser()
 					+ ",taskId=" + task.getTaskId()
-					+ ",taskreference name=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
+					+ ",taskReferenceName=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());
