@@ -182,7 +182,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                         Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId)) ;
 		    
             } else if (isEpisodic && isSupplemental) {
-               return ( temp1= isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId) &&
+               return ( isNoneEmpty(trk.titleKeys.episodeId, trk.titleKeys.seasonId, trk.titleKeys.seriesId) &&
                         Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
                         Objects.equals(trk.titleVersion.type, erk.titleVersion.type) &&
                         Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId) &&
