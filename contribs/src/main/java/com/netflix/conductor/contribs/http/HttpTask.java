@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -69,9 +72,12 @@ public class HttpTask extends GenericHttpTask {
 			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
 			return;
-		} else {
-			if (input.getServiceDiscoveryQuery() != null) {
-				url = lookup(input.getServiceDiscoveryQuery());
+		} else if (input.getServiceDiscoveryQuery() != null) {
+			url = lookup(input.getServiceDiscoveryQuery());
+
+			if (null == url) {
+				logger.error("SRV lookup of: " + input.getServiceDiscoveryQuery() + " failed, falling back to URI: " + StringUtils.defaultIfEmpty(input.getUri(), "[UNDEFINED]"));
+				// Oleksiy: Should the code return from this case or is it OK to continue?
 			}
 		}
 
@@ -80,8 +86,21 @@ public class HttpTask extends GenericHttpTask {
 			task.setStatus(Status.FAILED);
 			return;
 		} else {
-			if (url != null) {
-				input.setUri(url + input.getUri());
+			final String uri = input.getUri();
+			url = StringUtils.defaultIfEmpty(url, "");
+
+			if (uri.startsWith("/")) {
+				input.setUri(url + uri);
+			} else {
+				// https://jira.d3nw.com/browse/ONECOND-837
+				// Parse URI, extract the path, and append it to url
+				try {
+					URL tmp = new URL(uri);
+					input.setUri(url + tmp.getPath());
+				} catch (MalformedURLException e) {
+					logger.error("Unable to parse URL: " + uri, e);
+					// Oleksiy: In this case, the code will continue with the original URI value. Will that cause any issues?
+				}
 			}
 		}
 
