@@ -99,8 +99,8 @@ public class HttpTask extends GenericHttpTask {
 					URL tmp = new URL(uri);
 					input.setUri(hostAndPort + tmp.getPath());
 				} catch (MalformedURLException e) {
-					logger.error("Unable to parse URL: " + uri, e);
-					throw new Exception("Unable to parse URL: " + uri, e);
+					logger.error("Unable to build endpoint URL: " + uri, e);
+					throw new Exception("Unable to build endpoint URL: " + uri, e);
 				}
 			}
 		}
