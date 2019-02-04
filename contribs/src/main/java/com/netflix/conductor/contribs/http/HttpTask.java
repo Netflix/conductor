@@ -65,7 +65,7 @@ public class HttpTask extends GenericHttpTask {
 
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
-		String url = null;
+		String hostAndPort = null;
 		Input input = om.convertValue(request, Input.class);
 
 		if (request == null) {
@@ -73,9 +73,8 @@ public class HttpTask extends GenericHttpTask {
 			task.setStatus(Status.FAILED);
 			return;
 		} else if (input.getServiceDiscoveryQuery() != null) {
-			url = lookup(input.getServiceDiscoveryQuery());
+			hostAndPort = lookup(input.getServiceDiscoveryQuery());
 
-			if (null == url) {
 				logger.error("SRV lookup of: " + input.getServiceDiscoveryQuery() + " failed, falling back to URI: " + StringUtils.defaultIfEmpty(input.getUri(), "[UNDEFINED]"));
 				// Oleksiy: Should the code return from this case or is it OK to continue?
 			}
@@ -87,16 +86,16 @@ public class HttpTask extends GenericHttpTask {
 			return;
 		} else {
 			final String uri = input.getUri();
-			url = StringUtils.defaultIfEmpty(url, "");
+			hostAndPort = StringUtils.defaultIfEmpty(hostAndPort, "");
 
 			if (uri.startsWith("/")) {
-				input.setUri(url + uri);
+				input.setUri(hostAndPort + uri);
 			} else {
 				// https://jira.d3nw.com/browse/ONECOND-837
 				// Parse URI, extract the path, and append it to url
 				try {
 					URL tmp = new URL(uri);
-					input.setUri(url + tmp.getPath());
+					input.setUri(hostAndPort + tmp.getPath());
 				} catch (MalformedURLException e) {
 					logger.error("Unable to parse URL: " + uri, e);
 					// Oleksiy: In this case, the code will continue with the original URI value. Will that cause any issues?
