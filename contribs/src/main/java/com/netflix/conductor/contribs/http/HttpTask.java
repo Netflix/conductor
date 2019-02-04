@@ -100,7 +100,7 @@ public class HttpTask extends GenericHttpTask {
 					input.setUri(hostAndPort + tmp.getPath());
 				} catch (MalformedURLException e) {
 					logger.error("Unable to parse URL: " + uri, e);
-					// Oleksiy: In this case, the code will continue with the original URI value. Will that cause any issues?
+					throw new Exception("Unable to parse URL: " + uri, e);
 				}
 			}
 		}
