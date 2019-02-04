@@ -75,8 +75,10 @@ public class HttpTask extends GenericHttpTask {
 		} else if (input.getServiceDiscoveryQuery() != null) {
 			hostAndPort = lookup(input.getServiceDiscoveryQuery());
 
-				logger.error("SRV lookup of: " + input.getServiceDiscoveryQuery() + " failed, falling back to URI: " + StringUtils.defaultIfEmpty(input.getUri(), "[UNDEFINED]"));
-				// Oleksiy: Should the code return from this case or is it OK to continue?
+			if (null == hostAndPort) {
+				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery() + " . No records found.";
+				logger.error(msg);
+				throw new Exception(msg);
 			}
 		}
 
