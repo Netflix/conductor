@@ -724,6 +724,24 @@ public class WorkflowExecutor {
 		if (StringUtils.isEmpty(workflow.getReasonForIncompletion())) {
 			workflow.setReasonForIncompletion(reason);
 		}
+
+		if (failedTask != null) {
+			Object originalFailed = failedTask.getOutputData().get("originalFailedTask");
+			if (originalFailed == null) {
+				Map<String, Object> map = new HashMap<>();
+				map.put("taskId", failedTask.getTaskId());
+				map.put("retryCount", failedTask.getRetryCount());
+				map.put("referenceName", failedTask.getReferenceTaskName());
+				map.put("failureStatus", failedTask.getStatus());
+				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
+				map.put("workflowId", workflowId);
+				map.put("workflowType", workflow.getWorkflowType());
+				map.put("workflowVersion", workflow.getVersion());
+				originalFailed = map;
+			}
+			workflow.getOutput().put("originalFailedTask", originalFailed);
+		}
+
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is terminated/reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason + ",contextUser=" + workflow.getContextUser());
 		List<Task> tasks = workflow.getTasks();
@@ -759,7 +777,14 @@ public class WorkflowExecutor {
 				map.put("referenceName", failedTask.getReferenceTaskName());
 				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
 				input.put("failedTask", map);
-				logger.error("Error in task execution. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
+
+                // failedTask represents the task in current workflow only
+                failedTask.getOutputData().computeIfPresent("originalFailedTask", (key, oldValue) -> {
+                    input.put("originalFailedTask", oldValue);
+                    return null;
+                });
+
+                logger.error("Error in task execution. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			}
 
 			try {
