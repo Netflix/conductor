@@ -34,9 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -65,20 +62,16 @@ public class HttpTask extends GenericHttpTask {
 
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
-		String hostAndPort = null;
+		String url = null;
 		Input input = om.convertValue(request, Input.class);
 
 		if (request == null) {
 			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
 			return;
-		} else if (input.getServiceDiscoveryQuery() != null) {
-			hostAndPort = lookup(input.getServiceDiscoveryQuery());
-
-			if (null == hostAndPort) {
-				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery() + " . No records found.";
-				logger.error(msg);
-				throw new Exception(msg);
+		} else {
+			if (input.getServiceDiscoveryQuery() != null) {
+				url = lookup(input.getServiceDiscoveryQuery());
 			}
 		}
 
@@ -87,21 +80,8 @@ public class HttpTask extends GenericHttpTask {
 			task.setStatus(Status.FAILED);
 			return;
 		} else {
-			final String uri = input.getUri();
-			hostAndPort = StringUtils.defaultIfEmpty(hostAndPort, "");
-
-			if (uri.startsWith("/")) {
-				input.setUri(hostAndPort + uri);
-			} else {
-				// https://jira.d3nw.com/browse/ONECOND-837
-				// Parse URI, extract the path, and append it to url
-				try {
-					URL tmp = new URL(uri);
-					input.setUri(hostAndPort + tmp.getPath());
-				} catch (MalformedURLException e) {
-					logger.error("Unable to build endpoint URL: " + uri, e);
-					throw new Exception("Unable to build endpoint URL: " + uri, e);
-				}
+			if (url != null) {
+				input.setUri(url + input.getUri());
 			}
 		}
 

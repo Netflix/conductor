@@ -16,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
@@ -50,10 +48,10 @@ public class HttpWaitTask extends GenericHttpTask {
 			return;
 		}
 
-		String hostAndPort = null;
+		String url = null;
 		Input input = om.convertValue(request, Input.class);
 		if (input.getServiceDiscoveryQuery() != null) {
-			hostAndPort = lookup(input.getServiceDiscoveryQuery());
+			url = lookup(input.getServiceDiscoveryQuery());
 		}
 
 		if (StringUtils.isEmpty(input.getUri())) {
@@ -61,21 +59,8 @@ public class HttpWaitTask extends GenericHttpTask {
 			task.setStatus(Task.Status.FAILED);
 			return;
 		} else {
-			final String uri = input.getUri();
-			hostAndPort = StringUtils.defaultIfEmpty(hostAndPort, "");
-
-			if (uri.startsWith("/")) {
-				input.setUri(hostAndPort + uri);
-			} else {
-				// https://jira.d3nw.com/browse/ONECOND-837
-				// Parse URI, extract the path, and append it to url
-				try {
-					URL tmp = new URL(uri);
-					input.setUri(hostAndPort + tmp.getPath());
-				} catch (MalformedURLException e) {
-					logger.error("Unable to build endpoint URL: " + uri, e);
-					throw new Exception("Unable to build endpoint URL: " + uri, e);
-				}
+			if (url != null) {
+				input.setUri(url + input.getUri());
 			}
 		}
 
