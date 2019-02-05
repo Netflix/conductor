@@ -209,7 +209,7 @@ class TaskClient(BaseClient):
         params['workerid'] = workerid
         headers = {'Accept': 'application/json'}
         value = self.post(url, params, None, headers)
-        return value == 'true'
+        return value
 
     def getTasksInQueue(self, taskName):
         url = self.makeUrl('queue/{}', taskName)
