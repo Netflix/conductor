@@ -913,6 +913,12 @@ public class WorkflowExecutor {
 			long lastDuration = task.getEndTime() - task.getStartTime();
 			Monitors.recordTaskExecutionTime(task, duration, true);
 			Monitors.recordTaskExecutionTime(task, lastDuration, false);
+			if(task.getStatus().equals(Status.COMPLETED)) {
+				Monitors.recordTasksCompleted(task);
+			}
+			if(task.getStatus().equals(Status.FAILED)) {
+				Monitors.recordTasksFailed(task);
+			}
 		}
 	}
 
@@ -989,6 +995,7 @@ public class WorkflowExecutor {
 						tasksToBeUpdated.add(task);
 						stateChanged = true;
 					}
+
 				}
 			}
 			stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
@@ -997,6 +1004,7 @@ public class WorkflowExecutor {
 				edao.updateTasks(tasksToBeUpdated);
 				edao.updateWorkflow(workflow);
 				queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());
+
 			}
 
 			if (outcome.startWorkflow != null) {
