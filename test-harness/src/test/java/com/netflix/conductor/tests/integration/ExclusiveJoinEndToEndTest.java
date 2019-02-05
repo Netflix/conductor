@@ -38,6 +38,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.jetty.server.JettyServer;
@@ -55,9 +56,7 @@ public class ExclusiveJoinEndToEndTest {
 
 	private static EmbeddedElasticSearch search;
 
-	private static final int SERVER_PORT = 8080;
-
-	private static String CONDUCTOR_URI = "http://localhost:8080/api/";
+	private static final int SERVER_PORT = 8093;
 
 	private static String CONDUCTOR_WORKFLOW_DEF_NAME = "ExclusiveJoinTestWorkflow";
 
@@ -68,6 +67,8 @@ public class ExclusiveJoinEndToEndTest {
 	@BeforeClass
 	public static void setUp() throws Exception {
 		TestEnvironment.setup();
+        System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9205");
+        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "localhost:9305");
 
 		Injector bootInjector = Guice.createInjector(new BootstrapModule());
 		Injector serverInjector = Guice.createInjector(bootInjector.getInstance(ModulesProvider.class).get());
@@ -77,13 +78,13 @@ public class ExclusiveJoinEndToEndTest {
 
 		JettyServer server = new JettyServer(SERVER_PORT, false);
 		server.start();
-
+		String apiRoot = String.format("http://localhost:%d/api/", SERVER_PORT);
 		taskClient = new TaskClient();
-		taskClient.setRootURI(CONDUCTOR_URI);
+		taskClient.setRootURI(apiRoot);
 		workflowClient = new WorkflowClient();
-		workflowClient.setRootURI(CONDUCTOR_URI);
+		workflowClient.setRootURI(apiRoot);
 		metadataClient = new MetadataClient();
-		metadataClient.setRootURI(CONDUCTOR_URI);
+		metadataClient.setRootURI(apiRoot);
 	}
 
 	@Before
