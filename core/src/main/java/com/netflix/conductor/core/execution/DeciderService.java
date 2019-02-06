@@ -323,7 +323,7 @@ public class DeciderService {
 				status = WorkflowStatus.FAILED;
 			}
 			task.setRetried(true);
-			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId() + ",taskId" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId() + ",reason=" + task.getReasonForIncompletion() + ",status=" + status + ",contextUser=" + workflow.getContextUser());
+			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId() + ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId() + ",reason=" + task.getReasonForIncompletion() + ",status=" + status + ",contextUser=" + workflow.getContextUser());
 			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
 			throw new TerminateWorkflow(reason, status, task);
 		}
