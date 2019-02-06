@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
@@ -48,10 +50,10 @@ public class HttpWaitTask extends GenericHttpTask {
 			return;
 		}
 
-		String url = null;
+		String hostAndPort = null;
 		Input input = om.convertValue(request, Input.class);
-		if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
-			url = lookup(input.getServiceDiscoveryQuery());
+		if (input.getServiceDiscoveryQuery() != null) {
+			hostAndPort = lookup(input.getServiceDiscoveryQuery());
 		}
 
 		if (StringUtils.isEmpty(input.getUri())) {
@@ -59,8 +61,21 @@ public class HttpWaitTask extends GenericHttpTask {
 			task.setStatus(Task.Status.FAILED);
 			return;
 		} else {
-			if (url != null) {
-				input.setUri(url + input.getUri());
+			final String uri = input.getUri();
+			hostAndPort = StringUtils.defaultIfEmpty(hostAndPort, "");
+
+			if (uri.startsWith("/")) {
+				input.setUri(hostAndPort + uri);
+			} else {
+				// https://jira.d3nw.com/browse/ONECOND-837
+				// Parse URI, extract the path, and append it to url
+				try {
+					URL tmp = new URL(uri);
+					input.setUri(hostAndPort + tmp.getPath());
+				} catch (MalformedURLException e) {
+					logger.error("Unable to build endpoint URL: " + uri, e);
+					throw new Exception("Unable to build endpoint URL: " + uri, e);
+				}
 			}
 		}
 
@@ -104,9 +119,9 @@ public class HttpWaitTask extends GenericHttpTask {
 		try {
 			HttpResponse response;
 			logger.debug("http wait task started.workflowId=" + workflow.getWorkflowId()
-					+ ",correlationId=" + workflow.getCorrelationId()
+					+ ",CorrelationId=" + workflow.getCorrelationId()
 					+ ",taskId=" + task.getTaskId()
-					+ ",taskReferenceName=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
+					+ ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
@@ -120,7 +135,7 @@ public class HttpWaitTask extends GenericHttpTask {
 				response = httpCall(input, task, workflow, executor);
 			}
 
-			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskReferenceName=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",contextUser=" + workflow.getContextUser());
+			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -139,9 +154,8 @@ public class HttpWaitTask extends GenericHttpTask {
 		} catch (Exception ex) {
 			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId=" + workflow.getCorrelationId()
-					+ ",contextUser=" + workflow.getContextUser()
 					+ ",taskId=" + task.getTaskId()
-					+ ",taskReferenceName=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
+					+ ",taskreference name=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
 			task.setStatus(Task.Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());

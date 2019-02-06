@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -62,16 +65,20 @@ public class HttpTask extends GenericHttpTask {
 
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
-		String url = null;
+		String hostAndPort = null;
 		Input input = om.convertValue(request, Input.class);
 
 		if (request == null) {
 			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
 			return;
-		} else {
-			if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
-				url = lookup(input.getServiceDiscoveryQuery());
+		} else if (input.getServiceDiscoveryQuery() != null) {
+			hostAndPort = lookup(input.getServiceDiscoveryQuery());
+
+			if (null == hostAndPort) {
+				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery() + " . No records found.";
+				logger.error(msg);
+				throw new Exception(msg);
 			}
 		}
 
@@ -80,8 +87,21 @@ public class HttpTask extends GenericHttpTask {
 			task.setStatus(Status.FAILED);
 			return;
 		} else {
-			if (url != null) {
-				input.setUri(url + input.getUri());
+			final String uri = input.getUri();
+			hostAndPort = StringUtils.defaultIfEmpty(hostAndPort, "");
+
+			if (uri.startsWith("/")) {
+				input.setUri(hostAndPort + uri);
+			} else {
+				// https://jira.d3nw.com/browse/ONECOND-837
+				// Parse URI, extract the path, and append it to url
+				try {
+					URL tmp = new URL(uri);
+					input.setUri(hostAndPort + tmp.getPath());
+				} catch (MalformedURLException e) {
+					logger.error("Unable to build endpoint URL: " + uri, e);
+					throw new Exception("Unable to build endpoint URL: " + uri, e);
+				}
 			}
 		}
 
@@ -93,7 +113,7 @@ public class HttpTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response = new HttpResponse();
-			logger.debug("http task started. workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskReferenceName=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
 					String json = new ObjectMapper().writeValueAsString(task.getInputData());
@@ -112,7 +132,7 @@ public class HttpTask extends GenericHttpTask {
 				response = httpCall(input, task, workflow, executor);
 			}
 
-			logger.info("http task execution completed. workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskReferenceName=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",contextUser=" + workflow.getContextUser());
+			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -139,9 +159,8 @@ public class HttpTask extends GenericHttpTask {
 		} catch (Exception ex) {
 			logger.error("http task failed for workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId=" + workflow.getCorrelationId()
-					+ ",contextUser=" + workflow.getContextUser()
 					+ ",taskId=" + task.getTaskId()
-					+ ",taskReferenceName=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
+					+ ",taskreference name=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());
