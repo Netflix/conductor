@@ -167,7 +167,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
                         logger.info("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
                                 ",correlationId=" + task.getCorrelationId() +
                                 ",taskId=" + task.getTaskId() +
-                                ",taskreference name=" + task.getReferenceTaskName() +
+                                ",taskReferenceName=" + task.getReferenceTaskName() +
                                 ",response code=" + response.statusCode + ",response=" + response.body);
                     } else {
                         logger.info("batch task execution completed.carriedTaskId=" + carried.getTaskId() +
@@ -175,7 +175,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
                                 ",workflowId=" + task.getWorkflowInstanceId() +
                                 ",correlationId=" + task.getCorrelationId() +
                                 ",taskId=" + task.getTaskId() +
-                                ",taskreference name=" + task.getReferenceTaskName() +
+                                ",taskReferenceName=" + task.getReferenceTaskName() +
                                 ",response code=" + response.statusCode + ",response=" + response.body);
                     }
 
