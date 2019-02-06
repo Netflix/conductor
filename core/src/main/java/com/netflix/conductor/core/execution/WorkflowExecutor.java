@@ -235,7 +235,7 @@ public class WorkflowExecutor {
 			notifyWorkflowStatus(wf, StartEndState.start);
 
 			// Invoke decider or wake up sweeper
-			decideOrSweeper(workflowId);
+			decide(workflowId);
 			logger.debug("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
 					+ ",correlationId=" + wf.getCorrelationId()+ ",contextUser=" + wf.getContextUser());
 			return workflowId;
@@ -285,8 +285,7 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
 
-			// Invoke decider or wake up sweeper
-			decideOrSweeper(workflowId);
+			decide(workflowId);
 			return true;
 		}
 
@@ -399,8 +398,7 @@ public class WorkflowExecutor {
 				}
 			}
 
-			// Invoke decider or wake up sweeper
-			decideOrSweeper(workflowId);
+			decide(workflowId);
 			return true;
 		}
 		logger.debug("Workflow rerun. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
@@ -433,8 +431,7 @@ public class WorkflowExecutor {
 		// send wf start message
 		notifyWorkflowStatus(workflow, StartEndState.start);
 
-		// Invoke decider or wake up sweeper
-		decideOrSweeper(workflowId);
+		decide(workflowId);
 
 		logger.debug("Workflow rewind. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 	}
@@ -542,8 +539,7 @@ public class WorkflowExecutor {
 		// metrics
 		Monitors.recordWorkflowRetry(workflow);
 
-		// Invoke decider or wake up sweeper
-		decideOrSweeper(workflowId);
+		decide(workflowId);
 
 		logger.debug("Workflow retry. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
 	}
@@ -630,10 +626,8 @@ public class WorkflowExecutor {
 		}
 
 		edao.updateWorkflow(workflow);
-		cancelTasks(workflow, workflow.getTasks());
-		queue.remove(deciderQueue, workflow.getWorkflowId()); //remove from the sweep queue
-
 		logger.error("Workflow is cancelled. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+		cancelTasks(workflow, workflow.getTasks());
 
 		// If the following lines, for some reason fails, the sweep will take care of this again!
 		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
@@ -642,7 +636,7 @@ public class WorkflowExecutor {
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
 		String cancelWorkflow = def.getCancelWorkflow();
-		if (!StringUtils.isBlank(cancelWorkflow)) {
+		if (StringUtils.isNotEmpty(cancelWorkflow)) {
 			// Backward compatible by default
 			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
 			Map<String, Object> input = new HashMap<>();
@@ -669,6 +663,9 @@ public class WorkflowExecutor {
 			}
 		}
 
+		//remove from the sweep queue
+		queue.remove(deciderQueue, workflow.getWorkflowId());
+
 		// metrics
 		Monitors.recordWorkflowCancel(workflow);
 
@@ -691,17 +688,16 @@ public class WorkflowExecutor {
 		}
 
 		edao.updateWorkflow(workflow);
-		cancelTasks(workflow, workflow.getTasks());
-		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
-
 		logger.error("Workflow has been reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+		cancelTasks(workflow, workflow.getTasks());
 
-		// If the following lines, for some reason fails, the sweep will take
-		// care of this again!
+		// If the following lines, for some reason fails, the sweep will take care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			decide(workflow.getParentWorkflowId());
 		}
+
+		//remove from the sweep queue
+		queue.remove(deciderQueue, workflow.getWorkflowId());
 
 		// metrics
 		Monitors.recordWorkflowReset(workflow);
@@ -750,19 +746,16 @@ public class WorkflowExecutor {
 			workflow.getOutput().put("originalFailedTask", originalFailed);
 		}
 
-
 		edao.updateWorkflow(workflow);
-		cancelTasks(workflow, workflow.getTasks());
-		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
-
 		logger.error("Workflow is terminated/reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason + ",contextUser=" + workflow.getContextUser());
+		cancelTasks(workflow, workflow.getTasks());
 
 		// If the following lines, for some reason fails, the sweep will take care of this again!
 		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
 			decide(workflow.getParentWorkflowId());
 		}
 
-		if (!StringUtils.isBlank(failureWorkflow)) {
+		if (StringUtils.isNotEmpty(failureWorkflow)) {
 			// Backward compatible by default
 			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
 			Map<String, Object> input = new HashMap<>();
@@ -807,6 +800,9 @@ public class WorkflowExecutor {
 				Monitors.recordWorkflowStartError(failureWorkflow);
 			}
 		}
+
+		//remove from the sweep queue
+		queue.remove(deciderQueue, workflow.getWorkflowId());
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -878,14 +874,14 @@ public class WorkflowExecutor {
 				}
 			}
 		}
-		Task task2 = edao.getTask(result.getTaskId());
-		if (task2.getStatus().isTerminal()) {
-			// Task was already updated....
-			queue.remove(QueueUtils.getQueueName(task2), result.getTaskId());
-			String msg = "Task is already terminal as " + task2.getStatus() + "@" + task2.getEndTime() + ", workflow status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId() + ",taskId=" + task2.getTaskId()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser();
-			logger.warn(msg);
-			return;
-		}
+//		Task task2 = edao.getTask(result.getTaskId());
+//		if (task2.getStatus().isTerminal()) {
+//			// Task was already updated....
+//			queue.remove(QueueUtils.getQueueName(task2), result.getTaskId());
+//			String msg = "Task is already terminal as " + task2.getStatus() + "@" + task2.getEndTime() + ", workflow status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId() + ",taskId=" + task2.getTaskId()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser();
+//			logger.warn(msg);
+//			return;
+//		}
 		edao.updateTask(task);
 
 		result.getLogs().forEach(tl -> tl.setTaskId(task.getTaskId()));
@@ -921,7 +917,11 @@ public class WorkflowExecutor {
 		}
 
 		// Invoke decider or wake up sweeper
-		decideOrSweeper(workflowId);
+		if (lazyDecider) {
+			wakeUpSweeper(workflowId);
+		} else {
+			decide(workflowId);
+		}
 
 		if (task.getStatus().isTerminal()) {
 			long duration = getTaskDuration(0, task);
@@ -1045,14 +1045,10 @@ public class WorkflowExecutor {
 			}
 
 		} catch (TerminateWorkflow tw) {
-			if (tw.cancelled) {
-				return true;
-			}
-
 			String error = "Error in workflow execution: " + tw.getMessage() +
-					", workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser();
+					",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser();
 			if (tw.task != null) {
-				error += ", taskId=" + tw.task.getTaskId() + ",taskRefName=" + tw.task.getReferenceTaskName();
+				error += ",taskId=" + tw.task.getTaskId() + ",taskRefName=" + tw.task.getReferenceTaskName();
 			}
 			logger.error(error, tw);
 			terminate(def, workflow, tw);
@@ -1091,11 +1087,11 @@ public class WorkflowExecutor {
 			workflow.setCorrelationId(correlationId);
 		}
 		edao.updateWorkflow(workflow);
+
 		// metrics
 		Monitors.recordWorkflowResume(workflow);
 
-		// Invoke decider or wake up sweeper
-		decideOrSweeper(workflowId);
+		decide(workflowId);
 	}
 
 	public void skipTaskFromWorkflow(String workflowId, String taskReferenceName, SkipTaskRequest skipTaskRequest)  throws Exception {
@@ -1664,13 +1660,6 @@ public class WorkflowExecutor {
 			rerunWF(workflowId, cancelled, null, null, null, null, null);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-	}
-	private void decideOrSweeper(String workflowId) throws Exception {
-		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
-		} else {
-			decide(workflowId);
 		}
 	}
 }
