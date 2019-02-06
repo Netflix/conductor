@@ -584,10 +584,14 @@ public class WorkflowExecutor {
 
 	public String cancelWorkflow(String workflowId , String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow.getStatus().isTerminal() || workflow.getStatus().equals(WorkflowStatus.CANCELLED) ) {
+			String msg = "Workflow can not be cancelled because its already "+workflow.getStatus() ;
+			logger.error("Workflow can not be cancelled because its already  " + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
+			throw new ApplicationException(Code.CONFLICT, msg);
+		}
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
-
 		return cancelWorkflow(workflow, reason);
 	}
 
@@ -909,6 +913,12 @@ public class WorkflowExecutor {
 			long lastDuration = task.getEndTime() - task.getStartTime();
 			Monitors.recordTaskExecutionTime(task, duration, true);
 			Monitors.recordTaskExecutionTime(task, lastDuration, false);
+			if(task.getStatus().equals(Status.COMPLETED)) {
+				Monitors.recordTasksCompleted(task);
+			}
+			if(task.getStatus().equals(Status.FAILED)) {
+				Monitors.recordTasksFailed(task);
+			}
 		}
 	}
 
@@ -985,6 +995,7 @@ public class WorkflowExecutor {
 						tasksToBeUpdated.add(task);
 						stateChanged = true;
 					}
+
 				}
 			}
 			stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
@@ -993,6 +1004,7 @@ public class WorkflowExecutor {
 				edao.updateTasks(tasksToBeUpdated);
 				edao.updateWorkflow(workflow);
 				queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());
+
 			}
 
 			if (outcome.startWorkflow != null) {
