@@ -110,6 +110,7 @@ public class ParametersUtils {
 		wf.put("schemaVersion", workflow.getSchemaVersion());
 		wf.put("workflowIds", workflow.getWorkflowIds());
 		wf.put("authorization", workflow.getAuthorization());
+		wf.put("contextUser", workflow.getContextUser());
 
 		String correlationId = workflow.getCorrelationId();
 		if (StringUtils.isNotEmpty(correlationId) && correlationId.startsWith("{") && correlationId.endsWith("}")) {
