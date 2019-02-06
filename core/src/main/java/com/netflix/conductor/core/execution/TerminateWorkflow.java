@@ -44,4 +44,5 @@ public class TerminateWorkflow extends RuntimeException {
 		this.workflowStatus = workflowStatus;
 		this.task = task;
 	}
+
 }
