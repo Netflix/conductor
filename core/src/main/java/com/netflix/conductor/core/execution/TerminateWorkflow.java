@@ -30,7 +30,7 @@ public class TerminateWorkflow extends RuntimeException {
 	WorkflowStatus workflowStatus;
 	
 	Task task;
-
+	
 	TerminateWorkflow(String reason){
 		this(reason, WorkflowStatus.FAILED);
 	}
@@ -44,5 +44,5 @@ public class TerminateWorkflow extends RuntimeException {
 		this.workflowStatus = workflowStatus;
 		this.task = task;
 	}
-
+	
 }
