@@ -1,8 +1,13 @@
 plugins {
     id 'de.sebastianboegl.shadow.transformer.log4j' version '2.1.1'
     id 'com.github.johnrengelman.shadow' version '1.2.4'
+    id 'application'
     id 'java'
 }
+
+mainClassName = "com.netflix.conductor.archiver.Main"
+
+sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
