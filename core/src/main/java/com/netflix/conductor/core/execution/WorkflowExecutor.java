@@ -675,7 +675,7 @@ public class WorkflowExecutor {
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
 
-		logger.debug("Workflow has cancelled, workflowId=" + workflow.getWorkflowId()+",input="+workflow.getInput()+",correlationId="+workflow.getCorrelationId()+",output="+workflow.getOutput() + ",contextUser=" + workflow.getContextUser());
+		logger.debug("Workflow has cancelled, workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
 		return workflowId;
 	}
 
