@@ -748,7 +748,8 @@ public class WorkflowExecutor {
 
 		edao.updateWorkflow(workflow);
 		logger.error("Workflow is terminated/reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason + ",contextUser=" + workflow.getContextUser());
-		cancelTasks(workflow, workflow.getTasks());
+		List<Task> tasks = workflow.getTasks();
+		cancelTasks(workflow, tasks);
 
 		// If the following lines, for some reason fails, the sweep will take care of this again!
 		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
@@ -801,8 +802,7 @@ public class WorkflowExecutor {
 			}
 		}
 
-		//remove from the sweep queue
-		queue.remove(deciderQueue, workflow.getWorkflowId());
+		queue.remove(deciderQueue, workflow.getWorkflowId()); //remove from the sweep queue
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
@@ -916,7 +916,7 @@ public class WorkflowExecutor {
 				break;
 		}
 
-		// Invoke decider or wake up sweeper
+		// Who calls decider ? Sweeper or current thread?
 		if (lazyDecider) {
 			wakeUpSweeper(workflowId);
 		} else {
@@ -1087,10 +1087,8 @@ public class WorkflowExecutor {
 			workflow.setCorrelationId(correlationId);
 		}
 		edao.updateWorkflow(workflow);
-
 		// metrics
 		Monitors.recordWorkflowResume(workflow);
-
 		decide(workflowId);
 	}
 
