@@ -66,7 +66,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -101,6 +101,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -113,9 +120,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -191,7 +214,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -226,6 +249,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -242,9 +272,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -326,7 +372,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -361,6 +407,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -373,9 +426,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -386,12 +455,14 @@
     },
     "jacocoAgent": {
         "org.jacoco:org.jacoco.agent": {
-            "locked": "0.8.1"
+            "locked": "0.8.1",
+            "requested": "0.8.1"
         }
     },
     "jacocoAnt": {
         "org.jacoco:org.jacoco.ant": {
-            "locked": "0.8.1"
+            "locked": "0.8.1",
+            "requested": "0.8.1"
         }
     },
     "runtime": {
@@ -461,7 +532,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -496,6 +567,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -508,9 +586,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -586,7 +680,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -621,6 +715,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -633,9 +734,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -711,7 +828,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -746,6 +863,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -762,9 +886,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -844,7 +984,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -879,6 +1019,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -895,9 +1042,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -977,7 +1140,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -1012,6 +1175,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -1028,9 +1198,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -1110,7 +1296,7 @@
             "project": true
         },
         "com.netflix.runtime:health-api": {
-            "locked": "1.1.3",
+            "locked": "1.1.4",
             "requested": "1.1.+"
         },
         "com.netflix.servo:servo-core": {
@@ -1145,6 +1331,13 @@
             "locked": "1.5.9",
             "requested": "1.5.9"
         },
+        "javax.el:javax.el-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -1161,9 +1354,25 @@
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.2.1"
+        },
+        "org.glassfish:javax.el": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",

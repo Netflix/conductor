@@ -13,7 +13,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Optional;
 

@@ -1,6 +1,7 @@
 package com.netflix.conductor.elasticsearch;
 
 import com.netflix.conductor.service.Lifecycle;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

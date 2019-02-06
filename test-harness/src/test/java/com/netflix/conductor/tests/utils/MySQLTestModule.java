@@ -9,6 +9,8 @@ import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.execution.WorkflowStatusListener;
+import com.netflix.conductor.core.execution.WorkflowStatusListenerStub;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -20,6 +22,8 @@ import com.netflix.conductor.dao.mysql.MySQLQueueDAO;
 import com.netflix.conductor.mysql.MySQLConfiguration;
 import com.netflix.conductor.mysql.MySQLDataSourceProvider;
 import com.netflix.conductor.mysql.SystemPropertiesMySQLConfiguration;
+import com.netflix.conductor.service.MetadataService;
+import com.netflix.conductor.service.MetadataServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +54,14 @@ public class MySQLTestModule extends AbstractModule {
         bind(ExecutionDAO.class).to(MySQLExecutionDAO.class);
         bind(QueueDAO.class).to(MySQLQueueDAO.class);
         bind(IndexDAO.class).to(MockIndexDAO.class);
+        bind(WorkflowStatusListener.class).to(WorkflowStatusListenerStub.class);
 
         install(new CoreModule());
         bind(UserTask.class).asEagerSingleton();
         bind(ObjectMapper.class).toProvider(JsonMapperProvider.class);
         bind(ExternalPayloadStorage.class).to(MockExternalPayloadStorage.class);
 
+        bind(MetadataService.class).to(MetadataServiceImpl.class);
     }
 
 
