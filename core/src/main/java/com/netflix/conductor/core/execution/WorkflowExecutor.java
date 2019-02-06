@@ -602,7 +602,7 @@ public class WorkflowExecutor {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow.getStatus().isTerminal() || workflow.getStatus().equals(WorkflowStatus.CANCELLED) ) {
 			String msg = "Workflow can not be cancelled because its already "+workflow.getStatus() ;
-			logger.error("Workflow can not be cancelled because its already  " + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
+			logger.error("Workflow can not be cancelled because its already " + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
 			throw new ApplicationException(Code.CONFLICT, msg);
 		}
 		if (!workflow.getStatus().isTerminal()) {
@@ -712,7 +712,7 @@ public class WorkflowExecutor {
 	public void terminateWorkflow(String workflowId, String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow.getStatus().isTerminal()) {
-			logger.error("Workflow already finished. status=" + workflow.getStatus() + ",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
+			logger.error("Workflow already finished. status=" + workflow.getStatus() + ",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
 			throw new ApplicationException(Code.CONFLICT, "Workflow already finished. status=" + workflow.getStatus());
 		}
 
