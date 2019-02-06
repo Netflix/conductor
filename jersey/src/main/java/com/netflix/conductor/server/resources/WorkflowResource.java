@@ -117,16 +117,13 @@ public class WorkflowResource {
 		}
 
 		String contextToken = null;
-		Map<String, Object> authContext = null;
 		if (headers.getRequestHeader(CommonParams.AUTH_CONTEXT) != null) {
 			contextToken = headers.getRequestHeader(CommonParams.AUTH_CONTEXT).get(0);
-			if (StringUtils.isNotEmpty(contextToken)) {
-				authContext = executor.validateAuthContext(contextToken);
-			}
 		}
+
 		NDC.push("rest-start-" + UUID.randomUUID().toString());
 		try {
-			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth, authContext, contextToken);
+			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth, contextToken);
 		} finally {
 			NDC.remove();
 		}
