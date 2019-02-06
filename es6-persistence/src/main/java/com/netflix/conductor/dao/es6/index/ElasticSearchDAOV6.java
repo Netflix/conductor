@@ -1,3 +1,16 @@
+/**
+ * Copyright 2016 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.netflix.conductor.dao.es6.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,12 +28,9 @@ import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.es6.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
@@ -43,7 +53,6 @@ import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
@@ -71,14 +80,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Trace
 @Singleton
-public class ElasticSearchDAOV6 implements IndexDAO {
+public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO {
 
     private static Logger logger = LoggerFactory.getLogger(ElasticSearchDAOV6.class);
 
@@ -103,8 +110,6 @@ public class ElasticSearchDAOV6 implements IndexDAO {
     private static final long KEEP_ALIVE_TIME = 1L;
 
     private static final int UPDATE_REQUEST_RETRY_COUNT = 5;
-
-    private String indexPrefix;
 
     private String workflowIndexName;
 
@@ -151,25 +156,33 @@ public class ElasticSearchDAOV6 implements IndexDAO {
 
     @Override
     public void setup() throws Exception {
-        elasticSearchClient.admin().cluster().prepareHealth().setWaitForGreenStatus().execute().get();
+        waitForHealthyCluster();
 
-        setupIndexesTemplates();
+        createIndexesTemplates();
 
-        setupWorkflowIndex();
+        createWorkflowIndex();
 
-        setupTaskIndex();
+        createTaskIndex();
 
+    }
+
+    private void waitForHealthyCluster() throws Exception {
+        elasticSearchClient.admin()
+                .cluster()
+                .prepareHealth()
+                .setWaitForGreenStatus()
+                .execute()
+                .get();
     }
 
     /**
      * Initializes the indexes templates task_log, message and event, and mappings.
      */
-    private void setupIndexesTemplates() {
+    private void createIndexesTemplates() {
         try {
             initIndexesTemplates();
             updateIndexesNames();
-            Executors.newScheduledThreadPool(1)
-                    .scheduleAtFixedRate(this::updateIndexesNames, 0, 1, TimeUnit.HOURS);
+            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexesNames, 0, 1, TimeUnit.HOURS);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -207,12 +220,12 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         return indexName;
     }
 
-    private void setupWorkflowIndex() throws Exception {
+    private void createWorkflowIndex() throws Exception {
         createIndex(workflowIndexName);
         addTypeMapping(workflowIndexName, WORKFLOW_DOC_TYPE, "/mappings_docType_workflow.json");
     }
 
-    private void setupTaskIndex() throws Exception {
+    private void createTaskIndex() throws Exception {
         createIndex(taskIndexName);
         addTypeMapping(taskIndexName, TASK_DOC_TYPE, "/mappings_docType_task.json");
     }
@@ -240,22 +253,6 @@ public class ElasticSearchDAOV6 implements IndexDAO {
                 logger.error("Failed to init index " + indexName + " mappings", e);
             }
         }
-    }
-
-    String loadTypeMappingSource(String path) throws IOException {
-        return applyIndexPrefixToTemplate(IOUtils.toString(ElasticSearchDAOV6.class.getResourceAsStream(path)));
-    }
-
-    private String applyIndexPrefixToTemplate(String text) {
-        String pattern = "\"template\": \"\\*(.*)\\*\"";
-        Pattern r = Pattern.compile(pattern);
-        Matcher m = r.matcher(text);
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            m.appendReplacement(sb, m.group(0).replaceFirst(Pattern.quote(m.group(1)), indexPrefix + "_" + m.group(1)));
-        }
-        m.appendTail(sb);
-        return sb.toString();
     }
 
     private void executeIndexWorflow(Workflow workflow) {
@@ -621,18 +618,4 @@ public class ElasticSearchDAOV6 implements IndexDAO {
         return ids;
     }
 
-    private BoolQueryBuilder boolQueryBuilder(String expression, String queryString) throws ParserException {
-        QueryBuilder queryBuilder = QueryBuilders.matchAllQuery();
-        if (StringUtils.isNotEmpty(expression)) {
-            Expression exp = Expression.fromString(expression);
-            queryBuilder = exp.getFilterBuilder();
-        }
-        BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(queryBuilder);
-        QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(queryString);
-        return QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
-    }
-
-    private String indexName(String documentType) {
-        return indexPrefix + "_" + documentType;
-    }
 }

@@ -20,9 +20,25 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -50,9 +66,25 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -80,9 +112,25 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -91,12 +139,14 @@
     },
     "jacocoAgent": {
         "org.jacoco:org.jacoco.agent": {
-            "locked": "0.8.1"
+            "locked": "0.8.1",
+            "requested": "0.8.1"
         }
     },
     "jacocoAnt": {
         "org.jacoco:org.jacoco.ant": {
-            "locked": "0.8.1"
+            "locked": "0.8.1",
+            "requested": "0.8.1"
         }
     },
     "runtime": {
@@ -120,9 +170,25 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -150,9 +216,25 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -180,6 +262,10 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
@@ -187,6 +273,18 @@
         "junit:junit": {
             "locked": "4.12",
             "requested": "4.12"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -218,6 +316,10 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
@@ -225,6 +327,18 @@
         "junit:junit": {
             "locked": "4.12",
             "requested": "4.12"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -256,6 +370,10 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
@@ -263,6 +381,18 @@
         "junit:junit": {
             "locked": "4.12",
             "requested": "4.12"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
@@ -294,6 +424,10 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
+        "javax.el:javax.el-api": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
@@ -301,6 +435,18 @@
         "junit:junit": {
             "locked": "4.12",
             "requested": "4.12"
+        },
+        "org.apache.commons:commons-lang3": {
+            "locked": "3.0",
+            "requested": "3.0"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "requested": "3.0.0"
+        },
+        "org.hibernate:hibernate-validator": {
+            "locked": "6.0.13.Final",
+            "requested": "6.0.13.Final"
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
