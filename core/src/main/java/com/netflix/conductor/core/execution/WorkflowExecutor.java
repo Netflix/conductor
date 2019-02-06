@@ -236,8 +236,8 @@ public class WorkflowExecutor {
 
 			// Invoke decider or wake up sweeper
 			decideOrSweeper(workflowId);
-            logger.debug("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
-                    + ",correlationId=" + wf.getCorrelationId()+ ",contextUser=" + wf.getContextUser());
+			logger.debug("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
+					+ ",correlationId=" + wf.getCorrelationId()+ ",contextUser=" + wf.getContextUser());
 			return workflowId;
 
 		}catch (Exception e) {
@@ -436,7 +436,7 @@ public class WorkflowExecutor {
 		// Invoke decider or wake up sweeper
 		decideOrSweeper(workflowId);
 
-        logger.debug("Workflow rewind. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+		logger.debug("Workflow rewind. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 	}
 
 	public void retry(String workflowId, String correlationId) throws Exception {
@@ -545,7 +545,7 @@ public class WorkflowExecutor {
 		// Invoke decider or wake up sweeper
 		decideOrSweeper(workflowId);
 
-        logger.debug("Workflow retry. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
+		logger.debug("Workflow retry. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
 	}
 
 	public List<Workflow> getStatusByCorrelationId(String workflowName, String correlationId, boolean includeClosed) throws Exception {
@@ -633,7 +633,7 @@ public class WorkflowExecutor {
 		cancelTasks(workflow, workflow.getTasks());
 		queue.remove(deciderQueue, workflow.getWorkflowId()); //remove from the sweep queue
 
-        logger.error("Workflow is cancelled. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+		logger.error("Workflow is cancelled. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 
 		// If the following lines, for some reason fails, the sweep will take care of this again!
 		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
@@ -694,7 +694,7 @@ public class WorkflowExecutor {
 		cancelTasks(workflow, workflow.getTasks());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
-        logger.error("Workflow has been reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+		logger.error("Workflow has been reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -755,7 +755,7 @@ public class WorkflowExecutor {
 		cancelTasks(workflow, workflow.getTasks());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
-        logger.error("Workflow is terminated/reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason + ",contextUser=" + workflow.getContextUser());
+		logger.error("Workflow is terminated/reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason + ",contextUser=" + workflow.getContextUser());
 
 		// If the following lines, for some reason fails, the sweep will take care of this again!
 		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
@@ -786,13 +786,13 @@ public class WorkflowExecutor {
 				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
 				input.put("failedTask", map);
 
-                // failedTask represents the task in current workflow only
-                failedTask.getOutputData().computeIfPresent("originalFailedTask", (key, oldValue) -> {
-                    input.put("originalFailedTask", oldValue);
-                    return null;
-                });
+				// failedTask represents the task in current workflow only
+				failedTask.getOutputData().computeIfPresent("originalFailedTask", (key, oldValue) -> {
+					input.put("originalFailedTask", oldValue);
+					return null;
+				});
 
-                logger.error("Error in task execution. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
+				logger.error("Error in task execution. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			}
 
 			try {
