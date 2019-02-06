@@ -99,7 +99,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else if (subWorkflowStatus.isSuccessful()) {
 			task.setStatus(Status.COMPLETED);
 		} else if (subWorkflowStatus == WorkflowStatus.CANCELLED) {
-			task.setStatus(Status.FAILED);
+			task.setStatus(Status.CANCELED);
 			task.setReasonForIncompletion("Sub-workflow " + task.getReferenceTaskName() + " has been cancelled");
 			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else if (subWorkflowStatus == WorkflowStatus.TERMINATED) {

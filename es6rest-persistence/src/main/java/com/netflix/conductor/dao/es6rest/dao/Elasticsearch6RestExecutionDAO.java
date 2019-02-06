@@ -564,7 +564,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         Preconditions.checkNotNull(correlationId, "correlationId cannot be null");
 
         String sha256hex = DigestUtils.sha256Hex(correlationId);
-        QueryBuilder query = QueryBuilders.termQuery("sha256hex.keyword", sha256hex); // TODO Do not forget about data migration
+        QueryBuilder query = QueryBuilders.termQuery("sha256hex.keyword", sha256hex);
         List<HashMap> wraps = findAll(indexes.get(CORR_ID_TO_WORKFLOWS), types.get(CORR_ID_TO_WORKFLOWS), query, HashMap.class);
         Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId")).collect(Collectors.toSet());
         List<Workflow> workflows = workflowIds.stream().map(this::getWorkflow).collect(Collectors.toList());
@@ -581,7 +581,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         try {
             String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
-            if (insert(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION), id, toMap(ee))) {
+            if (insert(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION), id, ee)) {
                 indexer.add(ee);
 
                 if (logger.isDebugEnabled())
@@ -606,7 +606,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         try {
             String id = toId(ee.getName(), ee.getEvent(), ee.getMessageId(), ee.getId());
 
-            upsert(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION), id, toMap(ee));
+            upsert(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION), id, ee);
 
             indexer.add(ee);
             if (logger.isDebugEnabled())
@@ -663,7 +663,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String field = (domain == null) ? "DEFAULT" : domain;
         String id = toId(queueName, field);
 
-        upsert(indexes.get(POLL_DATA), types.get(POLL_DATA), id, toMap(pollData));
+        upsert(indexes.get(POLL_DATA), types.get(POLL_DATA), id, pollData);
 
         if (logger.isDebugEnabled())
             logger.debug("updateLastPoll: done");
@@ -756,13 +756,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String indexName = indexes.get(TASK);
         String typeName = types.get(TASK);
         String id = toId(task.getTaskId());
-        Map<String, ?> payload = toMap(task);
 
-        if (exists(indexName, typeName, id)) {
-            update(indexName, typeName, id, payload);
-        } else {
-            insert(indexName, typeName, id, payload);
-        }
+        upsert(indexName, typeName, id, task);
     }
 
     private void deleteTask(Task task) {
@@ -832,14 +827,14 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         String indexName = indexes.get(WORKFLOW);
         String typeName = types.get(WORKFLOW);
         String id = toId(workflow.getWorkflowId());
-        insert(indexName, typeName, id, toMap(workflow));
+        insert(indexName, typeName, id, workflow);
     }
 
     private void updateWorkflowInternal(Workflow workflow) {
         String indexName = indexes.get(WORKFLOW);
         String typeName = types.get(WORKFLOW);
         String id = toId(workflow.getWorkflowId());
-        update(indexName, typeName, id, toMap(workflow));
+        update(indexName, typeName, id, workflow);
     }
 
     private void deleteWorkflow(Workflow workflow) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.netflix.conductor.common.Versioned;
 import com.netflix.conductor.core.config.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -17,7 +18,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -264,7 +264,7 @@ abstract class Elasticsearch6RestAbstractDAO {
         });
     }
 
-    boolean insert(String indexName, String typeName, String id, Map<String, ?> payload) {
+    boolean insert(String indexName, String typeName, String id, Object payload) {
         ensureIndexExists(indexName);
         AtomicBoolean result = new AtomicBoolean(false);
 
@@ -272,7 +272,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             try {
                 IndexRequest request = new IndexRequest()
                         .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .source(payload)
+                        .source(toMap(payload))
                         .create(true)
                         .index(indexName)
                         .type(typeName)
@@ -291,20 +291,29 @@ abstract class Elasticsearch6RestAbstractDAO {
         return result.get();
     }
 
-    void update(String indexName, String typeName, String id, Map<String, ?> payload) {
+    void update(String indexName, String typeName, String id, Object payload) {
         ensureIndexExists(indexName);
         doWithRetry(() -> {
             try {
+
                 IndexRequest request = new IndexRequest()
                         .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .source(payload)
+                        .source(toMap(payload))
                         .index(indexName)
                         .type(typeName)
                         .id(id);
 
+                if (payload instanceof Versioned) {
+                    Versioned versioned = (Versioned)payload;
+                    request.version(versioned.getRevision());
+                }
+
                 client.index(request);
             } catch (Exception ex) {
-                if (!isVerConflictException(ex)) {
+                if (isVerConflictException(ex)) {
+                    String error = String.format("Update conflict for %s/%s/%s %s", indexName, typeName, id, toJson(payload));
+                    throw new IllegalStateException(error, ex);
+                } else {
                     logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
                     throw new RuntimeException(ex.getMessage(), ex);
                 }
@@ -312,25 +321,12 @@ abstract class Elasticsearch6RestAbstractDAO {
         });
     }
 
-    void upsert(String indexName, String typeName, String id, Map<String, ?> payload) {
-        ensureIndexExists(indexName);
-        doWithRetry(() -> {
-            try {
-                UpdateRequest request = new UpdateRequest().setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .docAsUpsert(true)
-                        .doc(payload)
-                        .index(indexName)
-                        .type(typeName)
-                        .id(id);
-
-                client.update(request);
-            } catch (Exception ex) {
-                if (!isVerConflictException(ex)) {
-                    logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-                    throw new RuntimeException(ex.getMessage(), ex);
-                }
-            }
-        });
+    void upsert(String indexName, String typeName, String id, Object payload) {
+        if (exists(indexName, typeName, id)) {
+            update(indexName, typeName, id, payload);
+        } else {
+            insert(indexName, typeName, id, payload);
+        }
     }
 
     GetResponse findOne(String indexName, String typeName, String id) {
@@ -370,7 +366,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
             GetResponse record = result.get();
             if (record.isExists()) {
-                return convert(record.getSource(), clazz);
+                return convert(record.getSource(), clazz, record.getVersion());
             }
             return null;
         } catch (Exception ex) {
@@ -439,6 +435,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.query(query);
             sourceBuilder.size(limit);
+            sourceBuilder.version(true);
 
             Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
@@ -451,7 +448,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
             while (searchHits != null && searchHits.length > 0) {
                 for (SearchHit hit : searchHits) {
-                    result.add(convert(hit.getSourceAsMap(), clazz));
+                    result.add(convert(hit.getSourceAsMap(), clazz, hit.getVersion()));
                 }
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
@@ -527,11 +524,20 @@ abstract class Elasticsearch6RestAbstractDAO {
         }
     }
 
-    private <T> T convert(Map map, Class<T> clazz) {
-        return mapper.convertValue(map, clazz);
+    private <T> T convert(Map map, Class<T> clazz, Long version) {
+        T value = mapper.convertValue(map, clazz);
+        try {
+            if (value instanceof Versioned) {
+                Versioned versioned = (Versioned)value;
+                versioned.setRevision(version);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return value;
     }
 
-    Map<String, ?> toMap(Object value) {
+    private Map<String, ?> toMap(Object value) {
         return mapper.convertValue(value, MAP_ALL_TYPE);
     }
 

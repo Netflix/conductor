@@ -234,7 +234,7 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(wf, StartEndState.start);
 
-			decide(workflowId);
+			decideOrSweeper(workflowId);
 			logger.debug("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
 					+ ",correlationId=" + wf.getCorrelationId()+ ",contextUser=" + wf.getContextUser());
 			return workflowId;
@@ -284,7 +284,7 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
 
-			decide(workflowId);
+			decideOrSweeper(workflowId);
 			return true;
 		}
 
@@ -877,14 +877,14 @@ public class WorkflowExecutor {
 				}
 			}
 		}
-//		Task task2 = edao.getTask(result.getTaskId());
-//		if (task2.getStatus().isTerminal()) {
-//			// Task was already updated....
-//			queue.remove(QueueUtils.getQueueName(task2), result.getTaskId());
-//			String msg = "Task is already terminal as " + task2.getStatus() + "@" + task2.getEndTime() + ", workflow status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId() + ",taskId=" + task2.getTaskId()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser();
-//			logger.warn(msg);
-//			return;
-//		}
+		Task task2 = edao.getTask(result.getTaskId());
+		if (task2.getStatus().isTerminal()) {
+			// Task was already updated....
+			queue.remove(QueueUtils.getQueueName(task2), result.getTaskId());
+			String msg = "Task is already terminal as " + task2.getStatus() + "@" + task2.getEndTime() + ", workflow status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId() + ",taskId=" + task2.getTaskId()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser();
+			logger.warn(msg);
+			return;
+		}
 		edao.updateTask(task);
 
 		result.getLogs().forEach(tl -> tl.setTaskId(task.getTaskId()));
@@ -920,11 +920,7 @@ public class WorkflowExecutor {
 		}
 
 		// Who calls decider ? Sweeper or current thread?
-		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
-		} else {
-			decide(workflowId);
-		}
+		decideOrSweeper(workflowId);
 
 		if (task.getStatus().isTerminal()) {
 			long duration = getTaskDuration(0, task);
@@ -956,12 +952,12 @@ public class WorkflowExecutor {
 			}
 		}
 
-		Workflow workflow = edao.getWorkflow(workflowId, false);
-
-		// Must not wake up sweeper if workflow is already finished
-		if (workflow.getStatus().isTerminal()) {
-			return;
-		}
+//		Workflow workflow = edao.getWorkflow(workflowId, false);
+//
+//		// Must not wake up sweeper if workflow is already finished
+//		if (workflow.getStatus().isTerminal()) {
+//			return;
+//		}
 
 		// Otherwise wake it up by unacking message via queue
 		queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
@@ -1000,6 +996,7 @@ public class WorkflowExecutor {
 
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow.getStatus().isTerminal()) {
+			logger.debug("Invoked decide for finished workflow " + workflowId);
 			return true;
 		}
 
@@ -1665,6 +1662,14 @@ public class WorkflowExecutor {
 			rerunWF(workflowId, cancelled, null, null, null, null, null);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void decideOrSweeper(String workflowId) throws Exception {
+		if (lazyDecider) {
+			wakeUpSweeper(workflowId);
+		} else {
+			decide(workflowId);
 		}
 	}
 }
