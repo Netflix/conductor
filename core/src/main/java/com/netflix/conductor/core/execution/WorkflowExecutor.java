@@ -234,7 +234,7 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(wf, StartEndState.start);
 
-			decideOrSweeper(workflowId);
+			decide(workflowId);
 			logger.debug("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
 					+ ",correlationId=" + wf.getCorrelationId()+ ",contextUser=" + wf.getContextUser());
 			return workflowId;
@@ -284,7 +284,7 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(workflow, StartEndState.start);
 
-			decideOrSweeper(workflowId);
+			decide(workflowId);
 			return true;
 		}
 
@@ -920,7 +920,11 @@ public class WorkflowExecutor {
 		}
 
 		// Who calls decider ? Sweeper or current thread?
-		decideOrSweeper(workflowId);
+		if (lazyDecider) {
+			wakeUpSweeper(workflowId);
+		} else {
+			decide(workflowId);
+		}
 
 		if (task.getStatus().isTerminal()) {
 			long duration = getTaskDuration(0, task);
@@ -1093,7 +1097,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 		// metrics
 		Monitors.recordWorkflowResume(workflow);
-		decideOrSweeper(workflowId);
+		decide(workflowId);
 	}
 
 	public void skipTaskFromWorkflow(String workflowId, String taskReferenceName, SkipTaskRequest skipTaskRequest)  throws Exception {
@@ -1135,7 +1139,7 @@ public class WorkflowExecutor {
 			theTask.setOutputData(skipTaskRequest.getTaskOutput());
 		}
 		edao.createTasks(Arrays.asList(theTask));
-		decideOrSweeper(workflowId);
+		decide(workflowId);
 	}
 
 	public Workflow getWorkflow(String workflowId, boolean includeTasks) {
@@ -1662,14 +1666,6 @@ public class WorkflowExecutor {
 			rerunWF(workflowId, cancelled, null, null, null, null, null);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-	}
-
-	private void decideOrSweeper(String workflowId) throws Exception {
-		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
-		} else {
-			decide(workflowId);
 		}
 	}
 }
