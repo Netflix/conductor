@@ -143,6 +143,7 @@ public class EventProcessor {
 
 	private void handle(ObservableQueue queue, Message msg) {
 
+		NDC.push("event-"+msg.getId());
 		try {
 
 			List<Future<Boolean>> futures = new LinkedList<>();
@@ -175,7 +176,6 @@ public class EventProcessor {
 
 				String condition = handler.getCondition();
 				if (StringUtils.isNotEmpty(condition)) {
-					logger.debug("condition: {}", condition);
 					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
 					if (!success) {
 						logger.debug("handler {} condition {} did not match payload {}", handler.getName(), condition, payloadObj);
@@ -198,7 +198,7 @@ public class EventProcessor {
 
 					boolean anyRunning = es.runningWorkflowsByTags(tags);
 					if (!anyRunning) {
-						logger.debug("handler {} for payload {} did not find running workflows with tags {}", handler.getName(), payloadObj, tags);
+						logger.debug("handler {} did not find running workflows with tags {}", handler.getName(), tags);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setEvent(handler.getEvent());
@@ -221,7 +221,7 @@ public class EventProcessor {
 					if (StringUtils.isNotEmpty(action.getCondition())) {
 						Boolean success = ScriptEvaluator.evalBool(action.getCondition(), payloadObj);
 						if (!success) {
-							logger.debug("{} condition {} did not match payload {}", action, action.getCondition(), payloadObj);
+							logger.debug("{} did not match payload {}", action, payloadObj);
 							EventExecution ee = new EventExecution(id, msg.getId());
 							ee.setCreated(System.currentTimeMillis());
 							ee.setEvent(handler.getEvent());
@@ -252,6 +252,7 @@ public class EventProcessor {
 
 			// if no tags for all handlers - ack message
 			if (tagsNotMatchCounter > 0 && tagsMatchCounter == 0) {
+				logger.debug("No running workflows for the tags. Ack for " + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 				return;
 			}
@@ -268,8 +269,10 @@ public class EventProcessor {
 			}
 
 			if (anySuccess) {
+				logger.debug("Message has been processed. Ack for messageId=" + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 			} else {
+				logger.debug("Message has to be redelivered. Unack for messageId=" + msg.getReceipt());
 				queue.unack(Collections.singletonList(msg));
 			}
 
@@ -277,6 +280,7 @@ public class EventProcessor {
 			logger.error(e.getMessage(), e);
 			queue.unack(Collections.singletonList(msg));
 		} finally {
+			NDC.remove();
 			Monitors.recordEventQueueMessagesProcessed(queue.getType(), queue.getName(), 1);
 		}
 	}
@@ -286,8 +290,7 @@ public class EventProcessor {
 			boolean success = false;
 			NDC.push("event-"+ee.getMessageId());
 			try {
-
-				logger.debug("Executing {} with payload {}", action.getAction(), payload);
+				logger.debug("Executing " + action);
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);
