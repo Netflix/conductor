@@ -29,8 +29,6 @@ public class TerminateWorkflow extends RuntimeException {
 	
 	WorkflowStatus workflowStatus;
 	
-	boolean cancelled;
-
 	Task task;
 
 	TerminateWorkflow(String reason){
@@ -45,10 +43,5 @@ public class TerminateWorkflow extends RuntimeException {
 		super(reason);
 		this.workflowStatus = workflowStatus;
 		this.task = task;
-	}
-
-	TerminateWorkflow(String reason, WorkflowStatus workflowStatus, Task task, boolean cancelled){
-		this(reason, workflowStatus, task);
-		this.cancelled = cancelled;
 	}
 }
