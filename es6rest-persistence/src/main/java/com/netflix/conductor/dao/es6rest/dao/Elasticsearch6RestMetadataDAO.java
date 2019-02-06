@@ -260,7 +260,7 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
         String typeName = toTypeName(EVENT_HANDLERS);
         String id = toId(handler.getName());
 
-        insert(indexName, typeName, id, toMap(handler));
+        insert(indexName, typeName, id, handler);
 
         if (logger.isDebugEnabled())
             logger.debug("addEventHandler: done");
@@ -281,7 +281,7 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
         String typeName = toTypeName(EVENT_HANDLERS);
         String id = toId(eventHandler.getName());
 
-        update(indexName, typeName, id, toMap(eventHandler));
+        update(indexName, typeName, id, eventHandler);
 
         if (logger.isDebugEnabled())
             logger.debug("updateEventHandler: done");
@@ -377,11 +377,7 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
         String typeName = toTypeName(TASK_DEFS);
         String id = toId(def.getName());
 
-        if (exists(indexName, typeName, id)) {
-            update(indexName, typeName, id, toMap(def));
-        } else {
-            insert(indexName, typeName, id, toMap(def));
-        }
+        upsert(indexName, typeName, id, def);
 
         refreshTaskDefs();
         if (logger.isDebugEnabled())
@@ -399,11 +395,7 @@ public class Elasticsearch6RestMetadataDAO extends Elasticsearch6RestAbstractDAO
         String typeName = toTypeName(WORKFLOW_DEFS);
         String id = toId(def.getName(), String.valueOf(def.getVersion()));
 
-        if (exists(indexName, typeName, id)) {
-            update(indexName, typeName, id, toMap(def));
-        } else {
-            insert(indexName, typeName, id, toMap(def));
-        }
+        upsert(indexName, typeName, id, def);
 
         if (logger.isDebugEnabled())
             logger.debug("insertOrUpdate: done");

@@ -99,7 +99,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else if (subWorkflowStatus.isSuccessful()) {
 			task.setStatus(Status.COMPLETED);
 		} else if (subWorkflowStatus == WorkflowStatus.CANCELLED) {
-			task.setStatus(Status.FAILED);
+			task.setStatus(Status.CANCELED);
 			task.setReasonForIncompletion("Sub-workflow " + task.getReferenceTaskName() + " has been cancelled");
 			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else if (subWorkflowStatus == WorkflowStatus.TERMINATED) {
@@ -152,10 +152,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 			provider.cancelWorkflow(subWorkflow, "Parent workflow has been cancelled");
 		} else if (workflow.getStatus() == WorkflowStatus.FAILED) {
 			subWorkflow.setStatus(WorkflowStatus.FAILED);
-			provider.terminateWorkflow(subWorkflow, "Parent workflow has been failed", null);
+			provider.terminateWorkflow(subWorkflow, "Parent workflow has been failed", null, null);
 		} else {
 			subWorkflow.setStatus(WorkflowStatus.TERMINATED);
-			provider.terminateWorkflow(subWorkflow, "Parent workflow has been terminated with status " + workflow.getStatus(), null);
+			provider.terminateWorkflow(subWorkflow, "Parent workflow has been terminated with status " + workflow.getStatus(), null, null);
 		}
 	}
 
@@ -206,7 +206,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 			subWorkflow.setStatus(WorkflowStatus.FAILED);
 			subWorkflow.setReasonForIncompletion(ex.getMessage());
 			try {
-				provider.terminateWorkflow(subWorkflow, ex.getMessage(), null);
+				provider.terminateWorkflow(subWorkflow, ex.getMessage(), null, null);
 			} catch (Exception ignore) {
 			}
 		}

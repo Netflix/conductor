@@ -15,12 +15,13 @@
  */
 package com.netflix.conductor.common.run;
 
+import com.netflix.conductor.common.Versioned;
 import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
 
 import java.util.*;
 
-public class Workflow extends Auditable{
+public class Workflow extends Auditable implements Versioned {
 	
 	public enum  WorkflowStatus {
 		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false), CANCELLED(true, false), PAUSED(false, true), RESET(true, false);
@@ -42,7 +43,9 @@ public class Workflow extends Auditable{
 			return successful;
 		}
 	}
-	
+
+	private long revision = 1;
+
 	private WorkflowStatus status = WorkflowStatus.RUNNING;
 	
 	private long endTime;
@@ -352,6 +355,16 @@ public class Workflow extends Auditable{
 
 	public void setContextUser(String contextUser) {
 		this.contextUser = contextUser;
+	}
+
+	@Override
+	public long getRevision() {
+		return revision;
+	}
+
+	@Override
+	public void setRevision(long revision) {
+		this.revision = revision;
 	}
 
 	@Override
