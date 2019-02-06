@@ -163,13 +163,13 @@ public class DeciderService {
 				List<Task> nextTasks = getNextTask(def, workflow, task);
 				nextTasks.forEach(rt -> tasksToBeScheduled.put(rt.getReferenceTaskName(), rt));
 				outcome.tasksToBeUpdated.add(task);
-				logger.debug("Scheduling Tasks from " + task.getTaskDefName() + ", next = " + nextTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser());
+				logger.debug("Scheduling Tasks from " + task.getReferenceTaskName() + ", next = " + nextTasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser());
 			}
 		}
 		
 		List<Task> unScheduledTasks = tasksToBeScheduled.values().stream().filter(tt -> !executedTaskRefNames.contains(tt.getReferenceTaskName())).collect(Collectors.toList());
 		if (!unScheduledTasks.isEmpty()) {
-			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			outcome.tasksToBeScheduled.addAll(unScheduledTasks);
 		}
 		updateOutput(def, workflow);
@@ -319,7 +319,7 @@ public class DeciderService {
 
 			task.setRetried(true);
 			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId() + ",taskId" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId() + ",reason=" + task.getReasonForIncompletion() + ",status=" + status + ",contextUser=" + workflow.getContextUser());
-			throw new TerminateWorkflow(reason, status, task, task.getStatus().equals(Status.CANCELED));
+			throw new TerminateWorkflow(reason, status, task);
 		}
 
 		// retry... - but not immediately - put a delay...
