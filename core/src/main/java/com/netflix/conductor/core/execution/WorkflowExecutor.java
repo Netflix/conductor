@@ -234,7 +234,6 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(wf, StartEndState.start);
 
-			// Invoke decider or wake up sweeper
 			decide(workflowId);
 			logger.debug("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
 					+ ",correlationId=" + wf.getCorrelationId()+ ",contextUser=" + wf.getContextUser());
@@ -432,7 +431,6 @@ public class WorkflowExecutor {
 		notifyWorkflowStatus(workflow, StartEndState.start);
 
 		decide(workflowId);
-
 		logger.debug("Workflow rewind. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 	}
 
@@ -540,7 +538,6 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowRetry(workflow);
 
 		decide(workflowId);
-
 		logger.debug("Workflow retry. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
 	}
 
@@ -802,7 +799,7 @@ public class WorkflowExecutor {
 			}
 		}
 
-		queue.remove(deciderQueue, workflow.getWorkflowId()); //remove from the sweep queue
+		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
