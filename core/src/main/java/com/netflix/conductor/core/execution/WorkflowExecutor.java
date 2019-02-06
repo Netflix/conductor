@@ -956,13 +956,6 @@ public class WorkflowExecutor {
 			}
 		}
 
-//		Workflow workflow = edao.getWorkflow(workflowId, false);
-//
-//		// Must not wake up sweeper if workflow is already finished
-//		if (workflow.getStatus().isTerminal()) {
-//			return;
-//		}
-
 		// Otherwise wake it up by unacking message via queue
 		queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
 	}
