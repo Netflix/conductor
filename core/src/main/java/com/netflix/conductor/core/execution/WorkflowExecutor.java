@@ -1248,8 +1248,8 @@ public class WorkflowExecutor {
 			}
 
 			updateTask(new TaskResult(task));
-			logger.debug("Done Executing {}/{}-{} op={} for workflowId={},correlationId={},contextUser={}",
-					task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString(),
+			logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},contextUser={}",
+					task.getTaskType(), task.getTaskId(), task.getStatus(),
 					workflow.getWorkflowId(), workflow.getCorrelationId(), workflow.getContextUser());
 
 		} catch (Exception e) {
