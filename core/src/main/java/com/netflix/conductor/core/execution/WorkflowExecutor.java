@@ -1093,7 +1093,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 		// metrics
 		Monitors.recordWorkflowResume(workflow);
-		decide(workflowId);
+		decideOrSweeper(workflowId);
 	}
 
 	public void skipTaskFromWorkflow(String workflowId, String taskReferenceName, SkipTaskRequest skipTaskRequest)  throws Exception {
@@ -1135,7 +1135,7 @@ public class WorkflowExecutor {
 			theTask.setOutputData(skipTaskRequest.getTaskOutput());
 		}
 		edao.createTasks(Arrays.asList(theTask));
-		decide(workflowId);
+		decideOrSweeper(workflowId);
 	}
 
 	public Workflow getWorkflow(String workflowId, boolean includeTasks) {
