@@ -608,10 +608,10 @@ public class WorkflowExecutor {
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
-		return cancelWorkflow(workflow, reason, false);
+		return cancelWorkflow(workflow, reason);
 	}
 
-	public String cancelWorkflow(Workflow workflow, String reason, boolean suppressDecider) throws Exception {
+	public String cancelWorkflow(Workflow workflow, String reason) throws Exception {
 		String workflowId = workflow.getWorkflowId();
 
 		if (!workflow.getStatus().isTerminal()) {
@@ -628,7 +628,7 @@ public class WorkflowExecutor {
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
-		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
+		if (workflow.getParentWorkflowId() != null) {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
 			decide(parent.getWorkflowId());
 		}
@@ -716,10 +716,10 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.CONFLICT, "Workflow already finished. status=" + workflow.getStatus());
 		}
 
-		terminateWorkflow(workflow, reason, null, null, false);
+		terminateWorkflow(workflow, reason, null, null);
 	}
 
-	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow, Task failedTask, boolean suppressDecider) throws Exception {
+	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow, Task failedTask) throws Exception {
 		String workflowId = workflow.getWorkflowId();
 
 		if (!workflow.getStatus().isTerminal()) {
@@ -754,7 +754,7 @@ public class WorkflowExecutor {
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
-		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
+		if (workflow.getParentWorkflowId() != null) {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
 			decide(parent.getWorkflowId());
 		}
@@ -1368,7 +1368,7 @@ public class WorkflowExecutor {
 		if(tw.task != null){
 			edao.updateTask(tw.task);
 		}
-		terminateWorkflow(workflow, tw.getMessage(), failureWorkflow, tw.task, false);
+		terminateWorkflow(workflow, tw.getMessage(), failureWorkflow, tw.task);
 
 		String taskId = (tw.task != null ? tw.task.getTaskId() : null);
 		String taskRefName = (tw.task != null ? tw.task.getReferenceTaskName() : null);
