@@ -72,7 +72,7 @@ public class HttpTask extends GenericHttpTask {
 			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
 			return;
-		} else if (input.getServiceDiscoveryQuery() != null) {
+		} else if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
 			hostAndPort = lookup(input.getServiceDiscoveryQuery());
 
 			if (null == hostAndPort) {

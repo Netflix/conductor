@@ -52,7 +52,7 @@ public class HttpWaitTask extends GenericHttpTask {
 
 		String hostAndPort = null;
 		Input input = om.convertValue(request, Input.class);
-		if (input.getServiceDiscoveryQuery() != null) {
+		if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
 			hostAndPort = lookup(input.getServiceDiscoveryQuery());
 		}
 
