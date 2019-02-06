@@ -626,9 +626,11 @@ public class WorkflowExecutor {
 		logger.error("Workflow is cancelled. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 		cancelTasks(workflow, workflow.getTasks());
 
-		// If the following lines, for some reason fails, the sweep will take care of this again!
+		// If the following lines, for some reason fails, the sweep will take
+		// care of this again!
 		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
-			decide(workflow.getParentWorkflowId());
+			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
+			decide(parent.getWorkflowId());
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
@@ -661,7 +663,7 @@ public class WorkflowExecutor {
 		}
 
 		//remove from the sweep queue
-		queue.remove(deciderQueue, workflow.getWorkflowId());
+		queue.remove(deciderQueue, workflowId);
 
 		// metrics
 		Monitors.recordWorkflowCancel(workflow);
@@ -688,9 +690,11 @@ public class WorkflowExecutor {
 		logger.error("Workflow has been reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 		cancelTasks(workflow, workflow.getTasks());
 
-		// If the following lines, for some reason fails, the sweep will take care of this again!
+		// If the following lines, for some reason fails, the sweep will take
+		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			decide(workflow.getParentWorkflowId());
+			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
+			decide(parent.getWorkflowId());
 		}
 
 		//remove from the sweep queue
@@ -748,9 +752,11 @@ public class WorkflowExecutor {
 		List<Task> tasks = workflow.getTasks();
 		cancelTasks(workflow, tasks);
 
-		// If the following lines, for some reason fails, the sweep will take care of this again!
+		// If the following lines, for some reason fails, the sweep will take
+		// care of this again!
 		if (workflow.getParentWorkflowId() != null && !suppressDecider) {
-			decide(workflow.getParentWorkflowId());
+			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
+			decide(parent.getWorkflowId());
 		}
 
 		if (StringUtils.isNotEmpty(failureWorkflow)) {
@@ -993,6 +999,10 @@ public class WorkflowExecutor {
 	public boolean decide(String workflowId) throws Exception {
 
 		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow.getStatus().isTerminal()) {
+			return true;
+		}
+
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
 		try {
 			DeciderOutcome outcome = decider.decide(workflow, def);
