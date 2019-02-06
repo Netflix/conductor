@@ -70,7 +70,7 @@ public class HttpTask extends GenericHttpTask {
 			task.setStatus(Status.FAILED);
 			return;
 		} else {
-			if (input.getServiceDiscoveryQuery() != null) {
+			if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
 				url = lookup(input.getServiceDiscoveryQuery());
 			}
 		}

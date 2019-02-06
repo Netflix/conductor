@@ -50,7 +50,7 @@ public class HttpWaitTask extends GenericHttpTask {
 
 		String url = null;
 		Input input = om.convertValue(request, Input.class);
-		if (input.getServiceDiscoveryQuery() != null) {
+		if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
 			url = lookup(input.getServiceDiscoveryQuery());
 		}
 
