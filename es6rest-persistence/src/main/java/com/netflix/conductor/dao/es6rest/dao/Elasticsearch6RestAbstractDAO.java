@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.netflix.conductor.common.Versioned;
 import com.netflix.conductor.core.config.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -303,17 +302,9 @@ abstract class Elasticsearch6RestAbstractDAO {
                         .type(typeName)
                         .id(id);
 
-                if (payload instanceof Versioned) {
-                    Versioned versioned = (Versioned)payload;
-                    request.version(versioned.getRevision());
-                }
-
                 client.index(request);
             } catch (Exception ex) {
-                if (isVerConflictException(ex)) {
-                    String error = String.format("Update conflict for %s/%s/%s %s", indexName, typeName, id, toJson(payload));
-                    throw new IllegalStateException(error, ex);
-                } else {
+                if (!isVerConflictException(ex)) {
                     logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
                     throw new RuntimeException(ex.getMessage(), ex);
                 }
@@ -366,7 +357,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
             GetResponse record = result.get();
             if (record.isExists()) {
-                return convert(record.getSource(), clazz, record.getVersion());
+                return convert(record.getSource(), clazz);
             }
             return null;
         } catch (Exception ex) {
@@ -448,7 +439,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
             while (searchHits != null && searchHits.length > 0) {
                 for (SearchHit hit : searchHits) {
-                    result.add(convert(hit.getSourceAsMap(), clazz, hit.getVersion()));
+                    result.add(convert(hit.getSourceAsMap(), clazz));
                 }
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
@@ -524,17 +515,8 @@ abstract class Elasticsearch6RestAbstractDAO {
         }
     }
 
-    private <T> T convert(Map map, Class<T> clazz, Long version) {
-        T value = mapper.convertValue(map, clazz);
-        try {
-            if (value instanceof Versioned) {
-                Versioned versioned = (Versioned)value;
-                versioned.setRevision(version);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return value;
+    private <T> T convert(Map map, Class<T> clazz) {
+        return mapper.convertValue(map, clazz);
     }
 
     private Map<String, ?> toMap(Object value) {
