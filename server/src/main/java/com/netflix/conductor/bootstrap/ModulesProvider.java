@@ -2,6 +2,7 @@ package com.netflix.conductor.bootstrap;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.ProvisionException;
+import com.netflix.conductor.cassandra.CassandraModule;
 import com.google.inject.util.Modules;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.contribs.http.HttpTask;
@@ -12,9 +13,15 @@ import com.netflix.conductor.core.execution.WorkflowExecutorModule;
 import com.netflix.conductor.core.utils.DummyPayloadStorage;
 import com.netflix.conductor.core.utils.S3PayloadStorage;
 import com.netflix.conductor.dao.RedisWorkflowModule;
-import com.netflix.conductor.elasticsearch.es6.ElasticSearchV6Module;
+import com.netflix.conductor.elasticsearch.ElasticSearchModule;
 import com.netflix.conductor.mysql.MySQLWorkflowModule;
-import com.netflix.conductor.server.*;
+import com.netflix.conductor.server.DynomiteClusterModule;
+import com.netflix.conductor.server.JerseyModule;
+import com.netflix.conductor.server.LocalRedisModule;
+import com.netflix.conductor.server.RedisClusterModule;
+import com.netflix.conductor.server.RedisSentinelModule;
+import com.netflix.conductor.server.ServerModule;
+import com.netflix.conductor.server.SwaggerModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,9 +89,17 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 modules.add(new RedisWorkflowModule());
                 logger.info("Starting conductor server using redis_cluster.");
                 break;
+            case CASSANDRA:
+                modules.add(new CassandraModule());
+                logger.info("Starting conductor server using cassandra.");
+            case REDIS_SENTINEL:
+                modules.add(new RedisSentinelModule());
+                modules.add(new RedisWorkflowModule());
+                logger.info("Starting conductor server using redis_sentinel.");
+                break;
         }
 
-        modules.add(new ElasticSearchV6Module());
+        modules.add(new ElasticSearchModule());
 
         modules.add(new WorkflowExecutorModule());
 
@@ -97,7 +112,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         String externalPayloadStorageString = configuration.getProperty("workflow.external.payload.storage", "");
         try {
             externalPayloadStorageType = ExternalPayloadStorageType.valueOf(externalPayloadStorageString);
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             logger.info("External payload storage is not configured, provided: {}, supported values are: {}", externalPayloadStorageString, Arrays.toString(ExternalPayloadStorageType.values()), e);
         }
 
