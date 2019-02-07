@@ -3,7 +3,6 @@ package com.netflix.conductor.bootstrap;
 import com.google.inject.AbstractModule;
 import com.google.inject.ProvisionException;
 import com.netflix.conductor.cassandra.CassandraModule;
-import com.google.inject.util.Modules;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.contribs.http.HttpTask;
 import com.netflix.conductor.contribs.http.RestClientManager;
