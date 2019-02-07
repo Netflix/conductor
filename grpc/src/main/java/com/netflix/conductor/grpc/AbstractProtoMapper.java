@@ -82,7 +82,6 @@ public abstract class AbstractProtoMapper {
             case NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF: to = CompleteTaskResultPb.CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF; break;
             case COMPLETED: to = CompleteTaskResultPb.CompleteTaskResult.CompletionStatus.COMPLETED; break;
             case NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE: to = CompleteTaskResultPb.CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE; break;
-            case UNKNOWN_STATE: to = CompleteTaskResultPb.CompleteTaskResult.CompletionStatus.UNKNOWN_STATE; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -95,7 +94,6 @@ public abstract class AbstractProtoMapper {
             case NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF: to = CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF; break;
             case COMPLETED: to = CompleteTaskResult.CompletionStatus.COMPLETED; break;
             case NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE: to = CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE; break;
-            case UNKNOWN_STATE: to = CompleteTaskResult.CompletionStatus.UNKNOWN_STATE; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;

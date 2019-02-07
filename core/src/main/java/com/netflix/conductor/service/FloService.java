@@ -3,6 +3,7 @@ package com.netflix.conductor.service;
 import com.netflix.conductor.common.metadata.tasks.CompleteTaskResult;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.common.metadata.workflow.TaskType;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -18,15 +19,6 @@ import java.util.Optional;
 @Singleton
 public class FloService {
 
-    private enum FloStatus {
-        DELIVERY_ASSIGNED,
-        DELIVERY_CONFIRMED,
-        DELIVERY_ARRIVED,
-        DELIVERY_PICKED_UP,
-        DELIVERY_REACHED,
-        DELIVERY_DELIVERED
-    }
-
     private static final String TASK_STATE_DELIMITER = ":__:";
     private static final String KEY_UNBLOCKED_BY = "unblocked_by";
 
@@ -38,24 +30,19 @@ public class FloService {
     }
 
     public CompleteTaskResult completeWaitStateTask(String workflowId, String instanceState, String unblockedBy) {
-        List<Task> runningTaskList = executionService.getInProgressWaitTasksForWorkflow(workflowId);
+        List<Task> runningTaskList = executionService.filterTaskByTypeAndStatusForWorkflow(workflowId, TaskType.WAIT, Task.Status.IN_PROGRESS);
 
-        if (runningTaskList.size() > 0) {
-            Optional<Task> runningTaskOptional = getTaskOfInterest(runningTaskList, instanceState); // runningTaskList.get();
+        if (!runningTaskList.isEmpty()) {
+            Optional<Task> runningTaskOptional = getRunningTaskToUnblock(runningTaskList, instanceState);
             if (runningTaskOptional.isPresent()) {
                 Task runningTask = runningTaskOptional.get();
-                String taskName = runningTask.getTaskDefName();
-                if (isKnownState(taskName)) {
-                    Map<String, Object> outputData = new HashMap<>();
-                    outputData.put(KEY_UNBLOCKED_BY, unblockedBy);
-                    // set outputData and status
-                    runningTask.setOutputData(outputData);
-                    runningTask.setStatus(Task.Status.COMPLETED);
-                    executionService.updateTask(new TaskResult(runningTask));
-                    return new CompleteTaskResult(CompleteTaskResult.CompletionStatus.COMPLETED, runningTask);
-                } else {
-                    return new CompleteTaskResult(CompleteTaskResult.CompletionStatus.UNKNOWN_STATE, runningTask);
-                }
+                Map<String, Object> outputData = new HashMap<>();
+                outputData.put(KEY_UNBLOCKED_BY, unblockedBy);
+                // set outputData and status
+                runningTask.setOutputData(outputData);
+                runningTask.setStatus(Task.Status.COMPLETED);
+                executionService.updateTask(new TaskResult(runningTask));
+                return new CompleteTaskResult(CompleteTaskResult.CompletionStatus.COMPLETED, runningTask);
             }
             else {
                 return new CompleteTaskResult(CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE, null);
@@ -64,7 +51,7 @@ public class FloService {
         return new CompleteTaskResult(CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF, null);
     }
 
-    private Optional<Task> getTaskOfInterest(List<Task> runningTaskList, String instanceState) {
+    private Optional<Task> getRunningTaskToUnblock(List<Task> runningTaskList, String instanceState) {
         return runningTaskList
                 .stream()
                 .filter(task -> getStateFromTaskName(task.getTaskDefName()).equals(instanceState))
@@ -76,15 +63,4 @@ public class FloService {
         return taskName.split(TASK_STATE_DELIMITER)[0].toUpperCase();
     }
 
-    private boolean isKnownState(String taskName) {
-        String taskInstanceState = getStateFromTaskName(taskName);
-        String concatStatus = FloStatus.DELIVERY_ASSIGNED.name() + "|" +
-                FloStatus.DELIVERY_CONFIRMED.name() + "|" +
-                FloStatus.DELIVERY_ARRIVED.name() + "|" +
-                FloStatus.DELIVERY_PICKED_UP.name() + "|" +
-                FloStatus.DELIVERY_REACHED.name() + "|" +
-                FloStatus.DELIVERY_DELIVERED.name();
-
-        return concatStatus.indexOf(taskInstanceState) != -1;
-    }
 }

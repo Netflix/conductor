@@ -1,9 +1,5 @@
 package com.netflix.conductor.common.metadata.tasks;
 
-/**
- * @author aniket.sinha on 1/21/19
- */
-
 import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
@@ -15,8 +11,7 @@ public class CompleteTaskResult {
     public enum CompletionStatus {
         NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF(-1, "No IN_PROGRESS WAIT Task found"),
         COMPLETED(0, "Task completed"),
-        NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE(1, "No IN_PROGRESS WAIT Task found for state"),
-        UNKNOWN_STATE(2, "Unknown state, unable to mark complete.");
+        NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE(1, "No IN_PROGRESS WAIT Task found for state");
 
         private int code;
         private String message;

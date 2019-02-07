@@ -18,10 +18,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-
-/**
- * @author aniket.sinha on 1/23/19
- */
 @Api(value = "/flo", produces = MediaType.APPLICATION_JSON, consumes = MediaType.APPLICATION_JSON, tags = "Flo APIs")
 @Path("/flo")
 @Produces({MediaType.APPLICATION_JSON})

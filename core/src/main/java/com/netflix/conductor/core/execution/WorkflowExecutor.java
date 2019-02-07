@@ -479,11 +479,11 @@ public class WorkflowExecutor {
     }
 
 
-    public List<Task> getInProgressWaitTasksByWorkflow(String workflowId) {
+    public List<Task> filterTaskByTypeAndStatusForWorkflow(String workflowId, TaskType taskType, Task.Status taskStatus) {
         return executionDAOFacade.getTasksForWorkflow(workflowId)
                 .stream()
-                .filter(task -> task.getTaskType().equals(TaskType.WAIT.name()))
-                .filter(task -> task.getStatus() == Task.Status.IN_PROGRESS)
+                .filter(task -> task.getTaskType().equals(taskType.name()))
+                .filter(task -> task.getStatus() == taskStatus)
                 .collect(Collectors.toList());
     }
 

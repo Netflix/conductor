@@ -12,7 +12,6 @@ message CompleteTaskResult {
         NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF = 0;
         COMPLETED = 1;
         NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE = 2;
-        UNKNOWN_STATE = 3;
     }
     int32 code = 1;
     string message = 2;
