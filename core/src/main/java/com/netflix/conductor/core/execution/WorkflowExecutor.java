@@ -730,8 +730,9 @@ public class WorkflowExecutor {
 			workflow.setReasonForIncompletion(reason);
 		}
 
+		Object originalFailed = null;
 		if (failedTask != null) {
-			Object originalFailed = failedTask.getOutputData().get("originalFailedTask");
+			originalFailed = failedTask.getOutputData().get("originalFailedTask");
 			if (originalFailed == null) {
 				Map<String, Object> map = new HashMap<>();
 				map.put("taskId", failedTask.getTaskId());
@@ -783,14 +784,10 @@ public class WorkflowExecutor {
 				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
 				input.put("failedTask", map);
 
-				// failedTask represents the task in current workflow only
-				failedTask.getOutputData().computeIfPresent("originalFailedTask", (key, oldValue) -> {
-					input.put("originalFailedTask", oldValue);
-					return null;
-				});
-
 				logger.error("Error in task execution. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			}
+			// originalFailed represents the task in the first failed workflow
+			input.put("originalFailedTask", originalFailed);
 
 			try {
 
