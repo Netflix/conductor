@@ -88,20 +88,20 @@ public class TaskTest {
     public void testFunctionToDisableTaskLogging(){
         Task task = new Task();
         task.setInputData(Collections.singletonMap("disableLog", true));
-        assertTrue(task.isLoggingDisabled());
+        assertFalse(task.isLoggingEnabled());
     }
 
     @Test
     public void testFunctionToEnableTaskLoggingPassingFalse(){
         Task task = new Task();
         task.setInputData(Collections.singletonMap("disableLog", false));
-        assertFalse(task.isLoggingDisabled());
+        assertTrue(task.isLoggingEnabled());
     }
 
     @Test
     public void testFunctionToEnableTaskLoggingNotPassingProperty(){
         Task task = new Task();
-        assertFalse(task.isLoggingDisabled());
+        assertTrue(task.isLoggingEnabled());
     }
 
 }

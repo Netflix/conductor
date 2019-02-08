@@ -29,7 +29,7 @@ public class TaskSummaryTest {
         Task task = Mockito.mock(Task.class);
         when(task.getInputData()).thenReturn(Collections.singletonMap("input", "data"));
         when(task.getOutputData()).thenReturn(Collections.singletonMap("output", "data"));
-        when(task.isLoggingDisabled()).thenReturn(true);
+        when(task.isLoggingEnabled()).thenReturn(false);
         TaskSummary taskSummary = new TaskSummary(task);
         assertNull(taskSummary.getInput());
         assertNull(taskSummary.getOutput());
@@ -40,7 +40,7 @@ public class TaskSummaryTest {
         Task task = Mockito.mock(Task.class);
         when(task.getInputData()).thenReturn(Collections.singletonMap("input", "data"));
         when(task.getOutputData()).thenReturn(Collections.singletonMap("output", "data"));
-        when(task.isLoggingDisabled()).thenReturn(false);
+        when(task.isLoggingEnabled()).thenReturn(true);
         TaskSummary taskSummary = new TaskSummary(task);
         assertNotNull(taskSummary.getInput());
         assertEquals(Collections.singletonMap("input", "data").toString(), taskSummary.getInput());

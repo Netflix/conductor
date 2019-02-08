@@ -108,7 +108,7 @@ public class TaskSummary {
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
 
-		if(!task.isLoggingDisabled()) {
+		if(task.isLoggingEnabled()) {
 			if (task.getInputData() != null) {
 				this.input = task.getInputData().toString();
 			}

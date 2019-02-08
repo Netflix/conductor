@@ -666,8 +666,8 @@ public class Task {
         this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
     }
 
-    public Boolean isLoggingDisabled(){
-        return this.getInputData() != null && this.getInputData().containsKey("disableLog") && Boolean.valueOf(this.getInputData().get("disableLog").toString());
+    public Boolean isLoggingEnabled(){
+        return !(this.getInputData() != null && this.getInputData().containsKey("disableLog") && Boolean.valueOf(this.getInputData().get("disableLog").toString()));
     }
 
     public Task copy() {
@@ -706,7 +706,7 @@ public class Task {
         return "Task{" +
                 "taskType='" + taskType + '\'' +
                 ", status=" + status +
-                (!isLoggingDisabled() ? ", inputData=" + inputData : "") +
+                (isLoggingEnabled() ? ", inputData=" + inputData : "") +
                 ", referenceTaskName='" + referenceTaskName + '\'' +
                 ", retryCount=" + retryCount +
                 ", seq=" + seq +
@@ -729,7 +729,7 @@ public class Task {
                 ", reasonForIncompletion='" + reasonForIncompletion + '\'' +
                 ", callbackAfterSeconds=" + callbackAfterSeconds +
                 ", workerId='" + workerId + '\'' +
-                (!isLoggingDisabled() ? ", outputData=" + outputData : "") +
+                (isLoggingEnabled() ? ", outputData=" + outputData : "") +
                 ", workflowTask=" + workflowTask +
                 ", domain='" + domain + '\'' +
                 ", inputMessage='" + inputMessage + '\'' +
