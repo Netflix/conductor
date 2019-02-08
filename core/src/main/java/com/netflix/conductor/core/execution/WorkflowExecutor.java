@@ -1039,7 +1039,7 @@ public class WorkflowExecutor {
             }
 
             updateTask(new TaskResult(task));
-            LOGGER.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString());
+            LOGGER.info("Done Executing {}/{}-{} op={}", task.getTaskType(), task.getTaskId(), task.getStatus(), task.isLoggingEnabled() ? task.getOutputData().toString() : "");
 
         } catch (Exception e) {
             LOGGER.error("Error executing system task - {}, with id: {}", systemTask, taskId, e);
