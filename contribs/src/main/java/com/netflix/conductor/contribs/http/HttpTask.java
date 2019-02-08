@@ -116,7 +116,7 @@ public class HttpTask extends WorkflowSystemTask {
 		
 		try {
 			HttpResponse response = httpCall(input, task.isLoggingEnabled());
-			logger.info("response {}, {}", response.statusCode, response.body);
+			logger.info("response {}, {}", response.statusCode, task.isLoggingEnabled() ? response.body : "");
 			if(response.statusCode > 199 && response.statusCode < 300) {
 				task.setStatus(Status.COMPLETED);
 			} else {
