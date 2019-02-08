@@ -94,9 +94,6 @@ public class AuthManager {
 	}
 
 	public AuthResponse authorize(Workflow workflow) throws Exception {
-		if (workflow == null) {
-			throw new IllegalArgumentException("");
-		}
 		Client client = Client.create();
 		MultivaluedMap<String, String> data = new MultivaluedMapImpl();
 		data.add("grant_type", "client_credentials");
