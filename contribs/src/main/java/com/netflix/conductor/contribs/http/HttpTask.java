@@ -18,7 +18,6 @@
  */
 package com.netflix.conductor.contribs.http;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -42,13 +41,14 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @author Viren
- * Task that enables calling another http endpoint as part of its execution
+ * @author Viren Task that enables calling another http endpoint as part of its
+ *         execution
  */
 @Singleton
 public class HttpTask extends GenericHttpTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
-	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
+	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME
+			+ "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
 	private int unackTimeout;
@@ -76,7 +76,8 @@ public class HttpTask extends GenericHttpTask {
 			hostAndPort = lookup(input.getServiceDiscoveryQuery());
 
 			if (null == hostAndPort) {
-				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery() + " . No records found.";
+				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery()
+						+ " . No records found.";
 				logger.error(msg);
 				throw new Exception(msg);
 			}
@@ -113,7 +114,9 @@ public class HttpTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response = new HttpResponse();
-			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
+			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
 					String json = new ObjectMapper().writeValueAsString(task.getInputData());
@@ -132,7 +135,10 @@ public class HttpTask extends GenericHttpTask {
 				response = httpCall(input, task, workflow, executor);
 			}
 
-			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
+			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
+					+ ",response=" + response.body);
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -147,7 +153,8 @@ public class HttpTask extends GenericHttpTask {
 				}
 			}
 
-			// Check the http response validation. It will overwrite the task status if needed
+			// Check the http response validation. It will overwrite the task status if
+			// needed
 			if (task.getStatus() == Status.COMPLETED) {
 				checkHttpResponseValidation(task, response);
 			} else {
@@ -157,10 +164,9 @@ public class HttpTask extends GenericHttpTask {
 
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {
-			logger.error("http task failed for workflowId=" + workflow.getWorkflowId()
-					+ ",correlationId=" + workflow.getCorrelationId()
-					+ ",taskId=" + task.getTaskId()
-					+ ",taskreference name=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
+			logger.error("http task failed for workflowId=" + workflow.getWorkflowId() + ",correlationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());

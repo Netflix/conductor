@@ -31,8 +31,8 @@ public class HttpWaitTask extends GenericHttpTask {
 	private MetadataDAO metadata;
 
 	@Inject
-	public HttpWaitTask(Configuration config, RestClientManager rcm,
-						ObjectMapper om, MetadataDAO metadata, EventProcessor processor, AuthManager auth) {
+	public HttpWaitTask(Configuration config, RestClientManager rcm, ObjectMapper om, MetadataDAO metadata,
+			EventProcessor processor, AuthManager auth) {
 		super("HTTP_WAIT", config, rcm, om, auth);
 		this.processor = processor;
 		this.metadata = metadata;
@@ -91,7 +91,8 @@ public class HttpWaitTask extends GenericHttpTask {
 				if (input.getBody().toString().equals("{}")) {
 					input.setBody("{taskid=" + task.getTaskId() + "}");
 				} else {
-					input.setBody(input.getBody().toString().substring(0, index) + ", taskid=" + task.getTaskId() + input.getBody().toString().substring(index));
+					input.setBody(input.getBody().toString().substring(0, index) + ", taskid=" + task.getTaskId()
+							+ input.getBody().toString().substring(index));
 				}
 			} else {
 				input.setBody("{taskid=" + task.getTaskId() + "}");
@@ -104,7 +105,8 @@ public class HttpWaitTask extends GenericHttpTask {
 				if (input.getBody().toString().equals("{}")) {
 					input.setBody("{Curtimestamp=" + System.currentTimeMillis() + "}");
 				} else {
-					input.setBody(input.getBody().toString().substring(0, index) + ", Curtimestamp=" + System.currentTimeMillis() + input.getBody().toString().substring(index));
+					input.setBody(input.getBody().toString().substring(0, index) + ", Curtimestamp="
+							+ System.currentTimeMillis() + input.getBody().toString().substring(index));
 				}
 			} else {
 				input.setBody("{Curtimestamp=" + System.currentTimeMillis() + "}");
@@ -118,10 +120,9 @@ public class HttpWaitTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response;
-			logger.debug("http wait task started.workflowId=" + workflow.getWorkflowId()
-					+ ",CorrelationId=" + workflow.getCorrelationId()
-					+ ",taskId=" + task.getTaskId()
-					+ ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
+			logger.debug("http wait task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
@@ -135,7 +136,10 @@ public class HttpWaitTask extends GenericHttpTask {
 				response = httpCall(input, task, workflow, executor);
 			}
 
-			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",response=" + response.body);
+			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
+					+ ",response=" + response.body);
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -146,16 +150,16 @@ public class HttpWaitTask extends GenericHttpTask {
 					task.setStatus(Task.Status.FAILED);
 				}
 			}
-			// Check the http response validation. It will overwrite the task status if needed
+			// Check the http response validation. It will overwrite the task status if
+			// needed
 			if (task.getStatus() != Task.Status.IN_PROGRESS) {
 				setReasonForIncompletion(response, task);
 			}
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {
-			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId()
-					+ ",correlationId=" + workflow.getCorrelationId()
-					+ ",taskId=" + task.getTaskId()
-					+ ",taskreference name=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
+			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId() + ",correlationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
 			task.setStatus(Task.Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());
