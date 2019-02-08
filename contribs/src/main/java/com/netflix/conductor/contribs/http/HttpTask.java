@@ -83,13 +83,13 @@ public class HttpTask extends GenericHttpTask {
 			}
 		}
 
-		if (input.getUri() == null) {
-			task.setReasonForIncompletion("Missing HTTP URI. See documentation for HttpTask for required input parameters");
+		if (StringUtils.isEmpty(input.getUri())) {
+			task.setReasonForIncompletion(
+					"Missing HTTP URI. See documentation for HttpTask for required input parameters");
 			task.setStatus(Status.FAILED);
 			return;
-		} else {
+		} else if (StringUtils.isNotEmpty(hostAndPort)) {
 			final String uri = input.getUri();
-			hostAndPort = StringUtils.defaultIfEmpty(hostAndPort, "");
 
 			if (uri.startsWith("/")) {
 				input.setUri(hostAndPort + uri);
@@ -104,6 +104,8 @@ public class HttpTask extends GenericHttpTask {
 					throw new Exception("Unable to build endpoint URL: " + uri, e);
 				}
 			}
+		} else if (StringUtils.isNotEmpty(input.getUri())) {
+			// Do Nothing, use input.getUri() as is
 		}
 
 		if (input.getMethod() == null) {

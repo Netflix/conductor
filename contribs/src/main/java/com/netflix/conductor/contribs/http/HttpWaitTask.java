@@ -60,9 +60,8 @@ public class HttpWaitTask extends GenericHttpTask {
 			task.setReasonForIncompletion("Missing http uri");
 			task.setStatus(Task.Status.FAILED);
 			return;
-		} else {
+		} else if (StringUtils.isNotEmpty(hostAndPort)) {
 			final String uri = input.getUri();
-			hostAndPort = StringUtils.defaultIfEmpty(hostAndPort, "");
 
 			if (uri.startsWith("/")) {
 				input.setUri(hostAndPort + uri);
@@ -77,6 +76,8 @@ public class HttpWaitTask extends GenericHttpTask {
 					throw new Exception("Unable to build endpoint URL: " + uri, e);
 				}
 			}
+		} else if (StringUtils.isNotEmpty(input.getUri())) {
+			// Do Nothing, use input.getUri() as is
 		}
 
 		if (StringUtils.isEmpty(input.getMethod())) {
