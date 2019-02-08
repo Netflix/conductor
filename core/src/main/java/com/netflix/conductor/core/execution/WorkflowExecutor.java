@@ -1527,7 +1527,7 @@ public class WorkflowExecutor {
 		}
 
 		if (!failedList.isEmpty()) {
-			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: at least one of the verify conditions failed");
+			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation rules failed: " + failedList.keySet());
 		}
 
 		return decoded;
