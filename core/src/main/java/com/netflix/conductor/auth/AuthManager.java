@@ -109,6 +109,7 @@ public class AuthManager {
 
 		// Use service discovery when not external
 		if (!isExternal) {
+			logger.debug("Using service discovery for " + this.authService);
 			final String uri = DNSLookup.lookup(this.authService);
 
 			if (StringUtils.isEmpty(uri)) {
@@ -116,8 +117,9 @@ public class AuthManager {
 			} else {
 				url = uri + authEndpoint;
 			}
+		} else {
+			logger.debug("Using external auth url");
 		}
-		logger.debug("Auth url is " + url);
 
 		WebResource webResource = client.resource(url);
 		ClientResponse response;
