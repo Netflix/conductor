@@ -980,6 +980,7 @@ public class WorkflowExecutor {
             Task task = executionDAOFacade.getTaskById(taskId);
             if (task == null){
                 LOGGER.error("TaskId: {} could not be found while executing SystemTask", taskId);
+                return;
             }
             LOGGER.info("Task: {} fetched from execution DAO for taskId: {}", task, taskId);
             if (task.getStatus().isTerminal()) {
