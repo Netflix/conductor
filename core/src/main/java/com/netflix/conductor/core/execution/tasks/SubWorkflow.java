@@ -65,7 +65,9 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 		try {
 
-			String subWorkflowId = provider.startWorkflow(name, version, wfInput, correlationId, workflow.getWorkflowId(), task.getTaskId(), null, workflow.getTaskToDomain(), workflow.getWorkflowIds());
+			String subWorkflowId = provider.startWorkflow(name, version, wfInput, correlationId,
+					workflow.getWorkflowId(), task.getTaskId(), null,
+					workflow.getTaskToDomain(), workflow.getWorkflowIds(), workflow.getAuthorization());
 			task.getOutputData().put("subWorkflowId", subWorkflowId);
 			task.getInputData().put("subWorkflowId", subWorkflowId);
 			task.setStatus(Status.IN_PROGRESS);

@@ -25,6 +25,7 @@ import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.auth.AuthResponse;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -117,7 +118,8 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
             // Attach the Authorization header
             Object authorize = carried.getInputData().get("authorize");
             if (Boolean.TRUE.equals(authorize)) {
-                AuthResponse auth = authManager.authorize(carried.getCorrelationId());
+                Workflow workflow = workflowExecutor.getWorkflow(carried.getWorkflowInstanceId(), false);
+                AuthResponse auth = authManager.authorize(workflow);
                 builder.header(HttpHeaders.AUTHORIZATION, "Bearer " + auth.getAccessToken());
             }
 

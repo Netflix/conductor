@@ -26,9 +26,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.contribs.correlation.Correlator;
-import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.DNSLookup;
+import com.netflix.conductor.core.config.Configuration;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -36,6 +37,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,11 +93,10 @@ public class AuthManager {
 			throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_SECRET);
 	}
 
-	public AuthResponse authorize() throws Exception {
-		return authorize(null);
-	}
-
-	public AuthResponse authorize(String correlationId) throws Exception {
+	public AuthResponse authorize(Workflow workflow) throws Exception {
+		if (workflow == null) {
+			throw new IllegalArgumentException("");
+		}
 		Client client = Client.create();
 		MultivaluedMap<String, String> data = new MultivaluedMapImpl();
 		data.add("grant_type", "client_credentials");
@@ -103,23 +104,29 @@ public class AuthManager {
 		data.add("client_secret", this.clientSecret);
 
 		String url = this.authUrl;
+		boolean isExternal = false;
+		if (MapUtils.isNotEmpty(workflow.getAuthorization())) {
+			String issuer = (String)workflow.getAuthorization().get("iss");
+			isExternal = StringUtils.isNotEmpty(issuer) && issuer.contains(".dmlib.");// dmlib.(de|in|io) means external call
+		}
 
-		// ONECOND-803: Add Service Discovery
-		if (shouldUseServiceDiscovery()) { 
+		// Use service discovery when not external
+		if (!isExternal) {
 			final String uri = DNSLookup.lookup(this.authService);
 
 			if (StringUtils.isEmpty(uri)) {
-				logger.error("Service lookup failed for " + this.authUrl + " falling back to: " + this.authUrl);
+				logger.error("Service lookup failed for " + this.authService + " falling back to: " + this.authUrl);
 			} else {
-				url = getAuthURL(uri);
+				url = uri + authEndpoint;
 			}
 		}
+		logger.debug("Auth url is " + url);
 
 		WebResource webResource = client.resource(url);
 		ClientResponse response;
 
-		if (StringUtils.isNotEmpty(correlationId)) {
-			Correlator correlator = new Correlator(logger, correlationId);
+		if (StringUtils.isNotEmpty(workflow.getCorrelationId())) {
+			Correlator correlator = new Correlator(logger, workflow.getCorrelationId());
 			correlator.updateSequenceNo();
 
 			response = webResource
@@ -212,13 +219,5 @@ public class AuthManager {
 			}
 		};
 		return CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(1000).build(loader);
-	}
-
-	private boolean shouldUseServiceDiscovery() {
-		return StringUtils.isNotEmpty(this.authService);
-	}
-
-	private String getAuthURL(String uri) {
-		return uri + authEndpoint;
 	}
 }
