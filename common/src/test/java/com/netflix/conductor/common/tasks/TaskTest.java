@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -82,4 +83,25 @@ public class TaskTest {
         assertTrue(task.getTaskDefinition().isPresent());
         assertEquals(taskDefinition, task.getTaskDefinition().get());
     }
+
+    @Test
+    public void testFunctionToDisableTaskLogging(){
+        Task task = new Task();
+        task.setInputData(Collections.singletonMap("disableLog", true));
+        assertTrue(task.isLoggingDisabled());
+    }
+
+    @Test
+    public void testFunctionToEnableTaskLoggingPassingFalse(){
+        Task task = new Task();
+        task.setInputData(Collections.singletonMap("disableLog", false));
+        assertFalse(task.isLoggingDisabled());
+    }
+
+    @Test
+    public void testFunctionToEnableTaskLoggingNotPassingProperty(){
+        Task task = new Task();
+        assertFalse(task.isLoggingDisabled());
+    }
+
 }

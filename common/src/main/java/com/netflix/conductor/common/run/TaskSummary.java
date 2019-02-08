@@ -107,15 +107,17 @@ public class TaskSummary {
 		this.status = task.getStatus();
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
-		if (task.getInputData() != null) {
-			this.input = task.getInputData().toString();
+
+		if(!task.isLoggingDisabled()) {
+			if (task.getInputData() != null) {
+				this.input = task.getInputData().toString();
+			}
+
+			if (task.getOutputData() != null) {
+				this.output = task.getOutputData().toString();
+			}
 		}
-		
-		if (task.getOutputData() != null) {
-			this.output = task.getOutputData().toString();
-		}
-		
-		
+
 		if(task.getEndTime() > 0){
 			this.executionTime = task.getEndTime() - task.getStartTime();
 		}
