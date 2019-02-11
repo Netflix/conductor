@@ -123,7 +123,7 @@ public class HttpWaitTask extends GenericHttpTask {
 			HttpResponse response;
 			logger.debug("http wait task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
-					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
 
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
@@ -140,7 +140,7 @@ public class HttpWaitTask extends GenericHttpTask {
 			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
 					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
-					+ ",response=" + response.body);
+					+ ",contextUser=" + workflow.getContextUser());
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -160,7 +160,8 @@ public class HttpWaitTask extends GenericHttpTask {
 		} catch (Exception ex) {
 			logger.error("http wait task failed for workflowId=" + workflow.getWorkflowId() + ",correlationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
-					+ task.getReferenceTaskName() + ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser()
+					+ " with " + ex.getMessage(), ex);
 			task.setStatus(Task.Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());
