@@ -116,9 +116,9 @@ public class HttpTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response = new HttpResponse();
-			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
+			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",correlationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
-					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",request input=" + request);
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
 					String json = new ObjectMapper().writeValueAsString(task.getInputData());
@@ -140,7 +140,7 @@ public class HttpTask extends GenericHttpTask {
 			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
 					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
-					+ ",response=" + response.body);
+					+ ",contextUser=" + workflow.getContextUser());
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -168,7 +168,8 @@ public class HttpTask extends GenericHttpTask {
 		} catch (Exception ex) {
 			logger.error("http task failed for workflowId=" + workflow.getWorkflowId() + ",correlationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
-					+ task.getReferenceTaskName() + ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser() +
+					" with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());
