@@ -153,11 +153,6 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 				String reason = cr.getEntity(String.class);
 				logger.error(reason, ex);
 			}
-		} catch (IllegalStateException ex) {
-			response.body = null;
-			response.headers = null;
-			response.statusCode = -1;
-			response.error = ex.getMessage();
 		} catch (Exception ex) {
 			response.body = null;
 			response.headers = null;
