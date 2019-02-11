@@ -123,48 +123,34 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null, null);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, null);
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, null, null);
 	}
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser);
 	}
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null, null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null);
 	}
 
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, authorization, null);
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, String contextToken, String contextUser) throws Exception {
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, authorization, contextToken, contextUser);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input,
 								String correlationId, String parentWorkflowId, String parentWorkflowTaskId,
 								String event, Map<String, String> taskToDomain, List<String> workflowIds,
-								Map<String, Object> authorization, String contextToken) throws Exception {
+								Map<String, Object> authorization, String contextToken, String contextUser) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
-		}
-
-		// Decode auth context if passed and store at workflow level
-		String contextUser = null;
-		if (authContextEnabled && StringUtils.isNotEmpty(contextToken)) {
-			try {
-				Map<String, Object> context = auth.decode(contextToken);
-				String username = (String)context.get("preferred_username");
-				String email = (String)context.get("email");
-				contextUser = String.format("%s(%s)", username, email);
-			} catch (Exception ex) {
-				logger.error("Auth context validation failed: " + ex.getMessage(), ex);
-				throw new ApplicationException(Code.UNAUTHORIZED, "Auth context validation failed: " + ex.getMessage());
-			}
 		}
 
 		try {
@@ -651,6 +637,7 @@ public class WorkflowExecutor {
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());
 			input.put("workflowVersion", workflow.getVersion());
+			input.put("contextUser", workflow.getContextUser());
 
 			try {
 
@@ -776,6 +763,7 @@ public class WorkflowExecutor {
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());
 			input.put("workflowVersion", workflow.getVersion());
+			input.put("contextUser", workflow.getContextUser());
 			input.put("reason", reason);
 			input.put("failureStatus", workflow.getStatus().toString());
 			if (failedTask != null) {
@@ -1531,6 +1519,23 @@ public class WorkflowExecutor {
 		}
 
 		return decoded;
+	}
+
+	public String validateContextUser(String contextToken) {
+		// Decode auth context if passed and store at workflow level
+		String contextUser = null;
+		if (authContextEnabled && StringUtils.isNotEmpty(contextToken)) {
+			try {
+				Map<String, Object> context = auth.decode(contextToken);
+				String username = (String)context.get("preferred_username");
+				String email = (String)context.get("email");
+				contextUser = String.format("%s(%s)", username, email);
+			} catch (Exception ex) {
+				logger.error("Auth context validation failed: " + ex.getMessage(), ex);
+				throw new ApplicationException(Code.UNAUTHORIZED, "Auth context validation failed: " + ex.getMessage());
+			}
+		}
+		return contextUser;
 	}
 
 	public Task getTask(String taskId) {
