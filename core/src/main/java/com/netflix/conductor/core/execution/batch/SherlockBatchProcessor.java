@@ -161,7 +161,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 		} catch (Exception ex) {
 			response.body = null;
 			response.headers = null;
-			response.statusCode = 0;
+			response.statusCode = -1;
 			response.error = ex.getMessage();
 		}
 
