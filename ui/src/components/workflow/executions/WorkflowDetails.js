@@ -1,7 +1,7 @@
-import React, {Component} from 'react';
+import React from 'react';
 import {OverlayTrigger, Button, Popover, Panel, Table} from 'react-bootstrap';
-import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import {connect} from 'react-redux';
+import {Link} from 'react-router'
 import {getWorkflowDetails} from '../../../actions/WorkflowActions';
 import WorkflowAction from './WorkflowAction';
 import WorkflowMetaDia from '../WorkflowMetaDia';
@@ -96,11 +96,9 @@ function showFailure(wf) {
     return 'none';
 }
 
-
-class WorkflowDetails extends Component {
+class WorkflowDetails extends React.Component {
     constructor(props) {
         super(props);
-
         http.get('/api/sys/').then((data) => {
             window.sys = data.sys;
         });
@@ -120,6 +118,12 @@ class WorkflowDetails extends Component {
         return true;
     }
 
+    gotoParentWorkflow = ()=> {
+      history.push({
+        pathname:"/workflow/id/" + this.props.data.parentWorkflowId
+      })
+    }
+
     render() {
         let wf = this.props.data;
         if (wf == null) {
@@ -133,10 +137,17 @@ class WorkflowDetails extends Component {
             return a.seq - b.seq;
         });
 
+        let parentWorkflowButton = "";
+        if(wf.parentWorkflowId){
+            parentWorkflowButton = <Link to={"/workflow/id/" + wf.parentWorkflowId}><Button bsStyle="default" bsSize="xsmall">
+              Parent
+            </Button></Link>;
+        }
+
         return (
             <div className="ui-content">
                 <h4>
-                    {wf.workflowType}/{wf.version}
+                    {wf.workflowName}/{wf.version}
                     <span
                         className={(wf.status === 'FAILED' || wf.status === 'TERMINATED' || wf.status === 'TIMED_OUT') ? "red" : "green"}>
           {wf.status}
@@ -144,6 +155,9 @@ class WorkflowDetails extends Component {
                     <span>
           <WorkflowAction workflowStatus={wf.status} workflowId={wf.workflowId}/>
         </span>
+                <span>
+                  {parentWorkflowButton}
+                </span>
                 </h4>
                 <br/><br/>
                 <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}>
@@ -201,7 +215,7 @@ class WorkflowDetails extends Component {
                                                        data-clipboard-target="#wfoutput"/></strong>
                             <pre style={{height: '200px'}}
                                  id="wfoutput">{JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
-                            {wf.status === 'FAILED' ? <div><strong>Workflow Faiure Reason (if any)</strong>
+                            {wf.status === 'FAILED' ? <div><strong>Workflow Failure Reason (if any)</strong>
                                 <pre>{wf.reasonForIncompletion ? JSON.stringify(wf.reasonForIncompletion, null, 3) : ''}</pre>
                             </div> : ''}
                         </div>

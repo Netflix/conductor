@@ -132,8 +132,10 @@ class Grapher extends Component {
         let inner = svg.select("g");
         inner.attr("transform", "translate(20,20)");
         this.grapher(inner, g);
-        let w = g.graph().width + 50;
+
+        let w = g.graph().width + 200;
         let h = g.graph().height + 50;
+
         svg.attr("width", w + "px").attr("height", h + "px");
 
 
@@ -193,7 +195,7 @@ class Grapher extends Component {
         return (
             <div className="graph-ui-content" id="graph-ui-content">
                 <div className="right-prop-overlay" ref={this.setPropsDivRef}
-                     style={{ display: this.state.showSideBar ? '' : 'none', padding: '5px 5px 10px 10px'}}>
+                     style={{overflowX: 'scroll', display: this.state.showSideBar ? '' : 'none', padding: '5px 5px 10px 10px'}}>
                     <h4 className="propsheader">
                         <i className="fa fa-close fa-1x close-btn" onClick={hideProps}/>
                         {this.state.selectedTask.taskType} ({this.state.selectedTask.status})
@@ -259,6 +261,7 @@ class Grapher extends Component {
                 </div>
 
                 <div className="right-prop-overlay" ref={this.setDivRef} style={{
+                    overflowX: 'scroll',
                     display: this.state.showSubGraph ? '' : 'none',
                     padding: '5px 5px 10px 10px',
                     zIndex: this.state.showSubGraph ? '' : '-100'

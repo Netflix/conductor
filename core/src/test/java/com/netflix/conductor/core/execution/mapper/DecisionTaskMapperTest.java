@@ -2,6 +2,7 @@ package com.netflix.conductor.core.execution.mapper;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
@@ -12,7 +13,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,13 +20,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DecisionTaskMapperTest {
 
-    private ParametersUtils parametersUtils = new ParametersUtils();
+    private ParametersUtils parametersUtils;
     private DeciderService deciderService;
     //Subject
     private DecisionTaskMapper decisionTaskMapper;
@@ -34,19 +34,19 @@ public class DecisionTaskMapperTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-
     Map<String, Object> ip1;
     WorkflowTask task1;
     WorkflowTask task2;
     WorkflowTask task3;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
+        parametersUtils = new ParametersUtils();
 
         ip1 = new HashMap<>();
-        ip1.put("p1", "workflow.input.param1");
-        ip1.put("p2", "workflow.input.param2");
-        ip1.put("case", "workflow.input.case");
+        ip1.put("p1", "${workflow.input.param1}");
+        ip1.put("p2", "${workflow.input.param2}");
+        ip1.put("case", "${workflow.input.case}");
 
         task1 = new WorkflowTask();
         task1.setName("Test1");
@@ -67,7 +67,7 @@ public class DecisionTaskMapperTest {
     }
 
     @Test
-    public void getMappedTasks() throws Exception {
+    public void getMappedTasks() {
 
         //Given
         //Task Definition
@@ -79,7 +79,7 @@ public class DecisionTaskMapperTest {
 
         //Decision task instance
         WorkflowTask decisionTask = new WorkflowTask();
-        decisionTask.setType(WorkflowTask.Type.DECISION.name());
+        decisionTask.setType(TaskType.DECISION.name());
         decisionTask.setName("Decision");
         decisionTask.setTaskReferenceName("decisionTask");
         decisionTask.setDefaultCase(Arrays.asList(task1));
@@ -91,11 +91,14 @@ public class DecisionTaskMapperTest {
         decisionCases.put("odd", Arrays.asList(task3));
         decisionTask.setDecisionCases(decisionCases);
         //Workflow instance
+        WorkflowDef  workflowDef = new WorkflowDef();
+        workflowDef.setSchemaVersion(2);
+
         Workflow workflowInstance = new Workflow();
+        workflowInstance.setWorkflowDefinition(workflowDef);
         Map<String, Object> workflowInput = new HashMap<>();
         workflowInput.put("Id", "22");
         workflowInstance.setInput(workflowInput);
-        workflowInstance.setSchemaVersion(2);
 
         Map<String, Object> body = new HashMap<>();
         body.put("input", taskDefinitionInput);
@@ -105,15 +108,22 @@ public class DecisionTaskMapperTest {
                 workflowInstance, null, null);
 
 
-        WorkflowDef  workflowDef = new WorkflowDef();
         Task theTask = new Task();
         theTask.setReferenceTaskName("Foo");
         theTask.setTaskId(IDGenerator.generate());
 
-        when(deciderService.getTasksToBeScheduled(workflowDef, workflowInstance, task2, 0, null))
+        when(deciderService.getTasksToBeScheduled(workflowInstance, task2, 0, null))
                 .thenReturn(Arrays.asList(theTask));
-        TaskMapperContext taskMapperContext = new TaskMapperContext(workflowDef, workflowInstance, decisionTask,
-                input, 0, null, IDGenerator.generate(), deciderService);
+
+        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
+                .withWorkflowDefinition(workflowDef)
+                .withWorkflowInstance(workflowInstance)
+                .withTaskToSchedule(decisionTask)
+                .withTaskInput(input)
+                .withRetryCount(0)
+                .withTaskId(IDGenerator.generate())
+                .withDeciderService(deciderService)
+                .build();
 
         //When
         List<Task> mappedTasks = decisionTaskMapper.getMappedTasks(taskMapperContext);
@@ -126,10 +136,9 @@ public class DecisionTaskMapperTest {
     }
 
     @Test
-    public void getEvaluatedCaseValue() throws Exception {
-
+    public void getEvaluatedCaseValue() {
         WorkflowTask decisionTask = new WorkflowTask();
-        decisionTask.setType(WorkflowTask.Type.DECISION.name());
+        decisionTask.setType(TaskType.DECISION.name());
         decisionTask.setName("Decision");
         decisionTask.setTaskReferenceName("decisionTask");
         decisionTask.setInputParameters(ip1);
@@ -141,21 +150,21 @@ public class DecisionTaskMapperTest {
         decisionTask.setDecisionCases(decisionCases);
 
         Workflow workflowInstance = new Workflow();
+        workflowInstance.setWorkflowDefinition(new WorkflowDef());
         Map<String, Object> workflowInput = new HashMap<>();
-        workflowInput.put("p1", "workflow.input.param1");
-        workflowInput.put("p2", "workflow.input.param2");
+        workflowInput.put("param1", "test1");
+        workflowInput.put("param2", "test2");
         workflowInput.put("case", "0");
         workflowInstance.setInput(workflowInput);
 
         Map<String, Object> input = parametersUtils.getTaskInput(decisionTask.getInputParameters(),
                 workflowInstance, null, null);
 
-        assertEquals("0",decisionTaskMapper.getEvaluatedCaseValue(decisionTask, input));
-
+        assertEquals("0", decisionTaskMapper.getEvaluatedCaseValue(decisionTask, input));
     }
 
     @Test
-    public void getEvaluatedCaseValueUsingExpression() throws Exception {
+    public void getEvaluatedCaseValueUsingExpression() {
         //Given
         //Task Definition
         TaskDef taskDef = new TaskDef();
@@ -166,7 +175,7 @@ public class DecisionTaskMapperTest {
 
         //Decision task instance
         WorkflowTask decisionTask = new WorkflowTask();
-        decisionTask.setType(WorkflowTask.Type.DECISION.name());
+        decisionTask.setType(TaskType.DECISION.name());
         decisionTask.setName("Decision");
         decisionTask.setTaskReferenceName("decisionTask");
         decisionTask.setDefaultCase(Arrays.asList(task1));
@@ -177,12 +186,16 @@ public class DecisionTaskMapperTest {
         decisionCases.put("even", Arrays.asList(task2));
         decisionCases.put("odd", Arrays.asList(task3));
         decisionTask.setDecisionCases(decisionCases);
+
         //Workflow instance
+        WorkflowDef def = new WorkflowDef();
+        def.setSchemaVersion(2);
+
         Workflow workflowInstance = new Workflow();
+        workflowInstance.setWorkflowDefinition(def);
         Map<String, Object> workflowInput = new HashMap<>();
         workflowInput.put("Id", "22");
         workflowInstance.setInput(workflowInput);
-        workflowInstance.setSchemaVersion(2);
 
         Map<String, Object> body = new HashMap<>();
         body.put("input", taskDefinitionInput);
@@ -208,7 +221,7 @@ public class DecisionTaskMapperTest {
 
         //Decision task instance
         WorkflowTask decisionTask = new WorkflowTask();
-        decisionTask.setType(WorkflowTask.Type.DECISION.name());
+        decisionTask.setType(TaskType.DECISION.name());
         decisionTask.setName("Decision");
         decisionTask.setTaskReferenceName("decisionTask");
         decisionTask.setDefaultCase(Arrays.asList(task1));
@@ -219,12 +232,16 @@ public class DecisionTaskMapperTest {
         decisionCases.put("even", Arrays.asList(task2));
         decisionCases.put("odd", Arrays.asList(task3));
         decisionTask.setDecisionCases(decisionCases);
+
         //Workflow instance
+        WorkflowDef def = new WorkflowDef();
+        def.setSchemaVersion(2);
+
         Workflow workflowInstance = new Workflow();
+        workflowInstance.setWorkflowDefinition(def);
         Map<String, Object> workflowInput = new HashMap<>();
         workflowInput.put(".Id", "22");
         workflowInstance.setInput(workflowInput);
-        workflowInstance.setSchemaVersion(2);
 
         Map<String, Object> body = new HashMap<>();
         body.put("input", taskDefinitionInput);
@@ -238,10 +255,5 @@ public class DecisionTaskMapperTest {
         expectedException.expectMessage("Error while evaluating the script " + decisionTask.getCaseExpression());
 
         decisionTaskMapper.getEvaluatedCaseValue(decisionTask, evaluatorInput);
-
     }
-
-
-
-
 }

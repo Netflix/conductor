@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,13 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * 
- */
 package com.netflix.conductor.dao;
-
-import java.util.Comparator;
-import java.util.List;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -28,6 +22,8 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
+
+import java.util.List;
 
 /**
  * @author Viren
@@ -81,27 +77,28 @@ public interface ExecutionDAO {
 	 * @see TaskDef#concurrencyLimit()
 	 */
 	boolean exceedsInProgressLimit(Task task);
-	
-	/**
-	 * 
-	 * @param tasks Multiple tasks to be updated
-	 *  
-	 */
-	void updateTasks(List<Task> tasks);
 
 	/**
-	 * 
-	 * @param log Task Execution Log to be added
-	 *  
+	 * Checks if the Task is rate limited or not based on the {@link Task#getRateLimitPerFrequency()} and {@link Task#getRateLimitFrequencyInSeconds()}
+	 * @param task: which needs to be evaluated whether it is rateLimited or not
+	 * @return true: If the {@link Task} is rateLimited
+	 * 		false: If the {@link Task} is not rateLimited
 	 */
-	void addTaskExecLog(List<TaskExecLog> log);
+	boolean exceedsRateLimitPerFrequency(Task task);
+
+	/**
+	 *
+	 * @param tasks Multiple tasks to be updated
+	 *
+	 */
+	void updateTasks(List<Task> tasks);
 	
 	/**
 	 * 
 	 * @param taskId id of the task to be removed.
-	 *  
+	 * @return true if the deletion is successful, false otherwise.
 	 */
-	void removeTask(String taskId);
+	boolean removeTask(String taskId);
 
 	/**
 	 * 
@@ -125,7 +122,7 @@ public interface ExecutionDAO {
 	 * @return List of pending tasks
 	 * 
 	 */
-	public List<Task> getPendingTasksForTaskType(String taskType);
+	List<Task> getPendingTasksForTaskType(String taskType);
 
 	/**
 	 * 
@@ -154,10 +151,9 @@ public interface ExecutionDAO {
 	/**
 	 *
 	 * @param workflowId workflow instance id
-	 * @param archiveWorkflow if true, archives the workflow in elasticsearch, else, removes the workflow completely
-	 *  
+	 * @return true if the deletion is successful, false otherwise
 	 */
-	void removeWorkflow(String workflowId, boolean archiveWorkflow);
+	boolean removeWorkflow(String workflowId);
 	
 	/**
 	 * 
@@ -230,6 +226,12 @@ public interface ExecutionDAO {
 	 */
 	List<Workflow> getWorkflowsByCorrelationId(String correlationId, boolean includeTasks);
 
+	/**
+	 *
+	 * @return true, if the DAO implementation is capable of searching across workflows
+	 * false, if the DAO implementation cannot perform searches across workflows (and needs to use indexDAO)
+	 */
+	boolean canSearchAcrossWorkflows();
 
 	//Events
 	
@@ -247,6 +249,12 @@ public interface ExecutionDAO {
 	void updateEventExecution(EventExecution ee);
 
 	/**
+	 *
+	 * @param ee Event execution to be removed
+	 */
+	void removeEventExecution(EventExecution ee);
+
+	/**
 	 * 
 	 * @param eventHandlerName Name of the event handler
 	 * @param eventName Event Name
@@ -255,13 +263,6 @@ public interface ExecutionDAO {
 	 * @return list of matching events
 	 */
 	List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max);
-
-	/**
-	 * Adds an incoming external message into the store/index
-	 * @param queue Name of the registered queue
-	 * @param msg Message
-	 */
-	void addMessage(String queue, Message msg);
 	
 	void updateLastPoll(String taskDefName, String domain, String workerId);
 	

@@ -19,9 +19,9 @@ package com.netflix.conductor.config;
  */
 
 
-import java.util.Map;
-
 import com.netflix.conductor.core.config.Configuration;
+
+import java.util.Map;
 
 /**
  * @author Viren
@@ -68,8 +68,13 @@ public class TestConfiguration implements Configuration {
 	public String getProperty(String string, String def) {
 		return "dummy";
 	}
-	
-	@Override
+
+    @Override
+    public boolean getBooleanProperty(String name, boolean defaultValue) {
+        return false;
+    }
+
+    @Override
 	public String getAvailabilityZone() {
 		return "us-east-1a";
 	}
@@ -82,6 +87,46 @@ public class TestConfiguration implements Configuration {
 	@Override
 	public String getRegion() {
 		return "us-east-1";
+	}
+
+	@Override
+	public Long getWorkflowInputPayloadSizeThresholdKB() {
+		return 5120L;
+	}
+
+	@Override
+	public Long getMaxWorkflowInputPayloadSizeThresholdKB() {
+		return 10240L;
+	}
+
+	@Override
+	public Long getWorkflowOutputPayloadSizeThresholdKB() {
+		return 5120L;
+	}
+
+	@Override
+	public Long getMaxWorkflowOutputPayloadSizeThresholdKB() {
+		return 10240L;
+	}
+
+	@Override
+	public Long getTaskInputPayloadSizeThresholdKB() {
+		return 3072L;
+	}
+
+	@Override
+	public Long getMaxTaskInputPayloadSizeThresholdKB() {
+		return 10240L;
+	}
+
+	@Override
+	public Long getTaskOutputPayloadSizeThresholdKB() {
+		return 3072L;
+	}
+
+	@Override
+	public Long getMaxTaskOutputPayloadSizeThresholdKB() {
+		return 10240L;
 	}
 
 	@Override
