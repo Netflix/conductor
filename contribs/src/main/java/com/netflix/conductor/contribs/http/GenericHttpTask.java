@@ -263,11 +263,11 @@ class GenericHttpTask extends WorkflowSystemTask {
 
 	void setReasonForIncompletion(HttpResponse response, Task task) {
 		if (response.body != null) {
-			task.setReasonForIncompletion(response.body.toString());
+			task.setReasonForIncompletion("StatusCode="+response.statusCode+",Reason="+response.body.toString());
 		} else if (StringUtils.isNotEmpty(response.error)) {
-			task.setReasonForIncompletion(response.error);
+			task.setReasonForIncompletion("StatusCode="+response.statusCode+",Reason="+response.error);
 		} else {
-			task.setReasonForIncompletion("No response from the remote service");
+			task.setReasonForIncompletion("StatusCode="+response.statusCode+",Reason=No response from the remote service");
 		}
 	}
 
