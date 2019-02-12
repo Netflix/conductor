@@ -726,6 +726,8 @@ public class WorkflowExecutor {
 			originalFailed = failedTask.getOutputData().get("originalFailedTask");
 			if (originalFailed == null) {
 				Map<String, Object> map = new HashMap<>();
+				map.put("input", failedTask.getInputData());
+				map.put("output", failedTask.getOutputData());
 				map.put("taskId", failedTask.getTaskId());
 				map.put("retryCount", failedTask.getRetryCount());
 				map.put("referenceName", failedTask.getReferenceTaskName());
