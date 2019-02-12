@@ -13,7 +13,7 @@ import Tab from "../../common/Tab";
 import TabContainer from "../../common/TabContainer";
 import { startWorkflow } from '../../../actions/WorkflowActions';
 import {Link} from "react-router";
-import unescapeJs from "unescape-js";
+import UnescapeButton from '../../common/UnescapeButton'
 
 new Clipboard('.btn');
 
@@ -53,12 +53,12 @@ function popoverLink(cell, row) {
     return (<OverlayTrigger trigger="click" rootClose placement="left" overlay={
         <Popover id="task-details-wfd" title="Task Details" style={{width: '800px'}}>
             <Panel header={<span><span>Task Input</span> <i title="copy to clipboard" className="btn fa fa-clipboard"
-                                                            data-clipboard-target="#input"/></span>}>
+                                                            data-clipboard-target="#input"/><UnescapeButton target='input' /></span>}>
 
                 <span className="small"><pre id="input">{JSON.stringify(row.inputData, null, 2)}</pre></span>
             </Panel>
             <Panel header={<span><span>Task Output</span> <i title="copy to clipboard" className="btn fa fa-clipboard"
-                                                             data-clipboard-target="#output"/></span>}>
+                                                             data-clipboard-target="#output"/><UnescapeButton target='output' /></span>}>
                 <span className="small"><pre id="output">{JSON.stringify(row.outputData, null, 2)}</pre></span>
             </Panel>
             <Panel header="Task Failure Reason (if any)">
@@ -103,9 +103,6 @@ class WorkflowDetails extends Component {
     constructor(props) {
         super(props);
 
-        this.startWorkflow1 = this.startWorkflow1.bind(this);
-        this.doUnescape = this.doUnescape.bind(this);
-
         this.state = {
             loading: this.props.starting,
             log: this.props.res,
@@ -114,9 +111,7 @@ class WorkflowDetails extends Component {
             workflowForm: {
                 labels: [],
                 values: []
-            },
-            unescapeInput: false,
-            unescapeOutput: false
+            }
         };
 
         http.get('/api/sys/').then((data) => {
@@ -345,11 +340,11 @@ class WorkflowDetails extends Component {
                         <div>
                             <strong>Workflow Input <i title="copy to clipboard" className="btn fa fa-clipboard"
                                                       data-clipboard-target="#wfinput"/></strong>
-                                                      <button onClick={(e) => this.doUnescape(e, 1)} className='btn btn-default btn-xs'>{this.state.unescapeInput ? 'Escape' : 'Unescape'}</button>
+                                                      <UnescapeButton target='wfinput' />
                             <pre style={{height: '200px'}} id="wfinput">{this.state.unescapeInput ? unescapeJs(JSON.stringify(wf.input, null, 3)) : JSON.stringify(wf.input, null, 3)}</pre>
                             <strong>Workflow Output <i title="copy to clipboard" className="btn fa fa-clipboard"
                                                        data-clipboard-target="#wfoutput"/></strong>
-                                                       <button onClick={(e) => this.doUnescape(e, 2)} className='btn btn-default btn-xs'>{this.state.unescapeOutput ? 'Escape' : 'Unescape'}</button>
+                                                       <UnescapeButton target='wfoutput' />
                             <pre style={{height: '200px'}}
                                  id="wfoutput">{this.state.unescapeOutput ? unescapeJs(JSON.stringify((wf.output) == null ? {} : wf.output, null, 3)) : JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
                             {wf.status === 'FAILED' ? <div><strong>Workflow Faiure Reason (if any)</strong>
@@ -360,6 +355,7 @@ class WorkflowDetails extends Component {
                     <Tab eventKey={4} title="JSON">
                         <i title="copy to clipboard" className="btn fa fa-clipboard"
                            data-clipboard-target="#fulljson"/>
+                           <UnescapeButton target='fulljson' />
                         <pre style={{height: '80%'}} id="fulljson">{JSON.stringify(wf, null, 3)}</pre>
                     </Tab>
                     <Tab eventKey={5} title="Edit input">

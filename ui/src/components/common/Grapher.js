@@ -3,6 +3,7 @@ import dagreD3 from 'dagre-d3'
 import d3 from 'd3'
 import {Tabs, Tab, Table} from 'react-bootstrap';
 import Clipboard from 'clipboard';
+import UnescapeButton from './UnescapeButton'
 
 new Clipboard('.btn');
 
@@ -219,7 +220,7 @@ class Grapher extends Component {
                                 </tr>
                                 <tr>
                                     <th colSpan="4">Input <i title="copy to clipboard" className="btn fa fa-clipboard"
-                                                             data-clipboard-target="#t_input"/></th>
+                                                             data-clipboard-target="#t_input"/><UnescapeButton target="t_input" /></th>
                                 </tr>
                                 <tr>
                                     <td colSpan="4">
@@ -229,7 +230,7 @@ class Grapher extends Component {
                                 </tr>
                                 <tr>
                                     <th colSpan="4">Output <i title="copy to clipboard" className="btn fa fa-clipboard"
-                                                              data-clipboard-target="#t_output"/></th>
+                                                              data-clipboard-target="#t_output"/><UnescapeButton target="t_output" /></th>
                                 </tr>
                                 <tr>
                                     <td colSpan="4" >
@@ -242,12 +243,12 @@ class Grapher extends Component {
                         </Tab>
                         <Tab eventKey={2} title="JSON"><br/>
                             <i title="copy to clipboard" className="btn fa fa-clipboard"
-                               data-clipboard-target="#t_json"/>
+                               data-clipboard-target="#t_json"/><UnescapeButton target="t_json" />
                             <pre id="t_json">{JSON.stringify(this.state.selectedTask, null, 3)}</pre>
                         </Tab>
                         <Tab eventKey={3} title="Logs"><br/>
                             <i title="copy to clipboard" className="btn fa fa-clipboard"
-                               data-clipboard-target="#t_logs"/>
+                               data-clipboard-target="#t_logs"/><UnescapeButton target="t_logs" />
                             <pre id="t_logs">{JSON.stringify(this.state.selectedTask.logs, null, 3)}</pre>
                         </Tab>
                     </Tabs>
