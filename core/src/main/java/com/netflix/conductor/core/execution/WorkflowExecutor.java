@@ -479,6 +479,14 @@ public class WorkflowExecutor {
     }
 
 
+    public List<Task> filterTaskByTypeAndStatusForWorkflow(String workflowId, TaskType taskType, Task.Status taskStatus) {
+        return executionDAOFacade.getTasksForWorkflow(workflowId)
+                .stream()
+                .filter(task -> task.getTaskType().equals(taskType.name()))
+                .filter(task -> task.getStatus() == taskStatus)
+                .collect(Collectors.toList());
+    }
+
     /**
      * @param wf the workflow to be completed
      * @throws ApplicationException if workflow is not in terminal state
