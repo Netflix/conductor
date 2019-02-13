@@ -37,7 +37,7 @@ if [[ "$log4j_aurora_appender" == "true" ]]; then
     echo "log4j.rootLogger=ALL, CN, DB" > /app/config/log4j.properties
 
     echo "log4j.appender.CN=org.apache.log4j.ConsoleAppender" >> /app/config/log4j.properties
-    echo "log4j.appender.CN.threshold=ERROR" >> /app/config/log4j.properties
+    echo "log4j.appender.CN.threshold=INFO" >> /app/config/log4j.properties
     echo "log4j.appender.CN.layout=com.netflix.conductor.log4j.KeyValueLayout" >> /app/config/log4j.properties
 
     echo "log4j.appender.DB=com.netflix.conductor.aurora.log4j.DeluxeAuroraAppender" >> /app/config/log4j.properties
