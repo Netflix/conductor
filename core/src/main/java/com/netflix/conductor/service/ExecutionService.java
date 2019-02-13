@@ -37,6 +37,8 @@ import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.impl.Log4JLogger;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -380,11 +382,10 @@ public class ExecutionService {
 			config.override(pair.getKey(), pair.getValue());
 			if (pair.getKey().startsWith("log4j_logger_")) {
 				String name = pair.getKey().replace("log4j_logger_", "").replaceAll("_", ".");
-				Logger targetLogger = LoggerFactory.getLogger(name);
 				Level targetLevel = Level.toLevel(pair.getValue());
 
 				try {
-					setLevel(targetLogger, targetLevel);
+					setLevel(name, targetLevel);
 				} catch (Exception e) {
 					logger.error("set log level failed with {} for {}", e.getMessage(), pair.toString(), e);
 				}
@@ -392,11 +393,18 @@ public class ExecutionService {
 		});
 	}
 
-	private void setLevel(Logger logger, Level level) throws Exception {
-		Field field = logger.getClass().getDeclaredField("logger");
+	private void setLevel(String name, Level level) throws Exception {
+		// Get slf4j wrapper
+		Logger slfLogger = LoggerFactory.getLogger(name);
+		Field field = slfLogger.getClass().getDeclaredField("logger");
 		field.setAccessible(true);
 
-		org.apache.log4j.Logger object = (org.apache.log4j.Logger)field.get(logger);
-		object.setLevel(level);
+		// Ge actual log4j logger
+		org.apache.log4j.Logger target = (org.apache.log4j.Logger)field.get(slfLogger);
+		target.setLevel(level);
+
+		// Apache common logging to log4j logger
+		Log4JLogger commLogger = (Log4JLogger)LogFactory.getLog(name);
+		commLogger.getLogger().setLevel(level);
 	}
 }
