@@ -360,10 +360,11 @@ router.get('/queue/data', async (req, res, next) => {
 });
 
 //metadata post
-router.put('/metadata/workflow/',  (req, res, next) => {
+router.put('/metadata', async (req, res, next) => {
   try {
-    http.put(baseURLMeta + 'workflow/', req);
-    res.status(200).send(req.body);
+    let workflowDesc = req.body;
+    const response = await http.put(baseURLMeta + 'workflow/', workflowDesc);
+    res.status(204);
   } catch (err) {
     next(err);
   }

@@ -389,9 +389,3 @@ export function getTaskLogs(taskId) {
     });
   }
 }
-
-//updating metadata
-export function setWorkflowMetaDetails(name, version, tasksToSend){
-  let JSONToSend = '['+JSON.stringify({name: name, version: version, tasks: tasksToSend})+']';
-  http.put('/api/wfe/metadata/workflow/', JSON.parse(JSONToSend));
-}
