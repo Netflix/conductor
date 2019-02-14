@@ -69,7 +69,7 @@ import java.util.stream.Collectors;
  */
 @Trace
 public class WorkflowExecutor {
-	private static final String BEARER = "Bearer ";
+	private static final String BEARER = "Bearer";
 
 	public enum StartEndState {
 		start, end
@@ -726,6 +726,8 @@ public class WorkflowExecutor {
 			originalFailed = failedTask.getOutputData().get("originalFailedTask");
 			if (originalFailed == null) {
 				Map<String, Object> map = new HashMap<>();
+				map.put("input", failedTask.getInputData());
+				map.put("output", failedTask.getOutputData());
 				map.put("taskId", failedTask.getTaskId());
 				map.put("retryCount", failedTask.getRetryCount());
 				map.put("referenceName", failedTask.getReferenceTaskName());
@@ -1495,16 +1497,21 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
 
 		// It gives us: Bearer token
-		String bearer = strings.get(0);
-		if (StringUtils.isEmpty(bearer))
+		String header = strings.get(0);
+		if (StringUtils.isEmpty(header))
 			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
 
-		// Checking bearer format
-		if (!bearer.startsWith(BEARER))
-			throw new ApplicationException(Code.UNAUTHORIZED, "Invalid " + HttpHeaders.AUTHORIZATION + " header format");
+		// Validate length
+		if (header.length() <= BEARER.length())
+			throw new ApplicationException(Code.UNAUTHORIZED, HttpHeaders.AUTHORIZATION + " header too short");
 
-		// Get the access token
-		String token = bearer.substring(BEARER.length());
+		// Get the bearer & access token
+		String type = header.substring(0, BEARER.length());
+		String token = header.substring(BEARER.length() + 1);
+
+		// Checking bearer format
+		if (!BEARER.equalsIgnoreCase(type))
+			throw new ApplicationException(Code.UNAUTHORIZED, "Invalid " + HttpHeaders.AUTHORIZATION + " type(" + type + ")");
 
 		Map<String, Object> decoded;
 
