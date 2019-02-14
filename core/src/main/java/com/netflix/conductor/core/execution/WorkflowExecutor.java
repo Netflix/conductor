@@ -952,7 +952,8 @@ public class WorkflowExecutor {
 		}
 
 		// Otherwise wake it up by unacking message via queue
-		queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
+		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
+		logger.debug("wakeup " + result + " for " + workflowId);
 	}
 
 	public List<Task> getTasks(String taskType, String startKey, int count) throws Exception {

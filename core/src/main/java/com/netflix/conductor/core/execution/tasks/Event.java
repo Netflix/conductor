@@ -77,7 +77,7 @@ public class Event extends WorkflowSystemTask {
 				task.setStatus(Status.FAILED);
 				task.setReasonForIncompletion(ex.getMessage());
 			}
-			logger.info("Event message published.Message="+message.getPayload()+",status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("Event message published.Message="+message.getPayload()+",status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 		} else {
 			task.setReasonForIncompletion("No queue found to publish.");
 			logger.error("No queue found to publish.");

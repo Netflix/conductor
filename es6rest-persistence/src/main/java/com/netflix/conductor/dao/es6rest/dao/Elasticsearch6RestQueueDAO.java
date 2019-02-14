@@ -465,7 +465,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     @Override
-    public void wakeup(String queueName, String id) {
+    public boolean wakeup(String queueName, String id) {
         initQueue(queueName);
         try {
             String indexName = toIndexName(queueName);
@@ -473,7 +473,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             GetResponse record = findOne(indexName, typeName, id);
             if (!record.isExists()) {
                 pushIfNotExists(queueName, id, 0);
-                return;
+                return false;
             }
 
             // This method used on conjunction with checking of sweeper queue (see workflow executor)
@@ -490,7 +490,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
 
             // If the record pulled within threshold period - do nothing as it might be in sweeper right now
             if (System.currentTimeMillis() - poppedOn < poppedThreshold) {
-                return;
+                return false;
             }
 
             // Otherwise make record visible for pulling
@@ -511,7 +511,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
 
                 client.update(updateRequest);
 
-                logger.info("wakeup success for " + id);
+                return true;
             } catch (Exception ex) {
                 if (!isVerConflictException(ex)) {
                     logger.error("wakeup: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
@@ -520,6 +520,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         } catch (Exception ex) {
             logger.error("wakeup: unable to execute for {}/{} with {}", queueName, id, ex.getMessage(), ex);
         }
+        return false;
     }
 
     private boolean pushMessage(String queueName, String id, String payload, long offsetSeconds) {
