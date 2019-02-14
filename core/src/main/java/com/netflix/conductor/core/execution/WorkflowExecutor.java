@@ -742,9 +742,14 @@ public class WorkflowExecutor {
 		}
 
 		edao.updateWorkflow(workflow);
-		String error = "Workflow is terminated/reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason + ",contextUser=" + workflow.getContextUser();
+		String error = "Workflow is terminated/reset. workflowId=" + workflowId
+				+ ",correlationId=" + workflow.getCorrelationId()
+				+ ",reasonForIncompletion=" + reason
+				+ ",contextUser=" + workflow.getContextUser();
 		if (failedTask != null) {
-			error += ",taskId=" + failedTask.getTaskId() + ",taskRefName=" + failedTask.getReferenceTaskName();
+			error += ",taskId=" + failedTask.getTaskId()
+					+ ",taskRefName=" + failedTask.getReferenceTaskName()
+					+ ",taskReasonForIncompletion=" + failedTask.getReasonForIncompletion();
 		}
 		logger.error(error);
 		List<Task> tasks = workflow.getTasks();
@@ -781,8 +786,6 @@ public class WorkflowExecutor {
 				map.put("referenceName", failedTask.getReferenceTaskName());
 				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
 				input.put("failedTask", map);
-
-				logger.error("Error in task execution. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			}
 			// originalFailed represents the task in the first failed workflow
 			input.put("originalFailedTask", originalFailed);
