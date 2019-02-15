@@ -60,8 +60,8 @@ class JSONTab extends Component {
     render() {
       return(
           <div>
-            <button className="btn btn-primary" onClick={(e) => this.editJSONswitch(e, 1)} style={{marginTop:'5px', marginBottom: '5px'}} disabled={this.state.reloading}>{this.state.editingJSON ? 'Save' : 'Edit'}</button>
-            <button className="btn btn-default" onClick={(e) => this.editJSONswitch(e, 2)} style={{marginTop:'5px', marginBottom: '5px', marginLeft: '5px', display: this.state.editingJSON ? 'inline-block' : 'none'}} >Cancel</button>
+            <button className="btn btn-default" onClick={(e) => this.editJSONswitch(e, 2)} style={{marginTop:'5px', marginBottom: '5px', display: this.state.editingJSON ? 'inline-block' : 'none'}} >Cancel</button>
+            <button className="btn btn-primary" onClick={(e) => this.editJSONswitch(e, 1)} style={{marginTop:'5px', marginBottom: '5px', marginLeft: '5px'}} disabled={this.state.reloading}>{this.state.editingJSON ? 'Save' : 'Edit'}</button>
             <div style={{marginTop: '10px', display: this.state.isNotParsable ? "block" : "none"}} className="alert alert-warning" role="alert">{this.state.isNotParsable ? "Could not parse JSON. Is the syntax correct?" : ""}</div>
             <pre ref={elem => this.editor = elem} className={this.state.editingJSON ? 'editingPre' : ''} contentEditable={this.state.editingJSON}>
               {this.state.wfs}
