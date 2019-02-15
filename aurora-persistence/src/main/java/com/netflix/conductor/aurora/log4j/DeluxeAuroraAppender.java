@@ -40,6 +40,8 @@ import java.util.concurrent.TimeUnit;
  * @author Oleksiy Lysak
  */
 public class DeluxeAuroraAppender extends AppenderSkeleton {
+    private static final String CREATE_INDEX = "create index log4j_logs_log_time_idx on log4j_logs (log_time)";
+
     private static final String CREATE_TABLE = "create table log4j_logs(\n" +
             "  log_time timestamp,\n" +
             "  logger varchar,\n" +
@@ -105,13 +107,8 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 
                 dataSource = new HikariDataSource(poolConfig);
 
-                try (Connection tx = dataSource.getConnection()) {
-                    tx.prepareCall(CREATE_TABLE).execute();
-                } catch (Exception ex) {
-                    if (!ex.getMessage().contains("already exists")) {
-                        ex.printStackTrace();
-                    }
-                }
+                execute(CREATE_TABLE);
+                execute(CREATE_INDEX);
             }
 
             try (Connection tx = dataSource.getConnection()) {
@@ -167,6 +164,16 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 
     public String getPassword() {
         return password;
+    }
+
+    private void execute(String ddl) {
+        try (Connection tx = dataSource.getConnection()) {
+            tx.prepareCall(ddl).execute();
+        } catch (Exception ex) {
+            if (!ex.getMessage().contains("already exists")) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     private String normalizeMessage(String message) {
