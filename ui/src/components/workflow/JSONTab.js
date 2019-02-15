@@ -27,13 +27,14 @@ class JSONTab extends Component {
       if(which == 1) {
         if(this.state.editingJSON) {
           try {
-            JSON.parse(unescapeJs(this.editor.innerText)).tasks;
+            JSON.parse(this.editor.innerText);
           } catch(e) {
             parseErr = e;
           }
           if(parseErr == null) {
             this.setState({wfs: this.editor.innerText});
-            let toBeSent = JSON.parse("["+unescapeJs(this.editor.innerText)+"]");
+            let toBeSent = JSON.parse("["+this.editor.innerText+"]");
+            
             this.props.dispatch(updateWorkflow(toBeSent));
             this.setState({
               reloading: true
