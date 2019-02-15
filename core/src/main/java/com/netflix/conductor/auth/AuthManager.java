@@ -37,7 +37,6 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,24 +100,11 @@ public class AuthManager {
 		data.add("client_secret", this.clientSecret);
 
 		String url = this.authUrl;
-		boolean isExternal = false;
-		if (MapUtils.isNotEmpty(workflow.getAuthorization())) {
-			String issuer = (String)workflow.getAuthorization().get("iss");
-			isExternal = StringUtils.isNotEmpty(issuer) && issuer.contains(".dmlib.");// dmlib.(de|in|io) means external call
-		}
-
-		// Use service discovery when not external
-		if (!isExternal) {
-			logger.debug("Using service discovery for " + this.authService);
-			final String uri = DNSLookup.lookup(this.authService);
-
-			if (StringUtils.isEmpty(uri)) {
-				logger.error("Service lookup failed for " + this.authService + " falling back to: " + this.authUrl);
-			} else {
-				url = uri + authEndpoint;
-			}
+		String hostAndPort = DNSLookup.lookup(this.authService);
+		if (StringUtils.isEmpty(hostAndPort)) {
+			logger.error("Service lookup failed for " + this.authService + " falling back to: " + this.authUrl);
 		} else {
-			logger.debug("Using external auth url");
+			url = hostAndPort + authEndpoint;
 		}
 
 		WebResource webResource = client.resource(url);
