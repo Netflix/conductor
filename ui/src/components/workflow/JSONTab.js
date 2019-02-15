@@ -9,7 +9,8 @@ class JSONTab extends Component {
       this.state = {
         editingJSON: false,
         wfs: this.props.wfs,
-        isNotParsable: false
+        isNotParsable: false,
+        reloading: false
       }
       this.editJSONswitch = this.editJSONswitch.bind(this);
     }
@@ -33,7 +34,11 @@ class JSONTab extends Component {
           if(parseErr == null) {
             this.setState({wfs: this.editor.innerText});
             let toBeSent = JSON.parse("["+unescapeJs(this.editor.innerText)+"]");
-            console.log(toBeSent)
+            this.props.dispatch(updateWorkflow(toBeSent));
+            this.setState({
+              reloading: true
+            })
+            location.reload();
           } else {
             this.setState({isNotParsable : true});
           }
@@ -54,7 +59,7 @@ class JSONTab extends Component {
     render() {
       return(
           <div>
-            <button className="btn btn-primary" onClick={(e) => this.editJSONswitch(e, 1)} style={{marginTop:'5px', marginBottom: '5px'}} >{this.state.editingJSON ? 'Save' : 'Edit'}</button>
+            <button className="btn btn-primary" onClick={(e) => this.editJSONswitch(e, 1)} style={{marginTop:'5px', marginBottom: '5px'}} disabled={this.state.reloading}>{this.state.editingJSON ? 'Save' : 'Edit'}</button>
             <button className="btn btn-default" onClick={(e) => this.editJSONswitch(e, 2)} style={{marginTop:'5px', marginBottom: '5px', marginLeft: '5px', display: this.state.editingJSON ? 'inline-block' : 'none'}} >Cancel</button>
             <div style={{marginTop: '10px', display: this.state.isNotParsable ? "block" : "none"}} className="alert alert-warning" role="alert">{this.state.isNotParsable ? "Could not parse JSON. Is the syntax correct?" : ""}</div>
             <pre ref={elem => this.editor = elem} className={this.state.editingJSON ? 'editingPre' : ''} contentEditable={this.state.editingJSON}>
