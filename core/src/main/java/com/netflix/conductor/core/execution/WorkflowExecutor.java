@@ -742,7 +742,16 @@ public class WorkflowExecutor {
 		}
 
 		edao.updateWorkflow(workflow);
-		logger.error("Workflow is terminated/reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason + ",contextUser=" + workflow.getContextUser());
+		String error = "Workflow is terminated/reset. workflowId=" + workflowId
+				+ ",correlationId=" + workflow.getCorrelationId()
+				+ ",reasonForIncompletion=" + reason
+				+ ",contextUser=" + workflow.getContextUser();
+		if (failedTask != null) {
+			error += ",taskId=" + failedTask.getTaskId()
+					+ ",taskRefName=" + failedTask.getReferenceTaskName()
+					+ ",taskReasonForIncompletion=" + failedTask.getReasonForIncompletion();
+		}
+		logger.error(error);
 		List<Task> tasks = workflow.getTasks();
 		cancelTasks(workflow, tasks);
 
@@ -777,8 +786,6 @@ public class WorkflowExecutor {
 				map.put("referenceName", failedTask.getReferenceTaskName());
 				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
 				input.put("failedTask", map);
-
-				logger.error("Error in task execution. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			}
 			// originalFailed represents the task in the first failed workflow
 			input.put("originalFailedTask", originalFailed);
@@ -948,7 +955,8 @@ public class WorkflowExecutor {
 		}
 
 		// Otherwise wake it up by unacking message via queue
-		queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
+		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
+		logger.debug("wakeup " + result + " for " + workflowId);
 	}
 
 	public List<Task> getTasks(String taskType, String startKey, int count) throws Exception {
@@ -1042,7 +1050,7 @@ public class WorkflowExecutor {
 			if (tw.task != null) {
 				error += ",taskId=" + tw.task.getTaskId() + ",taskRefName=" + tw.task.getReferenceTaskName();
 			}
-			logger.error(error, tw);
+			logger.debug(error, tw);
 			terminate(def, workflow, tw);
 			return true;
 		}
@@ -1363,7 +1371,7 @@ public class WorkflowExecutor {
 
 		String taskId = (tw.task != null ? tw.task.getTaskId() : null);
 		String taskRefName = (tw.task != null ? tw.task.getReferenceTaskName() : null);
-		logger.error("Workflow failed/reset. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName + ",contextUser=" + workflow.getContextUser());
+		logger.debug("Workflow failed/reset. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName + ",contextUser=" + workflow.getContextUser());
 	}
 
 	@SuppressWarnings("unchecked")
