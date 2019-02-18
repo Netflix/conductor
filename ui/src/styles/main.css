@@ -403,6 +403,11 @@ pre {
   word-break: break-all;
 }
 
+.editingPre {
+  border: 1px solid#aeb7ff;
+  background-color: #f6f7ff;
+}
+
 .blue {
   color: navy;
 }

@@ -206,16 +206,6 @@ class WorkflowDetails extends Component {
         this.state.jsonData = dataObject;
     }
 
-    doUnescape(e, option) {
-        if(option == 1) {
-            let newval = !this.state.unescapeInput;
-            this.setState({unescapeInput: newval});
-        } else {
-            let newval = !this.state.unescapeOutput;
-            this.setState({unescapeOutput: newval});
-        }
-        this.forceUpdate();
-    }
 
     render() {
 
@@ -346,7 +336,7 @@ class WorkflowDetails extends Component {
                                                        data-clipboard-target="#wfoutput"/></strong>
                                                        <UnescapeButton target='wfoutput' />
                             <pre style={{height: '200px'}}
-                                 id="wfoutput">{this.state.unescapeOutput ? unescapeJs(JSON.stringify((wf.output) == null ? {} : wf.output, null, 3)) : JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
+                                 id="wfoutput">{JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
                             {wf.status === 'FAILED' ? <div><strong>Workflow Faiure Reason (if any)</strong>
                                 <pre>{wf.reasonForIncompletion ? JSON.stringify(wf.reasonForIncompletion, null, 3) : ''}</pre>
                             </div> : ''}
