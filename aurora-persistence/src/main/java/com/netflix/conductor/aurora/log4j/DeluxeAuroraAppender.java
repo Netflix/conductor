@@ -112,23 +112,23 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		if (buffer.isEmpty()) {
 			return;
 		}
-        if (!initialized.get()) {
-            init();
-        }
-        try (Connection tx = dataSource.getConnection()) {
-            PreparedStatement st = tx.prepareStatement(INSERT_QUERY);
+		if (!initialized.get()) {
+			init();
+		}
+		try (Connection tx = dataSource.getConnection()) {
+			PreparedStatement st = tx.prepareStatement(INSERT_QUERY);
 
 			LogEntry entry = buffer.poll();
 			while (entry != null) {
-                st.setTimestamp(1, entry.timestamp);
-                st.setString(2, entry.logger);
-                st.setString(3, entry.level);
-                st.setString(4, entry.owner);
-                st.setString(5, hostname);
-                st.setString(6, fromhost);
-                st.setString(7, entry.message);
-                st.setString(8, entry.stack);
-                st.execute();
+				st.setTimestamp(1, entry.timestamp);
+				st.setString(2, entry.logger);
+				st.setString(3, entry.level);
+				st.setString(4, entry.owner);
+				st.setString(5, hostname);
+				st.setString(6, fromhost);
+				st.setString(7, entry.message);
+				st.setString(8, entry.stack);
+				st.execute();
 
 				// Get the next
 				entry = buffer.take();
