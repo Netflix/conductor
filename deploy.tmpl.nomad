@@ -68,6 +68,10 @@ job "conductor" {
         TLD = "<TLD>"
         APP_VERSION = "<APP_VERSION>"
         WF_SERVICE = "${NOMAD_JOB_NAME}-server.service.<TLD>"
+
+        // Auth settings. Rest settings are in vault
+        conductor_auth_service = "auth.service.<TLD>"
+        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
       }
       service {
         name = "${JOB}-${TASK}"
@@ -165,7 +169,7 @@ job "conductor" {
         workflow_elasticsearch_initial_sleep_seconds = "30"
         workflow_elasticsearch_stale_period_seconds = "300"
 
-        // Auth settings
+        // Auth settings. Rest settings are in vault
         conductor_auth_service = "auth.service.<TLD>"
         conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
 
