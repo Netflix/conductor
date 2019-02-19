@@ -34,9 +34,13 @@ public class DbLogCleanup {
 
 			try (Connection tx = DriverManager.getConnection(url, config.auroraUser(), config.auroraPassword())) {
 				tx.setAutoCommit(true);
-				long startTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.keepDays());
+
+				long endTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.keepDays());
+				logger.info("Deleting records earlier than " + new Timestamp(endTime));
+
 				PreparedStatement st = tx.prepareStatement(CLEANUP);
-				st.setTimestamp(1, new Timestamp(startTime));
+				st.setTimestamp(1, new Timestamp(endTime));
+
 				int deleted = st.executeUpdate();
 				logger.info("Db log cleanup deleted " + deleted);
 			}
