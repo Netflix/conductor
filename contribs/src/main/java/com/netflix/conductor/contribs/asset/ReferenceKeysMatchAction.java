@@ -106,7 +106,11 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                 task.getOutputData().put("conductor.event.name", event);
                 task.getOutputData().put("conductor.event.payload", payload);
                 task.getOutputData().put("conductor.event.messageId", messageId);
-                logger.debug("Updating task " + task + ". workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId());
+                logger.debug("Updating task " + task + ". workflowId=" + workflow.getWorkflowId()
+                        + ",correlationId=" + workflow.getCorrelationId()
+                        + ",contextUser=" + workflow.getContextUser()
+                        + ",messageId=" + messageId
+                        + ",payload=" + payload);
 
                 // Set the reason if task failed. It should be provided in the event
                 if (Task.Status.FAILED.equals(taskStatus)) {
