@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.auth.AuthResponse;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.when;
 public class TestAuthManager {
 	private static Server server;
 	private Configuration config = mock(Configuration.class);
+	private Workflow workflow = mock(Workflow.class);
 	private ObjectMapper om = new ObjectMapper();
 
 	@BeforeClass
@@ -54,7 +56,7 @@ public class TestAuthManager {
 		AuthManager manager = new AuthManager(config);
 		AuthResponse authResponse = null;
 		try {
-			authResponse = manager.authorize();
+			authResponse = manager.authorize(workflow);
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -81,7 +83,7 @@ public class TestAuthManager {
 		AuthManager manager = new AuthManager(config);
 		AuthResponse authResponse = null;
 		try {
-			authResponse = manager.authorize();
+			authResponse = manager.authorize(workflow);
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -98,7 +100,7 @@ public class TestAuthManager {
 		AuthManager manager = new AuthManager(config);
 		AuthResponse authResponse = null;
 		try {
-			authResponse = manager.authorize();
+			authResponse = manager.authorize(workflow);
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}

@@ -86,7 +86,7 @@ public class AuthTask extends WorkflowSystemTask {
 
 			doValidate(task, failOnError);
 		} else {
-			doAuth(task, failOnError);
+			doAuth(workflow, task, failOnError);
 		}
 	}
 
@@ -125,8 +125,8 @@ public class AuthTask extends WorkflowSystemTask {
 		}
 	}
 
-	private void doAuth(Task task, boolean failOnError) throws Exception {
-		AuthResponse auth = manger.authorize(task.getCorrelationId());
+	private void doAuth(Workflow workflow, Task task, boolean failOnError) throws Exception {
+		AuthResponse auth = manger.authorize(workflow);
 
 		if (!StringUtils.isEmpty(auth.getAccessToken())) {
 			task.getOutputData().put("success", true);

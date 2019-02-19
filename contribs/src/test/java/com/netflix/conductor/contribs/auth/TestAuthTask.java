@@ -380,7 +380,7 @@ public class TestAuthTask {
 				.sign(Algorithm.none());
 		authResponse.setAccessToken(accessToken);
 		authResponse.setRefreshToken(refreshToken);
-		when(manger.authorize()).thenReturn(authResponse);
+		when(manger.authorize(workflow)).thenReturn(authResponse);
 
 		AuthTask authTask = new AuthTask(manger);
 
@@ -402,7 +402,7 @@ public class TestAuthTask {
 		AuthResponse authResponse = new AuthResponse();
 		authResponse.setError("invalid_request");
 		authResponse.setErrorDescription("Invalid grant_type");
-		when(manger.authorize()).thenReturn(authResponse);
+		when(manger.authorize(workflow)).thenReturn(authResponse);
 
 		AuthTask authTask = new AuthTask(manger);
 
@@ -424,7 +424,7 @@ public class TestAuthTask {
 		AuthResponse authResponse = new AuthResponse();
 		authResponse.setError("invalid_request");
 		authResponse.setErrorDescription("Invalid grant_type");
-		when(manger.authorize()).thenReturn(authResponse);
+		when(manger.authorize(workflow)).thenReturn(authResponse);
 
 		AuthTask authTask = new AuthTask(manger);
 

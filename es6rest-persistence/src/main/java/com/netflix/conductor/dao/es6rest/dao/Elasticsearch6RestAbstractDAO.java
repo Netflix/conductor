@@ -17,7 +17,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -264,7 +263,7 @@ abstract class Elasticsearch6RestAbstractDAO {
         });
     }
 
-    boolean insert(String indexName, String typeName, String id, Map<String, ?> payload) {
+    boolean insert(String indexName, String typeName, String id, Object payload) {
         ensureIndexExists(indexName);
         AtomicBoolean result = new AtomicBoolean(false);
 
@@ -272,7 +271,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             try {
                 IndexRequest request = new IndexRequest()
                         .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .source(payload)
+                        .source(toMap(payload))
                         .create(true)
                         .index(indexName)
                         .type(typeName)
@@ -291,13 +290,14 @@ abstract class Elasticsearch6RestAbstractDAO {
         return result.get();
     }
 
-    void update(String indexName, String typeName, String id, Map<String, ?> payload) {
+    void update(String indexName, String typeName, String id, Object payload) {
         ensureIndexExists(indexName);
         doWithRetry(() -> {
             try {
+
                 IndexRequest request = new IndexRequest()
                         .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .source(payload)
+                        .source(toMap(payload))
                         .index(indexName)
                         .type(typeName)
                         .id(id);
@@ -312,25 +312,12 @@ abstract class Elasticsearch6RestAbstractDAO {
         });
     }
 
-    void upsert(String indexName, String typeName, String id, Map<String, ?> payload) {
-        ensureIndexExists(indexName);
-        doWithRetry(() -> {
-            try {
-                UpdateRequest request = new UpdateRequest().setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .docAsUpsert(true)
-                        .doc(payload)
-                        .index(indexName)
-                        .type(typeName)
-                        .id(id);
-
-                client.update(request);
-            } catch (Exception ex) {
-                if (!isVerConflictException(ex)) {
-                    logger.error("upsert: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
-                    throw new RuntimeException(ex.getMessage(), ex);
-                }
-            }
-        });
+    void upsert(String indexName, String typeName, String id, Object payload) {
+        if (exists(indexName, typeName, id)) {
+            update(indexName, typeName, id, payload);
+        } else {
+            insert(indexName, typeName, id, payload);
+        }
     }
 
     GetResponse findOne(String indexName, String typeName, String id) {
@@ -439,6 +426,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.query(query);
             sourceBuilder.size(limit);
+            sourceBuilder.version(true);
 
             Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
@@ -531,7 +519,7 @@ abstract class Elasticsearch6RestAbstractDAO {
         return mapper.convertValue(map, clazz);
     }
 
-    Map<String, ?> toMap(Object value) {
+    private Map<String, ?> toMap(Object value) {
         return mapper.convertValue(value, MAP_ALL_TYPE);
     }
 

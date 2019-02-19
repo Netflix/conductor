@@ -208,7 +208,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 			logger.error(ex.getMessage(), ex);
 			response.body = null;
 			response.headers = null;
-			response.statusCode = 0;
+			response.statusCode = -1;
 			response.error = ex.getMessage();
 			return response;
 		}
@@ -242,14 +242,14 @@ class GenericHttpTask extends WorkflowSystemTask {
 	}
 
 	private void setAuthToken(Input input, Workflow workflow) throws Exception {
-		AuthResponse response = auth.authorize(workflow.getCorrelationId());
+		AuthResponse response = auth.authorize(workflow);
 		if (!response.hasAccessToken()) {
 			// Just log first time
 			String error = String.format(GET_ACCESS_TOKEN_FAILED, response.getError(), response.getErrorDescription());
 			logger.error(error);
 
 			// Repeat authorize
-			response = auth.authorize(workflow.getCorrelationId());
+			response = auth.authorize(workflow);
 
 			// This time need to throw exception
 			if (!response.hasAccessToken()) {

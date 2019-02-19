@@ -20,7 +20,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 
 import java.util.*;
 
-public class Workflow extends Auditable{
+public class Workflow extends Auditable {
 	
 	public enum  WorkflowStatus {
 		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false), CANCELLED(true, false), PAUSED(false, true), RESET(true, false);
@@ -42,7 +42,9 @@ public class Workflow extends Auditable{
 			return successful;
 		}
 	}
-	
+
+	private long revision = 1;
+
 	private WorkflowStatus status = WorkflowStatus.RUNNING;
 	
 	private long endTime;

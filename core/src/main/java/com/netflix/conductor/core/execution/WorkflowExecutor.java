@@ -69,7 +69,7 @@ import java.util.stream.Collectors;
  */
 @Trace
 public class WorkflowExecutor {
-	private static final String BEARER = "Bearer ";
+	private static final String BEARER = "Bearer";
 
 	public enum StartEndState {
 		start, end
@@ -123,44 +123,34 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null, null);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, null);
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, null, null);
 	}
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser);
 	}
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null, null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null);
+	}
+
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, String contextToken, String contextUser) throws Exception {
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, authorization, contextToken, contextUser);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input,
 								String correlationId, String parentWorkflowId, String parentWorkflowTaskId,
 								String event, Map<String, String> taskToDomain, List<String> workflowIds,
-								Map<String, Object> authorization, String contextToken) throws Exception {
+								Map<String, Object> authorization, String contextToken, String contextUser) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
-		}
-
-		// Decode auth context if passed and store at workflow level
-		String contextUser = null;
-		if (authContextEnabled && StringUtils.isNotEmpty(contextToken)) {
-			try {
-				Map<String, Object> context = auth.decode(contextToken);
-				String username = (String)context.get("preferred_username");
-				String email = (String)context.get("email");
-				contextUser = String.format("%s(%s)", username, email);
-			} catch (Exception ex) {
-				logger.error("Auth context validation failed: " + ex.getMessage(), ex);
-				throw new ApplicationException(Code.UNAUTHORIZED, "Auth context validation failed: " + ex.getMessage());
-			}
 		}
 
 		try {
@@ -609,7 +599,7 @@ public class WorkflowExecutor {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow.getStatus().isTerminal() || workflow.getStatus().equals(WorkflowStatus.CANCELLED) ) {
 			String msg = "Workflow can not be cancelled because its already "+workflow.getStatus() ;
-			logger.error("Workflow can not be cancelled because its already  " + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId());
+			logger.error("Workflow can not be cancelled because its already " + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
 			throw new ApplicationException(Code.CONFLICT, msg);
 		}
 		if (!workflow.getStatus().isTerminal()) {
@@ -619,22 +609,17 @@ public class WorkflowExecutor {
 	}
 
 	public String cancelWorkflow(Workflow workflow, String reason) throws Exception {
+		String workflowId = workflow.getWorkflowId();
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
 
-
-		String workflowId = workflow.getWorkflowId();
 		if(StringUtils.isNotEmpty(reason)) {
 			workflow.setReasonForIncompletion(reason);
 		}
-		else
-		{
-			workflow.setReasonForIncompletion("workflow cancel called from api");
-		}
+
 		edao.updateWorkflow(workflow);
-		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 		logger.error("Workflow is cancelled. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 		cancelTasks(workflow, workflow.getTasks());
 
@@ -647,7 +632,7 @@ public class WorkflowExecutor {
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
 		String cancelWorkflow = def.getCancelWorkflow();
-		if (!StringUtils.isBlank(cancelWorkflow)) {
+		if (StringUtils.isNotEmpty(cancelWorkflow)) {
 			// Backward compatible by default
 			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
 			Map<String, Object> input = new HashMap<>();
@@ -659,6 +644,7 @@ public class WorkflowExecutor {
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());
 			input.put("workflowVersion", workflow.getVersion());
+			input.put("contextUser", workflow.getContextUser());
 
 			try {
 
@@ -674,13 +660,16 @@ public class WorkflowExecutor {
 			}
 		}
 
+		//remove from the sweep queue
+		queue.remove(deciderQueue, workflowId);
+
 		// metrics
 		Monitors.recordWorkflowCancel(workflow);
 
 		// send wf end message
 		notifyWorkflowStatus(workflow, StartEndState.end);
 
-		logger.debug("Workflow has cancelled, workflowId=" + workflow.getWorkflowId()+",input="+workflow.getInput()+",correlationId="+workflow.getCorrelationId()+",output="+workflow.getOutput() + ",contextUser=" + workflow.getContextUser());
+		logger.debug("Workflow has cancelled, workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
 		return workflowId;
 	}
 
@@ -691,9 +680,11 @@ public class WorkflowExecutor {
 			workflow.setStatus(WorkflowStatus.RESET);
 		}
 
-		workflow.setReasonForIncompletion(reason);
+		if(StringUtils.isNotEmpty(reason)) {
+			workflow.setReasonForIncompletion(reason);
+		}
+
 		edao.updateWorkflow(workflow);
-		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
 		logger.error("Workflow has been reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 		cancelTasks(workflow, workflow.getTasks());
 
@@ -703,6 +694,9 @@ public class WorkflowExecutor {
 			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
 			decide(parent.getWorkflowId());
 		}
+
+		//remove from the sweep queue
+		queue.remove(deciderQueue, workflow.getWorkflowId());
 
 		// metrics
 		Monitors.recordWorkflowReset(workflow);
@@ -715,31 +709,32 @@ public class WorkflowExecutor {
 
 	public void terminateWorkflow(String workflowId, String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
-		if (!workflow.getStatus().isTerminal()) {
-			workflow.setStatus(WorkflowStatus.TERMINATED);
+		if (workflow.getStatus().isTerminal()) {
+			logger.error("Workflow already finished. status=" + workflow.getStatus() + ",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
+			throw new ApplicationException(Code.CONFLICT, "Workflow already finished. status=" + workflow.getStatus());
 		}
-		terminateWorkflow(workflow, reason, null);
-	}
 
-	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow) throws Exception {
-		terminateWorkflow(workflow, reason, failureWorkflow, null);
+		terminateWorkflow(workflow, reason, null, null);
 	}
 
 	public void terminateWorkflow(Workflow workflow, String reason, String failureWorkflow, Task failedTask) throws Exception {
+		String workflowId = workflow.getWorkflowId();
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.TERMINATED);
 		}
 
-		String workflowId = workflow.getWorkflowId();
-		if (StringUtils.isEmpty(workflow.getReasonForIncompletion())) {
+		if (StringUtils.isNotEmpty(reason)) {
 			workflow.setReasonForIncompletion(reason);
 		}
 
+		Object originalFailed = null;
 		if (failedTask != null) {
-			Object originalFailed = failedTask.getOutputData().get("originalFailedTask");
+			originalFailed = failedTask.getOutputData().get("originalFailedTask");
 			if (originalFailed == null) {
 				Map<String, Object> map = new HashMap<>();
+				map.put("input", failedTask.getInputData());
+				map.put("output", failedTask.getOutputData());
 				map.put("taskId", failedTask.getTaskId());
 				map.put("retryCount", failedTask.getRetryCount());
 				map.put("referenceName", failedTask.getReferenceTaskName());
@@ -754,7 +749,16 @@ public class WorkflowExecutor {
 		}
 
 		edao.updateWorkflow(workflow);
-		logger.error("Workflow is terminated/reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",reasonForIncompletion="+reason + ",contextUser=" + workflow.getContextUser());
+		String error = "Workflow is terminated/reset. workflowId=" + workflowId
+				+ ",correlationId=" + workflow.getCorrelationId()
+				+ ",reasonForIncompletion=" + reason
+				+ ",contextUser=" + workflow.getContextUser();
+		if (failedTask != null) {
+			error += ",taskId=" + failedTask.getTaskId()
+					+ ",taskRefName=" + failedTask.getReferenceTaskName()
+					+ ",taskReasonForIncompletion=" + failedTask.getReasonForIncompletion();
+		}
+		logger.error(error);
 		List<Task> tasks = workflow.getTasks();
 		cancelTasks(workflow, tasks);
 
@@ -765,7 +769,7 @@ public class WorkflowExecutor {
 			decide(parent.getWorkflowId());
 		}
 
-		if (!StringUtils.isBlank(failureWorkflow)) {
+		if (StringUtils.isNotEmpty(failureWorkflow)) {
 			// Backward compatible by default
 			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
 			Map<String, Object> input = new HashMap<>();
@@ -777,6 +781,7 @@ public class WorkflowExecutor {
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());
 			input.put("workflowVersion", workflow.getVersion());
+			input.put("contextUser", workflow.getContextUser());
 			input.put("reason", reason);
 			input.put("failureStatus", workflow.getStatus().toString());
 			if (failedTask != null) {
@@ -788,15 +793,9 @@ public class WorkflowExecutor {
 				map.put("referenceName", failedTask.getReferenceTaskName());
 				map.put("reasonForIncompletion", failedTask.getReasonForIncompletion());
 				input.put("failedTask", map);
-
-                // failedTask represents the task in current workflow only
-                failedTask.getOutputData().computeIfPresent("originalFailedTask", (key, oldValue) -> {
-                    input.put("originalFailedTask", oldValue);
-                    return null;
-                });
-
-                logger.error("Error in task execution. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId()+",failedTaskid="+failedTask.getTaskId()+",taskReferenceName="+failedTask.getReferenceTaskName()+"reasonForIncompletion="+failedTask.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			}
+			// originalFailed represents the task in the first failed workflow
+			input.put("originalFailedTask", originalFailed);
 
 			try {
 
@@ -834,10 +833,11 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.INVALID_INPUT, "Task object is null");
 		}
 		String workflowId = result.getWorkflowInstanceId();
-		Workflow wf = edao.getWorkflow(workflowId);
+		Workflow wf = edao.getWorkflow(workflowId, false);
 		Task task = edao.getTask(result.getTaskId());
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
+			queue.remove(deciderQueue, wf.getWorkflowId());	//remove from the sweep queue
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			if(!task.getStatus().isTerminal()) {
 				task.setStatus(Status.COMPLETED);
@@ -962,7 +962,8 @@ public class WorkflowExecutor {
 		}
 
 		// Otherwise wake it up by unacking message via queue
-		queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
+		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
+		logger.debug("wakeup " + result + " for " + workflowId);
 	}
 
 	public List<Task> getTasks(String taskType, String startKey, int count) throws Exception {
@@ -997,6 +998,11 @@ public class WorkflowExecutor {
 	public boolean decide(String workflowId) throws Exception {
 
 		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow.getStatus().isTerminal()) {
+			logger.debug("Invoked decide for finished workflow " + workflowId);
+			return true;
+		}
+
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
 		try {
 			DeciderOutcome outcome = decider.decide(workflow, def);
@@ -1018,7 +1024,6 @@ public class WorkflowExecutor {
 						tasksToBeUpdated.add(task);
 						stateChanged = true;
 					}
-
 				}
 			}
 			stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
@@ -1027,7 +1032,6 @@ public class WorkflowExecutor {
 				edao.updateTasks(tasksToBeUpdated);
 				edao.updateWorkflow(workflow);
 				queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());
-
 			}
 
 			if (outcome.startWorkflow != null) {
@@ -1049,11 +1053,11 @@ public class WorkflowExecutor {
 
 		} catch (TerminateWorkflow tw) {
 			String error = "Error in workflow execution: " + tw.getMessage() +
-					", workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser();
+					",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser();
 			if (tw.task != null) {
-				error += ", taskId=" + tw.task.getTaskId() + ",taskRefName=" + tw.task.getReferenceTaskName();
+				error += ",taskId=" + tw.task.getTaskId() + ",taskRefName=" + tw.task.getReferenceTaskName();
 			}
-			logger.error(error, tw);
+			logger.debug(error, tw);
 			terminate(def, workflow, tw);
 			return true;
 		}
@@ -1158,10 +1162,10 @@ public class WorkflowExecutor {
 		Monitors.recordWorkflowRemove(workflow);
 	}
 
-
 	public void removeWorkflowNotImplemented(String workflowId) {
 		throw new ApplicationException(Code.NOT_IMPLEMENTED, "Method not implemented");
 	}
+
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {
@@ -1245,8 +1249,8 @@ public class WorkflowExecutor {
 			}
 
 			updateTask(new TaskResult(task));
-			logger.debug("Done Executing {}/{}-{} op={} for workflowId={},correlationId={},contextUser={}",
-					task.getTaskType(), task.getTaskId(), task.getStatus(), task.getOutputData().toString(),
+			logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},contextUser={}",
+					task.getTaskType(), task.getTaskId(), task.getStatus(),
 					workflow.getWorkflowId(), workflow.getCorrelationId(), workflow.getContextUser());
 
 		} catch (Exception e) {
@@ -1374,7 +1378,7 @@ public class WorkflowExecutor {
 
 		String taskId = (tw.task != null ? tw.task.getTaskId() : null);
 		String taskRefName = (tw.task != null ? tw.task.getReferenceTaskName() : null);
-		logger.error("Workflow failed/reset. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName + ",contextUser=" + workflow.getContextUser());
+		logger.debug("Workflow failed/reset. workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",reason="+tw.getMessage()+",taskId="+taskId+",taskReferenceName="+taskRefName + ",contextUser=" + workflow.getContextUser());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1504,16 +1508,21 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
 
 		// It gives us: Bearer token
-		String bearer = strings.get(0);
-		if (StringUtils.isEmpty(bearer))
+		String header = strings.get(0);
+		if (StringUtils.isEmpty(header))
 			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
 
-		// Checking bearer format
-		if (!bearer.startsWith(BEARER))
-			throw new ApplicationException(Code.UNAUTHORIZED, "Invalid " + HttpHeaders.AUTHORIZATION + " header format");
+		// Validate length
+		if (header.length() <= BEARER.length())
+			throw new ApplicationException(Code.UNAUTHORIZED, HttpHeaders.AUTHORIZATION + " header too short");
 
-		// Get the access token
-		String token = bearer.substring(BEARER.length());
+		// Get the bearer & access token
+		String type = header.substring(0, BEARER.length());
+		String token = header.substring(BEARER.length() + 1);
+
+		// Checking bearer format
+		if (!BEARER.equalsIgnoreCase(type))
+			throw new ApplicationException(Code.UNAUTHORIZED, "Invalid " + HttpHeaders.AUTHORIZATION + " type(" + type + ")");
 
 		Map<String, Object> decoded;
 
@@ -1528,10 +1537,27 @@ public class WorkflowExecutor {
 		}
 
 		if (!failedList.isEmpty()) {
-			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: at least one of the verify conditions failed");
+			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation rules failed: " + failedList.keySet());
 		}
 
 		return decoded;
+	}
+
+	public String validateContextUser(String contextToken) {
+		// Decode auth context if passed and store at workflow level
+		String contextUser = null;
+		if (authContextEnabled && StringUtils.isNotEmpty(contextToken)) {
+			try {
+				Map<String, Object> context = auth.decode(contextToken);
+				String username = (String)context.get("preferred_username");
+				String email = (String)context.get("email");
+				contextUser = String.format("%s(%s)", username, email);
+			} catch (Exception ex) {
+				logger.error("Auth context validation failed: " + ex.getMessage(), ex);
+				throw new ApplicationException(Code.UNAUTHORIZED, "Auth context validation failed: " + ex.getMessage());
+			}
+		}
+		return contextUser;
 	}
 
 	public Task getTask(String taskId) {
@@ -1559,6 +1585,7 @@ public class WorkflowExecutor {
 			if (!task.getStatus().isTerminal()) {
 				// Cancel the ones which are not completed yet....
 				task.setStatus(Status.CANCELED);
+				task.setReasonForIncompletion(workflow.getReasonForIncompletion());
 				if (SystemTaskType.is(task.getTaskType())) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
 					stt.cancel(workflow, task, this);

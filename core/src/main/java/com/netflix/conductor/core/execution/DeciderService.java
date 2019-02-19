@@ -85,7 +85,7 @@ public class DeciderService {
 
 		DeciderOutcome outcome = new DeciderOutcome();
 		
- 		if (workflow.getStatus().equals(WorkflowStatus.PAUSED)) {
+		if (workflow.getStatus().equals(WorkflowStatus.PAUSED)) {
 			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + " is paused");
 			return outcome;
 		}
@@ -163,13 +163,13 @@ public class DeciderService {
 				List<Task> nextTasks = getNextTask(def, workflow, task);
 				nextTasks.forEach(rt -> tasksToBeScheduled.put(rt.getReferenceTaskName(), rt));
 				outcome.tasksToBeUpdated.add(task);
-				logger.debug("Scheduling Tasks from " + task.getTaskDefName() + ", next = " + nextTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser());
+				logger.debug("Scheduling Tasks from " + task.getReferenceTaskName() + ", next = " + nextTasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList())+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser());
 			}
 		}
 		
 		List<Task> unScheduledTasks = tasksToBeScheduled.values().stream().filter(tt -> !executedTaskRefNames.contains(tt.getReferenceTaskName())).collect(Collectors.toList());
 		if (!unScheduledTasks.isEmpty()) {
-			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(t -> t.getTaskDefName()).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("Scheduling Tasks " + unScheduledTasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			outcome.tasksToBeScheduled.addAll(unScheduledTasks);
 		}
 		updateOutput(def, workflow);
@@ -312,11 +312,23 @@ public class DeciderService {
 
 		int retryCount = task.getRetryCount();
 		if (!task.getStatus().isRetriable() || SystemTaskType.isBuiltIn(task.getTaskType()) || taskDef == null || taskDef.getRetryCount() <= retryCount) {
-			WorkflowStatus status = task.getStatus().equals(Status.TIMED_OUT) ? WorkflowStatus.TIMED_OUT :
-					task.getStatus().equals(Status.RESET) ? WorkflowStatus.RESET : WorkflowStatus.FAILED;
+			WorkflowStatus status;
+			if (task.getStatus().equals(Status.TIMED_OUT)) {
+				status = WorkflowStatus.TIMED_OUT;
+			} else if (task.getStatus().equals(Status.CANCELED)) {
+				status = WorkflowStatus.CANCELLED;
+			} else if (task.getStatus().equals(Status.RESET)) {
+				status = WorkflowStatus.RESET;
+			} else {
+				status = WorkflowStatus.FAILED;
+			}
 			task.setRetried(true);
-			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId() + ",taskId" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId() + ",reason=" + task.getReasonForIncompletion() + ",status=" + status + ",contextUser=" + workflow.getContextUser());
-			throw new TerminateWorkflow(task.getReasonForIncompletion(), status, task);
+			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId()
+					+ ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId()
+					+ ",reason=" + task.getReasonForIncompletion() + ",status=" + status
+					+ ",contextUser=" + workflow.getContextUser());
+			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
+			throw new TerminateWorkflow(reason, status, task);
 		}
 
 		// retry... - but not immediately - put a delay...
@@ -484,10 +496,10 @@ public class DeciderService {
 				break;
 			case USER_DEFINED:
 				TaskDef taskDef = metadata.getTaskDef(taskToSchedule.getName());
-			    if(taskDef == null){
-			    	String reason = "Invalid task specified.  Cannot find task by name " + taskToSchedule.getName() + " in the task definitions";
-			    	throw new TerminateWorkflow(reason);
-			    }
+				if(taskDef == null){
+					String reason = "Invalid task specified.  Cannot find task by name " + taskToSchedule.getName() + " in the task definitions";
+					throw new TerminateWorkflow(reason);
+				}
 				input = pu.getTaskInputV2(taskToSchedule.getInputParameters(), workflow, taskId, taskDef, taskToSchedule);
 				task = SystemTask.userDefined(workflow, taskId, taskToSchedule, input, taskDef, retryCount);
 				tasks.add(task);
@@ -634,12 +646,12 @@ public class DeciderService {
 		TaskDef taskDef = metadata.getTaskDef(taskToSchedule.getName());
 		
 		if (taskDef == null) {
-	    	String reason = "Invalid task specified.  Cannot find task by name " + taskToSchedule.getName() + " in the task definitions";
-	    	throw new TerminateWorkflow(reason);
-	    }
+			String reason = "Invalid task specified.  Cannot find task by name " + taskToSchedule.getName() + " in the task definitions";
+			throw new TerminateWorkflow(reason);
+		}
 		String taskId = IDGenerator.generate();
 		Map<String, Object> input = getTaskInput(taskToSchedule.getInputParameters(), workflow, taskDef, taskId);
-	    return SystemTask.createSimpleTask(workflow, taskId, taskToSchedule, input, taskDef, retryCount);
+		return SystemTask.createSimpleTask(workflow, taskId, taskToSchedule, input, taskDef, retryCount);
 	}
 	
 	@VisibleForTesting

@@ -219,7 +219,7 @@ public class ElasticSearch5ExecutionDAO extends ElasticSearch5BaseDAO implements
 
 		boolean rateLimited = !ids.contains(task.getTaskId());
 		if (rateLimited) {
-			logger.info("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
+			logger.debug("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
 			Monitors.recordTaskRateLimited(task.getTaskDefName(), limit);
 		}
 

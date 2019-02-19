@@ -18,7 +18,6 @@
  */
 package com.netflix.conductor.contribs.http;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -34,18 +33,22 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @author Viren
- * Task that enables calling another http endpoint as part of its execution
+ * @author Viren Task that enables calling another http endpoint as part of its
+ *         execution
  */
 @Singleton
 public class HttpTask extends GenericHttpTask {
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
-	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
+	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME
+			+ "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
 	private int unackTimeout;
@@ -62,27 +65,47 @@ public class HttpTask extends GenericHttpTask {
 
 		Object request = task.getInputData().get(REQUEST_PARAMETER_NAME);
 		task.setWorkerId(config.getServerId());
-		String url = null;
+		String hostAndPort = null;
 		Input input = om.convertValue(request, Input.class);
 
 		if (request == null) {
 			task.setReasonForIncompletion(MISSING_REQUEST);
 			task.setStatus(Status.FAILED);
 			return;
-		} else {
-			if (input.getServiceDiscoveryQuery() != null) {
-				url = lookup(input.getServiceDiscoveryQuery());
+		} else if (StringUtils.isNotEmpty(input.getServiceDiscoveryQuery())) {
+			hostAndPort = lookup(input.getServiceDiscoveryQuery());
+
+			if (null == hostAndPort) {
+				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery()
+						+ " . No records found.";
+				logger.error(msg);
+				throw new Exception(msg);
 			}
 		}
 
-		if (input.getUri() == null) {
-			task.setReasonForIncompletion("Missing HTTP URI. See documentation for HttpTask for required input parameters");
+		if (StringUtils.isEmpty(input.getUri())) {
+			task.setReasonForIncompletion(
+					"Missing HTTP URI. See documentation for HttpTask for required input parameters");
 			task.setStatus(Status.FAILED);
 			return;
-		} else {
-			if (url != null) {
-				input.setUri(url + input.getUri());
+		} else if (StringUtils.isNotEmpty(hostAndPort)) {
+			final String uri = input.getUri();
+
+			if (uri.startsWith("/")) {
+				input.setUri(hostAndPort + uri);
+			} else {
+				// https://jira.d3nw.com/browse/ONECOND-837
+				// Parse URI, extract the path, and append it to url
+				try {
+					URL tmp = new URL(uri);
+					input.setUri(hostAndPort + tmp.getPath());
+				} catch (MalformedURLException e) {
+					logger.error("Unable to build endpoint URL: " + uri, e);
+					throw new Exception("Unable to build endpoint URL: " + uri, e);
+				}
 			}
+		} else if (StringUtils.isNotEmpty(input.getUri())) {
+			// Do Nothing, use input.getUri() as is
 		}
 
 		if (input.getMethod() == null) {
@@ -93,7 +116,9 @@ public class HttpTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response = new HttpResponse();
-			logger.debug("http task started. workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskReferenceName=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",correlationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
 					String json = new ObjectMapper().writeValueAsString(task.getInputData());
@@ -112,7 +137,10 @@ public class HttpTask extends GenericHttpTask {
 				response = httpCall(input, task, workflow, executor);
 			}
 
-			logger.info("http task execution completed. workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskReferenceName=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode + ",contextUser=" + workflow.getContextUser());
+			logger.debug("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
+					+ ",contextUser=" + workflow.getContextUser());
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
@@ -127,7 +155,8 @@ public class HttpTask extends GenericHttpTask {
 				}
 			}
 
-			// Check the http response validation. It will overwrite the task status if needed
+			// Check the http response validation. It will overwrite the task status if
+			// needed
 			if (task.getStatus() == Status.COMPLETED) {
 				checkHttpResponseValidation(task, response);
 			} else {
@@ -137,11 +166,10 @@ public class HttpTask extends GenericHttpTask {
 
 			task.getOutputData().put("response", response.asMap());
 		} catch (Exception ex) {
-			logger.error("http task failed for workflowId=" + workflow.getWorkflowId()
-					+ ",correlationId=" + workflow.getCorrelationId()
-					+ ",contextUser=" + workflow.getContextUser()
-					+ ",taskId=" + task.getTaskId()
-					+ ",taskReferenceName=" + task.getReferenceTaskName()+ ",url=" + input.getUri() + " with " + ex.getMessage(), ex);
+			logger.error("http task failed for workflowId=" + workflow.getWorkflowId() + ",correlationId="
+					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser() +
+					" with " + ex.getMessage(), ex);
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());

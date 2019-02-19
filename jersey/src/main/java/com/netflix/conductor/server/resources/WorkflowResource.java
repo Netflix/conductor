@@ -117,13 +117,17 @@ public class WorkflowResource {
 		}
 
 		String contextToken = null;
+		String contextUser = null;
 		if (headers.getRequestHeader(CommonParams.AUTH_CONTEXT) != null) {
 			contextToken = headers.getRequestHeader(CommonParams.AUTH_CONTEXT).get(0);
+			contextUser = executor.validateContextUser(contextToken);
 		}
 
 		NDC.push("rest-start-" + UUID.randomUUID().toString());
 		try {
-			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(), request.getInput(), null, request.getTaskToDomain(), auth, contextToken);
+			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
+					request.getInput(), null, request.getTaskToDomain(),
+					auth, contextToken, contextUser);
 		} finally {
 			NDC.remove();
 		}
@@ -340,7 +344,7 @@ public class WorkflowResource {
 
 		NDC.push("rest-terminate-" + UUID.randomUUID().toString());
 		try {
-			executor.terminateWorkflow(workflowId, reason);
+			executor.terminateWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Terminated from api"));
 		} finally {
 			NDC.remove();
 		}
@@ -360,7 +364,7 @@ public class WorkflowResource {
 
 		NDC.push("rest-cancel-" + UUID.randomUUID().toString());
 		try {
-			executor.cancelWorkflow(workflowId, reason);
+			executor.cancelWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
 		} finally {
 			NDC.remove();
 		}
