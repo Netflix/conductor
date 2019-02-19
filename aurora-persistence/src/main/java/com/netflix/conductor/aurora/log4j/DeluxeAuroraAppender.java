@@ -35,84 +35,91 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Oleksiy Lysak
  */
 public class DeluxeAuroraAppender extends AppenderSkeleton {
-    private static final String CREATE_INDEX = "create index log4j_logs_log_time_idx on log4j_logs (log_time)";
+	private static final String CREATE_INDEX = "create index log4j_logs_log_time_idx on log4j_logs (log_time)";
 
-    private static final String CREATE_TABLE = "create table log4j_logs(\n" +
-            "  log_time timestamp,\n" +
-            "  logger varchar,\n" +
-            "  level varchar,\n" +
-            "  owner varchar,\n" +
-            "  hostname varchar,\n" +
-            "  fromhost varchar,\n" +
-            "  message varchar,\n" +
-            "  stack varchar\n" +
-            ")";
+	private static final String CREATE_TABLE = "create table log4j_logs(\n" +
+			"  log_time timestamp,\n" +
+			"  logger varchar,\n" +
+			"  level varchar,\n" +
+			"  owner varchar,\n" +
+			"  hostname varchar,\n" +
+			"  fromhost varchar,\n" +
+			"  message varchar,\n" +
+			"  stack varchar\n" +
+			")";
 
-    private static final String INSERT_QUERY = "INSERT INTO log4j_logs " +
-            "(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_QUERY = "INSERT INTO log4j_logs " +
+			"(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-    private LinkedBlockingDeque<LogEntry> buffer = new LinkedBlockingDeque<>();
-    private ScheduledExecutorService execs;
-    private DataSource dataSource;
-    private String hostname;
-    private String fromhost;
-    private String url;
-    private String user;
-    private String password;
+	private LinkedBlockingDeque<LogEntry> buffer = new LinkedBlockingDeque<>();
+	private AtomicBoolean initialized = new AtomicBoolean(false);
+	private ScheduledExecutorService execs;
+	private DataSource dataSource;
+	private String hostname;
+	private String fromhost;
+	private String url;
+	private String user;
+	private String password;
 
-    public DeluxeAuroraAppender() {
-        super();
-        hostname = getHostName();
-        fromhost = getHostIp();
-        execs = Executors.newScheduledThreadPool(1);
-        execs.scheduleWithFixedDelay(this::flush, 500, 100, TimeUnit.MILLISECONDS);
-    }
+	public DeluxeAuroraAppender() {
+		super();
+		hostname = getHostName();
+		fromhost = getHostIp();
+		execs = Executors.newScheduledThreadPool(1);
+		execs.scheduleWithFixedDelay(this::flush, 500, 100, TimeUnit.MILLISECONDS);
+	}
 
-    public void append(LoggingEvent event) {
-        LogEntry entry = new LogEntry();
-        entry.timestamp = new Timestamp(System.currentTimeMillis());
-        entry.level = event.getLevel().toString().toLowerCase();
-        entry.logger = event.getLoggerName().toLowerCase();
-        entry.owner = event.getNDC();
-        entry.message = normalizeMessage(event.getRenderedMessage());
-        if (event.getThrowableInformation() != null
-                && event.getThrowableInformation().getThrowable() != null) {
-            Throwable throwable = event.getThrowableInformation().getThrowable();
+	public void append(LoggingEvent event) {
+		LogEntry entry = new LogEntry();
+		entry.timestamp = new Timestamp(System.currentTimeMillis());
+		entry.level = event.getLevel().toString().toLowerCase();
+		entry.logger = event.getLoggerName().toLowerCase();
+		entry.owner = event.getNDC();
+		entry.message = normalizeMessage(event.getRenderedMessage());
+		if (event.getThrowableInformation() != null
+				&& event.getThrowableInformation().getThrowable() != null) {
+			Throwable throwable = event.getThrowableInformation().getThrowable();
 
-            StringWriter sw = new StringWriter();
-            throwable.printStackTrace(new PrintWriter(sw));
-            entry.stack = normalizeMessage(sw.toString());
+			StringWriter sw = new StringWriter();
+			throwable.printStackTrace(new PrintWriter(sw));
+			entry.stack = normalizeMessage(sw.toString());
+		}
+		buffer.add(entry);
+	}
+
+	public void init() {
+		HikariConfig poolConfig = new HikariConfig();
+		poolConfig.setJdbcUrl(url);
+		poolConfig.setUsername(user);
+		poolConfig.setPassword(password);
+		poolConfig.setAutoCommit(true);
+
+		dataSource = new HikariDataSource(poolConfig);
+
+		execute(CREATE_TABLE);
+		execute(CREATE_INDEX);
+
+		initialized.set(true);
+	}
+
+	private void flush() {
+		if (buffer.isEmpty()) {
+			return;
+		}
+        if (!initialized.get()) {
+            init();
         }
-        buffer.add(entry);
-    }
+        try (Connection tx = dataSource.getConnection()) {
+            PreparedStatement st = tx.prepareStatement(INSERT_QUERY);
 
-    private void flush() {
-        try {
-            LogEntry entry = buffer.poll(50, TimeUnit.MILLISECONDS);
-            if (entry == null) {
-                return;
-            }
-
-            if (dataSource == null) {
-                HikariConfig poolConfig = new HikariConfig();
-                poolConfig.setJdbcUrl(url);
-                poolConfig.setUsername(user);
-                poolConfig.setPassword(password);
-                poolConfig.setAutoCommit(true);
-
-                dataSource = new HikariDataSource(poolConfig);
-
-                execute(CREATE_TABLE);
-                execute(CREATE_INDEX);
-            }
-
-            try (Connection tx = dataSource.getConnection()) {
-                PreparedStatement st = tx.prepareStatement(INSERT_QUERY);
+			LogEntry entry = buffer.poll();
+			while (entry != null) {
                 st.setTimestamp(1, entry.timestamp);
                 st.setString(2, entry.logger);
                 st.setString(3, entry.level);
@@ -122,99 +129,102 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
                 st.setString(7, entry.message);
                 st.setString(8, entry.stack);
                 st.execute();
-            }
-        } catch (Throwable ex) {
-            ex.printStackTrace();
-        }
-    }
 
-    public void close() {
-        execs.shutdown();
-        try {
-            execs.awaitTermination(5, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        this.closed = true;
-    }
+				// Get the next
+				entry = buffer.take();
+			}
+		} catch (Throwable ex) {
+			ex.printStackTrace();
+		}
+	}
 
-    public boolean requiresLayout() {
-        return false;
-    }
+	public void close() {
+		execs.shutdown();
+		try {
+			execs.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		this.closed = true;
+	}
 
-    public void setUser(String user) {
-        this.user = user;
-    }
+	public boolean requiresLayout() {
+		return false;
+	}
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
+	public void setUser(String user) {
+		this.user = user;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public void setUrl(String url) {
+		this.url = url;
+	}
 
-    public String getUser() {
-        return user;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    public String getUrl() {
-        return url;
-    }
+	public String getUser() {
+		return user;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public String getUrl() {
+		return url;
+	}
 
-    private void execute(String ddl) {
-        try (Connection tx = dataSource.getConnection()) {
-            tx.prepareCall(ddl).execute();
-        } catch (Exception ex) {
-            if (!ex.getMessage().contains("already exists")) {
-                ex.printStackTrace();
-            }
-        }
-    }
+	public String getPassword() {
+		return password;
+	}
 
-    private String normalizeMessage(String message) {
-        String response = "";
-        if (message != null) {
-            response = message;
-            if (response.contains("\n")) {
-                response = response.replace("\n", "");
-            }
-            if (response.contains("\t")) {
-                response = response.replace("\t", " ");
-            }
-        }
+	private void execute(String ddl) {
+		try (Connection tx = dataSource.getConnection()) {
+			tx.prepareCall(ddl).execute();
+		} catch (Exception ex) {
+			if (!ex.getMessage().contains("already exists")) {
+				ex.printStackTrace();
+			}
+		}
+	}
 
-        return response;
-    }
+	private String normalizeMessage(String message) {
+		String response = "";
+		if (message != null) {
+			response = message;
+			if (response.contains("\n")) {
+				response = response.replace("\n", "");
+			}
+			if (response.contains("\t")) {
+				response = response.replace("\t", " ");
+			}
+		}
 
-    private String getHostName() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            return "unknown";
-        }
-    }
+		return response;
+	}
 
-    private String getHostIp() {
-        try {
-            return InetAddress.getLocalHost().getHostAddress();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            return "unknown";
-        }
-    }
+	private String getHostName() {
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			return "unknown";
+		}
+	}
 
-    private static class LogEntry {
-        Timestamp timestamp;
-        String level;
-        String logger;
-        String owner;
-        String message;
-        String stack;
-    }
+	private String getHostIp() {
+		try {
+			return InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			return "unknown";
+		}
+	}
+
+	private static class LogEntry {
+		Timestamp timestamp;
+		String level;
+		String logger;
+		String owner;
+		String message;
+		String stack;
+	}
 }
