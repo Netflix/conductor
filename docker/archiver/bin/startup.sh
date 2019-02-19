@@ -27,4 +27,10 @@ addParam "${archiver_region}" "region" "us-west-2"
 addParam "${archiver_access_key}" "access_key" ""
 addParam "${archiver_access_secret}" "access_secret" ""
 
+addParam "${aurora_host}" "aurora_host" ""
+addParam "${aurora_port}" "aurora_port" ""
+addParam "${aurora_db}" "aurora_db" ""
+addParam "${aurora_user}" "aurora_user" ""
+addParam "${aurora_password}" "aurora_password" ""
+
 exec java -jar conductor-archiver-*-all.jar
