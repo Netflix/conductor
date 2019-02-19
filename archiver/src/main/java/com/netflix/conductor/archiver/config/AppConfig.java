@@ -77,12 +77,16 @@ public class AppConfig {
 		return config.getString("workflow_elasticsearch_tasklog_index_name", "task_log");
 	}
 
+	public boolean isLog4jAuroraAppender() {
+		return "true".equalsIgnoreCase(config.getString("log4j_aurora_appender", "false"));
+	}
+
 	public String auroraHost() {
 		return config.getString("aurora_host");
 	}
 
-	public int auroraPort() {
-		return config.getInt("aurora_port");
+	public String auroraPort() {
+		return config.getString("aurora_port");
 	}
 
 	public String auroraDb() {

@@ -1,6 +1,7 @@
 package com.netflix.conductor.archiver.cleanup;
 
 import com.netflix.conductor.archiver.config.AppConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,6 +19,15 @@ public class DbLogCleanup {
 		logger.info("Starting db log cleanup");
 		try {
 			AppConfig config = AppConfig.getInstance();
+			if (!config.isLog4jAuroraAppender()) {
+				logger.warn("Doing nothing as log4j_aurora_appender is not enabled");
+				return;
+			}
+
+			if (StringUtils.isAnyEmpty(config.auroraHost(), config.auroraPort(), config.auroraDb(), config.auroraUser(), config.auroraPassword())) {
+				logger.error("Not all aurora properties defined");
+				return;
+			}
 
 			// jdbc:postgresql://"${aurora_host}":"${aurora_port}"/"${aurora_db}
 			String url = String.format("jdbc:postgresql://%s:%s/%s", config.auroraHost(), config.auroraPort(), config.auroraDb());
