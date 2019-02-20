@@ -472,8 +472,16 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 
         List<String> wfIds = getRunningWorkflowIds(workflowName);
-        List<Workflow> workflows = wfIds.stream().map(this::getWorkflow).filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        List<Workflow> workflows = wfIds.stream().map(id -> {
+            try {
+                return this.getWorkflow(id);
+            } catch (Exception ex) {
+                if (!ex.getMessage().contains("No such workflow found by id")) {
+                    throw ex;
+                }
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
 
         if (logger.isDebugEnabled())
             logger.debug("getPendingWorkflowsByType: result={}", toJson(workflows));
