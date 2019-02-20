@@ -146,7 +146,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 		messages.forEach(message -> {
 			String payload = message.getPayload();
 			try {
-				logger.info(String.format("Trying to publish to %s: %s", subject, payload));
+				logger.debug(String.format("Trying to publish to %s: %s", subject, payload));
 				publishWait(subject, payload);
 				logger.info(String.format("Published to %s: %s", subject, payload));
 			} catch (Exception eo) {
@@ -162,7 +162,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 
 						Thread.sleep(delay * 1000L);
 
-						logger.info(String.format("Trying to publish to %s: %s", subject, payload));
+						logger.debug(String.format("Trying to publish to %s: %s", subject, payload));
 						publishWait(subject, payload);
 						logger.info(String.format("Published to %s: %s", subject, payload));
 

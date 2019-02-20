@@ -24,6 +24,9 @@ dependencies {
     // AWS S3
     compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.428'
 
+    // PostgreSQL
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
+
     // Tools
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
     compile group: 'org.apache.commons', name: 'commons-configuration2', version: '2.2'
