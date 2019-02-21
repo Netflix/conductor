@@ -63,6 +63,11 @@ public class FindUpdateAction implements JavaEventAction {
 		tasks.parallelStream().forEach(task -> {
 			try {
 				Workflow workflow = executor.getWorkflow(task.getWorkflowInstanceId(), false);
+				if (workflow == null) {
+					logger.debug("No workflow found with id " + task.getWorkflowInstanceId() + ", skipping " + task);
+					return;
+				}
+
 				if (workflow.getStatus().isTerminal()) {
 					return;
 				}

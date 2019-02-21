@@ -142,6 +142,7 @@ public class EventProcessor {
 
 	private void handle(ObservableQueue queue, Message msg) {
 
+		NDC.push("event-"+msg.getId());
 		try {
 
 			List<Future<Void>> futures = new LinkedList<>();
@@ -237,6 +238,7 @@ public class EventProcessor {
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
+			NDC.remove();
 			Monitors.recordEventQueueMessagesProcessed(queue.getType(), queue.getName(), 1);
 		}
 	}
@@ -246,7 +248,7 @@ public class EventProcessor {
 			NDC.push("event-"+ee.getMessageId());
 			try {
 
-				logger.debug("Executing {} with payload {}", action.getAction(), payload);
+				logger.debug("Executing {} with payload {}", action, payload);
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);

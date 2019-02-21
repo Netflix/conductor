@@ -82,6 +82,11 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                 }
 
                 Workflow workflow = executor.getWorkflow(task.getWorkflowInstanceId(), false);
+                if (workflow == null) {
+                    logger.debug("No workflow found with id " + task.getWorkflowInstanceId() + ", skipping " + task);
+                    return;
+                }
+
                 if (workflow.getStatus().isTerminal()) {
                     return;
                 }
