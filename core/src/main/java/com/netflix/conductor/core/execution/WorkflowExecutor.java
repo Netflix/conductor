@@ -1150,6 +1150,8 @@ public class WorkflowExecutor {
 
 	public void removeWorkflow(String workflowId) {
 		Workflow workflow = getWorkflow(workflowId, false);
+		if (workflow == null)
+			throw new RuntimeException("No workflow found with id " + workflowId);
 		edao.removeWorkflow(workflowId);
 		// metrics
 		Monitors.recordWorkflowRemove(workflow);
@@ -1606,6 +1608,11 @@ public class WorkflowExecutor {
 
 		// Get the workflow and find related task
 		Workflow workflow = getWorkflow(workflowId, true);
+		if (workflow == null) {
+			logger.debug("No workflow found with id " + workflowId);
+			return;
+		}
+
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		workflow.setReasonForIncompletion(null);
 		edao.updateWorkflow(workflow);

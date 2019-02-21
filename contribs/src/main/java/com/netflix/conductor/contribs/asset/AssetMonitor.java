@@ -85,7 +85,7 @@ public class AssetMonitor implements JavaEventAction {
 			// Step 3.2
 			// Null means that the task not even scheduled. Rare case but might happen. Just logging that information
 			if (joinTask == null) {
-				logger.error("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state to handle the message " + messageId);
+				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state to handle the message " + messageId);
 				continue;
 			}
 
@@ -163,6 +163,10 @@ public class AssetMonitor implements JavaEventAction {
 			// Action Source Wait sub-workflow
 			String actionSubWorkflowId = (String) task.getOutputData().get("subWorkflowId");
 			Workflow actionSubWorkflow = executor.getWorkflow(actionSubWorkflowId, true);
+			if (actionSubWorkflow == null) {
+				logger.debug("No workflow found with id " + actionSubWorkflowId + ", skipping " + task);
+				continue;
+			}
 
 			// Find the source wait sub-flow task
 			Task sourceWaitTask = actionSubWorkflow.getTasks().stream()
