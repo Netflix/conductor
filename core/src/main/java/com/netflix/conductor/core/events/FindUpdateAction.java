@@ -108,10 +108,8 @@ public class FindUpdateAction implements JavaEventAction {
 				output.add(workflow.getWorkflowId());
 
 			} catch (Exception ex) {
-				if (!ex.getMessage().contains("No such workflow found by id")) {
-					logger.error("Find update failed for taskId={}, messageId={}, event={}, workflowId={}, correlationId={}, payload={}",
-						task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload, ex);
-				}
+				logger.error("Find update failed for taskId={}, messageId={}, event={}, workflowId={}, correlationId={}, payload={}",
+					task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload, ex);
 			}
 		});
 
