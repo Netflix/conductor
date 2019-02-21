@@ -121,7 +121,7 @@ public class HttpWaitTask extends GenericHttpTask {
 
 		try {
 			HttpResponse response;
-			logger.debug("http wait task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
+			logger.info("http wait task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
 					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
 
@@ -137,7 +137,7 @@ public class HttpWaitTask extends GenericHttpTask {
 				response = httpCall(input, task, workflow, executor);
 			}
 
-			logger.debug("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
+			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
 					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
 					+ ",contextUser=" + workflow.getContextUser());
