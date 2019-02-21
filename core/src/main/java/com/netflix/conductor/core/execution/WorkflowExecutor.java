@@ -1613,7 +1613,6 @@ public class WorkflowExecutor {
 			return;
 		}
 
-
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		workflow.setReasonForIncompletion(null);
 		edao.updateWorkflow(workflow);
