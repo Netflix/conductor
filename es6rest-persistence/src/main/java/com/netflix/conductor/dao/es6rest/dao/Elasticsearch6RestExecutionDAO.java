@@ -123,8 +123,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		QueryBuilder query = QueryBuilders.termQuery("taskDefName.keyword", taskName);
 		List<HashMap> wraps = findAll(indexes.get(IN_PROGRESS_TASKS), types.get(IN_PROGRESS_TASKS), query, HashMap.class);
 		Set<String> taskIds = wraps.stream().filter(map -> workflowId.equals(map.get("workflowId")))
-				.map(map -> (String) map.get("taskId"))
-				.collect(Collectors.toSet());
+			.map(map -> (String) map.get("taskId"))
+			.collect(Collectors.toSet());
 		List<Task> tasks = taskIds.stream().map(this::getTask).filter(Objects::nonNull).collect(Collectors.toList());
 
 		if (logger.isDebugEnabled())
@@ -474,7 +474,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		QueryBuilder query = QueryBuilders.termQuery("workflowType.keyword", workflowName);
 		List<HashMap> wraps = findAll(indexes.get(PENDING_WORKFLOWS), types.get(PENDING_WORKFLOWS), query, HashMap.class);
 		Set<String> workflowIds = wraps.stream().map(map -> (String) map.get("workflowId"))
-				.filter(Objects::nonNull).collect(Collectors.toSet());
+			.filter(Objects::nonNull).collect(Collectors.toSet());
 
 		if (logger.isDebugEnabled())
 			logger.debug("getRunningWorkflowIds: result={}", workflowIds);
@@ -489,7 +489,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 
 		List<String> wfIds = getRunningWorkflowIds(workflowName);
 		List<Workflow> workflows = wfIds.stream().map(this::getWorkflow).filter(Objects::nonNull)
-				.collect(Collectors.toList());
+			.collect(Collectors.toList());
 
 		if (logger.isDebugEnabled())
 			logger.debug("getPendingWorkflowsByType: result={}", toJson(workflows));
@@ -546,10 +546,10 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		List<String> dateStrs = dateStrBetweenDates(startTime, endTime);
 		dateStrs.forEach(dateStr -> {
 			QueryBuilder query1 = QueryBuilders
-					.termQuery("workflowType.keyword", workflowName);
+				.termQuery("workflowType.keyword", workflowName);
 
 			QueryBuilder query2 = QueryBuilders
-					.termQuery("dateStr.keyword", dateStr);
+				.termQuery("dateStr.keyword", dateStr);
 
 			QueryBuilder query = QueryBuilders.boolQuery().must(query1).must(query2);
 
@@ -638,7 +638,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 	public List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max) {
 		if (logger.isDebugEnabled())
 			logger.debug("getEventExecutions: eventHandlerName={}, eventName={}, messageId={}, max={}",
-					eventHandlerName, eventName, messageId, max);
+				eventHandlerName, eventName, messageId, max);
 		try {
 			List<EventExecution> executions = Lists.newLinkedList();
 			for (int i = 0; i < max; i++) {
@@ -723,12 +723,12 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
 
 		return wraps.stream()
-				.map(map -> {
-					String workflowId = (String) map.get("workflowId");
-					return findOne(indexes.get(WORKFLOW), types.get(WORKFLOW), toId(workflowId), Workflow.class);
-				})
-				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
+			.map(map -> {
+				String workflowId = (String) map.get("workflowId");
+				return findOne(indexes.get(WORKFLOW), types.get(WORKFLOW), toId(workflowId), Workflow.class);
+			})
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
 	}
 
 	@Override
@@ -817,8 +817,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		String id = toId(task.getWorkflowInstanceId(), taskKey); // Do not add taskId here!!!
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
-				"taskRefName", task.getReferenceTaskName(),
-				"taskId", task.getTaskId());
+			"taskRefName", task.getReferenceTaskName(),
+			"taskId", task.getTaskId());
 
 		return insert(indexName, typeName, id, payload);
 	}
@@ -837,7 +837,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		String id = toId(task.getWorkflowInstanceId(), task.getTaskId());
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
-				"taskId", task.getTaskId());
+			"taskId", task.getTaskId());
 		insert(indexName, typeName, id, payload);
 	}
 
@@ -854,8 +854,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		String id = toId(task.getTaskDefName(), task.getTaskId());
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", task.getWorkflowInstanceId(),
-				"taskDefName", task.getTaskDefName(),
-				"taskId", task.getTaskId());
+			"taskDefName", task.getTaskDefName(),
+			"taskId", task.getTaskId());
 		insert(indexName, typeName, id, payload);
 	}
 
@@ -893,8 +893,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		String id = toId(workflow.getWorkflowType(), dateStr(workflow.getCreateTime()), workflow.getWorkflowId());
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
-				"workflowType", workflow.getWorkflowType(),
-				"dateStr", dateStr(workflow.getCreateTime()));
+			"workflowType", workflow.getWorkflowType(),
+			"dateStr", dateStr(workflow.getCreateTime()));
 		insert(indexName, typeName, id, payload);
 	}
 
@@ -915,8 +915,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		String id = toId(sha256hex, workflow.getWorkflowId());
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
-				"correlationId", workflow.getCorrelationId(),
-				"sha256hex", sha256hex);
+			"correlationId", workflow.getCorrelationId(),
+			"sha256hex", sha256hex);
 		insert(indexName, typeName, id, payload);
 	}
 
@@ -937,7 +937,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		String id = toId(workflow.getWorkflowType(), workflow.getWorkflowId());
 
 		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
-				"workflowType", workflow.getWorkflowType());
+			"workflowType", workflow.getWorkflowType());
 		insert(indexName, typeName, id, payload);
 	}
 
@@ -952,7 +952,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 			}
 
 			Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
-					"tags", workflow.getTags());
+				"tags", workflow.getTags());
 
 			insert(indexName, typeName, id, payload);
 		} else {
