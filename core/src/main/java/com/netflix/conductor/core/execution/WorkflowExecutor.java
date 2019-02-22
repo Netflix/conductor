@@ -251,6 +251,8 @@ public class WorkflowExecutor {
 
 		// Get the workflow
 		Workflow workflow = edao.getWorkflow(workflowId);
+		if (workflow == null)
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
 		// If the task Id is null it implies that the entire workflow has to be rerun
 		if( taskId == null) {
@@ -396,6 +398,9 @@ public class WorkflowExecutor {
 
 	public void rewind(String workflowId, String correlationId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow == null)
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
+
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser());
 			throw new ApplicationException(Code.CONFLICT, "Workflow is still running. status=" + workflow.getStatus());
@@ -426,6 +431,9 @@ public class WorkflowExecutor {
 
 	public void retry(String workflowId, String correlationId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow == null)
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
+
 		if (!workflow.getStatus().isTerminal()) {
 			logger.error("Workflow is still running. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			throw new ApplicationException(Code.CONFLICT, "Workflow is still running.  status=" + workflow.getStatus());
@@ -588,8 +596,48 @@ public class WorkflowExecutor {
 		logger.debug("Workflow has completed, workflowId=" + wf.getWorkflowId() + ",correlationId=" + wf.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 	}
 
+	public void forceCompleteWorkflow(String workflowId, String reason) throws Exception {
+		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow == null)
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
+
+		if (workflow.getStatus().isTerminal()) {
+			logger.error("Workflow has already been finished. status=" + workflow.getStatus()
+				+ ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			throw new ApplicationException(Code.CONFLICT, "Workflow has already been finished. Current status " + workflow.getStatus());
+		}
+
+		workflow.setReasonForIncompletion(reason);
+		workflow.setStatus(WorkflowStatus.COMPLETED);
+		edao.updateWorkflow(workflow);
+		logger.debug("Workflow is force completed. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId()
+			+ ",contextUser=" + workflow.getContextUser());
+		cancelTasks(workflow, workflow.getTasks());
+
+		// If the following lines, for some reason fails, the sweep will take
+		// care of this again!
+		if (workflow.getParentWorkflowId() != null) {
+			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
+			decide(parent.getWorkflowId());
+		}
+
+		//remove from the sweep queue
+		queue.remove(deciderQueue, workflowId);
+
+		// metrics
+		Monitors.recordWorkflowCancel(workflow);
+
+		// send wf end message
+		notifyWorkflowStatus(workflow, StartEndState.end);
+
+		logger.debug("Workflow has force completed, workflowId=" + workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
+	}
+
 	public String cancelWorkflow(String workflowId , String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow == null)
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
+
 		if (workflow.getStatus().isTerminal() || workflow.getStatus().equals(WorkflowStatus.CANCELLED) ) {
 			String msg = "Workflow can not be cancelled because its already "+workflow.getStatus() ;
 			logger.error("Workflow can not be cancelled because its already " + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+",contextUser=" + workflow.getContextUser());
@@ -668,6 +716,8 @@ public class WorkflowExecutor {
 
 	public String reset(String workflowId, String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow == null)
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.RESET);
@@ -1060,6 +1110,9 @@ public class WorkflowExecutor {
 	public void pauseWorkflow(String workflowId,String correlationId) throws Exception {
 		WorkflowStatus status = WorkflowStatus.PAUSED;
 		Workflow workflow = edao.getWorkflow(workflowId, false);
+		if (workflow == null)
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
+
 		if(workflow.getStatus().isTerminal()){
 			throw new ApplicationException(Code.CONFLICT, "Workflow id " + workflowId + " has ended, status cannot be updated.");
 		}
@@ -1078,6 +1131,9 @@ public class WorkflowExecutor {
 
 	public void resumeWorkflow(String workflowId,String correlationId) throws Exception{
 		Workflow workflow = edao.getWorkflow(workflowId, false);
+		if (workflow == null)
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
+
 		if(!workflow.getStatus().equals(WorkflowStatus.PAUSED)){
 			logger.error("Workflow is not is not PAUSED so cannot resume. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			throw new IllegalStateException("The workflow " + workflowId + " is not is not PAUSED so cannot resume");
@@ -1151,7 +1207,7 @@ public class WorkflowExecutor {
 	public void removeWorkflow(String workflowId) {
 		Workflow workflow = getWorkflow(workflowId, false);
 		if (workflow == null)
-			throw new RuntimeException("No workflow found with id " + workflowId);
+			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 		edao.removeWorkflow(workflowId);
 		// metrics
 		Monitors.recordWorkflowRemove(workflow);
