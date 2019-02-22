@@ -38,6 +38,7 @@ import com.netflix.dyno.queues.shard.SingleShardSupplier;
 
 import redis.clients.jedis.JedisCommands;
 import com.netflix.conductor.core.config.ValidationModule;
+import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.dyno.SystemPropertiesDynomiteConfiguration;
 import com.netflix.conductor.grpc.server.GRPCModule;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
@@ -125,6 +126,7 @@ public class ServerModule extends AbstractModule {
         bind(ObjectMapper.class).toProvider(JsonMapperProvider.class);
         bind(Configuration.class).to(SystemPropertiesDynomiteConfiguration.class);
         bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Scopes.SINGLETON);
+        bind(WorkflowSweeper.class).asEagerSingleton();
     }
 
 

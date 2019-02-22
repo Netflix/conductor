@@ -134,7 +134,34 @@ public class WorkflowTaskTypeConstraintTest {
         result.forEach(e -> validationErrors.add(e.getMessage()));
 
         assertTrue(validationErrors.contains("decisionCases should have atleast one task for taskType: DECISION taskName: encode"));
-        assertTrue(validationErrors.contains("caseValueParam field is required for taskType: DECISION taskName: encode"));
+        assertTrue(validationErrors.contains("caseValueParam or caseExpression field is required for taskType: DECISION taskName: encode"));
+    }
+
+    @Test
+    public void testWorkflowTaskTypeDecisionWithCaseParam() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType("DECISION");
+        workflowTask.setCaseExpression("$.valueCheck == null ? 'true': 'false'");
+
+        ConstraintMapping mapping = config.createConstraintMapping();
+
+        mapping.type(WorkflowTask.class)
+            .constraint(new WorkflowTaskTypeConstraintDef());
+
+        Validator validator = config.addMapping(mapping)
+            .buildValidatorFactory()
+            .getValidator();
+
+        when(mockMetadataDao.getTaskDef(anyString())).thenReturn(new TaskDef());
+
+        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
+        assertEquals(1, result.size());
+
+        List<String> validationErrors = new ArrayList<>();
+
+        result.forEach(e -> validationErrors.add(e.getMessage()));
+
+        assertTrue(validationErrors.contains("decisionCases should have atleast one task for taskType: DECISION taskName: encode"));
     }
 
     @Test
@@ -268,6 +295,27 @@ public class WorkflowTaskTypeConstraintTest {
     public void testWorkflowTaskTypeHTTP() {
         WorkflowTask workflowTask = createSampleWorkflowTask();
         workflowTask.setType("HTTP");
+        workflowTask.getInputParameters().put("http_request", "http://www.netflix.com");
+
+        ConstraintMapping mapping = config.createConstraintMapping();
+
+        mapping.type(WorkflowTask.class)
+                .constraint(new WorkflowTaskTypeConstraintDef());
+
+        Validator validator = config.addMapping(mapping)
+                .buildValidatorFactory()
+                .getValidator();
+
+        when(mockMetadataDao.getTaskDef(anyString())).thenReturn(new TaskDef());
+
+        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testWorkflowTaskTypeHTTPWithHttpParamMissing() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType("HTTP");
 
         ConstraintMapping mapping = config.createConstraintMapping();
 
@@ -288,6 +336,56 @@ public class WorkflowTaskTypeConstraintTest {
         result.forEach(e -> validationErrors.add(e.getMessage()));
 
         assertTrue(validationErrors.contains("inputParameters.http_request field is required for taskType: HTTP taskName: encode"));
+    }
+
+    @Test
+    public void testWorkflowTaskTypeHTTPWithHttpParamInTaskDef() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType("HTTP");
+
+        ConstraintMapping mapping = config.createConstraintMapping();
+
+        mapping.type(WorkflowTask.class)
+                .constraint(new WorkflowTaskTypeConstraintDef());
+
+        Validator validator = config.addMapping(mapping)
+                .buildValidatorFactory()
+                .getValidator();
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("encode");
+        taskDef.getInputTemplate().put("http_request", "http://www.netflix.com");
+
+        when(mockMetadataDao.getTaskDef(anyString())).thenReturn(taskDef);
+
+        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
+        assertEquals(0, result.size());
+    }
+
+
+    @Test
+    public void testWorkflowTaskTypeHTTPWithHttpParamInTaskDefAndWorkflowTask() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType("HTTP");
+        workflowTask.getInputParameters().put("http_request", "http://www.netflix.com");
+
+        ConstraintMapping mapping = config.createConstraintMapping();
+
+        mapping.type(WorkflowTask.class)
+                .constraint(new WorkflowTaskTypeConstraintDef());
+
+        Validator validator = config.addMapping(mapping)
+                .buildValidatorFactory()
+                .getValidator();
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("encode");
+        taskDef.getInputTemplate().put("http_request", "http://www.netflix.com");
+
+        when(mockMetadataDao.getTaskDef(anyString())).thenReturn(taskDef);
+
+        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
+        assertEquals(0, result.size());
     }
 
     @Test

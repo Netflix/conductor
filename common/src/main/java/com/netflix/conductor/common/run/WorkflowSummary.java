@@ -105,17 +105,12 @@ public class WorkflowSummary {
 			this.updateTime = sdf.format(new Date(workflow.getUpdateTime()));
 		}
 		this.status = workflow.getStatus();
-		ObjectMapper om = new ObjectMapper();
-		try {
-			this.input = om.writeValueAsString(workflow.getInput());
-		} catch (Exception e) {
-			this.input = workflow.getInput().toString();
+		if(workflow.getInput() != null){
+            this.input = workflow.getInput().toString();
 		}
-		try {
-			this.output = om.writeValueAsString(workflow.getOutput());
-		} catch (Exception e) {
-			this.output = workflow.getOutput().toString();
-		}
+        if(workflow.getOutput() != null){
+            this.output = workflow.getOutput().toString();
+        }
 		this.reasonForIncompletion = workflow.getReasonForIncompletion();
 		if(workflow.getEndTime() > 0){
 			this.executionTime = workflow.getEndTime() - workflow.getStartTime();

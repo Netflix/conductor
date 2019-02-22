@@ -618,6 +618,16 @@ public class ElasticSearchDAO implements IndexDAO {
 		return null;
 	}
 
+	@Override
+	public List<EventExecution> getEventExecutions(String event) {
+		return null;
+	}
+
+	@Override
+	public List<Message> getMessages(String queue) {
+		return null;
+	}
+
 	
 	
 }
