@@ -1021,12 +1021,14 @@ public class WorkflowExecutor {
 				if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
 					if (!stt.isAsync() && stt.execute(workflow, task, this)) {
+						logger.debug("Executed system task " + task + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 						tasksToBeUpdated.add(task);
 						stateChanged = true;
 					}
 				}
 			}
 			stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
+			logger.debug("State changed " + stateChanged + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 
 			if(!outcome.tasksToBeUpdated.isEmpty() || !outcome.tasksToBeScheduled.isEmpty()) {
 				edao.updateTasks(tasksToBeUpdated);
@@ -1314,6 +1316,7 @@ public class WorkflowExecutor {
 
 	@VisibleForTesting
 	boolean scheduleTask(Workflow workflow, List<Task> tasks) throws Exception {
+		logger.debug("Schedule tasks/input " + tasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 
 		if (tasks == null || tasks.isEmpty()) {
 			return false;
@@ -1325,8 +1328,13 @@ public class WorkflowExecutor {
 		}
 
 		List<Task> created = edao.createTasks(tasks);
+		logger.debug("Schedule tasks/created " + created.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+
 		List<Task> createdSystemTasks = created.stream().filter(task -> SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
+		logger.debug("Schedule tasks/created system " + createdSystemTasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+
 		List<Task> toBeQueued = created.stream().filter(task -> !SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
+
 		boolean startedSystemTasks = false;
 		for(Task task : createdSystemTasks) {
 
@@ -1336,6 +1344,7 @@ public class WorkflowExecutor {
 			}
 			task.setStartTime(System.currentTimeMillis());
 			if(!stt.isAsync()) {
+				logger.debug("Schedule tasks/starting " + task + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 				notifyTaskStatus(task, StartEndState.start);
 				stt.start(workflow, task, this);
 				startedSystemTasks = true;
@@ -1347,6 +1356,8 @@ public class WorkflowExecutor {
 				toBeQueued.add(task);
 			}
 		}
+
+		logger.debug("Schedule tasks/toBeQueued " + toBeQueued.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 		addTaskToQueue(toBeQueued);
 		return startedSystemTasks;
 	}
