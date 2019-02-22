@@ -97,13 +97,9 @@ public class DeciderService {
 		}
 		
 		List<Task> pendingTasks = workflow.getTasks().stream().filter(t -> (!t.isRetried() && !t.getStatus().equals(Status.SKIPPED)) || SystemTaskType.isBuiltIn(t.getTaskType())).collect(Collectors.toList());
-		logger.debug("Pending tasks " + pendingTasks.stream().map(Task::getReferenceTaskName).collect(Collectors.toList()) + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
-
 		Set<String> executedTaskRefNames = workflow.getTasks().stream()
 				.filter(t -> !t.getStatus().equals(Status.SKIPPED) && !t.getStatus().equals(Status.READY_FOR_RERUN))
 				.map(t -> t.getReferenceTaskName()).collect(Collectors.toSet());
-		logger.debug("Executed tasks " + executedTaskRefNames + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
-
 		Map<String, Task> tasksToBeScheduled = new LinkedHashMap<>();
 
 		preScheduledTasks.forEach(pst -> {
