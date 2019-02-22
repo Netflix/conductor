@@ -1068,15 +1068,12 @@ public class WorkflowExecutor {
 				if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
 					if (!stt.isAsync() && stt.execute(workflow, task, this)) {
-						logger.debug("Executed system task " + task + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 						tasksToBeUpdated.add(task);
 						stateChanged = true;
 					}
 				}
 			}
 			stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
-			logger.debug("State changed " + stateChanged + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
-
 			if(!outcome.tasksToBeUpdated.isEmpty() || !outcome.tasksToBeScheduled.isEmpty()) {
 				edao.updateTasks(tasksToBeUpdated);
 				edao.updateWorkflow(workflow);
@@ -1214,7 +1211,6 @@ public class WorkflowExecutor {
 		Workflow workflow = getWorkflow(workflowId, false);
 		if (workflow == null)
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
-
 		edao.removeWorkflow(workflowId);
 		// metrics
 		Monitors.recordWorkflowRemove(workflow);
@@ -1372,6 +1368,7 @@ public class WorkflowExecutor {
 
 	@VisibleForTesting
 	boolean scheduleTask(Workflow workflow, List<Task> tasks) throws Exception {
+
 		if (tasks == null || tasks.isEmpty()) {
 			return false;
 		}
@@ -1404,7 +1401,6 @@ public class WorkflowExecutor {
 				toBeQueued.add(task);
 			}
 		}
-
 		addTaskToQueue(toBeQueued);
 		return startedSystemTasks;
 	}

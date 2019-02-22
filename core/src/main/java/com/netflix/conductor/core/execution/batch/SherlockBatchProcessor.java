@@ -52,8 +52,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
-
 /**
  * @author Oleksiy Lysak
  */
@@ -96,7 +94,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 	@Override
 	public void run(List<Task> tasks) {
 		Map<String, List<Task>> groups = tasks.stream()
-				.collect(Collectors.groupingBy(o -> o.getInputData().get("uniqueness").toString()));
+			.collect(Collectors.groupingBy(o -> o.getInputData().get("uniqueness").toString()));
 
 		groups.forEach(this::processGroup);
 	}
@@ -104,18 +102,20 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 	private void processGroup(String key, List<Task> items) {
 		// Get the first from the group
 		Task carried = items.get(0);
+		String url = null;
 
 		Output response = new Output();
 		try {
-			String url = DNSLookup.lookup(service);
-			if (StringUtils.isEmpty(url)) {
+			String hostAndPort = DNSLookup.lookup(service);
+			if (StringUtils.isEmpty(hostAndPort)) {
 				throw new IllegalStateException("Service lookup failed for " + service);
 			}
-			String override = null;
 			if (carried.getInputData().containsKey("endpoint")) {
-				override = carried.getInputData().get("endpoint").toString();
+				url = hostAndPort + carried.getInputData().get("endpoint").toString();
+			} else {
+				url = hostAndPort + endpoint;
 			}
-			WebResource.Builder builder = httpClient.resource(url + defaultIfEmpty(override, endpoint)).type(MediaType.APPLICATION_JSON);
+			WebResource.Builder builder = httpClient.resource(url).type(MediaType.APPLICATION_JSON);
 
 			// Attaching Deluxe Owf Context
 			builder.header("Deluxe-Owf-Context", carried.getCorrelationId());
@@ -160,6 +160,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 			response.error = ex.getMessage();
 		}
 
+		String effectiveUrl = url;
 		List<Future<?>> futures = new ArrayList<>(items.size());
 		items.forEach(task -> {
 			Future<?> future = threadExecutor.submit(() -> {
@@ -167,18 +168,18 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 				try {
 					if (task.getTaskId().equalsIgnoreCase(carried.getTaskId())) {
 						logger.info("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
-								",correlationId=" + task.getCorrelationId() +
-								",taskId=" + task.getTaskId() +
-								",taskReferenceName=" + task.getReferenceTaskName() +
-								",response code=" + response.statusCode + ",response=" + response.body);
+							",correlationId=" + task.getCorrelationId() +
+							",taskId=" + task.getTaskId() +
+							",taskReferenceName=" + task.getReferenceTaskName() +
+							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					} else {
 						logger.info("batch task execution completed.carriedTaskId=" + carried.getTaskId() +
-								",carriedCorrelationId=" + carried.getCorrelationId() +
-								",workflowId=" + task.getWorkflowInstanceId() +
-								",correlationId=" + task.getCorrelationId() +
-								",taskId=" + task.getTaskId() +
-								",taskReferenceName=" + task.getReferenceTaskName() +
-								",response code=" + response.statusCode + ",response=" + response.body);
+							",carriedCorrelationId=" + carried.getCorrelationId() +
+							",workflowId=" + task.getWorkflowInstanceId() +
+							",correlationId=" + task.getCorrelationId() +
+							",taskId=" + task.getTaskId() +
+							",taskReferenceName=" + task.getReferenceTaskName() +
+							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					}
 
 					boolean handled = handleStatusMapping(task, response);
