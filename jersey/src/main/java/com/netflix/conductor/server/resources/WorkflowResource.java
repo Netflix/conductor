@@ -376,14 +376,14 @@ public class WorkflowResource {
 	@ApiOperation("Force complete workflow execution")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response complete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
+	public Response complete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 		handleCorrelationId(workflowId, headers, builder);
 
 		NDC.push("rest-complete-" + UUID.randomUUID().toString());
 		try {
-			executor.forceCompleteWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Completed from api"));
+			executor.forceCompleteWorkflow(workflowId);
 		} finally {
 			NDC.remove();
 		}

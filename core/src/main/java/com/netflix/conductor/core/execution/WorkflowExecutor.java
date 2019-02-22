@@ -596,7 +596,7 @@ public class WorkflowExecutor {
 		logger.debug("Workflow has completed, workflowId=" + wf.getWorkflowId() + ",correlationId=" + wf.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 	}
 
-	public void forceCompleteWorkflow(String workflowId, String reason) throws Exception {
+	public void forceCompleteWorkflow(String workflowId) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow == null)
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
