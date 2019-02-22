@@ -1074,6 +1074,7 @@ public class WorkflowExecutor {
 				}
 			}
 			stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
+
 			if(!outcome.tasksToBeUpdated.isEmpty() || !outcome.tasksToBeScheduled.isEmpty()) {
 				edao.updateTasks(tasksToBeUpdated);
 				edao.updateWorkflow(workflow);
