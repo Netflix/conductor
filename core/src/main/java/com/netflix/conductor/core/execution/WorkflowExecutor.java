@@ -601,13 +601,10 @@ public class WorkflowExecutor {
 		if (workflow == null)
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
-		if (workflow.getStatus().isTerminal()) {
-			logger.error("Workflow has already been finished. status=" + workflow.getStatus()
-				+ ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
-			throw new ApplicationException(Code.CONFLICT, "Workflow has already been finished. Current status " + workflow.getStatus());
+		if (workflow.getStatus() == WorkflowStatus.COMPLETED) {
+			throw new ApplicationException(Code.CONFLICT, "Workflow has already been completed");
 		}
 
-		workflow.setReasonForIncompletion(reason);
 		workflow.setStatus(WorkflowStatus.COMPLETED);
 		edao.updateWorkflow(workflow);
 		logger.debug("Workflow is force completed. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId()
