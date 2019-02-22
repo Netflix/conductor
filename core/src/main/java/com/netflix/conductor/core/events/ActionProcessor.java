@@ -72,6 +72,7 @@ public class ActionProcessor {
 	}
 
 	public Map<String, Object> execute(Action action, String payload, String event, String messageId) throws Exception {
+
 		Object jsonObj = om.readValue(payload, Object.class);
 		if (action.isExpandInlineJSON()) {
 			jsonObj = expand(jsonObj);
