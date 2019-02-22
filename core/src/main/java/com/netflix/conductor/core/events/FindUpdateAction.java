@@ -63,6 +63,11 @@ public class FindUpdateAction implements JavaEventAction {
 		tasks.parallelStream().forEach(task -> {
 			try {
 				Workflow workflow = executor.getWorkflow(task.getWorkflowInstanceId(), false);
+				if (workflow == null) {
+					logger.debug("No workflow found with id " + task.getWorkflowInstanceId() + ", skipping " + task);
+					return;
+				}
+
 				if (workflow.getStatus().isTerminal()) {
 					return;
 				}
@@ -83,10 +88,10 @@ public class FindUpdateAction implements JavaEventAction {
 				task.getOutputData().put("conductor.event.payload", payload);
 				task.getOutputData().put("conductor.event.messageId", messageId);
 				logger.debug("Updating task " + task + ". workflowId=" + workflow.getWorkflowId()
-						+ ",correlationId=" + workflow.getCorrelationId()
-						+ ",contextUser=" + workflow.getContextUser()
-						+ ",messageId=" + messageId
-						+ ",payload=" + payload);
+					+ ",correlationId=" + workflow.getCorrelationId()
+					+ ",contextUser=" + workflow.getContextUser()
+					+ ",messageId=" + messageId
+					+ ",payload=" + payload);
 
 				// Set the reason if task failed. It should be provided in the event
 				if (Task.Status.FAILED.equals(taskStatus)) {
@@ -104,7 +109,7 @@ public class FindUpdateAction implements JavaEventAction {
 
 			} catch (Exception ex) {
 				logger.error("Find update failed for taskId={}, messageId={}, event={}, workflowId={}, correlationId={}, payload={}",
-						task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload, ex);
+					task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload, ex);
 			}
 		});
 
