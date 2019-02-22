@@ -4,6 +4,7 @@ import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.archiver.cleanup.DbLogCleanup;
 import com.netflix.conductor.archiver.config.AppConfig;
 import com.netflix.conductor.archiver.export.AbstractExport;
 import com.netflix.conductor.archiver.export.EventExport;
@@ -96,6 +97,7 @@ public class Main {
 			upload(writers);
 			deleteOldData(writers);
 			deleteEmptyIndexes(writers);
+			deleteDbLogs();
 
 			logger.info("Finishing archiver for sessionId=" + sessionId);
 			System.exit(0);
@@ -222,5 +224,10 @@ public class Main {
 
 	private void deleteEmptyIndexes(EntityWriters writers) throws IOException {
 		new TaskLogExport(client, writers).deleteEmptyTaskLogsIndexes();
+	}
+
+	private void deleteDbLogs() throws IOException {
+		DbLogCleanup action = new DbLogCleanup();
+		action.cleanup();
 	}
 }
