@@ -371,6 +371,25 @@ public class WorkflowResource {
 		return builder.build();
 	}
 
+	@POST
+	@Path("/{workflowId}/complete")
+	@ApiOperation("Force complete workflow execution")
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response complete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
+		executor.validateAuth(workflowId, headers);
+		Response.ResponseBuilder builder = Response.ok(workflowId);
+		handleCorrelationId(workflowId, headers, builder);
+
+		NDC.push("rest-complete-" + UUID.randomUUID().toString());
+		try {
+			executor.forceCompleteWorkflow(workflowId);
+		} finally {
+			NDC.remove();
+		}
+		return builder.build();
+	}
+
 	@ApiOperation(value = "Search for workflows based in payload and other parameters", notes = "use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC.  If order is not specified, defaults to ASC")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
 	@GET

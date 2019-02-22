@@ -451,7 +451,9 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		// try from the archive
 		String json = indexer.get(workflowId, RAW_JSON_FIELD);
 		if (json == null) {
-			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "No such workflow found by id: " + workflowId);
+			if (logger.isDebugEnabled())
+				logger.debug("getWorkflow: No such workflow found by id: " + workflowId);
+			return null;
 		}
 		workflow = convert(json, Workflow.class);
 		if (!includeTasks) {
