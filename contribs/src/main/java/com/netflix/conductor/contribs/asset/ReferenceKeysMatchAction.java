@@ -82,6 +82,11 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                 }
 
                 Workflow workflow = executor.getWorkflow(task.getWorkflowInstanceId(), false);
+                if (workflow == null) {
+                    logger.debug("No workflow found with id " + task.getWorkflowInstanceId() + ", skipping " + task);
+                    return;
+                }
+
                 if (workflow.getStatus().isTerminal()) {
                     return;
                 }
@@ -98,6 +103,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 
                 // Array match
                 if (!matches(taskRefKeys, eventRefKeys)) {
+                    logger.debug(task + " does not match " + taskRefKeys + " and " + eventRefKeys);
                     return;
                 }
 
@@ -225,6 +231,14 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
     private static class ReferenceKey {
         public TitleKeys titleKeys;
         public TitleVersion titleVersion;
+
+        @Override
+        public String toString() {
+            return "ReferenceKey{" +
+                "titleKeys=" + titleKeys +
+                ", titleVersion=" + titleVersion +
+                '}';
+        }
     }
 
     private static class TitleKeys {
@@ -235,10 +249,30 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
         public String seasonId;
         public String episodeId;
         public String episodeVersionId;
+
+        @Override
+        public String toString() {
+            return "TitleKeys{" +
+                "featureId='" + featureId + '\'' +
+                ", featureVersionId='" + featureVersionId + '\'' +
+                ", seriesId='" + seriesId + '\'' +
+                ", seasonId='" + seasonId + '\'' +
+                ", episodeId='" + episodeId + '\'' +
+                ", episodeVersionId='" + episodeVersionId + '\'' +
+                '}';
+        }
     }
 
     private static class TitleVersion {
         public String type;
         public String supplementalSubType;
+
+        @Override
+        public String toString() {
+            return "TitleVersion{" +
+                "type='" + type + '\'' +
+                ", supplementalSubType='" + supplementalSubType + '\'' +
+                '}';
+        }
     }
 }
