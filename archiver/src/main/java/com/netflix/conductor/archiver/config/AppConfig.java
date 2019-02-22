@@ -100,4 +100,5 @@ public class AppConfig {
 	public String auroraPassword() {
 		return config.getString("aurora_password");
 	}
+
 }
