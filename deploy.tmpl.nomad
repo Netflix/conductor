@@ -221,6 +221,7 @@ job "conductor" {
         change_mode   = "signal"
         change_signal = "SIGINT"
       }
+
       resources {
         cpu    = 512  # MHz
         memory = 2048 # MB
@@ -231,6 +232,7 @@ job "conductor" {
       }
     } // end server task
   } // end server group
+
 } // end job
 
 job "conductor-archiver" {
