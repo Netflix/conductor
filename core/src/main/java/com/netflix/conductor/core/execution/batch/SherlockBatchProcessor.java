@@ -166,13 +166,13 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 				NDC.push("batch-sherlock-" + task.getTaskId());
 				try {
 					if (task.getTaskId().equalsIgnoreCase(carried.getTaskId())) {
-						logger.debug("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
+						logger.info("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
 								",correlationId=" + task.getCorrelationId() +
 								",taskId=" + task.getTaskId() +
 								",taskReferenceName=" + task.getReferenceTaskName() +
 								",response code=" + response.statusCode + ",response=" + response.body);
 					} else {
-						logger.debug("batch task execution completed.carriedTaskId=" + carried.getTaskId() +
+						logger.info("batch task execution completed.carriedTaskId=" + carried.getTaskId() +
 								",carriedCorrelationId=" + carried.getCorrelationId() +
 								",workflowId=" + task.getWorkflowInstanceId() +
 								",correlationId=" + task.getCorrelationId() +
