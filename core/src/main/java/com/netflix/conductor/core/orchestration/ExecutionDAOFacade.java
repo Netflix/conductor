@@ -198,7 +198,12 @@ public class ExecutionDAOFacade {
     }
 
     public List<Task> createTasks(List<Task> tasks) {
-        return executionDAO.createTasks(tasks);
+        List<Task> tasksCreated = new LinkedList<>();
+        tasksCreated = executionDAO.createTasks(tasks);
+	for (Task task : tasksCreated) {
+		indexDAO.indexTask(task);
+	}
+	return tasksCreated;
     }
 
     public List<Task> getTasksForWorkflow(String workflowId) {
