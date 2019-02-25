@@ -797,3 +797,51 @@ table tbody {
 .red {
   color: red;
 }
+
+.btn-unescape-med {
+  margin-left: 5px;
+}
+
+.editable-string {
+  cursor: pointer;
+}
+
+.popup {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  background-color: rgba(0,0,0, 0.5);
+}
+
+.popup-inner {
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  top: 25%;
+  bottom: 25%;
+  margin: auto;
+  background: white;
+  border-radius: 2px;
+}
+
+.popup-content {
+  width: 100%;
+  height: calc(100% - 40px);
+  padding: 5px;
+}
+
+#popup-editable-content {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.popup-actions {
+  width: 100%;
+  height: 40px;
+}
