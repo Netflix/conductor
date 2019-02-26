@@ -206,12 +206,13 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     private void onMessage(Subscription subscription, ShotgunOuterClass.Message message) {
         String payload = message.getContent().toStringUtf8();
-        logger.info(String.format("Received message for %s: %s", subscription.getSubject(), payload));
 
         Message dstMsg = new Message();
         dstMsg.setId(NUID.nextGlobal());
         dstMsg.setReceipt(message.getID());
         dstMsg.setPayload(payload);
+
+        logger.info(String.format("Received message for %s %s=%s", subscription.getSubject(), dstMsg.getId(), payload));
 
         messages.add(dstMsg);
         Monitors.recordEventQueueMessagesReceived(EventQueues.QueueType.shotgun.name(), queueURI);
