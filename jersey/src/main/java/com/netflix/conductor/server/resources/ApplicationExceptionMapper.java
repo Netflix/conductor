@@ -18,8 +18,12 @@
  */
 package com.netflix.conductor.server.resources;
 
-import java.util.List;
-import java.util.Map;
+import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.ApplicationException;
+import com.netflix.conductor.metrics.Monitors;
+import com.sun.jersey.api.core.HttpContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -29,14 +33,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.metrics.Monitors;
-import com.sun.jersey.api.core.HttpContext;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Viren
@@ -62,7 +60,7 @@ public class ApplicationExceptionMapper implements ExceptionMapper<ApplicationEx
 	
 	@Override
 	public Response toResponse(ApplicationException e) {
-		logger.error(e.getMessage(), e);
+		logger.warn(e.getMessage(), e);
 		if(e.getHttpStatusCode() == 500) {
 			Monitors.error("error", "error");
 		}
