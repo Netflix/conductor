@@ -696,6 +696,9 @@ public class WorkflowExecutor {
             return;
         }
 
+	if (taskResult.getStatus() == TaskResult.Status.IN_PROGRESS && task.getStartTime() == 0) {
+		task.setStartTime(System.currentTimeMillis());
+	}
         task.setStatus(valueOf(taskResult.getStatus().name()));
         task.setOutputData(taskResult.getOutputData());
         task.setOutputMessage(taskResult.getOutputMessage());
