@@ -194,7 +194,7 @@ public class EventProcessor {
 				if (StringUtils.isNotEmpty(handler.getTags())) {
 					List<Object> candidates = ScriptEvaluator.evalJqAsList(handler.getTags(), payloadObj);
 					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
-					logger.debug("tags: {}", tags);
+					logger.debug("Evaluated tags: {}", tags);
 
 					boolean anyRunning = es.runningWorkflowsByTags(tags);
 					if (!anyRunning) {
