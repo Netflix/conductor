@@ -327,7 +327,7 @@ public class DeciderService {
 				+ ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId()
 				+ ",reason=" + task.getReasonForIncompletion() + ",status=" + status
 				+ ",contextUser=" + workflow.getContextUser();
-			if (status == WorkflowStatus.CANCELLED || status == WorkflowStatus.RESET) {
+			if (WorkflowStatus.CANCELLED.equals(status) || WorkflowStatus.RESET.equals(status)) {
 				logger.debug(message);
 			} else {
 				logger.error(message);

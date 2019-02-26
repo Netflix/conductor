@@ -402,7 +402,7 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
 		if (!workflow.getStatus().isTerminal()) {
-			logger.warn("Workflow is still running. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser());
+			logger.debug("Workflow is still running. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId()+ ",contextUser=" + workflow.getContextUser());
 			throw new ApplicationException(Code.CONFLICT, "Workflow is still running. status=" + workflow.getStatus());
 		}
 
@@ -435,11 +435,11 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
 		if (!workflow.getStatus().isTerminal()) {
-			logger.warn("Workflow is still running. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("Workflow is still running. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			throw new ApplicationException(Code.CONFLICT, "Workflow is still running.  status=" + workflow.getStatus());
 		}
 		if (workflow.getTasks().isEmpty()) {
-			logger.warn("Workflow has not started yet. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("Workflow has not started yet. status=" + workflow.getStatus()+",workflowId="+workflow.getWorkflowId()+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			throw new ApplicationException(Code.CONFLICT, "Workflow has not started yet");
 		}
 
@@ -798,7 +798,7 @@ public class WorkflowExecutor {
 					+ ",taskRefName=" + failedTask.getReferenceTaskName()
 					+ ",taskReasonForIncompletion=" + failedTask.getReasonForIncompletion();
 		}
-		if (workflow.getStatus() == WorkflowStatus.RESET) {
+		if (WorkflowStatus.CANCELLED.equals(workflow.getStatus()) || WorkflowStatus.RESET.equals(workflow.getStatus())) {
 			logger.debug(message);
 		} else {
 			logger.error(message);
@@ -1101,7 +1101,11 @@ public class WorkflowExecutor {
 			if (tw.task != null) {
 				message += ",taskId=" + tw.task.getTaskId() + ",taskRefName=" + tw.task.getReferenceTaskName();
 			}
-			logger.debug(message, tw);
+			if (WorkflowStatus.CANCELLED.equals(tw.workflowStatus) || WorkflowStatus.RESET.equals(tw.workflowStatus)) {
+				logger.debug(message, tw);
+			} else {
+				logger.error(message, tw);
+			}
 			terminate(def, workflow, tw);
 			return true;
 		}
@@ -1136,7 +1140,7 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
 		if(!workflow.getStatus().equals(WorkflowStatus.PAUSED)){
-			logger.warn("Workflow is not is not PAUSED so cannot resume. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("Workflow is not is not PAUSED so cannot resume. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 			throw new IllegalStateException("The workflow " + workflowId + " is not is not PAUSED so cannot resume");
 		}
 		workflow.setStatus(WorkflowStatus.RUNNING);
@@ -1156,7 +1160,7 @@ public class WorkflowExecutor {
 		// If the wf is not running then cannot skip any task
 		if(!wf.getStatus().equals(WorkflowStatus.RUNNING)){
 			String errorMsg = String.format("The workflow %s is not running so the task referenced by %s cannot be skipped", workflowId, taskReferenceName);
-			logger.warn(errorMsg);
+			logger.debug(errorMsg);
 			throw new IllegalStateException(errorMsg);
 		}
 		// Check if the reference name is as per the workflowdef
@@ -1164,14 +1168,14 @@ public class WorkflowExecutor {
 		WorkflowTask wft = wfd.getTaskByRefName(taskReferenceName);
 		if(wft == null){
 			String errorMsg = String.format("The task referenced by %s does not exist in the WorkflowDef %s", taskReferenceName, wf.getWorkflowType());
-			logger.warn(errorMsg);
+			logger.debug(errorMsg);
 			throw new IllegalStateException(errorMsg);
 		}
 		// If the task is already started the again it cannot be skipped
 		wf.getTasks().forEach(task -> {
 			if(task.getReferenceTaskName().equals(taskReferenceName)){
 				String errorMsg = String.format("The task referenced %s has already been processed, cannot be skipped", taskReferenceName);
-				logger.warn(errorMsg);
+				logger.debug(errorMsg);
 				throw new IllegalStateException(errorMsg);
 			}
 		});
@@ -1430,10 +1434,15 @@ public class WorkflowExecutor {
 
 		String taskId = (tw.task != null ? tw.task.getTaskId() : null);
 		String taskRefName = (tw.task != null ? tw.task.getReferenceTaskName() : null);
-		logger.debug("Workflow failed/reset. workflowId=" + workflow.getWorkflowId()
+		String message = "Workflow failed/reset. workflowId=" + workflow.getWorkflowId()
 			+ ",correlationId=" + workflow.getCorrelationId() + ",reason=" + tw.getMessage()
 			+ ",taskId=" + taskId + ",taskReferenceName=" + taskRefName
-			+ ",contextUser=" + workflow.getContextUser());
+			+ ",contextUser=" + workflow.getContextUser();
+		if (WorkflowStatus.CANCELLED.equals(tw.workflowStatus) || WorkflowStatus.RESET.equals(tw.workflowStatus)) {
+			logger.debug(message);
+		} else {
+			logger.error(message);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
