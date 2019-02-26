@@ -732,7 +732,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 	}
 
 	@Override
-	public boolean runningWorkflowsByTags(Set<String> tags) {
+	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 		tags.forEach(tag -> query.must(QueryBuilders.termQuery("tags.keyword", tag)));
 

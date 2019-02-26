@@ -196,7 +196,7 @@ public class EventProcessor {
 					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
 					logger.debug("Evaluated tags: {}", tags);
 
-					boolean anyRunning = es.runningWorkflowsByTags(tags);
+					boolean anyRunning = es.anyRunningWorkflowsByTags(tags);
 					if (!anyRunning) {
 						logger.debug("handler {} did not find running workflows with tags {}", handler.getName(), tags);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());

@@ -288,7 +288,7 @@ public interface ExecutionDAO {
 		return Collections.emptyList();
 	}
 
-	public default boolean runningWorkflowsByTags(Set<String> tags) {
+	public default boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		return false;
 	}
 }

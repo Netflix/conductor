@@ -409,8 +409,8 @@ public class ExecutionService {
 	}
 
 
-	public boolean runningWorkflowsByTags(Set<String> tags) {
-		return edao.runningWorkflowsByTags(tags);
+	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
+		return edao.anyRunningWorkflowsByTags(tags);
 	}
 
 	public List<Workflow> getWorkflowsByTags(Set<String> tags) {
