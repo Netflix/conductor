@@ -37,4 +37,4 @@ addParam "${aurora_db}" "aurora_db" ""
 addParam "${aurora_user}" "aurora_user" ""
 addParam "${aurora_password}" "aurora_password" ""
 
-exec java -jar conductor-archiver-*-all.jar
+exec java $JAVA_OPTS -jar conductor-archiver-*-all.jar

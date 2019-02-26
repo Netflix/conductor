@@ -323,10 +323,15 @@ public class DeciderService {
 				status = WorkflowStatus.FAILED;
 			}
 			task.setRetried(true);
-			logger.error("Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId()
-					+ ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId()
-					+ ",reason=" + task.getReasonForIncompletion() + ",status=" + status
-					+ ",contextUser=" + workflow.getContextUser());
+			String message = "Timeout/fail/reset error occurred. workflowId=" + workflow.getWorkflowId()
+				+ ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId()
+				+ ",reason=" + task.getReasonForIncompletion() + ",status=" + status
+				+ ",contextUser=" + workflow.getContextUser();
+			if (WorkflowStatus.CANCELLED.equals(status) || WorkflowStatus.RESET.equals(status)) {
+				logger.debug(message);
+			} else {
+				logger.error(message);
+			}
 			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
 			throw new TerminateWorkflow(reason, status, task);
 		}
@@ -432,7 +437,7 @@ public class DeciderService {
 						Object returnValue = ScriptEvaluator.eval(expression, input);
 						caseValue = (returnValue == null) ? "null": returnValue.toString(); 
 					} catch (ScriptException e) {
-						logger.error(e.getMessage(), e);
+						logger.warn("Error while evaluating the script " + expression, e);
 						throw new RuntimeException("Error while evaluating the script " + expression, e);
 					}
 					
