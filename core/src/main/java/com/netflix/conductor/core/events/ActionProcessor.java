@@ -132,6 +132,7 @@ public class ActionProcessor {
 
 		try {
 			executor.updateTask(new TaskResult(task));
+			replaced.put("conductor.event.success", true);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			replaced.put("error", e.getMessage());
@@ -152,7 +153,7 @@ public class ActionProcessor {
 
 			String id = executor.startWorkflow(def.getName(), def.getVersion(), params.getCorrelationId(), workflowInput, event);
 			op.put("workflowId", id);
-
+			op.put("conductor.event.success", true);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -247,6 +248,7 @@ public class ActionProcessor {
 			op.put("conductor.event.name", event);
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.success", true);
 		} catch (Exception e) {
 			logger.error("updateTask: failed with " + e.getMessage() + " for action=" + updateTask + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
