@@ -62,7 +62,7 @@ class WorkflowMetaDetails extends Component {
             <div><WorkflowMetaDia meta={wf} tasks={[]}/></div>
           </Tab>
           <Tab ref={this.JSONTab} eventKey={2} title="JSON">
-            <div><JSONTab wfs={JSON.stringify(this.state.workflowMeta, null, 2)} name={this.state.name} version={this.state.version} /></div>
+            <div><JSONTab wfs={this.state.workflowMeta} name={this.state.name} version={this.state.version} /></div>
           </Tab>
           <Tab eventKey={3} title="Input">
           <div><WorkflowMetaInput workflowForm={this.state.workflowForm} name={this.state.name}/></div>

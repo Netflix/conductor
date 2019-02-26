@@ -29,7 +29,9 @@ class UnescapeButton extends Component {
 
     render() {
         return(
-            <button onClick={(e) => this.doUnescape()} className='btn btn-default btn-xs'>{this.state.isUnescaped ? 'Escape' : 'Unescape'}</button>
+            <button onClick={(e) => this.doUnescape()} className={"btn btn-default  " + (this.props.medium ? 'btn-unescape-med' : "btn-xs")}>
+                {this.state.isUnescaped ? 'Escape' : 'Unescape'}
+            </button>
         )
     }
 }
