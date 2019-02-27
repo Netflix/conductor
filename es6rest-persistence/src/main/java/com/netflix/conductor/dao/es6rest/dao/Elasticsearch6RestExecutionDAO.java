@@ -783,7 +783,11 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		// Add or remove from the pending workflows
 		if (workflow.getStatus().isTerminal()) {
 			deletePendingWorkflow(workflow);
-			addOrDeleteWorkflowTags(workflow, false);
+
+			// We must not delete tags for RESET as it must be restarted right away
+			if (workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
+				addOrDeleteWorkflowTags(workflow, false);
+			}
 		} else {
 			addPendingWorkflow(workflow);
 			addOrDeleteWorkflowTags(workflow, true);
