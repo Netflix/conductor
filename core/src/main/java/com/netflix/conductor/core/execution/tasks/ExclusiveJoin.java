@@ -40,7 +40,6 @@ public class ExclusiveJoin extends WorkflowSystemTask {
 
 		boolean foundExlusiveJoinOnTask = false;
 		boolean hasFailures = false;
-		boolean useWorkflowInput = false;
 		StringBuilder failureReason = new StringBuilder();
 		Task.Status taskStatus = null;
 		List<String> joinOn = (List<String>) task.getInputData().get("joinOn");
@@ -87,18 +86,18 @@ public class ExclusiveJoin extends WorkflowSystemTask {
 
 				}
 			} else {
-				useWorkflowInput = true;
+				logger.debug("Could not evaluate last tasks output. Verify the task configuration in the workflow definition.");
 			}
 		}
 
-		logger.debug("Status of flags: foundExlusiveJoinOnTask: {}, hasFailures {}, useWorkflowInput {}",
-				foundExlusiveJoinOnTask, hasFailures, useWorkflowInput);
-		if (foundExlusiveJoinOnTask || hasFailures || useWorkflowInput) {
+		logger.debug("Status of flags: foundExlusiveJoinOnTask: {}, hasFailures {}", foundExlusiveJoinOnTask,
+				hasFailures);
+		if (foundExlusiveJoinOnTask || hasFailures) {
 			if (hasFailures) {
 				task.setReasonForIncompletion(failureReason.toString());
 				task.setStatus(Task.Status.FAILED);
 			} else {
-				task.setOutputData((useWorkflowInput) ? workflow.getInput() : exclusiveTask.getOutputData());
+				task.setOutputData(exclusiveTask.getOutputData());
 				task.setStatus(Task.Status.COMPLETED);
 			}
 			logger.debug("Task status is: {}", task.getStatus());
