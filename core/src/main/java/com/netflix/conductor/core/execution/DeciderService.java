@@ -331,7 +331,6 @@ public class DeciderService {
 				logger.error(message);
 			} else {
 				logger.debug(message);
-
 			}
 			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
 			throw new TerminateWorkflow(reason, status, task);
