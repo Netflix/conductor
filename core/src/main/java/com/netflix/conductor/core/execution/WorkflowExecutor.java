@@ -798,7 +798,7 @@ public class WorkflowExecutor {
 					+ ",taskRefName=" + failedTask.getReferenceTaskName()
 					+ ",taskReasonForIncompletion=" + failedTask.getReasonForIncompletion();
 		}
-		if (WorkflowStatus.FAILED.equals(workflow.getStatus())) {
+		if (WorkflowStatus.FAILED.equals(workflow.getStatus()) || WorkflowStatus.TERMINATED.equals(workflow.getStatus())) {
 			logger.error(message);
 		} else {
 			logger.debug(message);
@@ -1101,7 +1101,7 @@ public class WorkflowExecutor {
 			if (tw.task != null) {
 				message += ",taskId=" + tw.task.getTaskId() + ",taskRefName=" + tw.task.getReferenceTaskName();
 			}
-			if (WorkflowStatus.FAILED.equals(tw.workflowStatus)) {
+			if (WorkflowStatus.FAILED.equals(tw.workflowStatus) || WorkflowStatus.TERMINATED.equals(tw.workflowStatus)) {
 				logger.error(message, tw);
 			} else {
 				logger.debug(message, tw);
@@ -1438,7 +1438,7 @@ public class WorkflowExecutor {
 			+ ",correlationId=" + workflow.getCorrelationId() + ",reason=" + tw.getMessage()
 			+ ",taskId=" + taskId + ",taskReferenceName=" + taskRefName
 			+ ",contextUser=" + workflow.getContextUser();
-		if (WorkflowStatus.FAILED.equals(tw.workflowStatus)) {
+		if (WorkflowStatus.FAILED.equals(tw.workflowStatus) || WorkflowStatus.TERMINATED.equals(tw.workflowStatus)) {
 			logger.error(message);
 		} else {
 			logger.debug(message);
