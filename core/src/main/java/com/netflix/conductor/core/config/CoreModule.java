@@ -31,6 +31,7 @@ import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
+import com.netflix.conductor.core.execution.mapper.EventWaitTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ExclusiveJoinTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ForkJoinDynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ForkJoinTaskMapper;
@@ -42,6 +43,7 @@ import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
 import com.netflix.conductor.core.execution.mapper.WaitTaskMapper;
 import com.netflix.conductor.core.execution.tasks.Event;
+import com.netflix.conductor.core.execution.tasks.EventWait;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.SystemTaskWorkerCoordinator;
 import com.netflix.conductor.core.execution.tasks.Wait;
@@ -62,6 +64,8 @@ import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_WAIT;
 import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDERS_QUALIFIER;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EXLCUSIVE_JOIN;
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EVENT_WAIT;
+
 /**
  * @author Viren
  */
@@ -79,6 +83,7 @@ public class CoreModule extends AbstractModule {
         bind(SubWorkflow.class).asEagerSingleton();
         bind(Wait.class).asEagerSingleton();
         bind(Event.class).asEagerSingleton();
+        bind(EventWait.class).asEagerSingleton();
     }
 
     @Provides
@@ -197,5 +202,12 @@ public class CoreModule extends AbstractModule {
     public TaskMapper getExclusiveJoinTaskMapper() {
         return new ExclusiveJoinTaskMapper();
     }
-
+    
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_EVENT_WAIT)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getEventWaitTaskMapper(ParametersUtils parametersUtils) {
+        return new EventWaitTaskMapper(parametersUtils);
+    }
 }

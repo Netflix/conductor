@@ -43,6 +43,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
+import com.netflix.conductor.core.execution.tasks.EventWait;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.service.ExecutionService;
 
@@ -108,6 +109,9 @@ public class QueueManager {
 				} else if(StringUtils.isEmpty(taskRefName)) {
 					logger.error("No taskRefName found in the message. If there is only one WAIT task, will mark it as completed. {}", payload);
 					taskOptional = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getTaskType().equals(Wait.NAME)).findFirst();
+				} else if(StringUtils.isEmpty(taskRefName)) {
+					logger.error("No taskRefName found in the message. If there is only one EVENT_WAIT task, will mark it as completed. {}", payload);
+					taskOptional = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getTaskType().equals(EventWait.NAME)).findFirst();
 				} else {
 					taskOptional = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getReferenceTaskName().equals(taskRefName)).findFirst();
 				}
