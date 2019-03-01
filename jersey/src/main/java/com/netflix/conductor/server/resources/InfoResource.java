@@ -20,6 +20,7 @@ package com.netflix.conductor.server.resources;
 
 import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.dao.MetricsDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.spectator.api.Counter;
 import com.netflix.spectator.api.histogram.PercentileTimer;
@@ -58,10 +59,12 @@ public class InfoResource {
 	private final String prefix = "deluxe.conductor.";
 	private String fullVersion;
 	private Configuration config;
+	private MetricsDAO metricsDAO;
 
 	@Inject
-	public InfoResource(Configuration config) {
+	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
 		this.config = config;
+		this.metricsDAO = metricsDAO;
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
@@ -133,15 +136,17 @@ public class InfoResource {
 		Map<String, Object> output = new TreeMap<>();
 
 		// Counters
-		output.putAll(getCounters());
-		output.putAll(getTodayCounters());
+//		output.putAll(getCounters());
+//		output.putAll(getTodayCounters());
+		output.putAll(metricsDAO.getCounters());
+		output.putAll(metricsDAO.getTodayCounters());
 
-		// Gauges to track in progress tasks, workflows, etc...
-		output.putAll(getGauges());
+//		// Gauges to track in progress tasks, workflows, etc...
+//		output.putAll(getGauges());
 
-		// Timers
-		output.putAll(getTimers());
-		output.putAll(getAverageExecutionTimes());
+//		// Timers
+//		output.putAll(getTimers());
+//		output.putAll(getAverageExecutionTimes());
 
 		return output;
 	}
@@ -375,7 +380,7 @@ public class InfoResource {
 	@ApiOperation(value = "Get the counter metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> counters() {
-		return new TreeMap<>(getAllCounterData());
+		return new TreeMap<>(metricsDAO.getCounters());
 	}
 
 	@GET
