@@ -798,10 +798,10 @@ public class WorkflowExecutor {
 					+ ",taskRefName=" + failedTask.getReferenceTaskName()
 					+ ",taskReasonForIncompletion=" + failedTask.getReasonForIncompletion();
 		}
-		if (WorkflowStatus.CANCELLED.equals(workflow.getStatus()) || WorkflowStatus.RESET.equals(workflow.getStatus())) {
-			logger.debug(message);
-		} else {
+		if (WorkflowStatus.FAILED.equals(workflow.getStatus())) {
 			logger.error(message);
+		} else {
+			logger.debug(message);
 		}
 		List<Task> tasks = workflow.getTasks();
 		cancelTasks(workflow, tasks);
@@ -1101,10 +1101,10 @@ public class WorkflowExecutor {
 			if (tw.task != null) {
 				message += ",taskId=" + tw.task.getTaskId() + ",taskRefName=" + tw.task.getReferenceTaskName();
 			}
-			if (WorkflowStatus.CANCELLED.equals(tw.workflowStatus) || WorkflowStatus.RESET.equals(tw.workflowStatus)) {
-				logger.debug(message, tw);
-			} else {
+			if (WorkflowStatus.FAILED.equals(tw.workflowStatus)) {
 				logger.error(message, tw);
+			} else {
+				logger.debug(message, tw);
 			}
 			terminate(def, workflow, tw);
 			return true;
@@ -1438,10 +1438,10 @@ public class WorkflowExecutor {
 			+ ",correlationId=" + workflow.getCorrelationId() + ",reason=" + tw.getMessage()
 			+ ",taskId=" + taskId + ",taskReferenceName=" + taskRefName
 			+ ",contextUser=" + workflow.getContextUser();
-		if (WorkflowStatus.CANCELLED.equals(tw.workflowStatus) || WorkflowStatus.RESET.equals(tw.workflowStatus)) {
-			logger.debug(message);
-		} else {
+		if (WorkflowStatus.FAILED.equals(tw.workflowStatus)) {
 			logger.error(message);
+		} else {
+			logger.debug(message);
 		}
 	}
 

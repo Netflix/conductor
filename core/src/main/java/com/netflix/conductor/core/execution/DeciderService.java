@@ -327,10 +327,11 @@ public class DeciderService {
 				+ ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId()
 				+ ",reason=" + task.getReasonForIncompletion() + ",status=" + status
 				+ ",contextUser=" + workflow.getContextUser();
-			if (WorkflowStatus.CANCELLED.equals(status) || WorkflowStatus.RESET.equals(status)) {
-				logger.debug(message);
-			} else {
+			if (WorkflowStatus.FAILED.equals(status)) {
 				logger.error(message);
+			} else {
+				logger.debug(message);
+
 			}
 			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
 			throw new TerminateWorkflow(reason, status, task);
