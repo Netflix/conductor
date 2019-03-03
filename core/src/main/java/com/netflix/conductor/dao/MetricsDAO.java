@@ -24,6 +24,5 @@ import java.util.Map;
  * @author Oleksiy Lysak
  */
 public interface MetricsDAO {
-	Map<String, Object> getCounters();
-	Map<String, Object> getTodayCounters();
+	Map<String, Object> getMetrics();
 }

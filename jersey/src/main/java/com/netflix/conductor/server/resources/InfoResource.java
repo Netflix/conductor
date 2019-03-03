@@ -133,22 +133,16 @@ public class InfoResource {
 	@ApiOperation(value = "Get the metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
-		Map<String, Object> output = new TreeMap<>();
-
-		// Counters
+//		Map<String, Object> output = new TreeMap<>();
+//		// Counters
 //		output.putAll(getCounters());
 //		output.putAll(getTodayCounters());
-		output.putAll(metricsDAO.getCounters());
-		output.putAll(metricsDAO.getTodayCounters());
-
 //		// Gauges to track in progress tasks, workflows, etc...
 //		output.putAll(getGauges());
-
 //		// Timers
 //		output.putAll(getTimers());
 //		output.putAll(getAverageExecutionTimes());
-
-		return output;
+		return new TreeMap<>(metricsDAO.getMetrics());
 	}
 
 	private Map<String, Object> getCounters() {
@@ -380,7 +374,7 @@ public class InfoResource {
 	@ApiOperation(value = "Get the counter metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> counters() {
-		return new TreeMap<>(metricsDAO.getCounters());
+		return new TreeMap<>(getAllCounterData());
 	}
 
 	@GET
