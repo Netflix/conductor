@@ -261,6 +261,8 @@ public class EventProcessor {
 				logger.error(e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
+				es.updateEventExecution(ee);
+
 				return null;
 			} finally {
 				NDC.remove();
