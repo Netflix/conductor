@@ -62,7 +62,6 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 	@Override
 	public Map<String, Object> getMetrics() {
-		long start = System.currentTimeMillis();
 		Map<String, AtomicLong> output = new ConcurrentHashMap<>();
 
 		// Filter definitions excluding sub workflows and maintenance workflows
@@ -119,7 +118,6 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			throw new RuntimeException(e.getMessage(), e);
 		}
 
-		System.out.println("Gather took " + (System.currentTimeMillis() - start) + " msec");
 		return new HashMap<>(output);
 	}
 
