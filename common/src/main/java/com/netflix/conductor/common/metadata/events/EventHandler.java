@@ -36,6 +36,8 @@ public class EventHandler {
 
 	private boolean active;
 
+	private String tags;
+
 	public EventHandler() {
 
 	}
@@ -108,6 +110,14 @@ public class EventHandler {
 	 */
 	public void setActive(boolean active) {
 		this.active = active;
+	}
+
+	public String getTags() {
+		return tags;
+	}
+
+	public void setTags(String tags) {
+		this.tags = tags;
 	}
 
 	public static class Action {

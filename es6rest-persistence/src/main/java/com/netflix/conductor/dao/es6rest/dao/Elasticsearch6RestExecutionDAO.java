@@ -33,8 +33,10 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -64,6 +66,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 	private final static String CORR_ID_TO_WORKFLOWS = "CORRID_TO_WORKFLOW";
 	private final static String POLL_DATA = "POLL_DATA";
 	private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
+	private final static String WORKFLOW_TAGS = "WORKFLOW_TAGS";
 
 	// static indexes and types
 	private final Map<String, String> indexes = new HashMap<>();
@@ -89,6 +92,17 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		initIndexTypeNames(CORR_ID_TO_WORKFLOWS);
 		initIndexTypeNames(POLL_DATA);
 		initIndexTypeNames(EVENT_EXECUTION);
+		initIndexTypeNames(WORKFLOW_TAGS);
+
+		// Explicitly init these indexes
+		ensureIndexExists(indexes.get(IN_PROGRESS_TASKS));
+		ensureIndexExists(indexes.get(WORKFLOW_TO_TASKS));
+		ensureIndexExists(indexes.get(SCHEDULED_TASKS));
+		ensureIndexExists(indexes.get(PENDING_WORKFLOWS));
+		ensureIndexExists(indexes.get(WORKFLOW_DEF_TO_WORKFLOWS));
+		ensureIndexExists(indexes.get(CORR_ID_TO_WORKFLOWS));
+		ensureIndexExists(indexes.get(POLL_DATA));
+		ensureIndexExists(indexes.get(WORKFLOW_TAGS));
 
 		// Explicitly init these indexes as they are using `es6runtime_***.json` resource file
 		ensureIndexExists(indexes.get(TASK), types.get(TASK));
@@ -441,7 +455,6 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 				logger.debug("getWorkflow: No such workflow found by id: " + workflowId);
 			return null;
 		}
-
 		workflow = convert(json, Workflow.class);
 		if (!includeTasks) {
 			workflow.getTasks().clear();
@@ -703,6 +716,31 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		return pollData;
 	}
 
+	@Override
+	public List<Workflow> getWorkflowsByTags(Set<String> tags) {
+		QueryBuilder query = QueryBuilders.termsQuery("tags.keyword", tags);
+
+		List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
+
+		return wraps.stream()
+			.map(map -> {
+				String workflowId = (String) map.get("workflowId");
+				return findOne(indexes.get(WORKFLOW), types.get(WORKFLOW), toId(workflowId), Workflow.class);
+			})
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
+	}
+
+	@Override
+	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
+		BoolQueryBuilder query = QueryBuilders.boolQuery();
+		tags.forEach(tag -> query.must(QueryBuilders.termQuery("tags.keyword", tag)));
+
+		List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
+
+		return !wraps.isEmpty();
+	}
+
 	private List<String> dateStrBetweenDates(Long startdatems, Long enddatems) {
 		if (logger.isDebugEnabled())
 			logger.debug("dateStrBetweenDates: startdatems={}, enddatems={}", startdatems, enddatems);
@@ -745,8 +783,14 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		// Add or remove from the pending workflows
 		if (workflow.getStatus().isTerminal()) {
 			deletePendingWorkflow(workflow);
+
+			// We must not delete tags for RESET as it must be restarted right away
+			if (workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
+				addOrDeleteWorkflowTags(workflow, false);
+			}
 		} else {
 			addPendingWorkflow(workflow);
+			addOrDeleteWorkflowTags(workflow, true);
 		}
 
 		workflow.setTasks(tasks);
@@ -899,6 +943,25 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
 			"workflowType", workflow.getWorkflowType());
 		insert(indexName, typeName, id, payload);
+	}
+
+	private void addOrDeleteWorkflowTags(Workflow workflow, boolean add) {
+		String indexName = indexes.get(WORKFLOW_TAGS);
+		String typeName = types.get(WORKFLOW_TAGS);
+		String id = toId(workflow.getWorkflowId());
+
+		if (add) {
+			if (CollectionUtils.isEmpty(workflow.getTags())) {
+				return;
+			}
+
+			Map<String, Object> payload = ImmutableMap.of("workflowId", workflow.getWorkflowId(),
+				"tags", workflow.getTags());
+
+			insert(indexName, typeName, id, payload);
+		} else {
+			delete(indexName, typeName, id);
+		}
 	}
 
 	private void deletePendingWorkflow(String workflowType, String workflowId) {

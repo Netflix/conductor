@@ -28,6 +28,7 @@ import com.netflix.conductor.core.events.queue.Message;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Viren
@@ -277,4 +278,17 @@ public interface ExecutionDAO {
 
 	public abstract List<PollData> getPollData(String taskDefName);
 
+	/**
+	 * Returns list of the in progress workflows associated with tags
+
+	 * @param tags The set of tags to search workflows
+	 * @return List of in progress workflows associated with tags
+	 */
+	public default List<Workflow> getWorkflowsByTags(Set<String> tags) {
+		return Collections.emptyList();
+	}
+
+	public default boolean anyRunningWorkflowsByTags(Set<String> tags) {
+		return false;
+	}
 }

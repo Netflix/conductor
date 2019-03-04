@@ -32,6 +32,7 @@ import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.TaskUtils;
 import com.netflix.conductor.service.MetadataService;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -131,6 +132,7 @@ public class ActionProcessor {
 
 		try {
 			executor.updateTask(new TaskResult(task));
+			replaced.put("conductor.event.success", true);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			replaced.put("error", e.getMessage());
@@ -151,7 +153,7 @@ public class ActionProcessor {
 
 			String id = executor.startWorkflow(def.getName(), def.getVersion(), params.getCorrelationId(), workflowInput, event);
 			op.put("workflowId", id);
-
+			op.put("conductor.event.success", true);
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -246,6 +248,7 @@ public class ActionProcessor {
 			op.put("conductor.event.name", event);
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.success", true);
 		} catch (Exception e) {
 			logger.error("updateTask: failed with " + e.getMessage() + " for action=" + updateTask + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
@@ -262,12 +265,13 @@ public class ActionProcessor {
 		EventHandler.FindUpdate params = action.getFind_update();
 		Map<String, Object> op = new HashMap<>();
 		try {
-			JavaEventAction javaEventAction = new FindUpdateAction(executor);
-			javaEventAction.handle(action, payload, event, messageId);
+			FindUpdateAction findUpdateAction = new FindUpdateAction(executor);
+			List<String> ids = findUpdateAction.handleInternal(action, payload, event, messageId);
 
 			op.put("conductor.event.name", event);
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.success", CollectionUtils.isNotEmpty(ids));
 
 		} catch (Exception e) {
 			logger.error("find_update: failed with " + e.getMessage() + " for action=" + params + ", payload=" + payload, e);
@@ -293,11 +297,12 @@ public class ActionProcessor {
 			Class clazz = Class.forName(params.getClassName());
 			Object object = injector.getInstance(clazz);
 			JavaEventAction javaEventAction = (JavaEventAction) object;
-			javaEventAction.handle(action, payload, event, messageId);
+			List<?> ids = javaEventAction.handle(action, payload, event, messageId);
 
 			op.put("conductor.event.name", event);
 			op.put("conductor.event.payload", payload);
 			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.success", CollectionUtils.isNotEmpty(ids));
 		} catch (Exception e) {
 			logger.error("javaAction: failed with " + e.getMessage() + " for action=" + params + ", payload=" + payload, e);
 			op.put("error", e.getMessage());

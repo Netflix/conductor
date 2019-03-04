@@ -216,6 +216,13 @@ public class WorkflowExecutor {
 			wf.setUpdateTime(null);
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
+
+			if (StringUtils.isNotEmpty(exists.getTags())) {
+				Map<String, Map<String, Object>> inputMap = pu.getInputMap(null, wf, null, null);
+				List<Object> candidates = ScriptEvaluator.evalJqAsList(exists.getTags(), inputMap);
+				Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
+				wf.setTags(tags);
+			}
 			edao.createWorkflow(wf);
 
 			// metrics

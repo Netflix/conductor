@@ -83,4 +83,10 @@ public interface ObservableQueue {
 	 */
 	default void close() { }
 
+	/**
+	 *
+	 * @param messages messages to be unack'ed
+	 */
+	default void unack(List<Message> messages) {}
+
 }

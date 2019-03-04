@@ -14,8 +14,8 @@ public class AppConfig {
 		Parameters params = new Parameters();
 
 		FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
-				new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
-						.configure(params.properties().setFileName("./archiver.properties"));
+			new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
+				.configure(params.properties().setFileName("./archiver.properties"));
 		try {
 			config = builder.getConfiguration();
 		} catch (ConfigurationException e) {
