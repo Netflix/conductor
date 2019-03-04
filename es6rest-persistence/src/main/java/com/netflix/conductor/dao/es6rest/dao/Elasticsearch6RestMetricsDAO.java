@@ -35,41 +35,30 @@ import java.util.stream.Collectors;
  */
 public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO implements MetricsDAO {
 	private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestMetricsDAO.class);
-	private static final List<Workflow.WorkflowStatus> WORKFLOW_TODAY_STATUSES = Arrays.asList(
-		Workflow.WorkflowStatus.COMPLETED,
-		Workflow.WorkflowStatus.CANCELLED,
-		Workflow.WorkflowStatus.TIMED_OUT,
-		Workflow.WorkflowStatus.RUNNING,
-		Workflow.WorkflowStatus.FAILED,
-		Workflow.WorkflowStatus.RESET
+	private static final List<String> WORKFLOW_TODAY_STATUSES = Arrays.asList(
+		Workflow.WorkflowStatus.COMPLETED.name(),
+		Workflow.WorkflowStatus.CANCELLED.name(),
+		Workflow.WorkflowStatus.TIMED_OUT.name(),
+		Workflow.WorkflowStatus.RUNNING.name(),
+		Workflow.WorkflowStatus.FAILED.name(),
+		Workflow.WorkflowStatus.RESET.name()
 	);
-	private static final List<Workflow.WorkflowStatus> WORKFLOW_OVERALL_STATUSES = Arrays.asList(
-		Workflow.WorkflowStatus.COMPLETED,
-		Workflow.WorkflowStatus.CANCELLED,
-		Workflow.WorkflowStatus.TIMED_OUT,
-		Workflow.WorkflowStatus.FAILED
+	private static final List<String> WORKFLOW_OVERALL_STATUSES = Arrays.asList(
+		Workflow.WorkflowStatus.COMPLETED.name(),
+		Workflow.WorkflowStatus.CANCELLED.name(),
+		Workflow.WorkflowStatus.TIMED_OUT.name(),
+		Workflow.WorkflowStatus.FAILED.name()
 	);
-
-	private static final List<String> TASK_NAMES = Arrays.asList(
-		"sherlock",
-		"sherlock1",
-		"sherlock2",
-		"waitchecksum",
-		"waittranscode",
-		"waittransfer",
-		"waitsherlock",
-		"waitmediaconvert",
-		"episodicwaitpending",
-		"waitpending");
 
 	private static final List<String> TASK_TYPES = Arrays.asList(
+		"WAIT",
 		"HTTP",
 		"BATCH",
 		"SUB_WORKFLOW");
 
-	private static final List<Task.Status> TASK_STATUSES = Arrays.asList(
-		Task.Status.COMPLETED,
-		Task.Status.FAILED
+	private static final List<String> TASK_STATUSES = Arrays.asList(
+		Task.Status.COMPLETED.name(),
+		Task.Status.FAILED.name()
 	);
 
 	private static final List<String> WORKFLOWS = Arrays.asList(
@@ -136,12 +125,6 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 				// Task type/refName average
 				futures.add(pool.submit(() -> taskTypeRefNameAverage(output, today)));
-
-				// Task refNames/status
-				//futures.add(pool.submit(() -> taskRefNameCounters(output, today)));
-
-				// Task refName average
-				//futures.add(pool.submit(() -> taskRefNameAverage(output, today)));
 			}
 
 			// Wait until completed
@@ -164,8 +147,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", TASK_STATUSES);
 		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
 		if (today) {
-			QueryBuilder timeQuery = QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
-			mainQuery = mainQuery.must(timeQuery);
+			mainQuery = mainQuery.must(getStartTimeQuery());
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
@@ -195,8 +177,8 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				initMetric(map, String.format("%s.task_%s_%s", prefix, typeName, refName));
 				initMetric(map, String.format("%s.task_%s_%s_today", prefix, typeName, refName));
 				// Init counters. Per typeName/refName/status + today/non-today
-				for (Task.Status status : TASK_STATUSES) {
-					String statusName = status.name().toLowerCase();
+				for (String status : TASK_STATUSES) {
+					String statusName = status.toLowerCase();
 					initMetric(map, String.format("%s.task_%s_%s_%s", prefix, typeName, refName, statusName));
 					initMetric(map, String.format("%s.task_%s_%s_%s_today", prefix, typeName, refName, statusName));
 				}
@@ -225,8 +207,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", Task.Status.COMPLETED);
 		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
 		if (today) {
-			QueryBuilder timeQuery = QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
-			mainQuery = mainQuery.must(timeQuery);
+			mainQuery = mainQuery.must(getStartTimeQuery());
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
@@ -263,110 +244,22 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 	}
 
-	private void taskRefNameAverage(Map<String, AtomicLong> map, boolean today) {
-		// Init counters
-		for (String refName : TASK_NAMES) {
-			String metricName = String.format("%s.avg_task_execution_msec%s.%s", prefix, toLabel(today), refName.toLowerCase());
-			map.computeIfAbsent(metricName, s -> new AtomicLong(0));
-		}
-
-		QueryBuilder typesQuery = QueryBuilders.termsQuery("referenceTaskName", TASK_NAMES);
-		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", Task.Status.COMPLETED);
-		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typesQuery).must(statusQuery);
-		if (today) {
-			QueryBuilder timeQuery = QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
-			mainQuery = mainQuery.must(timeQuery);
-		}
-
-		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggTaskRefName")
-			.field("referenceTaskName")
-			.subAggregation(averageExecTime);
-
-		SearchRequest searchRequest = new SearchRequest(taskIndex);
-		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
-
-		SearchResponse response = search(searchRequest);
-		ParsedStringTerms aggTaskRefName = response.getAggregations().get("aggTaskRefName");
-		for (Object item : aggTaskRefName.getBuckets()) {
-			ParsedStringTerms.ParsedBucket typeBucket = (ParsedStringTerms.ParsedBucket) item;
-			String refName = typeBucket.getKeyAsString().toLowerCase();
-
-			// Per each refName/status
-			ParsedAvg aggAvg = typeBucket.getAggregations().get("aggAvg");
-			double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
-
-			String metricName = String.format("%s.avg_task_execution_msec%s.%s", prefix, toLabel(today), refName);
-			map.put(metricName, new AtomicLong(Math.round(avg)));
-		}
-	}
-
-	private void taskRefNameCounters(Map<String, AtomicLong> map, boolean today) {
-		// Init counters
-		for (String refName : TASK_NAMES) {
-			for (Task.Status status : TASK_STATUSES) {
-				String statusName = status.name().toLowerCase();
-				String metricName = String.format("%s.task_%s_%s%s", prefix, refName.toLowerCase(), statusName, toLabel(today));
-				map.computeIfAbsent(metricName, s -> new AtomicLong(0));
-			}
-		}
-
-		QueryBuilder typesQuery = QueryBuilders.termsQuery("referenceTaskName", TASK_NAMES);
-		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", TASK_STATUSES);
-		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typesQuery).must(statusQuery);
-		if (today) {
-			QueryBuilder timeQuery = QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
-			mainQuery = mainQuery.must(timeQuery);
-		}
-
-		// Aggregation by workflow type and sub aggregation by workflow status
-		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggTaskRefName")
-			.field("referenceTaskName")
-			.subAggregation(AggregationBuilders.terms("aggStatus").field("status"));
-
-		SearchRequest searchRequest = new SearchRequest(taskIndex);
-		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
-
-		SearchResponse response = search(searchRequest);
-
-		ParsedStringTerms aggTaskRefName = response.getAggregations().get("aggTaskRefName");
-		for (Object item : aggTaskRefName.getBuckets()) {
-			ParsedStringTerms.ParsedBucket typeBucket = (ParsedStringTerms.ParsedBucket) item;
-			String refName = typeBucket.getKeyAsString().toLowerCase();
-
-			// Per each refName/status
-			ParsedStringTerms aggStatus = typeBucket.getAggregations().get("aggStatus");
-			for (Object subBucketItem : aggStatus.getBuckets()) {
-				ParsedStringTerms.ParsedBucket statusBucket = (ParsedStringTerms.ParsedBucket) subBucketItem;
-				String statusName = statusBucket.getKeyAsString().toLowerCase();
-				long docCount = statusBucket.getDocCount();
-
-				String metricName = String.format("%s.task_%s_%s%s", prefix, refName, statusName, toLabel(today));
-				map.get(metricName).addAndGet(docCount);
-			}
-		}
-	}
-
 	private void workflowCounters(Map<String, AtomicLong> map, boolean today, String shortName, Set<String> filtered) {
-		List<Workflow.WorkflowStatus> workflowStatuses = today ? WORKFLOW_TODAY_STATUSES : WORKFLOW_OVERALL_STATUSES;
+		List<String> workflowStatuses = today ? WORKFLOW_TODAY_STATUSES : WORKFLOW_OVERALL_STATUSES;
 
 		// Init counters
-		String metricName = String.format("%s.workflow_started%s", prefix, toLabel(today));
-		map.computeIfAbsent(metricName, s -> new AtomicLong(0));
+		initMetric(map, String.format("%s.workflow_started%s", prefix, toLabel(today)));
 
 		// Counter name per status
-		for (Workflow.WorkflowStatus status : workflowStatuses) {
-			metricName = String.format("%s.workflow_%s%s", prefix, status.name().toLowerCase(), toLabel(today));
-			map.computeIfAbsent(metricName, s -> new AtomicLong(0));
+		for (String status : workflowStatuses) {
+			initMetric(map, String.format("%s.workflow_%s%s", prefix, status.toLowerCase(), toLabel(today)));
 		}
 
 		// Counter name per workflow type and status
-		metricName = String.format("%s.workflow_started%s.%s", prefix, toLabel(today), shortName);
-		map.computeIfAbsent(metricName, s -> new AtomicLong(0));
-		for (Workflow.WorkflowStatus status : workflowStatuses) {
-			metricName = String.format("%s.workflow_%s%s.%s", prefix, status.name().toLowerCase(), toLabel(today), shortName);
-			map.computeIfAbsent(metricName, s -> new AtomicLong(0));
+		initMetric(map, String.format("%s.workflow_started%s.%s", prefix, toLabel(today), shortName));
+		for (String status : workflowStatuses) {
+			String metricName = String.format("%s.workflow_%s%s.%s", prefix, status.toLowerCase(), toLabel(today), shortName);
+			initMetric(map, metricName);
 		}
 
 		// Build the today/not-today query
@@ -374,14 +267,12 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", workflowStatuses);
 		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
 		if (today) {
-			QueryBuilder startTime = QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
-			mainQuery = mainQuery.must(startTime);
+			mainQuery = mainQuery.must(getStartTimeQuery());
 		}
 
 		// Aggregation by workflow type and sub aggregation by workflow status
 		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggWorkflowType")
-			.field("workflowType")
+			.terms("aggWorkflowType").field("workflowType")
 			.subAggregation(AggregationBuilders.terms("aggStatus").field("status"));
 
 		SearchRequest searchRequest = new SearchRequest(workflowIndex);
@@ -389,12 +280,12 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 		SearchResponse response = search(searchRequest);
 
-		ParsedStringTerms countByWorkflow = response.getAggregations().get("aggWorkflowType");
-		for (Object item : countByWorkflow.getBuckets()) {
+		ParsedStringTerms aggWorkflowType = response.getAggregations().get("aggWorkflowType");
+		for (Object item : aggWorkflowType.getBuckets()) {
 			ParsedStringTerms.ParsedBucket typeBucket = (ParsedStringTerms.ParsedBucket) item;
 
 			// Total started
-			metricName = String.format("%s.workflow_started%s", prefix, toLabel(today));
+			String metricName = String.format("%s.workflow_started%s", prefix, toLabel(today));
 			map.get(metricName).addAndGet(typeBucket.getDocCount());
 
 			// Started per workflow type
@@ -403,8 +294,8 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 			// Per each workflow/status
 			ParsedStringTerms aggStatus = typeBucket.getAggregations().get("aggStatus");
-			for (Object subBucketItem : aggStatus.getBuckets()) {
-				ParsedStringTerms.ParsedBucket statusBucket = (ParsedStringTerms.ParsedBucket) subBucketItem;
+			for (Object statusItem : aggStatus.getBuckets()) {
+				ParsedStringTerms.ParsedBucket statusBucket = (ParsedStringTerms.ParsedBucket) statusItem;
 				String statusName = statusBucket.getKeyAsString().toLowerCase();
 				long docCount = statusBucket.getDocCount();
 
@@ -424,8 +315,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		QueryBuilder statusQuery = QueryBuilders.termQuery("status", Workflow.WorkflowStatus.COMPLETED);
 		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typesQuery).must(statusQuery);
 		if (today) {
-			QueryBuilder timeQuery = QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
-			mainQuery = mainQuery.must(timeQuery);
+			mainQuery = mainQuery.must(getStartTimeQuery());
 		}
 
 		SearchRequest searchRequest = new SearchRequest(workflowIndex);
@@ -445,8 +335,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		QueryBuilder statusQuery = QueryBuilders.termQuery("status", "COMPLETED");
 		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typesQuery).must(statusQuery);
 		if (today) {
-			QueryBuilder timeQuery = QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
-			mainQuery = mainQuery.must(timeQuery);
+			mainQuery = mainQuery.must(getStartTimeQuery());
 		}
 
 		SearchRequest searchRequest = new SearchRequest(workflowIndex);
@@ -470,16 +359,6 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 	}
 
-	private SearchSourceBuilder searchSourceBuilder(QueryBuilder query, AggregationBuilder aggregation) {
-		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-		sourceBuilder.aggregation(aggregation);
-		sourceBuilder.fetchSource(false);
-		sourceBuilder.query(query);
-		sourceBuilder.size(0);
-
-		return sourceBuilder;
-	}
-
 	private long getPstStartTime() {
 		TimeZone pst = TimeZone.getTimeZone("America/Los_Angeles");
 
@@ -491,6 +370,20 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		calendar.set(Calendar.MILLISECOND, 0);
 
 		return calendar.getTimeInMillis();
+	}
+
+	private SearchSourceBuilder searchSourceBuilder(QueryBuilder query, AggregationBuilder aggregation) {
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.aggregation(aggregation);
+		sourceBuilder.fetchSource(false);
+		sourceBuilder.query(query);
+		sourceBuilder.size(0);
+
+		return sourceBuilder;
+	}
+
+	private QueryBuilder getStartTimeQuery() {
+		return QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
 	}
 
 	private void initMetric(Map<String, AtomicLong> map, String metricName) {
