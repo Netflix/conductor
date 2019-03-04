@@ -9,8 +9,6 @@ import nested from 'postcss-nested';
 import vars from 'postcss-simple-vars';
 import extend from 'postcss-simple-extend';
 import cssnano from 'cssnano';
-import imagemin from 'gulp-imagemin';
-import pngquant from 'imagemin-pngquant';
 import runSequence from 'run-sequence';
 import ghPages from 'gulp-gh-pages';
 import path from 'path';
@@ -132,11 +130,6 @@ gulp.task('fonts', () => {
 
 gulp.task('images', () => {
   gulp.src(paths.srcImg)
-    .pipe(imagemin({
-      progressive: true,
-      svgoPlugins: [{removeViewBox: false}],
-      use: [pngquant()]
-    }))
     .pipe(gulp.dest(paths.dist + '/images'));
 });
 
