@@ -258,8 +258,7 @@ public class EventHandler {
 
 		@Override
 		public String toString() {
-			return "Action{" +
-					"action=" + action +
+			return "{action=" + action +
 					", condition='" + condition + '\'' +
 					(start_workflow != null ? ", start_workflow=" + start_workflow : "") +
 					(complete_task != null ? ", complete_task=" + complete_task : "") +
