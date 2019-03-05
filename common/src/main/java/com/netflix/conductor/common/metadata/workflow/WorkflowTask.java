@@ -95,8 +95,6 @@ public class WorkflowTask {
 	@ProtoField(id = 8)
 	private String caseExpression;
 
-	@ProtoField(id = 9)
-	private String scriptExpression;
 
 	@ProtoMessage(wrapper = true)
 	public static class WorkflowTaskList {
@@ -156,6 +154,12 @@ public class WorkflowTask {
 	
 	@ProtoField(id = 21)
 	private List<String> defaultExclusiveJoinTask = new LinkedList<>();
+
+
+	@ProtoField(id = 22)
+	private String scriptExpression;
+
+
 	/**
 	 * @return the name
 	 */
