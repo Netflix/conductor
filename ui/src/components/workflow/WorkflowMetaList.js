@@ -102,19 +102,21 @@ const WorkflowMetaList = React.createClass({
     },
 
     updateSearchValue(e) {
+        const value = e.target.value;
         this.setState({
-            search: e.target.value
-        });
+            search: value
+        }, this.handleSearch(null, value));
     },
 
-    subitSearch() {
-        this.handleSearch(null);
-    },
+    handleSearch(alreadyFiltered, value) {
+        let searchValue = '';
+        if (value) {
+            searchValue = value;
+        } else {
+            searchValue = this.state.search;
+        }
 
-    handleSearch(alreadyFiltered) {
-        const value = this.state.search;
         let filtered = [];
-        
         if (alreadyFiltered) { 
             filtered = alreadyFiltered;
         } else {
@@ -124,7 +126,7 @@ const WorkflowMetaList = React.createClass({
         let filter = [];
         if ( filtered && filtered.length > 0) {
             filtered.forEach(wf => {
-                if (wf.name.toLowerCase().includes(value.toLowerCase())) {
+                if (wf.name.toLowerCase().includes(searchValue.toLowerCase())) {
                     filter.push(wf);
                 }
             });     
@@ -133,12 +135,6 @@ const WorkflowMetaList = React.createClass({
         this.setState({
             workflowsFilteredAndSearched: filter
         });
-    },
-
-    keyPress(e){
-        if(e.key == 'Enter'){
-            this.subitSearch();
-        }
     },
 
     render() {
@@ -170,25 +166,21 @@ const WorkflowMetaList = React.createClass({
             <div className="ui-content">
                 <h1>Workflows</h1>
                 <div>
-                    <Panel header="Filter Workflows">
-                    <Grid fluid={true}>
+                    <Panel header="Filter Workflows">                
                         <Row className="show-grid">
-                            <Col md={1} style={{ 'textAlign' : 'center'}}>
+                            <Col xs={1} style={{ 'textAlign' : 'center'}}>
                                 <Button onClick={this.showAllWorkflows} className="btn">Show All</Button>
                             </Col>
-                            <Col md={5}>
+                            <Col xs={5}>
                                 <Typeahead ref="workflowTypes" onChange={this.filterChange} options={this.state.allLabels} placeholder="Filter" multiple={true} selected={this.state.labels}/>
                                 &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Filter by Workflow label</label>
                             </Col>
-                            <Col md={5}>
-                                <Input type="input" id="wfSearchInput" value={this.state.search} onChange={this.updateSearchValue} onKeyPress={this.keyPress} ref="searchWorflows" placeholder="Search"/>
+                            <Col xs={6}>
+                                <Input type="input" id="wfSearchInput" value={this.state.search} onChange={this.updateSearchValue} ref="searchWorflows" placeholder="Search"/>
                                 &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Search by Workflow keyword</label>
                             </Col>
-                            <Col md={1}>
-                                <Button bsStyle="success" onClick={this.subitSearch} className="search-label btn"><i className="fa fa-search"/>&nbsp;&nbsp;Search</Button>
-                            </Col>
                         </Row>
-                    </Grid>
+                 
                     <form>
 
                     </form>

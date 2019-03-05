@@ -4,12 +4,15 @@ import { connect } from 'react-redux';
 import unescapeJs from 'unescape-js';
 import UnescapeButton from '../common/UnescapeButton';
 import Popup from '../common/Popup';
+import { Button } from 'react-bootstrap';
 
 class JSONTab extends Component {
     constructor(props) {
       super(props);
       this.state = {
         editingJSON: false,
+        modified: false,
+        updatedJSON: {},
         wfs: this.convertToString(this.props.wfs),
         isNotParsable: false,
         reloading: false,
@@ -26,7 +29,10 @@ class JSONTab extends Component {
     }
 
     convertToString(object) {
-      object = this.updateObject(object, "\r\n")
+      object = this.updateObject(object, "\r\n");
+      this.setState({
+        updatedJSON: object
+      });
       return JSON.stringify(object, null, 2); 
     }
 
@@ -92,6 +98,10 @@ class JSONTab extends Component {
       }
     }
 
+    onKeyPress(e) {
+      this.checkIfModified();
+    }
+
     openPopup(element) {
       if (this.state.editingJSON) {
         this.setState({
@@ -110,28 +120,53 @@ class JSONTab extends Component {
 
     closeAndSavePopup(element, text) {
       element.textContent = text.textContent.replace(/"/g, '\\"').replace(/\n/g, "\\r\\n"); 
+
+      this.checkIfModified();
+
       this.setState({
         showPopup: false,
         popUpText: ''
       });
     }
 
+    checkIfModified() {
+      var current = this.editor.innerHTML.replace(/"/g, "'");
+      var original = this.state.wfs.replace(/"/g, "'");
+
+      if (current === original) {
+        this.setState({modified: false})
+      } else {
+        this.setState({modified: true})
+      }
+    }
+
     render() {
       return(
           <div>
-            <button className="btn btn-default" onClick={(e) => this.editJSONswitch(e, 2)} style={{marginTop:'5px', marginBottom: '5px', display: this.state.editingJSON ? 'inline-block' : 'none'}} >Cancel</button>
-            <button className="btn btn-primary" onClick={(e) => this.editJSONswitch(e, 1)} style={{marginTop:'5px', marginBottom: '5px', marginLeft: '5px'}} disabled={this.state.reloading}>{this.state.editingJSON ? 'Save' : 'Edit'}</button>
+            <Button className="btn btn-default" onClick={(e) => this.editJSONswitch(e, 2)} 
+                    style={{marginTop:'5px', marginBottom: '5px', display: this.state.editingJSON ? 'inline-block' : 'none'}} >
+              Cancel
+            </Button>
+            <Button className="btn btn-primary" onClick={(e) => this.editJSONswitch(e, 1)} 
+                    style={{marginTop:'5px', marginBottom: '5px', marginLeft: '5px'}}
+                    disabled={this.state.reloading || (this.state.editingJSON && !this.state.modified)}>
+              {this.state.editingJSON ? 'Save' : 'Edit'}
+            </Button>
             <span style={{ display: this.state.editingJSON ? 'none' : 'inline-block' }}>
               <UnescapeButton target='jsonedit' medium='true' ref={instance => { this.unescapeButton = instance; }} />          
             </span>
+            <span id="json-modified-info" style={{ display: this.state.modified ? 'inline-block' : 'none' }}>
+              * Modified
+            </span>   
             <div style={{marginTop: '10px', display: this.state.isNotParsable ? "block" : "none"}} className="alert alert-warning" role="alert">{this.state.isNotParsable ? "Could not parse JSON. Is the syntax correct?" : ""}</div>
               <pre id="jsonedit" ref={elem => this.editor = elem} 
                 className={this.state.editingJSON ? 'editingPre' : ''} 
                 contentEditable={this.state.editingJSON} 
                 dangerouslySetInnerHTML= {{ __html: this.state.wfs }}
-                onClick={this.onClick.bind(this)}>
+                onClick={this.onClick.bind(this)}
+                onKeyUp={this.onKeyPress.bind(this)}>
               </pre>
-            {this.state.showPopup ? <Popup element={this.state.popUpElement} closeAndSave={this.closeAndSavePopup.bind(this)} close={this.closePopup.bind(this)}/> : null }
+              {this.state.showPopup ? <Popup element={this.state.popUpElement} closeAndSave={this.closeAndSavePopup.bind(this)} close={this.closePopup.bind(this)}/> : null }
           </div>
       
       )
