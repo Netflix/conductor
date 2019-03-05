@@ -98,7 +98,7 @@ public class AssetMonitor implements JavaEventAction {
 				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + ", messageId=" + messageId);
 			}
 		}
-		return Collections.emptyList();
+		return new ArrayList<>(sourceAtlasWaitIds);
 	}
 
 	// Step 4
