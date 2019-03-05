@@ -79,7 +79,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		LogEntry entry = new LogEntry();
 		entry.timestamp = new Timestamp(System.currentTimeMillis());
 		entry.level = event.getLevel().toString().toLowerCase();
-		entry.logger = event.getLoggerName().toLowerCase();
+		entry.logger = event.getLoggerName();
 		entry.owner = event.getNDC();
 		entry.message = normalizeMessage(event.getRenderedMessage());
 		if (event.getThrowableInformation() != null
