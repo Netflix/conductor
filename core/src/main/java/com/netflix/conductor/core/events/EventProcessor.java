@@ -178,7 +178,7 @@ public class EventProcessor {
 				if (StringUtils.isNotEmpty(condition)) {
 					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
 					if (!success) {
-						logger.warn("handler {} condition {} did not match payload {}", handler.getName(), condition, payloadObj);
+						logger.warn("Handler did not match payload. Handler={}, condition={}, payload={}", handler.getName(), condition, payloadObj);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setEvent(handler.getEvent());
@@ -194,11 +194,11 @@ public class EventProcessor {
 				if (StringUtils.isNotEmpty(handler.getTags())) {
 					List<Object> candidates = ScriptEvaluator.evalJqAsList(handler.getTags(), payloadObj);
 					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
-					logger.debug("Evaluated tags: {}", tags);
+					logger.debug("Evaluated tags={}", tags);
 
 					boolean anyRunning = es.anyRunningWorkflowsByTags(tags);
 					if (!anyRunning) {
-						logger.debug("handler {} did not find running workflows with tags {}", handler.getName(), tags);
+						logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setEvent(handler.getEvent());
@@ -221,7 +221,7 @@ public class EventProcessor {
 					if (StringUtils.isNotEmpty(action.getCondition())) {
 						Boolean success = ScriptEvaluator.evalBool(action.getCondition(), payloadObj);
 						if (!success) {
-							logger.debug("{} did not match payload {}", action, payloadObj);
+							logger.debug("Action did not match payload. {}, payload={}", action, payloadObj);
 							EventExecution ee = new EventExecution(id, msg.getId());
 							ee.setCreated(System.currentTimeMillis());
 							ee.setEvent(handler.getEvent());
@@ -290,7 +290,7 @@ public class EventProcessor {
 			boolean success = false;
 			NDC.push("event-"+ee.getMessageId());
 			try {
-				logger.debug("Executing " + action + " with " + payload);
+				logger.debug("Executing " + action + ", payload=" + payload);
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);
@@ -299,11 +299,14 @@ public class EventProcessor {
 				ee.setStatus(Status.COMPLETED);
 				es.updateEventExecution(ee);
 
+				logger.debug("Action result " + success);
 				return success;
 			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
+				logger.error("Action failed " + e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
+				es.updateEventExecution(ee);
+
 				return success;
 			} finally {
 				NDC.remove();
