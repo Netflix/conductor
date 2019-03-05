@@ -103,7 +103,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 
                 // Array match
                 if (!matches(taskRefKeys, eventRefKeys)) {
-                    logger.debug(task + " does not match " + taskRefKeys + " and " + eventRefKeys);
+                    logger.trace("Task does not match. Task={" + task + "}, taskRefKeys=" + taskRefKeys + ", eventRefKeys=" + eventRefKeys);
                     return;
                 }
 
@@ -135,7 +135,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
             } catch (Exception ex) {
                 String msg = String.format("Reference Keys Match failed for taskId=%s, messageId=%s, event=%s, workflowId=%s, correlationId=%s, payload=%s",
                         task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload);
-                logger.error(msg, ex);
+                logger.warn(msg, ex);
             }
         });
 
@@ -234,7 +234,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 
         @Override
         public String toString() {
-            return "ReferenceKey{" +
+            return "{" +
                 "titleKeys=" + titleKeys +
                 ", titleVersion=" + titleVersion +
                 '}';
