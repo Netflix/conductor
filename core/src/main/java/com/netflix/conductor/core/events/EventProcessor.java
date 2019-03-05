@@ -170,6 +170,7 @@ public class EventProcessor {
 				handlers.addAll(ms.getEventHandlersForEvent(event, true));
 			}
 
+			boolean retryMode = false;
 			int tagsMatchCounter = 0;
 			int tagsNotMatchCounter = 0;
 			for (EventHandler handler : handlers) {
@@ -192,6 +193,7 @@ public class EventProcessor {
 				}
 
 				if (StringUtils.isNotEmpty(handler.getTags())) {
+					retryMode = true;
 					List<Object> candidates = ScriptEvaluator.evalJqAsList(handler.getTags(), payloadObj);
 					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
 					logger.debug("Evaluated tags={}", tags);
@@ -268,14 +270,20 @@ public class EventProcessor {
 				}
 			}
 
-			if (anySuccess) {
-				logger.debug("Message has been processed. Ack for messageId=" + msg.getReceipt());
+			// Ack for legacy mode
+			if (!retryMode) {
+				logger.debug("Legacy mode. Ack for messageId=" + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 			} else {
-				logger.debug("Message has to be redelivered. Unack for messageId=" + msg.getReceipt());
-				queue.unack(Collections.singletonList(msg));
+				// Any action succeeded
+				if (anySuccess) {
+					logger.debug("Message has been processed. Ack for messageId=" + msg.getReceipt());
+					queue.ack(Collections.singletonList(msg));
+				} else {
+					logger.debug("Message has to be redelivered. Unack for messageId=" + msg.getReceipt());
+					queue.unack(Collections.singletonList(msg));
+				}
 			}
-
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			queue.unack(Collections.singletonList(msg));
