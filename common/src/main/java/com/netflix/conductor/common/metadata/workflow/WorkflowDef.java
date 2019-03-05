@@ -53,6 +53,8 @@ public class WorkflowDef extends Auditable {
 	private int schemaVersion = 1;
 
 	private List<String> retryForbidden = new LinkedList<String>();
+
+	private String tags;
 	
 	/**
 	 * @return the name
@@ -248,7 +250,15 @@ public class WorkflowDef extends Auditable {
 		this.retryForbidden = retryForbidden;
 	}
 
-    public WorkflowTask getNextTask(String taskReferenceName){
+	public String getTags() {
+		return tags;
+	}
+
+	public void setTags(String tags) {
+		this.tags = tags;
+	}
+
+	public WorkflowTask getNextTask(String taskReferenceName){
 		Iterator<WorkflowTask> it = tasks.iterator();
 		while(it.hasNext()){
 			 WorkflowTask task = it.next();

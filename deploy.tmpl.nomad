@@ -178,6 +178,7 @@ job "conductor" {
         io_shotgun_service = "conductor-server-<TLD>"
         io_shotgun_publishRetryIn = "5,10,15"
         io_shotgun_shared = "false"
+        io_shotgun_manualAck = "true"
         com_bydeluxe_onemq_log = "false"
 
         // NATS settings

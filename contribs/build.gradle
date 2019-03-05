@@ -14,7 +14,7 @@ dependencies {
 	compile group: 'org.json', name: 'json', version: '20141113'
 	compile group: 'io.nats', name: 'java-nats-streaming', version: '2.0.2'
 
-	compile files('libs/one-mq-0.3.5.jar')
+	compile files('libs/one-mq-0.3.6.jar')
 	compile 'io.grpc:grpc-core:1.15.1'
 	compile 'io.grpc:grpc-netty-shaded:1.15.1'
 	compile 'io.grpc:grpc-protobuf:1.15.1'

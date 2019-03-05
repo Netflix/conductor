@@ -97,7 +97,7 @@ public class DeciderService {
 		}
 		
 		List<Task> pendingTasks = workflow.getTasks().stream().filter(t -> (!t.isRetried() && !t.getStatus().equals(Status.SKIPPED)) || SystemTaskType.isBuiltIn(t.getTaskType())).collect(Collectors.toList());
-		
+
 		Set<String> executedTaskRefNames = workflow.getTasks().stream()
 				.filter(t -> !t.getStatus().equals(Status.SKIPPED) && !t.getStatus().equals(Status.READY_FOR_RERUN))
 				.map(t -> t.getReferenceTaskName()).collect(Collectors.toSet());
@@ -327,10 +327,10 @@ public class DeciderService {
 				+ ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId()
 				+ ",reason=" + task.getReasonForIncompletion() + ",status=" + status
 				+ ",contextUser=" + workflow.getContextUser();
-			if (WorkflowStatus.CANCELLED.equals(status) || WorkflowStatus.RESET.equals(status)) {
-				logger.debug(message);
-			} else {
+			if (WorkflowStatus.FAILED.equals(status)) {
 				logger.error(message);
+			} else {
+				logger.debug(message);
 			}
 			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
 			throw new TerminateWorkflow(reason, status, task);

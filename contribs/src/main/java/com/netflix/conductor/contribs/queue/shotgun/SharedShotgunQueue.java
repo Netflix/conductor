@@ -47,6 +47,7 @@ public class SharedShotgunQueue implements ObservableQueue {
     private static Logger logger = LoggerFactory.getLogger(ShotgunQueue.class);
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     private Duration[] publishRetryIn;
+    private boolean manualAck;
     private final String queueURI;
     private final String service;
     private final String subject;
@@ -54,11 +55,12 @@ public class SharedShotgunQueue implements ObservableQueue {
     private OneMQClient conn;
     private Subscription subs;
 
-    public SharedShotgunQueue(OneMQClient conn, String service, String queueURI, Duration[] publishRetryIn) {
+    public SharedShotgunQueue(OneMQClient conn, String service, String queueURI, Duration[] publishRetryIn, boolean manualAck) {
         this.conn = conn;
         this.service = service;
         this.queueURI = queueURI;
         this.publishRetryIn = publishRetryIn;
+        this.manualAck = manualAck;
 
         // If groupId specified (e.g. subject:groupId) - split to subject & groupId
         if (queueURI.contains(":")) {
@@ -121,7 +123,28 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     @Override
     public List<String> ack(List<Message> messages) {
+        if (!manualAck) {
+            return Collections.emptyList();
+        }
+        messages.forEach(msg -> {
+            try {
+                conn.ack(msg.getReceipt());
+            } catch (Exception e) {
+                logger.error("ack failed with " + e.getMessage() + " for " + msg.getId(), e);
+            }
+        });
         return Collections.emptyList();
+    }
+
+    @Override
+    public void unack(List<Message> messages) {
+        messages.forEach(msg -> {
+            try {
+                conn.unack(msg.getReceipt());
+            } catch (Exception e) {
+                logger.error("unack failed with " + e.getMessage() + " for " + msg.getId(), e);
+            }
+        });
     }
 
     @Override
@@ -169,10 +192,12 @@ public class SharedShotgunQueue implements ObservableQueue {
             if (StringUtils.isNotEmpty(groupId)) {
                 logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, groupId);
                 subs = conn.subscribe(subject, service, groupId, this::onMessage);
+                subs.setManualAck(manualAck);
             } else {
                 String uuid = UUID.randomUUID().toString();
                 logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, uuid);
                 subs = conn.subscribe(subject, service, uuid, this::onMessage);
+                subs.setManualAck(manualAck);
             }
         } catch (Exception ex) {
             logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
@@ -181,11 +206,13 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     private void onMessage(Subscription subscription, ShotgunOuterClass.Message message) {
         String payload = message.getContent().toStringUtf8();
-        logger.info(String.format("Received message for %s: %s", subscription.getSubject(), payload));
 
         Message dstMsg = new Message();
         dstMsg.setId(NUID.nextGlobal());
+        dstMsg.setReceipt(message.getID());
         dstMsg.setPayload(payload);
+
+        logger.info(String.format("Received message for %s %s=%s", subscription.getSubject(), dstMsg.getId(), payload));
 
         messages.add(dstMsg);
         Monitors.recordEventQueueMessagesReceived(EventQueues.QueueType.shotgun.name(), queueURI);

@@ -47,13 +47,14 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ShotgunEventQueueProvider implements EventQueueProvider {
 	private static Logger logger = LoggerFactory.getLogger(ShotgunEventQueueProvider.class);
+	private static final String PROP_MANUAL_ACK = "io.shotgun.manualAck";
 	private static final String PROP_SHARED = "io.shotgun.shared";
 	private static final String PROP_SERVICE = "io.shotgun.service";
 	private static final String PROP_DNS = "io.shotgun.dns";
 	private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
-	private ScheduledExecutorService execs;
 	private Duration[] publishRetryIn;
 	private OneMQClient mqClient;
+	private boolean manualAck;
 	private boolean shared;
 	private String service;
 	private String dns;
@@ -62,6 +63,7 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 	public ShotgunEventQueueProvider(Configuration config) {
 		logger.debug("Shotgun Event Queue Provider init");
 
+		manualAck = Boolean.parseBoolean(config.getProperty(PROP_MANUAL_ACK, "false"));
 		shared = Boolean.parseBoolean(config.getProperty(PROP_SHARED, "false"));
 
 		service = config.getProperty(PROP_SERVICE, null);
@@ -75,7 +77,7 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 		}
 
 		String[] arr = config.getProperty("io.shotgun.publishRetryIn", ",").split(",");
-		Duration[] publishRetryIn = new Duration[arr.length];
+		publishRetryIn = new Duration[arr.length];
 		for (int i = 0; i < arr.length; i++) {
 			publishRetryIn[i] = Duration.ofSeconds(Long.parseLong(arr[i]));
 		}
@@ -85,7 +87,7 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 
 		if (shared) {
 			mqClient = new OneMQ();
-			execs = Executors.newScheduledThreadPool(1);
+			ScheduledExecutorService execs = Executors.newScheduledThreadPool(1);
 			execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
 		}
 
@@ -96,9 +98,9 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
 		if (shared) {
-			return queues.computeIfAbsent(queueURI, q -> new SharedShotgunQueue(mqClient, service, queueURI, publishRetryIn));
+			return queues.computeIfAbsent(queueURI, q -> new SharedShotgunQueue(mqClient, service, queueURI, publishRetryIn, manualAck));
 		} else {
-			return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI, publishRetryIn));
+			return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI, publishRetryIn, manualAck));
 		}
 	}
 

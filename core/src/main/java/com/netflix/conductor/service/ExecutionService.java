@@ -407,4 +407,14 @@ public class ExecutionService {
 		Log4JLogger commLogger = (Log4JLogger)LogFactory.getLog(name);
 		commLogger.getLogger().setLevel(level);
 	}
+
+
+	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
+		return edao.anyRunningWorkflowsByTags(tags);
+	}
+
+	public List<Workflow> getWorkflowsByTags(Set<String> tags) {
+		return edao.getWorkflowsByTags(tags);
+	}
+
 }

@@ -29,6 +29,7 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
@@ -145,7 +146,7 @@ public class EventProcessor {
 		NDC.push("event-"+msg.getId());
 		try {
 
-			List<Future<Void>> futures = new LinkedList<>();
+			List<Future<Boolean>> futures = new LinkedList<>();
 
 			String payload = msg.getPayload();
 			Object payloadObj = null;
@@ -169,14 +170,15 @@ public class EventProcessor {
 				handlers.addAll(ms.getEventHandlersForEvent(event, true));
 			}
 
+			int tagsMatchCounter = 0;
+			int tagsNotMatchCounter = 0;
 			for (EventHandler handler : handlers) {
 
 				String condition = handler.getCondition();
-				logger.debug("condition: {}", condition);
-				if (!StringUtils.isEmpty(condition)) {
+				if (StringUtils.isNotEmpty(condition)) {
 					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
 					if (!success) {
-						logger.warn("handler {} condition {} did not match payload {}", handler.getName(), condition, payloadObj);
+						logger.warn("Handler did not match payload. Handler={}, condition={}, payload={}", handler.getName(), condition, payloadObj);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setEvent(handler.getEvent());
@@ -189,6 +191,29 @@ public class EventProcessor {
 					}
 				}
 
+				if (StringUtils.isNotEmpty(handler.getTags())) {
+					List<Object> candidates = ScriptEvaluator.evalJqAsList(handler.getTags(), payloadObj);
+					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
+					logger.debug("Evaluated tags={}", tags);
+
+					boolean anyRunning = es.anyRunningWorkflowsByTags(tags);
+					if (!anyRunning) {
+						logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
+						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
+						ee.setCreated(System.currentTimeMillis());
+						ee.setEvent(handler.getEvent());
+						ee.setName(handler.getName());
+						ee.setStatus(Status.SKIPPED);
+						ee.getOutput().put("msg", payload);
+						ee.getOutput().put("tags", tags);
+						es.addEventExecution(ee);
+						tagsNotMatchCounter++;
+						continue;
+					} else  {
+						tagsMatchCounter++;
+					}
+				}
+
 				int i = 0;
 				List<Action> actions = handler.getActions();
 				for (Action action : actions) {
@@ -196,7 +221,7 @@ public class EventProcessor {
 					if (StringUtils.isNotEmpty(action.getCondition())) {
 						Boolean success = ScriptEvaluator.evalBool(action.getCondition(), payloadObj);
 						if (!success) {
-							logger.debug("{} condition {} did not match payload {}", action, condition, payloadObj);
+							logger.debug("Action did not match payload. {}, payload={}", action, payloadObj);
 							EventExecution ee = new EventExecution(id, msg.getId());
 							ee.setCreated(System.currentTimeMillis());
 							ee.setEvent(handler.getEvent());
@@ -204,7 +229,7 @@ public class EventProcessor {
 							ee.setAction(action.getAction());
 							ee.setStatus(Status.SKIPPED);
 							ee.getOutput().put("msg", payload);
-							ee.getOutput().put("condition", condition);
+							ee.getOutput().put("condition", action.getCondition());
 							es.addEventExecution(ee);
 							continue;
 						}
@@ -217,7 +242,7 @@ public class EventProcessor {
 					ee.setAction(action.getAction());
 					ee.setStatus(Status.IN_PROGRESS);
 					if (es.addEventExecution(ee)) {
-						Future<Void> future = execute(ee, action, payload);
+						Future<Boolean> future = execute(ee, action, payload);
 						futures.add(future);
 					} else {
 						logger.warn("Duplicate delivery/execution? {}", id);
@@ -225,45 +250,64 @@ public class EventProcessor {
 				}
 			}
 
-			for (Future<Void> future : futures) {
+			// if no tags for all handlers - ack message
+			if (tagsNotMatchCounter > 0 && tagsMatchCounter == 0) {
+				logger.debug("No running workflows for the tags. Ack for " + msg.getReceipt());
+				queue.ack(Collections.singletonList(msg));
+				return;
+			}
+
+			boolean anySuccess = false;
+			for (Future<Boolean> future : futures) {
 				try {
-					future.get();
+					if (BooleanUtils.isTrue(future.get())) {
+						anySuccess = true;
+					}
 				} catch (Exception e) {
 					logger.error(e.getMessage(), e);
 				}
 			}
 
-			queue.ack(Arrays.asList(msg));
+			if (anySuccess) {
+				logger.debug("Message has been processed. Ack for messageId=" + msg.getReceipt());
+				queue.ack(Collections.singletonList(msg));
+			} else {
+				logger.debug("Message has to be redelivered. Unack for messageId=" + msg.getReceipt());
+				queue.unack(Collections.singletonList(msg));
+			}
 
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
+			queue.unack(Collections.singletonList(msg));
 		} finally {
 			NDC.remove();
 			Monitors.recordEventQueueMessagesProcessed(queue.getType(), queue.getName(), 1);
 		}
 	}
 
-	private Future<Void> execute(EventExecution ee, Action action, String payload) {
+	private Future<Boolean> execute(EventExecution ee, Action action, String payload) {
 		return executors.submit(() -> {
+			boolean success = false;
 			NDC.push("event-"+ee.getMessageId());
 			try {
-
-				logger.debug("Executing {} with payload {}", action, payload);
+				logger.debug("Executing " + action + ", payload=" + payload);
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);
+					success = BooleanUtils.isTrue((Boolean) output.get("conductor.event.success"));
 				}
 				ee.setStatus(Status.COMPLETED);
 				es.updateEventExecution(ee);
 
-				return null;
+				logger.debug("Action result " + success);
+				return success;
 			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
+				logger.error("Action failed " + e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
 				es.updateEventExecution(ee);
 
-				return null;
+				return success;
 			} finally {
 				NDC.remove();
 			}

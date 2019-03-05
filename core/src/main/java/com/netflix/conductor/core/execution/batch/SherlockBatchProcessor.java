@@ -94,7 +94,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 	@Override
 	public void run(List<Task> tasks) {
 		Map<String, List<Task>> groups = tasks.stream()
-				.collect(Collectors.groupingBy(o -> o.getInputData().get("uniqueness").toString()));
+			.collect(Collectors.groupingBy(o -> o.getInputData().get("uniqueness").toString()));
 
 		groups.forEach(this::processGroup);
 	}
