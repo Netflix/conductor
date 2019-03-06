@@ -215,7 +215,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "2.0.0-rc4"
+            "locked": "2.0.0-rc5"
         },
         "com.netflix.eureka:eureka-client": {
             "firstLevelTransitive": [
@@ -709,7 +709,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "2.0.0-rc4"
+            "locked": "2.0.0-rc5"
         },
         "com.netflix.eureka:eureka-client": {
             "firstLevelTransitive": [
@@ -1203,7 +1203,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "2.0.0-rc4"
+            "locked": "2.0.0-rc5"
         },
         "com.netflix.eureka:eureka-client": {
             "firstLevelTransitive": [
@@ -1697,7 +1697,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "2.0.0-rc4"
+            "locked": "2.0.0-rc5"
         },
         "com.netflix.eureka:eureka-client": {
             "firstLevelTransitive": [

@@ -67,8 +67,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
@@ -211,8 +211,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
@@ -355,8 +355,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
@@ -511,8 +511,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
@@ -655,8 +655,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
@@ -799,8 +799,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
@@ -951,8 +951,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
@@ -1103,8 +1103,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
@@ -1255,8 +1255,8 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc4",
-            "requested": "2.0.0-rc4"
+            "locked": "2.0.0-rc5",
+            "requested": "2.0.0-rc5"
         },
         "com.netflix.servo:servo-core": {
             "firstLevelTransitive": [
