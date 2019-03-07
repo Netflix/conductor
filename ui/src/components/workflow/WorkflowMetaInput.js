@@ -17,7 +17,6 @@ class WorkflowMetaInput extends Component {
             jsonData: {},
             log: this.props.res,
             loading: this.props.starting,
-            label: "info",
             showCron: false
         }
     }
@@ -79,88 +78,78 @@ class WorkflowMetaInput extends Component {
         const descs = this.props.workflowForm.descs || [];
         const { labels } = this.props.workflowForm;
 
-        function renderDesc(idx) {
-            if(descs[idx]){
-                return (
-                    <Label>{descs[idx]}</Label>
-                )
-            }
-        }
+        const statusLog = (log) => {
 
-        function renderCronComp() {
-            if(showCron){
-                return (
-                    <WorkflowMetaCron ref="cronform"/>
-                )
-            }
-        }
+            let { statusCode, statusText } = log;
+            let wfId = "";
+            if( log.body )
+                wfId = log.body.text;
 
-        function consoleLog() {
-            if(log){
-                if(log.body && log.statusCode === 200){
-                    return (
-                        <div>
-                            <Well>
-                            <span><h4>Workflow ID:</h4><Link to={`/workflow/id/${log.body.text}`}>{log.body.text}</Link><br/></span>
-                            <span><h4>Status code: </h4> <Label bsStyle="success">{log.statusCode}</Label><br/></span>
-                            <span><h4>Status text: </h4> <Label bsStyle="success">{log.statusText}</Label><br/></span>
-                            </Well>
-                        </div>
-                    );
-                }
-                if(log.statusCode === 200){
-                    return (
-                        <div>
-                            <Well>
-                            <span><h4>{log.text}</h4><br/></span>
-                            <span><h4>Status code: </h4> <Label bsStyle="success">{log.statusCode}</Label><br/></span>
-                            <span><h4>Status text: </h4> <Label bsStyle="success">{log.statusText}</Label><br/></span>
-                            </Well>
-                        </div>
-                    );
-                }
-                else {
-                    return (
-                        <div>
-                            <Well>
-                            <span><h4>Error: </h4> <Label bsStyle="danger">{log.toString()}</Label><br/></span>
-                            </Well>
-                        </div>
-                    )
-                } 
-            }
-        }
+            window.scrollTo(0,document.body.scrollHeight);
+
+            return (
+                <div>
+                    <Well>
+                        <span>
+                            <h4>Workflow ID:</h4>
+                            {wfId ? <Link to={`/workflow/id/${wfId}`}>{wfId}</Link> : ""}<br/>
+                        </span>
+                        <span>
+                            <h4>Status code: </h4>
+                            <Label bsStyle={(statusCode === 200) ? "success" : "danger"}>{statusCode}</Label><br/>
+                        </span>
+                        <span>
+                            <h4>Status text: </h4>
+                            <Label bsStyle={statusText ? "success" : "danger"}>{statusText}</Label><br/>
+                        </span>
+                    </Well>
+                </div>
+            );
+        };
+
+        const inputForm = (
+            <div>
+                <h1>Inputs of <Label
+                    bsStyle={log ? (log.error ? "danger" : "success") : "info"}>{this.props.name}</Label> workflow</h1>
+                <p>&nbsp;&nbsp;&nbsp;&nbsp;{this.props.meta ? this.props.meta.description : null}</p>
+
+                {labels.map((item, idx) =>
+                    <form onSubmit={!loading ? this.startWorfklow : null}>
+                        &nbsp;&nbsp;
+                        <Input type="input" key={values}
+                               label={item}
+                               defaultValue={values[idx]}
+                               placeholder="Enter the input"
+                               onChange={this.handleChange.bind(this, idx)}/>
+                        {descs[idx] ? <Label>{descs[idx]}</Label> : null}
+                        &nbsp;&nbsp;
+                    </form>)}
+            </div>
+        );
+
+        const cronForm = (
+            <div>
+                <h3>Schedule workflow &nbsp;&nbsp;
+
+                    <Button className="btn btn-default btn-circle" bsSize="xsmall"
+                            onClick={showCron ? this.hideCron.bind(this) : this.showCron.bind(this)}>
+                        { showCron ?  <i className="fas fa-minus"/> : <i className="fas fa-plus"/> }
+                    </Button></h3>
+
+                <CSSTransitionGroup
+                    transitionName="cronanim"
+                    transitionEnterTimeout={300}
+                    transitionLeaveTimeout={300}>
+                    { showCron ? <WorkflowMetaCron ref="cronform"/> : null }<br/>
+                </CSSTransitionGroup>
+            </div>
+        );
 
         return (
             <div className="input-form">
                 <Panel header="Execute workflow">
-                    <h1>Inputs of <Label bsStyle={log ? (log.error ? "danger":"success"):"info"}>{this.props.name}</Label> workflow</h1>
-                    <p>&nbsp;&nbsp;&nbsp;&nbsp;{this.props.meta ? this.props.meta.description : null}</p>
-                        {labels.map((item, idx) =>
-                         <form onSubmit={!loading ? this.startWorfklow : null}>
-                            &nbsp;&nbsp;
-                                <Input type="input" key={values}
-                                                    label={item}
-                                                    defaultValue={values[idx]}
-                                                    placeholder="Enter the input"
-                                                    onChange={this.handleChange.bind(this, idx)}/>
-                                 {renderDesc(idx)}
-                                 &nbsp;&nbsp;
-                         </form>)}
-
-                    <h3>Schedule workflow &nbsp;&nbsp;
-
-                        <Button className="btn btn-default btn-circle" bsSize="xsmall"
-                                onClick={showCron ? this.hideCron.bind(this) : this.showCron.bind(this)}>
-                            { showCron ?  <i className="fas fa-minus"/> : <i className="fas fa-plus"/> }
-                        </Button></h3>
-
-                    <CSSTransitionGroup
-                        transitionName="cronanim"
-                        transitionEnterTimeout={300}
-                        transitionLeaveTimeout={300}>
-                            {renderCronComp()}<br/>
-                    </CSSTransitionGroup>
+                    {inputForm}
+                    {cronForm}
 
                     <Button bsStyle="primary"
                             bsSize="large"
@@ -171,7 +160,7 @@ class WorkflowMetaInput extends Component {
                     </Button>
 
                     <h3>Console log</h3>
-                        {consoleLog()}
+                        { log ? statusLog(log) : null }
 
                 </Panel>
             </div>
