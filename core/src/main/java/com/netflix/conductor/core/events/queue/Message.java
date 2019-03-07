@@ -29,6 +29,8 @@ public class Message {
 	private String id;
 	
 	private String receipt;
+
+	private long received;
 	
 	public Message() {
 		
@@ -82,6 +84,22 @@ public class Message {
 	 */
 	public void setReceipt(String receipt) {
 		this.receipt = receipt;
+	}
+
+	/**
+	 *
+	 * @return Time when message received
+	 */
+	public long getReceived() {
+		return received;
+	}
+
+	/**
+	 *
+	 * @param received Time when message received
+	 */
+	public void setReceived(long received) {
+		this.received = received;
 	}
 
 	@Override

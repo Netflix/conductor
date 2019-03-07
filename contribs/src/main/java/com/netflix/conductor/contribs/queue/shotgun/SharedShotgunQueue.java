@@ -211,6 +211,7 @@ public class SharedShotgunQueue implements ObservableQueue {
         dstMsg.setId(NUID.nextGlobal());
         dstMsg.setReceipt(message.getID());
         dstMsg.setPayload(payload);
+        dstMsg.setReceived(System.currentTimeMillis());
 
         logger.info(String.format("Received message for %s %s=%s", subscription.getSubject(), dstMsg.getId(), payload));
 
