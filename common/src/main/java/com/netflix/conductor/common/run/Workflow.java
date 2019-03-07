@@ -87,6 +87,8 @@ public class Workflow extends Auditable {
 
 	private Set<String> tags = new HashSet<>();
 
+	private int restartCount;
+
 	public Workflow(){
 		
 	}
@@ -364,6 +366,18 @@ public class Workflow extends Auditable {
 
 	public void setTags(Set<String> tags) {
 		this.tags = tags;
+	}
+
+	public int getRestartCount() {
+		return restartCount;
+	}
+
+	public void setRestartCount(int restartCount) {
+		this.restartCount = restartCount;
+	}
+
+	public void incRestartCount() {
+		this.restartCount++;
 	}
 
 	@Override

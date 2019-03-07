@@ -42,7 +42,6 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
 	private static final String SUPPRESS_RESTART_PARAMETER = "suppressRestart";
-	private static final String RESTARTED = "restartCount";
 	private static final String RESTART_ON = "restartOn";
 	public static final String NAME = "SUB_WORKFLOW";
 
@@ -190,10 +189,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 	}
 
 	private boolean handleRestart(Workflow subWorkflow, Task task, SubWorkflowParams param, WorkflowExecutor provider) {
-		Integer restarted = (Integer) task.getOutputData().get(RESTARTED);
-		if (restarted == null) {
-			restarted = 0;
-		}
+		Integer restarted = subWorkflow.getRestartCount();
 
 		Integer restartsAllowed = param.getRestartCount();
 		if (restartsAllowed != null && restartsAllowed >= 0 && restarted >= restartsAllowed) {
@@ -203,9 +199,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 		}
 
 		logger.debug("Time to restart the sub-workflow " + subWorkflow.getWorkflowId());
-		restarted++;
-		task.getOutputData().put(RESTARTED, restarted);
 		try {
+			// restart count will be increased in the rewind method
 			provider.rewind(subWorkflow.getWorkflowId(), subWorkflow.getCorrelationId());
 		} catch (Exception ex) {
 			// Do nothing due to conflict situation when this task already been taken care of
