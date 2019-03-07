@@ -22,8 +22,11 @@ import com.netflix.conductor.bootstrap.Main;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.service.Lifecycle;
 import com.sun.jersey.api.client.Client;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +37,7 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * @author Viren
@@ -61,7 +65,27 @@ public class JettyServer implements Lifecycle {
             throw new IllegalStateException("Server is already running");
         }
 
-        this.server = new Server(port);
+        int minThreads = 8;
+        int maxThreads = 200;
+        int idleTimeout = 60000;
+        int queueCapacity = 1000;
+
+        try {
+            minThreads = Integer.valueOf(System.getProperty("jetty.threadpool.min.threads"));
+            maxThreads = Integer.valueOf(System.getProperty("jetty.threadpool.max.threads"));
+            idleTimeout = Integer.valueOf(System.getProperty("jetty.threadpool.idle.timeout"));
+            queueCapacity = Integer.valueOf(System.getProperty("jetty.threadpool.queue.capacity"));
+        } catch (NumberFormatException e) {
+            logger.warn("Couldn't read min and max jetty threads properties from configuration. Using defaults.");
+        }
+
+        this.server = new Server(new QueuedThreadPool(maxThreads, minThreads, idleTimeout, new ArrayBlockingQueue<>(queueCapacity)));
+
+        logger.info("Jetty started with minThreads: " + minThreads + ", maxThreads: " + maxThreads);
+
+        ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory());
+        connector.setPort(port);
+        server.addConnector(connector);
 
         ServletContextHandler context = new ServletContextHandler();
         context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
