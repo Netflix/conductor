@@ -170,6 +170,7 @@ public class EventProcessor {
 				handlers.addAll(ms.getEventHandlersForEvent(event, true));
 			}
 
+			boolean retryMode = false;
 			int tagsMatchCounter = 0;
 			int tagsNotMatchCounter = 0;
 			for (EventHandler handler : handlers) {
@@ -192,6 +193,7 @@ public class EventProcessor {
 				}
 
 				if (StringUtils.isNotEmpty(handler.getTags())) {
+					retryMode = true;
 					List<Object> candidates = ScriptEvaluator.evalJqAsList(handler.getTags(), payloadObj);
 					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
 					logger.debug("Evaluated tags={}", tags);
@@ -221,7 +223,7 @@ public class EventProcessor {
 					if (StringUtils.isNotEmpty(action.getCondition())) {
 						Boolean success = ScriptEvaluator.evalBool(action.getCondition(), payloadObj);
 						if (!success) {
-							logger.debug("Action did not match payload. {}, payload={}", action, payloadObj);
+							logger.debug("Action did not match payload. Handler={}, action={}, payload={}", handler.getName(), action, payloadObj);
 							EventExecution ee = new EventExecution(id, msg.getId());
 							ee.setCreated(System.currentTimeMillis());
 							ee.setEvent(handler.getEvent());
@@ -268,14 +270,20 @@ public class EventProcessor {
 				}
 			}
 
-			if (anySuccess) {
-				logger.debug("Message has been processed. Ack for messageId=" + msg.getReceipt());
+			// Ack for legacy mode
+			if (!retryMode) {
+				logger.debug("Ack for messageId=" + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 			} else {
-				logger.debug("Message has to be redelivered. Unack for messageId=" + msg.getReceipt());
-				queue.unack(Collections.singletonList(msg));
+				// Any action succeeded
+				if (anySuccess) {
+					logger.debug("Processed. Ack for messageId=" + msg.getReceipt());
+					queue.ack(Collections.singletonList(msg));
+				} else {
+					logger.debug("Redelivery needed. Unack for messageId=" + msg.getReceipt());
+					queue.unack(Collections.singletonList(msg));
+				}
 			}
-
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			queue.unack(Collections.singletonList(msg));
@@ -290,7 +298,6 @@ public class EventProcessor {
 			boolean success = false;
 			NDC.push("event-"+ee.getMessageId());
 			try {
-				logger.debug("Executing " + action + ", payload=" + payload);
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);
@@ -299,10 +306,13 @@ public class EventProcessor {
 				ee.setStatus(Status.COMPLETED);
 				es.updateEventExecution(ee);
 
-				logger.debug("Action result " + success);
+				long execTime = System.currentTimeMillis() - ee.getCreated();
+				logger.debug("Executed handler=" + ee.getName() + ", action=" + action +
+					", payload=" + payload + ", success=" + success + ", execTime=" + execTime);
 				return success;
 			} catch (Exception e) {
-				logger.error("Action failed " + e.getMessage(), e);
+				logger.debug("Execute failed handler=" + ee.getName() + ", action=" + action +
+					", payload=" + payload + ", reason=" + e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
 				es.updateEventExecution(ee);
