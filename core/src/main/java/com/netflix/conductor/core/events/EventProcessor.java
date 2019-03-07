@@ -272,15 +272,15 @@ public class EventProcessor {
 
 			// Ack for legacy mode
 			if (!retryMode) {
-				logger.debug("Legacy mode. Ack for messageId=" + msg.getReceipt());
+				logger.debug("Ack for messageId=" + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 			} else {
 				// Any action succeeded
 				if (anySuccess) {
-					logger.debug("Message has been processed. Ack for messageId=" + msg.getReceipt());
+					logger.debug("Processed. Ack for messageId=" + msg.getReceipt());
 					queue.ack(Collections.singletonList(msg));
 				} else {
-					logger.debug("Message has to be redelivered. Unack for messageId=" + msg.getReceipt());
+					logger.debug("Redelivery needed. Unack for messageId=" + msg.getReceipt());
 					queue.unack(Collections.singletonList(msg));
 				}
 			}
@@ -298,7 +298,6 @@ public class EventProcessor {
 			boolean success = false;
 			NDC.push("event-"+ee.getMessageId());
 			try {
-				logger.debug("Executing handler=" + ee.getName() + ", action=" + action + ", payload=" + payload);
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);
@@ -307,7 +306,7 @@ public class EventProcessor {
 				ee.setStatus(Status.COMPLETED);
 				es.updateEventExecution(ee);
 
-				logger.debug("Action result " + success);
+				logger.debug("Executed handler=" + ee.getName() + ", action=" + action + ", payload=" + payload + ", success=" + success);
 				return success;
 			} catch (Exception e) {
 				logger.error("Action failed " + e.getMessage(), e);
