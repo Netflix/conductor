@@ -306,10 +306,13 @@ public class EventProcessor {
 				ee.setStatus(Status.COMPLETED);
 				es.updateEventExecution(ee);
 
-				logger.debug("Executed handler=" + ee.getName() + ", action=" + action + ", payload=" + payload + ", success=" + success);
+				long execTime = System.currentTimeMillis() - ee.getCreated();
+				logger.debug("Executed handler=" + ee.getName() + ", action=" + action +
+					", payload=" + payload + ", success=" + success + ", execTime=" + execTime);
 				return success;
 			} catch (Exception e) {
-				logger.error("Action failed " + e.getMessage(), e);
+				logger.debug("Execute failed handler=" + ee.getName() + ", action=" + action +
+					", payload=" + payload + ", reason=" + e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
 				es.updateEventExecution(ee);
