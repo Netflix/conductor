@@ -1,6 +1,8 @@
 package com.netflix.conductor.dao.es6rest.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventExecution;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
@@ -19,6 +21,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.avg.AvgAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.avg.ParsedAvg;
+import org.elasticsearch.search.aggregations.metrics.cardinality.ParsedCardinality;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +29,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -40,8 +46,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		Workflow.WorkflowStatus.CANCELLED.name(),
 		Workflow.WorkflowStatus.TIMED_OUT.name(),
 		Workflow.WorkflowStatus.RUNNING.name(),
-		Workflow.WorkflowStatus.FAILED.name(),
-		Workflow.WorkflowStatus.RESET.name()
+		Workflow.WorkflowStatus.FAILED.name()
 	);
 	private static final List<String> WORKFLOW_OVERALL_STATUSES = Arrays.asList(
 		Workflow.WorkflowStatus.COMPLETED.name(),
@@ -61,6 +66,12 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		Task.Status.FAILED.name()
 	);
 
+	private static final List<String> EVENT_STATUSES = Arrays.asList(
+		EventExecution.Status.COMPLETED.name(),
+		EventExecution.Status.SKIPPED.name(),
+		EventExecution.Status.FAILED.name()
+	);
+
 	private static final List<String> WORKFLOWS = Arrays.asList(
 		"deluxe.dependencygraph.assembly.conformancegroup.process", // Sherlock V1 Assembly Conformance
 		"deluxe.dependencygraph.sourcewait.process",                // Sherlock V2 Sourcewait
@@ -77,6 +88,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	private static final String version = "\\.\\d+\\.\\d+"; // covers '.X.Y' where X and Y any number
 	private final MetadataDAO metadataDAO;
 	private final String workflowIndex;
+	private final String eventIndex;
 	private final String taskIndex;
 
 	@Inject
@@ -85,6 +97,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		super(client, config, mapper, "metrics");
 		this.metadataDAO = metadataDAO;
 		this.workflowIndex = String.format("conductor.runtime.%s.workflow", config.getStack());
+		this.eventIndex = String.format("conductor.runtime.%s.event_execution", config.getStack());
 		this.taskIndex = String.format("conductor.runtime.%s.task", config.getStack());
 	}
 
@@ -125,6 +138,9 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 				// Task type/refName average
 				futures.add(pool.submit(() -> taskTypeRefNameAverage(output, today)));
+
+				// Event counters
+				futures.add(pool.submit(() -> eventCounters(output, today)));
 			}
 
 			// Wait until completed
@@ -140,6 +156,64 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 
 		return new HashMap<>(output);
+	}
+
+	private void eventCounters(Map<String, AtomicLong> map, boolean today) {
+		// 0 - event bus, 1 - subject, 2 - queue
+		List<String> subjects = metadataDAO.getEventHandlers().stream()
+			.filter(EventHandler::isActive)
+			.map(eh -> eh.getEvent().split(":")[1])
+			.collect(Collectors.toList());
+
+		for (String subject : subjects) {
+			initMetric(map, String.format("%s.event_total%s.%s", prefix, toLabel(today), subject));
+
+			for (String status : EVENT_STATUSES) {
+				initMetric(map, String.format("%s.event_%s%s.%s", prefix, status.toLowerCase(), toLabel(today), subject));
+			}
+		}
+
+		QueryBuilder typeQuery = QueryBuilders.termsQuery("subject.keyword", subjects);
+		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", EVENT_STATUSES);
+		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
+		if (today) {
+			mainQuery = mainQuery.must(getStartTimeQuery("created"));
+		}
+
+		TermsAggregationBuilder aggregation = AggregationBuilders
+			.terms("aggSubject").field("subject.keyword")
+			.subAggregation(AggregationBuilders.cardinality("aggCountPerSubject").field("messageId"))
+			.subAggregation(AggregationBuilders
+				.terms("aggStatus").field("status")
+				.subAggregation(AggregationBuilders.cardinality("aggCountPerStatus").field("messageId"))
+			);
+
+		SearchRequest searchRequest = new SearchRequest(eventIndex);
+		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
+
+		SearchResponse response = search(searchRequest);
+		ParsedStringTerms aggSubject = response.getAggregations().get("aggSubject");
+		for (Object itemSubject : aggSubject.getBuckets()) {
+			ParsedStringTerms.ParsedBucket subjectBucket = (ParsedStringTerms.ParsedBucket) itemSubject;
+			String subjectName = subjectBucket.getKeyAsString().toLowerCase();
+
+			// Total per subject
+			ParsedCardinality countPerSubject = subjectBucket.getAggregations().get("aggCountPerSubject");
+			String metricName = String.format("%s.event_total%s.%s", prefix, toLabel(today), subjectName);
+			map.get(metricName).set(countPerSubject.getValue());
+
+			// Per each subject/status
+			ParsedStringTerms aggStatus = subjectBucket.getAggregations().get("aggStatus");
+			for (Object itemStatus : aggStatus.getBuckets()) {
+				ParsedStringTerms.ParsedBucket statusBucket = (ParsedStringTerms.ParsedBucket) itemStatus;
+				String statusName = statusBucket.getKeyAsString().toLowerCase();
+
+				// Per subject/status
+				ParsedCardinality aggCountPerStatus = statusBucket.getAggregations().get("aggCountPerStatus");
+				metricName = String.format("%s.event_%s%s.%s", prefix, statusName, toLabel(today), subjectName);
+				map.get(metricName).addAndGet(aggCountPerStatus.getValue());
+			}
+		}
 	}
 
 	private void taskTypeRefNameCounters(Map<String, AtomicLong> map, boolean today) {
@@ -383,7 +457,11 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	}
 
 	private QueryBuilder getStartTimeQuery() {
-		return QueryBuilders.rangeQuery("startTime").gte(getPstStartTime());
+		return getStartTimeQuery("startTime");
+	}
+
+	private QueryBuilder getStartTimeQuery(String field) {
+		return QueryBuilders.rangeQuery(field).gte(getPstStartTime());
 	}
 
 	private void initMetric(Map<String, AtomicLong> map, String metricName) {
