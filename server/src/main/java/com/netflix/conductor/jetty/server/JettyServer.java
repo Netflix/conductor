@@ -81,7 +81,7 @@ public class JettyServer implements Lifecycle {
 
         this.server = new Server(new QueuedThreadPool(maxThreads, minThreads, idleTimeout, new ArrayBlockingQueue<>(queueCapacity)));
 
-        logger.info("Jetty started with minThreads: " + minThreads + ", maxThreads: " + maxThreads);
+        logger.info("Jetty started with threadpool configuration: [minThreads: " + minThreads + ", maxThreads: " + maxThreads + ", idleTimeout: " + idleTimeout + ", queueCapacity: " + queueCapacity + "]");
 
         ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory());
         connector.setPort(port);
