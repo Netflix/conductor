@@ -78,7 +78,6 @@ public class AssetMonitor implements JavaEventAction {
 		// Step 3
 		for (Workflow workflow : workflows) {
 			// Step 3.1
-			// Step 3.1
 			Task actionCheck = workflow.getTasks().stream()
 				.filter(task -> task.getReferenceTaskName().equalsIgnoreCase("action_check"))
 				.findFirst().orElse(null);
