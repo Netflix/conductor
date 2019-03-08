@@ -137,9 +137,6 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 					futures.add(pool.submit(() -> workflowAverage(metrics, today, shortName, filtered)));
 				}
 
-				// Overall workflow execution average
-				futures.add(pool.submit(() -> overallWorkflowAverage(metrics, today, fullNames)));
-
 				// Task type/refName/status counter
 				futures.add(pool.submit(() -> taskTypeRefNameCounters(metrics, today)));
 
@@ -327,9 +324,6 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 					// Workflow average per short name
 					futures.add(pool.submit(() -> workflowAverage(metrics, today, shortName, filtered)));
 				}
-
-				// Overall workflow execution average
-				futures.add(pool.submit(() -> overallWorkflowAverage(metrics, today, fullNames)));
 			}
 
 			// Wait until completed
@@ -636,26 +630,6 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
 
 		String metricName = String.format("%s.avg_workflow_execution_sec%s.%s", PREFIX, toLabel(today), shortName);
-		map.put(metricName, new AtomicLong(Math.round(avg / 1000)));
-	}
-
-	private void overallWorkflowAverage(Map<String, AtomicLong> map, boolean today, Set<String> fullNames) {
-		QueryBuilder typesQuery = QueryBuilders.termsQuery("workflowType", fullNames);
-		QueryBuilder statusQuery = QueryBuilders.termQuery("status", "COMPLETED");
-		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typesQuery).must(statusQuery);
-		if (today) {
-			mainQuery = mainQuery.must(getStartTimeQuery());
-		}
-
-		SearchRequest searchRequest = new SearchRequest(workflowIndex);
-		searchRequest.source(searchSourceBuilder(mainQuery, AVERAGE_EXEC_TIME));
-
-		SearchResponse response = search(searchRequest);
-		ParsedAvg aggAvg = response.getAggregations().get("aggAvg");
-
-		double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
-
-		String metricName = String.format("%s.avg_workflow_execution_sec%s", PREFIX, toLabel(today));
 		map.put(metricName, new AtomicLong(Math.round(avg / 1000)));
 	}
 
