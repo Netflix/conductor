@@ -125,6 +125,14 @@ public class InfoResource {
 	}
 
 	@GET
+	@Path("/metrics/admin")
+	@ApiOperation(value = "Get the admin metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> admin() {
+		return new TreeMap<>(metricsDAO.getAdminCounters());
+	}
+
+	@GET
 	@Path("/metrics/task/counters")
 	@ApiOperation(value = "Get the task counter metrics")
 	@Produces(MediaType.APPLICATION_JSON)

@@ -95,6 +95,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	private static final String PREFIX = "deluxe.conductor";
 	private final MetadataDAO metadataDAO;
 	private final String workflowIndex;
+	private final String deciderIndex;
 	private final String eventIndex;
 	private final String taskIndex;
 
@@ -104,6 +105,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		super(client, config, mapper, "metrics");
 		this.metadataDAO = metadataDAO;
 		this.workflowIndex = String.format("conductor.runtime.%s.workflow", config.getStack());
+		this.deciderIndex = String.format("conductor.queues.%s._deciderqueue", config.getStack());
 		this.eventIndex = String.format("conductor.runtime.%s.event_execution", config.getStack());
 		this.taskIndex = String.format("conductor.runtime.%s.task", config.getStack());
 	}
@@ -150,6 +152,66 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				// Event average
 				futures.add(pool.submit(() -> eventAverage(metrics, today)));
 			}
+
+			// Admin counters
+			futures.add(pool.submit(() -> adminCounters(metrics)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getAdminCounters() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		adminCounters(metrics);
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getEventCounters() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> eventCounters(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> eventCounters(metrics, false)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getEventAverage() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> eventAverage(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> eventAverage(metrics, false)));
 
 			// Wait until completed
 			waitCompleted(futures);
@@ -198,54 +260,6 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 			// overall
 			futures.add(pool.submit(() -> taskTypeRefNameAverage(metrics, false)));
-
-			// Wait until completed
-			waitCompleted(futures);
-		} finally {
-			pool.shutdown();
-		}
-
-		return new HashMap<>(metrics);
-	}
-
-	@Override
-	public Map<String, Object> getEventCounters() {
-		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
-
-		// Using ExecutorService to process in parallel
-		ExecutorService pool = Executors.newCachedThreadPool();
-		try {
-			List<Future<?>> futures = new LinkedList<>();
-
-			// today
-			futures.add(pool.submit(() -> eventCounters(metrics, true)));
-
-			// overall
-			futures.add(pool.submit(() -> eventCounters(metrics, false)));
-
-			// Wait until completed
-			waitCompleted(futures);
-		} finally {
-			pool.shutdown();
-		}
-
-		return new HashMap<>(metrics);
-	}
-
-	@Override
-	public Map<String, Object> getEventAverage() {
-		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
-
-		// Using ExecutorService to process in parallel
-		ExecutorService pool = Executors.newCachedThreadPool();
-		try {
-			List<Future<?>> futures = new LinkedList<>();
-
-			// today
-			futures.add(pool.submit(() -> eventAverage(metrics, true)));
-
-			// overall
-			futures.add(pool.submit(() -> eventAverage(metrics, false)));
 
 			// Wait until completed
 			waitCompleted(futures);
@@ -327,40 +341,24 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	private void eventAverage(Map<String, AtomicLong> map, boolean today) {
-		Set<String> subjects = getSubjects();
+	private void adminCounters(Map<String, AtomicLong> map) {
+		Set<EventHandler> handlers = getHandlers();
 
-		for (String subject : subjects) {
-			initMetric(map, String.format("%s.avg_event_execution_msec%s.%s", PREFIX, toLabel(today), subject));
-		}
+		// number of active handlers
+		initMetric(map, String.format("%s.admin.active_handlers", PREFIX)).set(handlers.size());
 
-		QueryBuilder typeQuery = QueryBuilders.termsQuery("subject.keyword", subjects);
-		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", Arrays.asList("COMPLETED", "FAILED"));
-		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
-		if (today) {
-			mainQuery = mainQuery.must(getStartTimeQuery("created"));
-		}
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.fetchSource(false);
+		sourceBuilder.query(QueryBuilders.matchAllQuery());
+		sourceBuilder.size(0);
 
-		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggSubject").field("subject.keyword")
-			.subAggregation(EVENT_AVERAGE_PROC_TIME);
-
-		SearchRequest searchRequest = new SearchRequest(eventIndex);
-		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
+		SearchRequest searchRequest = new SearchRequest(deciderIndex);
+		searchRequest.source(sourceBuilder);
 
 		SearchResponse response = search(searchRequest);
-		ParsedStringTerms aggSubject = response.getAggregations().get("aggSubject");
-		for (Object itemSubject : aggSubject.getBuckets()) {
-			ParsedStringTerms.ParsedBucket subjectBucket = (ParsedStringTerms.ParsedBucket) itemSubject;
-			String subjectName = subjectBucket.getKeyAsString().toLowerCase();
 
-			ParsedAvg aggAvg = subjectBucket.getAggregations().get("aggAvg");
-
-			double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
-
-			String metricName = String.format("%s.avg_event_execution_msec%s.%s", PREFIX, toLabel(today), subjectName);
-			map.get(metricName).set((long) avg);
-		}
+		// number of active handlers
+		initMetric(map, String.format("%s.admin.decider_queue", PREFIX)).set(response.getHits().totalHits);
 	}
 
 	private void eventCounters(Map<String, AtomicLong> map, boolean today) {
@@ -414,6 +412,42 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				metricName = String.format("%s.event_%s%s.%s", PREFIX, statusName, toLabel(today), subjectName);
 				map.get(metricName).addAndGet(aggCountPerStatus.getValue());
 			}
+		}
+	}
+
+	private void eventAverage(Map<String, AtomicLong> map, boolean today) {
+		Set<String> subjects = getSubjects();
+
+		for (String subject : subjects) {
+			initMetric(map, String.format("%s.avg_event_execution_msec%s.%s", PREFIX, toLabel(today), subject));
+		}
+
+		QueryBuilder typeQuery = QueryBuilders.termsQuery("subject.keyword", subjects);
+		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", Arrays.asList("COMPLETED", "FAILED"));
+		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
+		if (today) {
+			mainQuery = mainQuery.must(getStartTimeQuery("created"));
+		}
+
+		TermsAggregationBuilder aggregation = AggregationBuilders
+			.terms("aggSubject").field("subject.keyword")
+			.subAggregation(EVENT_AVERAGE_PROC_TIME);
+
+		SearchRequest searchRequest = new SearchRequest(eventIndex);
+		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
+
+		SearchResponse response = search(searchRequest);
+		ParsedStringTerms aggSubject = response.getAggregations().get("aggSubject");
+		for (Object itemSubject : aggSubject.getBuckets()) {
+			ParsedStringTerms.ParsedBucket subjectBucket = (ParsedStringTerms.ParsedBucket) itemSubject;
+			String subjectName = subjectBucket.getKeyAsString().toLowerCase();
+
+			ParsedAvg aggAvg = subjectBucket.getAggregations().get("aggAvg");
+
+			double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
+
+			String metricName = String.format("%s.avg_event_execution_msec%s.%s", PREFIX, toLabel(today), subjectName);
+			map.get(metricName).set((long) avg);
 		}
 	}
 
@@ -641,10 +675,14 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			.collect(Collectors.toSet());
 	}
 
+	private Set<EventHandler> getHandlers() {
+		return metadataDAO.getEventHandlers().stream()
+			.filter(EventHandler::isActive).collect(Collectors.toSet());
+	}
+
 	// Extracts subject name from each active handler
 	private Set<String> getSubjects() {
-		return metadataDAO.getEventHandlers().stream()
-			.filter(EventHandler::isActive)
+		return getHandlers().stream()
 			.map(eh -> eh.getEvent().split(":")[1]) // 0 - event bus, 1 - subject, 2 - queue
 			.collect(Collectors.toSet());
 	}
@@ -687,8 +725,8 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return QueryBuilders.rangeQuery(field).gte(calendar.getTimeInMillis());
 	}
 
-	private void initMetric(Map<String, AtomicLong> map, String metricName) {
-		map.computeIfAbsent(metricName, s -> new AtomicLong(0));
+	private AtomicLong initMetric(Map<String, AtomicLong> map, String metricName) {
+		return map.computeIfAbsent(metricName, s -> new AtomicLong(0));
 	}
 
 	private String toLabel(boolean today) {
