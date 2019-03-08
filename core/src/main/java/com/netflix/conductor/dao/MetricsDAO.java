@@ -25,4 +25,10 @@ import java.util.Map;
  */
 public interface MetricsDAO {
 	Map<String, Object> getMetrics();
+	Map<String, Object> getTaskCounters();
+	Map<String, Object> getTaskAverage();
+	Map<String, Object> getEventCounters();
+	Map<String, Object> getEventAverage();
+	Map<String, Object> getWorkflowCounters();
+	Map<String, Object> getWorkflowAverage();
 }

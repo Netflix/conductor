@@ -14,6 +14,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -73,19 +74,25 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	);
 
 	private static final List<String> WORKFLOWS = Arrays.asList(
+		"deluxe.dependencygraph.conformancegroup.delivery.process", // Conformance Group
 		"deluxe.dependencygraph.assembly.conformancegroup.process", // Sherlock V1 Assembly Conformance
 		"deluxe.dependencygraph.sourcewait.process",                // Sherlock V2 Sourcewait
 		"deluxe.dependencygraph.execute.process",                   // Sherlock V2 Execute
 		"deluxe.deluxeone.sky.compliance.process",                  // Sky Compliance
 		"deluxe.delivery.itune.process"                             // iTune
 	);
-	private static final AvgAggregationBuilder averageExecTime = AggregationBuilders.avg("aggAvg")
+	private static final AvgAggregationBuilder AVERAGE_EXEC_TIME = AggregationBuilders.avg("aggAvg")
 		.script(new Script("doc['endTime'].value != null && doc['endTime'].value > 0 " +
 			" && doc['startTime'].value != null && doc['startTime'].value > 0 " +
 			" ? doc['endTime'].value - doc['startTime'].value : 0"));
 
-	private static final String prefix = "deluxe.conductor";
-	private static final String version = "\\.\\d+\\.\\d+"; // covers '.X.Y' where X and Y any number
+	private static final AvgAggregationBuilder EVENT_AVERAGE_PROC_TIME = AggregationBuilders.avg("aggAvg")
+		.script(new Script("doc['processed'].value != null && doc['processed'].value > 0 " +
+			" && doc['received'].value != null && doc['received'].value > 0 " +
+			" ? doc['processed'].value - doc['received'].value : 0"));
+
+	private static final String VERSION = "\\.\\d+\\.\\d+"; // covers '.X.Y' where X and Y any number/digit
+	private static final String PREFIX = "deluxe.conductor";
 	private final MetadataDAO metadataDAO;
 	private final String workflowIndex;
 	private final String eventIndex;
@@ -103,12 +110,10 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 	@Override
 	public Map<String, Object> getMetrics() {
-		Map<String, AtomicLong> output = new ConcurrentHashMap<>();
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
-		// Filter definitions excluding sub workflows and maintenance workflows
-		Set<String> fullNames = metadataDAO.findAll().stream()
-			.filter(fullName -> WORKFLOWS.stream().anyMatch(shortName -> fullName.matches(shortName + version)))
-			.collect(Collectors.toSet());
+		// Main workflow list
+		Set<String> fullNames = getMainWorkflows();
 
 		// Using ExecutorService to process in parallel
 		ExecutorService pool = Executors.newCachedThreadPool();
@@ -124,52 +129,248 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 					Set<String> filtered = fullNames.stream().filter(type -> type.startsWith(shortName)).collect(Collectors.toSet());
 
 					// Workflow counter per short name
-					futures.add(pool.submit(() -> workflowCounters(output, today, shortName, filtered)));
+					futures.add(pool.submit(() -> workflowCounters(metrics, today, shortName, filtered)));
 
 					// Workflow average per short name
-					futures.add(pool.submit(() -> workflowAverage(output, today, shortName, filtered)));
+					futures.add(pool.submit(() -> workflowAverage(metrics, today, shortName, filtered)));
 				}
 
 				// Overall workflow execution average
-				futures.add(pool.submit(() -> overallWorkflowAverage(output, today, fullNames)));
+				futures.add(pool.submit(() -> overallWorkflowAverage(metrics, today, fullNames)));
 
 				// Task type/refName/status counter
-				futures.add(pool.submit(() -> taskTypeRefNameCounters(output, today)));
+				futures.add(pool.submit(() -> taskTypeRefNameCounters(metrics, today)));
 
 				// Task type/refName average
-				futures.add(pool.submit(() -> taskTypeRefNameAverage(output, today)));
+				futures.add(pool.submit(() -> taskTypeRefNameAverage(metrics, today)));
 
 				// Event counters
-				futures.add(pool.submit(() -> eventCounters(output, today)));
+				futures.add(pool.submit(() -> eventCounters(metrics, today)));
+
+				// Event average
+				futures.add(pool.submit(() -> eventAverage(metrics, today)));
 			}
 
 			// Wait until completed
-			for (Future<?> future : futures) {
-				try {
-					future.get();
-				} catch (Exception ex) {
-					logger.error("Get future failed " + ex.getMessage(), ex);
-				}
-			}
+			waitCompleted(futures);
 		} finally {
 			pool.shutdown();
 		}
 
-		return new HashMap<>(output);
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getTaskCounters() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> taskTypeRefNameCounters(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> taskTypeRefNameCounters(metrics, false)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getTaskAverage() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> taskTypeRefNameAverage(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> taskTypeRefNameAverage(metrics, false)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getEventCounters() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> eventCounters(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> eventCounters(metrics, false)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getEventAverage() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> eventAverage(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> eventAverage(metrics, false)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getWorkflowCounters() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Main workflow list
+		Set<String> fullNames = getMainWorkflows();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today + overall
+			for (boolean today : Arrays.asList(true, false)) {
+
+				// then per each short name
+				for (String shortName : WORKFLOWS) {
+					// Filter workflow definitions to have current short related only
+					Set<String> filtered = fullNames.stream().filter(type -> type.startsWith(shortName)).collect(Collectors.toSet());
+
+					// Workflow counter per short name
+					futures.add(pool.submit(() -> workflowCounters(metrics, today, shortName, filtered)));
+				}
+			}
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getWorkflowAverage() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Main workflow list
+		Set<String> fullNames = getMainWorkflows();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today + overall
+			for (boolean today : Arrays.asList(true, false)) {
+
+				// then per each short name
+				for (String shortName : WORKFLOWS) {
+					// Filter workflow definitions to have current short related only
+					Set<String> filtered = fullNames.stream().filter(type -> type.startsWith(shortName)).collect(Collectors.toSet());
+
+					// Workflow average per short name
+					futures.add(pool.submit(() -> workflowAverage(metrics, today, shortName, filtered)));
+				}
+
+				// Overall workflow execution average
+				futures.add(pool.submit(() -> overallWorkflowAverage(metrics, today, fullNames)));
+			}
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	private void eventAverage(Map<String, AtomicLong> map, boolean today) {
+		Set<String> subjects = getSubjects();
+
+		for (String subject : subjects) {
+			initMetric(map, String.format("%s.avg_event_execution_msec%s.%s", PREFIX, toLabel(today), subject));
+		}
+
+		QueryBuilder typeQuery = QueryBuilders.termsQuery("subject.keyword", subjects);
+		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", Arrays.asList("COMPLETED", "FAILED"));
+		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
+		if (today) {
+			mainQuery = mainQuery.must(getStartTimeQuery("created"));
+		}
+
+		TermsAggregationBuilder aggregation = AggregationBuilders
+			.terms("aggSubject").field("subject.keyword")
+			.subAggregation(EVENT_AVERAGE_PROC_TIME);
+
+		SearchRequest searchRequest = new SearchRequest(eventIndex);
+		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
+
+		SearchResponse response = search(searchRequest);
+		ParsedStringTerms aggSubject = response.getAggregations().get("aggSubject");
+		for (Object itemSubject : aggSubject.getBuckets()) {
+			ParsedStringTerms.ParsedBucket subjectBucket = (ParsedStringTerms.ParsedBucket) itemSubject;
+			String subjectName = subjectBucket.getKeyAsString().toLowerCase();
+
+			ParsedAvg aggAvg = subjectBucket.getAggregations().get("aggAvg");
+
+			double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
+
+			String metricName = String.format("%s.avg_event_execution_msec%s.%s", PREFIX, toLabel(today), subjectName);
+			map.get(metricName).set((long)avg);
+		}
 	}
 
 	private void eventCounters(Map<String, AtomicLong> map, boolean today) {
-		// 0 - event bus, 1 - subject, 2 - queue
-		List<String> subjects = metadataDAO.getEventHandlers().stream()
-			.filter(EventHandler::isActive)
-			.map(eh -> eh.getEvent().split(":")[1])
-			.collect(Collectors.toList());
+		Set<String> subjects = getSubjects();
 
 		for (String subject : subjects) {
-			initMetric(map, String.format("%s.event_total%s.%s", prefix, toLabel(today), subject));
+			initMetric(map, String.format("%s.event_total%s.%s", PREFIX, toLabel(today), subject));
 
 			for (String status : EVENT_STATUSES) {
-				initMetric(map, String.format("%s.event_%s%s.%s", prefix, status.toLowerCase(), toLabel(today), subject));
+				initMetric(map, String.format("%s.event_%s%s.%s", PREFIX, status.toLowerCase(), toLabel(today), subject));
 			}
 		}
 
@@ -199,7 +400,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 			// Total per subject
 			ParsedCardinality countPerSubject = subjectBucket.getAggregations().get("aggCountPerSubject");
-			String metricName = String.format("%s.event_total%s.%s", prefix, toLabel(today), subjectName);
+			String metricName = String.format("%s.event_total%s.%s", PREFIX, toLabel(today), subjectName);
 			map.get(metricName).set(countPerSubject.getValue());
 
 			// Per each subject/status
@@ -210,7 +411,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 				// Per subject/status
 				ParsedCardinality aggCountPerStatus = statusBucket.getAggregations().get("aggCountPerStatus");
-				metricName = String.format("%s.event_%s%s.%s", prefix, statusName, toLabel(today), subjectName);
+				metricName = String.format("%s.event_%s%s.%s", PREFIX, statusName, toLabel(today), subjectName);
 				map.get(metricName).addAndGet(aggCountPerStatus.getValue());
 			}
 		}
@@ -248,13 +449,13 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				String refName = refBucket.getKeyAsString().toLowerCase();
 
 				// Init counters. Total per typeName/refName + today/non-today
-				initMetric(map, String.format("%s.task_%s_%s", prefix, typeName, refName));
-				initMetric(map, String.format("%s.task_%s_%s_today", prefix, typeName, refName));
+				initMetric(map, String.format("%s.task_%s_%s", PREFIX, typeName, refName));
+				initMetric(map, String.format("%s.task_%s_%s_today", PREFIX, typeName, refName));
 				// Init counters. Per typeName/refName/status + today/non-today
 				for (String status : TASK_STATUSES) {
 					String statusName = status.toLowerCase();
-					initMetric(map, String.format("%s.task_%s_%s_%s", prefix, typeName, refName, statusName));
-					initMetric(map, String.format("%s.task_%s_%s_%s_today", prefix, typeName, refName, statusName));
+					initMetric(map, String.format("%s.task_%s_%s_%s", PREFIX, typeName, refName, statusName));
+					initMetric(map, String.format("%s.task_%s_%s_%s_today", PREFIX, typeName, refName, statusName));
 				}
 
 				// Per each refName/status
@@ -265,11 +466,11 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 					long docCount = statusBucket.getDocCount();
 
 					// Parent typeName + refName
-					String metricName = String.format("%s.task_%s_%s%s", prefix, typeName, refName, toLabel(today));
+					String metricName = String.format("%s.task_%s_%s%s", PREFIX, typeName, refName, toLabel(today));
 					map.get(metricName).addAndGet(docCount);
 
 					// typeName + refName + status
-					metricName = String.format("%s.task_%s_%s_%s%s", prefix, typeName, refName, statusName, toLabel(today));
+					metricName = String.format("%s.task_%s_%s_%s%s", PREFIX, typeName, refName, statusName, toLabel(today));
 					map.get(metricName).addAndGet(docCount);
 				}
 			}
@@ -288,7 +489,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			.terms("aggTaskType").field("taskType")
 			.subAggregation(AggregationBuilders
 				.terms("aggRefName").field("referenceTaskName")
-				.subAggregation(averageExecTime));
+				.subAggregation(AVERAGE_EXEC_TIME));
 
 		SearchRequest searchRequest = new SearchRequest(taskIndex);
 		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
@@ -305,14 +506,14 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				String refName = refBucket.getKeyAsString().toLowerCase();
 
 				// Init both counters right away if any today/non-today returned
-				initMetric(map, String.format("%s.avg_task_execution_msec.%s_%s", prefix, typeName, refName));
-				initMetric(map, String.format("%s.avg_task_execution_msec_today.%s_%s", prefix, typeName, refName));
+				initMetric(map, String.format("%s.avg_task_execution_msec.%s_%s", PREFIX, typeName, refName));
+				initMetric(map, String.format("%s.avg_task_execution_msec_today.%s_%s", PREFIX, typeName, refName));
 
 				// Per each refName/status
 				ParsedAvg aggAvg = refBucket.getAggregations().get("aggAvg");
 				double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
 
-				String metricName = String.format("%s.avg_task_execution_msec%s.%s_%s", prefix, toLabel(today), typeName, refName);
+				String metricName = String.format("%s.avg_task_execution_msec%s.%s_%s", PREFIX, toLabel(today), typeName, refName);
 				map.put(metricName, new AtomicLong(Math.round(avg)));
 			}
 		}
@@ -322,17 +523,17 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		List<String> workflowStatuses = today ? WORKFLOW_TODAY_STATUSES : WORKFLOW_OVERALL_STATUSES;
 
 		// Init counters
-		initMetric(map, String.format("%s.workflow_started%s", prefix, toLabel(today)));
+		initMetric(map, String.format("%s.workflow_started%s", PREFIX, toLabel(today)));
 
 		// Counter name per status
 		for (String status : workflowStatuses) {
-			initMetric(map, String.format("%s.workflow_%s%s", prefix, status.toLowerCase(), toLabel(today)));
+			initMetric(map, String.format("%s.workflow_%s%s", PREFIX, status.toLowerCase(), toLabel(today)));
 		}
 
 		// Counter name per workflow type and status
-		initMetric(map, String.format("%s.workflow_started%s.%s", prefix, toLabel(today), shortName));
+		initMetric(map, String.format("%s.workflow_started%s.%s", PREFIX, toLabel(today), shortName));
 		for (String status : workflowStatuses) {
-			String metricName = String.format("%s.workflow_%s%s.%s", prefix, status.toLowerCase(), toLabel(today), shortName);
+			String metricName = String.format("%s.workflow_%s%s.%s", PREFIX, status.toLowerCase(), toLabel(today), shortName);
 			initMetric(map, metricName);
 		}
 
@@ -359,11 +560,11 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			ParsedStringTerms.ParsedBucket typeBucket = (ParsedStringTerms.ParsedBucket) item;
 
 			// Total started
-			String metricName = String.format("%s.workflow_started%s", prefix, toLabel(today));
+			String metricName = String.format("%s.workflow_started%s", PREFIX, toLabel(today));
 			map.get(metricName).addAndGet(typeBucket.getDocCount());
 
 			// Started per workflow type
-			metricName = String.format("%s.workflow_started%s.%s", prefix, toLabel(today), shortName);
+			metricName = String.format("%s.workflow_started%s.%s", PREFIX, toLabel(today), shortName);
 			map.get(metricName).addAndGet(typeBucket.getDocCount());
 
 			// Per each workflow/status
@@ -374,11 +575,11 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				long docCount = statusBucket.getDocCount();
 
 				// Counter name per status
-				metricName = String.format("%s.workflow_%s%s", prefix, statusName, toLabel(today));
+				metricName = String.format("%s.workflow_%s%s", PREFIX, statusName, toLabel(today));
 				map.get(metricName).addAndGet(docCount);
 
 				// Counter name per workflow type and status
-				metricName = String.format("%s.workflow_%s%s.%s", prefix, statusName, toLabel(today), shortName);
+				metricName = String.format("%s.workflow_%s%s.%s", PREFIX, statusName, toLabel(today), shortName);
 				map.get(metricName).addAndGet(docCount);
 			}
 		}
@@ -393,14 +594,14 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 
 		SearchRequest searchRequest = new SearchRequest(workflowIndex);
-		searchRequest.source(searchSourceBuilder(mainQuery, averageExecTime));
+		searchRequest.source(searchSourceBuilder(mainQuery, AVERAGE_EXEC_TIME));
 
 		SearchResponse response = search(searchRequest);
 		ParsedAvg aggAvg = response.getAggregations().get("aggAvg");
 
 		double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
 
-		String metricName = String.format("%s.avg_workflow_execution_sec%s.%s", prefix, toLabel(today), shortName);
+		String metricName = String.format("%s.avg_workflow_execution_sec%s.%s", PREFIX, toLabel(today), shortName);
 		map.put(metricName, new AtomicLong(Math.round(avg / 1000)));
 	}
 
@@ -413,14 +614,14 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 
 		SearchRequest searchRequest = new SearchRequest(workflowIndex);
-		searchRequest.source(searchSourceBuilder(mainQuery, averageExecTime));
+		searchRequest.source(searchSourceBuilder(mainQuery, AVERAGE_EXEC_TIME));
 
 		SearchResponse response = search(searchRequest);
 		ParsedAvg aggAvg = response.getAggregations().get("aggAvg");
 
 		double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
 
-		String metricName = String.format("%s.avg_workflow_execution_sec%s", prefix, toLabel(today));
+		String metricName = String.format("%s.avg_workflow_execution_sec%s", PREFIX, toLabel(today));
 		map.put(metricName, new AtomicLong(Math.round(avg / 1000)));
 	}
 
@@ -433,17 +634,30 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 	}
 
-	private long getPstStartTime() {
-		TimeZone pst = TimeZone.getTimeZone("America/Los_Angeles");
+	// Filters definitions excluding sub workflows and maintenance workflows
+	private Set<String> getMainWorkflows() {
+		return metadataDAO.findAll().stream()
+			.filter(fullName -> WORKFLOWS.stream().anyMatch(shortName -> fullName.matches(shortName + VERSION)))
+			.collect(Collectors.toSet());
+	}
 
-		Calendar calendar = new GregorianCalendar();
-		calendar.setTimeZone(pst);
-		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		calendar.set(Calendar.MINUTE, 0);
-		calendar.set(Calendar.SECOND, 0);
-		calendar.set(Calendar.MILLISECOND, 0);
+	// Extracts subject name from each active handler
+	private Set<String> getSubjects() {
+		return metadataDAO.getEventHandlers().stream()
+			.filter(EventHandler::isActive)
+			.map(eh -> eh.getEvent().split(":")[1]) // 0 - event bus, 1 - subject, 2 - queue
+			.collect(Collectors.toSet());
+	}
 
-		return calendar.getTimeInMillis();
+	// Wait until all futures completed
+	private void waitCompleted(List<Future<?>> futures) {
+		for (Future<?> future : futures) {
+			try {
+				future.get();
+			} catch (Exception ex) {
+				logger.error("Get future failed " + ex.getMessage(), ex);
+			}
+		}
 	}
 
 	private SearchSourceBuilder searchSourceBuilder(QueryBuilder query, AggregationBuilder aggregation) {
@@ -456,12 +670,21 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return sourceBuilder;
 	}
 
-	private QueryBuilder getStartTimeQuery() {
+	private RangeQueryBuilder getStartTimeQuery() {
 		return getStartTimeQuery("startTime");
 	}
 
-	private QueryBuilder getStartTimeQuery(String field) {
-		return QueryBuilders.rangeQuery(field).gte(getPstStartTime());
+	private RangeQueryBuilder getStartTimeQuery(String field) {
+		TimeZone pst = TimeZone.getTimeZone("America/Los_Angeles");
+
+		Calendar calendar = new GregorianCalendar();
+		calendar.setTimeZone(pst);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+
+		return QueryBuilders.rangeQuery(field).gte(calendar.getTimeInMillis());
 	}
 
 	private void initMetric(Map<String, AtomicLong> map, String metricName) {
