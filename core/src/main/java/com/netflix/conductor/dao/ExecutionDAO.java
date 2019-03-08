@@ -270,4 +270,15 @@ public interface ExecutionDAO {
 
 	List<PollData> getPollData(String taskDefName);
 
+	default String getWorkflowIdByUserDefinedId(String workflowType, String userDefinedId) {
+	    return null;
+	}
+
+	default boolean obtainLockForWorkflow(Workflow workflow) {
+	    return false;
+	}
+
+	default void releaseLockForWorkflow(Workflow workflow) {
+
+	}
 }

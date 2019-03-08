@@ -142,7 +142,17 @@ public class ExecutionDAOFacade {
      * @return the id of the created workflow
      */
     public String createWorkflow(Workflow workflow) {
-        executionDAO.createWorkflow(workflow);
+        if (!executionDAO.obtainLockForWorkflow(workflow)) {
+            throw new ApplicationException(ApplicationException.Code.CONFLICT, "A workflow is already running with the same UserDefinedID");
+        }
+
+        try {
+            executionDAO.createWorkflow(workflow);
+        } catch (Exception ex) {
+            executionDAO.releaseLockForWorkflow(workflow);
+            throw ex;
+        }
+
         indexDAO.indexWorkflow(workflow);
         return workflow.getWorkflowId();
     }

@@ -70,6 +70,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	private final static String PENDING_WORKFLOWS = "PENDING_WORKFLOWS";
 	private final static String WORKFLOW_DEF_TO_WORKFLOWS = "WORKFLOW_DEF_TO_WORKFLOWS";
 	private final static String CORR_ID_TO_WORKFLOWS = "CORR_ID_TO_WORKFLOWS";
+	private final static String USER_DEFINED_ID_TO_WORKFLOW_ID = "USER_DEFINED_ID_TO_WORKFLOW_ID";
 	private final static String POLL_DATA = "POLL_DATA";
 
 	private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
@@ -382,6 +383,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			String key = nsKey(WORKFLOW_DEF_TO_WORKFLOWS, workflow.getWorkflowName(), dateStr(workflow.getCreateTime()));
 			dynoClient.srem(key, workflowId);
 			dynoClient.srem(nsKey(CORR_ID_TO_WORKFLOWS, workflow.getCorrelationId()), workflowId);
+			dynoClient.hdel(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getUserDefinedId());
 			dynoClient.srem(nsKey(PENDING_WORKFLOWS, workflow.getWorkflowName()), workflowId);
 
 			// Remove the object
@@ -512,6 +514,10 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			if (workflow.getCorrelationId() != null) {
 				// Add to list of workflows for a correlationId
 				dynoClient.sadd(nsKey(CORR_ID_TO_WORKFLOWS, workflow.getCorrelationId()), workflow.getWorkflowId());
+			}
+
+			if (workflow.getUserDefinedId() != null) {
+			    dynoClient.hset(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getUserDefinedId(), workflow.getWorkflowId());
 			}
 		}
 		// Add or remove from the pending workflows
@@ -704,5 +710,42 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
         } catch (NullPointerException npe){
 	        throw new ApplicationException(Code.INVALID_INPUT, npe.getMessage(), npe);
         }
+    }
+
+    @Override
+    public String getWorkflowIdByUserDefinedId(String workflowType, String userDefinedId) {
+        String workflowId = dynoClient.hget(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflowType), userDefinedId);
+
+        return workflowId ;
+    }
+
+
+    @Override
+    public boolean obtainLockForWorkflow(Workflow workflow) {
+        if (workflow.getUserDefinedId() == null)
+            return true;
+
+        // Try creating the lock if it doesn't exist
+        dynoClient.hsetnx(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getUserDefinedId(), workflow.getWorkflowId());
+
+        String currentOwnerWorkflowId = getWorkflowIdByUserDefinedId(workflow.getWorkflowName(), workflow.getUserDefinedId());
+
+        return currentOwnerWorkflowId.equals(workflow.getWorkflowId());
+    }
+
+    @Override
+    public void releaseLockForWorkflow(Workflow workflow) {
+        if (workflow.getUserDefinedId() == null)
+            return;
+
+        String currentOwnerWorkflowId = getWorkflowIdByUserDefinedId(workflow.getWorkflowName(), workflow.getUserDefinedId());
+
+        if (! currentOwnerWorkflowId.equals(workflow.getWorkflowId())) {
+            // This should not happen, it is unexpected by design!
+            throw new ApplicationException(Code.INTERNAL_ERROR, "Can not release workflow lock that is not owned by the workflow");
+        }
+
+        // Only release if this workflow is the owner
+        dynoClient.hdel(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getUserDefinedId());
     }
 }
