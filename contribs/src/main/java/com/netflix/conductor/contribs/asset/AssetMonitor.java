@@ -78,14 +78,28 @@ public class AssetMonitor implements JavaEventAction {
 		// Step 3
 		for (Workflow workflow : workflows) {
 			// Step 3.1
+			Task actionCheck = workflow.getTasks().stream()
+				.filter(task -> task.getReferenceTaskName().equalsIgnoreCase("action_check"))
+				.findFirst().orElse(null);
+
 			Task joinTask = workflow.getTasks().stream()
 					.filter(task -> task.getReferenceTaskName().equalsIgnoreCase("deliverable_join"))
 					.findFirst().orElse(null);
 
 			// Step 3.2
+			if (actionCheck == null) {
+				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state (no action_check) to handle the message " + messageId);
+				continue;
+			} else {
+				if ("METADATA".equals(actionCheck.getInputData().get("case"))) {
+					logger.trace("Skipping workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " as it is METADATA");
+					continue;
+				}
+			}
+
 			// Null means that the task not even scheduled. Rare case but might happen. Just logging that information
 			if (joinTask == null) {
-				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state to handle the message " + messageId);
+				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state(no deliverable_join) to handle the message " + messageId);
 				continue;
 			}
 
@@ -98,7 +112,7 @@ public class AssetMonitor implements JavaEventAction {
 				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + ", messageId=" + messageId);
 			}
 		}
-		return Collections.emptyList();
+		return new ArrayList<>(sourceAtlasWaitIds);
 	}
 
 	// Step 4
@@ -162,6 +176,10 @@ public class AssetMonitor implements JavaEventAction {
 		for (Task task : deliverables) {
 			// Action Source Wait sub-workflow
 			String actionSubWorkflowId = (String) task.getOutputData().get("subWorkflowId");
+			if (StringUtils.isEmpty(actionSubWorkflowId)) {
+				continue;
+			}
+
 			Workflow actionSubWorkflow = executor.getWorkflow(actionSubWorkflowId, true);
 			if (actionSubWorkflow == null) {
 				logger.debug("No workflow found with id " + actionSubWorkflowId + ", skipping " + task);
