@@ -85,29 +85,29 @@ public class InfoResource {
 
 		List<Map<String, Object>> dependencies = new ArrayList<>();
 		dependencies.add(ImmutableMap.<String, Object>builder()
-				.put("name", "auth")
-				.put("version", "v1")
-				.put("scheme", "https")
-				.put("external", false)
-				.build());
+			.put("name", "auth")
+			.put("version", "v1")
+			.put("scheme", "https")
+			.put("external", false)
+			.build());
 		dependencies.add(ImmutableMap.<String, Object>builder()
-				.put("name", "vault")
-				.put("version", "v1")
-				.put("scheme", "http")
-				.put("external", false)
-				.build());
+			.put("name", "vault")
+			.put("version", "v1")
+			.put("scheme", "http")
+			.put("external", false)
+			.build());
 		dependencies.add(ImmutableMap.<String, Object>builder()
-				.put("name", "shotgun")
-				.put("version", "v1")
-				.put("scheme", "amq")
-				.put("external", false)
-				.build());
+			.put("name", "shotgun")
+			.put("version", "v1")
+			.put("scheme", "amq")
+			.put("external", false)
+			.build());
 		dependencies.add(ImmutableMap.<String, Object>builder()
-				.put("name", "*")
-				.put("version", "v1")
-				.put("scheme", "http")
-				.put("external", false)
-				.build());
+			.put("name", "*")
+			.put("version", "v1")
+			.put("scheme", "http")
+			.put("external", false)
+			.build());
 
 		Map<String, Object> result = new HashMap<>();
 		result.put("version", fullVersion);

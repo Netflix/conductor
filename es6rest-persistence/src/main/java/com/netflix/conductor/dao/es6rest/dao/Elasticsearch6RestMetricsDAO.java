@@ -359,7 +359,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
 
 			String metricName = String.format("%s.avg_event_execution_msec%s.%s", PREFIX, toLabel(today), subjectName);
-			map.get(metricName).set((long)avg);
+			map.get(metricName).set((long) avg);
 		}
 	}
 
