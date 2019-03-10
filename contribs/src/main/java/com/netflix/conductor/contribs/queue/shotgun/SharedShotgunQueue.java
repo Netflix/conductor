@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Oleksiy Lysak
  */
 public class SharedShotgunQueue implements ObservableQueue {
-    private static Logger logger = LoggerFactory.getLogger(ShotgunQueue.class);
+    private static Logger logger = LoggerFactory.getLogger(SharedShotgunQueue.class);
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     private Duration[] publishRetryIn;
     private boolean manualAck;
