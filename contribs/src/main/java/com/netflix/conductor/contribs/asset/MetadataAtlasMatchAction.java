@@ -159,14 +159,11 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 
 	private static class ReferenceKey {
 		public TitleKeys titleKeys;
-		public TitleVersion titleVersion;
 
 		@Override
 		public String toString() {
 			return "{" +
-				"titleKeys=" + titleKeys +
-				", titleVersion=" + titleVersion +
-				'}';
+				"titleKeys=" + titleKeys + '}';
 		}
 	}
 
@@ -188,19 +185,6 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 				", seasonId='" + seasonId + '\'' +
 				", episodeId='" + episodeId + '\'' +
 				", episodeVersionId='" + episodeVersionId + '\'' +
-				'}';
-		}
-	}
-
-	private static class TitleVersion {
-		public String type;
-		public String supplementalSubType;
-
-		@Override
-		public String toString() {
-			return "TitleVersion{" +
-				"type='" + type + '\'' +
-				", supplementalSubType='" + supplementalSubType + '\'' +
 				'}';
 		}
 	}
