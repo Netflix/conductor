@@ -407,10 +407,6 @@ public class WorkflowResource {
 		if (size > maxSearchSize) {
 			throw new ApplicationException(Code.INVALID_INPUT, "Cannot return more than " + maxSearchSize + " workflows.  Please use pagination");
 		}
-		if(freeText.contains(":"))
-		{
-			freeText= freeText.replace(":", "\\:");
-		}
 		return service.search(query, freeText, start, size, convert(sort));
 	}
 

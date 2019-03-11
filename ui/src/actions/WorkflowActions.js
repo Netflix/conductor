@@ -7,9 +7,15 @@ export function searchWorkflows(query, search, hours, fullstr, start, range) {
       type: 'GET_WORKFLOWS',
       search: search
     });
-
-    if(fullstr && search != null && search.length > 0) {
+    if(search != null && search.length > 0) {
+      if(fullstr)
+      {
       search = '"' + search + '"';
+      }
+      if(search.includes(":"))
+      {
+       search =search.replace(new RegExp(':','g'), '\\:');
+      }
     }
     return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search + '&start=' + start + "&range=" + range).then((data) => {
       dispatch({
