@@ -36,7 +36,7 @@ job "conductor" {
       driver = "docker"
 
       config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-ui"
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-ui"
 
         port_map {
           http = 5000
@@ -61,12 +61,12 @@ job "conductor" {
       }
 
       env {
-        TLD         = "<TLD>"
-        APP_VERSION = "<APP_VERSION>"
-        WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.<TLD>"
+        TLD         = "${meta.tld}"
+        APP_VERSION = "[[.app_version]]"
+        WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
 
         // Auth settings. Rest settings are in vault
-        conductor_auth_service  = "auth.service.<TLD>"
+        conductor_auth_service  = "auth.service.${meta.tld}"
         conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
       }
 
@@ -125,7 +125,7 @@ job "conductor" {
       driver = "docker"
 
       config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-server"
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-server"
 
         port_map {
           http = 8080
@@ -150,9 +150,9 @@ job "conductor" {
       }
 
       env {
-        TLD         = "<TLD>"
+        TLD         = "${meta.tld}"
         STACK       = "<ENV_TYPE>"
-        APP_VERSION = "<APP_VERSION>"
+        APP_VERSION = "[[.app_version]]"
 
         // Database settings
         db = "elasticsearch"
@@ -169,7 +169,7 @@ job "conductor" {
         workflow_system_task_http_unack_timeout      = "300"
         workflow_sweeper_frequency                   = "500"
         workflow_sweeper_thread_count                = 50
-        workflow_sweeper_batch_sherlock_service      = "sherlock.service.<TLD>"
+        workflow_sweeper_batch_sherlock_service      = "sherlock.service.${meta.tld}"
         workflow_sweeper_batch_sherlock_worker_count = 100
         workflow_sweeper_batch_names                 = "sherlock"
         workflow_batch_sherlock_enabled              = "true"
@@ -181,21 +181,21 @@ job "conductor" {
         workflow_elasticsearch_stale_period_seconds  = "300"
 
         // Auth settings. Rest settings are in vault
-        conductor_auth_service  = "auth.service.<TLD>"
+        conductor_auth_service  = "auth.service.${meta.tld}"
         conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
 
         // One MQ settings
-        io_shotgun_dns            = "shotgun.service.<TLD>"
-        io_shotgun_service        = "conductor-server-<TLD>"
+        io_shotgun_dns            = "shotgun.service.${meta.tld}"
+        io_shotgun_service        = "conductor-server-${meta.tld}"
         io_shotgun_publishRetryIn = "5,10,15"
         io_shotgun_shared         = "false"
         io_shotgun_manualAck      = "true"
         com_bydeluxe_onemq_log    = "false"
 
         // NATS settings
-        io_nats_streaming_url            = "nats://nats.service.<TLD>:4222"
+        io_nats_streaming_url            = "nats://nats.service.${meta.tld}:4222"
         io_nats_streaming_clusterId      = "events-streaming"
-        io_nats_streaming_durableName    = "conductor-server-<TLD>"
+        io_nats_streaming_durableName    = "conductor-server-${meta.tld}"
         io_nats_streaming_publishRetryIn = "5,10,15"
 
         // Additional nats & asset modules
@@ -212,7 +212,7 @@ job "conductor" {
       }
 
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.<DM_TLD>/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.<TLD>/", "metrics=${NOMAD_JOB_NAME}"]
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.<DM_TLD>/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/", "metrics=${NOMAD_JOB_NAME}"]
         name = "${JOB}-${TASK}"
         port = "http"
 
@@ -288,7 +288,7 @@ job "conductor-archiver" {
       driver = "docker"
 
       config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:<APP_VERSION>-archiver"
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-archiver"
 
         volumes = [
           "local/secrets/conductor-archiver.env:/app/config/secrets.env",
