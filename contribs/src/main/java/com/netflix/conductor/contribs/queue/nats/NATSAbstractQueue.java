@@ -73,6 +73,7 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
 		Message dstMsg = new Message();
 		dstMsg.setId(NUID.nextGlobal());
 		dstMsg.setPayload(payload);
+		dstMsg.setReceived(System.currentTimeMillis());
 
 		messages.add(dstMsg);
 		Monitors.recordEventQueueMessagesReceived(queueType.name(), queueURI);

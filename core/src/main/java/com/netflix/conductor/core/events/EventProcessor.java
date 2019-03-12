@@ -170,6 +170,11 @@ public class EventProcessor {
 				handlers.addAll(ms.getEventHandlersForEvent(event, true));
 			}
 
+			String subject = queue.getURI();
+			if (queue.getURI().contains(":")) {
+				subject = queue.getURI().substring(0, queue.getURI().indexOf(':'));
+			}
+
 			boolean retryMode = false;
 			int tagsMatchCounter = 0;
 			int tagsNotMatchCounter = 0;
@@ -182,11 +187,13 @@ public class EventProcessor {
 						logger.warn("Handler did not match payload. Handler={}, condition={}, payload={}", handler.getName(), condition, payloadObj);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
+						ee.setReceived(msg.getReceived());
 						ee.setEvent(handler.getEvent());
 						ee.setName(handler.getName());
 						ee.setStatus(Status.SKIPPED);
 						ee.getOutput().put("msg", payload);
 						ee.getOutput().put("condition", condition);
+						ee.setSubject(subject);
 						es.addEventExecution(ee);
 						continue;
 					}
@@ -203,11 +210,13 @@ public class EventProcessor {
 						logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
+						ee.setReceived(msg.getReceived());
 						ee.setEvent(handler.getEvent());
 						ee.setName(handler.getName());
 						ee.setStatus(Status.SKIPPED);
 						ee.getOutput().put("msg", payload);
 						ee.getOutput().put("tags", tags);
+						ee.setSubject(subject);
 						es.addEventExecution(ee);
 						tagsNotMatchCounter++;
 						continue;
@@ -226,12 +235,14 @@ public class EventProcessor {
 							logger.debug("Action did not match payload. Handler={}, action={}, payload={}", handler.getName(), action, payloadObj);
 							EventExecution ee = new EventExecution(id, msg.getId());
 							ee.setCreated(System.currentTimeMillis());
+							ee.setReceived(msg.getReceived());
 							ee.setEvent(handler.getEvent());
 							ee.setName(handler.getName());
 							ee.setAction(action.getAction());
 							ee.setStatus(Status.SKIPPED);
 							ee.getOutput().put("msg", payload);
 							ee.getOutput().put("condition", action.getCondition());
+							ee.setSubject(subject);
 							es.addEventExecution(ee);
 							continue;
 						}
@@ -239,10 +250,12 @@ public class EventProcessor {
 
 					EventExecution ee = new EventExecution(id, msg.getId());
 					ee.setCreated(System.currentTimeMillis());
+					ee.setReceived(msg.getReceived());
 					ee.setEvent(handler.getEvent());
 					ee.setName(handler.getName());
 					ee.setAction(action.getAction());
 					ee.setStatus(Status.IN_PROGRESS);
+					ee.setSubject(subject);
 					if (es.addEventExecution(ee)) {
 						Future<Boolean> future = execute(ee, action, payload);
 						futures.add(future);
@@ -304,6 +317,7 @@ public class EventProcessor {
 					success = BooleanUtils.isTrue((Boolean) output.get("conductor.event.success"));
 				}
 				ee.setStatus(Status.COMPLETED);
+				ee.setProcessed(System.currentTimeMillis());
 				es.updateEventExecution(ee);
 
 				long execTime = System.currentTimeMillis() - ee.getCreated();
@@ -315,6 +329,7 @@ public class EventProcessor {
 					", payload=" + payload + ", reason=" + e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
+				ee.setProcessed(System.currentTimeMillis());
 				es.updateEventExecution(ee);
 
 				return success;

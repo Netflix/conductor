@@ -18,10 +18,10 @@
  */
 package com.netflix.conductor.common.metadata.events;
 
+import com.netflix.conductor.common.metadata.events.EventHandler.Action;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 
 /**
  * @author Viren
@@ -48,6 +48,12 @@ public class EventExecution {
 	private Action.Type action;
 	
 	private Map<String, Object> output = new HashMap<>();
+
+	private String subject;
+
+	private long received;
+
+	private long processed;
 
 	public EventExecution() {
 		
@@ -178,7 +184,52 @@ public class EventExecution {
 	public void setOutput(Map<String, Object> output) {
 		this.output = output;
 	}
-	
-	
-	
+
+	/**
+	 *
+	 * @return Subject name
+	 */
+	public String getSubject() {
+		return subject;
+	}
+
+	/**
+	 *
+	 * @param subject Subject name
+	 */
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+
+	/**
+	 *
+	 * @return Time when message received by provider
+	 */
+	public long getReceived() {
+		return received;
+	}
+
+	/**
+	 *
+	 * @param received Time when message received by provider
+	 */
+	public void setReceived(long received) {
+		this.received = received;
+	}
+
+	/**
+	 *
+	 * @return Time when message processed by action
+	 */
+	public long getProcessed() {
+		return processed;
+	}
+
+	/**
+	 *
+	 * @param processed Time when message processed by action
+	 */
+	public void setProcessed(long processed) {
+		this.processed = processed;
+	}
 }

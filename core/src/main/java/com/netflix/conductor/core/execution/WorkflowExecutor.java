@@ -419,6 +419,7 @@ public class WorkflowExecutor {
 		workflow.setReasonForIncompletion(null);
 		workflow.setStartTime(System.currentTimeMillis());
 		workflow.setEndTime(0);
+		workflow.incRestartCount();
 		// Change the status to running
 		workflow.setStatus(WorkflowStatus.RUNNING);
 		if(StringUtils.isNotEmpty(correlationId)) {
