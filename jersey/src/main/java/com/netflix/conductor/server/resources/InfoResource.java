@@ -149,19 +149,27 @@ public class InfoResource {
 	}
 
 	@GET
-	@Path("/metrics/event/counters")
-	@ApiOperation(value = "Get the event counter metrics")
+	@Path("/metrics/event/received")
+	@ApiOperation(value = "Get the event received metrics")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> eventCounters() {
-		return new TreeMap<>(metricsDAO.getEventCounters());
+	public Map<String, Object> eventReceived() {
+		return new TreeMap<>(metricsDAO.getEventReceived());
+	}
+
+	@GET
+	@Path("/metrics/event/published")
+	@ApiOperation(value = "Get the event published metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> eventPublished() {
+		return new TreeMap<>(metricsDAO.getEventPublished());
 	}
 
 	@GET
 	@Path("/metrics/event/average")
-	@ApiOperation(value = "Get the event average metrics")
+	@ApiOperation(value = "Get the event executions average metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> eventAverage() {
-		return new TreeMap<>(metricsDAO.getEventAverage());
+		return new TreeMap<>(metricsDAO.getEventExecAverage());
 	}
 
 	@GET
