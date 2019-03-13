@@ -18,12 +18,14 @@
  */
 package com.netflix.conductor.core.execution;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.auth.AuthManager;
+import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
@@ -85,6 +87,7 @@ public class WorkflowExecutor {
 
 	private DeciderService decider;
 
+	private ObjectMapper om;
 	private Configuration config;
 
 	private AuthManager auth;
@@ -105,6 +108,7 @@ public class WorkflowExecutor {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
+		this.om = om;
 		this.config = config;
 		this.auth = auth;
 		activeWorkerLastPollnSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
@@ -1536,6 +1540,8 @@ public class WorkflowExecutor {
 		}
 
 		queue.publish(Collections.singletonList(msg));
+
+		addEventPublished(queue, msg);
 	}
 
 	private void validateWorkflowInput(WorkflowDef workflowDef, Map<String, Object> payload) {
@@ -1647,6 +1653,30 @@ public class WorkflowExecutor {
 				task.setEndTime(System.currentTimeMillis());
 			}
 			edao.updateTask(task);
+		}
+	}
+
+	public void addEventPublished(ObservableQueue queue, Message msg) {
+		try {
+			Map<String, Object> payload = om.readValue(msg.getPayload(), new TypeReference<Map<String, Object>>() {
+			});
+
+			String subject = queue.getURI();
+			if (queue.getURI().contains(":")) {
+				subject = queue.getURI().substring(0, queue.getURI().indexOf(':'));
+			}
+
+			EventPublished ep = new EventPublished();
+			ep.setId(msg.getId());
+			ep.setSubject(subject);
+			ep.setPayload(payload);
+			ep.setType(queue.getType());
+			ep.setPublished(System.currentTimeMillis());
+
+			edao.addEventPublished(ep);
+		} catch (Exception ex) {
+			logger.debug("addEventPublished failed with " + ex.getMessage() +
+				" for queue uri=" + queue.getURI() + ", payload=" + msg.getPayload());
 		}
 	}
 

@@ -6,10 +6,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.archiver.cleanup.DbLogCleanup;
 import com.netflix.conductor.archiver.config.AppConfig;
-import com.netflix.conductor.archiver.export.AbstractExport;
-import com.netflix.conductor.archiver.export.EventExport;
-import com.netflix.conductor.archiver.export.TaskLogExport;
-import com.netflix.conductor.archiver.export.WorkflowExport;
+import com.netflix.conductor.archiver.export.*;
 import com.netflix.conductor.archiver.writers.EntityWriters;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -111,7 +108,8 @@ public class Main {
 	private void export(EntityWriters writers) throws InterruptedException {
 		List<AbstractExport> exporterList = new ArrayList<>();
 		exporterList.add(new WorkflowExport(client, writers));
-		exporterList.add(new EventExport(client, writers));
+		exporterList.add(new EventExecsExport(client, writers));
+		exporterList.add(new EventPubsExport(client, writers));
 		exporterList.add(new TaskLogExport(client, writers));
 
 		// Run the exporters in threads

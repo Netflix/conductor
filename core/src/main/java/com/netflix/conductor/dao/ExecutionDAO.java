@@ -19,6 +19,7 @@
 package com.netflix.conductor.dao;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
+import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -291,4 +292,6 @@ public interface ExecutionDAO {
 	public default boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		return false;
 	}
+
+	public default void addEventPublished(EventPublished ep) {}
 }

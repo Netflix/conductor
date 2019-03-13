@@ -1,0 +1,23 @@
+{
+  "eventpublished": {
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "type": {
+        "type": "keyword"
+      },
+      "subject": {
+        "type": "keyword"
+      },
+      "published": {
+        "type": "long"
+      },
+      "payload": {
+        "type": "object",
+        "enabled": false,
+        "dynamic": false
+      }
+    }
+  }
+}
