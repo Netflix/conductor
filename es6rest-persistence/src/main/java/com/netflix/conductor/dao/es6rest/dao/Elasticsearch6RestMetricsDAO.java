@@ -73,6 +73,12 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		EventExecution.Status.FAILED.name()
 	);
 
+	private static final List<String> SINK_SUBJECTS = Arrays.asList(
+		"deluxe.conductor.deluxeone.compliance.workflow.update",
+		"deluxe.conductor.deluxeone.workflow.update",
+		"deluxe.conductor.workflow.update"
+	);
+
 	private static final List<String> WORKFLOWS = Arrays.asList(
 		"deluxe.dependencygraph.conformancegroup.delivery.process", // Conformance Group
 		"deluxe.dependencygraph.assembly.conformancegroup.process", // Sherlock V1 Assembly Conformance
@@ -96,7 +102,8 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	private final MetadataDAO metadataDAO;
 	private final String workflowIndex;
 	private final String deciderIndex;
-	private final String eventIndex;
+	private final String eventExecIndex;
+	private final String eventPubsIndex;
 	private final String taskIndex;
 
 	@Inject
@@ -106,7 +113,8 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		this.metadataDAO = metadataDAO;
 		this.workflowIndex = String.format("conductor.runtime.%s.workflow", config.getStack());
 		this.deciderIndex = String.format("conductor.queues.%s._deciderqueue", config.getStack());
-		this.eventIndex = String.format("conductor.runtime.%s.event_execution", config.getStack());
+		this.eventExecIndex = String.format("conductor.runtime.%s.event_execution", config.getStack());
+		this.eventPubsIndex = String.format("conductor.runtime.%s.event_published", config.getStack());
 		this.taskIndex = String.format("conductor.runtime.%s.task", config.getStack());
 	}
 
@@ -143,11 +151,14 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				// Task type/refName average
 				futures.add(pool.submit(() -> taskTypeRefNameAverage(metrics, today)));
 
-				// Event counters
-				futures.add(pool.submit(() -> eventCounters(metrics, today)));
+				// Event received
+				futures.add(pool.submit(() -> eventReceived(metrics, today)));
+
+				// Event published
+				futures.add(pool.submit(() -> eventPublished(metrics, today)));
 
 				// Event average
-				futures.add(pool.submit(() -> eventAverage(metrics, today)));
+				futures.add(pool.submit(() -> eventExecAverage(metrics, today)));
 			}
 
 			// Admin counters
@@ -172,7 +183,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	}
 
 	@Override
-	public Map<String, Object> getEventCounters() {
+	public Map<String, Object> getEventReceived() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
 		// Using ExecutorService to process in parallel
@@ -181,10 +192,10 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			List<Future<?>> futures = new LinkedList<>();
 
 			// today
-			futures.add(pool.submit(() -> eventCounters(metrics, true)));
+			futures.add(pool.submit(() -> eventReceived(metrics, true)));
 
 			// overall
-			futures.add(pool.submit(() -> eventCounters(metrics, false)));
+			futures.add(pool.submit(() -> eventReceived(metrics, false)));
 
 			// Wait until completed
 			waitCompleted(futures);
@@ -196,7 +207,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	}
 
 	@Override
-	public Map<String, Object> getEventAverage() {
+	public Map<String, Object> getEventPublished() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
 		// Using ExecutorService to process in parallel
@@ -205,10 +216,34 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			List<Future<?>> futures = new LinkedList<>();
 
 			// today
-			futures.add(pool.submit(() -> eventAverage(metrics, true)));
+			futures.add(pool.submit(() -> eventPublished(metrics, true)));
 
 			// overall
-			futures.add(pool.submit(() -> eventAverage(metrics, false)));
+			futures.add(pool.submit(() -> eventPublished(metrics, false)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getEventExecAverage() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> eventExecAverage(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> eventExecAverage(metrics, false)));
 
 			// Wait until completed
 			waitCompleted(futures);
@@ -355,11 +390,43 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		initMetric(map, String.format("%s.admin.decider_queue", PREFIX)).set(response.getHits().totalHits);
 	}
 
-	private void eventCounters(Map<String, AtomicLong> map, boolean today) {
+	private void eventPublished(Map<String, AtomicLong> map, boolean today) {
+		for (String subject : SINK_SUBJECTS) {
+			initMetric(map, String.format("%s.event_published%s.%s", PREFIX, toLabel(today), subject));
+		}
+
+		QueryBuilder mainQuery;
+		if (today) {
+			mainQuery = getStartTimeQuery("published");
+		} else {
+			mainQuery = QueryBuilders.matchAllQuery();
+		}
+
+		TermsAggregationBuilder aggregation = AggregationBuilders
+			.terms("aggSubject").field("subject")
+			.subAggregation(AggregationBuilders.cardinality("aggCountPerSubject").field("id"));
+
+		SearchRequest searchRequest = new SearchRequest(eventPubsIndex);
+		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
+
+		SearchResponse response = search(searchRequest);
+		ParsedStringTerms aggSubject = response.getAggregations().get("aggSubject");
+		for (Object itemSubject : aggSubject.getBuckets()) {
+			ParsedStringTerms.ParsedBucket subjectBucket = (ParsedStringTerms.ParsedBucket) itemSubject;
+			String subjectName = subjectBucket.getKeyAsString().toLowerCase();
+
+			// Total per subject
+			ParsedCardinality countPerSubject = subjectBucket.getAggregations().get("aggCountPerSubject");
+			String metricName = String.format("%s.event_published%s.%s", PREFIX, toLabel(today), subjectName);
+			map.get(metricName).set(countPerSubject.getValue());
+		}
+	}
+
+	private void eventReceived(Map<String, AtomicLong> map, boolean today) {
 		Set<String> subjects = getSubjects();
 
 		for (String subject : subjects) {
-			initMetric(map, String.format("%s.event_total%s.%s", PREFIX, toLabel(today), subject));
+			initMetric(map, String.format("%s.event_received%s.%s", PREFIX, toLabel(today), subject));
 
 			for (String status : EVENT_STATUSES) {
 				initMetric(map, String.format("%s.event_%s%s.%s", PREFIX, status.toLowerCase(), toLabel(today), subject));
@@ -381,7 +448,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				.subAggregation(AggregationBuilders.cardinality("aggCountPerStatus").field("messageId"))
 			);
 
-		SearchRequest searchRequest = new SearchRequest(eventIndex);
+		SearchRequest searchRequest = new SearchRequest(eventExecIndex);
 		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
 
 		SearchResponse response = search(searchRequest);
@@ -392,7 +459,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 			// Total per subject
 			ParsedCardinality countPerSubject = subjectBucket.getAggregations().get("aggCountPerSubject");
-			String metricName = String.format("%s.event_total%s.%s", PREFIX, toLabel(today), subjectName);
+			String metricName = String.format("%s.event_received%s.%s", PREFIX, toLabel(today), subjectName);
 			map.get(metricName).set(countPerSubject.getValue());
 
 			// Per each subject/status
@@ -409,7 +476,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 	}
 
-	private void eventAverage(Map<String, AtomicLong> map, boolean today) {
+	private void eventExecAverage(Map<String, AtomicLong> map, boolean today) {
 		Set<String> subjects = getSubjects();
 
 		for (String subject : subjects) {
@@ -427,7 +494,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			.terms("aggSubject").field("subject.keyword")
 			.subAggregation(EVENT_AVERAGE_PROC_TIME);
 
-		SearchRequest searchRequest = new SearchRequest(eventIndex);
+		SearchRequest searchRequest = new SearchRequest(eventExecIndex);
 		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
 
 		SearchResponse response = search(searchRequest);

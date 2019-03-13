@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.netflix.conductor.common.metadata.events.EventExecution;
+import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -66,6 +67,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 	private final static String CORR_ID_TO_WORKFLOWS = "CORRID_TO_WORKFLOW";
 	private final static String POLL_DATA = "POLL_DATA";
 	private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
+	private final static String EVENT_PUBLISHED = "EVENT_PUBLISHED";
 	private final static String WORKFLOW_TAGS = "WORKFLOW_TAGS";
 
 	// static indexes and types
@@ -92,6 +94,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		initIndexTypeNames(CORR_ID_TO_WORKFLOWS);
 		initIndexTypeNames(POLL_DATA);
 		initIndexTypeNames(EVENT_EXECUTION);
+		initIndexTypeNames(EVENT_PUBLISHED);
 		initIndexTypeNames(WORKFLOW_TAGS);
 
 		// Explicitly init these indexes
@@ -108,6 +111,7 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		ensureIndexExists(indexes.get(TASK), types.get(TASK));
 		ensureIndexExists(indexes.get(WORKFLOW), types.get(WORKFLOW));
 		ensureIndexExists(indexes.get(EVENT_EXECUTION), types.get(EVENT_EXECUTION));
+		ensureIndexExists(indexes.get(EVENT_PUBLISHED), types.get(EVENT_PUBLISHED));
 	}
 
 	private void initIndexTypeNames(String name) {
@@ -739,6 +743,24 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
 
 		return !wraps.isEmpty();
+	}
+
+	@Override
+	public void addEventPublished(EventPublished ep) {
+		if (logger.isDebugEnabled())
+			logger.debug("addEventPublished: ee={}", toJson(ep));
+		try {
+			String id = toId(ep.getSubject(), ep.getId());
+
+			upsert(indexes.get(EVENT_PUBLISHED), types.get(EVENT_PUBLISHED), id, ep);
+
+			if (logger.isDebugEnabled())
+				logger.debug("addEventPublished: false");
+		} catch (Exception ex) {
+			if (logger.isDebugEnabled())
+				logger.debug("addEventExecution: failed with {}", ex.getMessage());
+			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
+		}
 	}
 
 	private List<String> dateStrBetweenDates(Long startdatems, Long enddatems) {

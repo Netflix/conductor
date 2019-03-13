@@ -72,6 +72,8 @@ public class Event extends WorkflowSystemTask {
 				queue.publish(Arrays.asList(message));
 				task.getOutputData().putAll(payload);
 				task.setStatus(Status.COMPLETED);
+
+				provider.addEventPublished(queue, message);
 			} catch (Exception ex) {
 				logger.error(ex.getMessage(), ex);
 				task.setStatus(Status.FAILED);

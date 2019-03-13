@@ -28,9 +28,11 @@ public interface MetricsDAO {
 
 	Map<String, Object> getAdminCounters();
 
-	Map<String, Object> getEventCounters();
+	Map<String, Object> getEventReceived();
 
-	Map<String, Object> getEventAverage();
+	Map<String, Object> getEventPublished();
+
+	Map<String, Object> getEventExecAverage();
 
 	Map<String, Object> getTaskCounters();
 
