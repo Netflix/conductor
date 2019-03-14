@@ -59,10 +59,10 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	private static final List<String> TASK_TYPES = Arrays.asList(
 		"WAIT",
 		"HTTP",
-		"BATCH",
-		"SUB_WORKFLOW");
+		"BATCH");
 
 	private static final List<String> TASK_STATUSES = Arrays.asList(
+		Task.Status.IN_PROGRESS.name(),
 		Task.Status.COMPLETED.name(),
 		Task.Status.FAILED.name()
 	);
