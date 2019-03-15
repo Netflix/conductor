@@ -40,7 +40,7 @@ public class MockIndexDAO implements IndexDAO {
 	}
 
 	@Override
-	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort, String from, String to) {
+	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort, String from, String end) {
 		return new SearchResult<>(0, new ArrayList<>());
 	}
 	

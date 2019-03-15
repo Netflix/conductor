@@ -363,7 +363,7 @@ public class ElasticSearchDAO implements IndexDAO {
 	}
 	
 	@Override
-	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort, String from, String to) {
+	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort, String from, String end) {
 
 		try {
 			

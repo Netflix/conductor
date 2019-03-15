@@ -403,13 +403,13 @@ public class WorkflowResource {
 			@QueryParam("freeText") @DefaultValue("*") String freeText,
 			@QueryParam("query") String query,
 			@QueryParam("from") String from,
-			@QueryParam("end") String to
+			@QueryParam("end") String end
 	) {
 
 		if (size > maxSearchSize) {
 			throw new ApplicationException(Code.INVALID_INPUT, "Cannot return more than " + maxSearchSize + " workflows.  Please use pagination");
 		}
-		return service.search(query, freeText, start, size, convert(sort), from, to);
+		return service.search(query, freeText, start, size, convert(sort), from, end);
 	}
 
 	private List<String> convert(String sortStr) {
