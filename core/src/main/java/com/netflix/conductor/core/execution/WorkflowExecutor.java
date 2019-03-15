@@ -117,29 +117,6 @@ public class WorkflowExecutor {
     /**
      * @throws ApplicationException
      */
-    public String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> input, String externalInputPayloadStoragePath) {
-        return startWorkflow(name, version, correlationId, input, externalInputPayloadStoragePath, null);
-    }
-
-    /**
-     * @throws ApplicationException
-     */
-    public String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> input, String externalInputPayloadStoragePath, String event) {
-        return startWorkflow(
-                name,
-                version,
-                input,
-                externalInputPayloadStoragePath,
-                correlationId,
-                null,
-                null,
-                event
-        );
-    }
-
-    /**
-     * @throws ApplicationException
-     */
     public String startWorkflow(
             String name,
             Integer version,
@@ -149,94 +126,21 @@ public class WorkflowExecutor {
             String event,
             Map<String, String> taskToDomain
     ) {
-        return startWorkflow(
-                name,
-                version,
-                input,
-                externalInputPayloadStoragePath,
-                correlationId,
-                null,
-                null,
-                event,
-                taskToDomain
+        return startWorkflow(name, version, StartWorkflowParametersBuilder.newBuilder()
+                .setCorrelationId(correlationId)
+                .setWorkflowInput(input)
+                .setExternalInputPayloadStoragePath(externalInputPayloadStoragePath)
+                .setEvent(event)
+                .setTaskToDomain(taskToDomain)
+                .createStartWorkflowParameters()
         );
     }
 
-    /**
-     * @throws ApplicationException
-     */
-    public String startWorkflow(
-            String name,
-            Integer version,
-            Map<String, Object> input,
-            String externalInputPayloadStoragePath,
-            String correlationId,
-            String parentWorkflowId,
-            String parentWorkflowTaskId,
-            String event
-    ) {
-        return startWorkflow(
-                name,
-                version,
-                input,
-                externalInputPayloadStoragePath,
-                correlationId,
-                parentWorkflowId,
-                parentWorkflowTaskId,
-                event,
-                null
-        );
-    }
-
-    /**
-     * @throws ApplicationException
-     */
-    public String startWorkflow(
-            WorkflowDef workflowDefinition,
-            Map<String, Object> workflowInput,
-            String externalInputPayloadStoragePath,
-            String correlationId,
-            String event,
-            Map<String, String> taskToDomain
-    ) {
-        return startWorkflow(
-                workflowDefinition,
-                workflowInput,
-                externalInputPayloadStoragePath,
-                correlationId,
-                null,
-                null,
-                event,
-                taskToDomain
-        );
-    }
-
-    /**
-     * @throws ApplicationException
-     */
-    public String startWorkflow(
-            String name,
-            Integer version,
-            Map<String, Object> workflowInput,
-            String externalInputPayloadStoragePath,
-            String correlationId,
-            String parentWorkflowId,
-            String parentWorkflowTaskId,
-            String event,
-            Map<String, String> taskToDomain
-    ) {
+    public String startWorkflow(String name, Integer version, StartWorkflowParameters startWorkflowParameters) {
         WorkflowDef workflowDefinition = metadataMapperService.lookupForWorkflowDefinition(name, version);
+        startWorkflowParameters.setWorkflowDefinition(workflowDefinition);
 
-        return startWorkflow(
-                workflowDefinition,
-                workflowInput,
-                externalInputPayloadStoragePath,
-                correlationId,
-                parentWorkflowId,
-                parentWorkflowTaskId,
-                event,
-                taskToDomain
-        );
+        return startWorkflow(startWorkflowParameters);
     }
 
     private final Predicate<PollData> validateLastPolledTime = pd -> pd.getLastPollTime() > System.currentTimeMillis() - (activeWorkerLastPollInSecs * 1000);
@@ -245,10 +149,23 @@ public class WorkflowExecutor {
 
     private final Predicate<Task> isNonTerminalTask = task -> !task.getStatus().isTerminal();
 
+    public String startWorkflow(StartWorkflowParameters startWorkflowParameters) {
+        return startWorkflow(
+                startWorkflowParameters.getWorkflowDefinition(),
+                startWorkflowParameters.getWorkflowInput(),
+                startWorkflowParameters.getExternalInputPayloadStoragePath(),
+                startWorkflowParameters.getCorrelationId(),
+                startWorkflowParameters.getParentWorkflowId(),
+                startWorkflowParameters.getParentWorkflowTaskId(),
+                startWorkflowParameters.getEvent(),
+                startWorkflowParameters.getUserDefinedId(),
+                startWorkflowParameters.getTaskToDomain()
+        );
+    }
     /**
      * @throws ApplicationException
      */
-    public String startWorkflow(
+    private String startWorkflow(
             WorkflowDef workflowDefinition,
             Map<String, Object> workflowInput,
             String externalInputPayloadStoragePath,
@@ -256,6 +173,7 @@ public class WorkflowExecutor {
             String parentWorkflowId,
             String parentWorkflowTaskId,
             String event,
+            String userDefinedId,
             Map<String, String> taskToDomain
     ) {
         workflowDefinition = metadataMapperService.populateTaskDefinitions(workflowDefinition);
@@ -280,6 +198,7 @@ public class WorkflowExecutor {
         workflow.setUpdateTime(null);
         workflow.setEvent(event);
         workflow.setTaskToDomain(taskToDomain);
+        workflow.setUserDefinedId(userDefinedId);
 
         workflow.setInput(workflowInput);
         if (workflow.getInput() != null) {
@@ -625,13 +544,11 @@ public class WorkflowExecutor {
                                 new RuntimeException("Failure Workflow Definition not found for: " + failureWorkflow)
                         );
 
-                String failureWFId = startWorkflow(
-                        latestFailureWorkflow,
-                        input,
-                        null,
-                        workflowId,
-                        null,
-                        null
+                String failureWFId = startWorkflow(StartWorkflowParametersBuilder.newBuilder()
+                        .setWorkflowDefinition(latestFailureWorkflow)
+                        .setWorkflowInput(input)
+                        .setCorrelationId(workflowId)
+                        .createStartWorkflowParameters()
                 );
 
                 workflow.getOutput().put("conductor.failure_workflow", failureWFId);

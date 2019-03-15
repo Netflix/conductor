@@ -22,6 +22,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.core.execution.StartWorkflowParametersBuilder;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -57,7 +58,15 @@ public class SubWorkflow extends WorkflowSystemTask {
 		String correlationId = workflow.getCorrelationId();
 		
 		try {
-			String subWorkflowId = provider.startWorkflow(name, version, wfInput, null, correlationId, workflow.getWorkflowId(), task.getTaskId(), null, workflow.getTaskToDomain());
+			String subWorkflowId = provider.startWorkflow(name, version, StartWorkflowParametersBuilder.newBuilder()
+					.setWorkflowInput(wfInput)
+					.setCorrelationId(correlationId)
+					.setParentWorkflowId(workflow.getWorkflowId())
+					.setParentWorkflowTaskId(task.getTaskId())
+					.setTaskToDomain(workflow.getTaskToDomain())
+					.createStartWorkflowParameters()
+			);
+
 			task.getOutputData().put(SUB_WORKFLOW_ID, subWorkflowId);
 			task.getInputData().put(SUB_WORKFLOW_ID, subWorkflowId);
 			task.setStatus(Status.IN_PROGRESS);

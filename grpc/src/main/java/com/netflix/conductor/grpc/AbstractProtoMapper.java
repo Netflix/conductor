@@ -932,6 +932,9 @@ public abstract class AbstractProtoMapper {
         if (from.getExternalOutputPayloadStoragePath() != null) {
             to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
         }
+        if (from.getUserDefinedId() != null) {
+            to.setUserDefinedId( from.getUserDefinedId() );
+        }
         return to.build();
     }
 
@@ -967,6 +970,7 @@ public abstract class AbstractProtoMapper {
         }
         to.setExternalInputPayloadStoragePath( from.getExternalInputPayloadStoragePath() );
         to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
+        to.setUserDefinedId( from.getUserDefinedId() );
         return to;
     }
 

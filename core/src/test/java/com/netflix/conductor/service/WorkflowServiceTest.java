@@ -30,6 +30,8 @@ import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.ValidationModule;
 import com.netflix.conductor.core.execution.ApplicationException;
+import com.netflix.conductor.core.execution.StartWorkflowParameters;
+import com.netflix.conductor.core.execution.StartWorkflowParametersBuilder;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
 import org.junit.Before;
@@ -104,7 +106,7 @@ public class WorkflowServiceTest {
         try{
             Map<String, Object> input = new HashMap<>();
             input.put("1", "abc");
-            workflowService.startWorkflow(null, 1, "abc", input);
+            workflowService.startWorkflow(null, 1, "abc", "u123", input);
         } catch (ConstraintViolationException ex){
             assertEquals(1, ex.getConstraintViolations().size());
             Set<String> messages = getConstraintViolationMessages(ex.getConstraintViolations());
@@ -145,9 +147,8 @@ public class WorkflowServiceTest {
         String workflowID = "w112";
 
         when(mockMetadata.getWorkflowDef(anyString(), anyInt())).thenReturn(workflowDef);
-        when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(),
-                anyMapOf(String.class, Object.class), any(String.class))).thenReturn(workflowID);
-        assertEquals("w112", workflowService.startWorkflow("test", 1, "c123", input));
+        when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), any(StartWorkflowParameters.class))).thenReturn(workflowID);
+        assertEquals("w112", workflowService.startWorkflow("test", 1, "c123", "u123", input));
     }
 
     @Test(expected = ApplicationException.class)
@@ -158,7 +159,7 @@ public class WorkflowServiceTest {
             Map<String, Object> input = new HashMap<>();
             input.put("1", "abc");
 
-            workflowService.startWorkflow("test", 1, "c123", input);
+            workflowService.startWorkflow("test", 1, "c123", "u123",input);
         } catch (ApplicationException ex) {
             String message = "No such workflow found by name: test, version: 1";
             assertEquals(message, ex.getMessage());
