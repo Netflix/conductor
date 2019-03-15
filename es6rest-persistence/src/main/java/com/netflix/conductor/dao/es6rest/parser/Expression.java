@@ -30,13 +30,6 @@ import java.io.InputStream;
  */
 public class Expression extends AbstractNode implements FilterProvider {
 
-    public static void main(String[] args) throws ParserException {
-        String string = "startTime BETWEEN '2019-03-14T22:00:00.000Z' AND '2019-03-15T21:59:59.999Z'";
-        Expression exp = Expression.fromString(string);
-        QueryBuilder queryBuilder = exp.getFilterBuilder();
-        System.out.println("queryBuilder = " + queryBuilder);
-    }
-
     private NameValue nameVal;
 
     private GroupedExpression ge;
