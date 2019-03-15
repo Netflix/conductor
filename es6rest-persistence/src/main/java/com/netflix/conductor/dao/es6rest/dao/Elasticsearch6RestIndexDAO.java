@@ -339,9 +339,9 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
 
     @Override
     public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count,
-                                                List<String> sort, String from, String to) {
+                                                List<String> sort, String from, String end) {
         try {
-            return search(query, start, count, sort, freeText, from, to);
+            return search(query, start, count, sort, freeText, from, end);
         } catch (Exception e) {
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, e.getMessage(), e);
         }
