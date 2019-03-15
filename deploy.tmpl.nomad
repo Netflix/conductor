@@ -9,7 +9,7 @@ job "conductor" {
 
   constraint {
     attribute = "${meta.enclave}"
-    value = "shared"
+    value     = "shared"
   }
 
   update {
@@ -47,7 +47,7 @@ job "conductor" {
         ]
 
         labels {
-          service = "${NOMAD_JOB_NAME}"
+          service   = "${NOMAD_JOB_NAME}"
           component = "${NOMAD_TASK_NAME}"
         }
 
@@ -136,7 +136,7 @@ job "conductor" {
         ]
 
         labels {
-          service = "${NOMAD_JOB_NAME}"
+          service   = "${NOMAD_JOB_NAME}"
           component = "${NOMAD_TASK_NAME}"
         }
 
@@ -151,7 +151,7 @@ job "conductor" {
 
       env {
         TLD         = "${meta.tld}"
-        STACK       = "<ENV_TYPE>"
+        STACK       = "${meta.env}"
         APP_VERSION = "[[.app_version]]"
 
         // Database settings
@@ -266,7 +266,7 @@ job "conductor-archiver" {
 
   constraint {
     attribute = "${meta.enclave}"
-    value = "shared"
+    value     = "shared"
   }
 
   group "archiver" {
@@ -295,7 +295,7 @@ job "conductor-archiver" {
         ]
 
         labels {
-          service = "${NOMAD_JOB_NAME}"
+          service   = "${NOMAD_JOB_NAME}"
           component = "${NOMAD_TASK_NAME}"
         }
 
@@ -309,7 +309,7 @@ job "conductor-archiver" {
       }
 
       env {
-        env_type = "<ENV_TYPE>"
+        env_type = "${meta.env}"
       }
 
       # Write secrets to the file that can be mounted as volume
