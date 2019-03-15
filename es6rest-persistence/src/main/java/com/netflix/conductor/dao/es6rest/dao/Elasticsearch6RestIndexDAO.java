@@ -422,7 +422,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
         if (StringUtils.isNotEmpty(from) && StringUtils.isNotEmpty(end)) {
             fq.must(QueryBuilders.rangeQuery("startTime").gte(from).lte(end));
-		}
+        }
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(fq);
