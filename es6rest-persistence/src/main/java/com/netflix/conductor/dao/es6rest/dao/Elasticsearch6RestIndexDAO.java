@@ -38,10 +38,7 @@ import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -341,9 +338,10 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     }
 
     @Override
-    public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
+    public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count,
+                                                List<String> sort, String from, String end) {
         try {
-            return search(query, start, count, sort, freeText);
+            return search(query, start, count, sort, freeText, from, end);
         } catch (Exception e) {
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, e.getMessage(), e);
         }
@@ -410,7 +408,9 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         return null;
     }
 
-    private SearchResult<String> search(String structuredQuery, int start, int size, List<String> sortOptions, String freeTextQuery) throws Exception {
+    private SearchResult<String> search(String structuredQuery, int start, int size,
+                                        List<String> sortOptions, String freeTextQuery,
+                                        String from, String end) throws Exception {
         QueryBuilder qf = QueryBuilders.matchAllQuery();
         if (StringUtils.isNotEmpty(structuredQuery)) {
             Expression expression = Expression.fromString(structuredQuery);
@@ -420,6 +420,9 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         BoolQueryBuilder filterQuery = QueryBuilders.boolQuery().must(qf);
         QueryStringQueryBuilder stringQuery = QueryBuilders.queryStringQuery(freeTextQuery);
         BoolQueryBuilder fq = QueryBuilders.boolQuery().must(stringQuery).must(filterQuery);
+        if (StringUtils.isNotEmpty(from) && StringUtils.isNotEmpty(end)) {
+            fq.must(QueryBuilders.rangeQuery("startTime").gte(from).lte(end));
+        }
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         sourceBuilder.query(fq);

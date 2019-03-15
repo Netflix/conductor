@@ -62,9 +62,9 @@ router.get('/', async (req, res, next) => {
       end = moment().endOf('day');
     }
 
-    if (from != null && end != null) {
-      freeText.push('startTime:[' + from.toISOString() + ' TO ' + end.toISOString() + ']');
-    }
+    // convert to iso string
+    from = from != null ? from.toISOString() : '';
+    end = end != null ? end.toISOString() : '';
 
     let start = 0;
     if(!isNaN(req.query.start)){
@@ -72,7 +72,7 @@ router.get('/', async (req, res, next) => {
     }
 
     let query = req.query.q;
-    const url = baseURL2 + 'search?size=100&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query;
+    const url = baseURL2 + 'search?size=100&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query + '&from=' + from + '&end=' + end;
     const result = await http.get(url);
     const hits = result.results;
     res.status(200).send({result: {hits:hits, totalHits: result.totalHits}});

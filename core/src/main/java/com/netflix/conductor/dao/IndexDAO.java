@@ -15,14 +15,14 @@
  */
 package com.netflix.conductor.dao;
 
-import java.util.List;
-
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
+
+import java.util.List;
 
 /**
  * 
@@ -52,7 +52,7 @@ public interface IndexDAO {
 	 * @param sort sort options
 	 * @return List of workflow ids for the matching query
 	 */
-	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort);
+	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort, String from, String end);
 
 	/**
 	 * Remove the workflow index
