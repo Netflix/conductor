@@ -311,9 +311,9 @@ public class ExecutionService {
 		edao.removeWorkflow(workflowId);
 	}
 
-	public SearchResult<WorkflowSummary> search(String query, String freeText, int start, int size, List<String> sortOptions) {
+	public SearchResult<WorkflowSummary> search(String query, String freeText, int start, int size, List<String> sortOptions, String from, String to) {
 		
-		SearchResult<String> result = indexer.searchWorkflows(query, freeText, start, size, sortOptions);
+		SearchResult<String> result = indexer.searchWorkflows(query, freeText, start, size, sortOptions, from, to);
 		List<WorkflowSummary> workflows = result.getResults().stream().parallel().map(workflowId -> {
 			try {
 				

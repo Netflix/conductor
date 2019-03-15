@@ -157,7 +157,7 @@ public class MetadataService {
 		// Work in the batch mode
 		while (true) {
 			// Get the batch
-			SearchResult<WorkflowSummary> workflows = service.search(query, "*", 0, 100, null);
+			SearchResult<WorkflowSummary> workflows = service.search(query, "*", 0, 100, null, null, null);
 			if (workflows.getTotalHits() <= 0) {
 				break;
 			}

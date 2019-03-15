@@ -18,9 +18,6 @@
  */
 package com.netflix.conductor.tests.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
@@ -28,6 +25,9 @@ import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.IndexDAO;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Viren
@@ -40,7 +40,7 @@ public class MockIndexDAO implements IndexDAO {
 	}
 
 	@Override
-	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
+	public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort, String from, String to) {
 		return new SearchResult<>(0, new ArrayList<>());
 	}
 	
