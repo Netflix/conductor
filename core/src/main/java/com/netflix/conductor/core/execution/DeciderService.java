@@ -327,12 +327,17 @@ public class DeciderService {
 				+ ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId()
 				+ ",reason=" + task.getReasonForIncompletion() + ",status=" + status
 				+ ",contextUser=" + workflow.getContextUser();
+
+			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
+			if (WorkflowStatus.FAILED.equals(status) && taskDef != null && retryCount >= taskDef.getRetryCount()) {
+				reason = "Max retry count reached";
+				message += "," + reason;
+			}
 			if (WorkflowStatus.FAILED.equals(status)) {
 				logger.error(message);
 			} else {
 				logger.debug(message);
 			}
-			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
 			throw new TerminateWorkflow(reason, status, task);
 		}
 
@@ -374,7 +379,7 @@ public class DeciderService {
 	
 	@VisibleForTesting
 	void checkForTimeout(TaskDef taskType, Task task) {
-		
+
 		if(taskType == null){
 			logger.warn("missing task type " + task.getTaskDefName() + ", workflowId=" + task.getWorkflowInstanceId());
 			return;
@@ -404,6 +409,10 @@ public class DeciderService {
 		case TIME_OUT_WF:
 			task.setStatus(Status.TIMED_OUT);
 			task.setReasonForIncompletion(reason);
+			String message = "Task timeout occurred. " + task
+				+ ",workflowId=" + task.getWorkflowInstanceId()
+				+ ",correlationId=" + task.getCorrelationId();
+			logger.error(message);
 			throw new TerminateWorkflow(reason, WorkflowStatus.TIMED_OUT, task);
 		}
 		
