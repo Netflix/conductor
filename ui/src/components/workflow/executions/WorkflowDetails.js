@@ -222,14 +222,14 @@ class WorkflowDetails extends Component {
             checked: newv
         });
         if(newv) {
-            console.log("set interval")
+            //console.log("set interval")
             this.reloadTimeoutObject = setInterval(() => {
                 if(this.state.checked){
                     this.props.dispatch(getWorkflowDetails(this.props.params.workflowId));
                 }
             }, 3000);
         } else {
-            console.log("clear")
+            //console.log("clear")
             clearTimeout(this.reloadTimeoutObject);
         }
     }
