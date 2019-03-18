@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Collections;
-import javax.swing.text.html.Option;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
