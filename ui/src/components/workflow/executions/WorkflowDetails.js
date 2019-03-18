@@ -104,6 +104,9 @@ class WorkflowDetails extends Component {
         super(props);
 
         this.reloadPage = this.reloadPage.bind(this);
+        this.handleCheck = this.handleCheck.bind(this);
+
+        this.reloadTimeoutObject;
 
         this.state = {
             loading: this.props.starting,
@@ -113,7 +116,8 @@ class WorkflowDetails extends Component {
             workflowForm: {
                 labels: [],
                 values: []
-            }
+            },
+            checked: false
         };
 
         http.get('/api/sys/').then((data) => {
@@ -210,6 +214,24 @@ class WorkflowDetails extends Component {
 
     reloadPage() {
         this.props.dispatch(getWorkflowDetails(this.props.params.workflowId));
+    }
+
+    handleCheck() {
+        let newv = !this.state.checked;
+        this.setState({
+            checked: newv
+        });
+        if(newv) {
+            console.log("set interval")
+            this.reloadTimeoutObject = setInterval(() => {
+                if(this.state.checked){
+                    this.props.dispatch(getWorkflowDetails(this.props.params.workflowId));
+                }
+            }, 3000);
+        } else {
+            console.log("clear")
+            clearTimeout(this.reloadTimeoutObject);
+        }
     }
 
     render() {
@@ -309,7 +331,7 @@ class WorkflowDetails extends Component {
 
                 <TabContainer>
                     <Tab eventKey={1} title="Execution Flow">
-                        <div style={{marginTop: 10}}><button className={'btn btn-default'} style={{display: 'inline-block', marginRight: 10}} onClick={() => {this.reloadPage()}}>Reload diagram</button><input type="checkbox" /> Auto-reload every <input type="number" min="0" style={{width: 45}} defaultValue={3}/> seconds</div>
+                        <div style={{marginTop: 10}}><button className={'btn btn-default'} style={{display: 'inline-block', marginRight: 10}} disabled={this.state.checked} onClick={() => {this.reloadPage()}}>Reload diagram</button><input type="checkbox" onChange={this.handleCheck} /> Auto-reload every <input type="number" min="0" style={{width: 45}} defaultValue={3}/> seconds</div>
                         <WorkflowMetaDia meta={this.props.meta} wfe={wf} subworkflows={this.props.subworkflows}/>
                     </Tab>
                     <Tab eventKey={2} title="Task Details">
