@@ -103,6 +103,8 @@ class WorkflowDetails extends Component {
     constructor(props) {
         super(props);
 
+        this.reloadPage = this.reloadPage.bind(this);
+
         this.state = {
             loading: this.props.starting,
             log: this.props.res,
@@ -206,6 +208,9 @@ class WorkflowDetails extends Component {
         this.state.jsonData = dataObject;
     }
 
+    reloadPage() {
+        this.props.dispatch(getWorkflowDetails(this.props.params.workflowId));
+    }
 
     render() {
 
@@ -304,6 +309,7 @@ class WorkflowDetails extends Component {
 
                 <TabContainer>
                     <Tab eventKey={1} title="Execution Flow">
+                        <div style={{marginTop: 10}}><button className={'btn btn-default'} style={{display: 'inline-block', marginRight: 10}} onClick={() => {this.reloadPage()}}>Reload diagram</button><input type="checkbox" /> Auto-reload every <input type="number" min="0" style={{width: 45}} defaultValue={3}/> seconds</div>
                         <WorkflowMetaDia meta={this.props.meta} wfe={wf} subworkflows={this.props.subworkflows}/>
                     </Tab>
                     <Tab eventKey={2} title="Task Details">
