@@ -208,7 +208,14 @@ public class WorkflowExecutor {
             workflow.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
         }
 
-        executionDAOFacade.createWorkflow(workflow);
+        executionDAOFacade.obtainLockForWorkflow(workflow);
+        try {
+            executionDAOFacade.createWorkflow(workflow);
+        } catch (Exception ex) {
+            executionDAOFacade.releaseLockForWorkflow(workflow);
+            throw ex;
+        }
+
         LOGGER.info("A new instance of workflow {} created with workflow id {}", workflow.getWorkflowName(), workflowId);
 
         //then decide to see if anything needs to be done as part of the workflow
@@ -312,7 +319,9 @@ public class WorkflowExecutor {
         workflow.setStatus(WorkflowStatus.RUNNING);
         workflow.setOutput(null);
         workflow.setExternalOutputPayloadStoragePath(null);
+        executionDAOFacade.obtainLockForWorkflow(workflow);
         executionDAOFacade.updateWorkflow(workflow);
+
         decide(workflowId);
     }
 
@@ -345,6 +354,7 @@ public class WorkflowExecutor {
 
         // set workflow to RUNNING status
         workflow.setStatus(WorkflowStatus.RUNNING);
+        executionDAOFacade.obtainLockForWorkflow(workflow);
         executionDAOFacade.updateWorkflow(workflow);
 
         List<Task> rescheduledTasks = new ArrayList<>();
@@ -425,6 +435,7 @@ public class WorkflowExecutor {
         if (workflow.getStatus().equals(WorkflowStatus.COMPLETED)) {
             queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
             executionDAOFacade.removeFromPendingWorkflow(workflow.getWorkflowName(), workflow.getWorkflowId());
+            executionDAOFacade.releaseLockForWorkflow(workflow);
             LOGGER.info("Workflow has already been completed.  Current status={}, workflowId= {}", workflow.getStatus(), wf.getWorkflowId());
             return;
         }
@@ -445,6 +456,7 @@ public class WorkflowExecutor {
         workflow.setOutput(wf.getOutput());
         workflow.setExternalOutputPayloadStoragePath(wf.getExternalOutputPayloadStoragePath());
         executionDAOFacade.updateWorkflow(workflow);
+        executionDAOFacade.releaseLockForWorkflow(workflow);
         executionDAOFacade.updateTasks(wf.getTasks());
         LOGGER.debug("Completed workflow execution for {}", wf.getWorkflowId());
 
@@ -561,6 +573,7 @@ public class WorkflowExecutor {
 
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
         executionDAOFacade.removeFromPendingWorkflow(workflow.getWorkflowName(), workflow.getWorkflowId());
+        executionDAOFacade.releaseLockForWorkflow(workflow);
 
         // Send to atlas
         Monitors.recordWorkflowTermination(workflow.getWorkflowName(), workflow.getStatus(), workflow.getOwnerApp());
@@ -824,8 +837,11 @@ public class WorkflowExecutor {
             throw new IllegalStateException("The workflow " + workflowId + " is not PAUSED so cannot resume. " +
                     "Current status is " + workflow.getStatus().name());
         }
+
         workflow.setStatus(WorkflowStatus.RUNNING);
+        executionDAOFacade.obtainLockForWorkflow(workflow);
         executionDAOFacade.updateWorkflow(workflow);
+
         decide(workflowId);
     }
 
@@ -1135,15 +1151,16 @@ public class WorkflowExecutor {
         if (taskId == null) {
             // remove all tasks
             workflow.getTasks().forEach(task -> executionDAOFacade.removeTask(task.getTaskId()));
-            // Set workflow as RUNNING
-            workflow.setStatus(WorkflowStatus.RUNNING);
+
             if (correlationId != null) {
                 workflow.setCorrelationId(correlationId);
             }
             if (workflowInput != null) {
                 workflow.setInput(workflowInput);
             }
-
+            // Set workflow as RUNNING
+            workflow.setStatus(WorkflowStatus.RUNNING);
+            executionDAOFacade.obtainLockForWorkflow(workflow);
             executionDAOFacade.updateWorkflow(workflow);
 
             decide(workflowId);
@@ -1169,14 +1186,15 @@ public class WorkflowExecutor {
         }
 
         if (rerunFromTask != null) {
-            // set workflow as RUNNING
-            workflow.setStatus(WorkflowStatus.RUNNING);
             if (correlationId != null) {
                 workflow.setCorrelationId(correlationId);
             }
             if (workflowInput != null) {
                 workflow.setInput(workflowInput);
             }
+            // Set workflow as RUNNING
+            workflow.setStatus(WorkflowStatus.RUNNING);
+            executionDAOFacade.obtainLockForWorkflow(workflow);
             executionDAOFacade.updateWorkflow(workflow);
 
             // Remove all tasks after the "rerunFromTask"

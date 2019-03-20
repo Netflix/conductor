@@ -383,7 +383,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			String key = nsKey(WORKFLOW_DEF_TO_WORKFLOWS, workflow.getWorkflowName(), dateStr(workflow.getCreateTime()));
 			dynoClient.srem(key, workflowId);
 			dynoClient.srem(nsKey(CORR_ID_TO_WORKFLOWS, workflow.getCorrelationId()), workflowId);
-			dynoClient.hdel(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getUserDefinedId());
 			dynoClient.srem(nsKey(PENDING_WORKFLOWS, workflow.getWorkflowName()), workflowId);
 
 			// Remove the object
@@ -514,10 +513,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			if (workflow.getCorrelationId() != null) {
 				// Add to list of workflows for a correlationId
 				dynoClient.sadd(nsKey(CORR_ID_TO_WORKFLOWS, workflow.getCorrelationId()), workflow.getWorkflowId());
-			}
-
-			if (workflow.getUserDefinedId() != null) {
-			    dynoClient.hset(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getUserDefinedId(), workflow.getWorkflowId());
 			}
 		}
 		// Add or remove from the pending workflows

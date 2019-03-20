@@ -275,7 +275,7 @@ public interface ExecutionDAO {
 	}
 
 	default boolean obtainLockForWorkflow(Workflow workflow) {
-	    return false;
+	    return true;
 	}
 
 	default void releaseLockForWorkflow(Workflow workflow) {
