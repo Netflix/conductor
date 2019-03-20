@@ -58,7 +58,7 @@ public class EventWaitIntTest {
 
     private static EmbeddedElasticSearch search;
 
-    private static final int SERVER_PORT = 8090;
+    private static final int SERVER_PORT = 8097;
 
     private static String CONDUCTOR_WORKFLOW_DEF_NAME = "EventWaitTest";
 
