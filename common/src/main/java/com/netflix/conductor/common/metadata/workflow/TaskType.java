@@ -17,7 +17,8 @@ public enum TaskType {
     USER_DEFINED(false),
     HTTP(true),
     LAMBDA(true),
-    EXCLUSIVE_JOIN(true);
+    EXCLUSIVE_JOIN(true),
+    EVENT_WAIT(true);
 
     /**
      * TaskType constants representing each of the possible enumeration values.
@@ -37,6 +38,7 @@ public enum TaskType {
     public static final String TASK_TYPE_HTTP = "HTTP";
     public static final String TASK_TYPE_LAMBDA= "LAMBDA";
     public static final String TASK_TYPE_EXLCUSIVE_JOIN = "EXCLUSIVE_JOIN";
+    public static final String TASK_TYPE_EVENT_WAIT = "EVENT_WAIT";
     
     private boolean isSystemTask;
 
