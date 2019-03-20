@@ -64,6 +64,7 @@ import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_WAIT;
 import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDERS_QUALIFIER;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EXLCUSIVE_JOIN;
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_LAMBDA;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EVENT_WAIT;
 
 /**
@@ -83,6 +84,7 @@ public class CoreModule extends AbstractModule {
         bind(SubWorkflow.class).asEagerSingleton();
         bind(Wait.class).asEagerSingleton();
         bind(Event.class).asEagerSingleton();
+        bind(Lambda.class).asEagerSingleton();
         bind(EventWait.class).asEagerSingleton();
     }
 
@@ -193,6 +195,14 @@ public class CoreModule extends AbstractModule {
     @Named(TASK_MAPPERS_QUALIFIER)
     public TaskMapper getHTTPTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
         return new HTTPTaskMapper(parametersUtils, metadataDAO);
+    }
+
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_LAMBDA)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getLambdaTaskMapper(ParametersUtils parametersUtils) {
+        return new LambdaTaskMapper(parametersUtils);
     }
     
     @ProvidesIntoMap
