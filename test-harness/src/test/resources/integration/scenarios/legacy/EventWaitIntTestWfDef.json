@@ -1,0 +1,15 @@
+{
+    "name": "EventWaitTest",
+    "description": "Event Wait Test",
+    "version": 1,
+    "tasks": [
+      {
+        "name": "TASK_1",
+        "taskReferenceName": "task1",
+        "type": "EVENT_WAIT",
+        "startDelay": 0,
+        "sink": "conductor:test_queue",
+        "optional": false
+      }
+    ]
+}
