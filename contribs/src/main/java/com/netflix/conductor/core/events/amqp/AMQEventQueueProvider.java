@@ -42,12 +42,6 @@ public class AMQEventQueueProvider implements EventQueueProvider {
         // Build the queue with the inner Builder class of AMQObservableQueue
         final AMQObservableQueue queue = queues.computeIfAbsent(queueURI,
                 q -> new Builder(config).withQueueName(q).build());
-        if (queue.isClosed()) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Queue {} is closed. Open it", queueURI);
-            }
-            queue.open();
-        }
         return queue;
     }
 }
