@@ -60,4 +60,5 @@ ext {
     revSlf4j = '1.7.25'
     revSlf4jlog4j = '1.8.0-alpha1'
     revSpectator = '0.68.0'
+    revAmqpClient = '5.6.0'
 }
