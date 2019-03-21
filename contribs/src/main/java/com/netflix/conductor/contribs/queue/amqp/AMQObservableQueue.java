@@ -32,10 +32,11 @@ public class AMQObservableQueue implements ObservableQueue {
     private static final String QUEUE_TYPE = "amqp";
 
     private static final String PROPERTY_KEY_TEMPLATE = "workflow.event.queues.amqp.%s";
-    private static final int DEFAULT_BATCH_SIZE = 1;
-    private static final int DEFAULT_POLL_TIME_MS = 100;
-    private static final String DEFAULT_CONTENT_TYPE = "application/json";
-    private static final String DEFAULT_CONTENT_ENCODING = "UTF-8";
+
+    public static final int DEFAULT_BATCH_SIZE = 1;
+    public static final int DEFAULT_POLL_TIME_MS = 100;
+    public static final String DEFAULT_CONTENT_TYPE = "application/json";
+    public static final String DEFAULT_CONTENT_ENCODING = "UTF-8";
 
     private final String queueName;
     private boolean isDurable;
@@ -88,11 +89,11 @@ public class AMQObservableQueue implements ObservableQueue {
         }
     }
 
-    public boolean isClosed() {
+    private boolean isClosed() {
         return !isConnOpened && !isChanOpened;
     }
 
-    public void open() {
+    private void open() {
         connect();
     }
 
@@ -115,6 +116,38 @@ public class AMQObservableQueue implements ObservableQueue {
     @Override
     public String getURI() {
         return queueName;
+    }
+
+    public ConnectionFactory getConnectionFactory() {
+        return factory;
+    }
+
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public boolean isDurable() {
+        return isDurable;
+    }
+
+    public boolean isExclusive() {
+        return isExclusive;
+    }
+
+    public Map<String, Object> getQueueArgs() {
+        return queueArgs;
+    }
+
+    public int getBatchSize() {
+        return batchSize;
+    }
+
+    public int getPollTimeInMS() {
+        return pollTimeInMS;
+    }
+
+    public Address[] getAddresses() {
+        return addresses;
     }
 
     @Override
@@ -242,6 +275,9 @@ public class AMQObservableQueue implements ObservableQueue {
         }
 
         public Builder withHosts(String hosts) {
+            if (StringUtils.isEmpty(hosts)) {
+                throw new IllegalArgumentException("Hosts are undefined");
+            }
             this.addresses = Address.parseAddresses(hosts);
             return this;
         }
@@ -390,7 +426,7 @@ public class AMQObservableQueue implements ObservableQueue {
     }
 
     private AMQP.Queue.DeclareOk getOrCreateQueue() throws IOException {
-        if (!isConnOpened) {
+        if (!isClosed()) {
             open();
         }
         if (Strings.isNullOrEmpty(queueName)) {
