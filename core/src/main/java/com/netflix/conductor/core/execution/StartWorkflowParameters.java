@@ -14,11 +14,11 @@ public class StartWorkflowParameters {
     String parentWorkflowId;
     String parentWorkflowTaskId;
     String event;
-    String userDefinedId;
+    String idempotencyKey;
     Map<String, String> taskToDomain;
 
 
-    public StartWorkflowParameters(String name, Integer version, WorkflowDef workflowDefinition, Map<String, Object> workflowInput, String externalInputPayloadStoragePath, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, String userDefinedId, Map<String, String> taskToDomain) {
+    public StartWorkflowParameters(String name, Integer version, WorkflowDef workflowDefinition, Map<String, Object> workflowInput, String externalInputPayloadStoragePath, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, String idempotencyKey, Map<String, String> taskToDomain) {
         this.name = name;
         this.version = version;
         this.workflowDefinition = workflowDefinition;
@@ -28,7 +28,7 @@ public class StartWorkflowParameters {
         this.parentWorkflowId = parentWorkflowId;
         this.parentWorkflowTaskId = parentWorkflowTaskId;
         this.event = event;
-        this.userDefinedId = userDefinedId;
+        this.idempotencyKey = idempotencyKey;
         this.taskToDomain = taskToDomain;
     }
 
@@ -88,12 +88,12 @@ public class StartWorkflowParameters {
         this.event = event;
     }
 
-    public String getUserDefinedId() {
-        return userDefinedId;
+    public String getIdempotencyKey() {
+        return idempotencyKey;
     }
 
-    public void setUserDefinedId(String userDefinedId) {
-        this.userDefinedId = userDefinedId;
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
     public Map<String, String> getTaskToDomain() {

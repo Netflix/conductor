@@ -270,7 +270,7 @@ public interface ExecutionDAO {
 
 	List<PollData> getPollData(String taskDefName);
 
-	default String getWorkflowIdByUserDefinedId(String workflowType, String userDefinedId) {
+	default String getWorkflowIdByIdempotencyKey(String workflowType, String idempotencyKey) {
 	    return null;
 	}
 

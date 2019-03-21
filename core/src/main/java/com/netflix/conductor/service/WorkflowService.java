@@ -64,7 +64,7 @@ public interface WorkflowService {
      * @return the id of the workflow instance that can be use for tracking.
      */
     String startWorkflow(@NotEmpty(message = "Workflow name cannot be null or empty") String name, Integer version,
-                                String correlationId, String userDefinedId, Map<String, Object> input);
+                                String correlationId, String idempotencyKey, Map<String, Object> input);
 
     /**
      * Lists workflows for the given correlation id.

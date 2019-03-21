@@ -14,7 +14,7 @@ public class StartWorkflowParametersBuilder {
     private String parentWorkflowId;
     private String parentWorkflowTaskId;
     private String event;
-    private String userDefinedId;
+    private String idempotencyKey;
     private Map<String, String> taskToDomain;
 
     public static StartWorkflowParametersBuilder newBuilder() {
@@ -56,8 +56,8 @@ public class StartWorkflowParametersBuilder {
         return this;
     }
 
-    public StartWorkflowParametersBuilder setUserDefinedId(String userDefinedId) {
-        this.userDefinedId = userDefinedId;
+    public StartWorkflowParametersBuilder setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
         return this;
     }
 
@@ -77,6 +77,6 @@ public class StartWorkflowParametersBuilder {
     }
 
     public StartWorkflowParameters createStartWorkflowParameters() {
-        return new StartWorkflowParameters(name, version, workflowDefinition, workflowInput, externalInputPayloadStoragePath, correlationId, parentWorkflowId, parentWorkflowTaskId, event, userDefinedId, taskToDomain);
+        return new StartWorkflowParameters(name, version, workflowDefinition, workflowInput, externalInputPayloadStoragePath, correlationId, parentWorkflowId, parentWorkflowTaskId, event, idempotencyKey, taskToDomain);
     }
 }

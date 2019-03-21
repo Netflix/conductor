@@ -70,7 +70,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	private final static String PENDING_WORKFLOWS = "PENDING_WORKFLOWS";
 	private final static String WORKFLOW_DEF_TO_WORKFLOWS = "WORKFLOW_DEF_TO_WORKFLOWS";
 	private final static String CORR_ID_TO_WORKFLOWS = "CORR_ID_TO_WORKFLOWS";
-	private final static String USER_DEFINED_ID_TO_WORKFLOW_ID = "USER_DEFINED_ID_TO_WORKFLOW_ID";
+	private final static String IDEMPOTENCY_KEY_TO_WORKFLOW_ID = "IDEMPOTENCY_KEY_TO_WORKFLOW_ID";
 	private final static String POLL_DATA = "POLL_DATA";
 
 	private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
@@ -708,8 +708,8 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
     }
 
     @Override
-    public String getWorkflowIdByUserDefinedId(String workflowType, String userDefinedId) {
-        String workflowId = dynoClient.hget(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflowType), userDefinedId);
+    public String getWorkflowIdByIdempotencyKey(String workflowType, String idempotencyKey) {
+        String workflowId = dynoClient.hget(nsKey(IDEMPOTENCY_KEY_TO_WORKFLOW_ID, workflowType), idempotencyKey);
 
         return workflowId ;
     }
@@ -717,23 +717,23 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
     @Override
     public boolean obtainLockForWorkflow(Workflow workflow) {
-        if (workflow.getUserDefinedId() == null)
+        if (workflow.getIdempotencyKey() == null)
             return true;
 
         // Try creating the lock if it doesn't exist
-        dynoClient.hsetnx(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getUserDefinedId(), workflow.getWorkflowId());
+        dynoClient.hsetnx(nsKey(IDEMPOTENCY_KEY_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getIdempotencyKey(), workflow.getWorkflowId());
 
-        String currentOwnerWorkflowId = getWorkflowIdByUserDefinedId(workflow.getWorkflowName(), workflow.getUserDefinedId());
+        String currentOwnerWorkflowId = getWorkflowIdByIdempotencyKey(workflow.getWorkflowName(), workflow.getIdempotencyKey());
 
         return currentOwnerWorkflowId.equals(workflow.getWorkflowId());
     }
 
     @Override
     public void releaseLockForWorkflow(Workflow workflow) {
-        if (workflow.getUserDefinedId() == null)
+        if (workflow.getIdempotencyKey() == null)
             return;
 
-        String currentOwnerWorkflowId = getWorkflowIdByUserDefinedId(workflow.getWorkflowName(), workflow.getUserDefinedId());
+        String currentOwnerWorkflowId = getWorkflowIdByIdempotencyKey(workflow.getWorkflowName(), workflow.getIdempotencyKey());
 
         if (! currentOwnerWorkflowId.equals(workflow.getWorkflowId())) {
             // This should not happen, it is unexpected by design!
@@ -741,6 +741,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
         }
 
         // Only release if this workflow is the owner
-        dynoClient.hdel(nsKey(USER_DEFINED_ID_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getUserDefinedId());
+        dynoClient.hdel(nsKey(IDEMPOTENCY_KEY_TO_WORKFLOW_ID, workflow.getWorkflowName()), workflow.getIdempotencyKey());
     }
 }

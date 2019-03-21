@@ -116,7 +116,7 @@ public class Workflow extends Auditable{
 	private String externalOutputPayloadStoragePath;
 
     @ProtoField(id = 22)
-    private String userDefinedId;
+    private String idempotencyKey;
 
 	public Workflow(){
 
@@ -417,12 +417,12 @@ public class Workflow extends Auditable{
 		this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
 	}
 
-	public String getUserDefinedId() {
-		return this.userDefinedId;
+	public String getIdempotencyKey() {
+		return this.idempotencyKey;
 	}
 
-	public void setUserDefinedId(String userDefinedId) {
-		this.userDefinedId = userDefinedId;
+	public void setIdempotencyKey(String idempotencyKey) {
+		this.idempotencyKey = idempotencyKey;
 	}
 
 	public Task getTaskByRefName(String refName) {

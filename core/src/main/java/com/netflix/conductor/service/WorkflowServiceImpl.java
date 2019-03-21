@@ -128,7 +128,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      * @return the id of the workflow instance that can be use for tracking.
      */
     @Service
-    public String startWorkflow(String name, Integer version, String correlationId, String userDefinedId, Map<String, Object> input) {
+    public String startWorkflow(String name, Integer version, String correlationId, String idempotencyKey, Map<String, Object> input) {
         WorkflowDef workflowDef = metadataService.getWorkflowDef( name, version );
         if (workflowDef == null) {
             throw new ApplicationException( ApplicationException.Code.NOT_FOUND, String.format( "No such workflow found by name: %s, version: %d", name, version ) );
@@ -136,7 +136,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         return workflowExecutor.startWorkflow(workflowDef.getName(), workflowDef.getVersion(), StartWorkflowParametersBuilder.newBuilder()
                 .setCorrelationId(correlationId)
                 .setWorkflowInput(input)
-                .setUserDefinedId(userDefinedId)
+                .setIdempotencyKey(idempotencyKey)
                 .createStartWorkflowParameters()
         );
     }

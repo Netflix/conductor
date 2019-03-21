@@ -38,5 +38,5 @@ message Workflow {
     WorkflowDef workflow_definition = 19;
     string external_input_payload_storage_path = 20;
     string external_output_payload_storage_path = 21;
-    string user_defined_id = 22;
+    string idempotency_key = 22;
 }

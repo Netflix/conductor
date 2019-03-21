@@ -158,7 +158,7 @@ public class WorkflowExecutor {
                 startWorkflowParameters.getParentWorkflowId(),
                 startWorkflowParameters.getParentWorkflowTaskId(),
                 startWorkflowParameters.getEvent(),
-                startWorkflowParameters.getUserDefinedId(),
+                startWorkflowParameters.getIdempotencyKey(),
                 startWorkflowParameters.getTaskToDomain()
         );
     }
@@ -173,7 +173,7 @@ public class WorkflowExecutor {
             String parentWorkflowId,
             String parentWorkflowTaskId,
             String event,
-            String userDefinedId,
+            String idempotencyKey,
             Map<String, String> taskToDomain
     ) {
         workflowDefinition = metadataMapperService.populateTaskDefinitions(workflowDefinition);
@@ -198,7 +198,7 @@ public class WorkflowExecutor {
         workflow.setUpdateTime(null);
         workflow.setEvent(event);
         workflow.setTaskToDomain(taskToDomain);
-        workflow.setUserDefinedId(userDefinedId);
+        workflow.setIdempotencyKey(idempotencyKey);
 
         workflow.setInput(workflowInput);
         if (workflow.getInput() != null) {

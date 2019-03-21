@@ -77,9 +77,9 @@ public class WorkflowResource {
     public String startWorkflow(@PathParam("name") String name,
                                 @QueryParam("version") Integer version,
                                 @QueryParam("correlationId") String correlationId,
-                                @QueryParam("userDefinedId") String userDefinedId,
+                                @QueryParam("idempotencyKey") String idempotencyKey,
                                 Map<String, Object> input) {
-        return workflowService.startWorkflow(name, version, correlationId, userDefinedId, input);
+        return workflowService.startWorkflow(name, version, correlationId, idempotencyKey, input);
     }
 
     @GET

@@ -318,7 +318,7 @@ public class ExecutionDAOFacade {
 
     public void obtainLockForWorkflow(Workflow workflow) {
         if (!executionDAO.obtainLockForWorkflow(workflow)) {
-            throw new ApplicationException(ApplicationException.Code.CONFLICT, "A workflow is already running with the same UserDefinedID");
+            throw new ApplicationException(ApplicationException.Code.CONFLICT, "A workflow is already running with the same idempotencyKey");
         }
     }
 }
