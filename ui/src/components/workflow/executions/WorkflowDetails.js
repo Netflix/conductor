@@ -162,6 +162,10 @@ class WorkflowDetails extends Component {
 
     }
 
+    componentWillUnmount(){
+        clearTimeout(this.reloadTimeoutObject);
+    }
+
     getObject(wf) {
         let inputObject;
 
