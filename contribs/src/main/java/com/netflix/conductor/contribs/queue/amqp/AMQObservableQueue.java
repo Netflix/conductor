@@ -2,10 +2,9 @@ package com.netflix.conductor.contribs.queue.amqp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
+import com.netflix.conductor.contribs.queue.AbstractObservableQueue;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
 import com.rabbitmq.client.*;
 import org.apache.commons.lang3.StringUtils;
@@ -15,9 +14,10 @@ import rx.Observable;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
+import static com.netflix.conductor.contribs.queue.amqp.AMQProperties.*;
 
 /**
  * Created at 19/03/2019 16:38
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * @author Mickaël GREGORI <mickael.gregori@alchimie.com>
  * @version $Id$
  */
-public class AMQObservableQueue implements ObservableQueue {
+public class AMQObservableQueue extends AbstractObservableQueue {
 
     private static Logger logger = LoggerFactory.getLogger(AMQObservableQueue.class);
 
@@ -35,15 +35,11 @@ public class AMQObservableQueue implements ObservableQueue {
 
     public static final int DEFAULT_BATCH_SIZE = 1;
     public static final int DEFAULT_POLL_TIME_MS = 100;
-    public static final String DEFAULT_CONTENT_TYPE = "application/json";
-    public static final String DEFAULT_CONTENT_ENCODING = "UTF-8";
 
-    private final String queueName;
-    private boolean isDurable;
-    private boolean isExclusive;
-    private final Map<String, Object> queueArgs;
+    private final AMQConsumeSettings subSettings;
+    private final AMQPublishSettings pubSettings;
 
-    private final int batchSize, pollTimeInMS;
+    private final int batchSize;
 
     private boolean isConnOpened = false, isChanOpened = false;
 
@@ -53,15 +49,30 @@ public class AMQObservableQueue implements ObservableQueue {
     private Address[] addresses;
 
     AMQObservableQueue(final ConnectionFactory factory, final Address[] addresses,
-                       final String queueName, final boolean isDurable, final boolean isExclusive,
-                       final Map<String, Object> queueArgs,
+                       final AMQConsumeSettings subSettings, final AMQPublishSettings pubSettings,
                        final int batchSize, final int pollTimeInMS) {
+        if (factory == null) {
+            throw new IllegalArgumentException("Connection factory is undefined");
+        }
+        if (addresses == null || addresses.length == 0) {
+            throw new IllegalArgumentException("Addresses are undefined");
+        }
+        if (subSettings == null) {
+            throw new IllegalArgumentException("Consume settings are undefined");
+        }
+        if (pubSettings == null) {
+            throw new IllegalArgumentException("Publish settings are undefined");
+        }
+        if (batchSize <= 0) {
+            throw new IllegalArgumentException("Batch size must be greater than 0");
+        }
+        if (pollTimeInMS <= 0) {
+            throw new IllegalArgumentException("Poll time must be greater than 0 ms");
+        }
         this.factory = factory;
         this.addresses = addresses;
-        this.queueName = queueName;
-        this.isDurable = isDurable;
-        this.isExclusive = isExclusive;
-        this.queueArgs = queueArgs;
+        this.subSettings = subSettings;
+        this.pubSettings = pubSettings;
         this.batchSize = batchSize;
         this.pollTimeInMS = pollTimeInMS;
     }
@@ -110,40 +121,28 @@ public class AMQObservableQueue implements ObservableQueue {
 
     @Override
     public String getName() {
-        return queueName;
+        return subSettings.getQueueName();
     }
 
     @Override
     public String getURI() {
-        return queueName;
+        return subSettings.getQueueName();
     }
 
     public ConnectionFactory getConnectionFactory() {
         return factory;
     }
 
-    public String getQueueName() {
-        return queueName;
-    }
-
-    public boolean isDurable() {
-        return isDurable;
-    }
-
-    public boolean isExclusive() {
-        return isExclusive;
-    }
-
-    public Map<String, Object> getQueueArgs() {
-        return queueArgs;
-    }
-
     public int getBatchSize() {
         return batchSize;
     }
 
-    public int getPollTimeInMS() {
-        return pollTimeInMS;
+    public AMQConsumeSettings getConsumeSettings() {
+        return subSettings;
+    }
+
+    public AMQPublishSettings getPublishSettings() {
+        return pubSettings;
     }
 
     public Address[] getAddresses() {
@@ -169,33 +168,59 @@ public class AMQObservableQueue implements ObservableQueue {
         return processedDeliveryTags;
     }
 
+    private static AMQP.BasicProperties buildBasicProperties(final Message message,
+                                                             final AMQPublishSettings settings) {
+        return new AMQP.BasicProperties.Builder()
+                .messageId(StringUtils.isEmpty(message.getId()) ?
+                        UUID.randomUUID().toString() :
+                        message.getId())
+                .correlationId(StringUtils.isEmpty(message.getReceipt()) ?
+                        UUID.randomUUID().toString() :
+                        message.getReceipt())
+                .contentType(settings.getContentType())
+                .contentEncoding(settings.getContentEncoding())
+                .deliveryMode(settings.getDeliveryMode())
+                .build();
+    }
+
+    private void publishMessage(Message message, String exchange, String routingKey) {
+        try {
+            final String payload = message.getPayload();
+            getOrCreateChannel().basicPublish(exchange,
+                    routingKey,
+                    buildBasicProperties(message, pubSettings),
+                    payload.getBytes(pubSettings.getContentEncoding()));
+            logger.info(String.format("Published message to %s: %s", exchange, payload));
+        } catch (Exception ex) {
+            logger.error("Failed to publish message {} to {}", message.getPayload(), exchange, ex);
+            throw new RuntimeException(ex);
+        }
+    }
+
     @Override
     public void publish(List<Message> messages) {
         try {
-            final AMQP.Queue.DeclareOk declareOk = getOrCreateQueue();
-            messages.forEach(message -> {
-                try {
-                    final String payload = message.getPayload();
-                    getOrCreateChannel().basicPublish(StringUtils.EMPTY, declareOk.getQueue(),
-                            new AMQP.BasicProperties.Builder()
-                                    .messageId(StringUtils.isEmpty(message.getId()) ?
-                                            UUID.randomUUID().toString() :
-                                            message.getId())
-                                    .correlationId(StringUtils.isEmpty(message.getReceipt()) ?
-                                            UUID.randomUUID().toString() :
-                                            message.getReceipt())
-                                    .contentType(DEFAULT_CONTENT_TYPE)
-                                    .contentEncoding(DEFAULT_CONTENT_ENCODING)
-                                    .deliveryMode(2) /* Persist messages */
-                                    .build(), payload.getBytes(DEFAULT_CONTENT_ENCODING));
-                    logger.info(String.format("Published message to %s: %s", declareOk.getQueue(), payload));
-                } catch (Exception ex) {
-                    logger.error("Failed to publish message {} to {}", message.getPayload(), declareOk.getQueue(), ex);
-                    throw new RuntimeException(ex);
-                }
-            });
+            final String exchange, routingKey;
+            if (pubSettings.useExchange()) {
+                // Use exchange + routing key for publishing
+                getOrCreateExchange(pubSettings.getQueueOrExchangeName(), pubSettings.getExchangeType(),
+                        pubSettings.isDurable(), pubSettings.autoDelete(), pubSettings.getArguments());
+                exchange = pubSettings.getQueueOrExchangeName();
+                routingKey = pubSettings.getRoutingKey();
+            }
+            else {
+                // Use queue for publishing
+                final AMQP.Queue.DeclareOk declareOk = getOrCreateQueue(pubSettings.getQueueOrExchangeName(),
+                        pubSettings.isDurable(), pubSettings.isExclusive(), pubSettings.autoDelete(),
+                        pubSettings.getArguments());
+                exchange = StringUtils.EMPTY; // Empty exchange name for queue
+                routingKey = declareOk.getQueue(); // Routing name is the name of queue
+            }
+            messages.forEach(message -> publishMessage(message, exchange, routingKey));
+        } catch (final RuntimeException ex) {
+            throw ex;
         } catch (final Exception ex) {
-            logger.error("Failed to get queue {}", queueName, ex);
+            logger.error("Failed to publish messages: {}", ex.getMessage(), ex);
             throw new RuntimeException(ex);
         }
     }
@@ -208,7 +233,7 @@ public class AMQObservableQueue implements ObservableQueue {
     public long size() {
         if (!isClosed()) {
             try {
-                return getOrCreateChannel().messageCount(queueName);
+                return getOrCreateChannel().messageCount(subSettings.getQueueName());
             }
             catch (final Exception e) {
                 throw new RuntimeException(e);
@@ -227,171 +252,100 @@ public class AMQObservableQueue implements ObservableQueue {
 
         private Address[] addresses;
 
-        private String username, password, virtualHost;
+        private int batchSize;
+        private int pollTimeInMS;
 
-        private int port, connectionTimeout;
-
-        private boolean useNio = false, isExclusive = false, isDurable = true;
-
-        private String queueName;
-
-        private Map<String, Object> queueArguments;
-
-        private int batchSize = 1;
-
-        private int pollTimeInMS = 100;
-
-        public Builder() {}
+        private ConnectionFactory factory;
+        private AMQConsumeSettings consumeSettings;
+        private AMQPublishSettings pubSettings;
 
         public Builder(Configuration config) {
-            final int maxPriority = config.getIntProperty("workflow.event.queues.amqp.maxPriority", -1);
-            final Map<String, Object> queueArgs = Maps.newHashMap();
-            if (maxPriority > 0) {
-                queueArgs.put("x-max-priority", maxPriority);
-            }
-            init(config, queueArgs);
-        }
-
-        private void init(Configuration config, Map<String, Object> queueArgs) {
-            withHosts(config.getProperty(String.format(PROPERTY_KEY_TEMPLATE, "hosts"),
-                    ConnectionFactory.DEFAULT_HOST)).
-            withUsername(config.getProperty(String.format(PROPERTY_KEY_TEMPLATE, "username"),
-                    ConnectionFactory.DEFAULT_USER)).
-            withPassword(config.getProperty(String.format(PROPERTY_KEY_TEMPLATE, "password"),
-                    ConnectionFactory.DEFAULT_PASS)).
-            withVirtualHost(config.getProperty(String.format(PROPERTY_KEY_TEMPLATE, "virtualHost"),
-                    ConnectionFactory.DEFAULT_VHOST)).
-            withPort(config.getIntProperty(String.format(PROPERTY_KEY_TEMPLATE, "port"),  AMQP.PROTOCOL.PORT)).
-            withConnectionTimeout(config.getIntProperty(String.format(PROPERTY_KEY_TEMPLATE, "connectionTimeout"),
-                    ConnectionFactory.DEFAULT_CONNECTION_TIMEOUT)).
-            useNio(config.getBoolProperty(String.format(PROPERTY_KEY_TEMPLATE, "useNio"), false)).
+            this.addresses = buildAddressesFromHosts(config);
+            this.factory = buildConnectionFactory(config);
             /* messages polling settings */
-            withBatchSize(config.getIntProperty(String.format(PROPERTY_KEY_TEMPLATE, "batchSize"), DEFAULT_BATCH_SIZE)).
-            withPollTimeInMS(config.getIntProperty(String.format(PROPERTY_KEY_TEMPLATE, "pollTimeInMs"), DEFAULT_POLL_TIME_MS)).
-            /* properties for queues */
-            withQueueArgs(queueArgs).
-            isDurable(config.getBooleanProperty(String.format(PROPERTY_KEY_TEMPLATE, "durable"), true)).
-            isExclusive(config.getBooleanProperty(String.format(PROPERTY_KEY_TEMPLATE, "exclusive"), false));
+            batchSize = config.getIntProperty(String.format(PROPERTY_KEY_TEMPLATE, BATCH_SIZE),
+                    DEFAULT_BATCH_SIZE);
+            pollTimeInMS = config.getIntProperty(String.format(PROPERTY_KEY_TEMPLATE, POLL_TIME_IN_MS),
+                    DEFAULT_POLL_TIME_MS);
         }
 
-        public Builder withHosts(String hosts) {
+        private static Address[] buildAddressesFromHosts(final Configuration config) {
+            // Read hosts from config
+            final String hosts = config.getProperty(String.format(PROPERTY_KEY_TEMPLATE, HOSTS),
+                    ConnectionFactory.DEFAULT_HOST);
             if (StringUtils.isEmpty(hosts)) {
                 throw new IllegalArgumentException("Hosts are undefined");
             }
-            this.addresses = Address.parseAddresses(hosts);
-            return this;
+            return Address.parseAddresses(hosts);
         }
 
-        public Builder withUsername(String username) {
+        private static ConnectionFactory buildConnectionFactory(final Configuration config) {
+            final ConnectionFactory factory = new ConnectionFactory();
+            // Get rabbitmq username from config
+            final String username = config.getProperty(String.format(PROPERTY_KEY_TEMPLATE, USERNAME),
+                    ConnectionFactory.DEFAULT_USER);
             if (StringUtils.isEmpty(username)) {
                 throw new IllegalArgumentException("Username is null or empty");
             }
-            this.username = username;
-            return this;
-        }
-
-        public Builder withPassword(String password) {
+            else {
+                factory.setUsername(username);
+            }
+            // Get rabbitmq password from config
+            final String password = config.getProperty(String.format(PROPERTY_KEY_TEMPLATE, PASSWORD),
+                    ConnectionFactory.DEFAULT_PASS);
             if (StringUtils.isEmpty(password)) {
                 throw new IllegalArgumentException("Password is null or empty");
             }
-            this.password = password;
-            return this;
-        }
-
-        public Builder withVirtualHost(String virtualHost) {
+            else {
+                factory.setPassword(password);
+            }
+            // Get vHost from config
+            final String virtualHost = config.getProperty(String.format(PROPERTY_KEY_TEMPLATE, VIRTUAL_HOST),
+                    ConnectionFactory.DEFAULT_VHOST);
             if (StringUtils.isEmpty(virtualHost)) {
                 throw new IllegalArgumentException("Virtual host is null or empty");
             }
-            this.virtualHost = virtualHost;
-            return this;
-        }
-
-        public Builder withQueueName(String name) {
-            if (StringUtils.isEmpty(name)) {
-                throw new IllegalArgumentException("Queue name is null or empty");
+            else {
+                factory.setVirtualHost(virtualHost);
             }
-            this.queueName = name;
-            return this;
-        }
-
-        public Builder withQueueArgs(Map<String, Object> arguments) {
-            this.queueArguments = arguments;
-            return this;
-        }
-
-        public Builder withPort(int port) {
+            // Get server port from config
+            final int port = config.getIntProperty(String.format(PROPERTY_KEY_TEMPLATE, PORT),
+                    AMQP.PROTOCOL.PORT);
             if (port <= 0) {
                 throw new IllegalArgumentException("Port must be greater than 0");
             }
-            this.port = port;
-            return this;
-        }
-
-        public Builder withConnectionTimeout(int connectionTimeout) {
+            else {
+                factory.setPort(port);
+            }
+            // Get connection timeout from config
+            final int connectionTimeout = config.getIntProperty(String.format(PROPERTY_KEY_TEMPLATE, CONNECTION_TIMEOUT),
+                    ConnectionFactory.DEFAULT_CONNECTION_TIMEOUT);
             if (connectionTimeout <= 0) {
                 throw new IllegalArgumentException("Connection timeout must be greater than 0");
             }
-            this.connectionTimeout = connectionTimeout;
-            return this;
-        }
-
-        public Builder withBatchSize(int batchSize) {
-            if (batchSize <= 0) {
-                throw new IllegalArgumentException("Batch size must be greater than 0");
-            }
-            this.batchSize = batchSize;
-            return this;
-        }
-
-        public Builder withPollTimeInMS(int pollTimeInMS) {
-            if (pollTimeInMS <= 0) {
-                throw new IllegalArgumentException("Poll time must be greater than 0 ms");
-            }
-            this.pollTimeInMS = pollTimeInMS;
-            return this;
-        }
-
-        public Builder isDurable(boolean isDurable) {
-            this.isDurable = isDurable;
-            return this;
-        }
-
-        public Builder isExclusive(boolean isExclusive) {
-            this.isExclusive = isExclusive;
-            return this;
-        }
-
-        public Builder useNio(boolean useNio) {
-            this.useNio = useNio;
-            return this;
-        }
-
-        private ConnectionFactory buildConnectionFactory() {
-            final ConnectionFactory factory = new ConnectionFactory();
-            if (!Strings.isNullOrEmpty(username)) {
-                factory.setUsername(username);
-            }
-            if (!Strings.isNullOrEmpty(password)) {
-                factory.setPassword(password);
-            }
-            if (port > 0) {
-                factory.setPort(port);
-            }
-            if (connectionTimeout >= 0) {
+            else {
                 factory.setConnectionTimeout(connectionTimeout);
             }
-            if (!Strings.isNullOrEmpty(virtualHost)) {
-                factory.setVirtualHost(virtualHost);
-            }
+            final boolean useNio = config.getBoolProperty(String.format(PROPERTY_KEY_TEMPLATE, USE_NIO), false);
             if (useNio) {
                 factory.useNio();
             }
             return factory;
         }
 
+        public Builder withConsumeSettings(final AMQConsumeSettings consumeSettings) {
+            this.consumeSettings = consumeSettings;
+            return this;
+        }
+
+        public Builder withPublishSettings(final AMQPublishSettings pubSettings) {
+            this.pubSettings = pubSettings;
+            return this;
+        }
+
         public AMQObservableQueue build() {
-            return new AMQObservableQueue(buildConnectionFactory(), addresses,
-                    queueName, isDurable, isExclusive, queueArguments,
+            return new AMQObservableQueue(factory, addresses,
+                    consumeSettings, pubSettings,
                     batchSize, pollTimeInMS);
         }
     }
@@ -425,21 +379,52 @@ public class AMQObservableQueue implements ObservableQueue {
         return channel;
     }
 
-    private AMQP.Queue.DeclareOk getOrCreateQueue() throws IOException {
+    private AMQP.Exchange.DeclareOk getOrCreateExchange(final String name, final String type,
+                                                        final boolean isDurable, final boolean autoDelete,
+                                                        final Map<String, Object> arguments) throws IOException {
+        if (StringUtils.isEmpty(name)) {
+            throw new RuntimeException("Exchange name is undefined");
+        }
+        if (StringUtils.isEmpty(type)) {
+            throw new RuntimeException("Exchange type is undefined");
+        }
         if (!isClosed()) {
             open();
         }
-        if (Strings.isNullOrEmpty(queueName)) {
+        AMQP.Exchange.DeclareOk declareOk;
+        try {
+            declareOk = getOrCreateChannel().exchangeDeclarePassive(name);
+        }
+        catch (final IOException e) {
+            logger.warn("Exchange {} of type {} might not exists", name, type, e);
+            declareOk = getOrCreateChannel().exchangeDeclare(name, type, isDurable,
+                    autoDelete, arguments);
+        }
+        return declareOk;
+    }
+
+    private AMQP.Queue.DeclareOk getOrCreateQueue() throws IOException {
+        return getOrCreateQueue(subSettings.getQueueName(), subSettings.isDurable(), subSettings.isExclusive(),
+                subSettings.autoDelete(), subSettings.getArguments());
+    }
+
+    private AMQP.Queue.DeclareOk getOrCreateQueue(final String name, final boolean isDurable, final boolean isExclusive,
+                                                  final boolean autoDelete, final Map<String, Object> arguments)
+            throws IOException {
+        if (Strings.isNullOrEmpty(name)) {
             throw new RuntimeException("Queue name is undefined");
+        }
+        if (!isClosed()) {
+            open();
         }
         AMQP.Queue.DeclareOk declareOk;
         try {
-            declareOk = getOrCreateChannel().queueDeclarePassive(queueName);
+            declareOk = getOrCreateChannel().queueDeclarePassive(name);
         }
         catch (final IOException e) {
-            logger.warn("Queue {} might not exists", queueName, e);
-            declareOk = getOrCreateChannel().queueDeclare(queueName, isDurable, isExclusive,
-                    false, queueArgs);
+            logger.warn("Queue {} might not exists", name, e);
+            declareOk = getOrCreateChannel().queueDeclare(name, isDurable, isExclusive,
+                    autoDelete, arguments);
         }
         return declareOk;
     }
@@ -493,19 +478,19 @@ public class AMQObservableQueue implements ObservableQueue {
         }
     }
 
-    private static Message asMessage(GetResponse response) throws Exception {
+    private static Message asMessage(AMQConsumeSettings settings, GetResponse response) throws Exception {
         if (response == null) {
             return null;
         }
         final Message message = new Message();
         message.setId(response.getProps().getMessageId());
-        message.setPayload(new String(response.getBody(), "UTF-8"));
+        message.setPayload(new String(response.getBody(), settings.getContentEncoding()));
         message.setReceipt(String.valueOf(response.getEnvelope().getDeliveryTag()));
         return message;
     }
 
     @VisibleForTesting
-    List<Message> receiveMessages() {
+    protected List<Message> receiveMessages() {
         try {
             final AMQP.Queue.DeclareOk declareOk = getOrCreateQueue();
             final List<Message> messages = new LinkedList<>();
@@ -513,7 +498,8 @@ public class AMQObservableQueue implements ObservableQueue {
             Message message;
             int nb = 0;
             do {
-                message = asMessage(getOrCreateChannel().basicGet(declareOk.getQueue(), false));
+                message = asMessage(getConsumeSettings(),
+                        getOrCreateChannel().basicGet(declareOk.getQueue(), false));
                 if (message != null) {
                     if (logger.isDebugEnabled()) {
                         logger.debug("Got message {}", message);
@@ -530,16 +516,5 @@ public class AMQObservableQueue implements ObservableQueue {
             Monitors.recordObservableQMessageReceivedErrors(QUEUE_TYPE);
         }
         return new ArrayList<>();
-    }
-
-    @VisibleForTesting
-    Observable.OnSubscribe<Message> getOnSubscribe() {
-        return subscriber -> {
-            Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
-            interval.flatMap((Long x)->{
-                List<Message> msgs = receiveMessages();
-                return Observable.from(msgs);
-            }).subscribe(subscriber::onNext, subscriber::onError);
-        };
     }
 }

@@ -1,6 +1,8 @@
 package com.netflix.conductor.core.events.amqp;
 
+import com.netflix.conductor.contribs.queue.amqp.AMQConsumeSettings;
 import com.netflix.conductor.contribs.queue.amqp.AMQObservableQueue;
+import com.netflix.conductor.contribs.queue.amqp.AMQPublishSettings;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
@@ -41,7 +43,10 @@ public class AMQEventQueueProvider implements EventQueueProvider {
         }
         // Build the queue with the inner Builder class of AMQObservableQueue
         final AMQObservableQueue queue = queues.computeIfAbsent(queueURI,
-                q -> new Builder(config).withQueueName(q).build());
+                q -> new Builder(config)
+                        .withConsumeSettings(new AMQConsumeSettings(config).fromURI(q))
+                        .withPublishSettings(new AMQPublishSettings(config).fromURI(q))
+                        .build());
         return queue;
     }
 }

@@ -1,4 +1,4 @@
-package com.netflix.conductor.contribs.queue;
+package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -6,7 +6,10 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.ProvidesIntoMap;
 import com.google.inject.multibindings.StringMapKey;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.contribs.queue.QueueManager;
+import com.netflix.conductor.contribs.queue.amqp.AMQConsumeSettings;
 import com.netflix.conductor.contribs.queue.amqp.AMQObservableQueue;
+import com.netflix.conductor.contribs.queue.amqp.AMQPublishSettings;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.amqp.AMQEventQueueProvider;
@@ -18,7 +21,6 @@ import javax.inject.Named;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.netflix.conductor.contribs.queue.amqp.AMQObservableQueue.Builder;
 import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDERS_QUALIFIER;
 
 /**
@@ -61,8 +63,9 @@ public class AMQModule extends AbstractModule {
         for(Task.Status status : statuses) {
             String queueName = config.getProperty("workflow.listener.queue.prefix",
                     config.getAppId() + "_amqp_notify_" + stack + status.name());
-            Builder builder = new AMQObservableQueue.Builder(config).withQueueName(queueName);
-            ObservableQueue queue = builder.build();
+            ObservableQueue queue = new AMQObservableQueue.Builder(config)
+                            .withConsumeSettings(new AMQConsumeSettings(config).fromURI(queueName))
+                            .withPublishSettings(new AMQPublishSettings(config).fromURI(queueName)).build();
             queues.put(status, queue);
         }
 
