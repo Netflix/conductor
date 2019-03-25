@@ -14,6 +14,7 @@ import javax.inject.Provider;
 import java.io.IOException;
 
 public class JsonMapperProvider implements Provider<ObjectMapper> {
+
     public JsonMapperProvider() {}
 
     /**

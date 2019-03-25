@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.elasticsearch.query.parser;
 
@@ -24,24 +24,24 @@ import java.io.InputStream;
  * @author Viren
  */
 public class ComparisonOp extends AbstractNode {
-	
+
 	public static enum Operators {
 		BETWEEN("BETWEEN"), EQUALS("="), LESS_THAN("<"), GREATER_THAN(">"), IN("IN"), NOT_EQUALS("!="), IS("IS");
-		
+
 		private String value;
 		Operators(String value){
 			this.value = value;
 		}
-		
+
 		public String value(){
 			return value;
 		}
 	}
-	
+
 	private static final int betwnLen = Operators.BETWEEN.value().length();
-	
+
 	private String value;
-	
+
 	public ComparisonOp(InputStream is) throws ParserException {
 		super(is);
 	}
@@ -62,15 +62,15 @@ public class ComparisonOp extends AbstractNode {
 		}else{
 			throw new ParserException("Expecting an operator (=, >, <, !=, BETWEEN, IN), but found none.  Peeked=>" + new String(peeked));
 		}
-		
+
 		read(this.value.length());
 	}
-	
+
 	@Override
 	public String toString(){
 		return " " + value + " ";
 	}
-	
+
 	public String getOperator(){
 		return value;
 	}

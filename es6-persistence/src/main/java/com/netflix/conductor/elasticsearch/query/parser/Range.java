@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.elasticsearch.query.parser;
 
@@ -25,14 +25,14 @@ import java.io.InputStream;
 
 /**
  * @author Viren
- * 
+ *
  */
 public class Range extends AbstractNode {
-	
+
 	private String low;
-	
+
 	private String high;
-	
+
 	public Range(InputStream is) throws ParserException {
 		super(is);
 	}
@@ -40,18 +40,18 @@ public class Range extends AbstractNode {
 	@Override
 	protected void _parse() throws Exception {
 		this.low = readNumber(is);
-		
+
 		skipWhitespace();
 		byte[] peeked = read(3);
 		assertExpected(peeked, "AND");
 		skipWhitespace();
-		
+
 		String num = readNumber(is);
 		if(num == null || "".equals(num)){
 			throw new ParserException("Missing the upper range value...");
 		}
 		this.high = num;
-	
+
 	}
 
 	private String readNumber(InputStream is) throws Exception {
@@ -70,7 +70,7 @@ public class Range extends AbstractNode {
 		return numValue;
 	}
 
-	
+
 	/**
 	 * @return the low
 	 */

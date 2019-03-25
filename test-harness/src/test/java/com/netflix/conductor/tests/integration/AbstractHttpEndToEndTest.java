@@ -116,6 +116,8 @@ public abstract class AbstractHttpEndToEndTest extends AbstractEndToEndTest {
         assertEquals(0, workflow.getTasks().size());
         assertEquals(workflowId, workflow.getWorkflowId());
 
+        Thread.sleep(2000);
+
         Awaitility.await()
             .atMost(5, TimeUnit.SECONDS)
             .untilAsserted(() -> {
@@ -200,7 +202,7 @@ public abstract class AbstractHttpEndToEndTest extends AbstractEndToEndTest {
         assertNotNull(workflow);
         assertEquals(WorkflowStatus.TERMINATED, workflow.getStatus());
 
-        workflowClient.restart(workflowId);
+        workflowClient.restart(workflowId, false);
         workflow = workflowClient.getWorkflow(workflowId, true);
         assertNotNull(workflow);
         assertEquals(WorkflowStatus.RUNNING, workflow.getStatus());

@@ -3,7 +3,7 @@ version: '2.3'
 services:
   conductor-server:
     environment:
-      - CONFIG_PROP=config.properties
+      - CONFIG_PROP=/app/config/config.properties
     image: conductor:server
     build:
       context: ../
@@ -52,7 +52,7 @@ services:
       timeout: 5s
       retries: 12
     logging:
-      driver: "json-file"
+      driver: none
       options:
         max-size: "1k"
         max-file: "3"

@@ -172,11 +172,13 @@ public class TestElasticSearchDAOV6 {
     }
 
     @Test
-    public void shouldIndexWorkflow() {
+    public void shouldIndexWorkflow() throws Exception {
         Workflow workflow = TestUtils.loadWorkflowSnapshot("workflow");
         WorkflowSummary summary = new WorkflowSummary(workflow);
 
         indexDAO.indexWorkflow(workflow);
+
+        Thread.sleep(1000);
 
         assertWorkflowSummary(workflow.getWorkflowId(), summary);
     }
@@ -224,15 +226,18 @@ public class TestElasticSearchDAOV6 {
     }
 
     @Test
-    public void shouldUpdateWorkflow() {
+    public void shouldUpdateWorkflow() throws Exception {
         Workflow workflow = TestUtils.loadWorkflowSnapshot("workflow");
         WorkflowSummary summary = new WorkflowSummary(workflow);
 
         indexDAO.indexWorkflow(workflow);
 
+        Thread.sleep(1000);
+
         indexDAO.updateWorkflow(workflow.getWorkflowId(), new String[]{"status"}, new Object[]{Workflow.WorkflowStatus.COMPLETED});
 
         summary.setStatus(Workflow.WorkflowStatus.COMPLETED);
+
         assertWorkflowSummary(workflow.getWorkflowId(), summary);
     }
 
@@ -243,9 +248,12 @@ public class TestElasticSearchDAOV6 {
 
         indexDAO.indexWorkflow(workflow);
 
+        Thread.sleep(1000);
+
         indexDAO.asyncUpdateWorkflow(workflow.getWorkflowId(), new String[]{"status"}, new Object[]{Workflow.WorkflowStatus.FAILED}).get();
 
         summary.setStatus(Workflow.WorkflowStatus.FAILED);
+
         assertWorkflowSummary(workflow.getWorkflowId(), summary);
     }
 

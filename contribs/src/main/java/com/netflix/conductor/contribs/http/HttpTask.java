@@ -115,8 +115,8 @@ public class HttpTask extends WorkflowSystemTask {
 		}
 		
 		try {
-			HttpResponse response = httpCall(input);
-			logger.info("response {}, {}", response.statusCode, response.body);
+			HttpResponse response = httpCall(input, task.isLoggingEnabled());
+			logger.info("response {}, {}", response.statusCode, task.isLoggingEnabled() ? response.body : "");
 			if(response.statusCode > 199 && response.statusCode < 300) {
 				task.setStatus(Status.COMPLETED);
 			} else {
@@ -145,9 +145,16 @@ public class HttpTask extends WorkflowSystemTask {
 	 * @throws Exception If there was an error making http call
 	 * Note: protected access is so that tasks extended from this task can re-use this to make http calls
 	 */
-	protected HttpResponse httpCall(Input input) throws Exception {
+	protected HttpResponse httpCall(Input input, Boolean isLoggingEnabled) throws Exception {
 		Client client = rcm.getClient(input);
 
+		if(input.connectionTimeOut != null ) {
+			client.setConnectTimeout(input.connectionTimeOut);
+		}
+
+		if(input.readTimeOut != null ) {
+			client.setReadTimeout(input.readTimeOut);
+		}
 		if(input.oauthConsumerKey != null) {
 			logger.info("Configuring OAuth filter");
 			OAuthParameters params = new OAuthParameters().consumerKey(input.oauthConsumerKey).signatureMethod("HMAC-SHA1").version("1.0");
@@ -167,7 +174,7 @@ public class HttpTask extends WorkflowSystemTask {
 
 			ClientResponse cr = builder.accept(input.accept).method(input.method, ClientResponse.class);
 			if (cr.getStatus() != 204 && cr.hasEntity()) {
-				response.body = extractBody(cr);
+				response.body = extractBody(cr, isLoggingEnabled);
 			}
 			response.statusCode = cr.getStatus();
 			response.reasonPhrase = cr.getStatusInfo().getReasonPhrase();
@@ -179,7 +186,7 @@ public class HttpTask extends WorkflowSystemTask {
 			logger.error(String.format("Got unexpected http response - uri: %s, vipAddress: %s, status code: %s", input.getUri(), input.getVipAddress(), cr.getStatus()), ex);
 			if(cr.getStatus() > 199 && cr.getStatus() < 300) {
 				if(cr.getStatus() != 204 && cr.hasEntity()) {
-					response.body = extractBody(cr);
+					response.body = extractBody(cr, isLoggingEnabled);
 				}
 				response.headers = cr.getHeaders();
 				response.statusCode = cr.getStatus();
@@ -193,10 +200,11 @@ public class HttpTask extends WorkflowSystemTask {
 		}
 	}
 
-	private Object extractBody(ClientResponse cr) {
+	private Object extractBody(ClientResponse cr, Boolean isLoggingEnabled) {
 
 		String json = cr.getEntity(String.class);
-		logger.info(json);
+
+		if(isLoggingEnabled) logger.info(json);
 		
 		try {
 			
@@ -295,6 +303,12 @@ public class HttpTask extends WorkflowSystemTask {
 		private String oauthConsumerKey;
 
 		private String oauthConsumerSecret;
+
+		private  Integer connectionTimeOut;
+
+		private Integer  readTimeOut;
+
+
 
 		/**
 		 * @return the method
@@ -431,5 +445,29 @@ public class HttpTask extends WorkflowSystemTask {
 		public void setAppName(String appName) {
 			this.appName = appName;
 		}
+
+
+		/**
+		 * @return the connectionTimeOut
+		 */
+		public Integer getConnectionTimeOut() {
+			return connectionTimeOut;
+		}
+
+		/**
+		 * @return the readTimeOut
+		 */
+		public Integer getReadTimeOut() {
+			return readTimeOut;
+		}
+
+		public void setConnectionTimeOut(Integer connectionTimeOut) {
+			this.connectionTimeOut = connectionTimeOut;
+		}
+
+		public void setReadTimeOut(Integer readTimeOut) {
+			this.readTimeOut = readTimeOut;
+		}
+
 	}
 }

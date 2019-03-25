@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import com.github.vmg.protogen.annotations.*;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import org.apache.commons.lang3.StringUtils;
+import com.netflix.conductor.common.utils.JsonParser;
 
 /**
  * Captures workflow summary info to be indexed in Elastic Search.
@@ -87,7 +88,7 @@ public class WorkflowSummary {
 
 	@ProtoField(id = 16)
 	private String externalOutputPayloadStoragePath;
-	
+
 	public WorkflowSummary() {
 		
 	}
@@ -111,10 +112,10 @@ public class WorkflowSummary {
 		}
 		this.status = workflow.getStatus();
 		if(workflow.getInput() != null){
-            this.input = workflow.getInput().toString();
+            this.input = JsonParser.toJson(workflow.getInput());
 		}
         if(workflow.getOutput() != null){
-            this.output = workflow.getOutput().toString();
+            this.output = JsonParser.toJson(workflow.getOutput());
         }
 		this.reasonForIncompletion = workflow.getReasonForIncompletion();
 		if(workflow.getEndTime() > 0){

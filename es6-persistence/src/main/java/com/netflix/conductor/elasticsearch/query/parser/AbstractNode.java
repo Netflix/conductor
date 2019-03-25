@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.elasticsearch.query.parser;
 
@@ -32,36 +32,36 @@ import java.util.regex.Pattern;
 public abstract class AbstractNode {
 
 	public static final Pattern WHITESPACE = Pattern.compile("\\s");
-	
+
 	protected static Set<Character> comparisonOprs = new HashSet<Character>();
-	
+
 	static {
 		comparisonOprs.add('>');
 		comparisonOprs.add('<');
 		comparisonOprs.add('=');
 	}
-	
+
 	protected InputStream is;
-	
-	
-	
+
+
+
 	protected AbstractNode(InputStream is) throws ParserException {
 		this.is = is;
 		this.parse();
 	}
-	
+
 	protected boolean isNumber(String test){
 		try{
 			//If you can convert to a big decimal value, then it is a number.
 			new BigDecimal(test);
 			return true;
-			
+
 		}catch(NumberFormatException e){
 			//Ignore
 		}
 		return false;
 	}
-	
+
 	protected boolean isBoolOpr(byte[] buffer){
 		if(buffer.length > 1 && buffer[0] == 'O' && buffer[1] == 'R'){
 			return true;
@@ -70,7 +70,7 @@ public abstract class AbstractNode {
 		}
 		return false;
 	}
-	
+
 	protected boolean isComparisonOpr(byte[] buffer){
 		if(buffer[0] == 'I' && buffer[1] == 'N'){
 			return true;
@@ -79,9 +79,9 @@ public abstract class AbstractNode {
 		}else{
 			return comparisonOprs.contains((char)buffer[0]);
 		}
-		
+
 	}
-	
+
 	protected byte[] peek(int length) throws Exception {
 		return read(length, true);
 	}
@@ -89,7 +89,7 @@ public abstract class AbstractNode {
 	protected byte[] read(int length) throws Exception {
 		return read(length, false);
 	}
-	
+
 	protected String readToken() throws Exception {
 		skipWhitespace();
 		StringBuilder sb = new StringBuilder();
@@ -107,18 +107,18 @@ public abstract class AbstractNode {
 		}
 		return sb.toString().trim();
 	}
-	
+
 	protected boolean isNumeric(char c) {
 		if (c == '-' || c == 'e' || (c >= '0' && c <= '9') || c == '.'){
 			return true;
 		}
 		return false;
 	}
-	
+
 	protected void assertExpected(byte[] found, String expected) throws ParserException {
 		assertExpected(new String(found), expected);
 	}
-	
+
 	protected void assertExpected(String found, String expected) throws ParserException {
 		if(!found.equals(expected)){
 			throw new ParserException("Expected " + expected + ", found " + found);
@@ -129,15 +129,15 @@ public abstract class AbstractNode {
 			throw new ParserException("Expected " + expected + ", found " + found);
 		}
 	}
-	
+
 	protected static void efor(int length, FunctionThrowingException<Integer> consumer) throws Exception {
 		for(int i = 0; i < length; i++){
 			consumer.accept(i);
 		}
 	}
-	
+
 	protected abstract void _parse() throws Exception;
-	
+
 	//Public stuff here
 	private void parse() throws ParserException {
 		//skip white spaces
@@ -156,7 +156,7 @@ public abstract class AbstractNode {
 	}
 
 	//Private methods
-	
+
 	private byte[] read(int length, boolean peekOnly) throws Exception {
 		byte[] buf = new byte[length];
 		if(peekOnly){
@@ -168,7 +168,7 @@ public abstract class AbstractNode {
 		}
 		return buf;
 	}
-	
+
 	protected void skipWhitespace() throws ParserException {
 		try{
 			while(is.available() > 0){

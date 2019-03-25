@@ -50,6 +50,10 @@ public interface Configuration {
     String AVAILABILITY_ZONE_PROPERTY_NAME = "EC2_AVAILABILITY_ZONE";
     String AVAILABILITY_ZONE_DEFAULT_VALUE = "us-east-1c";
 
+    String LOCAL_RACK_PROPERTY_NAME = "LOCAL_RACK";
+
+    String LOCAL_DATACENTER_PROPERTY_NAME = "LOCAL_DATACENTER";
+
     String JERSEY_ENABLED_PROPERTY_NAME = "conductor.jersey.enabled";
     boolean JERSEY_ENABLED_DEFAULT_VALUE = true;
 

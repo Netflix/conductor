@@ -179,7 +179,7 @@ public abstract class AbstractGrpcEndToEndTest extends AbstractEndToEndTest {
         assertEquals(t1.getTaskReferenceName(), pending.getReferenceTaskName());
         assertEquals(workflowId, pending.getWorkflowInstanceId());
 
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         SearchResult<WorkflowSummary> searchResult = workflowClient.search("workflowType='" + def.getName() + "'");
         assertNotNull(searchResult);
         assertEquals(1, searchResult.getTotalHits());
@@ -189,7 +189,7 @@ public abstract class AbstractGrpcEndToEndTest extends AbstractEndToEndTest {
         assertNotNull(wf);
         assertEquals(WorkflowStatus.TERMINATED, wf.getStatus());
 
-        workflowClient.restart(workflowId);
+        workflowClient.restart(workflowId, false);
         wf = workflowClient.getWorkflow(workflowId, true);
         assertNotNull(wf);
         assertEquals(WorkflowStatus.RUNNING, wf.getStatus());
