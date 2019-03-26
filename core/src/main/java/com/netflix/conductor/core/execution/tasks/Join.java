@@ -51,7 +51,7 @@ public class Join extends WorkflowSystemTask {
 				break;
 			}
 			Status taskStatus = forkedTask.getStatus();
-			hasFailures = !taskStatus.isSuccessful();
+			hasFailures = !taskStatus.isSuccessful() && !forkedTask.getWorkflowTask().isOptional();
 			if(hasFailures){
 				failureReason.append(forkedTask.getReasonForIncompletion()).append(" ");
 			}
