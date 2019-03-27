@@ -1,6 +1,5 @@
 package com.netflix.conductor.contribs.queue.amqp;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.rabbitmq.client.*;
@@ -12,6 +11,8 @@ import org.mockito.internal.stubbing.answers.ReturnsElementsOf;
 import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.OngoingStubbing;
 import rx.Observable;
+import rx.observers.Subscribers;
+import rx.observers.TestSubscriber;
 
 import java.io.IOException;
 import java.util.*;
@@ -125,7 +126,7 @@ abstract class AbstractTestAMQObservableQueue {
         }
         // exchangeDeclare
         OngoingStubbing<AMQP.Exchange.DeclareOk> declareOkOngoingStubbing = when(channel.exchangeDeclare(eq(name),
-                eq(type), anyBoolean(), anyBoolean(), anyBoolean(), anyMap()))
+                eq(type), anyBoolean(), anyBoolean(), anyMap()))
                 .thenReturn(exchangeDeclareOK);
         if (!isWorking) {
             declareOkOngoingStubbing
@@ -184,19 +185,25 @@ abstract class AbstractTestAMQObservableQueue {
 
     void runObserve(Channel channel, AMQObservableQueue observableQueue, String queueName, boolean useWorkingChannel,
                             int batchSize) throws IOException {
-        List<Message> found = new ArrayList<>();
-        Observable<Message> observable = observableQueue.observe();
-        assertNotNull(observable);
-        observable.subscribe(found::add);
 
-        Uninterruptibles.sleepUninterruptibly(1000, TimeUnit.MILLISECONDS);
+        final List<Message> found = new ArrayList<>(batchSize);
+
+        TestSubscriber<Message> subscriber = TestSubscriber.create(Subscribers.create(found::add));
+        Observable<Message> observable = observableQueue.observe().take(pollTimeMs * 2, TimeUnit.MILLISECONDS);
+        assertNotNull(observable);
+        observable.subscribe(subscriber);
+
+        subscriber.awaitTerminalEvent();
+        subscriber.assertNoErrors();
+        subscriber.assertCompleted();
 
         if (useWorkingChannel) {
             verify(channel, atLeast(batchSize)).basicGet(eq(queueName), anyBoolean());
-            assertNotNull(found);
+
             doNothing().when(channel).basicAck(anyLong(), eq(false));
 
             doAnswer(new DoesNothing()).when(channel).basicAck(anyLong(), eq(false));
+
             observableQueue.ack(Collections.synchronizedList(found));
         }
         else {

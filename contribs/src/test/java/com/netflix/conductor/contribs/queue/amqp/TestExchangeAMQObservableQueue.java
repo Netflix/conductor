@@ -10,6 +10,7 @@ import org.junit.Test;
 import rx.Observable;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -129,6 +130,18 @@ public class TestExchangeAMQObservableQueue extends AbstractTestAMQObservableQue
         assertEquals(queue.size(), observableQueue.size());
 
         runObserve(channel, observableQueue, queueName, useWorkingChannel, batchSize);
+
+        if (useWorkingChannel) {
+            if (exists) {
+                verify(channel, atLeastOnce()).exchangeDeclarePassive(eq(name));
+            }
+            else {
+                verify(channel, atLeastOnce()).exchangeDeclare(eq(name), eq(type), eq(settings.isDurable()), eq(settings.autoDelete()),
+                        eq(Collections.emptyMap()));
+            }
+            verify(channel, atLeastOnce()).queueDeclare();
+            verify(channel, atLeastOnce()).queueBind(eq(queueName), eq(name), eq(routingKey));
+        }
     }
 
     private void testPublishMessagesToExchangeAndDefaultConfiguration(Channel channel, Connection connection,
