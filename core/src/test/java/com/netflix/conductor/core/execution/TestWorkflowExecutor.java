@@ -30,7 +30,9 @@ import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ForkJoinDynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ForkJoinTaskMapper;
+import com.netflix.conductor.core.execution.mapper.HTTPTaskMapper;
 import com.netflix.conductor.core.execution.mapper.JoinTaskMapper;
+import com.netflix.conductor.core.execution.mapper.LambdaTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SimpleTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SubWorkflowTaskMapper;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
@@ -88,7 +90,6 @@ public class TestWorkflowExecutor {
     private MetadataDAO metadataDAO;
     private QueueDAO queueDAO;
     private WorkflowStatusListener workflowStatusListener;
-    private DeciderService deciderService;
 
     @Before
     public void init() {
@@ -111,10 +112,12 @@ public class TestWorkflowExecutor {
         taskMappers.put("SUB_WORKFLOW", new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put("EVENT", new EventTaskMapper(parametersUtils));
         taskMappers.put("WAIT", new WaitTaskMapper(parametersUtils));
+        taskMappers.put("HTTP", new HTTPTaskMapper(parametersUtils, metadataDAO));
+        taskMappers.put("LAMBDA", new LambdaTaskMapper(parametersUtils));
 
-        deciderService = new DeciderService(parametersUtils, queueDAO, externalPayloadStorageUtils, taskMappers);
+        DeciderService deciderService = new DeciderService(parametersUtils, queueDAO, metadataDAO, externalPayloadStorageUtils, taskMappers);
         MetadataMapperService metadataMapperService = new MetadataMapperService(metadataDAO);
-        workflowExecutor = new WorkflowExecutor(deciderService, metadataDAO, queueDAO, metadataMapperService, workflowStatusListener, executionDAOFacade, config);
+        workflowExecutor = new WorkflowExecutor(deciderService, metadataDAO, queueDAO, metadataMapperService, workflowStatusListener, executionDAOFacade, externalPayloadStorageUtils, config);
     }
 
     @Test
@@ -528,22 +531,17 @@ public class TestWorkflowExecutor {
             return null;
         }).when(executionDAOFacade).updateTasks(any());
 
-        AtomicInteger updateTasksAlledCounter = new AtomicInteger(0);
+        AtomicInteger updateTaskCalledCounter = new AtomicInteger(0);
         doAnswer(invocation -> {
-            updateTasksCalledCounter.incrementAndGet();
+            updateTaskCalledCounter.incrementAndGet();
             return null;
         }).when(executionDAOFacade).updateTask(any());
-
-        AtomicInteger removeQueueEntryCalledCounter = new AtomicInteger(0);
-        doAnswer(invocation -> {
-            removeQueueEntryCalledCounter.incrementAndGet();
-            return null;
-        }).when(queueDAO).remove(anyString(), anyString());
 
         // add 2 failed task in 2 forks and 1 cancelled in the 3rd fork
         Task task_1_1 = new Task();
         task_1_1.setTaskId(UUID.randomUUID().toString());
         task_1_1.setSeq(20);
+        task_1_1.setRetryCount(0);
         task_1_1.setTaskType(TaskType.SIMPLE.toString());
         task_1_1.setStatus(Status.CANCELED);
         task_1_1.setTaskDefName("task1");
@@ -552,6 +550,7 @@ public class TestWorkflowExecutor {
         Task task_1_2 = new Task();
         task_1_2.setTaskId(UUID.randomUUID().toString());
         task_1_2.setSeq(21);
+        task_1_2.setRetryCount(1);
         task_1_2.setTaskType(TaskType.SIMPLE.toString());
         task_1_2.setStatus(Status.FAILED);
         task_1_2.setTaskDefName("task1");
@@ -560,6 +559,7 @@ public class TestWorkflowExecutor {
         Task task_2_1 = new Task();
         task_2_1.setTaskId(UUID.randomUUID().toString());
         task_2_1.setSeq(22);
+        task_2_1.setRetryCount(0);
         task_2_1.setStatus(Status.FAILED);
         task_2_1.setTaskType(TaskType.SIMPLE.toString());
         task_2_1.setTaskDefName("task2");
@@ -569,6 +569,7 @@ public class TestWorkflowExecutor {
         Task task_3_1 = new Task();
         task_3_1.setTaskId(UUID.randomUUID().toString());
         task_3_1.setSeq(23);
+        task_3_1.setRetryCount(0);
         task_3_1.setStatus(Status.CANCELED);
         task_3_1.setTaskType(TaskType.SIMPLE.toString());
         task_3_1.setTaskDefName("task3");
@@ -577,12 +578,13 @@ public class TestWorkflowExecutor {
         Task task_4_1 = new Task();
         task_4_1.setTaskId(UUID.randomUUID().toString());
         task_4_1.setSeq(122);
+        task_4_1.setRetryCount(0);
         task_4_1.setStatus(Status.FAILED);
         task_4_1.setTaskType(TaskType.SIMPLE.toString());
         task_4_1.setTaskDefName("task1");
         task_4_1.setReferenceTaskName("task4_refABC");
 
-        workflow.setTasks(Arrays.asList(task_1_1, task_1_2, task_2_1, task_3_1, task_4_1));
+        workflow.getTasks().addAll(Arrays.asList(task_1_1, task_1_2, task_2_1, task_3_1, task_4_1));
         //end of setup
 
         //when:
@@ -592,10 +594,10 @@ public class TestWorkflowExecutor {
 
         workflowExecutor.retry(workflow.getWorkflowId());
 
-        assertEquals(Workflow.WorkflowStatus.COMPLETED, workflow.getStatus());
-        assertEquals(2, updateWorkflowCalledCounter.get());
-        assertEquals(7, updateTasksCalledCounter.get());
-        assertEquals(1, removeQueueEntryCalledCounter.get());
+        assertEquals(Workflow.WorkflowStatus.RUNNING, workflow.getStatus());
+        assertEquals(1, updateWorkflowCalledCounter.get());
+        assertEquals(1, updateTasksCalledCounter.get());
+        assertEquals(0, updateTaskCalledCounter.get());
     }
 
     @Test
@@ -631,5 +633,40 @@ public class TestWorkflowExecutor {
 
         activeDomain = workflowExecutor.getActiveDomain(taskType, null);
         assertNull(activeDomain);
+    }
+
+    @Test
+    public void testDedupAndAddTasks() {
+        Workflow workflow = new Workflow();
+
+        Task task1 = new Task();
+        task1.setReferenceTaskName("task1");
+        task1.setRetryCount(1);
+
+        Task task2 = new Task();
+        task2.setReferenceTaskName("task2");
+        task2.setRetryCount(2);
+
+        List<Task> tasks = new ArrayList<>(Arrays.asList(task1, task2));
+
+        List<Task> taskList = workflowExecutor.dedupAndAddTasks(workflow, tasks);
+        assertEquals(2, taskList.size());
+        assertEquals(tasks, taskList);
+        assertEquals(workflow.getTasks(), taskList);
+
+        // Adding the same tasks again
+        taskList = workflowExecutor.dedupAndAddTasks(workflow, tasks);
+        assertEquals(0, taskList.size());
+        assertEquals(workflow.getTasks(), tasks);
+
+        // Adding 2 new tasks
+        Task newTask = new Task();
+        newTask.setReferenceTaskName("newTask");
+        newTask.setRetryCount(0);
+
+        taskList = workflowExecutor.dedupAndAddTasks(workflow, Collections.singletonList(newTask));
+        assertEquals(1, taskList.size());
+        assertEquals(newTask, taskList.get(0));
+        assertEquals(3, workflow.getTasks().size());
     }
 }

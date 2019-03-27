@@ -31,15 +31,14 @@ import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
+import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
+import java.time.Instant;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -51,6 +50,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -114,7 +114,7 @@ public class TestHttpTask {
     public void setup() {
         workflowExecutor = mock(WorkflowExecutor.class);
         config = mock(Configuration.class);
-        RestClientManager rcm = new RestClientManager();
+        RestClientManager rcm = new RestClientManager(Mockito.mock(Configuration.class));
         when(config.getServerId()).thenReturn("test_server_id");
         httpTask = new HttpTask(rcm, config);
     }
@@ -253,6 +253,39 @@ public class TestHttpTask {
 
     }
 
+
+    @Test
+    public void testHTTPGetConnectionTimeOut() throws Exception{
+        Task task = new Task();
+        Input input = new Input();
+        Instant start  = Instant.now();
+        input.setConnectionTimeOut(110);
+        input.setMethod("GET");
+        input.setUri("http://10.255.255.255");
+        task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+        task.setStatus(Status.SCHEDULED);
+        task.setScheduledTime(0);
+        httpTask.start(workflow,task,workflowExecutor);
+        Instant end  = Instant.now();
+        long diff = end.toEpochMilli()-start.toEpochMilli();
+        Assert.assertEquals(task.getStatus(),Status.FAILED);
+        Assert.assertTrue(diff >= 110l);
+    }
+
+    @Test
+    public void testHTTPGETReadTimeOut() throws Exception{
+        Task task = new Task();
+        Input input = new Input();
+        input.setReadTimeOut(-1);
+        input.setMethod("GET");
+        input.setUri("http://localhost:7009/json");
+        task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+        task.setStatus(Status.SCHEDULED);
+        task.setScheduledTime(0);
+        httpTask.start(workflow,task,workflowExecutor);
+        Assert.assertEquals(task.getStatus(),Status.FAILED);
+    }
+
     @Test
     public void testOptional() {
         Task task = new Task();
@@ -288,11 +321,12 @@ public class TestHttpTask {
         workflow.getTasks().add(task);
 
         QueueDAO queueDAO = mock(QueueDAO.class);
+        MetadataDAO metadataDAO = mock(MetadataDAO.class);
         ExternalPayloadStorageUtils externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
         ParametersUtils parametersUtils = mock(ParametersUtils.class);
 
         Map<String, TaskMapper> taskMappers = new HashMap<>();
-        new DeciderService(parametersUtils, queueDAO, externalPayloadStorageUtils, taskMappers).decide(workflow);
+        new DeciderService(parametersUtils, queueDAO, metadataDAO, externalPayloadStorageUtils, taskMappers).decide(workflow);
 
         System.out.println(workflow.getTasks());
         System.out.println(workflow.getStatus());

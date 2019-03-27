@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import http from '../core/HttpClient';
+import http from '../core/HttpClientServerSide';
 import moment from 'moment';
 import filter from 'lodash/fp/filter';
 import forEach from 'lodash/fp/forEach';
@@ -40,11 +40,11 @@ router.get('/', async (req, res, next) => {
     const url =
       baseURL2 +
       'search?size=100&sort=startTime:DESC&freeText=' +
-      freeText.join(' AND ') +
+      encodeURIComponent(freeText.join(' AND ')) +
       '&start=' +
       start +
       '&query=' +
-      query;
+      encodeURIComponent(query);
     const result = await http.get(url, req.token);
     const hits = result.results;
     res.status(200).send({ result: { hits: hits, totalHits: result.totalHits } });
@@ -78,7 +78,7 @@ router.get('/search-by-task/:taskId', async (req, res, next) => {
 
     let query = req.query.q || '';
     const url =
-      baseURL2 + 'search-by-tasks?size=100&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start;
+      baseURL2 + 'search-by-tasks?size=100&sort=startTime:DESC&freeText=' + encodeURIComponent(freeText.join(' AND ')) + '&start=' + start;
     const result = await http.get(url, req.token);
 
     const hits = result.results;
@@ -203,6 +203,24 @@ router.post('/bulk/restart', async (req, res, next) => {
   }
 })
 
+router.post('/bulk/restart_with_latest_definition', async (req, res, next) => {
+  try {
+    const result = await http.post(baseURL2 + "bulk/restart?useLatestDefinition=true", req.body, req.token);
+    res.status(200).send(result);
+  } catch (err) {
+    next(err);
+  }
+})
+
+router.post('/bulk/restart_with_current_definition', async (req, res, next) => {
+  try {
+    const result = await http.post(baseURL2 + "bulk/restart", req.body, req.token);
+    res.status(200).send(result);
+  } catch (err) {
+    next(err);
+  }
+})
+
 router.delete('/bulk/terminate', async (req, res, next) => {
   try {
     const result = await http.delete(baseURL2 + "bulk/terminate", req.body, req.token);
@@ -224,7 +242,7 @@ router.delete('/terminate/:workflowId', async (req, res, next) => {
 
 router.post('/restart/:workflowId', async (req, res, next) => {
   try {
-    const result = await http.post(baseURL2 + req.params.workflowId + '/restart', {}, req.token);
+    const result = await http.post(baseURL2 + req.params.workflowId + '/restart?useLatestDefinitions=' + (req.query && req.query.useLatestDefinitions || false), {}, req.token);
     res.status(200).send({ result: req.params.workflowId });
   } catch (err) {
     next(err);

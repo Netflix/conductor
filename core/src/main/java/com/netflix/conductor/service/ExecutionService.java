@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.constraints.Max;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,6 +83,8 @@ public class ExecutionService {
     private static final int MAX_POLL_TIMEOUT_MS = 5000;
     private static final int POLL_COUNT_ONE = 1;
     private static final int POLLING_TIMEOUT_IN_MS = 100;
+
+    private static final int MAX_SEARCH_SIZE = 5_000;
 
 	@Inject
 	public ExecutionService(WorkflowExecutor workflowExecutor,
@@ -118,35 +121,40 @@ public class ExecutionService {
 	public List<Task> poll(String taskType, String workerId, String domain, int count, int timeoutInMilliSecond) {
 		if (timeoutInMilliSecond > MAX_POLL_TIMEOUT_MS) {
 			throw new ApplicationException(ApplicationException.Code.INVALID_INPUT,
-                    "Long Poll Timeout value cannot be more than 5 seconds");
+					"Long Poll Timeout value cannot be more than 5 seconds");
 		}
 		String queueName = QueueUtils.getQueueName(taskType, domain);
 
-		List<String> taskIds = queueDAO.pop(queueName, count, timeoutInMilliSecond);
 		List<Task> tasks = new LinkedList<>();
-		for(String taskId : taskIds) {
-			Task task = getTask(taskId);
-			if(task == null) {
-				continue;
-			}
+		try {
+			List<String> taskIds = queueDAO.pop(queueName, count, timeoutInMilliSecond);
+			for (String taskId : taskIds) {
+				Task task = getTask(taskId);
+				if (task == null) {
+					continue;
+				}
 
-			if(executionDAOFacade.exceedsInProgressLimit(task)) {
-				continue;
-			}
+				if (executionDAOFacade.exceedsInProgressLimit(task)) {
+					continue;
+				}
 
-			task.setStatus(Status.IN_PROGRESS);
-			if (task.getStartTime() == 0) {
-				task.setStartTime(System.currentTimeMillis());
-				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
+				task.setStatus(Status.IN_PROGRESS);
+				if (task.getStartTime() == 0) {
+					task.setStartTime(System.currentTimeMillis());
+					Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
+				}
+				task.setCallbackAfterSeconds(0);    // reset callbackAfterSeconds when giving the task to the worker
+				task.setWorkerId(workerId);
+				task.setPollCount(task.getPollCount() + 1);
+				executionDAOFacade.updateTask(task);
+				tasks.add(task);
 			}
-			task.setCallbackAfterSeconds(0);	// reset callbackAfterSeconds when giving the task to the worker
-			task.setWorkerId(workerId);
-			task.setPollCount(task.getPollCount() + 1);
-			executionDAOFacade.updateTask(task);
-			tasks.add(task);
+			executionDAOFacade.updateTaskLastPoll(taskType, domain, workerId);
+			Monitors.recordTaskPoll(queueName);
+		} catch (Exception e) {
+			logger.error("Error polling for task: {} from worker: {} in domain: {}, count: {}", taskType, workerId, domain, count, e);
+			Monitors.error(this.getClass().getCanonicalName(), "taskPoll");
 		}
-		executionDAOFacade.updateTaskLastPoll(taskType, domain, workerId);
-		Monitors.recordTaskPoll(queueName);
 		return tasks;
 	}
 
@@ -395,10 +403,9 @@ public class ExecutionService {
 		return new SearchResult<>(totalHits, workflows);
 	}
 
-	public SearchResult<TaskSummary> getSearchTasks(String query, String freeText, int start, int size, String sortString) {
-
-	    ServiceUtils.checkArgument(size < maxSearchSize, String.format("Cannot return more than %d workflows." +
-                " Please use pagination.", maxSearchSize));
+	public SearchResult<TaskSummary> getSearchTasks(String query, String freeText, int start,
+													@Max(value = MAX_SEARCH_SIZE, message = "Cannot return more than {value} workflows." +
+															" Please use pagination.") int size, String sortString) {
 	    return searchTasks(query, freeText, start, size, ServiceUtils.convertStringToList(sortString));
     }
 

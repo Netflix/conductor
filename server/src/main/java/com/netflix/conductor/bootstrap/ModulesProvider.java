@@ -2,6 +2,8 @@ package com.netflix.conductor.bootstrap;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.ProvisionException;
+import com.google.inject.util.Modules;
+import com.netflix.conductor.cassandra.CassandraModule;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.contribs.http.HttpTask;
 import com.netflix.conductor.contribs.http.RestClientManager;
@@ -13,13 +15,7 @@ import com.netflix.conductor.core.utils.S3PayloadStorage;
 import com.netflix.conductor.dao.RedisWorkflowModule;
 import com.netflix.conductor.elasticsearch.ElasticSearchModule;
 import com.netflix.conductor.mysql.MySQLWorkflowModule;
-import com.netflix.conductor.server.DynomiteClusterModule;
-import com.netflix.conductor.server.JerseyModule;
-import com.netflix.conductor.server.LocalRedisModule;
-import com.netflix.conductor.server.RedisClusterModule;
-import com.netflix.conductor.server.RedisSentinelModule;
-import com.netflix.conductor.server.ServerModule;
-import com.netflix.conductor.server.SwaggerModule;
+import com.netflix.conductor.server.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +24,8 @@ import javax.inject.Provider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static java.util.Collections.singletonList;
 
 // TODO Investigate whether this should really be a ThrowingProvider.
 public class ModulesProvider implements Provider<List<AbstractModule>> {
@@ -46,12 +44,8 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
 
     @Override
     public List<AbstractModule> get() {
-        List<AbstractModule> modulesToLoad = new ArrayList<>();
-
-        modulesToLoad.addAll(selectModulesToLoad());
-        modulesToLoad.addAll(configuration.getAdditionalModules());
-
-        return modulesToLoad;
+        AbstractModule resolvedModule = (AbstractModule) Modules.override(selectModulesToLoad()).with(configuration.getAdditionalModules());
+        return singletonList(resolvedModule);
     }
 
     private List<AbstractModule> selectModulesToLoad() {
@@ -89,6 +83,9 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 modules.add(new RedisWorkflowModule());
                 logger.info("Starting conductor server using redis_cluster.");
                 break;
+            case CASSANDRA:
+                modules.add(new CassandraModule());
+                logger.info("Starting conductor server using cassandra.");
             case REDIS_SENTINEL:
                 modules.add(new RedisSentinelModule());
                 modules.add(new RedisWorkflowModule());
@@ -109,7 +106,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         String externalPayloadStorageString = configuration.getProperty("workflow.external.payload.storage", "");
         try {
             externalPayloadStorageType = ExternalPayloadStorageType.valueOf(externalPayloadStorageString);
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             logger.info("External payload storage is not configured, provided: {}, supported values are: {}", externalPayloadStorageString, Arrays.toString(ExternalPayloadStorageType.values()), e);
         }
 
@@ -129,7 +126,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
             });
         }
 
-        new HttpTask(new RestClientManager(), configuration);
+        new HttpTask(new RestClientManager(configuration), configuration);
         new JsonJqTransform();
         modules.add(new ServerModule());
 
