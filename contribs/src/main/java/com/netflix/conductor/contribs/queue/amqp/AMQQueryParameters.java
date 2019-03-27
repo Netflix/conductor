@@ -7,16 +7,19 @@ package com.netflix.conductor.contribs.queue.amqp;
  * @author Mickaël GREGORI <mickael.gregori@alchimie.com>
  * @version $Id$
  */
-public enum AMQPublishParameters {
+public enum AMQQueryParameters {
 
-    PUBLISH_TARGET_TYPE("pubTargetType"),
-    PUBLISH_NAME("pubName"),
-    PUBLISH_ROUTING_KEY("pubRoutingKey"),
-    PUBLISH_DELIVERY_MODE("pubDeliveryMode");
+    PARAM_EXCHANGE_TYPE("exchangeType"),
+    PARAM_ROUTING_KEY("routingKey"),
+    PARAM_DELIVERY_MODE("deliveryMode"),
+    PARAM_DURABLE("durable"),
+    PARAM_EXCLUSIVE("exclusive"),
+    PARAM_AUTO_DELETE("autoDelete"),
+    PARAM_MAX_PRIORITY("maxPriority");
 
     String propertyName;
 
-    AMQPublishParameters(String propertyName) {
+    AMQQueryParameters(String propertyName) {
         this.propertyName = propertyName;
     }
 

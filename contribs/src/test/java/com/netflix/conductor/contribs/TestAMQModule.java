@@ -1,7 +1,6 @@
 package com.netflix.conductor.contribs;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.contribs.AMQModule;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
@@ -12,7 +11,6 @@ import org.junit.Test;
 import java.util.Map;
 
 import static org.mockito.Matchers.*;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -34,8 +32,14 @@ public class TestAMQModule {
     }
 
     @Test
-    public void testGetRabbitmqEventQueueProvider() {
-        EventQueueProvider provider = module.getRabbitmqEventQueueProvider(config);
+    public void testGetAMQQueueEventQueueProvider() {
+        EventQueueProvider provider = module.getAMQQueueEventQueueProvider(config);
+        Assert.assertNotNull(provider);
+    }
+
+    @Test
+    public void testGetAMQExchangeEventQueueProvider() {
+        EventQueueProvider provider = module.getAMQExchangeEventQueueProvider(config);
         Assert.assertNotNull(provider);
     }
 

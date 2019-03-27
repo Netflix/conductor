@@ -9,23 +9,23 @@ package com.netflix.conductor.contribs.queue.amqp;
  */
 public enum AMQProperties {
 
-    CONTENT_TYPE("contentType"),
-    CONTENT_ENCODING("contentEncoding"),
-    IS_DURABLE("isDurable"),
-    IS_EXCLUSIVE("isExclusive"),
-    AUTO_DELETE("autoDelete"),
-    DELIVERY_MODE("deliveryMode"),
-    EXCHANGE_TYPE("exchangeType"),
-    MAX_PRIORITY("maxPriority"),
-    BATCH_SIZE("batchSize"),
-    POLL_TIME_IN_MS("pollTimeInMs"),
-    HOSTS("hosts"),
-    USERNAME("username"),
-    PASSWORD("password"),
-    VIRTUAL_HOST("virtualHost"),
-    PORT("port"),
-    CONNECTION_TIMEOUT("connectionTimeout"),
-    USE_NIO("useNio");
+    PROPERTY_CONTENT_TYPE("contentType"),
+    PROPERTY_CONTENT_ENCODING("contentEncoding"),
+    PROPERTY_IS_DURABLE("durable"),
+    PROPERTY_IS_EXCLUSIVE("exclusive"),
+    PROPERTY_AUTO_DELETE("autoDelete"),
+    PROPERTY_DELIVERY_MODE("deliveryMode"),
+    PROPERTY_EXCHANGE_TYPE("exchangeType"),
+    PROPERTY_MAX_PRIORITY("maxPriority"),
+    PROPERTY_BATCH_SIZE("batchSize"),
+    PROPERTY_POLL_TIME_IN_MS("pollTimeInMs"),
+    PROPERTY_HOSTS("hosts"),
+    PROPERTY_USERNAME("username"),
+    PROPERTY_PASSWORD("password"),
+    PROPERTY_VIRTUAL_HOST("virtualHost"),
+    PROPERTY_PORT("port"),
+    PROPERTY_CONNECTION_TIMEOUT("connectionTimeout"),
+    PROPERTY_USE_NIO("useNio");
 
     String propertyName;
 

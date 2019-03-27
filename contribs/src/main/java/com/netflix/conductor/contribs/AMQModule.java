@@ -7,9 +7,7 @@ import com.google.inject.multibindings.ProvidesIntoMap;
 import com.google.inject.multibindings.StringMapKey;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.contribs.queue.QueueManager;
-import com.netflix.conductor.contribs.queue.amqp.AMQConsumeSettings;
 import com.netflix.conductor.contribs.queue.amqp.AMQObservableQueue;
-import com.netflix.conductor.contribs.queue.amqp.AMQPublishSettings;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.amqp.AMQEventQueueProvider;
@@ -36,6 +34,8 @@ import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDER
  */
 public class AMQModule extends AbstractModule {
 
+    private static final boolean USE_EXCHANGE_BY_DEFAULT = false;
+
     private static Logger logger = LoggerFactory.getLogger(AMQModule.class);
 
     @Override
@@ -45,11 +45,19 @@ public class AMQModule extends AbstractModule {
     }
 
     @ProvidesIntoMap
-    @StringMapKey("amqp")
+    @StringMapKey("amqp-queue")
     @Singleton
     @Named(EVENT_QUEUE_PROVIDERS_QUALIFIER)
-    public EventQueueProvider getRabbitmqEventQueueProvider(Configuration config) {
-        return new AMQEventQueueProvider(config);
+    public EventQueueProvider getAMQQueueEventQueueProvider(Configuration config) {
+        return new AMQEventQueueProvider(config, false);
+    }
+
+    @ProvidesIntoMap
+    @StringMapKey("amqp-exchange")
+    @Singleton
+    @Named(EVENT_QUEUE_PROVIDERS_QUALIFIER)
+    public EventQueueProvider getAMQExchangeEventQueueProvider(Configuration config) {
+        return new AMQEventQueueProvider(config, true);
     }
 
     @Provides
@@ -58,14 +66,15 @@ public class AMQModule extends AbstractModule {
         if(config.getStack() != null && config.getStack().length() > 0) {
             stack = config.getStack() + "_";
         }
+        final boolean useExchange = config.getBooleanProperty("workflow.listener.queue.useExchange",
+                USE_EXCHANGE_BY_DEFAULT);
         Task.Status[] statuses = new Task.Status[]{Task.Status.COMPLETED, Task.Status.FAILED};
         Map<Task.Status, ObservableQueue> queues = new HashMap<>();
         for(Task.Status status : statuses) {
             String queueName = config.getProperty("workflow.listener.queue.prefix",
                     config.getAppId() + "_amqp_notify_" + stack + status.name());
-            ObservableQueue queue = new AMQObservableQueue.Builder(config)
-                            .withConsumeSettings(new AMQConsumeSettings(config).fromURI(queueName))
-                            .withPublishSettings(new AMQPublishSettings(config).fromURI(queueName)).build();
+            final ObservableQueue queue = new AMQObservableQueue.Builder(config)
+                    .build(useExchange, queueName);
             queues.put(status, queue);
         }
 
