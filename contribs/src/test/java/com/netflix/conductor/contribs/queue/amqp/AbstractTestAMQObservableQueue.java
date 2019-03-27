@@ -196,30 +196,23 @@ abstract class AbstractTestAMQObservableQueue {
                             int batchSize) throws IOException {
 
         final List<Message> found = new ArrayList<>(batchSize);
-
         TestSubscriber<Message> subscriber = TestSubscriber.create(Subscribers.create(found::add));
         Observable<Message> observable = observableQueue.observe().take(pollTimeMs * 2, TimeUnit.MILLISECONDS);
         assertNotNull(observable);
         observable.subscribe(subscriber);
-
         subscriber.awaitTerminalEvent();
         subscriber.assertNoErrors();
         subscriber.assertCompleted();
-
         if (useWorkingChannel) {
             verify(channel, atLeast(batchSize)).basicGet(eq(queueName), anyBoolean());
-
             doNothing().when(channel).basicAck(anyLong(), eq(false));
-
             doAnswer(new DoesNothing()).when(channel).basicAck(anyLong(), eq(false));
-
             observableQueue.ack(Collections.synchronizedList(found));
         }
         else {
             assertNotNull(found);
             assertTrue(found.isEmpty());
         }
-
         observableQueue.close();
     }
 }
