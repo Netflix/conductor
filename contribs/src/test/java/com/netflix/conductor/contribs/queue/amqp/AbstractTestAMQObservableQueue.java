@@ -133,8 +133,17 @@ abstract class AbstractTestAMQObservableQueue {
                     .thenThrow(new IOException("Cannot declare exchange "+ name + " of type "+ type),
                             new RuntimeException("Not working"));
         }
+        // queueDeclarePassive
+        final AMQImpl.Queue.DeclareOk queueDeclareOK = new AMQImpl.Queue.DeclareOk(queueName, queue.size(), 1);
+        if (exists) {
+            when(channel.queueDeclarePassive(eq(queueName))).thenReturn(queueDeclareOK);
+        }
+        else {
+            when(channel.queueDeclarePassive(eq(queueName))).thenThrow(new IOException("Queue "+ queueName +" exists"));
+        }
         // queueDeclare
-        when(channel.queueDeclare()).thenReturn(new AMQImpl.Queue.DeclareOk(queueName, queue.size(), 1));
+        when(channel.queueDeclare(eq(queueName), anyBoolean(), anyBoolean(), anyBoolean(), anyMap()))
+                .thenReturn(queueDeclareOK);
         // queueBind
         when(channel.queueBind(eq(queueName), eq(name), eq(routingKey))).thenReturn(new AMQImpl.Queue.BindOk());
         // messageCount

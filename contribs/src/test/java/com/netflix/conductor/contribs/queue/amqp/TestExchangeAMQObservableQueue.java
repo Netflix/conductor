@@ -99,8 +99,8 @@ public class TestExchangeAMQObservableQueue extends AbstractTestAMQObservableQue
         final Random random = new Random();
 
         final String name = RandomStringUtils.randomAlphabetic(30), type = "topic",
-                queueName = RandomStringUtils.randomAlphabetic(30),
                 routingKey = RandomStringUtils.randomAlphabetic(30);
+        final String queueName = String.format("bound_to_%s", name);
 
         final AMQSettings settings = new AMQSettings(configuration)
                 .fromURI("amqp-exchange:" + name +"?exchangeType="+ type +"&routingKey="+ routingKey
@@ -136,10 +136,11 @@ public class TestExchangeAMQObservableQueue extends AbstractTestAMQObservableQue
                 verify(channel, atLeastOnce()).exchangeDeclarePassive(eq(name));
             }
             else {
-                verify(channel, atLeastOnce()).exchangeDeclare(eq(name), eq(type), eq(settings.isDurable()), eq(settings.autoDelete()),
-                        eq(Collections.emptyMap()));
+                verify(channel, atLeastOnce()).exchangeDeclare(eq(name), eq(type), eq(settings.isDurable()),
+                        eq(settings.autoDelete()), eq(Collections.emptyMap()));
+                verify(channel, atLeastOnce()).queueDeclare(eq(queueName), anyBoolean(), anyBoolean(),
+                        anyBoolean(), anyMap());
             }
-            verify(channel, atLeastOnce()).queueDeclare();
             verify(channel, atLeastOnce()).queueBind(eq(queueName), eq(name), eq(routingKey));
         }
     }
