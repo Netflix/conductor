@@ -2,6 +2,7 @@ package com.netflix.conductor.contribs.queue.amqp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.netflix.conductor.contribs.queue.AbstractObservableQueue;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
@@ -495,13 +496,21 @@ public class AMQObservableQueue extends AbstractObservableQueue implements AMQCo
             getOrCreateChannel().basicQos(batchSize);
             String queueName;
             if (useExchange) {
+                // Consume messages from an exchange
                 getOrCreateExchange();
-                queueName = getOrCreateChannel().queueDeclare().getQueue();
+                // Declare an exclusive not durable with auto-delete queue
+                final AMQP.Queue.DeclareOk declareOk = getOrCreateQueue(
+                        String.format("bound_to_%s", settings.getQueueOrExchangeName()),
+                        false, true, true, Maps.newHashMap());
+                // Bind the declared queue to exchange
+                queueName = declareOk.getQueue();
                 getOrCreateChannel().queueBind(queueName, settings.getQueueOrExchangeName(), settings.getRoutingKey());
             }
             else {
+                // Consume messages from a queue
                 queueName = getOrCreateQueue().getQueue();
             }
+            // Consume messages
             return receiveMessagesFromQueue(queueName);
         }
         catch (Exception exception) {
