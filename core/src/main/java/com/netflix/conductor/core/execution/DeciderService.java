@@ -16,6 +16,7 @@
 package com.netflix.conductor.core.execution;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -283,7 +284,10 @@ public class DeciderService {
             output = externalPayloadStorageUtils.downloadPayload(last.getExternalOutputPayloadStoragePath());
             Monitors.recordExternalPayloadStorageUsage(last.getTaskDefName(), ExternalPayloadStorage.Operation.READ.toString(), ExternalPayloadStorage.PayloadType.TASK_OUTPUT.toString());
         } else {
-            output = last.getOutputData();
+            Map<String, Status> executedTasks = new HashMap<>();
+            allTasks.forEach(_task -> executedTasks.put(_task.getReferenceTaskName(), _task.getStatus()));
+            Map<String, Object> outputObj = ImmutableMap.of("task", last.getReferenceTaskName(), "status", last.getStatus(), "output", last.getOutputData(), "executedTasks", executedTasks.toString());
+            output = outputObj;
         }
 
         workflow.setOutput(output);
