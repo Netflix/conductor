@@ -89,6 +89,8 @@ public class Workflow extends Auditable {
 
 	private int restartCount;
 
+	private String cancelledBy;
+
 	public Workflow(){
 		
 	}
@@ -378,6 +380,14 @@ public class Workflow extends Auditable {
 
 	public void incRestartCount() {
 		this.restartCount++;
+	}
+
+	public String getCancelledBy() {
+		return cancelledBy;
+	}
+
+	public void setCancelledBy(String cancelledBy) {
+		this.cancelledBy = cancelledBy;
 	}
 
 	@Override
