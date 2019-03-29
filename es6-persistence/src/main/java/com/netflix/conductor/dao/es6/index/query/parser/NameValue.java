@@ -33,7 +33,7 @@ import java.io.InputStream;
  * @author Viren
  * <pre>
  * Represents an expression of the form as below:
- * key OPR value 
+ * key OPR value
  * OPR is the comparison operator which could be on the following:
  * 	&gt;, &lt;, = , !=, IN, BETWEEN
  * </pre>

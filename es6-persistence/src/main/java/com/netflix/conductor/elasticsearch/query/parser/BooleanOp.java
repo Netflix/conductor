@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.elasticsearch.query.parser;
 
@@ -22,12 +22,12 @@ import java.io.InputStream;
 
 /**
  * @author Viren
- *   
+ *
  */
 public class BooleanOp extends AbstractNode {
 
 	private String value;
-	
+
 	public BooleanOp(InputStream is) throws ParserException {
 		super(is);
 	}
@@ -44,16 +44,16 @@ public class BooleanOp extends AbstractNode {
 		}
 		read(this.value.length());
 	}
-	
+
 	@Override
 	public String toString(){
 		return " " + value + " ";
 	}
-	
+
 	public String getOperator(){
 		return value;
 	}
-	
+
 	public boolean isAnd(){
 		return "AND".equals(value);
 	}

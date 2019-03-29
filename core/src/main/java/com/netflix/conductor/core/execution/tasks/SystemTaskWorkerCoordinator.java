@@ -139,7 +139,7 @@ public class SystemTaskWorkerCoordinator {
                 return;
 			}
 
-			List<String> polledTaskIds = queueDAO.pop(taskName, realPollCount, 200);
+			List<String> polledTaskIds = queueDAO.pop(taskName, realPollCount, 0);
 			Monitors.recordTaskPoll(taskName);
 			logger.debug("Polling for {}, got {} tasks", taskName, polledTaskIds.size());
 			for(String taskId : polledTaskIds) {

@@ -80,11 +80,16 @@ public class SystemPropertiesConfiguration implements Configuration {
 
     @Override
     public String getRegion() {
-        return getProperty(REGION_PROPERTY_NAME, REGION_DEFAULT_VALUE);
+        String localDatacenter = getProperty(LOCAL_DATACENTER_PROPERTY_NAME, null);
+        return localDatacenter != null ? localDatacenter : getProperty(REGION_PROPERTY_NAME, REGION_DEFAULT_VALUE);
     }
 
     @Override
     public String getAvailabilityZone() {
+        String localRack = getProperty(LOCAL_RACK_PROPERTY_NAME, null);
+        if (localRack != null) {
+            return localRack;
+        }
         return getProperty(AVAILABILITY_ZONE_PROPERTY_NAME, AVAILABILITY_ZONE_DEFAULT_VALUE);
     }
 
