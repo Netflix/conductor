@@ -163,6 +163,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 			provider.forceCompleteWorkflow(workflowId);
 		} else if (workflow.getStatus() == WorkflowStatus.CANCELLED) {
 			subWorkflow.setStatus(WorkflowStatus.CANCELLED);
+			subWorkflow.setCancelledBy(workflow.getCancelledBy());
 			provider.cancelWorkflow(subWorkflow, defaultIfEmpty(workflow.getReasonForIncompletion(), "Parent workflow has been cancelled"));
 		} else if (workflow.getStatus() == WorkflowStatus.FAILED) {
 			subWorkflow.setStatus(WorkflowStatus.FAILED);

@@ -655,6 +655,8 @@ public class WorkflowExecutor {
 		if (!workflow.getStatus().isTerminal()) {
 			workflow.setStatus(WorkflowStatus.CANCELLED);
 		}
+
+		workflow.setCancelledBy("API");
 		return cancelWorkflow(workflow, reason);
 	}
 
@@ -695,6 +697,7 @@ public class WorkflowExecutor {
 			input.put("workflowType", workflow.getWorkflowType());
 			input.put("workflowVersion", workflow.getVersion());
 			input.put("contextUser", workflow.getContextUser());
+			input.put("cancelledBy", workflow.getCancelledBy());
 
 			try {
 
