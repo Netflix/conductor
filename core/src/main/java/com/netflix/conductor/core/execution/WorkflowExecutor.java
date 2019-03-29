@@ -801,6 +801,7 @@ public class WorkflowExecutor {
 				originalFailed = map;
 			}
 			workflow.getOutput().put("originalFailedTask", originalFailed);
+			workflow.setCancelledBy((String)failedTask.getOutputData().get("cancelledBy"));
 		}
 
 		edao.updateWorkflow(workflow);
