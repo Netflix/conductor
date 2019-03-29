@@ -4264,7 +4264,6 @@ public abstract class AbstractWorkflowServiceTest {
         workflowDef.setName("test_execution_times_wf");
         workflowDef.setSchemaVersion(2);
 
-
         WorkflowTask httpTask1 = new WorkflowTask();
         httpTask1.setWorkflowTaskType(TaskType.HTTP);
         httpTask1.setName("default");
