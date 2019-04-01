@@ -4260,6 +4260,18 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testExecutionTimes(){
 
+        String taskName = "junit_task_1";
+        TaskDef taskDef = notFoundSafeGetTaskDef(taskName);
+        taskDef.setTimeoutSeconds(1);
+        metadataService.updateTaskDef(taskDef);
+
+        taskName = "junit_task_2";
+        taskDef = notFoundSafeGetTaskDef(taskName);
+        taskDef.setTimeoutSeconds(1);
+        metadataService.updateTaskDef(taskDef);
+
+        metadataService.registerTaskDef(Collections.singletonList(taskDef));
+
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("test_execution_times_wf");
         workflowDef.setSchemaVersion(2);
