@@ -17,6 +17,8 @@ dump.rdb
 .idea
 *.iml
 out/
+bin/
+target/
 .DS_Store
 gradle.properties
 ui/.vscode/settings.json

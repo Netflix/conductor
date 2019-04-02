@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import { Tabs, Tab } from 'react-bootstrap';
+import { Link } from 'react-router';
+import { Breadcrumb, BreadcrumbItem, Grid, Row, Col, Well, OverlayTrigger,Button,Popover, Panel, Tabs, Tab } from 'react-bootstrap';
+import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import { connect } from 'react-redux';
 import { getWorkflowMetaDetails, updateWorkflow } from '../../actions/WorkflowActions';
 import WorkflowMetaDia from './WorkflowMetaDia';

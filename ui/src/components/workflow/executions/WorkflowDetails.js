@@ -2,17 +2,17 @@ import React, {Component} from 'react';
 import {OverlayTrigger, Button, Popover, Panel, Table, Input, Well, Label} from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import {connect} from 'react-redux';
+import {Link} from 'react-router'
 import {getWorkflowDetails} from '../../../actions/WorkflowActions';
 import WorkflowAction from './WorkflowAction';
 import WorkflowMetaDia from '../WorkflowMetaDia';
 import moment from 'moment';
-import http from '../../../core/HttpClient';
+import http from '../../../core/HttpClientClientSide';
 import Clipboard from 'clipboard';
 import map from "lodash/fp/map";
 import Tab from "../../common/Tab";
 import TabContainer from "../../common/TabContainer";
 import { startWorkflow } from '../../../actions/WorkflowActions';
-import {Link} from "react-router";
 import UnescapeButton from '../../common/UnescapeButton'
 
 new Clipboard('.btn');
@@ -146,6 +146,12 @@ class WorkflowDetails extends Component {
         return true;
     }
 
+    gotoParentWorkflow = ()=> {
+      history.push({
+        pathname:"/workflow/id/" + this.props.data.parentWorkflowId
+      })
+    }
+
     startWorkflow1(e) {
 
         e.preventDefault();
@@ -158,7 +164,7 @@ class WorkflowDetails extends Component {
 
         this.props.dispatch(startWorkflow(wfname, data));
 
-            this.setState({ show: true });
+        this.setState({ show: true });
 
     }
 
@@ -205,7 +211,7 @@ class WorkflowDetails extends Component {
         let dataObject = {};
         let { labels, values } = this.state.workflowForm;
 
-            values.splice(idx, 1, e.target.value);
+        values.splice(idx, 1, e.target.value);
 
         for (let i = 0; i < labels.length; i++) {
             if (values[i] && values[i].startsWith("{")) {
@@ -255,6 +261,13 @@ class WorkflowDetails extends Component {
             return a.seq - b.seq;
         });
 
+        let parentWorkflowButton = "";
+        if(wf.parentWorkflowId){
+            parentWorkflowButton = <Link to={"/workflow/id/" + wf.parentWorkflowId}><Button bsStyle="default" bsSize="xsmall">
+              Parent
+            </Button></Link>;
+        }
+
         function consoleLog() {
             if(show) {
                 if (log) {
@@ -301,7 +314,7 @@ class WorkflowDetails extends Component {
         return (
             <div className="ui-content">
                 <h4>
-                    {wf.workflowType}/{wf.version}
+                    {wf.workflowName}/{wf.version}
                     <span
                         className={(wf.status === 'FAILED' || wf.status === 'TERMINATED' || wf.status === 'TIMED_OUT') ? "red" : "green"}>
           {wf.status}
@@ -309,6 +322,9 @@ class WorkflowDetails extends Component {
                     <span>
           <WorkflowAction workflowStatus={wf.status} workflowId={wf.workflowId}/>
         </span>
+                <span>
+                  {parentWorkflowButton}
+                </span>
                 </h4>
                 <br/><br/>
                 <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}>
@@ -369,7 +385,7 @@ class WorkflowDetails extends Component {
                                                        <UnescapeButton target='wfoutput' />
                             <pre style={{height: '200px'}}
                                  id="wfoutput">{JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
-                            {wf.status === 'FAILED' ? <div><strong>Workflow Faiure Reason (if any)</strong>
+                            {wf.status === 'FAILED' ? <div><strong>Workflow Failure Reason (if any)</strong>
                                 <pre>{wf.reasonForIncompletion ? JSON.stringify(wf.reasonForIncompletion, null, 3) : ''}</pre>
                             </div> : ''}
                         </div>

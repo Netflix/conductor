@@ -59,9 +59,7 @@ class WorkflowMetaInput extends Component {
             } : {cronExp: null, cronDesc: null})
         };
 
-        console.log(JSON.stringify(data, null, 2));
-
-        this.props.dispatch(startWorkflow(wfname, data));        
+        this.props.dispatch(startWorkflow(wfname, data));
     };
 
     showCron(){
@@ -79,12 +77,6 @@ class WorkflowMetaInput extends Component {
         const { labels } = this.props.workflowForm;
 
         const statusLog = (log) => {
-
-            let { statusCode, statusText } = log;
-            let wfId = "";
-            if( log.body )
-                wfId = log.body.text;
-
             window.scrollTo(0,document.body.scrollHeight);
 
             return (
@@ -92,15 +84,14 @@ class WorkflowMetaInput extends Component {
                     <Well>
                         <span>
                             <h4>Workflow ID:</h4>
-                            {wfId ? <Link to={`/workflow/id/${wfId}`}>{wfId}</Link> : ""}<br/>
+                            {log.text ? <Link to={`/workflow/id/${log.text}`}>{log.text}</Link> : ""}<br/>
                         </span>
                         <span>
                             <h4>Status code: </h4>
-                            <Label bsStyle={(statusCode === 200) ? "success" : "danger"}>{statusCode}</Label><br/>
+                            <Label bsStyle={(log.status === 200) ? "success" : "danger"}>{log.status}</Label><br/>
                         </span>
                         <span>
-                            <h4>Status text: </h4>
-                            <Label bsStyle={statusText ? "success" : "danger"}>{statusText}</Label><br/>
+                            <h4>Req. URL: {log.req.url}</h4>
                         </span>
                     </Well>
                 </div>

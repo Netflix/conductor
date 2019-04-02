@@ -1,210 +1,125 @@
-/**
- * Copyright 2016 Netflix, Inc.
- *
+/*
+ * Copyright 2018 Netflix, Inc.
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * 
- */
 package com.netflix.conductor.service;
 
-import com.google.common.base.Preconditions;
-import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.core.WorkflowContext;
-import com.netflix.conductor.core.events.EventQueues;
-import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.core.execution.ApplicationException.Code;
-import com.netflix.conductor.dao.MetadataDAO;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
+import java.util.Optional;
 
-/**
- * @author Viren 
- * 
- */
-@Singleton
-@Trace
-public class MetadataService {
 
-	private MetadataDAO metadata;
+public interface MetadataService {
+    /**
+     * @param taskDefinitions Task Definitions to register
+     */
+    void registerTaskDef(@NotNull(message = "TaskDefList cannot be empty or null")
+                                @Size(min=1, message = "TaskDefList is empty") List<@Valid TaskDef> taskDefinitions);
 
-	@Inject
-	public MetadataService(MetadataDAO metadata) {
-		this.metadata = metadata;
-	}
+        /**
+         * @param taskDefinition Task Definition to be updated
+         */
+    void updateTaskDef(@NotNull(message = "TaskDef cannot be null") @Valid TaskDef taskDefinition);
 
-	/**
-	 * 
-	 * @param taskDefinitions Task Definitions to register
-	 */
-	public void registerTaskDef(List<TaskDef> taskDefinitions) {
-		for (TaskDef taskDefinition : taskDefinitions) {
-			taskDefinition.setCreatedBy(WorkflowContext.get().getClientApp());
-	   		taskDefinition.setCreateTime(System.currentTimeMillis());
-	   		taskDefinition.setUpdatedBy(null);
-	   		taskDefinition.setUpdateTime(null);
-			metadata.createTaskDef(taskDefinition);
-		}
-	}
+    /**
+     * @param taskType Remove task definition
+     */
+    void unregisterTaskDef(@NotEmpty(message="TaskName cannot be null or empty") String taskType);
 
-	/**
-	 * 
-	 * @param taskDefinition Task Definition to be updated
-	 */
-	public void updateTaskDef(TaskDef taskDefinition) {
-		TaskDef existing = metadata.getTaskDef(taskDefinition.getName());
-		if (existing == null) {
-			throw new ApplicationException(Code.NOT_FOUND, "No such task by name " + taskDefinition.getName());
-		}
-   		taskDefinition.setUpdatedBy(WorkflowContext.get().getClientApp());
-   		taskDefinition.setUpdateTime(System.currentTimeMillis());
-		metadata.updateTaskDef(taskDefinition);
-	}
+    /**
+     * @return List of all the registered tasks
+     */
+    List<TaskDef> getTaskDefs();
 
-	/**
-	 * 
-	 * @param taskType Remove task definition
-	 */
-	public void unregisterTaskDef(String taskType) {
-		metadata.removeTaskDef(taskType);
-	}
+    /**
+     * @param taskType Task to retrieve
+     * @return Task Definition
+     */
+    TaskDef getTaskDef(@NotEmpty(message="TaskType cannot be null or empty") String taskType);
 
-	/**
-	 * 
-	 * @return List of all the registered tasks
-	 */
-	public List<TaskDef> getTaskDefs() {
-		return metadata.getAllTaskDefs();
-	}
+    /**
+     * @param def Workflow definition to be updated
+     */
+    void updateWorkflowDef(@NotNull(message = "WorkflowDef cannot be null") @Valid WorkflowDef def);
 
-	/**
-	 * 
-	 * @param taskType Task to retrieve
-	 * @return Task Definition
-	 */
-	public TaskDef getTaskDef(String taskType) {
-		return metadata.getTaskDef(taskType);
-	}
+    /**
+     *
+     * @param workflowDefList Workflow definitions to be updated.
+     */
+    void updateWorkflowDef(@NotNull(message = "WorkflowDef list name cannot be null or empty")
+                           @Size(min=1, message = "WorkflowDefList is empty")
+                                   List<@NotNull(message = "WorkflowDef cannot be null") @Valid WorkflowDef> workflowDefList);
 
-	/**
-	 * 
-	 * @param def Workflow definition to be updated
-	 */
-	public void updateWorkflowDef(WorkflowDef def) {
-		metadata.update(def);		
-	}
-	
-	/**
-	 * 
-	 * @param wfs Workflow definitions to be updated.
-	 */
-	public void updateWorkflowDef(List<WorkflowDef> wfs) {
-		for (WorkflowDef wf : wfs) {
-			metadata.update(wf);
-		}
-	}
+    /**
+     * @param name    Name of the workflow to retrieve
+     * @param version Optional.  Version.  If null, then retrieves the latest
+     * @return Workflow definition
+     */
+    WorkflowDef getWorkflowDef(@NotEmpty(message = "Workflow name cannot be null or empty") String name, Integer version);
 
-	/**
-	 * 
-	 * @param name Name of the workflow to retrieve
-	 * @param version Optional.  Version.  If null, then retrieves the latest
-	 * @return Workflow definition
-	 */
-	public WorkflowDef getWorkflowDef(String name, Integer version) {
-		if (version == null) {
-			return metadata.getLatest(name);
-		}
-		return metadata.get(name, version);
-	}
-	
-	/**
-	 * 
-	 * @param name Name of the workflow to retrieve
-	 * @return Latest version of the workflow definition
-	 */
-	public WorkflowDef getLatestWorkflow(String name) {
-		return metadata.getLatest(name);
-	}
+    /**
+     * @param name Name of the workflow to retrieve
+     * @return Latest version of the workflow definition
+     */
+    Optional<WorkflowDef> getLatestWorkflow(@NotEmpty(message = "Workflow name cannot be null or empty") String name);
 
-	public List<WorkflowDef> getWorkflowDefs() {
-		return metadata.getAll();
-	}
+    List<WorkflowDef> getWorkflowDefs();
 
-	public void registerWorkflowDef(WorkflowDef def) {
-		if(def.getName().contains(":")) {
-			throw new ApplicationException(Code.INVALID_INPUT, "Workflow name cannot contain the following set of characters: ':'");
-		}
-		if(def.getSchemaVersion() < 1 || def.getSchemaVersion() > 2) {
-			def.setSchemaVersion(2);
-		}
-		metadata.create(def);
-	}
+    void registerWorkflowDef(@NotNull(message = "WorkflowDef cannot be null")
+                             @Valid WorkflowDef workflowDef);
 
-	/**
-	 * 
-	 * @param eventHandler Event handler to be added.  
-	 * Will throw an exception if an event handler already exists with the name
-	 */
-	public void addEventHandler(EventHandler eventHandler) {
-		validateEvent(eventHandler);
-		metadata.addEventHandler(eventHandler);
-	}
+    /**
+     *
+     * @param name Name of the workflow definition to be removed
+     * @param version Version of the workflow definition to be removed
+     */
+    void unregisterWorkflowDef(@NotEmpty(message = "Workflow name cannot be null or empty") String name,
+                               @NotNull(message = "Version cannot be null") Integer version);
 
-	/**
-	 * 
-	 * @param eventHandler Event handler to be updated.
-	 */
-	public void updateEventHandler(EventHandler eventHandler) {
-		validateEvent(eventHandler);
-		metadata.updateEventHandler(eventHandler);
-	}
-	
-	/**
-	 * 
-	 * @param name Removes the event handler from the system
-	 */
-	public void removeEventHandlerStatus(String name) {
-		metadata.removeEventHandlerStatus(name);
-	}
+    /**
+     * @param eventHandler Event handler to be added.
+     *                     Will throw an exception if an event handler already exists with the name
+     */
+    void addEventHandler(@NotNull(message = "EventHandler cannot be null") @Valid EventHandler eventHandler);
 
-	/**
-	 * 
-	 * @return All the event handlers registered in the system
-	 */
-	public List<EventHandler> getEventHandlers() {
-		return metadata.getEventHandlers();
-	}
-	
-	/**
-	 * 
-	 * @param event name of the event
-	 * @param activeOnly if true, returns only the active handlers
-	 * @return Returns the list of all the event handlers for a given event
-	 */
-	public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
-		return metadata.getEventHandlersForEvent(event, activeOnly);
-	}
-	
-	private void validateEvent(EventHandler eh) {
-		Preconditions.checkNotNull(eh.getName(), "Missing event handler name");
-		Preconditions.checkNotNull(eh.getEvent(), "Missing event location");
-		Preconditions.checkNotNull(eh.getActions().isEmpty(), "No actions specified.  Please specify at-least one action");
-		String event = eh.getEvent();
-		EventQueues.getQueue(event, true);
-	}
+    /**
+     * @param eventHandler Event handler to be updated.
+     */
+    void updateEventHandler(@NotNull(message = "EventHandler cannot be null") @Valid EventHandler eventHandler);
+
+    /**
+     * @param name Removes the event handler from the system
+     */
+    void removeEventHandlerStatus(@NotEmpty(message = "EventName cannot be null or empty") String name);
+
+    /**
+     * @return All the event handlers registered in the system
+     */
+    List<EventHandler> getEventHandlers();
+
+    /**
+     * @param event      name of the event
+     * @param activeOnly if true, returns only the active handlers
+     * @return Returns the list of all the event handlers for a given event
+     */
+
+    List<EventHandler> getEventHandlersForEvent(@NotEmpty(message = "EventName cannot be null or empty") String event, boolean activeOnly);
 }
