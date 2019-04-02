@@ -42,6 +42,7 @@ public class ExecutionDAOFacade {
 
     private static final String ARCHIVED_FIELD = "archived";
     private static final String RAW_JSON_FIELD = "rawJSON";
+    private static final int MAX_RAW_JSON = 1024 * 32 - 10; // Based on string limit in Elastic Search
 
     private final ExecutionDAO executionDAO;
     private final IndexDAO indexDAO;
@@ -175,10 +176,15 @@ public class ExecutionDAOFacade {
 
             // remove workflow from ES
             if (archiveWorkflow) {
+		String rawJson = objectMapper.writeValueAsString(workflow); 
+		//If size is greater then MAX then truncate to MAX
+		if (rawJson.length() > MAX_RAW_JSON) {
+			rawJson = rawJson.substring(0, MAX_RAW_JSON);
+		}
                 //Add to elasticsearch
                 indexDAO.updateWorkflow(workflowId,
                         new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD},
-                        new Object[]{objectMapper.writeValueAsString(workflow), true});
+                        new Object[]{rawJson, true});
             } else {
                 // Not archiving, also remove workflowId from index
                 indexDAO.removeWorkflow(workflowId);
