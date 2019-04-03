@@ -14,27 +14,33 @@ const menuPaths = {
   },{
     label: 'All',
     href: '/workflow',
-    icon: 'fa-circle'
+    icon: 'fa-circle',
+      search: {states: []}
   },{
     label: 'Running',
     href: '/workflow?status=RUNNING',
-    icon: 'far fa-play-circle'
+    icon: 'far fa-play-circle',
+      search: {states: ['RUNNING']}
   },{
     label: 'Failed',
     href: '/workflow?status=FAILED&h=48',
-    icon: 'fas fa-exclamation-circle'
+    icon: 'fas fa-exclamation-circle',
+      search: {states: ['FAILED'], cutoff: '48'}
   },{
     label: 'Timed Out',
     href: '/workflow?status=TIMED_OUT&h=48',
-    icon: 'far fa-clock'
+    icon: 'far fa-clock',
+      search: {states: ['TIMED_OUT'], cutoff: '48'}
   },{
     label: 'Terminated',
     href: '/workflow?status=TERMINATED&h=48',
-    icon: 'fa-ban'
+    icon: 'fa-ban',
+      search: {states: ['TERMINATED'], cutoff: '48'}
   },{
     label: 'Completed',
     href: '/workflow?status=COMPLETED&h=48',
-    icon: 'fa-bullseye'
+    icon: 'fa-bullseye',
+      search: {states: ['COMPLETED'], cutoff: '48'}
   },{
     label: 'Scheduled',
     href: '/workflow/scheduled',

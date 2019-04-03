@@ -108,7 +108,7 @@ export default class WorkflowTable extends Component {
       <BootstrapTable data={results} striped={true} hover={true}
                            search={false} exportCSV={false}
                            pagination={false} selectRow={selectRow}
-                           options={{sizePerPage: 100}} tableStyle={{backgroundColor: 'red'}}>
+                           options={{sizePerPage: 100}}>
         <TableHeaderColumn dataField="workflowType" dataAlign="left" dataSort>Workflow</TableHeaderColumn>
         <TableHeaderColumn dataField="workflowId" isKey dataSort dataFormat={linkMaker}>Workflow ID</TableHeaderColumn>
         <TableHeaderColumn dataField="status" dataSort>Status</TableHeaderColumn>
