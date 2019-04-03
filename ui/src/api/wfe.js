@@ -8,6 +8,7 @@ import authManager from '../core/AuthManager';
 const router = new Router();
 
 router.get('/', async (req, res, next) => {
+
   try {
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
@@ -24,16 +25,26 @@ router.get('/', async (req, res, next) => {
       h = req.query.h;
     }
 
+    var frmdate  = req.query.frmdate;
+    var todate  = req.query.todate;
     let range = req.query.range;
-
     let from = null;
     let end = null;
+    if (frmdate != 'undefined' && todate != 'undefined' && frmdate != '' && todate != '') {
+
+     from=moment(frmdate);
+     end=moment(todate);
+    }
+    else
+    {
     if (h != '-1') {
       from = moment().subtract(h, 'hours');
       end = moment();
-    } else if (range === 'All data') {
+    }
+    else if (range === 'All data') {
       // do nothing
-    } else if (range === 'This year') {
+    }
+     else if (range === 'This year') {
       from = moment().startOf('year');
       end = moment().endOf('year');
     } else if (range === 'Last quarter') {
@@ -61,10 +72,11 @@ router.get('/', async (req, res, next) => {
       from = moment().startOf('day');
       end = moment().endOf('day');
     }
+    }
 
-    // convert to iso string
-    from = from != null ? from.toISOString() : '';
-    end = end != null ? end.toISOString() : '';
+    if (from != null && end != null) {
+      freeText.push('startTime:[' + from.toISOString() + ' TO ' + end.toISOString() + ']');
+    }
 
     let start = 0;
     if(!isNaN(req.query.start)){
@@ -72,7 +84,8 @@ router.get('/', async (req, res, next) => {
     }
 
     let query = req.query.q;
-    const url = baseURL2 + 'search?size=100&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query + '&from=' + from + '&end=' + end;
+
+    const url = baseURL2 + 'search?size=100&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query;
     const result = await http.get(url);
     const hits = result.results;
     res.status(200).send({result: {hits:hits, totalHits: result.totalHits}});
