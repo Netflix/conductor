@@ -36,7 +36,7 @@ public class SimpleProgressHandler implements JavaEventAction {
 	public List<String> handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
 		ActionParams params = mapper.convertValue(action.getJava_action().getInputParameters(), ActionParams.class);
 		if (StringUtils.isEmpty(params.taskRefName)) {
-			throw new IllegalStateException("No taskRefName defined for " + action.getJava_action());
+			throw new IllegalStateException("No taskRefName defined in parameters");
 		}
 
 		String workflowId = ScriptEvaluator.evalJq(JQ_GET_WFID_URN, payload);
@@ -92,8 +92,9 @@ public class SimpleProgressHandler implements JavaEventAction {
 		return Collections.singletonList(workflowId);
 	}
 
+	// Keep it public!
 	public static class ActionParams {
-		String taskRefName;
-		boolean resetStartTime = true;
+		public String taskRefName;
+		public boolean resetStartTime = true;
 	}
 }
