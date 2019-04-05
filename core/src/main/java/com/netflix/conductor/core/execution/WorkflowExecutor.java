@@ -698,11 +698,13 @@ public class WorkflowExecutor {
 			input.put("workflowVersion", workflow.getVersion());
 			input.put("contextUser", workflow.getContextUser());
 			input.put("cancelledBy", workflow.getCancelledBy());
+			input.put("correlationId", workflow.getCorrelationId());
+
 
 			try {
 
 				WorkflowDef latestCancelWorkflow = metadata.getLatest(cancelWorkflow);
-				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input, workflow.getCorrelationId(), workflow.getWorkflowId(), null, null);
+				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input, workflow.getCorrelationId(), workflow.getWorkflowId(), null, null, null, workflow.getWorkflowIds());
 
 				workflow.getOutput().put("conductor.cancel_workflow", cancelWFId);
 
@@ -842,6 +844,8 @@ public class WorkflowExecutor {
 			input.put("workflowType", workflow.getWorkflowType());
 			input.put("workflowVersion", workflow.getVersion());
 			input.put("contextUser", workflow.getContextUser());
+			input.put("cancelledBy", workflow.getCancelledBy());
+			input.put("correlationId", workflow.getCorrelationId());
 			input.put("reason", reason);
 			input.put("failureStatus", workflow.getStatus().toString());
 			if (failedTask != null) {
@@ -1104,7 +1108,7 @@ public class WorkflowExecutor {
 				} else {
 					workflowVersion = startWorkflow.version;
 				}
-				startWorkflow(workflowName, workflowVersion, startWorkflow.params, null, workflow.getWorkflowId(), null,null);
+				startWorkflow(workflowName, workflowVersion, startWorkflow.params, null, workflow.getWorkflowId(), null,null, null, workflow.getWorkflowIds());
 			}
 
 			if(stateChanged) {
