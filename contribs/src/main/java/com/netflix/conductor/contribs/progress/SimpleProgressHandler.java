@@ -17,8 +17,6 @@ import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
 
-import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.*;
-
 @Singleton
 public class SimpleProgressHandler implements JavaEventAction {
 	private static Logger logger = LoggerFactory.getLogger(SimpleProgressHandler.class);
@@ -51,9 +49,7 @@ public class SimpleProgressHandler implements JavaEventAction {
 			return Collections.emptyList();
 		}
 
-		if (workflow.getStatus() == COMPLETED
-			|| workflow.getStatus() == FAILED
-			|| workflow.getStatus() == CANCELLED) {
+		if (workflow.getStatus().isTerminal()) {
 			logger.debug("Skipping. Target workflow is already " + workflow.getStatus().name()
 				+ ", workflowId=" + workflowId
 				+ ", contextUser=" + workflow.getContextUser()
@@ -71,7 +67,7 @@ public class SimpleProgressHandler implements JavaEventAction {
 		}
 
 		if (task.getStatus().isTerminal()) {
-			logger.debug("Skipping. Target " + task + " is already finished. "
+			logger.debug("Skipping. Target task " + task + " is already finished. "
 				+ ", workflowId=" + workflowId
 				+ ", contextUser=" + workflow.getContextUser()
 				+ ", correlationId=" + workflow.getCorrelationId());
