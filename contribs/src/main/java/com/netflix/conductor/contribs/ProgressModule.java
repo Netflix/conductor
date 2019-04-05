@@ -20,7 +20,6 @@ package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
 import com.netflix.conductor.contribs.progress.SimpleProgressHandler;
-import com.netflix.conductor.contribs.progress.HybrikProgressHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +31,6 @@ public class ProgressModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(HybrikProgressHandler.class).asEagerSingleton();
 		bind(SimpleProgressHandler.class).asEagerSingleton();
 		logger.debug("Progress Module configured ...");
 	}
