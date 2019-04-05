@@ -138,7 +138,9 @@ const WorkflowMetaList = React.createClass({
     },
 
     render() {
-        var wfs = this.state.workflowsFilteredAndSearched;
+        const options = {
+            noDataText: 'Empty Table'
+        };
 
     function jsonMaker(cell) {
       return JSON.stringify(cell);
@@ -187,7 +189,7 @@ const WorkflowMetaList = React.createClass({
                     </Panel>
                 </div>
                 <div className="panel panel-default">
-                    <BootstrapTable ref="table" data={wfs} striped={true} hover={true} exportCSV={false} pagination={false} s>
+                    <BootstrapTable ref="table" data={this.state.workflowsFilteredAndSearched || []} striped={true} hover={true} exportCSV={false} pagination={false} options={ options }>
                         <TableHeaderColumn dataField="name" isKey={true} dataAlign="left" dataSort={true} dataFormat={nameMaker}>Name/Version</TableHeaderColumn>
                         <TableHeaderColumn dataField="description" dataFormat={labelsMaker}>Labels</TableHeaderColumn>
                         <TableHeaderColumn dataField="inputParameters" width="500" dataSort={true} dataFormat={jsonMaker}>Input Parameters</TableHeaderColumn>
