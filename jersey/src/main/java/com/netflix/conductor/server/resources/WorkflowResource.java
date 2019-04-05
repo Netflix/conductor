@@ -99,7 +99,7 @@ public class WorkflowResource {
 	@POST
 	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	public Response startWorkflow(StartWorkflowRequest request, @Context HttpHeaders headers) throws Exception {
 		WorkflowDef def = metadata.getWorkflowDef(request.getName(), request.getVersion());
 		if (def == null) {
@@ -138,7 +138,7 @@ public class WorkflowResource {
 	@Path("/{name}")
 	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Start a new workflow.  Returns the ID of the workflow instance that can be later used for tracking")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	public Response startWorkflow(@Context HttpHeaders headers,
 								  @PathParam("name") String name, @QueryParam("version") Integer version,
 								  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
@@ -155,7 +155,7 @@ public class WorkflowResource {
 	@GET
 	@Path("/{name}/correlated/{correlationId}")
 	@ApiOperation("Lists workflows for the given correlation id")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),})
 	@Consumes(MediaType.WILDCARD)
 	public List<Workflow> getWorkflows(@PathParam("name") String name, @PathParam("correlationId") String correlationId,
 									   @QueryParam("includeClosed") @DefaultValue("false") boolean includeClosed,
@@ -221,7 +221,7 @@ public class WorkflowResource {
 	@PUT
 	@Path("/{workflowId}/pause")
 	@ApiOperation("Pauses the workflow")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Response pauseWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
@@ -240,7 +240,7 @@ public class WorkflowResource {
 	@PUT
 	@Path("/{workflowId}/resume")
 	@ApiOperation("Resumes the workflow")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Response resumeWorkflow(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
@@ -274,7 +274,7 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/rerun")
 	@ApiOperation("Reruns the workflow from a specific task")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
 	public Response rerun(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, RerunWorkflowRequest request) throws Exception {
@@ -297,7 +297,7 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/restart")
 	@ApiOperation("Restarts a completed workflow")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Response restart(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
@@ -316,7 +316,7 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/retry")
 	@ApiOperation("Retries the last failed task")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Response retry(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
@@ -335,7 +335,7 @@ public class WorkflowResource {
 	@DELETE
 	@Path("/{workflowId}")
 	@ApiOperation("Terminate workflow execution")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
 	public Response terminate(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.validateAuth(workflowId, headers);
@@ -355,7 +355,7 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/cancel")
 	@ApiOperation("Cancel workflow execution")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.validateAuth(workflowId, headers);
@@ -374,7 +374,7 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/complete")
 	@ApiOperation("Force complete workflow execution")
-	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header")})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response complete(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
 		executor.validateAuth(workflowId, headers);
