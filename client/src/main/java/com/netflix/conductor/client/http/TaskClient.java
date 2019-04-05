@@ -224,8 +224,9 @@ public class TaskClient extends ClientBase {
         Preconditions.checkNotNull(taskResult, "Task result cannot be null");
         Preconditions.checkArgument(StringUtils.isBlank(taskResult.getExternalOutputPayloadStoragePath()), "External Storage Path must not be set");
 
+        Map<String, Object> outputData = taskResult.getOutputData();
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            objectMapper.writeValue(byteArrayOutputStream, taskResult.getOutputData());
+            objectMapper.writeValue(byteArrayOutputStream, outputData);
             byte[] taskOutputBytes = byteArrayOutputStream.toByteArray();
             long taskResultSize = taskOutputBytes.length;
             WorkflowTaskMetrics.recordTaskResultPayloadSize(taskType, taskResultSize);
@@ -247,6 +248,9 @@ public class TaskClient extends ClientBase {
         } catch (IOException e) {
             String errorMsg = String.format("Unable to update task: %s with task result", taskResult.getTaskId());
             logger.error(errorMsg, e);
+            // reset output data and external output storage payload path
+            taskResult.setOutputData(outputData);
+            taskResult.setExternalOutputPayloadStoragePath(null);
             throw new ConductorClientException(errorMsg, e);
         }
         postForEntityWithRequestOnly("tasks", taskResult);
