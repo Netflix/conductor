@@ -199,7 +199,7 @@ job "conductor" {
         io_nats_streaming_publishRetryIn = "5,10,15"
 
         // Additional nats & asset modules
-        conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule,com.netflix.conductor.contribs.ShotgunModule,com.netflix.conductor.contribs.AssetModule"
+        conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule,com.netflix.conductor.contribs.ShotgunModule"
 
         // Exclude demo workflows
         loadSample = "false"
