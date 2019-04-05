@@ -311,6 +311,7 @@ public class EventProcessor {
 			boolean success = false;
 			NDC.push("event-"+ee.getMessageId());
 			try {
+				logger.debug("Starting handler=" + ee.getName() + ", action=" + action + ", payload=" + payload);
 				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
 				if (output != null) {
 					ee.getOutput().putAll(output);
