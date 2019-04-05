@@ -20,8 +20,10 @@ package com.netflix.conductor.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.netflix.conductor.contribs.AssetModule;
 import com.netflix.conductor.contribs.AuthModule;
 import com.netflix.conductor.contribs.HttpModule;
+import com.netflix.conductor.contribs.ProgressModule;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.contribs.validation.ValidationTask;
 import com.netflix.conductor.core.config.Configuration;
@@ -115,6 +117,8 @@ public class ServerModule extends AbstractModule {
 		install(new JerseyModule());
 		install(new HttpModule());
 		install(new AuthModule());
+		install(new AssetModule());
+		install(new ProgressModule());
 		new JsonJqTransform();
 		new ValidationTask();
 		List<AbstractModule> additionalModules = config.getAdditionalModules();
