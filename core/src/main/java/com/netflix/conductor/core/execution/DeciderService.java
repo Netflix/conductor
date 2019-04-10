@@ -129,28 +129,6 @@ public class DeciderService {
 				if (workflowTask != null && workflowTask.isOptional()) {					
 					task.setStatus(Status.COMPLETED_WITH_ERRORS);
 				} else {
-					if (task.getStatus() == Status.TIMED_OUT
-							&& workflowTask != null
-							&& workflowTask.getTimeOutWorkflow() != null
-							&& !StringUtils.isEmpty(workflowTask.getTimeOutWorkflow().getName())) {
-						Map<String, Object> params = new HashMap<>();
-						params.put("workflowId", workflow.getWorkflowId());
-						params.put("workflowType", workflow.getWorkflowType());
-						params.put("correlationId", workflow.getCorrelationId());
-						params.put("workflowInput", workflow.getInput());
-						params.put("workflowVersion", workflow.getVersion());
-						params.put("taskId", task.getTaskId());
-						params.put("taskInput", task.getInputData());
-						params.put("taskRefName", task.getReferenceTaskName());
-						params.put("taskRetryCount", task.getRetryCount());
-
-						StartWorkflowParams startWorkflow = new StartWorkflowParams();
-						startWorkflow.name = workflowTask.getTimeOutWorkflow().getName();
-						startWorkflow.version = (Integer)workflowTask.getTimeOutWorkflow().getVersion();
-						startWorkflow.params = params;
-
-						outcome.startWorkflow = startWorkflow;
-					}
 					Task rt = retry(taskDef, workflowTask, task, workflow);
 					tasksToBeScheduled.put(rt.getReferenceTaskName(), rt);
 					executedTaskRefNames.remove(rt.getReferenceTaskName());
@@ -737,15 +715,7 @@ public class DeciderService {
 		
 		boolean isComplete;
 
-		StartWorkflowParams startWorkflow;
-
 		private DeciderOutcome() { }
 
-	}
-
-	public static class StartWorkflowParams {
-		String name;
-		Integer version;
-		Map<String, Object> params;
 	}
 }
