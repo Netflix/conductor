@@ -6,6 +6,7 @@ buildscript {
     
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
+        classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7'
         classpath 'org.apache.ant:ant:1.9.7'
     }
 }
@@ -17,7 +18,7 @@ plugins {
 ext.githubProjectName = rootProject.name // Change if github project name is not the same as the root project's name
 
 apply plugin: 'project-report'
-
+apply plugin: 'org.sonarqube'
 
 subprojects {
 
