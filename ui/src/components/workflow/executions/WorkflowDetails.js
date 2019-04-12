@@ -50,7 +50,7 @@ function workerLink(type, cell) {
 }
 
 function popoverLink(cell, row) {
-    return (<OverlayTrigger trigger="click" rootClose placement="left" overlay={
+    return (<OverlayTrigger trigger="click" rootClose={true} placement="left" overlay={
         <Popover id="task-details-wfd" title="Task Details" style={{width: '800px'}}>
             <Panel header={<span><span>Task Input</span> <i title="copy to clipboard" className="btn fa fa-clipboard"
                                                             data-clipboard-target="#input"/><UnescapeButton target='input' /></span>}>
@@ -271,29 +271,16 @@ class WorkflowDetails extends Component {
         function consoleLog() {
             if(show) {
                 if (log) {
-                    if (log.body && log.statusCode === 200) {
+                    if (log.status === 200) {
                         return (
                             <div>
                                 <Well>
                                 <span><h4>Workflow ID:</h4><Link
-                                    to={`/workflow/id/${log.body.text}`}>{log.body.text}</Link><br/></span>
+                                    to={`/workflow/id/${log.text}`}>{log.text}</Link><br/></span>
                                     <span><h4>Status code: </h4> <Label
-                                        bsStyle="success">{log.statusCode}</Label><br/></span>
+                                        bsStyle="success">{log.status}</Label><br/></span>
                                     <span><h4>Status text: </h4> <Label
-                                        bsStyle="success">{log.statusText}</Label><br/></span>
-                                </Well>
-                            </div>
-                        );
-                    }
-                    if (log.statusCode === 200) {
-                        return (
-                            <div>
-                                <Well>
-                                    <span><h4>{log.text}</h4><br/></span>
-                                    <span><h4>Status code: </h4> <Label
-                                        bsStyle="success">{log.statusCode}</Label><br/></span>
-                                    <span><h4>Status text: </h4> <Label
-                                        bsStyle="success">{log.statusText}</Label><br/></span>
+                                        bsStyle="success">{log.text}</Label><br/></span>
                                 </Well>
                             </div>
                         );
@@ -405,7 +392,7 @@ class WorkflowDetails extends Component {
                                     bsStyle={log ? (log.error ? "danger" : "success") : "info"}>{this.props.meta ? this.props.meta.name : ""}</Label> workflow
                                 </h1>
                                 {labels.map((item, idx) =>
-                                    <form onSubmit={!this.state.loading ? this.startWorkflow1 : null}>
+                                    <form onSubmit={!this.state.loading ? this.startWorkflow1.bind(this): null}>
                                         &nbsp;&nbsp;
                                         <Input type="input" key={values}
                                                label={item}
@@ -416,7 +403,7 @@ class WorkflowDetails extends Component {
                                     </form>)}
 
                                 <Button bsStyle="primary" bsSize="large" disabled={this.state.loading}
-                                        onClick={!this.state.loading ? this.startWorkflow1 : null }>
+                                        onClick={!this.state.loading ? this.startWorkflow1.bind(this) : null }>
                                         <i className="fas fa-redo"/>
                                         &nbsp;&nbsp;Rerun workflow
                                 </Button>

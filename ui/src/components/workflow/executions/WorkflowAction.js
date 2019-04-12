@@ -81,7 +81,7 @@ class WorkflowAction extends React.Component {
     if (this.props.workflowStatus === 'RUNNING') {
       return (
         <ButtonGroup>
-          <OverlayTrigger placement="bottom" rootClose="true" overlay={ttTerm}>
+          <OverlayTrigger placement="bottom" rootClose={true} overlay={ttTerm}>
             <Button
               bsStyle="danger"
               bsSize="xsmall"

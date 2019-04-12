@@ -18,6 +18,9 @@ class TaskMetaList extends React.Component {
   }
 
   render() {
+    const options = {
+      noDataText: 'Please wait for data'
+    };
     const { taskDefs } = this.state;
 
     const retries = (_, row) => {
@@ -113,7 +116,7 @@ class TaskMetaList extends React.Component {
     return (
       <div className="ui-content">
         <h1>Task Definitions</h1>
-        <BootstrapTable data={taskDefs} striped hover search exportCSV={false} pagination={false}>
+        <BootstrapTable data={taskDefs || []} striped hover search exportCSV={false} pagination={false} options={options}>
           <TableHeaderColumn dataField="name" isKey dataAlign="left" dataSort dataFormat={editor}>
             Name/Version
           </TableHeaderColumn>

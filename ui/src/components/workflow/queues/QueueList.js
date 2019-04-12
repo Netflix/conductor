@@ -19,6 +19,9 @@ class QueueListList extends React.Component {
 
   render() {
     const { queueData } = this.state;
+    const options = {
+      noDataText: 'Please wait for data'
+    };
 
     function formatName(_, { queueName, domain }) {
       return domain != null ? `${queueName} (${domain})` : queueName;
@@ -31,7 +34,8 @@ class QueueListList extends React.Component {
     return (
       <div className="ui-content">
         <h1>Queues</h1>
-        <BootstrapTable data={queueData} striped hover search exportCSV={false} pagination={false}>
+        <BootstrapTable data={queueData || []} striped hover search exportCSV={false}
+                        pagination={false} options={options}>
           <TableHeaderColumn dataField="queueName" isKey dataAlign="left" dataSort dataFormat={formatName}>
             Name (Domain)
           </TableHeaderColumn>

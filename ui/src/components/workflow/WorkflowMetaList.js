@@ -139,12 +139,12 @@ const WorkflowMetaList = React.createClass({
 
     render() {
         const options = {
-            noDataText: 'Empty Table'
+            noDataText: 'Please wait for data'
         };
 
-    function jsonMaker(cell) {
-      return JSON.stringify(cell);
-    }
+        function jsonMaker(cell) {
+          return JSON.stringify(cell);
+        }
 
         function taskMaker(cell, row) {
             if(cell == null){

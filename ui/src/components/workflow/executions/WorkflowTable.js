@@ -67,6 +67,10 @@ export default class WorkflowTable extends Component {
 
     const found = size(results);
     const max = (found < 100) ? start + found : start + 100;
+    const options = {
+      noDataText: 'Please wait for data',
+        sizePerPage:100
+    };
 
     const selectRow = {
       mode: 'checkbox',
@@ -106,7 +110,7 @@ export default class WorkflowTable extends Component {
       </Overlay>
 
         <BootstrapTable data={results} striped={true} hover={true} search={false} exportCSV={false} pagination={false}
-                        selectRow={selectRow} options={{sizePerPage:100}}>
+                        selectRow={selectRow} options={options}>
             <TableHeaderColumn dataField="workflowType" isKey dataAlign="left" dataSort>Workflow</TableHeaderColumn>
             <TableHeaderColumn dataField="workflowId" dataSort dataFormat={linkMaker}>Workflow ID</TableHeaderColumn>
             <TableHeaderColumn dataField="status" dataSort>Status</TableHeaderColumn>
