@@ -1,5 +1,25 @@
-# Base image alredy creates app folder and installs modules there
-FROM frinx/conductor-ui_base:latest
+FROM node:9-alpine
+
+# Install the required packages for the node build
+# to run on alpine
+RUN apk update && apk add \
+  autoconf \
+  automake \
+  libtool \
+  build-base \
+  libstdc++ \
+  gcc \
+  abuild \
+  binutils \
+  nasm \
+  libpng \
+  libpng-dev \
+  libjpeg-turbo \
+  libjpeg-turbo-dev \
+  python
+
+# Make app folders
+RUN mkdir -p /app/ui
 
 # Copy the ui files onto the image
 COPY ./docker/ui/bin /app
@@ -10,6 +30,7 @@ RUN chmod +x /app/startup.sh
 
 # Get and install conductor UI
 RUN cd /app/ui \
+  && npm install \
   && npm run build --server
 
 EXPOSE 5000
