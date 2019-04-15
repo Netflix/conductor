@@ -18,23 +18,25 @@ package com.netflix.conductor.core.execution.mapper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.SystemTaskType;
+import com.netflix.conductor.core.execution.TerminateWorkflowException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 
 /**
- * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link WorkflowTask.Type#DECISION}
+ * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link TaskType#DECISION}
  * to a List {@link Task} starting with Task of type {@link SystemTaskType#DECISION} which is marked as IN_PROGRESS,
  * followed by the list of {@link Task} based on the case expression evaluation in the Decision task.
  */
@@ -43,7 +45,7 @@ public class DecisionTaskMapper implements TaskMapper {
     Logger logger = LoggerFactory.getLogger(DecisionTaskMapper.class);
 
     /**
-     * This method gets the list of tasks that need to scheduled when the the task to scheduled is of type {@link WorkflowTask.Type#DECISION}.
+     * This method gets the list of tasks that need to scheduled when the the task to scheduled is of type {@link TaskType#DECISION}.
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link WorkflowDef}, {@link Workflow} and a string representation of the TaskId
      * @return List of tasks in the following order:
@@ -66,7 +68,6 @@ public class DecisionTaskMapper implements TaskMapper {
         List<Task> tasksToBeScheduled = new LinkedList<>();
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
-        WorkflowDef workflowDefinition = taskMapperContext.getWorkflowDefinition();
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
         int retryCount = taskMapperContext.getRetryCount();
         String taskId = taskMapperContext.getTaskId();
@@ -80,12 +81,11 @@ public class DecisionTaskMapper implements TaskMapper {
         decisionTask.setTaskDefName(SystemTaskType.DECISION.name());
         decisionTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         decisionTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
-        decisionTask.setWorkflowType(workflowInstance.getWorkflowType());
+        decisionTask.setWorkflowType(workflowInstance.getWorkflowName());
         decisionTask.setCorrelationId(workflowInstance.getCorrelationId());
         decisionTask.setScheduledTime(System.currentTimeMillis());
-        decisionTask.setEndTime(System.currentTimeMillis());
         decisionTask.getInputData().put("case", caseValue);
-        decisionTask.getOutputData().put("caseOutput", Arrays.asList(caseValue));
+        decisionTask.getOutputData().put("caseOutput", Collections.singletonList(caseValue));
         decisionTask.setTaskId(taskId);
         decisionTask.setStatus(Task.Status.IN_PROGRESS);
         decisionTask.setWorkflowTask(taskToSchedule);
@@ -102,8 +102,7 @@ public class DecisionTaskMapper implements TaskMapper {
         if (selectedTasks != null && !selectedTasks.isEmpty()) {
             WorkflowTask selectedTask = selectedTasks.get(0);        //Schedule the first task to be executed...
             //TODO break out this recursive call using function composition of what needs to be done and then walk back the condition tree
-            List<Task> caseTasks = taskMapperContext.getDeciderService()
-                    .getTasksToBeScheduled(workflowDefinition, workflowInstance, selectedTask, retryCount, taskMapperContext.getRetryTaskId());
+            List<Task> caseTasks = taskMapperContext.getDeciderService().getTasksToBeScheduled(workflowInstance, selectedTask, retryCount, taskMapperContext.getRetryTaskId());
             tasksToBeScheduled.addAll(caseTasks);
             decisionTask.getInputData().put("hasChildren", "true");
         }
@@ -115,7 +114,7 @@ public class DecisionTaskMapper implements TaskMapper {
      *
      * @param taskToSchedule: The decision task that has the case expression to be evaluated.
      * @param taskInput:      the input which has the values that will be used in evaluating the case expression.
-     * @return: A String representation of the evaluated result
+     * @return A String representation of the evaluated result
      */
     @VisibleForTesting
     String getEvaluatedCaseValue(WorkflowTask taskToSchedule, Map<String, Object> taskInput) {
@@ -128,8 +127,9 @@ public class DecisionTaskMapper implements TaskMapper {
                 Object returnValue = ScriptEvaluator.eval(expression, taskInput);
                 caseValue = (returnValue == null) ? "null" : returnValue.toString();
             } catch (ScriptException e) {
-                logger.error(e.getMessage(), e);
-                throw new RuntimeException("Error while evaluating the script " + expression, e);
+                String errorMsg = String.format("Error while evaluating script: %s", expression);
+                logger.error(errorMsg, e);
+                throw new TerminateWorkflowException(errorMsg);
             }
 
         } else {//In case of no case expression, get the caseValueParam and treat it as a string representation of caseValue

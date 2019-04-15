@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -57,16 +58,15 @@ public class EventTaskMapper implements TaskMapper {
         eventTask.setTaskDefName(taskToSchedule.getName());
         eventTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         eventTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
-        eventTask.setWorkflowType(workflowInstance.getWorkflowType());
+        eventTask.setWorkflowType(workflowInstance.getWorkflowName());
         eventTask.setCorrelationId(workflowInstance.getCorrelationId());
         eventTask.setScheduledTime(System.currentTimeMillis());
-        eventTask.setEndTime(System.currentTimeMillis());
         eventTask.setInputData(eventTaskInput);
         eventTask.getInputData().put("sink", sink);
         eventTask.setTaskId(taskId);
         eventTask.setStatus(Task.Status.SCHEDULED);
         eventTask.setWorkflowTask(taskToSchedule);
 
-        return Arrays.asList(eventTask);
+        return Collections.singletonList(eventTask);
     }
 }

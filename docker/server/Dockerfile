@@ -17,7 +17,6 @@ RUN cd conductor/server && ../gradlew build --no-daemon -x test
 #
 # conductor:server - Netflix conductor server
 #
-
 FROM java:8-jre-alpine
 
 # Make app folders

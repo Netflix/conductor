@@ -21,9 +21,9 @@ const WorkflowMetaList = React.createClass({
         }
     },
 
-    componentWillMount(){
-        this.props.dispatch(getWorkflowDefs());
-    },
+  componentWillMount(){
+    this.props.dispatch(getWorkflowDefs());
+  },
 
     componentWillReceiveProps(nextProps){
         this.state.workflows = nextProps.workflows;
@@ -71,7 +71,7 @@ const WorkflowMetaList = React.createClass({
     },
 
     filterChange(labels) {
-        this.state.labels = labels;  
+        this.state.labels = labels;
         this.handleFilter();
     },
 
@@ -97,7 +97,7 @@ const WorkflowMetaList = React.createClass({
         {
             workflowsFiltered: filter,
         },
-            this.handleSearch(filter) 
+            this.handleSearch(filter)
         );
     },
 
@@ -117,19 +117,19 @@ const WorkflowMetaList = React.createClass({
         }
 
         let filtered = [];
-        if (alreadyFiltered) { 
+        if (alreadyFiltered) {
             filtered = alreadyFiltered;
         } else {
             filtered = this.state.workflowsFiltered;
         }
-        
+
         let filter = [];
         if ( filtered && filtered.length > 0) {
             filtered.forEach(wf => {
                 if (wf.name.toLowerCase().includes(searchValue.toLowerCase())) {
                     filter.push(wf);
                 }
-            });     
+            });
         }
 
         this.setState({
@@ -138,10 +138,12 @@ const WorkflowMetaList = React.createClass({
     },
 
     render() {
-        var wfs = this.state.workflowsFilteredAndSearched;
+        const options = {
+            noDataText: 'Please wait for data'
+        };
 
-        function jsonMaker(cell, row) {
-            return JSON.stringify(cell);
+        function jsonMaker(cell) {
+          return JSON.stringify(cell);
         }
 
         function taskMaker(cell, row) {
@@ -166,7 +168,7 @@ const WorkflowMetaList = React.createClass({
             <div className="ui-content">
                 <h1>Workflows</h1>
                 <div>
-                    <Panel header="Filter Workflows">                
+                    <Panel header="Filter Workflows">
                         <Row className="show-grid">
                             <Col xs={1} style={{ 'textAlign' : 'center'}}>
                                 <Button onClick={this.showAllWorkflows} className="btn">Show All</Button>
@@ -180,14 +182,14 @@ const WorkflowMetaList = React.createClass({
                                 &nbsp;<i className="fa fa-angle-up fa-1x"/>&nbsp;&nbsp;<label className="small nobold">Search by Workflow keyword</label>
                             </Col>
                         </Row>
-                 
+
                     <form>
 
                     </form>
                     </Panel>
                 </div>
                 <div className="panel panel-default">
-                    <BootstrapTable ref="table" data={wfs} striped={true} hover={true} exportCSV={false} pagination={false} s>
+                    <BootstrapTable ref="table" data={this.state.workflowsFilteredAndSearched || []} striped={true} hover={true} exportCSV={false} pagination={false} options={ options }>
                         <TableHeaderColumn dataField="name" isKey={true} dataAlign="left" dataSort={true} dataFormat={nameMaker}>Name/Version</TableHeaderColumn>
                         <TableHeaderColumn dataField="description" dataFormat={labelsMaker}>Labels</TableHeaderColumn>
                         <TableHeaderColumn dataField="inputParameters" width="500" dataSort={true} dataFormat={jsonMaker}>Input Parameters</TableHeaderColumn>

@@ -3,7 +3,6 @@ import Workflow from './components/workflow/executions/WorkflowList';
 import Event from './components/event/EventList';
 import EventExecs from './components/event/EventExecs';
 import WorkflowDetails from './components/workflow/executions/WorkflowDetails';
-import WorkflowDia from './components/workflow/executions/WorkflowDia';
 import WorkflowMetaList from './components/workflow/WorkflowMetaList';
 import WorkflowScheduleList from './components/workflow/WorkflowScheduleList';
 import TasksMetaList from './components/workflow/tasks/TasksMetaList';
@@ -32,6 +31,6 @@ const routeConfig = [
       { path: 'help', component: Help }
     ]
   }
-]
+];
 
 export default routeConfig;
