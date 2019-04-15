@@ -91,6 +91,7 @@
          httpTask.setWorkflowTask(taskToSchedule);
          httpTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
          httpTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+         httpTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
          return Collections.singletonList(httpTask);
      }
  }
