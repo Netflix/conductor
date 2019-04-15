@@ -108,11 +108,10 @@ export default class WorkflowTable extends Component {
           </div>
         </Popover>
       </Overlay>
-
         <BootstrapTable data={results} striped={true} hover={true} search={false} exportCSV={false} pagination={false}
                         selectRow={selectRow} options={options}>
-            <TableHeaderColumn dataField="workflowType" isKey dataAlign="left" dataSort>Workflow</TableHeaderColumn>
-            <TableHeaderColumn dataField="workflowId" dataSort dataFormat={linkMaker}>Workflow ID</TableHeaderColumn>
+            <TableHeaderColumn dataField="workflowType" dataAlign="left" dataSort>Workflow</TableHeaderColumn>
+            <TableHeaderColumn dataField="workflowId" isKey dataSort dataFormat={linkMaker}>Workflow ID</TableHeaderColumn>
             <TableHeaderColumn dataField="status" dataSort>Status</TableHeaderColumn>
             <TableHeaderColumn dataField="startTime" dataSort dataFormat={formatDate}>Start Time</TableHeaderColumn>
             <TableHeaderColumn dataField="updateTime" dataSort dataFormat={formatDate}>Last Updated</TableHeaderColumn>
@@ -121,7 +120,7 @@ export default class WorkflowTable extends Component {
             <TableHeaderColumn dataField="failedReferenceTaskNames">Failed Tasks</TableHeaderColumn>
             <TableHeaderColumn dataField="input" width="300px">Input</TableHeaderColumn>
             <TableHeaderColumn dataField="workflowId" width="75px" dataFormat={this.formatDetails}>Details</TableHeaderColumn>
-      </BootstrapTable>
+        </BootstrapTable>
     </div>
   }
 }
