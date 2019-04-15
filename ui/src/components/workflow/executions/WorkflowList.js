@@ -7,13 +7,15 @@ import { searchWorkflows, getWorkflowDefs } from '../../../actions/WorkflowActio
 import WorkflowAction  from './WorkflowAction';
 import Typeahead from 'react-bootstrap-typeahead';
 import Select from 'react-select';
-
 const ILLEGAL_SEARCH_CHARACTERS = /#|"|%|&|\\/;
 const Workflow = React.createClass({
 
   getInitialState() {
+   this.state = {
+              datefrm: new Date(),
+              dateto:new Date()
+          };
     let h = this.props.location.query.h;
-
     let range = this.props.location.query.range;
     if(range != null && range != '') {
       range = range.split(',');
@@ -55,6 +57,7 @@ const Workflow = React.createClass({
       start: start
     }
   },
+
   componentWillMount(){
     this.props.dispatch(getWorkflowDefs());
     this.doDispatch();
@@ -69,6 +72,7 @@ const Workflow = React.createClass({
     if(search == null || search == 'undefined' || search == '') {
       search = '';
     }
+
     let h = nextProps.location.query.h;
     if(isNaN(h)) {
       h = '';
@@ -122,13 +126,16 @@ const Workflow = React.createClass({
     }
   },
   urlUpdate() {
+
     let q = this.state.search;
     let h = this.state.h;
     let workflowTypes = this.state.workflowTypes;
     let status = this.state.status;
     let start = this.state.start;
     let range = this.state.range;
-    this.props.history.pushState(null, "/workflow?q=" + q + "&h=" + h + "&workflowTypes=" + workflowTypes + "&status=" + status + "&start=" + start + "&range=" + range);
+    let frmdate = this.state.datefrm;
+    let todate = this.state.dateto;
+    this.props.history.pushState(null, "/workflow?q=" + q + "&h=" + h + "&workflowTypes=" + workflowTypes + "&status=" + status + "&start=" + start + "&range=" + range+"&frmdate="+frmdate+"todate="+todate);
   },
   doDispatch() {
 
@@ -144,7 +151,7 @@ const Workflow = React.createClass({
     if(this.state.status.length > 0) {
       query.push('status IN (' + this.state.status.join(',') + ') ');
     }
-    this.props.dispatch(searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start, this.state.range));
+    this.props.dispatch(searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start, this.state.range,this.state.datefrm,this.state.dateto));
   },
   workflowTypeChange(workflowTypes) {
     this.state.update = true;
@@ -192,6 +199,24 @@ const Workflow = React.createClass({
     this.state.h = e.target.value;
     this.refreshResults();
   },
+dateChangeFrom(e){
+    this.state.update = true;
+    this.state.datefrm = e.target.value;
+    this.refreshResults();
+},
+
+   dateChangeTo(e){
+      this.state.update = true;
+        this.state.dateto = e.target.value;
+        this.refreshResults();
+  },
+   clearBtnClick() {
+     this.state.update = true;
+     this.state.datefrm= "";
+     this.state.dateto = "";
+     this.refreshResults();
+    },
+
   keyPress(e){
    if(e.key == 'Enter'){
      this.state.update = true;
@@ -298,6 +323,20 @@ const Workflow = React.createClass({
                 <br/>&nbsp;&nbsp;&nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Created (in past hours)</label>
               </Col>
             </Row>
+             <Row className="show-grid">
+               <Col md={2}>
+                  <input  name="datefrm"  type="date" value={this.state.datefrm} className="form-control"  onChange={ this.dateChangeFrom } />
+                   &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">From Date</label>
+                </Col>
+                <Col md={2}>
+                   <input  name="dateto"  type="date" value={this.state.dateto} className="form-control"  onChange={ this.dateChangeTo } />
+                       &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">To Date</label>
+
+                  </Col>
+                    <Col md={2}>
+                         <Button bsSize="small" bsStyle="success" onClick={this.clearBtnClick}>&nbsp;&nbsp;Clear date range</Button>
+                     </Col>
+             </Row>
           </Grid>
           <form>
 

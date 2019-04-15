@@ -1,6 +1,6 @@
 import http from '../core/HttpClient';
 
-export function searchWorkflows(query, search, hours, fullstr, start, range) {
+export function searchWorkflows(query, search, hours, fullstr, start, range,frmdate,todate) {
 
   return function (dispatch) {
     dispatch({
@@ -17,7 +17,8 @@ export function searchWorkflows(query, search, hours, fullstr, start, range) {
        search =search.replace(new RegExp(':','g'), '\\:');
       }
     }
-    return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search + '&start=' + start + "&range=" + range).then((data) => {
+
+    return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search + '&start=' + start + "&range=" + range+"&frmdate="+frmdate+"&todate="+todate).then((data) => {
       dispatch({
         type: 'RECEIVED_WORKFLOWS',
         data
@@ -37,7 +38,6 @@ export function getWorkflowDetails(workflowId){
       type: 'GET_WORKFLOW_DETAILS',
       workflowId
     });
-
 
     return http.get('/api/wfe/id/' + workflowId).then((data) => {
       dispatch({
