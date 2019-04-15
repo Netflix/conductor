@@ -56,6 +56,7 @@ public class CoreModule extends AbstractModule {
         bind(Event.class).asEagerSingleton();
         bind(Lambda.class).asEagerSingleton();
         bind(Terminate.class).asEagerSingleton();
+        bind(IsolatedTaskQueueProducer.class).asEagerSingleton();
     }
 
     @Provides

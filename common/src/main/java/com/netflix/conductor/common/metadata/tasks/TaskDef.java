@@ -103,6 +103,9 @@ public class TaskDef extends Auditable {
 	@ProtoField(id = 15)
 	private Integer rateLimitFrequencyInSeconds;
 
+	@ProtoField(id = 16)
+	private String isolationGroupId;
+
 	public TaskDef() {
 	}
 
@@ -338,6 +341,14 @@ public class TaskDef extends Auditable {
 		this.inputTemplate = inputTemplate;
 	}
 
+	public String getIsolationGroupId() {
+		return isolationGroupId;
+	}
+
+	public void setIsolationGroupId(String isolationGroupId) {
+		this.isolationGroupId = isolationGroupId;
+	}
+
 	@Override
 	public String toString(){
 		return name;
@@ -360,7 +371,8 @@ public class TaskDef extends Auditable {
 				getRetryLogic() == taskDef.getRetryLogic() &&
 				Objects.equals(getConcurrentExecLimit(), taskDef.getConcurrentExecLimit()) &&
 				Objects.equals(getRateLimitPerFrequency(), taskDef.getRateLimitPerFrequency()) &&
-				Objects.equals(getInputTemplate(), taskDef.getInputTemplate());
+				Objects.equals(getInputTemplate(), taskDef.getInputTemplate()) &&
+				Objects.equals(getIsolationGroupId(), taskDef.getIsolationGroupId());
 	}
 
 	@Override
@@ -368,7 +380,6 @@ public class TaskDef extends Auditable {
 
 		return Objects.hash(getName(), getDescription(), getRetryCount(), getTimeoutSeconds(), getInputKeys(),
 				getOutputKeys(), getTimeoutPolicy(), getRetryLogic(), getRetryDelaySeconds(),
-				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate());
+				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate(), getIsolationGroupId());
 	}
-
 }

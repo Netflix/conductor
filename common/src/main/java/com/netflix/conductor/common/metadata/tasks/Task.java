@@ -187,6 +187,9 @@ public class Task {
     @ProtoField(id = 35)
     private String externalOutputPayloadStoragePath;
 
+    @ProtoField(id = 36)
+    private String isolationGroupId;
+
     public Task() {
     }
 
@@ -666,6 +669,14 @@ public class Task {
         this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
     }
 
+    public void setIsolationGroupId(String isolationGroupId) {
+        this.isolationGroupId = isolationGroupId;
+    }
+
+    public String getIsolationGroupId() {
+        return isolationGroupId;
+    }
+
     public Task copy() {
         Task copy = new Task();
         copy.setCallbackAfterSeconds(callbackAfterSeconds);
@@ -734,6 +745,7 @@ public class Task {
                 ", rateLimitFrequencyInSeconds=" + rateLimitFrequencyInSeconds +
                 ", externalInputPayloadStoragePath='" + externalInputPayloadStoragePath + '\'' +
                 ", externalOutputPayloadStoragePath='" + externalOutputPayloadStoragePath + '\'' +
+                ", isolationGroupId='" + isolationGroupId + '\'' +
                 '}';
     }
 
@@ -775,11 +787,12 @@ public class Task {
                 Objects.equals(getInputMessage(), task.getInputMessage()) &&
                 Objects.equals(getOutputMessage(), task.getOutputMessage()) &&
                 Objects.equals(getExternalInputPayloadStoragePath(), task.getExternalInputPayloadStoragePath()) &&
-                Objects.equals(getExternalOutputPayloadStoragePath(), task.getExternalOutputPayloadStoragePath());
+                Objects.equals(getExternalOutputPayloadStoragePath(), task.getExternalOutputPayloadStoragePath()) &&
+                Objects.equals(getIsolationGroupId(), task.getIsolationGroupId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTaskType(), getStatus(), getInputData(), getReferenceTaskName(), getRetryCount(), getSeq(), getCorrelationId(), getPollCount(), getTaskDefName(), getScheduledTime(), getStartTime(), getEndTime(), getUpdateTime(), getStartDelayInSeconds(), getRetriedTaskId(), isRetried(), isExecuted(), isCallbackFromWorker(), getResponseTimeoutSeconds(), getWorkflowInstanceId(), getWorkflowType(), getTaskId(), getReasonForIncompletion(), getCallbackAfterSeconds(), getWorkerId(), getOutputData(), getWorkflowTask(), getDomain(), getInputMessage(), getOutputMessage(), getRateLimitPerFrequency(), getRateLimitFrequencyInSeconds(), getExternalInputPayloadStoragePath(), getExternalOutputPayloadStoragePath());
+        return Objects.hash(getTaskType(), getStatus(), getInputData(), getReferenceTaskName(), getRetryCount(), getSeq(), getCorrelationId(), getPollCount(), getTaskDefName(), getScheduledTime(), getStartTime(), getEndTime(), getUpdateTime(), getStartDelayInSeconds(), getRetriedTaskId(), isRetried(), isExecuted(), isCallbackFromWorker(), getResponseTimeoutSeconds(), getWorkflowInstanceId(), getWorkflowType(), getTaskId(), getReasonForIncompletion(), getCallbackAfterSeconds(), getWorkerId(), getOutputData(), getWorkflowTask(), getDomain(), getInputMessage(), getOutputMessage(), getRateLimitPerFrequency(), getRateLimitFrequencyInSeconds(), getExternalInputPayloadStoragePath(), getExternalOutputPayloadStoragePath(), getIsolationGroupId());
     }
 }
