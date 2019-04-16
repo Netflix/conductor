@@ -1,9 +1,12 @@
 # build the server using java 8 jdk
 build:
   - image: java:8-jdk
+    env_file:
+      - mold.sonar.env
     workdir: /conductor
     commands:
       - ./gradlew build -x test
+      - ./gradlew sonarqube -x test -Dsonar.projectKey=conductor -Dsonar.branch.name="${SONAR_BRANCH}" -Dsonar.host.url="${SONAR_HOST}" -Dsonar.login="${SONAR_LOGIN}"
 
 # build the runtime artifact images..
 artifacts:
