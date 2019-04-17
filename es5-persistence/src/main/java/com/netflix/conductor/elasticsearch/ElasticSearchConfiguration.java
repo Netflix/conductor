@@ -46,6 +46,9 @@ public interface ElasticSearchConfiguration extends Configuration {
     String ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_PROPERTY_NAME = "workflow.elasticsearch.archive.search.batchSize";
     int ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE = 5000;
 
+    String AWS_ELASTIC_SEARCH_PROPERTY_ENABLED_NAME = "workflow.elasticsearch.aws";
+    boolean AWS_ELASTIC_SEARCH_PROPERTY_ENABLED_VALUE = false;
+
     default String getURL() {
         return getProperty(ELASTIC_SEARCH_URL_PROPERTY_NAME, ELASTIC_SEARCH_URL_DEFAULT_VALUE);
     }
@@ -114,5 +117,9 @@ public interface ElasticSearchConfiguration extends Configuration {
     default int getArchiveSearchBatchSize() {
         return getIntProperty(ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_PROPERTY_NAME,
             ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE);
+    }
+
+    default boolean isAwsEs() {
+        return getBooleanProperty(AWS_ELASTIC_SEARCH_PROPERTY_ENABLED_NAME, AWS_ELASTIC_SEARCH_PROPERTY_ENABLED_VALUE);
     }
 }
