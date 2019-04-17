@@ -264,6 +264,26 @@ export function getQueueData() {
   }
 }
 
+export function updateWorkflow(workflow){
+    return function (dispatch) {
+        dispatch({
+            type: 'REQUESTED_UPDATE_WORKFLOW_DEF',
+            workflow
+        });
+
+
+        return http.put('/api/wfe/metadata/', workflow).then((data) => {
+            dispatch({
+                type: 'RECEIVED_UPDATE_WORKFLOW_DEF'
+            });
+        }).catch((e) => {
+            dispatch({
+                type: 'REQUEST_ERROR',
+                e
+            });
+        });
+    }
+}
 
 export function getEventHandlers() {
 
