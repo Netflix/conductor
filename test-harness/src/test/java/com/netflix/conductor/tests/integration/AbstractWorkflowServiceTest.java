@@ -4426,13 +4426,11 @@ public abstract class AbstractWorkflowServiceTest {
 
         Task task = workflowExecutionService.poll("junit_task_1", "test");
         assertNotNull(task);
-        assertEquals("task2", task.getReferenceTaskName());
         task.setStatus(Status.COMPLETED);
         workflowExecutionService.updateTask(task);
 
         task = workflowExecutionService.poll("junit_task_1", "test");
         assertNotNull(task);
-        assertEquals("task3", task.getReferenceTaskName());
         task.setStatus(Status.COMPLETED);
         workflowExecutionService.updateTask(task);
 
