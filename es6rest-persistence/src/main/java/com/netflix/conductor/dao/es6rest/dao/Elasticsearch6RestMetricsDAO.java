@@ -92,7 +92,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			" && doc['startTime'].value != null && doc['startTime'].value > 0 " +
 			" ? doc['endTime'].value - doc['startTime'].value : 0"));
 
-	private static final AvgAggregationBuilder EVENT_AVERAGE_PROC_TIME = AggregationBuilders.avg("aggAvg")
+	private static final AvgAggregationBuilder EVENT_AVERAGE_EXEC_TIME = AggregationBuilders.avg("aggAvg")
 		.script(new Script("doc['processed'].value != null && doc['processed'].value > 0 " +
 			" && doc['created'].value != null && doc['created'].value > 0 " +
 			" ? doc['processed'].value - doc['created'].value : 0"));
@@ -539,7 +539,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			.terms("aggSubject")
 			.field("subject.keyword")
 			.size(Integer.MAX_VALUE)
-			.subAggregation(EVENT_AVERAGE_PROC_TIME);
+			.subAggregation(EVENT_AVERAGE_EXEC_TIME);
 
 		SearchRequest searchRequest = new SearchRequest(eventExecIndex);
 		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
