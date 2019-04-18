@@ -129,9 +129,5 @@ public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
     @Override
     public void testTerminateTaskWithCompletedStatus() {}
 
-    @Ignore
-    @Test
-    @Override
-    public void testExecutionTimes(){}
 
 }

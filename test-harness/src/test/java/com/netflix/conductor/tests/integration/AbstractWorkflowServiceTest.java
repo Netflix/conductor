@@ -4366,44 +4366,36 @@ public abstract class AbstractWorkflowServiceTest {
         taskDef.setTimeoutSeconds(1);
         metadataService.updateTaskDef(taskDef);
 
-        taskName = "junit_task_2";
-        taskDef = notFoundSafeGetTaskDef(taskName);
-        taskDef.setTimeoutSeconds(1);
-        metadataService.updateTaskDef(taskDef);
-
         metadataService.registerTaskDef(Collections.singletonList(taskDef));
 
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("test_execution_times_wf");
         workflowDef.setSchemaVersion(2);
 
-        WorkflowTask httpTask1 = new WorkflowTask();
-        httpTask1.setWorkflowTaskType(TaskType.HTTP);
-        httpTask1.setName("default");
-        httpTask1.setTaskReferenceName("http1");
+        WorkflowTask workflowTask1 = new WorkflowTask();
+        workflowTask1.setName("junit_task_1");
+        workflowTask1.setTaskReferenceName("task1");
+
+        WorkflowTask workflowTask2 = new WorkflowTask();
+        workflowTask2.setName("junit_task_1");
+        workflowTask2.setTaskReferenceName("task2");
+
+        WorkflowTask workflowTask3 = new WorkflowTask();
+        workflowTask3.setName("junit_task_1");
+        workflowTask3.setTaskReferenceName("task3");
 
         WorkflowTask forkTask = new WorkflowTask();
         forkTask.setType(TaskType.FORK_JOIN.name());
         forkTask.setName("forktask1");
         forkTask.setTaskReferenceName("forktask1");
 
-        WorkflowTask httpTask2 = new WorkflowTask();
-        httpTask2.setWorkflowTaskType(TaskType.HTTP);
-        httpTask2.setName("junit_task_1");
-        httpTask2.setTaskReferenceName("http2");
-
-        WorkflowTask httpTask3 = new WorkflowTask();
-        httpTask3.setWorkflowTaskType(TaskType.HTTP);
-        httpTask3.setName("junit_task_2");
-        httpTask3.setTaskReferenceName("http3");
-
-        forkTask.getForkTasks().add(Collections.singletonList(httpTask2));
-        forkTask.getForkTasks().add(Collections.singletonList(httpTask3));
+        forkTask.getForkTasks().add(Collections.singletonList(workflowTask2));
+        forkTask.getForkTasks().add(Collections.singletonList(workflowTask3));
 
         WorkflowTask joinTask = new WorkflowTask();
         joinTask.setType(TaskType.JOIN.name());
         joinTask.setTaskReferenceName("jointask");
-        joinTask.setJoinOn(Arrays.asList("http2", "http3"));
+        joinTask.setJoinOn(Arrays.asList("task2", "task3"));
 
         Map<String, Object> decisionInputParameters = new HashMap<>();
         decisionInputParameters.put("case", "a");
@@ -4413,7 +4405,7 @@ public abstract class AbstractWorkflowServiceTest {
         decisionTask.setName("decision1");
         decisionTask.setTaskReferenceName("decision1");
         decisionTask.setInputParameters(decisionInputParameters);
-        decisionTask.setDefaultCase(Collections.singletonList(httpTask1));
+        decisionTask.setDefaultCase(Collections.singletonList(workflowTask1));
         decisionTask.setCaseValueParam("case");
         Map<String, List<WorkflowTask>> decisionCases = new HashMap<>();
         decisionCases.put("a", Arrays.asList(forkTask, joinTask));
@@ -4432,13 +4424,15 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(workflow);
         assertEquals(5, workflow.getTasks().size());
 
-        Task task = workflowExecutionService.poll("HTTP", "test");
+        Task task = workflowExecutionService.poll("junit_task_1", "test");
         assertNotNull(task);
+        assertEquals("task2", task.getReferenceTaskName());
         task.setStatus(Status.COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        task = workflowExecutionService.poll("HTTP", "test");
+        task = workflowExecutionService.poll("junit_task_1", "test");
         assertNotNull(task);
+        assertEquals("task3", task.getReferenceTaskName());
         task.setStatus(Status.COMPLETED);
         workflowExecutionService.updateTask(task);
 
@@ -4454,8 +4448,8 @@ public abstract class AbstractWorkflowServiceTest {
 
         assertEquals("decision1", workflow.getTasks().get(0).getReferenceTaskName());
         assertEquals("forktask1", workflow.getTasks().get(1).getReferenceTaskName());
-        assertEquals("http2", workflow.getTasks().get(2).getReferenceTaskName());
-        assertEquals("http3", workflow.getTasks().get(3).getReferenceTaskName());
+        assertEquals("task2", workflow.getTasks().get(2).getReferenceTaskName());
+        assertEquals("task3", workflow.getTasks().get(3).getReferenceTaskName());
         assertEquals("jointask", workflow.getTasks().get(4).getReferenceTaskName());
 
         metadataService.unregisterWorkflowDef(workflowDef.getName(), 1);
