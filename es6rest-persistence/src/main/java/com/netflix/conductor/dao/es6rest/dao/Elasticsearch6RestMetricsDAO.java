@@ -94,8 +94,13 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 	private static final AvgAggregationBuilder EVENT_AVERAGE_PROC_TIME = AggregationBuilders.avg("aggAvg")
 		.script(new Script("doc['processed'].value != null && doc['processed'].value > 0 " +
-			" && doc['received'].value != null && doc['received'].value > 0 " +
-			" ? doc['processed'].value - doc['received'].value : 0"));
+			" && doc['created'].value != null && doc['created'].value > 0 " +
+			" ? doc['processed'].value - doc['created'].value : 0"));
+
+	private static final AvgAggregationBuilder EVENT_AVERAGE_WAIT_TIME = AggregationBuilders.avg("aggAvg")
+		.script(new Script("doc['received'].value != null && doc['received'].value > 0 " +
+			" && doc['created'].value != null && doc['created'].value > 0 " +
+			" ? doc['created'].value - doc['received'].value : 0"));
 
 	private static final String VERSION = "\\.\\d+\\.\\d+"; // covers '.X.Y' where X and Y any number/digit
 	private static final String PREFIX = "deluxe.conductor";
@@ -157,8 +162,11 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 				// Event published
 				futures.add(pool.submit(() -> eventPublished(metrics, today)));
 
-				// Event average
+				// Event execution
 				futures.add(pool.submit(() -> eventExecAverage(metrics, today)));
+
+				// Event wait
+				futures.add(pool.submit(() -> eventWaitAverage(metrics, today)));
 			}
 
 			// Admin counters
@@ -244,6 +252,30 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 			// overall
 			futures.add(pool.submit(() -> eventExecAverage(metrics, false)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);
+	}
+
+	@Override
+	public Map<String, Object> getEventWaitAverage() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> eventWaitAverage(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> eventWaitAverage(metrics, false)));
 
 			// Wait until completed
 			waitCompleted(futures);
@@ -440,7 +472,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", EVENT_STATUSES);
 		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
 		if (today) {
-			mainQuery = mainQuery.must(getStartTimeQuery("created"));
+			mainQuery = mainQuery.must(getStartTimeQuery("received"));
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
@@ -500,7 +532,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", Arrays.asList("COMPLETED", "FAILED"));
 		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
 		if (today) {
-			mainQuery = mainQuery.must(getStartTimeQuery("created"));
+			mainQuery = mainQuery.must(getStartTimeQuery("received"));
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
@@ -523,6 +555,44 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
 
 			String metricName = String.format("%s.avg_event_execution_msec%s.%s", PREFIX, toLabel(today), subjectName);
+			map.get(metricName).set((long) avg);
+		}
+	}
+
+	private void eventWaitAverage(Map<String, AtomicLong> map, boolean today) {
+		Set<String> subjects = getSubjects();
+
+		for (String subject : subjects) {
+			initMetric(map, String.format("%s.avg_event_wait_msec%s.%s", PREFIX, toLabel(today), subject));
+		}
+
+		QueryBuilder typeQuery = QueryBuilders.termsQuery("subject.keyword", subjects);
+		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", EVENT_STATUSES);
+		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
+		if (today) {
+			mainQuery = mainQuery.must(getStartTimeQuery("received"));
+		}
+
+		TermsAggregationBuilder aggregation = AggregationBuilders
+			.terms("aggSubject")
+			.field("subject.keyword")
+			.size(Integer.MAX_VALUE)
+			.subAggregation(EVENT_AVERAGE_WAIT_TIME);
+
+		SearchRequest searchRequest = new SearchRequest(eventExecIndex);
+		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
+
+		SearchResponse response = search(searchRequest);
+		ParsedStringTerms aggSubject = response.getAggregations().get("aggSubject");
+		for (Object itemSubject : aggSubject.getBuckets()) {
+			ParsedStringTerms.ParsedBucket subjectBucket = (ParsedStringTerms.ParsedBucket) itemSubject;
+			String subjectName = subjectBucket.getKeyAsString().toLowerCase();
+
+			ParsedAvg aggAvg = subjectBucket.getAggregations().get("aggAvg");
+
+			double avg = Double.isInfinite(aggAvg.getValue()) ? 0 : aggAvg.getValue();
+
+			String metricName = String.format("%s.avg_event_wait_msec%s.%s", PREFIX, toLabel(today), subjectName);
 			map.get(metricName).set((long) avg);
 		}
 	}
