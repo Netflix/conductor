@@ -608,7 +608,7 @@ public class WorkflowExecutor {
 		logger.debug("Workflow has completed, workflowId=" + wf.getWorkflowId() + ",correlationId=" + wf.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 	}
 
-	public void forceCompleteWorkflow(String workflowId) throws Exception {
+	public void forceCompleteWorkflow(String workflowId, String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow == null)
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
@@ -621,7 +621,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 		logger.debug("Workflow is force completed. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId()
 			+ ",contextUser=" + workflow.getContextUser());
-		cancelTasks(workflow, workflow.getTasks());
+		cancelTasks(workflow, workflow.getTasks(), reason);
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -673,7 +673,7 @@ public class WorkflowExecutor {
 
 		edao.updateWorkflow(workflow);
 		logger.debug("Workflow is cancelled. workflowId=" + workflowId + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
-		cancelTasks(workflow, workflow.getTasks());
+		cancelTasks(workflow, workflow.getTasks(), reason);
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -743,7 +743,7 @@ public class WorkflowExecutor {
 
 		edao.updateWorkflow(workflow);
 		logger.debug("Workflow has been reset. workflowId="+workflowId+",correlationId="+workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
-		cancelTasks(workflow, workflow.getTasks());
+		cancelTasks(workflow, workflow.getTasks(), null);
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -822,7 +822,7 @@ public class WorkflowExecutor {
 			logger.debug(message);
 		}
 		List<Task> tasks = workflow.getTasks();
-		cancelTasks(workflow, tasks);
+		cancelTasks(workflow, tasks, null);
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -1713,12 +1713,12 @@ public class WorkflowExecutor {
 		}
 	}
 
-	private void cancelTasks(Workflow workflow, List<Task> tasks) throws Exception {
+	private void cancelTasks(Workflow workflow, List<Task> tasks, String reason) throws Exception {
 		for (Task task : tasks) {
 			if (!task.getStatus().isTerminal()) {
 				// Cancel the ones which are not completed yet....
 				task.setStatus(Status.CANCELED);
-				task.setReasonForIncompletion(workflow.getReasonForIncompletion());
+				task.setReasonForIncompletion(StringUtils.defaultIfEmpty(reason, workflow.getReasonForIncompletion()));
 				if (SystemTaskType.is(task.getTaskType())) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
 					stt.cancel(workflow, task, this);

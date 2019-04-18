@@ -160,8 +160,13 @@ public class SubWorkflow extends WorkflowSystemTask {
 			return;
 		}
 
+		logger.debug("Workflow cancellation requested. workflowId=" + subWorkflow.getWorkflowId()
+			+ ", correlationId=" + subWorkflow.getCorrelationId()
+			+ ", contextUser=" + subWorkflow.getContextUser()
+			+ ", parentWorkflowId=" + subWorkflow.getParentWorkflowId());
+
 		if (workflow.getStatus() == WorkflowStatus.COMPLETED) {
-			provider.forceCompleteWorkflow(workflowId);
+			provider.forceCompleteWorkflow(workflowId, "Parent workflow force completed");
 		} else if (workflow.getStatus() == WorkflowStatus.CANCELLED) {
 			subWorkflow.setStatus(WorkflowStatus.CANCELLED);
 			subWorkflow.setCancelledBy(workflow.getCancelledBy());
