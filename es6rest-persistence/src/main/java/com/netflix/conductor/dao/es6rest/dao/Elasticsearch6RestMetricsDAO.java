@@ -401,8 +401,13 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggSubject").field("subject")
-			.subAggregation(AggregationBuilders.cardinality("aggCountPerSubject").field("id"));
+			.terms("aggSubject")
+			.field("subject")
+			.size(Integer.MAX_VALUE)
+			.subAggregation(AggregationBuilders
+				.cardinality("aggCountPerSubject")
+				.field("id")
+			);
 
 		SearchRequest searchRequest = new SearchRequest(eventPubsIndex);
 		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
@@ -439,11 +444,21 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggSubject").field("subject.keyword")
-			.subAggregation(AggregationBuilders.cardinality("aggCountPerSubject").field("messageId"))
+			.terms("aggSubject")
+			.field("subject.keyword")
+			.size(Integer.MAX_VALUE)
 			.subAggregation(AggregationBuilders
-				.terms("aggStatus").field("status")
-				.subAggregation(AggregationBuilders.cardinality("aggCountPerStatus").field("messageId"))
+				.cardinality("aggCountPerSubject")
+				.field("messageId")
+			)
+			.subAggregation(AggregationBuilders
+				.terms("aggStatus")
+				.field("status")
+				.size(Integer.MAX_VALUE)
+				.subAggregation(AggregationBuilders
+					.cardinality("aggCountPerStatus")
+					.field("messageId")
+				)
 			);
 
 		SearchRequest searchRequest = new SearchRequest(eventExecIndex);
@@ -489,7 +504,9 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggSubject").field("subject.keyword")
+			.terms("aggSubject")
+			.field("subject.keyword")
+			.size(Integer.MAX_VALUE)
 			.subAggregation(EVENT_AVERAGE_PROC_TIME);
 
 		SearchRequest searchRequest = new SearchRequest(eventExecIndex);
@@ -519,11 +536,16 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggTaskType").field("taskType")
+			.terms("aggTaskType")
+			.field("taskType")
 			.subAggregation(AggregationBuilders
-				.terms("aggRefName").field("referenceTaskName")
+				.terms("aggRefName")
+				.field("referenceTaskName")
+				.size(Integer.MAX_VALUE)
 				.subAggregation(AggregationBuilders
-					.terms("aggStatus").field("status")
+					.terms("aggStatus")
+					.field("status")
+					.size(Integer.MAX_VALUE)
 				)
 			);
 
@@ -579,10 +601,15 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		}
 
 		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggTaskType").field("taskType")
+			.terms("aggTaskType")
+			.field("taskType")
+			.size(Integer.MAX_VALUE)
 			.subAggregation(AggregationBuilders
-				.terms("aggRefName").field("referenceTaskName")
-				.subAggregation(AVERAGE_EXEC_TIME));
+				.terms("aggRefName")
+				.field("referenceTaskName")
+				.size(Integer.MAX_VALUE)
+				.subAggregation(AVERAGE_EXEC_TIME)
+			);
 
 		SearchRequest searchRequest = new SearchRequest(taskIndex);
 		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
@@ -640,8 +667,14 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 		// Aggregation by workflow type and sub aggregation by workflow status
 		TermsAggregationBuilder aggregation = AggregationBuilders
-			.terms("aggWorkflowType").field("workflowType")
-			.subAggregation(AggregationBuilders.terms("aggStatus").field("status"));
+			.terms("aggWorkflowType")
+			.field("workflowType")
+			.size(Integer.MAX_VALUE)
+			.subAggregation(AggregationBuilders
+				.terms("aggStatus")
+				.field("status")
+				.size(Integer.MAX_VALUE)
+			);
 
 		SearchRequest searchRequest = new SearchRequest(workflowIndex);
 		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
@@ -754,7 +787,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	}
 
 	private RangeQueryBuilder getStartTimeQuery(String field) {
-		TimeZone pst = TimeZone.getTimeZone("America/Los_Angeles");
+		TimeZone pst = TimeZone.getTimeZone("UTC");
 
 		Calendar calendar = new GregorianCalendar();
 		calendar.setTimeZone(pst);
