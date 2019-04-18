@@ -732,7 +732,9 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	private void waitCompleted(List<Future<?>> futures) {
 		for (Future<?> future : futures) {
 			try {
-				future.get();
+				if (future != null) {
+					future.get();
+				}
 			} catch (Exception ex) {
 				logger.error("Get future failed " + ex.getMessage(), ex);
 			}
