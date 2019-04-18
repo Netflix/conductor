@@ -427,7 +427,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			initMetric(map, String.format("%s.event_published%s.%s", PREFIX, toLabel(today), subject));
 		}
 
-		QueryBuilder mainQuery = QueryBuilders.termsQuery("subject.keyword", SINK_SUBJECTS);
+		QueryBuilder mainQuery = QueryBuilders.termsQuery("subject", SINK_SUBJECTS);
 		if (today) {
 			mainQuery = QueryBuilders.boolQuery().must(mainQuery).must(getStartTimeQuery("published"));
 		}
