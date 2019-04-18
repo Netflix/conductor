@@ -10,6 +10,7 @@ import com.netflix.conductor.core.utils.TaskUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,10 +59,17 @@ public class FindUpdateAction implements JavaEventAction {
 		}
 
 		// Lets find WAIT + IN_PROGRESS tasks directly via edao
+		String ndcValue = NDC.peek();
 		boolean taskNamesDefined = CollectionUtils.isNotEmpty(findUpdate.getTaskRefNames());
 		List<Task> tasks = executor.getPendingSystemTasks(Wait.NAME);
 		tasks.parallelStream().forEach(task -> {
+			boolean ndcCleanup = false;
 			try {
+				if (StringUtils.isEmpty(NDC.peek())) {
+					ndcCleanup = true;
+					NDC.push(ndcValue);
+				}
+
 				Workflow workflow = executor.getWorkflow(task.getWorkflowInstanceId(), false);
 				if (workflow == null) {
 					logger.debug("No workflow found with id " + task.getWorkflowInstanceId() + ", skipping " + task);
@@ -110,6 +118,10 @@ public class FindUpdateAction implements JavaEventAction {
 			} catch (Exception ex) {
 				logger.error("Find update failed for taskId={}, messageId={}, event={}, workflowId={}, correlationId={}, payload={}",
 					task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload, ex);
+			} finally {
+				if (ndcCleanup) {
+					NDC.remove();
+				}
 			}
 		});
 
