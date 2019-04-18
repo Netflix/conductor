@@ -418,7 +418,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 			// Total per subject
 			ParsedCardinality countPerSubject = subjectBucket.getAggregations().get("aggCountPerSubject");
 			String metricName = String.format("%s.event_published%s.%s", PREFIX, toLabel(today), subjectName);
-			map.get(metricName).set(countPerSubject.getValue());
+			initMetric(map, metricName, countPerSubject.getValue());
 		}
 	}
 
@@ -770,6 +770,10 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 	private AtomicLong initMetric(Map<String, AtomicLong> map, String metricName) {
 		return map.computeIfAbsent(metricName, s -> new AtomicLong(0));
+	}
+
+	private AtomicLong initMetric(Map<String, AtomicLong> map, String metricName, long value) {
+		return map.computeIfAbsent(metricName, s -> new AtomicLong(value));
 	}
 
 	private String toLabel(boolean today) {
