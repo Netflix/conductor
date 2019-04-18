@@ -165,11 +165,19 @@ public class InfoResource {
 	}
 
 	@GET
-	@Path("/metrics/event/average")
+	@Path("/metrics/event/exec")
 	@ApiOperation(value = "Get the event executions average metrics")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> eventAverage() {
+	public Map<String, Object> eventExec() {
 		return new TreeMap<>(metricsDAO.getEventExecAverage());
+	}
+
+	@GET
+	@Path("/metrics/event/wait")
+	@ApiOperation(value = "Get the event wait average metrics")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> eventWait() {
+		return new TreeMap<>(metricsDAO.getEventWaitAverage());
 	}
 
 	@GET
