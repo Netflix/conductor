@@ -435,6 +435,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		TermsAggregationBuilder aggregation = AggregationBuilders
 			.terms("aggSubject")
 			.field("subject")
+			.size(Integer.MAX_VALUE)
 			.subAggregation(AggregationBuilders
 				.cardinality("aggCountPerSubject")
 				.field("id")
