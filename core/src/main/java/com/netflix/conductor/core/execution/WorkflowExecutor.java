@@ -1161,7 +1161,7 @@ public class WorkflowExecutor {
                 if (workflowSystemTask == null) {
                     throw new ApplicationException(NOT_FOUND, "No system task found by name " + task.getTaskType());
                 }
-                if (task.getStatus() != null && task.getStatus().isTerminal() && task.getStartTime() == 0) {
+                if (task.getStatus() != null && !task.getStatus().isTerminal() && task.getStartTime() == 0) {
                     task.setStartTime(System.currentTimeMillis());
                 }
                 if (!workflowSystemTask.isAsync()) {
