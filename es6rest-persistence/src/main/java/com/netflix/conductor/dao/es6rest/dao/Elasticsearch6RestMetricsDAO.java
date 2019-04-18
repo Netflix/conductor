@@ -538,6 +538,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		TermsAggregationBuilder aggregation = AggregationBuilders
 			.terms("aggTaskType")
 			.field("taskType")
+			.size(Integer.MAX_VALUE)
 			.subAggregation(AggregationBuilders
 				.terms("aggRefName")
 				.field("referenceTaskName")
