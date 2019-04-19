@@ -37,7 +37,8 @@ public class SimpleProgressHandler implements JavaEventAction {
 			throw new IllegalStateException("No taskRefName defined in parameters");
 		}
 
-		String workflowId = ScriptEvaluator.evalJq(JQ_GET_WFID_URN, payload);
+		String workflowJq = StringUtils.defaultIfEmpty(params.workflowIdJq, JQ_GET_WFID_URN);
+		String workflowId = ScriptEvaluator.evalJq(workflowJq, payload);
 		if (StringUtils.isEmpty(workflowId)) {
 			logger.debug("Skipping. No workflowId provided in urns");
 			return Collections.emptyList();
@@ -92,5 +93,6 @@ public class SimpleProgressHandler implements JavaEventAction {
 	public static class ActionParams {
 		public String taskRefName;
 		public boolean resetStartTime = true;
+		public String workflowIdJq;
 	}
 }
