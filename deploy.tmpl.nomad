@@ -13,14 +13,8 @@ job "conductor" {
   }
 
   update {
-    max_parallel      = 3
-    health_check      = "checks"
-    min_healthy_time  = "10s"
-    healthy_deadline  = "5m"
-    progress_deadline = "10m"
-    auto_revert       = true
-    canary            = 1
-    stagger           = "30s"
+    stagger      = "15s"
+    max_parallel = 1
   }
 
   group "ui" {
