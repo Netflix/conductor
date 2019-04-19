@@ -93,7 +93,7 @@ public class SimpleProgressHandler implements JavaEventAction {
 		return Collections.singletonList(workflowId);
 	}
 
-	// Keep it public!
+	// Keep fields public!
 	public static class ActionParams {
 		public String taskRefName;
 		public boolean resetStartTime = true;
