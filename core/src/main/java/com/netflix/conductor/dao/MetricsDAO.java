@@ -34,6 +34,8 @@ public interface MetricsDAO {
 
 	Map<String, Object> getEventExecAverage();
 
+	Map<String, Object> getEventWaitAverage();
+
 	Map<String, Object> getTaskCounters();
 
 	Map<String, Object> getTaskAverage();
