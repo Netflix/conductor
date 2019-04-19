@@ -80,6 +80,10 @@ public class SimpleProgressHandler implements JavaEventAction {
 
 		TaskResult taskResult = new TaskResult(task);
 		taskResult.setResetStartTime(params.resetStartTime);
+		if (params.payloadToOutput) {
+			taskResult.getOutputData().put("payload", payload);
+		}
+
 		executor.updateTask(taskResult);
 		logger.debug("Task " + task + " has been updated"
 			+ ", workflowId=" + workflow.getWorkflowId()
@@ -94,5 +98,6 @@ public class SimpleProgressHandler implements JavaEventAction {
 		public String taskRefName;
 		public boolean resetStartTime = true;
 		public String workflowIdJq;
+		public boolean payloadToOutput = false;
 	}
 }
