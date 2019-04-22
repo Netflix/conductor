@@ -1,0 +1,499 @@
+{
+  "createTime": 1553108639406,
+  "updateTime": 1553108644261,
+  "status": "COMPLETED",
+  "endTime": 1553108644261,
+  "workflowId": "8684d51a-73b5-4b5f-bdc7-b9eba85441d3",
+  "tasks": [{
+    "taskType": "DECISION",
+    "status": "COMPLETED",
+    "inputData": {
+      "hasChildren": "true",
+      "case": "true"
+    },
+    "referenceTaskName": "Conditional01",
+    "retryCount": 0,
+    "seq": 1,
+    "correlationId": "null",
+    "pollCount": 0,
+    "taskDefName": "DECISION",
+    "scheduledTime": 1553108639892,
+    "startTime": 1553108640457,
+    "endTime": 1553108639655,
+    "updateTime": 1553108644319,
+    "startDelayInSeconds": 0,
+    "retried": false,
+    "executed": true,
+    "callbackFromWorker": true,
+    "responseTimeoutSeconds": 0,
+    "workflowInstanceId": "8684d51a-73b5-4b5f-bdc7-b9eba85441d3",
+    "workflowType": "orchestrator_teste_fork_join",
+    "taskId": "0aeee431-ab54-4b96-be88-3663cf6dbc81",
+    "callbackAfterSeconds": 0,
+    "outputData": {
+      "caseOutput": ["true"]
+    },
+    "workflowTask": {
+      "name": "orchestrator_Default",
+      "taskReferenceName": "Conditional01",
+      "description": "...",
+      "inputParameters": {
+        "caseValueParam": "${workflow.input.body.condition}"
+      },
+      "type": "DECISION",
+      "caseValueParam": "caseValueParam",
+      "decisionCases": {
+        "false": [{
+          "name": "orchestrator_Default",
+          "taskReferenceName": "Request03",
+          "inputParameters": {
+            "http_request": {
+              "uri": "https://httpstat.us/200?sleep=300",
+              "method": "GET",
+              "headers": {
+                "x-workflow-id": "${workflow.workflowId}",
+                "x-correlation-id": "${workflow.correlationId}"
+              }
+            }
+          },
+          "type": "HTTP",
+          "startDelay": 0,
+          "optional": false
+        }]
+      },
+      "defaultCase": [{
+        "name": "orchestrator_Default",
+        "taskReferenceName": "Fork01",
+        "type": "FORK_JOIN",
+        "forkTasks": [
+          [{
+            "name": "orchestrator_Default",
+            "taskReferenceName": "Request01",
+            "inputParameters": {
+              "http_request": {
+                "uri": "https://httpstat.us/200?sleep=300",
+                "method": "GET",
+                "headers": {
+                  "x-workflow-id": "${workflow.workflowId}",
+                  "x-correlation-id": "${workflow.correlationId}"
+                }
+              }
+            },
+            "type": "HTTP",
+            "startDelay": 0,
+            "optional": false
+          }],
+          [{
+            "name": "orchestrator_Default",
+            "taskReferenceName": "Request02",
+            "inputParameters": {
+              "http_request": {
+                "uri": "https://httpstat.us/200?sleep=300",
+                "method": "GET",
+                "headers": {
+                  "x-workflow-id": "${workflow.workflowId}",
+                  "x-correlation-id": "${workflow.correlationId}"
+                }
+              }
+            },
+            "type": "HTTP",
+            "startDelay": 0,
+            "optional": false
+          }]
+        ],
+        "startDelay": 0,
+        "optional": false
+      }, {
+        "name": "orchestrator_Default",
+        "taskReferenceName": "Join01",
+        "type": "JOIN",
+        "startDelay": 0,
+        "joinOn": ["Request01", "Request02"],
+        "optional": false
+      }],
+      "startDelay": 0,
+      "optional": false
+    },
+    "rateLimitPerFrequency": 0,
+    "rateLimitFrequencyInSeconds": 0,
+    "loggingEnabled": true,
+    "taskDefinition": {
+      "present": false
+    },
+    "queueWaitTime": 565,
+    "taskStatus": "COMPLETED"
+  }, {
+    "taskType": "FORK",
+    "status": "COMPLETED",
+    "referenceTaskName": "Fork01",
+    "retryCount": 0,
+    "seq": 2,
+    "correlationId": "null",
+    "pollCount": 0,
+    "taskDefName": "FORK",
+    "scheduledTime": 1553108640052,
+    "startTime": 1553108640535,
+    "endTime": 1553108639575,
+    "updateTime": 1553108644399,
+    "startDelayInSeconds": 0,
+    "retried": false,
+    "executed": true,
+    "callbackFromWorker": true,
+    "responseTimeoutSeconds": 0,
+    "workflowInstanceId": "8684d51a-73b5-4b5f-bdc7-b9eba85441d3",
+    "workflowType": "orchestrator_teste_fork_join",
+    "taskId": "dafd645c-8f9e-4fb2-bfc1-3ceff06e7555",
+    "callbackAfterSeconds": 0,
+    "workflowTask": {
+      "name": "orchestrator_Default",
+      "taskReferenceName": "Fork01",
+      "type": "FORK_JOIN",
+      "forkTasks": [
+        [{
+          "name": "orchestrator_Default",
+          "taskReferenceName": "Request01",
+          "inputParameters": {
+            "http_request": {
+              "uri": "https://httpstat.us/200?sleep=300",
+              "method": "GET",
+              "headers": {
+                "x-workflow-id": "${workflow.workflowId}",
+                "x-correlation-id": "${workflow.correlationId}"
+              }
+            }
+          },
+          "type": "HTTP",
+          "startDelay": 0,
+          "optional": false
+        }],
+        [{
+          "name": "orchestrator_Default",
+          "taskReferenceName": "Request02",
+          "inputParameters": {
+            "http_request": {
+              "uri": "https://httpstat.us/200?sleep=300",
+              "method": "GET",
+              "headers": {
+                "x-workflow-id": "${workflow.workflowId}",
+                "x-correlation-id": "${workflow.correlationId}"
+              }
+            }
+          },
+          "type": "HTTP",
+          "startDelay": 0,
+          "optional": false
+        }]
+      ],
+      "startDelay": 0,
+      "optional": false
+    },
+    "rateLimitPerFrequency": 0,
+    "rateLimitFrequencyInSeconds": 0,
+    "loggingEnabled": true,
+    "taskDefinition": {
+      "present": false
+    },
+    "queueWaitTime": 483,
+    "taskStatus": "COMPLETED"
+  }, {
+    "taskType": "HTTP",
+    "status": "COMPLETED",
+    "inputData": {
+      "http_request": {
+        "uri": "https://httpstat.us/200?sleep=300",
+        "method": "GET",
+        "headers": {
+          "x-workflow-id": "8684d51a-73b5-4b5f-bdc7-b9eba85441d3",
+          "x-correlation-id": "null"
+        }
+      }
+    },
+    "referenceTaskName": "Request01",
+    "retryCount": 0,
+    "seq": 3,
+    "correlationId": "null",
+    "pollCount": 1,
+    "taskDefName": "orchestrator_Default",
+    "scheduledTime": 1553108640209,
+    "startTime": 1553108641042,
+    "endTime": 1553108643079,
+    "updateTime": 1553108644479,
+    "startDelayInSeconds": 0,
+    "retried": false,
+    "executed": true,
+    "callbackFromWorker": true,
+    "responseTimeoutSeconds": 0,
+    "workflowInstanceId": "8684d51a-73b5-4b5f-bdc7-b9eba85441d3",
+    "workflowType": "orchestrator_teste_fork_join",
+    "taskId": "2b1e0d8b-f1b3-4ceb-8e84-3665dbad9f16",
+    "callbackAfterSeconds": 0,
+    "workerId": "d44b29c9d1f2",
+    "outputData": {
+      "response": {
+        "headers": {
+          "Server": ["Microsoft-IIS/10.0"],
+          "Cache-Control": ["private"],
+          "Access-Control-Allow-Origin": ["*"],
+          "X-AspNet-Version": ["4.0.30319"],
+          "Set-Cookie": ["ARRAffinity=beec3692495883b8df6195e900c12f49514e054d865a22ad2951c84f51dbaf93;Path=/;HttpOnly;Domain=httpstat.us"],
+          "Content-Length": ["8"],
+          "Date": ["Wed, 20 Mar 2019 19:04:02 GMT"],
+          "X-Powered-By": ["ASP.NET"],
+          "X-AspNetMvc-Version": ["5.1"],
+          "Content-Type": ["application/json; charset=utf-8"]
+        },
+        "reasonPhrase": "OK",
+        "body": "200 OK",
+        "statusCode": 200
+      }
+    },
+    "workflowTask": {
+      "name": "orchestrator_Default",
+      "taskReferenceName": "Request01",
+      "inputParameters": {
+        "http_request": {
+          "uri": "https://httpstat.us/200?sleep=300",
+          "method": "GET",
+          "headers": {
+            "x-workflow-id": "${workflow.workflowId}",
+            "x-correlation-id": "${workflow.correlationId}"
+          }
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    "rateLimitPerFrequency": 0,
+    "rateLimitFrequencyInSeconds": 1,
+    "loggingEnabled": true,
+    "taskDefinition": {
+      "present": false
+    },
+    "queueWaitTime": 833,
+    "taskStatus": "COMPLETED"
+  }, {
+    "taskType": "HTTP",
+    "status": "COMPLETED",
+    "inputData": {
+      "http_request": {
+        "uri": "https://httpstat.us/200?sleep=300",
+        "method": "GET",
+        "headers": {
+          "x-workflow-id": "8684d51a-73b5-4b5f-bdc7-b9eba85441d3",
+          "x-correlation-id": "null"
+        }
+      }
+    },
+    "referenceTaskName": "Request02",
+    "retryCount": 0,
+    "seq": 4,
+    "correlationId": "null",
+    "pollCount": 1,
+    "taskDefName": "orchestrator_Default",
+    "scheduledTime": 1553108640338,
+    "startTime": 1553108641201,
+    "endTime": 1553108643075,
+    "updateTime": 1553108644557,
+    "startDelayInSeconds": 0,
+    "retried": false,
+    "executed": true,
+    "callbackFromWorker": true,
+    "responseTimeoutSeconds": 0,
+    "workflowInstanceId": "8684d51a-73b5-4b5f-bdc7-b9eba85441d3",
+    "workflowType": "orchestrator_teste_fork_join",
+    "taskId": "c229f59a-667e-4609-b597-22c703f5bec9",
+    "callbackAfterSeconds": 0,
+    "workerId": "d44b29c9d1f2",
+    "outputData": {
+      "response": {
+        "headers": {
+          "Server": ["Microsoft-IIS/10.0"],
+          "Cache-Control": ["private"],
+          "Access-Control-Allow-Origin": ["*"],
+          "X-AspNet-Version": ["4.0.30319"],
+          "Set-Cookie": ["ARRAffinity=beec3692495883b8df6195e900c12f49514e054d865a22ad2951c84f51dbaf93;Path=/;HttpOnly;Domain=httpstat.us"],
+          "Content-Length": ["8"],
+          "Date": ["Wed, 20 Mar 2019 19:04:02 GMT"],
+          "X-Powered-By": ["ASP.NET"],
+          "X-AspNetMvc-Version": ["5.1"],
+          "Content-Type": ["application/json; charset=utf-8"]
+        },
+        "reasonPhrase": "OK",
+        "body": "200 OK",
+        "statusCode": 200
+      }
+    },
+    "workflowTask": {
+      "name": "orchestrator_Default",
+      "taskReferenceName": "Request02",
+      "inputParameters": {
+        "http_request": {
+          "uri": "https://httpstat.us/200?sleep=300",
+          "method": "GET",
+          "headers": {
+            "x-workflow-id": "${workflow.workflowId}",
+            "x-correlation-id": "${workflow.correlationId}"
+          }
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    "rateLimitPerFrequency": 0,
+    "rateLimitFrequencyInSeconds": 1,
+    "loggingEnabled": true,
+    "taskDefinition": {
+      "present": false
+    },
+    "queueWaitTime": 863,
+    "taskStatus": "COMPLETED"
+  }, {
+    "taskType": "JOIN",
+    "status": "COMPLETED",
+    "inputData": {
+      "joinOn": ["Request01", "Request02"]
+    },
+    "referenceTaskName": "Join01",
+    "retryCount": 0,
+    "seq": 5,
+    "correlationId": "null",
+    "pollCount": 0,
+    "taskDefName": "JOIN",
+    "scheduledTime": 1553108641579,
+    "startTime": 1553108641683,
+    "endTime": 1553108643847,
+    "updateTime": 1553108644635,
+    "startDelayInSeconds": 0,
+    "retried": false,
+    "executed": true,
+    "callbackFromWorker": true,
+    "responseTimeoutSeconds": 0,
+    "workflowInstanceId": "8684d51a-73b5-4b5f-bdc7-b9eba85441d3",
+    "workflowType": "orchestrator_teste_fork_join",
+    "taskId": "65608e70-9828-4c81-8a21-3646ed51aa1d",
+    "callbackAfterSeconds": 0,
+    "outputData": {
+      "Request01": {
+        "response": {
+          "headers": {
+            "Server": ["Microsoft-IIS/10.0"],
+            "Cache-Control": ["private"],
+            "Access-Control-Allow-Origin": ["*"],
+            "X-AspNet-Version": ["4.0.30319"],
+            "Set-Cookie": ["ARRAffinity=beec3692495883b8df6195e900c12f49514e054d865a22ad2951c84f51dbaf93;Path=/;HttpOnly;Domain=httpstat.us"],
+            "Content-Length": ["8"],
+            "Date": ["Wed, 20 Mar 2019 19:04:02 GMT"],
+            "X-Powered-By": ["ASP.NET"],
+            "X-AspNetMvc-Version": ["5.1"],
+            "Content-Type": ["application/json; charset=utf-8"]
+          },
+          "reasonPhrase": "OK",
+          "body": "200 OK",
+          "statusCode": 200
+        }
+      },
+      "Request02": {
+        "response": {
+          "headers": {
+            "Server": ["Microsoft-IIS/10.0"],
+            "Cache-Control": ["private"],
+            "Access-Control-Allow-Origin": ["*"],
+            "X-AspNet-Version": ["4.0.30319"],
+            "Set-Cookie": ["ARRAffinity=beec3692495883b8df6195e900c12f49514e054d865a22ad2951c84f51dbaf93;Path=/;HttpOnly;Domain=httpstat.us"],
+            "Content-Length": ["8"],
+            "Date": ["Wed, 20 Mar 2019 19:04:02 GMT"],
+            "X-Powered-By": ["ASP.NET"],
+            "X-AspNetMvc-Version": ["5.1"],
+            "Content-Type": ["application/json; charset=utf-8"]
+          },
+          "reasonPhrase": "OK",
+          "body": "200 OK",
+          "statusCode": 200
+        }
+      }
+    },
+    "workflowTask": {
+      "name": "orchestrator_Default",
+      "taskReferenceName": "Join01",
+      "type": "JOIN",
+      "startDelay": 0,
+      "joinOn": ["Request01", "Request02"],
+      "optional": false
+    },
+    "rateLimitPerFrequency": 0,
+    "rateLimitFrequencyInSeconds": 0,
+    "loggingEnabled": true,
+    "taskDefinition": {
+      "present": false
+    },
+    "queueWaitTime": 104,
+    "taskStatus": "COMPLETED"
+  }],
+  "input": {
+    "context": {},
+    "headers": {
+      "user-agent": "Faraday v0.15.3",
+      "content-type": "application/json",
+      "x-organization-slug": "orchestrator",
+      "accept-encoding": "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+      "accept": "*/*",
+      "connection": "close",
+      "host": "api-orchestrator.qa.api.zup.me",
+      "content-length": "18",
+      "x-forwarded-proto": "https",
+      "x-forwarded-for": "191.232.239.35"
+    },
+    "body": {
+      "condition": true
+    }
+  },
+  "output": {
+    "Request01": {
+      "response": {
+        "headers": {
+          "Server": ["Microsoft-IIS/10.0"],
+          "Cache-Control": ["private"],
+          "Access-Control-Allow-Origin": ["*"],
+          "X-AspNet-Version": ["4.0.30319"],
+          "Set-Cookie": ["ARRAffinity=beec3692495883b8df6195e900c12f49514e054d865a22ad2951c84f51dbaf93;Path=/;HttpOnly;Domain=httpstat.us"],
+          "Content-Length": ["8"],
+          "Date": ["Wed, 20 Mar 2019 19:04:02 GMT"],
+          "X-Powered-By": ["ASP.NET"],
+          "X-AspNetMvc-Version": ["5.1"],
+          "Content-Type": ["application/json; charset=utf-8"]
+        },
+        "reasonPhrase": "OK",
+        "body": "200 OK",
+        "statusCode": 200
+      }
+    },
+    "Request02": {
+      "response": {
+        "headers": {
+          "Server": ["Microsoft-IIS/10.0"],
+          "Cache-Control": ["private"],
+          "Access-Control-Allow-Origin": ["*"],
+          "X-AspNet-Version": ["4.0.30319"],
+          "Set-Cookie": ["ARRAffinity=beec3692495883b8df6195e900c12f49514e054d865a22ad2951c84f51dbaf93;Path=/;HttpOnly;Domain=httpstat.us"],
+          "Content-Length": ["8"],
+          "Date": ["Wed, 20 Mar 2019 19:04:02 GMT"],
+          "X-Powered-By": ["ASP.NET"],
+          "X-AspNetMvc-Version": ["5.1"],
+          "Content-Type": ["application/json; charset=utf-8"]
+        },
+        "reasonPhrase": "OK",
+        "body": "200 OK",
+        "statusCode": 200
+      }
+    }
+  },
+  "workflowType": "teste_fork_join",
+  "version": 3,
+  "correlationId": "null",
+  "schemaVersion": 2,
+  "startTime": 1553108639406,
+  "workflowName": "orchestrator_teste_fork_join",
+  "workflowVersion": 3
+}

@@ -86,6 +86,9 @@ public class WorkflowDef extends Auditable {
 	@ProtoField(id = 10)
 	private boolean workflowStatusListenerEnabled = false;
 
+	@ProtoField(id = 11)
+	private Map<String, List<String>> obfuscationFields;
+
 	/**
 	 * @return the name
 	 */
@@ -225,6 +228,14 @@ public class WorkflowDef extends Auditable {
 	 */
 	public boolean isWorkflowStatusListenerEnabled() {
 		return workflowStatusListenerEnabled;
+	}
+
+	public Map<String, List<String>> getObfuscationFields() {
+		return obfuscationFields;
+	}
+
+	public void setObfuscationFields(Map<String, List<String>> obfuscationFields) {
+		this.obfuscationFields = obfuscationFields;
 	}
 
 	/**

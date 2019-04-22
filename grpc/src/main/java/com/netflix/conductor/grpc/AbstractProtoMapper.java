@@ -1020,6 +1020,7 @@ public abstract class AbstractProtoMapper {
         to.setSchemaVersion( from.getSchemaVersion() );
         to.setRestartable( from.isRestartable() );
         to.setWorkflowStatusListenerEnabled( from.isWorkflowStatusListenerEnabled() );
+        to.addAllObfuscationFields( from.getObfuscationFields() );
         return to.build();
     }
 
@@ -1039,6 +1040,7 @@ public abstract class AbstractProtoMapper {
         to.setSchemaVersion( from.getSchemaVersion() );
         to.setRestartable( from.getRestartable() );
         to.setWorkflowStatusListenerEnabled( from.getWorkflowStatusListenerEnabled() );
+        to.setObfuscationFields( from.getObfuscationFieldsList().stream().collect(Collectors.toCollection(ArrayList::new)) );
         return to;
     }
 
