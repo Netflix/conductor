@@ -40,8 +40,8 @@ public class ObfuscationServiceTest {
     @Test
     public void should_obfuscate_selected_fields() {
         WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setObfuscationFields(ImmutableMap.of("workflow", singletonList("output.Request01.response"),
-                "tasks", singletonList("Request01.inputData.http_request.headers.x-workflow-id")));
+        workflowDef.setObfuscationFields(ImmutableMap.of("WorkflowFields", singletonList("output.Request01.response"),
+                "TasksFields", singletonList("Request01.inputData.http_request.headers.x-workflow-id")));
 
         Mockito.when(executionDAO.getWorkflow("8684d51a-73b5-4b5f-bdc7-b9eba85441d3", true)).thenReturn(workflow);
 
