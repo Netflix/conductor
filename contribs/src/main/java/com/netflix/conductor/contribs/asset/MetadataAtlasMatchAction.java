@@ -14,6 +14,7 @@ import com.netflix.conductor.core.utils.TaskUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,10 +67,17 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 		}
 
 		// Lets find WAIT + IN_PROGRESS tasks directly via edao
+		String ndcValue = NDC.peek();
 		boolean taskNamesDefined = CollectionUtils.isNotEmpty(params.taskRefNames);
 		List<Task> tasks = executor.getPendingSystemTasks(Wait.NAME);
 		tasks.parallelStream().forEach(task -> {
+			boolean ndcCleanup = false;
 			try {
+				if (StringUtils.isEmpty(NDC.peek())) {
+					ndcCleanup = true;
+					NDC.push(ndcValue);
+				}
+
 				if (!task.getInputData().containsKey("referenceKeys")) {
 					return;
 				}
@@ -133,6 +141,10 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 				String msg = String.format("Reference Keys Match failed for taskId=%s, messageId=%s, event=%s, workflowId=%s, correlationId=%s, payload=%s",
 					task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload);
 				logger.warn(msg, ex);
+			} finally {
+				if (ndcCleanup) {
+					NDC.remove();
+				}
 			}
 		});
 

@@ -383,7 +383,7 @@ public class WorkflowResource {
 
 		NDC.push("rest-complete-" + UUID.randomUUID().toString());
 		try {
-			executor.forceCompleteWorkflow(workflowId);
+			executor.forceCompleteWorkflow(workflowId, "Force completed by API");
 		} finally {
 			NDC.remove();
 		}
