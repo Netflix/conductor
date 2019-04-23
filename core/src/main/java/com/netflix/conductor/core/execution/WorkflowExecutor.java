@@ -869,7 +869,7 @@ public class WorkflowExecutor {
 		}
 
 		// Start failure workflow
-		if (StringUtils.isNotEmpty(failureWorkflow)) {
+		if (StringUtils.isNotEmpty(failureWorkflow) && !WorkflowStatus.TIMED_OUT.equals(workflow.getStatus())) {
 			// Backward compatible by default
 			boolean expandInline = Boolean.parseBoolean(config.getProperty("workflow.failure.expandInline", "true"));
 			Map<String, Object> input = new HashMap<>();
