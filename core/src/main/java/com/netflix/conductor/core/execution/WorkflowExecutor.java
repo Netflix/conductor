@@ -270,6 +270,7 @@ public class WorkflowExecutor {
 			// remove all tasks
 			workflow.getTasks().forEach(t -> edao.removeTask(t.getTaskId()));
 			// Set workflow as RUNNING
+			workflow.incRerunCount();
 			workflow.setStatus(WorkflowStatus.RUNNING);
 			workflow.setReasonForIncompletion(null);
 			if(StringUtils.isNotEmpty(correlationId)){
@@ -318,6 +319,7 @@ public class WorkflowExecutor {
 			}
 
 			// and workflow as RUNNING
+			workflow.incRerunCount();
 			workflow.setStatus(WorkflowStatus.RUNNING);
 			workflow.setReasonForIncompletion(null);
 			if (StringUtils.isNotEmpty(correlationId)) {
@@ -800,6 +802,8 @@ public class WorkflowExecutor {
 				map.put("workflowId", workflowId);
 				map.put("workflowType", workflow.getWorkflowType());
 				map.put("workflowVersion", workflow.getVersion());
+				map.put("workflowRestartCount", workflow.getRestartCount());
+				map.put("workflowRerunCount", workflow.getRerunCount());
 				originalFailed = map;
 			}
 			workflow.getOutput().put("originalFailedTask", originalFailed);
@@ -854,6 +858,8 @@ public class WorkflowExecutor {
 				input.put("workflowInput", workflow.getInput());
 				input.put("workflowVersion", workflow.getVersion());
 				input.put("contextUser", workflow.getContextUser());
+				input.put("restartCount", workflow.getRestartCount());
+				input.put("rerunCount", workflow.getRerunCount());
 				input.put("taskId", failedTask.getTaskId());
 				input.put("taskInput", failedTask.getInputData());
 				input.put("taskRefName", failedTask.getReferenceTaskName());
@@ -886,6 +892,8 @@ public class WorkflowExecutor {
 			input.put("correlationId", workflow.getCorrelationId());
 			input.put("reason", reason);
 			input.put("failureStatus", workflow.getStatus().toString());
+			input.put("restartCount", workflow.getRestartCount());
+			input.put("rerunCount", workflow.getRerunCount());
 			if (failedTask != null) {
 				Map<String, Object> map = new HashMap<>();
 				map.put("taskId", failedTask.getTaskId());
