@@ -26,7 +26,8 @@ class WorkflowMetaList extends Component {
             labels: [],
             allLabels: [],
             search: '',
-            workflowsFilteredAndSearched: []
+            workflowsFilteredAndSearched: [],
+            loading: false
         };
     }
 
@@ -162,12 +163,12 @@ class WorkflowMetaList extends Component {
 
     addFavourite(data, e) {
         e.preventDefault();
+        this.state.loading = true;
         let description = data.description;
         description += ", FAVOURITE";
         data.description = description;
 
         let toBeSent = [data];
-
         this.props.dispatch(updateWorkflow(toBeSent));
 
         location.reload();
@@ -175,6 +176,7 @@ class WorkflowMetaList extends Component {
 
     removeFavourite(data, e){
         e.preventDefault();
+        this.state.loading = true;
         let description = data.description;
         if (description.includes(", FAVOURITE")) {
             description = description.replace(", FAVOURITE","");
@@ -255,6 +257,9 @@ class WorkflowMetaList extends Component {
 
                     </form>
                     </Panel>
+                </div>
+                <div className={this.state.loading?"loading":""}>
+                    <i className={this.state.loading?"fa fa-spinner fa-pulse fa-5x fa-fw":""}/>
                 </div>
                 <div className="panel panel-default">
                     <BootstrapTable ref="table" data={wfs || []} striped={true} hover={true} exportCSV={false} pagination={false} options={ options }>
