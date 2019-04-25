@@ -7,12 +7,18 @@ import com.jayway.jsonpath.JsonPath;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.ExecutionDAO;
+import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.exception.ObfuscationServiceException;
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import net.minidev.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Optional;
 
 public class ObfuscationServiceImpl implements ObfuscationService {
 
@@ -22,55 +28,70 @@ public class ObfuscationServiceImpl implements ObfuscationService {
     private static final String JSON_TASK_INDEX = "[0].";
     private static final String WORKFLOW_OBFUSCATION_FIELDS = "WorkflowFields";
     private static final String TASKS_OBFUSCATION_FIELDS = "TasksFields";
+    private static final String WORKFLOW_TASKS_FIELD = "tasks";
     private final ObjectMapper objectMapper;
     private final ExecutionDAO executionDAO;
+    private final IndexDAO indexDAO;
 
     @Inject
-    public ObfuscationServiceImpl(ObjectMapper objectMapper, ExecutionDAO executionDAO) {
+    public ObfuscationServiceImpl(ObjectMapper objectMapper, ExecutionDAO executionDAO, IndexDAO indexDAO) {
         this.objectMapper = objectMapper;
         this.executionDAO = executionDAO;
+        this.indexDAO = indexDAO;
     }
-
 
     //TODO: run this async
     @Override
     public void obfuscateFields(String workflowId, WorkflowDef workflowDef) {
-        Workflow workflow = getWorkflow(workflowId);
-        DocumentContext jsonWorkflow = JsonPath.parse(convertToJson(workflow));
-        DocumentContext workflowTasks = JsonPath.parse(convertToJson(workflow.getTasks()));
+        if(hasFieldsToObfuscate(workflowDef)) {
+            Workflow workflow = getWorkflow(workflowId);
+            DocumentContext jsonWorkflow = JsonPath.parse(convertToJson(workflow));
+            DocumentContext workflowTasks = JsonPath.parse(convertToJson(workflow.getTasks()));
 
-        workflowDef.getObfuscationFields().get(WORKFLOW_OBFUSCATION_FIELDS).forEach(field -> obfuscateWorkflowField(field, jsonWorkflow));
-        workflowDef.getObfuscationFields().get(TASKS_OBFUSCATION_FIELDS).forEach(field -> obfuscateTaskField(field, workflowTasks));
+            List<String> workflowChangedFields = new ArrayList<>();
 
-        jsonWorkflow.set("tasks", workflowTasks.json());
+            workflowDef.getObfuscationFields().get(WORKFLOW_OBFUSCATION_FIELDS).forEach(field -> obfuscateWorkflowField(field, jsonWorkflow, workflowChangedFields));
+            workflowDef.getObfuscationFields().get(TASKS_OBFUSCATION_FIELDS).forEach(field -> obfuscateTaskField(field, workflowTasks, workflowChangedFields));
 
-        System.out.println(jsonWorkflow.jsonString());
-
-//        executionDAO.updateWorkflow(objectMapper.convertValue(jsonWorkflow, Workflow.class));
-        //TODO: add indexDAO
-
-    }
-
-    @Override
-    public void obfuscateFieldsByWorkflowDef(String name, Integer version) {
-
-    }
-
-    private void obfuscateWorkflowField(String field, DocumentContext workflow) {
-        LinkedHashMap fieldToObfuscate = workflow.read(field);
-        if(!fieldToObfuscate.isEmpty()) {
-            workflow.set(field, OBFUSCATION_VALUE);
+            if(!workflowChangedFields.isEmpty()) {
+                if(workflowChangedFields.contains(WORKFLOW_TASKS_FIELD)) {
+                    jsonWorkflow.set(WORKFLOW_TASKS_FIELD, workflowTasks.json());
+                }
+                Workflow updatedWorkflow = objectMapper.convertValue(jsonWorkflow.json(), Workflow.class);
+                executionDAO.updateWorkflow(updatedWorkflow);
+                indexDAO.asyncIndexWorkflow(updatedWorkflow);
+            }
         }
     }
 
-    private void obfuscateTaskField(String field, DocumentContext workflowTasks) {
-        JSONArray task = findTask(buildQuery(getReferenceTaskName(field)), workflowTasks);
+    @Override
+    public void obfuscateFieldsByWorkflowDef(String name, Integer version) {}
+
+    private void obfuscateWorkflowField(String field, DocumentContext workflow, List<String> workflowChangedFields) {
+        try{
+            LinkedHashMap fieldToObfuscate = workflow.read(field);
+            if(!fieldToObfuscate.isEmpty()) {
+                workflow.set(field, OBFUSCATION_VALUE);
+                workflowChangedFields.add(getRootField(field));
+            }
+        } catch (Exception e) {
+            LOGGER.error("obfuscation failed for workflow field: {} with exception: {}", field, e);
+            throw new ObfuscationServiceException("workflow field obfuscation failed", e);
+        }
+    }
+
+    private void obfuscateTaskField(String field, DocumentContext workflowTasks, List<String> workflowChangedFields) {
+        JSONArray task = findTask(buildQuery(getRootField(field)), workflowTasks);
         if(!task.isEmpty()) {
-            String fieldToObfuscate = getFieldToObfuscate(field);
+            String fieldToObfuscate = getTaskField(field);
             try {
-                JsonPath.parse(task).set(fieldToObfuscate, OBFUSCATION_VALUE);
+                DocumentContext parsedTask = JsonPath.parse(task);
+                validateTaskField(parsedTask, fieldToObfuscate);
+                parsedTask.set(fieldToObfuscate, OBFUSCATION_VALUE);
+                workflowChangedFields.add(WORKFLOW_TASKS_FIELD);
             } catch (Exception e) {
-                LOGGER.info("obfuscation failed for field: {} with exception: {}", fieldToObfuscate, e);
+                LOGGER.error("obfuscation failed for task field: {} with exception: {}", fieldToObfuscate, e);
+                throw new ObfuscationServiceException("workflow task field obfuscation failed", e);
             }
         }
     }
@@ -83,26 +104,34 @@ public class ObfuscationServiceImpl implements ObfuscationService {
         return String.format(REFERENCE_TASK_NAME_QUERY, referenceTaskName);
     }
 
-    private String getReferenceTaskName(String obfuscationField) {
+    private String getRootField(String obfuscationField) {
         return obfuscationField.split("\\.")[0];
     }
 
-    private String getFieldToObfuscate(String obfuscationField) {
+    private String getTaskField(String obfuscationField) {
        return JSON_TASK_INDEX + obfuscationField.replaceFirst(".*?\\.",  "");
 
     }
-
 
     private String convertToJson(Object object) {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return null;
+            LOGGER.error("failed to parse object: {}", e);
+            throw new ObfuscationServiceException("parsing object to json failed", e);
         }
     }
 
     private Workflow getWorkflow(String workflowId) {
-        return executionDAO.getWorkflow(workflowId, true);
+        return Optional.ofNullable(executionDAO.getWorkflow(workflowId, true))
+                .orElseThrow(() -> new ObfuscationServiceException("workflow not found"));
+    }
+
+    private boolean hasFieldsToObfuscate(WorkflowDef workflowDef) {
+        return workflowDef.getObfuscationFields() != null && !workflowDef.getObfuscationFields().isEmpty();
+    }
+
+    private void validateTaskField(DocumentContext task, String field) {
+        task.read(field);
     }
 }
