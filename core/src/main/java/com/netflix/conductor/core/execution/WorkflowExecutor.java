@@ -39,6 +39,7 @@ import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.publisher.WorkflowObfuscationQueuePublisher;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +86,7 @@ public class WorkflowExecutor {
     private final Configuration config;
     private final MetadataMapperService metadataMapperService;
     private final ExecutionDAOFacade executionDAOFacade;
+    private final WorkflowObfuscationQueuePublisher publisher;
 
     private WorkflowStatusListener workflowStatusListener;
     private ExternalPayloadStorageUtils externalPayloadStorageUtils;
@@ -102,7 +104,8 @@ public class WorkflowExecutor {
             WorkflowStatusListener workflowStatusListener,
             ExecutionDAOFacade executionDAOFacade,
             ExternalPayloadStorageUtils externalPayloadStorageUtils,
-            Configuration config
+            Configuration config,
+            WorkflowObfuscationQueuePublisher publisher
     ) {
         this.deciderService = deciderService;
         this.metadataDAO = metadataDAO;
@@ -113,6 +116,7 @@ public class WorkflowExecutor {
         this.activeWorkerLastPollInSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
         this.workflowStatusListener = workflowStatusListener;
         this.externalPayloadStorageUtils = externalPayloadStorageUtils;
+        this.publisher = publisher;
     }
 
     /**
@@ -557,6 +561,7 @@ public class WorkflowExecutor {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             workflowStatusListener.onWorkflowCompleted(workflow);
         }
+        publisher.publish(workflow.getWorkflowId(), workflow.getWorkflowDefinition());
     }
 
     public void terminateWorkflow(String workflowId, String reason) {
@@ -654,6 +659,7 @@ public class WorkflowExecutor {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             workflowStatusListener.onWorkflowTerminated(workflow);
         }
+        publisher.publish(workflowId, workflow.getWorkflowDefinition());
     }
 
     /**

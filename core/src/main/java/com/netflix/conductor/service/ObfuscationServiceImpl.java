@@ -9,25 +9,27 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.exception.ObfuscationServiceException;
-import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import net.minidev.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
+@Singleton
 public class ObfuscationServiceImpl implements ObfuscationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObfuscationServiceImpl.class);
+    //TODO: use system prop here
     private static final String OBFUSCATION_VALUE = "***";
     private static final String REFERENCE_TASK_NAME_QUERY = "$.[?(@.referenceTaskName == '%s')]";
     private static final String JSON_TASK_INDEX = "[0].";
-    private static final String WORKFLOW_OBFUSCATION_FIELDS = "WorkflowFields";
-    private static final String TASKS_OBFUSCATION_FIELDS = "TasksFields";
+    private static final String WORKFLOW_OBFUSCATION_FIELDS = "workflowFields";
+    private static final String TASKS_OBFUSCATION_FIELDS = "taskFields";
     private static final String WORKFLOW_TASKS_FIELD = "tasks";
     private final ObjectMapper objectMapper;
     private final ExecutionDAO executionDAO;
@@ -42,16 +44,19 @@ public class ObfuscationServiceImpl implements ObfuscationService {
 
     //TODO: run this async
     @Override
-    public void obfuscateFields(String workflowId, WorkflowDef workflowDef) {
-        if(hasFieldsToObfuscate(workflowDef)) {
-            Workflow workflow = getWorkflow(workflowId);
+    public void obfuscateFields(String workflowId) {
+        Workflow workflow = getWorkflow(workflowId);
+
+        if(hasFieldsToObfuscate(workflow.getWorkflowDefinition())) {
             DocumentContext jsonWorkflow = JsonPath.parse(convertToJson(workflow));
             DocumentContext workflowTasks = JsonPath.parse(convertToJson(workflow.getTasks()));
 
             List<String> workflowChangedFields = new ArrayList<>();
 
-            workflowDef.getObfuscationFields().get(WORKFLOW_OBFUSCATION_FIELDS).forEach(field -> obfuscateWorkflowField(field, jsonWorkflow, workflowChangedFields));
-            workflowDef.getObfuscationFields().get(TASKS_OBFUSCATION_FIELDS).forEach(field -> obfuscateTaskField(field, workflowTasks, workflowChangedFields));
+            workflow.getWorkflowDefinition().getObfuscationFields().get(WORKFLOW_OBFUSCATION_FIELDS)
+                    .forEach(field -> obfuscateWorkflowField(field, jsonWorkflow, workflowChangedFields));
+            workflow.getWorkflowDefinition().getObfuscationFields().get(TASKS_OBFUSCATION_FIELDS)
+                    .forEach(field -> obfuscateTaskField(field, workflowTasks, workflowChangedFields));
 
             if(!workflowChangedFields.isEmpty()) {
                 if(workflowChangedFields.contains(WORKFLOW_TASKS_FIELD)) {
@@ -117,7 +122,7 @@ public class ObfuscationServiceImpl implements ObfuscationService {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
-            LOGGER.error("failed to parse object: {}", e);
+            LOGGER.error("failed to parse object: {} with error {}", object, e);
             throw new ObfuscationServiceException("parsing object to json failed", e);
         }
     }

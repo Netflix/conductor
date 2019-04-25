@@ -230,10 +230,16 @@ public class WorkflowDef extends Auditable {
 		return workflowStatusListenerEnabled;
 	}
 
+	/**
+	 * @return the obfuscationFields
+	 */
 	public Map<String, List<String>> getObfuscationFields() {
 		return obfuscationFields;
 	}
 
+	/**
+	 * @param obfuscationFields the obfuscationFields to set
+	 */
 	public void setObfuscationFields(Map<String, List<String>> obfuscationFields) {
 		this.obfuscationFields = obfuscationFields;
 	}
@@ -333,6 +339,7 @@ public class WorkflowDef extends Auditable {
 				.add("schemaVersion", schemaVersion)
 				.add("restartable", restartable)
 				.add("workflowStatusListenerEnabled", workflowStatusListenerEnabled)
+				.add("obfuscationFields", obfuscationFields)
 				.toString();
 	}
 }

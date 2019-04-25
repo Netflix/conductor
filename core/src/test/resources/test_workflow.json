@@ -183,6 +183,73 @@
   "version": 3,
   "correlationId": "null",
   "schemaVersion": 2,
+  "workflowDefinition": {
+    "createTime": 1550686558442,
+    "name": "orchestrator_ConditionalMode",
+    "description": "...",
+    "version": 3,
+    "tasks": [
+      {
+        "name": "orchestrator_Default",
+        "taskReferenceName": "Conditional01",
+        "description": "...",
+        "inputParameters": {
+          "caseValueParam": "${workflow.input.body.mode}"
+        },
+        "type": "DECISION",
+        "caseValueParam": "caseValueParam",
+        "decisionCases": {
+          "01": [
+            {
+              "name": "orchestrator_Default",
+              "taskReferenceName": "Request01",
+              "inputParameters": {
+                "http_request": {
+                  "uri": "http://www.mocky.io/v2/5c6d95ff370000530afa34e8",
+                  "method": "GET",
+                  "headers": {
+                    "x-workflow-id": "${workflow.workflowId}",
+                    "x-correlation-id": "${workflow.correlationId}"
+                  }
+                }
+              },
+              "type": "HTTP",
+              "startDelay": 0,
+              "optional": false
+            }
+          ]
+        },
+        "defaultCase": [
+          {
+            "name": "orchestrator_Default",
+            "taskReferenceName": "Request02",
+            "inputParameters": {
+              "http_request": {
+                "uri": "http://www.mocky.io/v2/5c6d95ff370000530afa34e8",
+                "method": "GET",
+                "headers": {
+                  "x-workflow-id": "${workflow.workflowId}",
+                  "x-correlation-id": "${workflow.correlationId}"
+                }
+              }
+            },
+            "type": "HTTP",
+            "startDelay": 0,
+            "optional": false
+          }
+        ],
+        "startDelay": 0,
+        "optional": false
+      }
+    ],
+    "schemaVersion": 2,
+    "restartable": true,
+    "workflowStatusListenerEnabled": false,
+    "obfuscationFields": {
+      "workflowFields": ["output.response.body"],
+      "taskFields": ["Request02.inputData.http_request.headers.x-workflow-id"]
+    }
+  },
   "startTime": 1552911262342,
   "workflowName": "orchestrator_ConditionalMode",
   "workflowVersion": 3

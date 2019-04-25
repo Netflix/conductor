@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -13,20 +12,13 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.exception.ObfuscationServiceException;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.times;
 
 public class ObfuscationServiceTest {
@@ -48,13 +40,9 @@ public class ObfuscationServiceTest {
 
     @Test
     public void should_obfuscate_selected_fields() throws JsonProcessingException {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setObfuscationFields(ImmutableMap.of("WorkflowFields", singletonList("output.response.body"),
-                "TasksFields", singletonList("Request02.inputData.http_request.headers.x-workflow-id")));
-
         Mockito.when(executionDAO.getWorkflow(workflowId, true)).thenReturn(workflow);
 
-        obfuscationService.obfuscateFields(workflowId, workflowDef);
+        obfuscationService.obfuscateFields(workflowId);
 
 
         DocumentContext workflowJson = JsonPath.parse(mapper.writeValueAsString(workflow));
@@ -71,61 +59,54 @@ public class ObfuscationServiceTest {
 
     @Test
     public void should_not_obfuscate_if_there_are_no_given_fields() {
-        WorkflowDef workflowDef = new WorkflowDef();
+        workflow.getWorkflowDefinition().setObfuscationFields(null);
 
         Mockito.when(executionDAO.getWorkflow(workflowId, true)).thenReturn(workflow);
 
-        obfuscationService.obfuscateFields(workflowId, workflowDef);
+        obfuscationService.obfuscateFields(workflowId);
 
-        Mockito.verify(executionDAO, times(0)).getWorkflow(anyString(), anyBoolean());
+        Mockito.verify(executionDAO, times(1)).getWorkflow(anyString(), anyBoolean());
         Mockito.verify(executionDAO, times(0)).updateWorkflow(anyObject());
         Mockito.verify(indexDAO, times(0)).asyncIndexWorkflow(anyObject());
     }
 
     @Test
     public void should_not_obfuscate_if_fields_are_empty() {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setObfuscationFields(new HashMap<>());
+        workflow.getWorkflowDefinition().setObfuscationFields(new HashMap<>());
 
         Mockito.when(executionDAO.getWorkflow(workflowId, true)).thenReturn(workflow);
 
-        obfuscationService.obfuscateFields(workflowId, workflowDef);
+        obfuscationService.obfuscateFields(workflowId);
 
-        Mockito.verify(executionDAO, times(0)).getWorkflow(anyString(), anyBoolean());
+        Mockito.verify(executionDAO, times(1)).getWorkflow(anyString(), anyBoolean());
         Mockito.verify(executionDAO, times(0)).updateWorkflow(anyObject());
         Mockito.verify(indexDAO, times(0)).asyncIndexWorkflow(anyObject());
     }
 
     @Test(expected = ObfuscationServiceException.class)
     public void should_throw_service_exception_if_workflow_field_is_incorrect() {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setObfuscationFields(ImmutableMap.of("WorkflowFields", singletonList("incorrectField")));
+        workflow.getWorkflowDefinition().setObfuscationFields(ImmutableMap.of("workflowFields", singletonList("incorrectField")));
 
         Mockito.when(executionDAO.getWorkflow(workflowId, true)).thenReturn(workflow);
 
-        obfuscationService.obfuscateFields(workflowId, workflowDef);
+        obfuscationService.obfuscateFields(workflowId);
     }
 
     @Test(expected = ObfuscationServiceException.class)
     public void should_throw_service_exception_if_workflow_task_field_is_incorrect() {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setObfuscationFields(ImmutableMap.of("WorkflowFields", singletonList("output.response.body"),
-                "TasksFields", singletonList("Request02.inputData.incorrectField")));
+        workflow.getWorkflowDefinition().setObfuscationFields(ImmutableMap.of("workflowFields", singletonList("output.response.body"),
+                "taskFields", singletonList("Request02.inputData.incorrectField")));
 
         Mockito.when(executionDAO.getWorkflow(workflowId, true)).thenReturn(workflow);
 
-        obfuscationService.obfuscateFields(workflowId, workflowDef);
+        obfuscationService.obfuscateFields(workflowId);
     }
 
     @Test(expected = ObfuscationServiceException.class)
     public void should_throw_service_exception_if_workflow_is_not_found() {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setObfuscationFields(ImmutableMap.of("WorkflowFields", singletonList("output.response.body"),
-                "TasksFields", singletonList("Request02.inputData.http_request.headers.x-workflow-id")));
-
         Mockito.when(executionDAO.getWorkflow(workflowId, true)).thenReturn(null);
 
-        obfuscationService.obfuscateFields(workflowId, workflowDef);
+        obfuscationService.obfuscateFields(workflowId);
     }
 }
 
