@@ -35,6 +35,9 @@ public class SubWorkflowParams {
 	private Integer restartCount;
 
 	private Long restartDelay;
+
+	private RerunWorkflowParams rerunWorkflow;
+
 	/**
 	 * @return the name
 	 */
@@ -117,5 +120,19 @@ public class SubWorkflowParams {
 	 */
 	public void setRestartDelay(Long restartDelay) {
 		this.restartDelay = restartDelay;
+	}
+
+	/**
+	 * @return Rerun workflow details
+	 */
+	public RerunWorkflowParams getRerunWorkflow() {
+		return rerunWorkflow;
+	}
+
+	/**
+	 * @param rerunWorkflow Rerun workflow details
+	 */
+	public void setRerunWorkflow(RerunWorkflowParams rerunWorkflow) {
+		this.rerunWorkflow = rerunWorkflow;
 	}
 }
