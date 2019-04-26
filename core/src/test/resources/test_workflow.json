@@ -246,8 +246,8 @@
     "restartable": true,
     "workflowStatusListenerEnabled": false,
     "obfuscationFields": {
-      "workflowFields": ["output.response.body"],
-      "taskFields": ["Request02.inputData.http_request.headers.x-workflow-id"]
+      "workflowFields": "output.response.body",
+      "taskFields": "Request02.inputData.http_request.headers.x-workflow-id"
     }
   },
   "startTime": 1552911262342,

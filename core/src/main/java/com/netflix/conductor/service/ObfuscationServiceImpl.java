@@ -1,9 +1,12 @@
 package com.netflix.conductor.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -15,10 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
+import static java.util.Arrays.asList;
 
 @Singleton
 public class ObfuscationServiceImpl implements ObfuscationService {
@@ -49,18 +51,19 @@ public class ObfuscationServiceImpl implements ObfuscationService {
 
         if(hasFieldsToObfuscate(workflow.getWorkflowDefinition())) {
             DocumentContext jsonWorkflow = JsonPath.parse(convertToJson(workflow));
-            DocumentContext workflowTasks = JsonPath.parse(convertToJson(workflow.getTasks()));
+            DocumentContext jsonWorkflowTasks = JsonPath.parse(convertToJson(workflow.getTasks()));
 
             List<String> workflowChangedFields = new ArrayList<>();
 
-            workflow.getWorkflowDefinition().getObfuscationFields().get(WORKFLOW_OBFUSCATION_FIELDS)
+            getObfuscationFieldsList(workflow.getWorkflowDefinition(), WORKFLOW_OBFUSCATION_FIELDS)
                     .forEach(field -> obfuscateWorkflowField(field, jsonWorkflow, workflowChangedFields));
-            workflow.getWorkflowDefinition().getObfuscationFields().get(TASKS_OBFUSCATION_FIELDS)
-                    .forEach(field -> obfuscateTaskField(field, workflowTasks, workflowChangedFields));
+            getObfuscationFieldsList(workflow.getWorkflowDefinition(), TASKS_OBFUSCATION_FIELDS)
+                    .forEach(field -> obfuscateTaskField(field, jsonWorkflowTasks, workflowChangedFields));
 
             if(!workflowChangedFields.isEmpty()) {
                 if(workflowChangedFields.contains(WORKFLOW_TASKS_FIELD)) {
-                    jsonWorkflow.set(WORKFLOW_TASKS_FIELD, workflowTasks.json());
+                    List<Task> updatedTasks = convertJsonTasksToTaskList(jsonWorkflowTasks);
+                    executionDAO.updateTasks(updatedTasks);
                 }
                 Workflow updatedWorkflow = objectMapper.convertValue(jsonWorkflow.json(), Workflow.class);
                 executionDAO.updateWorkflow(updatedWorkflow);
@@ -138,5 +141,18 @@ public class ObfuscationServiceImpl implements ObfuscationService {
 
     private void validateTaskField(DocumentContext task, String field) {
         task.read(field);
+    }
+
+    private List<String> getObfuscationFieldsList(WorkflowDef workflowDef, String entityFields) {
+        return asList(workflowDef.getObfuscationFields().get(entityFields).split(","));
+    }
+
+    private List<Task> convertJsonTasksToTaskList(DocumentContext jsonWorkflowTasks) {
+        try {
+            return asList(objectMapper.readValue(jsonWorkflowTasks.jsonString(), Task[].class));
+        } catch (Exception e) {
+            LOGGER.error("failed to convert task list with error: {}", e);
+            throw new ObfuscationServiceException("failed to convert task list", e);
+        }
     }
 }
