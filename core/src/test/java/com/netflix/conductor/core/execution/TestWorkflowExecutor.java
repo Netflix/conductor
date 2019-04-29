@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.core.execution;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -25,7 +26,9 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
@@ -67,6 +70,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.netflix.conductor.core.execution.tasks.SubWorkflow.SUB_WORKFLOW_ID;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.maxBy;
@@ -75,11 +80,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -99,6 +100,7 @@ public class TestWorkflowExecutor {
     private QueueDAO queueDAO;
     private WorkflowStatusListener workflowStatusListener;
     private WorkflowObfuscationQueuePublisher publisher;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Before
     public void init() {
@@ -109,7 +111,6 @@ public class TestWorkflowExecutor {
         workflowStatusListener = mock(WorkflowStatusListener.class);
         publisher = mock(WorkflowObfuscationQueuePublisher.class);
         ExternalPayloadStorageUtils externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
-        ObjectMapper objectMapper = new ObjectMapper();
         ParametersUtils parametersUtils = new ParametersUtils();
         Map<String, TaskMapper> taskMappers = new HashMap<>();
         taskMappers.put("DECISION", new DecisionTaskMapper());
@@ -361,7 +362,7 @@ public class TestWorkflowExecutor {
         workflowDef.setName("testDef");
         workflowDef.setVersion(1);
         workflowDef.setRestartable(true);
-        workflowDef.getTasks().addAll(Collections.singletonList(workflowTask));
+        workflowDef.getTasks().addAll(singletonList(workflowTask));
 
         Task task_1 = new Task();
         task_1.setTaskId(UUID.randomUUID().toString());
@@ -404,7 +405,7 @@ public class TestWorkflowExecutor {
         workflowDef.setName("testDef");
         workflowDef.setVersion(2);
         workflowDef.setRestartable(true);
-        workflowDef.getTasks().addAll(Collections.singletonList(workflowTask));
+        workflowDef.getTasks().addAll(singletonList(workflowTask));
 
         when(metadataDAO.getLatest(workflow.getWorkflowName())).thenReturn(Optional.of(workflowDef));
         workflowExecutor.rewind(workflow.getWorkflowId(), true);
@@ -925,7 +926,7 @@ public class TestWorkflowExecutor {
         newTask.setReferenceTaskName("newTask");
         newTask.setRetryCount(0);
 
-        taskList = workflowExecutor.dedupAndAddTasks(workflow, Collections.singletonList(newTask));
+        taskList = workflowExecutor.dedupAndAddTasks(workflow, singletonList(newTask));
         assertEquals(1, taskList.size());
         assertEquals(newTask, taskList.get(0));
         assertEquals(3, workflow.getTasks().size());
@@ -991,6 +992,57 @@ public class TestWorkflowExecutor {
         workflowExecutor.rollbackTasks(workflowId, Arrays.asList(task1, task2, task3));
         assertEquals(1, removeWorkflowCalledCounter.get());
         assertEquals(3, removeTaskCalledCounter.get());
+    }
+
+    @Test
+    public void testObfuscateWorkflows() throws JsonProcessingException {
+        String workflowName = "test_workflow";
+        int workflowVersion = 1;
+        WorkflowDef workflowDefinition = new WorkflowDef();
+        String query = String.format("workflowType:%s AND version:%s", workflowName, workflowVersion);
+        WorkflowSummary summary1 = new WorkflowSummary();
+        summary1.setWorkflowId("workflowId1");
+        WorkflowSummary summary2 = new WorkflowSummary();
+        summary2.setWorkflowId("workflowId2");
+
+
+        when(metadataDAO.get(workflowName, workflowVersion)).thenReturn(Optional.of(workflowDefinition));
+        when(executionDAOFacade.searchWorkflows(null, query, 0, 100, null)).thenReturn(
+                new SearchResult<>(2, singletonList(objectMapper.writeValueAsString(summary1))));
+        when(executionDAOFacade.searchWorkflows(null, query, 1, 100, null)).thenReturn(
+                new SearchResult<>(2, singletonList(objectMapper.writeValueAsString(summary2))));
+
+        workflowExecutor.obfuscateWorkflows(workflowName, workflowVersion);
+
+        verify(publisher, times(1)).publishAll(singletonList("workflowId1"), workflowDefinition);
+        verify(publisher, times(1)).publishAll(singletonList("workflowId2"), workflowDefinition);
+    }
+
+    @Test
+    public void testObfuscateWorkflowsWithNoWorkflowsFound() {
+        String workflowName = "test_workflow";
+        int workflowVersion = 1;
+        WorkflowDef workflowDefinition = new WorkflowDef();
+        String query = String.format("workflowType:%s AND version:%s", workflowName, workflowVersion);
+
+
+        when(metadataDAO.get(workflowName, workflowVersion)).thenReturn(Optional.of(workflowDefinition));
+        when(executionDAOFacade.searchWorkflows(null, query, 0, 100, null)).thenReturn(
+                new SearchResult<>(0, emptyList()));
+
+        workflowExecutor.obfuscateWorkflows(workflowName, workflowVersion);
+
+        verify(publisher, times(0)).publishAll(anyListOf(String.class), anyObject());
+    }
+
+    @Test(expected = ApplicationException.class)
+    public void testObfuscateWorkflowsFailingWithException() {
+        String workflowName = "test_workflow";
+        int workflowVersion = 1;
+
+        when(metadataDAO.get(workflowName, workflowVersion)).thenReturn(Optional.empty());
+
+        workflowExecutor.obfuscateWorkflows(workflowName, workflowVersion);
     }
 
     private Workflow generateSampleWorkflow() {

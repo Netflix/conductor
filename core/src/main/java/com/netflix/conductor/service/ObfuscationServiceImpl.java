@@ -44,7 +44,6 @@ public class ObfuscationServiceImpl implements ObfuscationService {
         this.indexDAO = indexDAO;
     }
 
-    //TODO: run this async
     @Override
     public void obfuscateFields(String workflowId) {
         Workflow workflow = getWorkflow(workflowId);

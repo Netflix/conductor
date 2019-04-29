@@ -257,4 +257,12 @@ public interface WorkflowService {
      * @return {@link ExternalStorageLocation} containing the uri and the path to the payload is stored in external storage
      */
     ExternalStorageLocation getExternalStorageLocation(String path, String operation, String payloadType);
+
+    /**
+     * Obfuscate the defined workflow fields for previously executed workflows
+     *
+     * @param name      Name of the workflow you want to have the fields obfuscated
+     * @param version   Version of the workflow you want to have the fields obfuscated
+     */
+    void obfuscateWorkflows(String name, Integer version);
 }

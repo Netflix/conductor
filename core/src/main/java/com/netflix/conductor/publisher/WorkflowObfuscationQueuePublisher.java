@@ -6,6 +6,7 @@ import com.netflix.conductor.dao.QueueDAO;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.List;
 
 @Singleton
 public class WorkflowObfuscationQueuePublisher {
@@ -26,6 +27,12 @@ public class WorkflowObfuscationQueuePublisher {
     public void publish(String workflowId, WorkflowDef workflowDef) {
         if(isObfuscationEnabled(workflowDef)) {
             queueDAO.push(workflowObfuscationQueueName, workflowId, 0);
+        }
+    }
+
+    public void publishAll(List<String> workflowIds, WorkflowDef workflowDef) {
+        if(isObfuscationEnabled(workflowDef)) {
+            workflowIds.forEach(id -> queueDAO.push(workflowObfuscationQueueName, id, 0));
         }
     }
 
