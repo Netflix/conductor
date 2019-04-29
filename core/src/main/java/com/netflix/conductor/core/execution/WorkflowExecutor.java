@@ -952,11 +952,6 @@ public class WorkflowExecutor {
 			if(!task.getStatus().isTerminal()) {
 				task.setStatus(Status.COMPLETED);
 			}
-			task.setOutputData(result.getOutputData());
-			task.setReasonForIncompletion(result.getReasonForIncompletion());
-			task.setWorkerId(result.getWorkerId());
-			edao.updateTask(task);
-			notifyTaskStatus(task, StartEndState.end);
 			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ",reason=" + wf.getReasonForIncompletion()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser();
 			logger.warn(msg);
 			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
