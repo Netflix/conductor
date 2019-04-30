@@ -258,7 +258,7 @@ public class ExecutionDAOFacade {
     public void updateTask(Task task) {
         try {
             executionDAO.updateTask(task);
-            //indexDAO.indexTask(task);
+            //indexDAO.asyncIndexTask(task);
         } catch (Exception e) {
             String errorMsg = String.format("Error updating task: %s in workflow: %s", task.getTaskId(), task.getWorkflowInstanceId());
             LOGGER.error(errorMsg, e);
