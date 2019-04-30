@@ -1,7 +1,6 @@
-package com.netflix.conductor.coordinator;
+package com.netflix.conductor.consumer;
 
 import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.exception.ObfuscationServiceException;
@@ -15,8 +14,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
 
+/**
+ * Pops messages from the obfuscationQueue and calls the ObfuscationService for each of them,
+ * when the processing is complete the messages are removed. If a ObfuscationServiceException is
+ * thrown, the message is also removed from queue.
+ */
 @Singleton
-public class WorkflowObfuscationCoordinator {
+public class WorkflowObfuscationQueueConsumer {
 
     private static Logger LOGGER = LoggerFactory.getLogger(WorkflowSweeper.class);
     private ExecutorService executorService;
@@ -28,20 +32,20 @@ public class WorkflowObfuscationCoordinator {
     private String workflowObfuscationQueue;
 
     @Inject
-    public WorkflowObfuscationCoordinator(Configuration config, ObfuscationService obfuscationService, QueueDAO queueDAO) {
+    public WorkflowObfuscationQueueConsumer(Configuration config, ObfuscationService obfuscationService, QueueDAO queueDAO) {
         this.config = config;
         this.obfuscationService = obfuscationService;
         this.queueDAO = queueDAO;
         this.obfuscationEnabled = config.getBooleanProperty("workflow.obfuscation.enabled", false);
-        this.executorThreadPoolSize = config.getIntProperty("workflow.obfuscation.coordinator.thread.count", 5);
-        this.workflowObfuscationQueue = config.getProperty("workflow.obfuscation.coordinator.queue.name", "_obfuscationQueue");
+        this.executorThreadPoolSize = config.getIntProperty("workflow.obfuscation.consumer.thread.count", 5);
+        this.workflowObfuscationQueue = config.getProperty("workflow.obfuscation.queue.name", "_obfuscationQueue");
 
         if(obfuscationEnabled) {
             this.executorService = Executors.newFixedThreadPool(executorThreadPoolSize);
             init();
-            LOGGER.info("workflow obfuscation coordinator started");
+            LOGGER.info("workflow obfuscation consumer started");
         } else {
-            LOGGER.info("workflow obfuscation coordinator disabled, workflow obfuscation will not work");
+            LOGGER.info("workflow obfuscation consumer disabled, workflow obfuscation will not work");
         }
     }
 
@@ -49,17 +53,18 @@ public class WorkflowObfuscationCoordinator {
         ScheduledExecutorService coordinatorPool = Executors.newScheduledThreadPool(1);
         coordinatorPool.scheduleWithFixedDelay(() -> {
             List<String> workflowIds = queueDAO.pop(workflowObfuscationQueue, 2 * executorThreadPoolSize, 2000);
-            LOGGER.info("{} workflow obfuscation requests popped", workflowIds.size());
+            LOGGER.debug("{} workflow obfuscation requests popped", workflowIds.size());
             process(workflowIds);
         }, 500, 500, TimeUnit.MILLISECONDS);
     }
+
 
     private void process(List<String> workflowIds) {
         List<Future<?>> futures = new LinkedList<>();
         workflowIds.forEach(id -> {
             Future<?> future = executorService.submit(() -> {
                 try {
-                    LOGGER.info("processing obfuscation for workflowId: {}", id);
+                    LOGGER.debug("processing obfuscation for workflowId: {}", id);
                     obfuscationService.obfuscateFields(id);
                     queueDAO.remove(workflowObfuscationQueue, id);
                 } catch (Exception e) {

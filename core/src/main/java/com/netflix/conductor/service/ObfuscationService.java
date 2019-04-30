@@ -1,11 +1,12 @@
 package com.netflix.conductor.service;
 
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-
 public interface ObfuscationService {
 
-    public void obfuscateFields(String workflowId);
-
-    public void obfuscateFieldsByWorkflowDef(String name, Integer version);
-
+    /**
+     * Obfuscates the desired workflow fields defined in the WorkflowDef.
+     * @throws com.netflix.conductor.exception.ObfuscationServiceException if the workflow or the workflowDef is not found,
+     * also if any json parsing fails, this exception will be thrown.
+     * @param workflowId  id of the workflow to be obfuscated
+     */
+    void obfuscateFields(String workflowId);
 }

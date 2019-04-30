@@ -74,6 +74,7 @@ import static com.netflix.conductor.core.execution.ApplicationException.Code.INV
 import static com.netflix.conductor.core.execution.ApplicationException.Code.NOT_FOUND;
 import static com.netflix.conductor.core.execution.tasks.SubWorkflow.SUB_WORKFLOW_ID;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * @author Viren Workflow services provider interface
@@ -1069,6 +1070,7 @@ public class WorkflowExecutor {
      * @throws ApplicationException If there was an error - caller should retry in this case.
      */
     public void obfuscateWorkflows(String name, Integer version) {
+        validateInput(name, version);
         WorkflowDef workflowDef = getWorkflowDef(name, version);
         long totalHits = searchWorkflowsToPublish(name, version, 0).getTotalHits();
 
@@ -1077,9 +1079,7 @@ public class WorkflowExecutor {
             while(processedWorkflows < totalHits) {
                 SearchResult<String> results = searchWorkflowsToPublish(name, version, processedWorkflows);
 
-                List<String> workflowIds = results.getResults().stream()
-                        .map(workflowSummary -> JsonPath.parse(workflowSummary).read("workflowId").toString())
-                        .collect(toList());
+                List<String> workflowIds = results.getResults();
 
                 publisher.publishAll(workflowIds, workflowDef);
                 processedWorkflows = processedWorkflows + workflowIds.size();
@@ -1089,8 +1089,13 @@ public class WorkflowExecutor {
         }
     }
 
-    private SearchResult<String> searchWorkflowsToPublish(String name, Integer version, int start) {
-        return executionDAOFacade.searchWorkflows(null, String.format("workflowType:%s AND version:%s", name, version), start, 100, null);
+    private void validateInput(String name, Integer version) {
+        if(version == null || version <= 0) {
+            throw new ApplicationException(Code.INVALID_INPUT, "workflow version must be present and cannot have 0 or below value");
+        }
+        if(isEmpty(name)) {
+            throw new ApplicationException(Code.INVALID_INPUT, "workflow name must be present");
+        }
     }
 
     private WorkflowDef getWorkflowDef(String name, Integer version) {
@@ -1100,6 +1105,10 @@ public class WorkflowExecutor {
         } else {
             throw new ApplicationException(Code.INVALID_INPUT, "workflowDefinition does not exists");
         }
+    }
+
+    private SearchResult<String> searchWorkflowsToPublish(String name, Integer version, int start) {
+        return executionDAOFacade.searchWorkflows(null, String.format("workflowType:%s AND version:%s", name, version), start, 100, null);
     }
 
     @VisibleForTesting

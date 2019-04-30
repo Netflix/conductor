@@ -252,7 +252,7 @@ public class WorkflowResource {
     @ApiOperation("obfuscate the defined fields on workflowDefinition to all workflows with given workflowName and version")
     @Consumes(MediaType.WILDCARD)
     @Path("/obfuscation")
-    public void obfuscateWorkflows(@QueryParam("workflowName") @NotEmpty String name, @QueryParam("version") @NotEmpty Integer version) {
+    public void obfuscateWorkflows(@QueryParam("workflowName") String name, @QueryParam("version") Integer version) {
         workflowService.obfuscateWorkflows(name, version);
     }
 }

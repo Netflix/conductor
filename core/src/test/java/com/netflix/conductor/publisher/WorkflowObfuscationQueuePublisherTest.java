@@ -28,7 +28,7 @@ public class WorkflowObfuscationQueuePublisherTest {
     @Before
     public void setup() {
         when(configuration.getBooleanProperty("workflow.obfuscation.enabled", false)).thenReturn(true);
-        when(configuration.getProperty("workflow.obfuscation.coordinator.queue.name", "_obfuscationQueue")).thenReturn("_obfuscationQueue");
+        when(configuration.getProperty("workflow.obfuscation.queue.name", "_obfuscationQueue")).thenReturn("_obfuscationQueue");
         workflowDef = new WorkflowDef();
         workflowDef.setObfuscationFields(ImmutableMap.of("workflowField", "field"));
     }

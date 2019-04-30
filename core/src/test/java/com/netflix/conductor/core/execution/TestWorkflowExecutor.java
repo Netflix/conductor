@@ -1000,22 +1000,20 @@ public class TestWorkflowExecutor {
         int workflowVersion = 1;
         WorkflowDef workflowDefinition = new WorkflowDef();
         String query = String.format("workflowType:%s AND version:%s", workflowName, workflowVersion);
-        WorkflowSummary summary1 = new WorkflowSummary();
-        summary1.setWorkflowId("workflowId1");
-        WorkflowSummary summary2 = new WorkflowSummary();
-        summary2.setWorkflowId("workflowId2");
+        String workflowId1 = "workflowId1";
+        String workflowId2 = "workflowId2";
 
 
         when(metadataDAO.get(workflowName, workflowVersion)).thenReturn(Optional.of(workflowDefinition));
         when(executionDAOFacade.searchWorkflows(null, query, 0, 100, null)).thenReturn(
-                new SearchResult<>(2, singletonList(objectMapper.writeValueAsString(summary1))));
+                new SearchResult<>(2, singletonList(workflowId1)));
         when(executionDAOFacade.searchWorkflows(null, query, 1, 100, null)).thenReturn(
-                new SearchResult<>(2, singletonList(objectMapper.writeValueAsString(summary2))));
+                new SearchResult<>(2, singletonList(workflowId2)));
 
         workflowExecutor.obfuscateWorkflows(workflowName, workflowVersion);
 
-        verify(publisher, times(1)).publishAll(singletonList("workflowId1"), workflowDefinition);
-        verify(publisher, times(1)).publishAll(singletonList("workflowId2"), workflowDefinition);
+        verify(publisher, times(1)).publishAll(singletonList(workflowId1), workflowDefinition);
+        verify(publisher, times(1)).publishAll(singletonList(workflowId2), workflowDefinition);
     }
 
     @Test
@@ -1036,13 +1034,38 @@ public class TestWorkflowExecutor {
     }
 
     @Test(expected = ApplicationException.class)
-    public void testObfuscateWorkflowsFailingWithException() {
+    public void testObfuscateWorkflowsFailingWithExceptionForNotFoundWorkflowDef() {
         String workflowName = "test_workflow";
         int workflowVersion = 1;
 
         when(metadataDAO.get(workflowName, workflowVersion)).thenReturn(Optional.empty());
 
         workflowExecutor.obfuscateWorkflows(workflowName, workflowVersion);
+    }
+
+    @Test(expected = ApplicationException.class)
+    public void testObfuscateWorkflowsFailingWithExceptionForEmptyWorkflowName() {
+        workflowExecutor.obfuscateWorkflows("", 1);
+    }
+
+    @Test(expected = ApplicationException.class)
+    public void testObfuscateWorkflowsFailingWithExceptionForNullWorkflowName() {
+        workflowExecutor.obfuscateWorkflows(null, 1);
+    }
+
+    @Test(expected = ApplicationException.class)
+    public void testObfuscateWorkflowsFailingWithExceptionForNullWorkflowVersion() {
+        workflowExecutor.obfuscateWorkflows("workflowName", null);
+    }
+
+    @Test(expected = ApplicationException.class)
+    public void testObfuscateWorkflowsFailingWithExceptionForWorkflowVersionEqualTo0() {
+        workflowExecutor.obfuscateWorkflows("workflowName", 0);
+    }
+
+    @Test(expected = ApplicationException.class)
+    public void testObfuscateWorkflowsFailingWithExceptionForInvalidWorkflowVersion() {
+        workflowExecutor.obfuscateWorkflows("workflowName", -1);
     }
 
     private Workflow generateSampleWorkflow() {
