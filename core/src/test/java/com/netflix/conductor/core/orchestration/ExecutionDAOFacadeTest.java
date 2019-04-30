@@ -58,7 +58,7 @@ public class ExecutionDAOFacadeTest {
         executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper);
     }
 
-    @Test
+    @Test (expected = com.netflix.conductor.core.execution.ApplicationException.class)
     public void tesGetWorkflowById() throws Exception {
         when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
         Workflow workflow = executionDAOFacade.getWorkflowById("workflowId", true);
