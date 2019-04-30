@@ -76,6 +76,23 @@ public class ExecutionDAOFacadeTest {
     }
 
     @Test
+    public void getWorkflowByIdWithFallbackToIndexDAO() throws Exception {
+        when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
+        Workflow workflow = executionDAOFacade.getWorkflowByIdWithFallbackToIndexDAO("workflowId", true);
+        assertNotNull(workflow);
+        verify(indexDAO, never()).get(any(), any());
+
+        when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(null);
+        InputStream stream = ExecutionDAOFacadeTest.class.getResourceAsStream("/test.json");
+        byte[] bytes = IOUtils.toByteArray(stream);
+        String jsonString = new String(bytes);
+        when(indexDAO.get(any(), any())).thenReturn(jsonString);
+        workflow = executionDAOFacade.getWorkflowByIdWithFallbackToIndexDAO("workflowId", true);
+        assertNotNull(workflow);
+        verify(indexDAO, times(1)).get(any(), any());
+    }
+
+    @Test
     public void testGetWorkflowsByCorrelationId() {
         when(executionDAO.canSearchAcrossWorkflows()).thenReturn(true);
         when(executionDAO.getWorkflowsByCorrelationId(any(), anyBoolean())).thenReturn(Collections.singletonList(new Workflow()));
