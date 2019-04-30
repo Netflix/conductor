@@ -4,6 +4,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.Value;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.tasks.CompleteTaskResult;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -20,6 +21,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
+import com.netflix.conductor.proto.CompleteTaskResultPb;
 import com.netflix.conductor.proto.DynamicForkJoinTaskListPb;
 import com.netflix.conductor.proto.DynamicForkJoinTaskPb;
 import com.netflix.conductor.proto.EventExecutionPb;
@@ -51,6 +53,52 @@ import javax.annotation.Generated;
 
 @Generated("com.github.vmg.protogen.ProtoGen")
 public abstract class AbstractProtoMapper {
+    public CompleteTaskResultPb.CompleteTaskResult toProto(CompleteTaskResult from) {
+        CompleteTaskResultPb.CompleteTaskResult.Builder to = CompleteTaskResultPb.CompleteTaskResult.newBuilder();
+        to.setCode( from.getCode() );
+        if (from.getMessage() != null) {
+            to.setMessage( from.getMessage() );
+        }
+        if (from.getInProgressTask() != null) {
+            to.setInProgressTask( toProto( from.getInProgressTask() ) );
+        }
+        return to.build();
+    }
+
+    public CompleteTaskResult fromProto(CompleteTaskResultPb.CompleteTaskResult from) {
+        CompleteTaskResult to = new CompleteTaskResult();
+        to.setCode( from.getCode() );
+        to.setMessage( from.getMessage() );
+        if (from.hasInProgressTask()) {
+            to.setInProgressTask( fromProto( from.getInProgressTask() ) );
+        }
+        return to;
+    }
+
+    public CompleteTaskResultPb.CompleteTaskResult.CompletionStatus toProto(
+            CompleteTaskResult.CompletionStatus from) {
+        CompleteTaskResultPb.CompleteTaskResult.CompletionStatus to;
+        switch (from) {
+            case NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF: to = CompleteTaskResultPb.CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF; break;
+            case COMPLETED: to = CompleteTaskResultPb.CompleteTaskResult.CompletionStatus.COMPLETED; break;
+            case NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE: to = CompleteTaskResultPb.CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE; break;
+            default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
+        }
+        return to;
+    }
+
+    public CompleteTaskResult.CompletionStatus fromProto(
+            CompleteTaskResultPb.CompleteTaskResult.CompletionStatus from) {
+        CompleteTaskResult.CompletionStatus to;
+        switch (from) {
+            case NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF: to = CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF; break;
+            case COMPLETED: to = CompleteTaskResult.CompletionStatus.COMPLETED; break;
+            case NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE: to = CompleteTaskResult.CompletionStatus.NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE; break;
+            default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
+        }
+        return to;
+    }
+
     public DynamicForkJoinTaskPb.DynamicForkJoinTask toProto(DynamicForkJoinTask from) {
         DynamicForkJoinTaskPb.DynamicForkJoinTask.Builder to = DynamicForkJoinTaskPb.DynamicForkJoinTask.newBuilder();
         if (from.getTaskName() != null) {
