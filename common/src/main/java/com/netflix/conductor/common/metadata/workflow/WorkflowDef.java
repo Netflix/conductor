@@ -25,20 +25,12 @@ import com.netflix.conductor.common.constraints.NoSemiColonConstraint;
 import com.netflix.conductor.common.constraints.TaskReferenceNameUniqueConstraint;
 import com.netflix.conductor.common.metadata.Auditable;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.*;
 
 
 /**
@@ -85,6 +77,9 @@ public class WorkflowDef extends Auditable {
 
 	@ProtoField(id = 10)
 	private boolean workflowStatusListenerEnabled = false;
+
+	@ProtoField(id = 11)
+	private Map<String, String> obfuscationFields = new HashMap<>();
 
 	/**
 	 * @return the name
@@ -228,6 +223,20 @@ public class WorkflowDef extends Auditable {
 	}
 
 	/**
+	 * @return the obfuscationFields
+	 */
+	public Map<String, String> getObfuscationFields() {
+		return obfuscationFields;
+	}
+
+	/**
+	 * @param obfuscationFields the obfuscationFields to set
+	 */
+	public void setObfuscationFields(Map<String, String> obfuscationFields) {
+		this.obfuscationFields = obfuscationFields;
+	}
+
+	/**
 	 * Specify if workflow listener is enabled to invoke a callback for completed or terminated workflows
 	 * @param workflowStatusListenerEnabled
 	 */
@@ -322,6 +331,7 @@ public class WorkflowDef extends Auditable {
 				.add("schemaVersion", schemaVersion)
 				.add("restartable", restartable)
 				.add("workflowStatusListenerEnabled", workflowStatusListenerEnabled)
+				.add("obfuscationFields", obfuscationFields)
 				.toString();
 	}
 }

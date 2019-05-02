@@ -1,0 +1,256 @@
+{
+  "createTime": 1552911262342,
+  "updateTime": 1552911264022,
+  "status": "COMPLETED",
+  "endTime": 1552911264022,
+  "workflowId": "f580ba3a-7c03-4db3-aab0-7d35f28aeb14",
+  "tasks": [{
+    "taskType": "DECISION",
+    "status": "COMPLETED",
+    "inputData": {
+      "hasChildren": "true",
+      "case": "null"
+    },
+    "referenceTaskName": "Conditional01",
+    "retryCount": 0,
+    "seq": 1,
+    "correlationId": "null",
+    "pollCount": 0,
+    "taskDefName": "DECISION",
+    "scheduledTime": 1552911262487,
+    "startTime": 1552911262704,
+    "endTime": 1552911262527,
+    "updateTime": 1552911264063,
+    "startDelayInSeconds": 0,
+    "retried": false,
+    "executed": true,
+    "callbackFromWorker": true,
+    "responseTimeoutSeconds": 0,
+    "workflowInstanceId": "f580ba3a-7c03-4db3-aab0-7d35f28aeb14",
+    "workflowType": "orchestrator_ConditionalMode",
+    "taskId": "329f0b96-3540-4658-9e8b-0ef8faf22733",
+    "callbackAfterSeconds": 0,
+    "outputData": {
+      "caseOutput": ["null"]
+    },
+    "workflowTask": {
+      "name": "orchestrator_Default",
+      "taskReferenceName": "Conditional01",
+      "description": "...",
+      "inputParameters": {
+        "caseValueParam": "${workflow.input.body.mode}"
+      },
+      "type": "DECISION",
+      "caseValueParam": "caseValueParam",
+      "decisionCases": {
+        "01": [{
+          "name": "orchestrator_Default",
+          "taskReferenceName": "Request01",
+          "inputParameters": {
+            "http_request": {
+              "uri": "http://www.mocky.io/v2/5c6d95ff370000530afa34e8",
+              "method": "GET",
+              "headers": {
+                "x-workflow-id": "${workflow.workflowId}",
+                "x-correlation-id": "${workflow.correlationId}"
+              }
+            }
+          },
+          "type": "HTTP",
+          "startDelay": 0,
+          "optional": false
+        }]
+      },
+      "defaultCase": [{
+        "name": "orchestrator_Default",
+        "taskReferenceName": "Request02",
+        "inputParameters": {
+          "http_request": {
+            "uri": "http://www.mocky.io/v2/5c6d95ff370000530afa34e8",
+            "method": "GET",
+            "headers": {
+              "x-workflow-id": "${workflow.workflowId}",
+              "x-correlation-id": "${workflow.correlationId}"
+            }
+          }
+        },
+        "type": "HTTP",
+        "startDelay": 0,
+        "optional": false
+      }],
+      "startDelay": 0,
+      "optional": false
+    },
+    "rateLimitPerFrequency": 0,
+    "rateLimitFrequencyInSeconds": 0,
+    "loggingEnabled": true,
+    "taskDefinition": {
+      "present": false
+    },
+    "queueWaitTime": 217,
+    "taskStatus": "COMPLETED"
+  }, {
+    "taskType": "HTTP",
+    "status": "COMPLETED",
+    "inputData": {
+      "http_request": {
+        "uri": "http://www.mocky.io/v2/5c6d95ff370000530afa34e8",
+        "method": "GET",
+        "headers": {
+          "x-workflow-id": "f580ba3a-7c03-4db3-aab0-7d35f28aeb14",
+          "x-correlation-id": "null"
+        }
+      }
+    },
+    "referenceTaskName": "Request02",
+    "retryCount": 0,
+    "seq": 2,
+    "correlationId": "null",
+    "pollCount": 1,
+    "taskDefName": "orchestrator_Default",
+    "scheduledTime": 1552911262624,
+    "startTime": 1552911263103,
+    "endTime": 1552911263790,
+    "updateTime": 1552911264135,
+    "startDelayInSeconds": 0,
+    "retried": false,
+    "executed": true,
+    "callbackFromWorker": true,
+    "responseTimeoutSeconds": 0,
+    "workflowInstanceId": "f580ba3a-7c03-4db3-aab0-7d35f28aeb14",
+    "workflowType": "orchestrator_ConditionalMode",
+    "taskId": "1ff8a4f8-8605-4f84-a348-e063b6f60444",
+    "callbackAfterSeconds": 0,
+    "workerId": "6156f7060442",
+    "outputData": {
+      "response": {
+        "headers": {
+          "header1": ["Header1"]
+        },
+        "reasonPhrase": "OK",
+        "body": {
+          "hello": "world"
+        },
+        "statusCode": 200
+      }
+    },
+    "workflowTask": {
+      "name": "orchestrator_Default",
+      "taskReferenceName": "Request02",
+      "inputParameters": {
+        "http_request": {
+          "uri": "http://www.mocky.io/v2/5c6d95ff370000530afa34e8",
+          "method": "GET",
+          "headers": {
+            "x-workflow-id": "${workflow.workflowId}",
+            "x-correlation-id": "${workflow.correlationId}"
+          }
+        }
+      },
+      "type": "HTTP",
+      "startDelay": 0,
+      "optional": false
+    },
+    "rateLimitPerFrequency": 0,
+    "rateLimitFrequencyInSeconds": 1,
+    "loggingEnabled": true,
+    "taskDefinition": {
+      "present": false
+    },
+    "queueWaitTime": 479,
+    "taskStatus": "COMPLETED"
+  }],
+  "input": {
+    "context": {},
+    "headers": {
+      "header1": "Header1"
+    },
+    "body": {}
+  },
+  "output": {
+    "response": {
+      "headers": {
+        "header1": "Header1"
+      },
+      "reasonPhrase": "OK",
+      "body": {
+        "hello": "world"
+      },
+      "statusCode": 200
+    }
+  },
+  "workflowType": "ConditionalMode",
+  "version": 3,
+  "correlationId": "null",
+  "schemaVersion": 2,
+  "workflowDefinition": {
+    "createTime": 1550686558442,
+    "name": "orchestrator_ConditionalMode",
+    "description": "...",
+    "version": 3,
+    "tasks": [
+      {
+        "name": "orchestrator_Default",
+        "taskReferenceName": "Conditional01",
+        "description": "...",
+        "inputParameters": {
+          "caseValueParam": "${workflow.input.body.mode}"
+        },
+        "type": "DECISION",
+        "caseValueParam": "caseValueParam",
+        "decisionCases": {
+          "01": [
+            {
+              "name": "orchestrator_Default",
+              "taskReferenceName": "Request01",
+              "inputParameters": {
+                "http_request": {
+                  "uri": "http://www.mocky.io/v2/5c6d95ff370000530afa34e8",
+                  "method": "GET",
+                  "headers": {
+                    "x-workflow-id": "${workflow.workflowId}",
+                    "x-correlation-id": "${workflow.correlationId}"
+                  }
+                }
+              },
+              "type": "HTTP",
+              "startDelay": 0,
+              "optional": false
+            }
+          ]
+        },
+        "defaultCase": [
+          {
+            "name": "orchestrator_Default",
+            "taskReferenceName": "Request02",
+            "inputParameters": {
+              "http_request": {
+                "uri": "http://www.mocky.io/v2/5c6d95ff370000530afa34e8",
+                "method": "GET",
+                "headers": {
+                  "x-workflow-id": "${workflow.workflowId}",
+                  "x-correlation-id": "${workflow.correlationId}"
+                }
+              }
+            },
+            "type": "HTTP",
+            "startDelay": 0,
+            "optional": false
+          }
+        ],
+        "startDelay": 0,
+        "optional": false
+      }
+    ],
+    "schemaVersion": 2,
+    "restartable": true,
+    "workflowStatusListenerEnabled": false,
+    "obfuscationFields": {
+      "workflowFields": "output.response.body",
+      "taskFields": "Request02.inputData.http_request.headers.x-workflow-id"
+    }
+  },
+  "startTime": 1552911262342,
+  "workflowName": "orchestrator_ConditionalMode",
+  "workflowVersion": 3
+}

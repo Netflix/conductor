@@ -14,6 +14,7 @@ package com.netflix.conductor.core.execution;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.jayway.jsonpath.JsonPath;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -23,6 +24,7 @@ import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.common.utils.RetryUtil;
@@ -39,6 +41,7 @@ import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.publisher.WorkflowObfuscationQueuePublisher;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +73,8 @@ import static com.netflix.conductor.core.execution.ApplicationException.Code.CON
 import static com.netflix.conductor.core.execution.ApplicationException.Code.INVALID_INPUT;
 import static com.netflix.conductor.core.execution.ApplicationException.Code.NOT_FOUND;
 import static com.netflix.conductor.core.execution.tasks.SubWorkflow.SUB_WORKFLOW_ID;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * @author Viren Workflow services provider interface
@@ -85,6 +90,7 @@ public class WorkflowExecutor {
     private final Configuration config;
     private final MetadataMapperService metadataMapperService;
     private final ExecutionDAOFacade executionDAOFacade;
+    private final WorkflowObfuscationQueuePublisher publisher;
 
     private WorkflowStatusListener workflowStatusListener;
     private ExternalPayloadStorageUtils externalPayloadStorageUtils;
@@ -102,7 +108,8 @@ public class WorkflowExecutor {
             WorkflowStatusListener workflowStatusListener,
             ExecutionDAOFacade executionDAOFacade,
             ExternalPayloadStorageUtils externalPayloadStorageUtils,
-            Configuration config
+            Configuration config,
+            WorkflowObfuscationQueuePublisher publisher
     ) {
         this.deciderService = deciderService;
         this.metadataDAO = metadataDAO;
@@ -113,6 +120,7 @@ public class WorkflowExecutor {
         this.activeWorkerLastPollInSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
         this.workflowStatusListener = workflowStatusListener;
         this.externalPayloadStorageUtils = externalPayloadStorageUtils;
+        this.publisher = publisher;
     }
 
     /**
@@ -459,7 +467,7 @@ public class WorkflowExecutor {
         List<Task> retriableTasks = retriableMap.values().stream()
                 .sorted(Comparator.comparingInt(Task::getSeq))
                 .map(task -> taskToBeRescheduled(task))
-                .collect(Collectors.toList());
+                .collect(toList());
 
         dedupAndAddTasks(workflow, retriableTasks);
         // Note: updateTasks before updateWorkflow might fail when Workflow is archived and doesn't exist in primary store.
@@ -557,6 +565,7 @@ public class WorkflowExecutor {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             workflowStatusListener.onWorkflowCompleted(workflow);
         }
+        publisher.publish(workflow.getWorkflowId(), workflow.getWorkflowDefinition());
     }
 
     public void terminateWorkflow(String workflowId, String reason) {
@@ -654,6 +663,7 @@ public class WorkflowExecutor {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             workflowStatusListener.onWorkflowTerminated(workflow);
         }
+        publisher.publish(workflow.getWorkflowId(), workflow.getWorkflowDefinition());
     }
 
     /**
@@ -779,7 +789,7 @@ public class WorkflowExecutor {
         return workflowsByType.stream()
                 .filter(workflow -> workflow.getWorkflowVersion() == version)
                 .map(Workflow::getWorkflowId)
-                .collect(Collectors.toList());
+                .collect(toList());
 
     }
 
@@ -871,11 +881,11 @@ public class WorkflowExecutor {
     List<Task> dedupAndAddTasks(Workflow workflow, List<Task> tasks) {
         List<String> tasksInWorkflow = workflow.getTasks().stream()
                 .map(task -> task.getReferenceTaskName() + "_" + task.getRetryCount())
-                .collect(Collectors.toList());
+                .collect(toList());
 
         List<Task> dedupedTasks = tasks.stream()
                 .filter(task -> !tasksInWorkflow.contains(task.getReferenceTaskName() + "_" + task.getRetryCount()))
-                .collect(Collectors.toList());
+                .collect(toList());
 
         workflow.getTasks().addAll(dedupedTasks);
         return dedupedTasks;
@@ -1054,6 +1064,53 @@ public class WorkflowExecutor {
         }
     }
 
+    /**
+     * @param name Name of the Workflow
+     * @param version Version of the Workflow
+     * @throws ApplicationException If there was an error - caller should retry in this case.
+     */
+    public void obfuscateWorkflows(String name, Integer version) {
+        validateInput(name, version);
+        WorkflowDef workflowDef = getWorkflowDef(name, version);
+        long totalHits = searchWorkflowsToPublish(name, version, 0).getTotalHits();
+
+        if(totalHits > 0) {
+            int processedWorkflows = 0;
+            while(processedWorkflows < totalHits) {
+                SearchResult<String> results = searchWorkflowsToPublish(name, version, processedWorkflows);
+
+                List<String> workflowIds = results.getResults();
+
+                publisher.publishAll(workflowIds, workflowDef);
+                processedWorkflows = processedWorkflows + workflowIds.size();
+            }
+        } else {
+            LOGGER.info("no workflows were found to be obfuscated");
+        }
+    }
+
+    private void validateInput(String name, Integer version) {
+        if(version == null || version <= 0) {
+            throw new ApplicationException(Code.INVALID_INPUT, "workflow version must be present and cannot have 0 or below value");
+        }
+        if(isEmpty(name)) {
+            throw new ApplicationException(Code.INVALID_INPUT, "workflow name must be present");
+        }
+    }
+
+    private WorkflowDef getWorkflowDef(String name, Integer version) {
+        Optional<WorkflowDef> workflowDef = metadataDAO.get(name, version);
+        if(workflowDef.isPresent()) {
+            return workflowDef.get();
+        } else {
+            throw new ApplicationException(Code.INVALID_INPUT, "workflowDefinition does not exists");
+        }
+    }
+
+    private SearchResult<String> searchWorkflowsToPublish(String name, Integer version, int start) {
+        return executionDAOFacade.searchWorkflows(null, String.format("workflowType:%s AND version:%s", name, version), start, 100, null);
+    }
+
     @VisibleForTesting
     void setTaskDomains(List<Task> tasks, Workflow wf) {
         Map<String, String> taskToDomain = wf.getTaskToDomain();
@@ -1147,11 +1204,11 @@ public class WorkflowExecutor {
 
             List<Task> systemTasks = createdTasks.stream()
                     .filter(isSystemTask)
-                    .collect(Collectors.toList());
+                    .collect(toList());
 
             List<Task> tasksToBeQueued = createdTasks.stream()
                     .filter(isSystemTask.negate())
-                    .collect(Collectors.toList());
+                    .collect(toList());
 
             boolean startedSystemTasks = false;
 

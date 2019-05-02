@@ -31,6 +31,7 @@ import io.swagger.annotations.ApiOperation;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.constraints.NotEmpty;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -245,5 +246,13 @@ public class WorkflowResource {
     @Path("/externalstoragelocation")
     public ExternalStorageLocation getExternalStorageLocation(@QueryParam("path") String path, @QueryParam("operation") String operation, @QueryParam("payloadType") String payloadType) {
         return workflowService.getExternalStorageLocation(path, operation, payloadType);
+    }
+
+    @POST
+    @ApiOperation("obfuscate the defined fields on workflowDefinition to all workflows with given workflowName and version")
+    @Consumes(MediaType.WILDCARD)
+    @Path("/obfuscation")
+    public void obfuscateWorkflows(@QueryParam("workflowName") String name, @QueryParam("version") Integer version) {
+        workflowService.obfuscateWorkflows(name, version);
     }
 }
