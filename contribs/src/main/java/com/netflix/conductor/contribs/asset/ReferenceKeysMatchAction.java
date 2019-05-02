@@ -190,6 +190,53 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                 then true
 			 */
 
+				/* Series match logic:
+				if .task.supplementalSubType != null and .task.supplementalSubType != ""
+					and .task.type != null and .task.type != ""
+					and .task.supplementalSubType == .event.supplementalSubType and .task.type == .event.type
+					and .task.seriesId != null and .task.seriesId == .event.seriesId
+				then true
+				elif ((.task.supplementalSubType == null or .task.supplementalSubType == "")
+					  and
+					  (.task.type == null or .task.type == "")
+					 )
+					 and .task.seriesVersionId != null and .task.seriesVersionId == .event.seriesVersionId
+					 and .task.seriesId != null and .task.seriesId == .event.seriesId
+				then true
+			*/
+
+					/* Franchise match logic:
+				if .task.supplementalSubType != null and .task.supplementalSubType != ""
+					and .task.type != null and .task.type != ""
+					and .task.supplementalSubType == .event.supplementalSubType and .task.type == .event.type
+					and .task.franchiseId != null and .task.franchiseId == .event.franchiseId
+				then true
+				elif ((.task.supplementalSubType == null or .task.supplementalSubType == "")
+					  and
+					  (.task.type == null or .task.type == "")
+					 )
+					 and .task.franchiseVersionId != null and .task.franchiseVersionId == .event.franchiseVersionId
+					 and .task.franchiseId != null and .task.franchiseId == .event.franchiseId
+				then true
+			*/
+
+						/* Season match logic:
+				if .task.supplementalSubType != null and .task.supplementalSubType != ""
+					and .task.type != null and .task.type != ""
+					and .task.supplementalSubType == .event.supplementalSubType and .task.type == .event.type
+					and .task.seasonId != null and .task.seasonId == .event.seasonId
+				    and .task.seriesId != null and .task.seriesId == .event.seriesId
+				then true
+				elif ((.task.supplementalSubType == null or .task.supplementalSubType == "")
+					  and
+					  (.task.type == null or .task.type == "")
+					 )
+					 and .task.seasonVersionId != null and .task.seasonVersionId == .event.seasonVersionId
+					 and .task.seasonId != null and .task.seasonId == .event.seasonId
+					 and .task.seriesId != null and .task.seriesId == .event.seriesId
+				then true
+			*/
+
             boolean isFeature = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.featureId);
             boolean isEpisodic = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.episodeId);
             boolean isFranchise = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.franchiseId);
