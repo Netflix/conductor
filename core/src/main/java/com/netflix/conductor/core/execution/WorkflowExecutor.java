@@ -663,7 +663,7 @@ public class WorkflowExecutor {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             workflowStatusListener.onWorkflowTerminated(workflow);
         }
-        publisher.publish(workflowId, workflow.getWorkflowDefinition());
+        publisher.publish(workflow.getWorkflowId(), workflow.getWorkflowDefinition());
     }
 
     /**

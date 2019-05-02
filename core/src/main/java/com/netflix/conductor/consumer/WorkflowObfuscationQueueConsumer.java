@@ -22,7 +22,7 @@ import java.util.concurrent.*;
 @Singleton
 public class WorkflowObfuscationQueueConsumer {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(WorkflowSweeper.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(WorkflowObfuscationQueueConsumer.class);
     private ExecutorService executorService;
     private Configuration config;
     private QueueDAO queueDAO;
