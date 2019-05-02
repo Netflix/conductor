@@ -110,6 +110,7 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 		if (queue != null) {
 			queue.close();
 			queues.remove(queueURI);
+			logger.debug("Remove initiated for queueURI = " + queueURI);
 		}
 	}
 
