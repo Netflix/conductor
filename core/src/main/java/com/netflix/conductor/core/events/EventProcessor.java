@@ -30,7 +30,7 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import org.apache.commons.lang.BooleanUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +40,8 @@ import javax.inject.Singleton;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.StringUtils.*;
 
 /**
  * @author Viren
@@ -165,7 +167,7 @@ public class EventProcessor {
 			List<EventHandler> handlers = ms.getEventHandlersForEvent(event, true);
 
 			// Find additional event handler which starts with ${event_bus} ...
-			if (StringUtils.isNotEmpty(eventBus)) {
+			if (isNotEmpty(eventBus)) {
 				event = EVENT_BUS_VAR + ":" + queue.getName();
 				handlers.addAll(ms.getEventHandlersForEvent(event, true));
 			}
@@ -181,10 +183,11 @@ public class EventProcessor {
 			for (EventHandler handler : handlers) {
 
 				String condition = handler.getCondition();
-				if (StringUtils.isNotEmpty(condition)) {
-					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
+				String conditionClass = handler.getConditionClass();
+				if (isNotEmpty(condition) || isNotEmpty(conditionClass)) {
+					boolean success = evalCondition(condition, conditionClass, payloadObj);
 					if (!success) {
-						logger.warn("Handler did not match payload. Handler={}, condition={}, payload={}", handler.getName(), condition, payloadObj);
+						logger.warn("Handler did not match payload. Handler={}, payload={}", handler.getName(), payloadObj);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setReceived(msg.getReceived());
@@ -192,14 +195,13 @@ public class EventProcessor {
 						ee.setName(handler.getName());
 						ee.setStatus(Status.SKIPPED);
 						ee.getOutput().put("msg", payload);
-						ee.getOutput().put("condition", condition);
 						ee.setSubject(subject);
 						es.addEventExecution(ee);
 						continue;
 					}
 				}
 
-				if (StringUtils.isNotEmpty(handler.getTags())) {
+				if (isNotEmpty(handler.getTags())) {
 					retryMode = true;
 					List<Object> candidates = ScriptEvaluator.evalJqAsList(handler.getTags(), payloadObj);
 					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
@@ -229,8 +231,11 @@ public class EventProcessor {
 				List<Action> actions = handler.getActions();
 				for (Action action : actions) {
 					String id = msg.getId() + "_" + i++;
-					if (StringUtils.isNotEmpty(action.getCondition())) {
-						Boolean success = ScriptEvaluator.evalBool(action.getCondition(), payloadObj);
+
+					condition = action.getCondition();
+					conditionClass = action.getConditionClass();
+					if (isNotEmpty(condition) || isNotEmpty(conditionClass)) {
+						boolean success = evalCondition(condition, conditionClass, payloadObj);
 						if (!success) {
 							logger.debug("Action did not match payload. Handler={}, action={}, payload={}", handler.getName(), action, payloadObj);
 							EventExecution ee = new EventExecution(id, msg.getId());
@@ -241,7 +246,6 @@ public class EventProcessor {
 							ee.setAction(action.getAction());
 							ee.setStatus(Status.SKIPPED);
 							ee.getOutput().put("msg", payload);
-							ee.getOutput().put("condition", action.getCondition());
 							ee.setSubject(subject);
 							es.addEventExecution(ee);
 							continue;
@@ -304,6 +308,17 @@ public class EventProcessor {
 			NDC.remove();
 			Monitors.recordEventQueueMessagesProcessed(queue.getType(), queue.getName(), 1);
 		}
+	}
+
+	private boolean evalCondition(String condition, String conditionClass, Object payload) throws Exception {
+		if (isNotEmpty(condition)) {
+			return ScriptEvaluator.evalBool(condition, payload);
+		} else if (isNotEmpty(conditionClass)) {
+			Class clazz = Class.forName(conditionClass);
+			JavaEventCondition javaEventCondition = (JavaEventCondition) clazz.newInstance();
+			return javaEventCondition.evalBool(payload);
+		}
+		return true;
 	}
 
 	private Future<Boolean> execute(EventExecution ee, Action action, String payload) {

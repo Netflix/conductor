@@ -32,6 +32,8 @@ public class EventHandler {
 
 	private String condition;
 
+	private String conditionClass;
+
 	private List<Action> actions = new LinkedList<>();
 
 	private boolean active;
@@ -85,6 +87,22 @@ public class EventHandler {
 	}
 
 	/**
+	 *
+	 * @return The condition class to set
+	 */
+	public String getConditionClass() {
+		return conditionClass;
+	}
+
+	/**
+	 *
+	 * @param conditionClass The condition class to set
+	 */
+	public void setConditionClass(String conditionClass) {
+		this.conditionClass = conditionClass;
+	}
+
+	/**
 	 * @return the actions
 	 */
 	public List<Action> getActions() {
@@ -128,6 +146,8 @@ public class EventHandler {
 
 		private String condition;
 
+		private String conditionClass;
+
 		private StartWorkflow start_workflow;
 
 		private TaskDetails complete_task;
@@ -168,6 +188,22 @@ public class EventHandler {
 		 */
 		public void setCondition(String condition) {
 			this.condition = condition;
+		}
+
+		/**
+		 *
+		 * @return The condition class to set
+		 */
+		public String getConditionClass() {
+			return conditionClass;
+		}
+
+		/**
+		 *
+		 * @param conditionClass The condition class to set
+		 */
+		public void setConditionClass(String conditionClass) {
+			this.conditionClass = conditionClass;
 		}
 
 		/**
