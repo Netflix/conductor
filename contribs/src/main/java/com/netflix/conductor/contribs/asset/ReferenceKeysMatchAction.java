@@ -319,8 +319,10 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                 ", seasonId='" + seasonId + '\'' +
                 ", episodeId='" + episodeId + '\'' +
                 ", episodeVersionId='" + episodeVersionId + '\'' +
-                    ", episodeId='" + episodeId + '\'' +
-                    ", episodeVersionId='" + episodeVersionId + '\'' +
+                    ", franchiseId='" + franchiseId + '\'' +
+                    ", franchiseVersionId='" + franchiseVersionId + '\'' +
+                    ", seriesVersionId='" + seriesVersionId + '\'' +
+                    ", seasonVersionId='" + seasonVersionId + '\'' +
                 '}';
         }
     }
