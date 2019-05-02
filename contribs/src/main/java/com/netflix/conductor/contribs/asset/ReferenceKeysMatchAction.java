@@ -192,6 +192,9 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 
             boolean isFeature = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.featureId);
             boolean isEpisodic = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.episodeId);
+            boolean isFranchise = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.franchiseId);
+            boolean isSeries = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.seriesId);
+            boolean isSeason = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.seasonId);
             boolean isSupplemental = nonNull(trk.titleVersion) && isNoneEmpty(trk.titleVersion.supplementalSubType, trk.titleVersion.type);
 
             if (isFeature && isSupplemental) {
@@ -214,7 +217,35 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                         Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
                         Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId));
 		    
-            } else if (isFeature) {
+            } else if (isSeries && isSupplemental) {
+                return (isNotEmpty(trk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seriesId, trk.titleKeys.seriesVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId)) ;
+
+            }else if (isFranchise && isSupplemental) {
+                return (isNotEmpty(trk.titleKeys.franchiseId) &&
+                        Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+                        Objects.equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId) &&
+                        Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.franchiseId, trk.titleKeys.franchiseVersionId) &&
+                        Objects.equals(trk.titleKeys.franchiseVersionId, erk.titleKeys.franchiseVersionId) &&
+                        Objects.equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId)) ;
+
+            }else if (isSeason && isSupplemental) {
+                return (isNoneEmpty(trk.titleKeys.seasonId,trk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
+                        Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.seasonVersionId) &&
+                        Objects.equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId)) ;
+
+            }
+
+            else if (isFeature) {
                 return isNoneEmpty(trk.titleKeys.featureId, trk.titleKeys.featureVersionId) &&
                         Objects.equals(trk.titleKeys.featureVersionId, erk.titleKeys.featureVersionId) &&
                         Objects.equals(trk.titleKeys.featureId, erk.titleKeys.featureId);
@@ -224,6 +255,19 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                         Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
                         Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
                         Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId);
+            } else if (isSeries) {
+                return isNoneEmpty(trk.titleKeys.seriesId, trk.titleKeys.seriesVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId);
+            } else if (isFranchise) {
+                return isNoneEmpty(trk.titleKeys.franchiseId, trk.titleKeys.franchiseVersionId) &&
+                        Objects.equals(trk.titleKeys.franchiseVersionId, erk.titleKeys.franchiseVersionId) &&
+                        Objects.equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId);
+            } else if (isSeason) {
+                return isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.seasonVersionId) &&
+                        Objects.equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId);
             }
             return false;
         });
@@ -261,6 +305,11 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
         public String episodeId;
         public String episodeVersionId;
 
+        public String franchiseId;
+        public String seriesVersionId;
+        public String seasonVersionId;
+        public String franchiseVersionId;
+
         @Override
         public String toString() {
             return "TitleKeys{" +
@@ -270,6 +319,8 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                 ", seasonId='" + seasonId + '\'' +
                 ", episodeId='" + episodeId + '\'' +
                 ", episodeVersionId='" + episodeVersionId + '\'' +
+                    ", episodeId='" + episodeId + '\'' +
+                    ", episodeVersionId='" + episodeVersionId + '\'' +
                 '}';
         }
     }
