@@ -240,8 +240,8 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
             boolean isFeature = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.featureId);
             boolean isEpisodic = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.episodeId);
             boolean isFranchise = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.franchiseId);
-            boolean isSeries = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.seriesId);
-            boolean isSeason = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.seasonId);
+            boolean isSeries = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.seriesVersionId);
+            boolean isSeason = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.seasonVersionId);
             boolean isSupplemental = nonNull(trk.titleVersion) && isNoneEmpty(trk.titleVersion.supplementalSubType, trk.titleVersion.type);
 
             if (isFeature && isSupplemental) {
@@ -265,9 +265,9 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                         Objects.equals(trk.titleKeys.episodeId, erk.titleKeys.episodeId));
 		    
             } else if (isSeries && isSupplemental) {
-                return (isNotEmpty(trk.titleKeys.seriesId) &&
+                return (isNotEmpty(trk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seriesId, trk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId)) ;
@@ -281,13 +281,13 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                         Objects.equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId)) ;
 
             }else if (isSeason && isSupplemental) {
-                return (isNoneEmpty(trk.titleKeys.seasonId,trk.titleKeys.seriesId) &&
+                return (isNoneEmpty(trk.titleKeys.seasonVersionId,trk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleVersion.supplementalSubType, erk.titleVersion.supplementalSubType) &&
-                        Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId) &&
-                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
-                        Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.seasonVersionId) &&
                         Objects.equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
-                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
+                        Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesVersionId, trk.titleKeys.seasonVersionId) &&
+                        Objects.equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId)) ;
 
             }
@@ -311,9 +311,9 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                         Objects.equals(trk.titleKeys.franchiseVersionId, erk.titleKeys.franchiseVersionId) &&
                         Objects.equals(trk.titleKeys.franchiseId, erk.titleKeys.franchiseId);
             } else if (isSeason) {
-                return isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesId, trk.titleKeys.seasonVersionId) &&
+                return isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesVersionId, trk.titleKeys.seasonVersionId) &&
                         Objects.equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
-                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesId) &&
+                        Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId);
             }
             return false;
