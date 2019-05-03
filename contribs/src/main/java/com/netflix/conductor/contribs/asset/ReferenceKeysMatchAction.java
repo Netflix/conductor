@@ -287,7 +287,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
                         Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleVersion.type, erk.titleVersion.type)) || (isNoneEmpty(trk.titleKeys.seasonId, trk.titleKeys.seriesVersionId, trk.titleKeys.seasonVersionId) &&
                         Objects.equals(trk.titleKeys.seasonVersionId, erk.titleKeys.seasonVersionId) &&
-                        Objects.equals(trk.titleKeys.seriesId, erk.titleKeys.seriesVersionId) &&
+                        Objects.equals(trk.titleKeys.seriesVersionId, erk.titleKeys.seriesVersionId) &&
                         Objects.equals(trk.titleKeys.seasonId, erk.titleKeys.seasonId)) ;
 
             }
