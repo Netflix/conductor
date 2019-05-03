@@ -77,7 +77,12 @@ public class ShotgunQueue implements ObservableQueue {
         }
         logger.debug(String.format("Initialized with queueURI=%s, subject=%s, groupId=%s", queueURI, subject, groupId));
 
-        conn = new OneMQ();
+        try {
+            conn = new OneMQ();
+            conn.connect(dns, null, null);
+        } catch (Exception ex) {
+            logger.error("OneMQ client connect failed {}", ex.getMessage(), ex);
+        }
         execs = Executors.newScheduledThreadPool(1);
         execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
     }
