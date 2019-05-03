@@ -194,7 +194,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 				if .task.supplementalSubType != null and .task.supplementalSubType != ""
 					and .task.type != null and .task.type != ""
 					and .task.supplementalSubType == .event.supplementalSubType and .task.type == .event.type
-					and .task.seriesId != null and .task.seriesId == .event.seriesId
+					and .task.seriesVersionId != null and .task.seriesVersionId == .event.seriesVersionId
 				then true
 				elif ((.task.supplementalSubType == null or .task.supplementalSubType == "")
 					  and
@@ -224,8 +224,8 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 				if .task.supplementalSubType != null and .task.supplementalSubType != ""
 					and .task.type != null and .task.type != ""
 					and .task.supplementalSubType == .event.supplementalSubType and .task.type == .event.type
-					and .task.seasonId != null and .task.seasonId == .event.seasonId
-				    and .task.seriesId != null and .task.seriesId == .event.seriesId
+					and .task.seasonVersionId != null and .task.seasonVersionId == .event.seasonVersionId
+				    and .task.seriesVersionId != null and .task.seriesVersionId == .event.seriesVersionId
 				then true
 				elif ((.task.supplementalSubType == null or .task.supplementalSubType == "")
 					  and
@@ -233,7 +233,7 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 					 )
 					 and .task.seasonVersionId != null and .task.seasonVersionId == .event.seasonVersionId
 					 and .task.seasonId != null and .task.seasonId == .event.seasonId
-					 and .task.seriesId != null and .task.seriesId == .event.seriesId
+					 and .task.seriesVersionId != null and .task.seriesVersionId == .event.seriesVersionId
 				then true
 			*/
 
