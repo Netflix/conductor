@@ -31,7 +31,9 @@ public class Message {
 	private String receipt;
 
 	private long received;
-	
+
+	private long accepted;
+
 	public Message() {
 		
 	}
@@ -100,6 +102,20 @@ public class Message {
 	 */
 	public void setReceived(long received) {
 		this.received = received;
+	}
+
+	/**
+	 * @return Time when message accepted at event handler for processing
+	 */
+	public long getAccepted() {
+		return accepted;
+	}
+
+	/**
+	 * @param accepted Time when message accepted at event handler for processing
+	 */
+	public void setAccepted(long accepted) {
+		this.accepted = accepted;
 	}
 
 	@Override

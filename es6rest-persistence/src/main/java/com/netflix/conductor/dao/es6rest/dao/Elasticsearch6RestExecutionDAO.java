@@ -37,10 +37,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.IdsQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -721,17 +718,29 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 	}
 
 	@Override
-	public List<Workflow> getWorkflowsByTags(Set<String> tags) {
+	public List<Task> getPendingTasksByTags(String taskType, Set<String> tags) {
 		QueryBuilder query = QueryBuilders.termsQuery("tags.keyword", tags);
-
 		List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
+
+		TermQueryBuilder statusTerm = QueryBuilders.termQuery("taskStatus", "IN_PROGRESS");
+		TermQueryBuilder typeTerm = QueryBuilders.termQuery("taskType", taskType);
+
+		String esIndexName = indexes.get(TASK);
+		String esTypeName = types.get(TASK);
 
 		return wraps.stream()
 			.map(map -> {
 				String workflowId = (String) map.get("workflowId");
-				return findOne(indexes.get(WORKFLOW), types.get(WORKFLOW), toId(workflowId), Workflow.class);
+
+				BoolQueryBuilder subQuery = QueryBuilders.boolQuery()
+					.must(QueryBuilders.termQuery("workflowInstanceId", workflowId))
+					.must(statusTerm)
+					.must(typeTerm);
+
+				return findAll(esIndexName, esTypeName, subQuery, Task.class);
 			})
 			.filter(Objects::nonNull)
+			.flatMap(tasks -> tasks.stream().filter(Objects::nonNull))
 			.collect(Collectors.toList());
 	}
 
@@ -740,9 +749,8 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 		tags.forEach(tag -> query.must(QueryBuilders.termQuery("tags.keyword", tag)));
 
-		List<HashMap> wraps = findAll(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query, HashMap.class);
-
-		return !wraps.isEmpty();
+		Long count = getCount(indexes.get(WORKFLOW_TAGS), types.get(WORKFLOW_TAGS), query);
+		return count > 0;
 	}
 
 	@Override
