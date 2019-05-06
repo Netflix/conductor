@@ -240,8 +240,8 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
             boolean isFeature = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.featureId);
             boolean isEpisodic = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.episodeId);
             boolean isFranchise = nonNull(trk.titleKeys) && isNoneEmpty(trk.titleKeys.franchiseId, trk.titleKeys.franchiseVersionId);
-            boolean isSeries = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.seriesId,trk.titleKeys.seriesVersionId);
-            boolean isSeason = nonNull(trk.titleKeys) && isNotEmpty(trk.titleKeys.seasonId,trk.titleKeys.seasonVersionId);
+            boolean isSeries = nonNull(trk.titleKeys) && isNoneEmpty(trk.titleKeys.seriesId,trk.titleKeys.seriesVersionId);
+            boolean isSeason = nonNull(trk.titleKeys) && isNoneEmpty(trk.titleKeys.seasonId,trk.titleKeys.seasonVersionId);
             boolean isSupplemental = nonNull(trk.titleVersion) && isNoneEmpty(trk.titleVersion.supplementalSubType, trk.titleVersion.type);
 
             if (isFeature && isSupplemental) {
