@@ -44,18 +44,18 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 	private static final String CREATE_INDEX = "create index log4j_logs_log_time_idx on log4j_logs (log_time)";
 
 	private static final String CREATE_TABLE = "create table log4j_logs(\n" +
-			"  log_time timestamp,\n" +
-			"  logger varchar,\n" +
-			"  level varchar,\n" +
-			"  owner varchar,\n" +
-			"  hostname varchar,\n" +
-			"  fromhost varchar,\n" +
-			"  message varchar,\n" +
-			"  stack varchar\n" +
-			")";
+		"  log_time timestamp,\n" +
+		"  logger varchar,\n" +
+		"  level varchar,\n" +
+		"  owner varchar,\n" +
+		"  hostname varchar,\n" +
+		"  fromhost varchar,\n" +
+		"  message varchar,\n" +
+		"  stack varchar\n" +
+		")";
 
 	private static final String INSERT_QUERY = "INSERT INTO log4j_logs " +
-			"(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+		"(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
 	private LinkedBlockingDeque<LogEntry> buffer = new LinkedBlockingDeque<>();
 	private AtomicBoolean initialized = new AtomicBoolean(false);
@@ -83,7 +83,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		entry.owner = event.getNDC();
 		entry.message = normalizeMessage(event.getRenderedMessage());
 		if (event.getThrowableInformation() != null
-				&& event.getThrowableInformation().getThrowable() != null) {
+			&& event.getThrowableInformation().getThrowable() != null) {
 			Throwable throwable = event.getThrowableInformation().getThrowable();
 			entry.stack = throwable2String(throwable);
 		}
