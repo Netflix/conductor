@@ -44,18 +44,18 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 	private static final String CREATE_INDEX = "create index log4j_logs_log_time_idx on log4j_logs (log_time)";
 
 	private static final String CREATE_TABLE = "create table log4j_logs(\n" +
-			"  log_time timestamp,\n" +
-			"  logger varchar,\n" +
-			"  level varchar,\n" +
-			"  owner varchar,\n" +
-			"  hostname varchar,\n" +
-			"  fromhost varchar,\n" +
-			"  message varchar,\n" +
-			"  stack varchar\n" +
-			")";
+		"  log_time timestamp,\n" +
+		"  logger varchar,\n" +
+		"  level varchar,\n" +
+		"  owner varchar,\n" +
+		"  hostname varchar,\n" +
+		"  fromhost varchar,\n" +
+		"  message varchar,\n" +
+		"  stack varchar\n" +
+		")";
 
 	private static final String INSERT_QUERY = "INSERT INTO log4j_logs " +
-			"(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+		"(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
 	private LinkedBlockingDeque<LogEntry> buffer = new LinkedBlockingDeque<>();
 	private AtomicBoolean initialized = new AtomicBoolean(false);
@@ -83,29 +83,32 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		entry.owner = event.getNDC();
 		entry.message = normalizeMessage(event.getRenderedMessage());
 		if (event.getThrowableInformation() != null
-				&& event.getThrowableInformation().getThrowable() != null) {
+			&& event.getThrowableInformation().getThrowable() != null) {
 			Throwable throwable = event.getThrowableInformation().getThrowable();
-
-			StringWriter sw = new StringWriter();
-			throwable.printStackTrace(new PrintWriter(sw));
-			entry.stack = normalizeMessage(sw.toString());
+			entry.stack = throwable2String(throwable);
 		}
 		buffer.add(entry);
 	}
 
 	public void init() {
-		HikariConfig poolConfig = new HikariConfig();
-		poolConfig.setJdbcUrl(url);
-		poolConfig.setUsername(user);
-		poolConfig.setPassword(password);
-		poolConfig.setAutoCommit(true);
+		try {
+			if (dataSource == null) {
+				HikariConfig poolConfig = new HikariConfig();
+				poolConfig.setJdbcUrl(url);
+				poolConfig.setUsername(user);
+				poolConfig.setPassword(password);
+				poolConfig.setAutoCommit(true);
 
-		dataSource = new HikariDataSource(poolConfig);
+				dataSource = new HikariDataSource(poolConfig);
+			}
 
-		execute(CREATE_TABLE);
-		execute(CREATE_INDEX);
+			execute(CREATE_TABLE);
+			execute(CREATE_INDEX);
 
-		initialized.set(true);
+			initialized.set(true);
+		} catch (Exception ex) {
+			System.out.println("DeluxeAuroraAppender.init failed " + ex.getMessage() + ", stack=" + throwable2String(ex));
+		}
 	}
 
 	private void flush() {
@@ -133,8 +136,8 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				// Get the next
 				entry = buffer.take();
 			}
-		} catch (Throwable ex) {
-			ex.printStackTrace();
+		} catch (Exception ex) {
+			System.out.println("DeluxeAuroraAppender.flush failed " + ex.getMessage() + ", stack=" + throwable2String(ex));
 		}
 	}
 
@@ -142,8 +145,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		execs.shutdown();
 		try {
 			execs.awaitTermination(5, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		} catch (InterruptedException ignore) {
 		}
 		this.closed = true;
 	}
@@ -181,7 +183,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 			tx.prepareCall(ddl).execute();
 		} catch (Exception ex) {
 			if (!ex.getMessage().contains("already exists")) {
-				ex.printStackTrace();
+				System.out.println("DeluxeAuroraAppender.execute failed " + ex.getMessage() + ", stack=" + throwable2String(ex));
 			}
 		}
 	}
@@ -201,11 +203,16 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		return response;
 	}
 
+	private String throwable2String(Throwable throwable) {
+		StringWriter sw = new StringWriter();
+		throwable.printStackTrace(new PrintWriter(sw));
+		return normalizeMessage(sw.toString());
+	}
+
 	private String getHostName() {
 		try {
 			return InetAddress.getLocalHost().getHostName();
 		} catch (UnknownHostException e) {
-			e.printStackTrace();
 			return "unknown";
 		}
 	}
@@ -214,7 +221,6 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {
-			e.printStackTrace();
 			return "unknown";
 		}
 	}
