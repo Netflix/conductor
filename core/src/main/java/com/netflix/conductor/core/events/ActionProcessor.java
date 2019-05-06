@@ -21,6 +21,7 @@ package com.netflix.conductor.core.events;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Injector;
+import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.events.EventHandler.*;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -71,7 +72,7 @@ public class ActionProcessor {
 		this.injector = injector;
 	}
 
-	public Map<String, Object> execute(Action action, String payload, String event, String messageId) throws Exception {
+	public Map<String, Object> execute(Action action, String payload, EventExecution ee) throws Exception {
 
 		Object jsonObj = om.readValue(payload, Object.class);
 		if (action.isExpandInlineJSON()) {
@@ -80,22 +81,22 @@ public class ActionProcessor {
 
 		switch (action.getAction()) {
 			case start_workflow:
-				Map<String, Object> op = startWorkflow(action, jsonObj, event, messageId);
+				Map<String, Object> op = startWorkflow(action, jsonObj, ee.getEvent(), ee.getMessageId());
 				return op;
 			case complete_task:
-				op = completeTask(action, jsonObj, action.getComplete_task(), Status.COMPLETED, event, messageId);
+				op = completeTask(action, jsonObj, action.getComplete_task(), Status.COMPLETED, ee.getEvent(), ee.getMessageId());
 				return op;
 			case fail_task:
-				op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, event, messageId);
+				op = completeTask(action, jsonObj, action.getFail_task(), Status.FAILED, ee.getEvent(), ee.getMessageId());
 				return op;
 			case update_task:
-				op = updateTask(action, jsonObj, event, messageId);
+				op = updateTask(action, jsonObj, ee.getEvent(), ee.getMessageId());
 				return op;
 			case find_update:
-				op = find_update(action, jsonObj, event, messageId);
+				op = find_update(action, jsonObj, ee);
 				return op;
 			case java_action:
-				op = java_action(action, jsonObj, event, messageId);
+				op = java_action(action, jsonObj, ee);
 				return op;
 			default:
 				break;
@@ -261,32 +262,32 @@ public class ActionProcessor {
 		return op;
 	}
 
-	private Map<String, Object> find_update(Action action, Object payload, String event, String messageId) throws Exception {
+	private Map<String, Object> find_update(Action action, Object payload, EventExecution ee) throws Exception {
 		EventHandler.FindUpdate params = action.getFind_update();
 		Map<String, Object> op = new HashMap<>();
 		try {
 			FindUpdateAction findUpdateAction = new FindUpdateAction(executor);
-			List<String> ids = findUpdateAction.handleInternal(action, payload, event, messageId);
+			List<?> ids = findUpdateAction.handle(action, payload, ee);
 
-			op.put("conductor.event.name", event);
+			op.put("conductor.event.name", ee.getEvent());
 			op.put("conductor.event.payload", payload);
-			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.messageId", ee.getMessageId());
 			op.put("conductor.event.success", CollectionUtils.isNotEmpty(ids));
 
 		} catch (Exception e) {
 			logger.error("find_update: failed with " + e.getMessage() + " for action=" + params + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
 			op.put("action", params);
-			op.put("conductor.event.name", event);
+			op.put("conductor.event.name", ee.getEvent());
 			op.put("conductor.event.payload", payload);
-			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.messageId", ee.getMessageId());
 		}
 
 		return op;
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> java_action(Action action, Object payload, String event, String messageId) {
+	private Map<String, Object> java_action(Action action, Object payload, EventExecution ee) {
 		JavaAction params = action.getJava_action();
 		Map<String, Object> op = new HashMap<>();
 		try {
@@ -297,19 +298,19 @@ public class ActionProcessor {
 			Class clazz = Class.forName(params.getClassName());
 			Object object = injector.getInstance(clazz);
 			JavaEventAction javaEventAction = (JavaEventAction) object;
-			List<?> ids = javaEventAction.handle(action, payload, event, messageId);
+			List<?> ids = javaEventAction.handle(action, payload, ee);
 
-			op.put("conductor.event.name", event);
+			op.put("conductor.event.name", ee.getEvent());
 			op.put("conductor.event.payload", payload);
-			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.messageId", ee.getMessageId());
 			op.put("conductor.event.success", CollectionUtils.isNotEmpty(ids));
 		} catch (Exception e) {
 			logger.error("javaAction: failed with " + e.getMessage() + " for action=" + params + ", payload=" + payload, e);
 			op.put("error", e.getMessage());
 			op.put("action", params);
-			op.put("conductor.event.name", event);
+			op.put("conductor.event.name", ee.getEvent());
 			op.put("conductor.event.payload", payload);
-			op.put("conductor.event.messageId", messageId);
+			op.put("conductor.event.messageId", ee.getMessageId());
 		}
 
 		return op;

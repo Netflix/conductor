@@ -1,6 +1,7 @@
 package com.netflix.conductor.contribs.asset;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
@@ -58,8 +59,7 @@ public class AssetMonitor implements JavaEventAction {
 	 * 	 6.2 in-progress - reset it. The sub-workflow will be restarted automatically in some time.
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
-	public List<Object> handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
+	public List<Object> handle(EventHandler.Action action, Object payload, EventExecution ee) throws Exception {
 		ActionParameters params = om.convertValue(action.getJava_action().getInputParameters(), ActionParameters.class);
 
 		// TODO Validate parameters
@@ -70,7 +70,7 @@ public class AssetMonitor implements JavaEventAction {
 		EventHandler.Action act = new EventHandler.Action();
 		act.setFind_update(params.getFindUpdate());
 		act.setAction(EventHandler.Action.Type.find_update);
-		List<String> sourceAtlasWaitIds = findUpdateJava.handleInternal(act, payload, event, messageId);
+		List<String> sourceAtlasWaitIds = findUpdateJava.handleInternal(act, payload, ee.getEvent(), ee.getMessageId(), ee.getTags());
 
 		// Step 2
 		List<Workflow> workflows = executor.getRunningWorkflows(workflowName);
@@ -88,7 +88,7 @@ public class AssetMonitor implements JavaEventAction {
 
 			// Step 3.2
 			if (actionCheck == null) {
-				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state (no action_check) to handle the message " + messageId);
+				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state (no action_check) to handle the message " + ee.getMessageId());
 				continue;
 			} else {
 				if ("METADATA".equals(actionCheck.getInputData().get("case"))) {
@@ -99,17 +99,17 @@ public class AssetMonitor implements JavaEventAction {
 
 			// Null means that the task not even scheduled. Rare case but might happen. Just logging that information
 			if (joinTask == null) {
-				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state(no deliverable_join) to handle the message " + messageId);
+				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state(no deliverable_join) to handle the message " + ee.getMessageId());
 				continue;
 			}
 
 			// All deliverables are completed
 			if (joinTask.getStatus() == Task.Status.COMPLETED) { // 3.3
-				checkForAlertMessage(params, workflow, joinTask, payload, messageId);
+				checkForAlertMessage(params, workflow, joinTask, payload, ee.getMessageId());
 			} else if (joinTask.getStatus() == Task.Status.IN_PROGRESS) { // 3.4
-				checkForRestart(params, workflow, payload, messageId, sourceAtlasWaitIds);
+				checkForRestart(params, workflow, payload, ee.getMessageId(), sourceAtlasWaitIds);
 			} else {
-				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + ", messageId=" + messageId);
+				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + ", messageId=" + ee.getMessageId());
 			}
 		}
 		return new ArrayList<>(sourceAtlasWaitIds);

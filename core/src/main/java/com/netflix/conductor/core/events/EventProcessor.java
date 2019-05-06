@@ -145,6 +145,7 @@ public class EventProcessor {
 
 		NDC.push("event-"+msg.getId());
 		try {
+			msg.setAccepted(System.currentTimeMillis());
 
 			List<Future<Boolean>> futures = new LinkedList<>();
 
@@ -175,17 +176,20 @@ public class EventProcessor {
 				subject = queue.getURI().substring(0, queue.getURI().indexOf(':'));
 			}
 
-			boolean retryMode = false;
+			// The retry flag is true if ANY of handlers requires it and tags JQ expression defined
+			boolean retryEnabled = handlers.stream().anyMatch(h -> h.isRetryEnabled() && StringUtils.isNotEmpty(h.getTags()));
 			int tagsMatchCounter = 0;
 			int tagsNotMatchCounter = 0;
+			Set<String> tags = null;
 			for (EventHandler handler : handlers) {
-
+				// Check handler's condition
 				String condition = handler.getCondition();
 				if (StringUtils.isNotEmpty(condition)) {
 					Boolean success = ScriptEvaluator.evalBool(condition, payloadObj);
 					if (!success) {
-						logger.warn("Handler did not match payload. Handler={}, condition={}, payload={}", handler.getName(), condition, payloadObj);
+						logger.warn("Handler did not match payload. Handler={}, condition={}", handler.getName(), condition);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
+						ee.setAccepted(msg.getAccepted());
 						ee.setCreated(System.currentTimeMillis());
 						ee.setReceived(msg.getReceived());
 						ee.setEvent(handler.getEvent());
@@ -199,32 +203,39 @@ public class EventProcessor {
 					}
 				}
 
+				// Evaluate tags and check associated workflows (if needed)
 				if (StringUtils.isNotEmpty(handler.getTags())) {
-					retryMode = true;
 					List<Object> candidates = ScriptEvaluator.evalJqAsList(handler.getTags(), payloadObj);
-					Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
+					tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
 					logger.debug("Evaluated tags={}", tags);
 
-					boolean anyRunning = es.anyRunningWorkflowsByTags(tags);
-					if (!anyRunning) {
-						logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
-						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
-						ee.setCreated(System.currentTimeMillis());
-						ee.setReceived(msg.getReceived());
-						ee.setEvent(handler.getEvent());
-						ee.setName(handler.getName());
-						ee.setStatus(Status.SKIPPED);
-						ee.getOutput().put("msg", payload);
-						ee.getOutput().put("tags", tags);
-						ee.setSubject(subject);
-						es.addEventExecution(ee);
-						tagsNotMatchCounter++;
-						continue;
-					} else  {
-						tagsMatchCounter++;
+					// Check running workflows only when retry enabled
+					// because outcome of that check used by retry decider ...
+					// see below when ack or unack decided
+					if (retryEnabled) {
+						boolean anyRunning = es.anyRunningWorkflowsByTags(tags);
+						if (!anyRunning) {
+							logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
+							EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
+							ee.setAccepted(msg.getAccepted());
+							ee.setCreated(System.currentTimeMillis());
+							ee.setReceived(msg.getReceived());
+							ee.setEvent(handler.getEvent());
+							ee.setName(handler.getName());
+							ee.setStatus(Status.SKIPPED);
+							ee.getOutput().put("msg", payload);
+							ee.setSubject(subject);
+							ee.setTags(tags);
+							es.addEventExecution(ee);
+							tagsNotMatchCounter++;
+							continue;
+						} else  {
+							tagsMatchCounter++;
+						}
 					}
 				}
 
+				// Walk over the handler's actions
 				int i = 0;
 				List<Action> actions = handler.getActions();
 				for (Action action : actions) {
@@ -232,8 +243,9 @@ public class EventProcessor {
 					if (StringUtils.isNotEmpty(action.getCondition())) {
 						Boolean success = ScriptEvaluator.evalBool(action.getCondition(), payloadObj);
 						if (!success) {
-							logger.debug("Action did not match payload. Handler={}, action={}, payload={}", handler.getName(), action, payloadObj);
+							logger.debug("Action did not match payload. Handler={}, action={}", handler.getName(), action);
 							EventExecution ee = new EventExecution(id, msg.getId());
+							ee.setAccepted(msg.getAccepted());
 							ee.setCreated(System.currentTimeMillis());
 							ee.setReceived(msg.getReceived());
 							ee.setEvent(handler.getEvent());
@@ -243,12 +255,14 @@ public class EventProcessor {
 							ee.getOutput().put("msg", payload);
 							ee.getOutput().put("condition", action.getCondition());
 							ee.setSubject(subject);
+							ee.setTags(tags);
 							es.addEventExecution(ee);
 							continue;
 						}
 					}
 
 					EventExecution ee = new EventExecution(id, msg.getId());
+					ee.setAccepted(msg.getAccepted());
 					ee.setCreated(System.currentTimeMillis());
 					ee.setReceived(msg.getReceived());
 					ee.setEvent(handler.getEvent());
@@ -256,6 +270,7 @@ public class EventProcessor {
 					ee.setAction(action.getAction());
 					ee.setStatus(Status.IN_PROGRESS);
 					ee.setSubject(subject);
+					ee.setTags(tags);
 					if (es.addEventExecution(ee)) {
 						Future<Boolean> future = execute(ee, action, payload);
 						futures.add(future);
@@ -266,7 +281,7 @@ public class EventProcessor {
 			}
 
 			// if no tags for all handlers - ack message
-			if (tagsNotMatchCounter > 0 && tagsMatchCounter == 0) {
+			if (retryEnabled && tagsNotMatchCounter > 0 && tagsMatchCounter == 0) {
 				logger.debug("No running workflows for the tags. Ack for " + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 				return;
@@ -284,7 +299,7 @@ public class EventProcessor {
 			}
 
 			// Ack for legacy mode
-			if (!retryMode) {
+			if (!retryEnabled) {
 				logger.debug("Ack for messageId=" + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 			} else {
@@ -311,8 +326,9 @@ public class EventProcessor {
 			boolean success = false;
 			NDC.push("event-"+ee.getMessageId());
 			try {
-				logger.debug("Starting handler=" + ee.getName() + ", action=" + action + ", payload=" + payload);
-				Map<String, Object> output = ap.execute(action, payload, ee.getEvent(), ee.getMessageId());
+				logger.debug("Starting handler=" + ee.getName() + ", action=" + action);
+				ee.setStarted(System.currentTimeMillis());
+				Map<String, Object> output = ap.execute(action, payload, ee);
 				if (output != null) {
 					ee.getOutput().putAll(output);
 					success = BooleanUtils.isTrue((Boolean) output.get("conductor.event.success"));
@@ -321,13 +337,23 @@ public class EventProcessor {
 				ee.setProcessed(System.currentTimeMillis());
 				es.updateEventExecution(ee);
 
-				long execTime = System.currentTimeMillis() - ee.getCreated();
-				logger.debug("Executed handler=" + ee.getName() + ", action=" + action +
-					", payload=" + payload + ", success=" + success + ", execTime=" + execTime);
+				// Wait for accepting by event processor
+				long waitTime = ee.getAccepted() - ee.getReceived();
+
+				// Preparation time. Between accepted and actually submitting for execution
+				long prepTime = ee.getCreated() - ee.getAccepted();
+
+				// Action execution time
+				long execTime = ee.getProcessed() - ee.getStarted();
+
+				// Overall time for the message
+				long overallTime = System.currentTimeMillis() - ee.getReceived();
+				logger.debug("Executed handler=" + ee.getName() + ", action=" + action + ", success=" + success +
+					", waitTime=" + waitTime + ", prepTime=" + prepTime +
+					", execTime=" + execTime + ", overallTime=" + overallTime);
 				return success;
 			} catch (Exception e) {
-				logger.debug("Execute failed handler=" + ee.getName() + ", action=" + action +
-					", payload=" + payload + ", reason=" + e.getMessage(), e);
+				logger.debug("Execute failed handler=" + ee.getName() + ", action=" + action + ", reason=" + e.getMessage(), e);
 				ee.setStatus(Status.FAILED);
 				ee.getOutput().put("exception", e.getMessage());
 				ee.setProcessed(System.currentTimeMillis());
