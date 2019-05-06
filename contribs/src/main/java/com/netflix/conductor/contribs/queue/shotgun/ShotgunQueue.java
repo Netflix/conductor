@@ -28,6 +28,7 @@ import com.netflix.conductor.metrics.Monitors;
 import d3sw.shotgun.shotgunpb.ShotgunOuterClass;
 import io.nats.client.NUID;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -41,7 +42,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Oleksiy Lysak
@@ -110,22 +110,6 @@ public class ShotgunQueue implements ObservableQueue {
             interval.flatMap((Long x) -> {
                 List<Message> available = new LinkedList<>();
                 messages.drainTo(available);
-
-                if (!available.isEmpty()) {
-                    AtomicInteger count = new AtomicInteger(0);
-                    StringBuilder buffer = new StringBuilder();
-                    available.forEach(msg -> {
-                        buffer.append(msg.getId()).append("=").append(msg.getPayload());
-                        count.incrementAndGet();
-
-                        if (count.get() < available.size()) {
-                            buffer.append(",");
-                        }
-                    });
-
-                    logger.debug(String.format("Batch from %s to conductor is %s", subject, buffer.toString()));
-                }
-
                 return Observable.from(available);
             }).subscribe(subscriber::onNext, subscriber::onError);
         };
@@ -250,7 +234,12 @@ public class ShotgunQueue implements ObservableQueue {
         dstMsg.setPayload(payload);
         dstMsg.setReceived(System.currentTimeMillis());
 
-        logger.info(String.format("Received message for %s %s=%s", subscription.getSubject(), dstMsg.getId(), payload));
+        NDC.push("event-"+dstMsg.getId());
+        try {
+            logger.info(String.format("Received message for %s %s=%s", subscription.getSubject(), dstMsg.getId(), payload));
+        } finally {
+            NDC.remove();
+        }
 
         messages.add(dstMsg);
         Monitors.recordEventQueueMessagesReceived(EventQueues.QueueType.shotgun.name(), queueURI);
