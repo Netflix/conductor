@@ -86,7 +86,12 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 				+ ", publishRetryIn=" + ArrayUtils.toString(publishRetryIn));
 
 		if (shared) {
-			mqClient = new OneMQ();
+			try {
+				mqClient = new OneMQ();
+				mqClient.connect(dns, null, null);
+			} catch (Exception ex) {
+				logger.error("OneMQ client connect failed {}", ex.getMessage(), ex);
+			}
 			ScheduledExecutorService execs = Executors.newScheduledThreadPool(1);
 			execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
 		}

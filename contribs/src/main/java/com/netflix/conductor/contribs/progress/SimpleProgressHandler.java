@@ -1,6 +1,7 @@
 package com.netflix.conductor.contribs.progress;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
@@ -31,7 +32,7 @@ public class SimpleProgressHandler implements JavaEventAction {
 	}
 
 	@Override
-	public List<String> handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
+	public List<String> handle(EventHandler.Action action, Object payload, EventExecution ee) throws Exception {
 		ActionParams params = mapper.convertValue(action.getJava_action().getInputParameters(), ActionParams.class);
 		if (StringUtils.isEmpty(params.taskRefName)) {
 			throw new IllegalStateException("No taskRefName defined in parameters");

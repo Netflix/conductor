@@ -21,7 +21,9 @@ package com.netflix.conductor.common.metadata.events;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Viren
@@ -54,6 +56,12 @@ public class EventExecution {
 	private long received;
 
 	private long processed;
+
+	private long started;
+
+	private long accepted;
+
+	private Set<String> tags = new HashSet<>();
 
 	public EventExecution() {
 		
@@ -231,5 +239,53 @@ public class EventExecution {
 	 */
 	public void setProcessed(long processed) {
 		this.processed = processed;
+	}
+
+	/**
+	 *
+	 * @return Time when action execution has been started
+	 */
+	public long getStarted() {
+		return started;
+	}
+
+	/**
+	 *
+	 * @param started Time when action execution has been started
+	 */
+	public void setStarted(long started) {
+		this.started = started;
+	}
+
+	/**
+	 *
+	 * @return Time when message accepted at event handler for processing
+	 */
+	public long getAccepted() {
+		return accepted;
+	}
+
+	/**
+	 *
+	 * @param accepted Time when message accepted at event handler for processing
+	 */
+	public void setAccepted(long accepted) {
+		this.accepted = accepted;
+	}
+
+	/**
+	 *
+	 * @return Associated tags
+	 */
+	public Set<String> getTags() {
+		return tags;
+	}
+
+	/**
+	 *
+	 * @param tags Associated tags
+	 */
+	public void setTags(Set<String> tags) {
+		this.tags = tags;
 	}
 }

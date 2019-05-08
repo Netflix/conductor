@@ -13,8 +13,13 @@ job "conductor" {
   }
 
   update {
-    stagger      = "15s"
-    max_parallel = 1
+    max_parallel      = 2
+    health_check      = "checks"
+    min_healthy_time  = "10s"
+    healthy_deadline  = "5m"
+    progress_deadline = "10m"
+    auto_revert       = true
+    stagger           = "30s"
   }
 
   group "ui" {
@@ -71,6 +76,7 @@ job "conductor" {
       }
 
       service {
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.<DM_TLD>/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
         name = "${JOB}-${TASK}"
         port = "http"
 

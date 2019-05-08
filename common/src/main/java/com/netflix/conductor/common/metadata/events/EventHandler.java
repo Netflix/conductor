@@ -40,6 +40,8 @@ public class EventHandler {
 
 	private String tags;
 
+	private boolean retryEnabled;
+
 	public EventHandler() {
 
 	}
@@ -136,6 +138,14 @@ public class EventHandler {
 
 	public void setTags(String tags) {
 		this.tags = tags;
+	}
+
+	public boolean isRetryEnabled() {
+		return retryEnabled;
+	}
+
+	public void setRetryEnabled(boolean retryEnabled) {
+		this.retryEnabled = retryEnabled;
 	}
 
 	public static class Action {

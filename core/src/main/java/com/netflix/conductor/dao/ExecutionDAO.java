@@ -280,12 +280,13 @@ public interface ExecutionDAO {
 	public abstract List<PollData> getPollData(String taskDefName);
 
 	/**
-	 * Returns list of the in progress workflows associated with tags
+	 * Returns list of the in progress tasks associated with tags
 
+	 * @param taskType The task type currently in progress for associated workflows
 	 * @param tags The set of tags to search workflows
-	 * @return List of in progress workflows associated with tags
+	 * @return List of in progress tasks for workflows associated with tags
 	 */
-	public default List<Workflow> getWorkflowsByTags(Set<String> tags) {
+	public default List<Task> getPendingTasksByTags(String taskType, Set<String> tags) {
 		return Collections.emptyList();
 	}
 

@@ -235,11 +235,17 @@ public class MetadataService {
 		if (existing == null) {
 			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
 		}
+
+		// Are subject:queue the same or been updated ?
 		boolean eventEquals = existing.getEvent().equalsIgnoreCase(eventHandler.getEvent());
-		// if event name was updated or the new is disabled - close old queue
-		if (!eventEquals || !eventHandler.isActive()) {
+
+		// The new handler is disabled - close old queue
+		if (existing.isActive() && !eventHandler.isActive()) {
+			EventQueues.remove(existing.getEvent());
+		} else if (!eventEquals) { // if subject:queue was updated
 			EventQueues.remove(existing.getEvent());
 		}
+
 		validateQueue(eventHandler);
 		metadata.updateEventHandler(eventHandler);
 	}
