@@ -59,7 +59,7 @@ public class ExecutionDAOFacadeTest {
         executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper);
     }
     
-    @Test (expected = com.netflix.conductor.core.execution.ApplicationException.class)
+    @Test (expected = java.lang.Exception.class)
     public void tesGetWorkflowById() throws Exception {
         when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
         Workflow workflow = executionDAOFacade.getWorkflowById("workflowId", true);
@@ -77,9 +77,9 @@ public class ExecutionDAOFacadeTest {
     }
 
     @Test
-    public void readWorkflow() throws Exception {
+    public void readWorkflowSuccess() throws Exception {
         when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
-        Workflow workflow = executionDAOFacade.readWorkflow("workflowId", true);
+        Workflow workflow = executionDAOFacade.fetchWorkFlow("workflowId");
         assertNotNull(workflow);
         verify(indexDAO, never()).get(any(), any());
 
@@ -88,9 +88,17 @@ public class ExecutionDAOFacadeTest {
         byte[] bytes = IOUtils.toByteArray(stream);
         String jsonString = new String(bytes);
         when(indexDAO.get(any(), any())).thenReturn(jsonString);
-        workflow = executionDAOFacade.readWorkflow("workflowId", true);
+        workflow = executionDAOFacade.fetchWorkFlow("workflowId");
         assertNotNull(workflow);
         verify(indexDAO, times(1)).get(any(), any());
+    }
+
+    @Test (expected = java.lang.Exception.class)
+    public void readWorkflowFailure() throws Exception {
+
+        when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(null);
+        when(indexDAO.get(any(), any())).thenReturn(null);
+        executionDAOFacade.fetchWorkFlow("workflowId");
     }
 
     @Test
