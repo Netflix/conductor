@@ -94,13 +94,13 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 	private static final AvgAggregationBuilder EVENT_AVERAGE_EXEC_TIME = AggregationBuilders.avg("aggAvg")
 		.script(new Script("doc['processed'].value != null && doc['processed'].value > 0 " +
-			" && doc['created'].value != null && doc['created'].value > 0 " +
-			" ? doc['processed'].value - doc['created'].value : 0"));
+			" && doc['started'].value != null && doc['started'].value > 0 " +
+			" ? doc['processed'].value - doc['started'].value : 0"));
 
 	private static final AvgAggregationBuilder EVENT_AVERAGE_WAIT_TIME = AggregationBuilders.avg("aggAvg")
 		.script(new Script("doc['received'].value != null && doc['received'].value > 0 " +
-			" && doc['created'].value != null && doc['created'].value > 0 " +
-			" ? doc['created'].value - doc['received'].value : 0"));
+			" && doc['accepted'].value != null && doc['accepted'].value > 0 " +
+			" ? doc['accepted'].value - doc['received'].value : 0"));
 
 	private static final String VERSION = "\\.\\d+\\.\\d+"; // covers '.X.Y' where X and Y any number/digit
 	private static final String PREFIX = "deluxe.conductor";
