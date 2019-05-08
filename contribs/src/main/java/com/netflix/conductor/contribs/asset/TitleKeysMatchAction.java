@@ -2,6 +2,7 @@ package com.netflix.conductor.contribs.asset;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
@@ -39,7 +40,7 @@ public class TitleKeysMatchAction implements JavaEventAction {
     }
 
     @Override
-    public List<String> handle(EventHandler.Action action, Object payload, String event, String messageId) throws Exception {
+    public List<String> handle(EventHandler.Action action, Object payload, EventExecution ee) throws Exception {
         Set<String> output = new HashSet<>();
         ActionParams params = mapper.convertValue(action.getJava_action().getInputParameters(), ActionParams.class);
 
@@ -116,13 +117,13 @@ public class TitleKeysMatchAction implements JavaEventAction {
 
                 //Otherwise update the task as we found it
                 task.setStatus(taskStatus);
-                task.getOutputData().put("conductor.event.name", event);
+                task.getOutputData().put("conductor.event.name", ee.getEvent());
                 task.getOutputData().put("conductor.event.payload", payload);
-                task.getOutputData().put("conductor.event.messageId", messageId);
+                task.getOutputData().put("conductor.event.messageId", ee.getMessageId());
                 logger.debug("Updating task " + task + ". workflowId=" + workflow.getWorkflowId()
                         + ",correlationId=" + workflow.getCorrelationId()
                         + ",contextUser=" + workflow.getContextUser()
-                        + ",messageId=" + messageId
+                        + ",messageId=" + ee.getMessageId()
                         + ",payload=" + payload);
 
                 // Set the reason if task failed. It should be provided in the event
@@ -141,7 +142,7 @@ public class TitleKeysMatchAction implements JavaEventAction {
 
             } catch (Exception ex) {
                 String msg = String.format("Reference Keys Match failed for taskId=%s, messageId=%s, event=%s, workflowId=%s, correlationId=%s, payload=%s",
-                        task.getTaskId(), messageId, event, task.getWorkflowInstanceId(), task.getCorrelationId(), payload);
+                        task.getTaskId(), ee.getMessageId(), ee.getEvent(), task.getWorkflowInstanceId(), task.getCorrelationId(), payload);
                 logger.warn(msg, ex);
             } finally {
                 if (ndcCleanup) {
