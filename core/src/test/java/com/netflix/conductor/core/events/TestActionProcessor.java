@@ -19,6 +19,7 @@
 package com.netflix.conductor.core.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
@@ -41,6 +42,12 @@ import static org.mockito.Mockito.*;
  */
 public class TestActionProcessor {
 	private ObjectMapper om = new ObjectMapper();
+	private EventExecution ee = new EventExecution();
+
+	public TestActionProcessor() {
+		ee.setEvent("foo");
+		ee.setMessageId("bar");
+	}
 
 	@Test
 	public void testAray() throws Exception {
@@ -158,7 +165,7 @@ public class TestActionProcessor {
 		payload.put("status", "completed");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(1)).updateTask(captor.capture());
 
 		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
@@ -171,6 +178,7 @@ public class TestActionProcessor {
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
 		assertEquals("value", op.get("key"));
+		assertEquals(true, op.get("conductor.event.success"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
 	}
@@ -200,7 +208,7 @@ public class TestActionProcessor {
 		payload.put("status", "completed");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(1)).updateTask(captor.capture());
 
 		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
@@ -213,6 +221,7 @@ public class TestActionProcessor {
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
 		assertEquals("value", op.get("key"));
+		assertEquals(true, op.get("conductor.event.success"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
 	}
@@ -242,7 +251,7 @@ public class TestActionProcessor {
 		payload.put("failedReason", "reason");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(1)).updateTask(captor.capture());
 
 		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
@@ -254,6 +263,7 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals(true, op.get("conductor.event.success"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
 	}
@@ -283,7 +293,7 @@ public class TestActionProcessor {
 		payload.put("status", "wip");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor).updateTask(captor.capture());
 
 		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
@@ -295,6 +305,7 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals(true, op.get("conductor.event.success"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
 	}
@@ -329,7 +340,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(1)).updateTask(captor.capture());
 
 		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
@@ -340,6 +351,7 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals(true, op.get("conductor.event.success"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
 	}
@@ -379,7 +391,7 @@ public class TestActionProcessor {
 		payload.put("reason", "exception message");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(1)).updateTask(captor.capture());
 
 		assertEquals(payload, captor.getValue().getOutputData().get("conductor.event.payload"));
@@ -391,6 +403,7 @@ public class TestActionProcessor {
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals(true, op.get("conductor.event.success"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
 	}
@@ -424,7 +437,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertEquals(payload, op.get("conductor.event.payload"));
@@ -463,12 +476,13 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertEquals(payload, op.get("conductor.event.payload"));
 		assertEquals("foo", op.get("conductor.event.name"));
 		assertEquals("bar", op.get("conductor.event.messageId"));
+		assertEquals(false, op.get("conductor.event.success"));
 		assertNull(op.get("error"));
 		assertNull(op.get("action"));
 	}
@@ -502,7 +516,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertEquals(payload, op.get("conductor.event.payload"));
@@ -541,7 +555,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertEquals(payload, op.get("conductor.event.payload"));
@@ -580,7 +594,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertNull(op.get("error"));
@@ -588,7 +602,7 @@ public class TestActionProcessor {
 		assertNotNull(op.get("conductor.event.payload"));
 		assertNotNull(op.get("conductor.event.name"));
 		assertNotNull(op.get("conductor.event.messageId"));
-		assertEquals(3, op.size());
+		assertEquals(4, op.size());
 	}
 
 	@Test
@@ -619,7 +633,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertNull(op.get("error"));
@@ -627,7 +641,7 @@ public class TestActionProcessor {
 		assertNotNull(op.get("conductor.event.payload"));
 		assertNotNull(op.get("conductor.event.name"));
 		assertNotNull(op.get("conductor.event.messageId"));
-		assertEquals(3, op.size());
+		assertEquals(4, op.size());
 	}
 
 	@Test
@@ -658,7 +672,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertNull(op.get("error"));
@@ -666,7 +680,7 @@ public class TestActionProcessor {
 		assertNotNull(op.get("conductor.event.payload"));
 		assertNotNull(op.get("conductor.event.name"));
 		assertNotNull(op.get("conductor.event.messageId"));
-		assertEquals(3, op.size());
+		assertEquals(4, op.size());
 	}
 
 	@Test
@@ -695,7 +709,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertNull(op.get("error"));
@@ -703,7 +717,7 @@ public class TestActionProcessor {
 		assertNotNull(op.get("conductor.event.payload"));
 		assertNotNull(op.get("conductor.event.name"));
 		assertNotNull(op.get("conductor.event.messageId"));
-		assertEquals(3, op.size());
+		assertEquals(4, op.size());
 	}
 
 	@Test
@@ -734,7 +748,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertNull(op.get("error"));
@@ -742,7 +756,7 @@ public class TestActionProcessor {
 		assertNotNull(op.get("conductor.event.payload"));
 		assertNotNull(op.get("conductor.event.name"));
 		assertNotNull(op.get("conductor.event.messageId"));
-		assertEquals(3, op.size());
+		assertEquals(4, op.size());
 	}
 
 	@Test
@@ -772,7 +786,7 @@ public class TestActionProcessor {
 		payload.put("versionId", "v");
 
 		ArgumentCaptor<TaskResult> captor = ArgumentCaptor.forClass(TaskResult.class);
-		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), "foo", "bar");
+		Map<String, Object> op = ap.execute(action, om.writeValueAsString(payload), ee);
 		verify(executor, times(0)).updateTask(captor.capture());
 
 		assertNull(op.get("error"));
@@ -780,7 +794,7 @@ public class TestActionProcessor {
 		assertNotNull(op.get("conductor.event.payload"));
 		assertNotNull(op.get("conductor.event.name"));
 		assertNotNull(op.get("conductor.event.messageId"));
-		assertEquals(3, op.size());
+		assertEquals(4, op.size());
 	}
 
 	private EventHandler.Action newFindUpdateAction() {
