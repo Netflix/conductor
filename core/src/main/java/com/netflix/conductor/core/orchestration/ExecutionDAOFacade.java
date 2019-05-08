@@ -55,9 +55,8 @@ public class ExecutionDAOFacade {
     }
 
     /**
-     * Fetches the {@link Workflow} object from the data store given the id.
-     * Attempts to fetch from {@link ExecutionDAO} first,
-     * if not found, attempts to fetch from {@link IndexDAO}.
+     * Fetches the {@link Workflow} which are not archived from the ExecutionDAO.
+     * Attempts to fetch from {@link ExecutionDAO},
      *
      * @param workflowId   the id of the workflow to be fetched
      * @param includeTasks if true, fetches the {@link Task} data in the workflow.
@@ -71,24 +70,47 @@ public class ExecutionDAOFacade {
     public Workflow getWorkflowById(String workflowId, boolean includeTasks) {
         Workflow workflow = executionDAO.getWorkflow(workflowId, includeTasks);
         if (workflow == null) {
-//            LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO", workflowId);
-//            String json = indexDAO.get(workflowId, RAW_JSON_FIELD);
-//            if (json == null) {
-                String errorMsg = String.format("No such workflow found by id: %s", workflowId);
+            String errorMsg = String.format("No such workflow found by id: %s", workflowId);
+            LOGGER.error(errorMsg);
+            throw new ApplicationException(ApplicationException.Code.NOT_FOUND, errorMsg);
+        }
+        return workflow;
+    }
+
+    /**
+     * Fetches the {@link Workflow} object from the data store given the id.
+     * Attempts to fetch from {@link ExecutionDAO} first,
+     * if not found, attempts to fetch from {@link IndexDAO}.
+     *
+     * @param workflowId   the id of the workflow to be fetched
+     * @return the {@link Workflow} object
+     * @throws ApplicationException if
+     *                              <ul>
+     *                              <li>no such {@link Workflow} is found</li>
+     *                              <li>parsing the {@link Workflow} object fails</li>
+     *                              </ul>
+     */
+    public Workflow fetchWorkFlow(String workflowId) throws Exception {
+        Workflow workflow;
+        try {
+            workflow = getWorkflowById(workflowId, false);
+            return workflow;
+        } catch(Exception ex) {
+            LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO", workflowId);
+            String json = indexDAO.get(workflowId, RAW_JSON_FIELD);
+            if (json == null) {
+                String errorMsg = String.format("No such running workflow found by id:  %s", workflowId);
+                LOGGER.error("No such running workflow found by id:  {}", workflowId);
+                throw new Exception(errorMsg);
+            }
+
+            try {
+                workflow = objectMapper.readValue(json, Workflow.class);
+            } catch (IOException e) {
+                String errorMsg = String.format("Error reading workflow: %s", workflowId);
                 LOGGER.error(errorMsg);
-                throw new ApplicationException(ApplicationException.Code.NOT_FOUND, errorMsg);
-//            }
-//
-//            try {
-//                workflow = objectMapper.readValue(json, Workflow.class);
-//                if (!includeTasks) {
-//                    workflow.getTasks().clear();
-//                }
-//            } catch (IOException e) {
-//                String errorMsg = String.format("Error reading workflow: %s", workflowId);
-//                LOGGER.error(errorMsg);
-//                throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, errorMsg, e);
-//            }
+                throw new Exception(errorMsg);
+            }
         }
         return workflow;
     }

@@ -58,9 +58,8 @@ public class ExecutionDAOFacadeTest {
         objectMapper = new JsonMapperProvider().get();
         executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper);
     }
-
-    @Test
-    @Ignore
+    
+    @Test (expected = java.lang.Exception.class)
     public void tesGetWorkflowById() throws Exception {
         when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
         Workflow workflow = executionDAOFacade.getWorkflowById("workflowId", true);
@@ -75,6 +74,31 @@ public class ExecutionDAOFacadeTest {
         workflow = executionDAOFacade.getWorkflowById("workflowId", true);
         assertNotNull(workflow);
         verify(indexDAO, times(1)).get(any(), any());
+    }
+
+    @Test
+    public void readWorkflowSuccess() throws Exception {
+        when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
+        Workflow workflow = executionDAOFacade.fetchWorkFlow("workflowId");
+        assertNotNull(workflow);
+        verify(indexDAO, never()).get(any(), any());
+
+        when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(null);
+        InputStream stream = ExecutionDAOFacadeTest.class.getResourceAsStream("/test.json");
+        byte[] bytes = IOUtils.toByteArray(stream);
+        String jsonString = new String(bytes);
+        when(indexDAO.get(any(), any())).thenReturn(jsonString);
+        workflow = executionDAOFacade.fetchWorkFlow("workflowId");
+        assertNotNull(workflow);
+        verify(indexDAO, times(1)).get(any(), any());
+    }
+
+    @Test (expected = java.lang.Exception.class)
+    public void readWorkflowFailure() throws Exception {
+
+        when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(null);
+        when(indexDAO.get(any(), any())).thenReturn(null);
+        executionDAOFacade.fetchWorkFlow("workflowId");
     }
 
     @Test
