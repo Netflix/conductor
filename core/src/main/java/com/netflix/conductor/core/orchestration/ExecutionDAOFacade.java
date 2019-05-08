@@ -91,7 +91,7 @@ public class ExecutionDAOFacade {
      *                              <li>parsing the {@link Workflow} object fails</li>
      *                              </ul>
      */
-    public Workflow getWorkflowByIdWithFallbackToIndexDAO(String workflowId, boolean includeTasks) {
+    public Workflow readWorkflow(String workflowId, boolean includeTasks) {
         Workflow workflow;
         try {
             workflow = getWorkflowById(workflowId, includeTasks);

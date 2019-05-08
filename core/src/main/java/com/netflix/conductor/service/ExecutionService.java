@@ -352,7 +352,7 @@ public class ExecutionService {
 		SearchResult<String> result = executionDAOFacade.searchWorkflows(query, freeText, start, size, sortOptions);
 		List<WorkflowSummary> workflows = result.getResults().stream().parallel().map(workflowId -> {
 			try {
-				return new WorkflowSummary(executionDAOFacade.getWorkflowByIdWithFallbackToIndexDAO(workflowId,false));
+				return new WorkflowSummary(executionDAOFacade.readWorkflow(workflowId,false));
 			} catch(Exception e) {
 				logger.error("Error fetching workflow by id: {}", workflowId, e);
 				return null;
@@ -370,7 +370,7 @@ public class ExecutionService {
 				.map(taskSummary -> {
 					try {
 						String workflowId = taskSummary.getWorkflowId();
-						return new WorkflowSummary(executionDAOFacade.getWorkflowByIdWithFallbackToIndexDAO(workflowId, false));
+						return new WorkflowSummary(executionDAOFacade.readWorkflow(workflowId, false));
 					} catch (Exception e) {
 						logger.error("Error fetching workflow by id: {}", taskSummary.getWorkflowId(), e);
 						return null;

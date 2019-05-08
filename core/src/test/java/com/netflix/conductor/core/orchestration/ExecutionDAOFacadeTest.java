@@ -77,9 +77,9 @@ public class ExecutionDAOFacadeTest {
     }
 
     @Test
-    public void getWorkflowByIdWithFallbackToIndexDAO() throws Exception {
+    public void readWorkflow() throws Exception {
         when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
-        Workflow workflow = executionDAOFacade.getWorkflowByIdWithFallbackToIndexDAO("workflowId", true);
+        Workflow workflow = executionDAOFacade.readWorkflow("workflowId", true);
         assertNotNull(workflow);
         verify(indexDAO, never()).get(any(), any());
 
@@ -88,7 +88,7 @@ public class ExecutionDAOFacadeTest {
         byte[] bytes = IOUtils.toByteArray(stream);
         String jsonString = new String(bytes);
         when(indexDAO.get(any(), any())).thenReturn(jsonString);
-        workflow = executionDAOFacade.getWorkflowByIdWithFallbackToIndexDAO("workflowId", true);
+        workflow = executionDAOFacade.readWorkflow("workflowId", true);
         assertNotNull(workflow);
         verify(indexDAO, times(1)).get(any(), any());
     }
