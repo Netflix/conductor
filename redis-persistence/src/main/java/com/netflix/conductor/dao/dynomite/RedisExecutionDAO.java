@@ -134,7 +134,9 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 				continue;
 			}
 
-			task.setScheduledTime(System.currentTimeMillis());
+			if(task.getStatus() != null && !task.getStatus().isTerminal() && task.getScheduledTime() == 0){
+				task.setScheduledTime(System.currentTimeMillis());
+			}
 
 			correlateTaskToWorkflowInDS(task.getTaskId(), task.getWorkflowInstanceId());
 			logger.debug("Scheduled task added to WORKFLOW_TO_TASKS workflowId: {}, taskId: {}, taskType: {} during createTasks",
@@ -397,6 +399,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	@Override
 	public void removeFromPendingWorkflow(String workflowType, String workflowId) {
 		recordRedisDaoRequests("removePendingWorkflow");
+		dynoClient.del(nsKey(SCHEDULED_TASKS, workflowId));
 		dynoClient.srem(nsKey(PENDING_WORKFLOWS, workflowType), workflowId);
 	}
 

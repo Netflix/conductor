@@ -118,4 +118,16 @@ public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
      */
     public void testForkJoinNestedWithSubWorkflow() {
     }
+
+    @Ignore
+    @Test
+    @Override
+    public void testTerminateTaskWithFailedStatus() {}
+
+    @Ignore
+    @Test
+    @Override
+    public void testTerminateTaskWithCompletedStatus() {}
+
+
 }

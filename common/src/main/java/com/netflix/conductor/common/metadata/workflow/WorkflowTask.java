@@ -156,6 +156,10 @@ public class WorkflowTask {
 	
 	@ProtoField(id = 21)
 	private List<String> defaultExclusiveJoinTask = new LinkedList<>();
+
+	@ProtoField(id = 23)
+	private Boolean asyncComplete = false;
+
 	/**
 	 * @return the name
 	 */
@@ -412,7 +416,19 @@ public class WorkflowTask {
 	public void setSink(String sink) {
 		this.sink = sink;
 	}
-	
+
+	/**
+	 *
+	 * @return whether wait for an external event to complete the task, for EVENT and HTTP tasks
+	 */
+	public Boolean isAsyncComplete() {
+		return asyncComplete;
+	}
+
+	public void setAsyncComplete(Boolean asyncComplete) {
+		this.asyncComplete = asyncComplete;
+	}
+
 	/**
 	 *
 	 * @return If the task is optional.  When set to true, the workflow execution continues even when the task is in failed status.
@@ -437,7 +453,7 @@ public class WorkflowTask {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param optional when set to true, the task is marked as optional
 	 */
 	public void setOptional(boolean optional) {
@@ -634,6 +650,7 @@ public class WorkflowTask {
                 Objects.equals(getSubWorkflowParam(), that.getSubWorkflowParam()) &&
                 Objects.equals(getJoinOn(), that.getJoinOn()) &&
                 Objects.equals(getSink(), that.getSink()) &&
+				Objects.equals(isAsyncComplete(), that.isAsyncComplete()) &&
                 Objects.equals(getDefaultExclusiveJoinTask(), that.getDefaultExclusiveJoinTask());
     }
 
@@ -659,6 +676,7 @@ public class WorkflowTask {
                 getSubWorkflowParam(),
                 getJoinOn(),
                 getSink(),
+                isAsyncComplete(),
                 isOptional(),
                 getDefaultExclusiveJoinTask()
         );

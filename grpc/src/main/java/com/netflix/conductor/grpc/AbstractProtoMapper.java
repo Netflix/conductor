@@ -459,6 +459,7 @@ public abstract class AbstractProtoMapper {
         if (from.getVersion() != null) {
             to.setVersion( from.getVersion() );
         }
+        to.putAllTaskToDomain( from.getTaskToDomain() );
         return to.build();
     }
 
@@ -466,6 +467,7 @@ public abstract class AbstractProtoMapper {
         SubWorkflowParams to = new SubWorkflowParams();
         to.setName( from.getName() );
         to.setVersion( from.getVersion() );
+        to.setTaskToDomain( from.getTaskToDomainMap() );
         return to;
     }
 
@@ -808,7 +810,6 @@ public abstract class AbstractProtoMapper {
             case FAILED: to = TaskResultPb.TaskResult.Status.FAILED; break;
             case FAILED_WITH_TERMINAL_ERROR: to = TaskResultPb.TaskResult.Status.FAILED_WITH_TERMINAL_ERROR; break;
             case COMPLETED: to = TaskResultPb.TaskResult.Status.COMPLETED; break;
-            case SCHEDULED: to = TaskResultPb.TaskResult.Status.SCHEDULED; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -821,7 +822,6 @@ public abstract class AbstractProtoMapper {
             case FAILED: to = TaskResult.Status.FAILED; break;
             case FAILED_WITH_TERMINAL_ERROR: to = TaskResult.Status.FAILED_WITH_TERMINAL_ERROR; break;
             case COMPLETED: to = TaskResult.Status.COMPLETED; break;
-            case SCHEDULED: to = TaskResult.Status.SCHEDULED; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -1174,6 +1174,9 @@ public abstract class AbstractProtoMapper {
             to.setRateLimited( from.isRateLimited() );
         }
         to.addAllDefaultExclusiveJoinTask( from.getDefaultExclusiveJoinTask() );
+        if (from.isAsyncComplete() != null) {
+            to.setAsyncComplete( from.isAsyncComplete() );
+        }
         return to.build();
     }
 
@@ -1213,6 +1216,7 @@ public abstract class AbstractProtoMapper {
         }
         to.setRateLimited( from.getRateLimited() );
         to.setDefaultExclusiveJoinTask( from.getDefaultExclusiveJoinTaskList().stream().collect(Collectors.toCollection(ArrayList::new)) );
+        to.setAsyncComplete( from.getAsyncComplete() );
         return to;
     }
 
