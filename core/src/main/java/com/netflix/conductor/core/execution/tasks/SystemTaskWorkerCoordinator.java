@@ -148,8 +148,8 @@ public class SystemTaskWorkerCoordinator {
 				return;
 			}
 			ExecutionConfig executionConfig = getExecutionConfig(queueName);
-			// get the remaining capacity of worker queue to prevent queue full exception
 			LinkedBlockingQueue<Runnable> workerQueue = executionConfig.workerQueue;
+			// get the remaining capacity of worker queue to prevent queue full exception
 			int realPollCount = Math.min(workerQueue.remainingCapacity(), pollCount);
 			if (realPollCount <= 0) {
                 logger.warn("All workers are busy, not polling. executor queue size: {}, max: {}, task queue name :{}", workerQueue.size(), workerQueueSize, queueName);
