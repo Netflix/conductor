@@ -13,4 +13,13 @@ public class QueueUtilsTest {
 		Assert.assertEquals("tType-isolationGroup", queueNameGenerated);
 	}
 
+	@Test
+	public void queueNameWithTypeAndNoIsolationGroup() {
+
+		String queueNameGenerated = QueueUtils.getQueueName("tType", null, null);
+
+		Assert.assertEquals("tType", queueNameGenerated);
+	}
+
+
 }

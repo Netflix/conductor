@@ -41,9 +41,7 @@ public class IsolatedTaskQueueProducer {
 			new Thread(this::syncTaskQueues).start();
 
 		} else {
-
 			logger.info("Isolated System Task Worker DISABLED");
-
 		}
 
 	}
@@ -80,7 +78,10 @@ public class IsolatedTaskQueueProducer {
 		try {
 
 			List<TaskDef> taskDefs = metadataService.getTaskDefs();
-			isolationGroups = taskDefs.stream().filter(taskDef -> Objects.nonNull(taskDef.getIsolationGroupId())).map(taskDef -> taskDef.getIsolationGroupId()).collect(Collectors.toSet());
+			isolationGroups = taskDefs.stream()
+					.filter(taskDef -> Objects.nonNull(taskDef.getIsolationGroupId()))
+					.map(taskDef -> taskDef.getIsolationGroupId())
+					.collect(Collectors.toSet());
 
 		} catch (RuntimeException unknownException) {
 
@@ -94,15 +95,15 @@ public class IsolatedTaskQueueProducer {
 	@VisibleForTesting
 	void addTaskQueues() throws InterruptedException {
 
-		Set<String> isolationGroup = getIsolationGroups();
-		logger.debug("Retrieved queues {}", isolationGroup);
+		Set<String> isolationGroups = getIsolationGroups();
+		logger.info("Retrieved queues {}", isolationGroups);
 		Set<String> taskTypes = SystemTaskWorkerCoordinator.taskNameWorkFlowTaskMapping.keySet();
 
-		for (String group : isolationGroup) {
+		for (String group : isolationGroups) {
 			for (String taskType : taskTypes) {
 
 				String taskQueue = QueueUtils.getQueueName(taskType, null, group);
-				logger.debug("Adding task={} to coordinator queue", taskQueue);
+				logger.info("Adding task={} to coordinator queue", taskQueue);
 				SystemTaskWorkerCoordinator.queue.add(taskQueue);
 
 			}
