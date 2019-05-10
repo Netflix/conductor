@@ -130,7 +130,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                 keepAliveTime,
                 TimeUnit.MINUTES,
                 new LinkedBlockingQueue<>(workerQueueSize),
-                (r,e)->{logger.warn("Dicarding messages to executor service '{}'", indexName, e)});
+                (r,e)->{logger.warn("Discarding messages to executor service '{}'", indexName, e);});
 
     }
 
