@@ -114,10 +114,6 @@ public interface ElasticSearchConfiguration extends Configuration {
         return elasticSearchInstanceType;
     }
 
-    default int getAsyncWorkerQueueSize() {
-       return  getIntProperty(ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE, DEFAULT_ASYNC_WORKER_QUEUE_SIZE);
-    }
-
 
     enum ElasticSearchInstanceType {
         MEMORY, EXTERNAL
@@ -127,8 +123,6 @@ public interface ElasticSearchConfiguration extends Configuration {
         return getIntProperty(ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_PROPERTY_NAME,
             ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE);
     }
-<<<<<<< Updated upstream
-=======
 
     default int getAsyncWorkerQueueSize() {
         return  getIntProperty(ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE, DEFAULT_ASYNC_WORKER_QUEUE_SIZE);
@@ -137,5 +131,4 @@ public interface ElasticSearchConfiguration extends Configuration {
     default int getAsyncMaxPoolSize() {
         return  getIntProperty(ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE, DEFAULT_ASYNC_MAX_POOL_SIZE);
     }
->>>>>>> Stashed changes
 }
