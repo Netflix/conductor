@@ -122,14 +122,15 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
         // Set up a workerpool for performing async operations.
         int corePoolSize = 10;
-        int maximumPoolSize = 20;
+        int maximumPoolSize = config.getAsyncMaxPoolSize();
         long keepAliveTime = 1L;
         int workerQueueSize = config.getAsyncWorkerQueueSize();
         this.executorService = new ThreadPoolExecutor(corePoolSize,
                 maximumPoolSize,
                 keepAliveTime,
                 TimeUnit.MINUTES,
-                new LinkedBlockingQueue<>(workerQueueSize));
+                new LinkedBlockingQueue<>(workerQueueSize),
+                (r,e)->{logger.warn("Dicarding messages to executor service '{}'", indexName, e)});
 
     }
 
