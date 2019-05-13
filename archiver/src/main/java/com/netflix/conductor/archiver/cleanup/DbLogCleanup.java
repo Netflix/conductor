@@ -4,6 +4,7 @@ import com.netflix.conductor.archiver.config.AppConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,10 +12,15 @@ import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.concurrent.TimeUnit;
 
-public class DbLogCleanup {
+public class DbLogCleanup extends AbstractCleanup {
 	private static final Logger logger = LogManager.getLogger(DbLogCleanup.class);
 	private static final String CLEANUP = "delete from log4j_logs where log_time < ?";
 
+	public DbLogCleanup(RestHighLevelClient client) {
+		super(client);
+	}
+
+	@Override
 	public void cleanup() {
 		logger.info("Starting db log cleanup");
 		try {
