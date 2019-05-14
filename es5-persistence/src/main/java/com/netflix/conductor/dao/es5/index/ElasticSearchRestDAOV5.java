@@ -18,7 +18,6 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
-import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.io.IOUtils;
@@ -63,9 +62,22 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -130,7 +142,9 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                 keepAliveTime,
                 TimeUnit.MINUTES,
                 new LinkedBlockingQueue<>(workerQueueSize),
-                (r,e)->{logger.warn("Discarding messages to executor service '{}'", indexName, e);});
+                (r, e) -> {
+                    logger.warn("Discarding messages to executor service '{}' ,{}, {} ", r, e, e.getQueue().size());
+                });
 
     }
 
@@ -663,6 +677,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private void indexWithRetry(final IndexRequest request, final String operationDescription) {
 
         try {
+            long startTime = Instant.now().getEpochSecond();
             new RetryUtil<IndexResponse>().retryOnException(() -> {
                 try {
                     return elasticSearchClient.index(request);
@@ -670,6 +685,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                     throw new RuntimeException(e);
                 }
             }, null, null, RETRY_COUNT, operationDescription, "indexWithRetry");
+            logger.info("Time taken {} for  request {}, type {} ,id {} , index {}", Instant.now().getEpochSecond() - startTime, request, request.type(), request.id(), request.index());
+            logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
         } catch (Exception e) {
             Monitors.error(className, "index");
             logger.error("Failed to index {} for request type: {}", request.id(), request.type(), e);
