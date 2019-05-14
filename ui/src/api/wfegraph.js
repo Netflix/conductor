@@ -38,7 +38,7 @@ class Workflow2Graph {
         });
         forks[tt.taskReferenceName] = wfts;
       }
-    }), this;
+    }, this);
 
     let nodes = [];
     let vertices = {};
