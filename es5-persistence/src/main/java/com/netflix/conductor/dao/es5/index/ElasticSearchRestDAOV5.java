@@ -677,7 +677,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private void indexWithRetry(final IndexRequest request, final String operationDescription) {
 
         try {
-            long startTime = Instant.now().getEpochSecond();
+            long startTime = Instant.now().toEpochMilli();
             new RetryUtil<IndexResponse>().retryOnException(() -> {
                 try {
                     return elasticSearchClient.index(request);
@@ -685,7 +685,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                     throw new RuntimeException(e);
                 }
             }, null, null, RETRY_COUNT, operationDescription, "indexWithRetry");
-            logger.info("Time taken {} for  request {}, type {} ,id {} , index {}", Instant.now().getEpochSecond() - startTime, request, request.type(), request.id(), request.index());
+            logger.info("Time taken {} for  request {}, type {} ,id {} , index {}", Instant.now().toEpochMilli() - startTime, request, request.type(), request.id(), request.index());
             logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
         } catch (Exception e) {
             Monitors.error(className, "index");
