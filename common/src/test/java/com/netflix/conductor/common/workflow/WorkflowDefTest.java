@@ -304,12 +304,7 @@ public class WorkflowDefTest {
 		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		Validator validator = factory.getValidator();
 		Set<ConstraintViolation<Object>> result = validator.validate(workflowDef);
-		assertEquals(1, result.size());
-
-		List<String> validationErrors = new ArrayList<>();
-		result.forEach(e -> validationErrors.add(e.getMessage()));
-
-		assertTrue(validationErrors.contains("key: blabla input parameter value: is null or empty"));
+		assertEquals(0, result.size());
 	}
 
 	@Test
@@ -333,7 +328,7 @@ public class WorkflowDefTest {
 		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 		Validator validator = factory.getValidator();
 		Set<ConstraintViolation<Object>> result = validator.validate(workflowDef);
-		assertEquals(2, result.size());
+		assertEquals(1, result.size());
 
 		List<String> validationErrors = new ArrayList<>();
 		result.forEach(e -> validationErrors.add(e.getMessage()));
