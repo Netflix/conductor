@@ -113,6 +113,11 @@ public class DeciderService {
         return decide(workflow, tasksToBeScheduled);
     }
 
+
+    public DeciderOutcome recoverDecide(final Workflow workflow, List<Task> preScheduledTasks) throws TerminateWorkflowException {
+        return decide(workflow, preScheduledTasks);
+    }
+
     private DeciderOutcome decide(final Workflow workflow, List<Task> preScheduledTasks) throws TerminateWorkflowException {
 
         DeciderOutcome outcome = new DeciderOutcome();

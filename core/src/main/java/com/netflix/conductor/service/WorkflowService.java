@@ -172,6 +172,14 @@ public interface WorkflowService {
     void restartWorkflow(@NotEmpty(message = "WorkflowId cannot be null or empty.") String workflowId, boolean useLatestDefinitions);
 
     /**
+     * Recover workflow
+     * @param workflowId         WorkflowId of the workflow.
+     * @param taskReferenceName  The task reference name.
+     */
+    void recoverWorkflow(@NotEmpty(message = "WorkflowId name cannot be null or empty.") String workflowId,
+                         @NotEmpty(message = "TaskReferenceName cannot be null or empty.") String taskReferenceName);
+
+    /**
      * Retries the last failed task.
      *
      * @param workflowId WorkflowId of the workflow.

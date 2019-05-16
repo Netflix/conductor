@@ -294,6 +294,17 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     /**
+     * Recover workflow by specified taskReferenceName.
+     * @param workflowId         WorkflowId of the workflow.
+     * @param taskReferenceName  The task reference name.
+     */
+    @Service
+    public void recoverWorkflow(String workflowId, String taskReferenceName){
+        workflowExecutor.recover(workflowId, taskReferenceName);
+    }
+
+
+    /**
      * Retries the last failed task.
      *
      * @param workflowId WorkflowId of the workflow.

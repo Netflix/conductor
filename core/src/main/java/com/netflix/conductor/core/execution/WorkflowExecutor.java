@@ -44,15 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -403,6 +395,144 @@ public class WorkflowExecutor {
         workflow.setExternalOutputPayloadStoragePath(null);
         executionDAOFacade.updateWorkflow(workflow);
         decide(workflowId);
+    }
+
+    /**
+     * Recover workflow
+     * @param workflowId
+     * @param taskReferenceName
+     */
+    public void recover(String workflowId, String taskReferenceName){
+        Workflow workflow = executionDAOFacade.getWorkflowById(workflowId, true);
+        if (!workflow.getStatus().isTerminal()) {
+            String errorMsg = String.format("Workflow: %s is not in terminal state, unable to recover.", workflow);
+            LOGGER.error(errorMsg);
+            throw new ApplicationException(CONFLICT, errorMsg);
+        }
+
+        WorkflowDef workflowDef;
+        workflowDef = Optional.ofNullable(workflow.getWorkflowDefinition())
+                .orElseGet(() -> metadataDAO.get(workflow.getWorkflowName(), workflow.getWorkflowVersion())
+                        .orElseThrow(() -> new ApplicationException(NOT_FOUND, String.format("Unable to find definition for %s", workflowId)))
+                );
+
+        // todo add workflowDef isRecoverable
+
+        if (workflow.getTasks().isEmpty()){
+            throw new ApplicationException(CONFLICT, String.format("Workflow: %s is not task scheduled", workflow));
+        }
+
+
+        Boolean taskReferenceNameExist;
+        taskReferenceNameExist = workflowDef.getTasks().stream().anyMatch(workflowTask -> workflowTask.getTaskReferenceName().equals(taskReferenceName));
+        if (!taskReferenceNameExist){
+            throw new ApplicationException(CONFLICT, String.format("WorkflowDef: %s is not taskReferenceName %s", workflowDef, taskReferenceName));
+        }
+        taskReferenceNameExist = workflow.getTasks().stream().anyMatch(task -> task.getReferenceTaskName().equals(taskReferenceName));
+        if (!taskReferenceNameExist){
+            throw new ApplicationException(CONFLICT, String.format("Workflow: %s is not taskReferenceName %s", workflow, taskReferenceName));
+        }
+
+        // fist taskReferenceName
+        String previousTaskReferenceName = "";
+        Boolean firstTaskReferenceName = false;
+        if (workflowDef.getTasks().get(0).getTaskReferenceName().equals(taskReferenceName)){
+            firstTaskReferenceName = true;
+            previousTaskReferenceName = taskReferenceName;
+        }
+        workflow.setEndTime(0);
+        workflow.setStatus(WorkflowStatus.RUNNING);
+        workflow.setOutput(null);
+        workflow.setExternalOutputPayloadStoragePath(null);
+
+        final List<Task> tasks = workflow.getTasks();
+        List<Task> newTasks = new LinkedList<>();
+
+        for (Task t : tasks){
+            newTasks.add(t);
+            if (t.getReferenceTaskName().equals(taskReferenceName)){
+                newTasks.remove(t);
+                break;
+            }
+            previousTaskReferenceName = t.getReferenceTaskName();
+        }
+        tasks.forEach(task -> {
+            if (task.getStatus().equals(SKIPPED)){
+                newTasks.add(task);
+            }});
+
+        try {
+            // found schedule task
+            WorkflowTask taskToSchedule;
+            if (firstTaskReferenceName) {
+                taskToSchedule = workflowDef.getTaskByRefName(previousTaskReferenceName);
+            } else {
+                taskToSchedule = workflowDef.getNextTask(previousTaskReferenceName);
+            }
+            if (taskToSchedule == null){
+                throw new ApplicationException(CONFLICT, String.format("Workflow: %s %s is the last  task", workflow, taskReferenceName));
+            }
+            while (isTaskSkipped(taskToSchedule, workflow)) {
+                taskToSchedule = workflowDef.getNextTask(taskToSchedule.getTaskReferenceName());
+                if (taskToSchedule == null){
+                    throw new ApplicationException(CONFLICT, String.format("Workflow: %s %s is skip task", workflow, taskReferenceName));
+                }
+            }
+
+            // Remove old data
+            if (newTasks.isEmpty()){
+                tasks.forEach(task -> {
+                    executionDAOFacade.removeTask(task.getTaskId());
+                });
+            }
+            tasks.forEach(task -> {
+                if (!newTasks.contains(task)){
+                    executionDAOFacade.removeTask(task.getTaskId());
+                }
+            });
+            workflow.getTasks().clear();
+            workflow.getTasks().addAll(newTasks);
+
+            // schedule task
+            List<Task> tasksToBeScheduled ;
+            tasksToBeScheduled = deciderService.getTasksToBeScheduled(workflow, taskToSchedule, 0);
+            DeciderService.DeciderOutcome outcome = deciderService.recoverDecide(workflow, tasksToBeScheduled);
+            if (outcome.isComplete) {
+                completeWorkflow(workflow);
+                return;
+            }
+            tasksToBeScheduled = outcome.tasksToBeScheduled;
+            setTaskDomains(tasksToBeScheduled, workflow);
+            tasksToBeScheduled = dedupAndAddTasks(workflow, tasksToBeScheduled);
+            scheduleTask(workflow, tasksToBeScheduled);
+        } catch (TerminateWorkflowException twe) {
+            LOGGER.info("Execution terminated of workflow: {} of type: {}", workflowId, workflow.getWorkflowDefinition().getName(), twe);
+            terminate(workflow, twe);
+            return;
+        } catch (RuntimeException e) {
+            LOGGER.error("Error deciding workflow: {}", workflowId, e);
+            throw e;
+        }
+
+        executionDAOFacade.updateWorkflow(workflow);
+    }
+
+    private boolean isTaskSkipped(WorkflowTask taskToSchedule, Workflow workflow) {
+        try {
+            boolean isTaskSkipped = false;
+            if (taskToSchedule != null) {
+                Task t = workflow.getTaskByRefName(taskToSchedule.getTaskReferenceName());
+                if (t == null) {
+                    isTaskSkipped = false;
+                } else if (t.getStatus().equals(SKIPPED)) {
+                    isTaskSkipped = true;
+                }
+            }
+            return isTaskSkipped;
+        } catch (Exception e) {
+            throw new TerminateWorkflowException(e.getMessage());
+        }
+
     }
 
     /**

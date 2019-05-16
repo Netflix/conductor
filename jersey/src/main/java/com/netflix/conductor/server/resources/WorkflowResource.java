@@ -185,6 +185,13 @@ public class WorkflowResource {
     }
 
     @POST
+    @Path("/{workflowId}/recover/{taskReferenceName}")
+    @ApiOperation("Recover a give taskReferenceName a current terminal workflow")
+    public void recover(@PathParam("workflowId") String workflowId, @PathParam("taskReferenceName") String taskReferenceName){
+        workflowService.recoverWorkflow(workflowId, taskReferenceName);
+    }
+
+    @POST
     @Path("/{workflowId}/retry")
     @ApiOperation("Retries the last failed task")
     @Consumes(MediaType.WILDCARD)
