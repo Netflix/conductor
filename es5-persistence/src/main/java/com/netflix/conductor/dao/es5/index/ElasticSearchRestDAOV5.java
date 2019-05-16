@@ -63,6 +63,7 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.*;
@@ -122,14 +123,17 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
         // Set up a workerpool for performing async operations.
         int corePoolSize = 10;
-        int maximumPoolSize = 20;
+        int maximumPoolSize = config.getAsyncMaxPoolSize();
         long keepAliveTime = 1L;
         int workerQueueSize = config.getAsyncWorkerQueueSize();
         this.executorService = new ThreadPoolExecutor(corePoolSize,
                 maximumPoolSize,
                 keepAliveTime,
                 TimeUnit.MINUTES,
-                new LinkedBlockingQueue<>(workerQueueSize));
+                new LinkedBlockingQueue<>(workerQueueSize),
+                (r, e) -> {
+                    logger.warn("Discarding messages to executor service '{}' ,{}, {} ", r, e, e.getQueue().size());
+                });
 
     }
 
@@ -662,6 +666,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private void indexWithRetry(final IndexRequest request, final String operationDescription) {
 
         try {
+            long startTime = Instant.now().toEpochMilli();
             new RetryUtil<IndexResponse>().retryOnException(() -> {
                 try {
                     return elasticSearchClient.index(request);
@@ -669,6 +674,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                     throw new RuntimeException(e);
                 }
             }, null, null, RETRY_COUNT, operationDescription, "indexWithRetry");
+            logger.info("Time taken {} for  request {}, type {} ,id {} , index {}", Instant.now().toEpochMilli() - startTime, request, request.type(), request.id(), request.index());
+            logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
         } catch (Exception e) {
             Monitors.error(className, "index");
             logger.error("Failed to index {} for request type: {}", request.id(), request.type(), e);

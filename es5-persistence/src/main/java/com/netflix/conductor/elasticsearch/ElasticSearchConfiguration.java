@@ -50,6 +50,9 @@ public interface ElasticSearchConfiguration extends Configuration {
     int ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE = 5000;
     int DEFAULT_ASYNC_WORKER_QUEUE_SIZE = 100;
 
+    String ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE = "workflow.elasticsearch.async.dao.max.pool.size";
+    int DEFAULT_ASYNC_MAX_POOL_SIZE = 20;
+
     default String getURL() {
         return getProperty(ELASTIC_SEARCH_URL_PROPERTY_NAME, ELASTIC_SEARCH_URL_DEFAULT_VALUE);
     }
@@ -111,10 +114,6 @@ public interface ElasticSearchConfiguration extends Configuration {
         return elasticSearchInstanceType;
     }
 
-    default int getAsyncWorkerQueueSize() {
-       return  getIntProperty(ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE, DEFAULT_ASYNC_WORKER_QUEUE_SIZE);
-    }
-
 
     enum ElasticSearchInstanceType {
         MEMORY, EXTERNAL
@@ -123,5 +122,13 @@ public interface ElasticSearchConfiguration extends Configuration {
     default int getArchiveSearchBatchSize() {
         return getIntProperty(ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_PROPERTY_NAME,
             ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE);
+    }
+
+    default int getAsyncWorkerQueueSize() {
+        return  getIntProperty(ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE, DEFAULT_ASYNC_WORKER_QUEUE_SIZE);
+    }
+
+    default int getAsyncMaxPoolSize() {
+        return  getIntProperty(ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE, DEFAULT_ASYNC_MAX_POOL_SIZE);
     }
 }
