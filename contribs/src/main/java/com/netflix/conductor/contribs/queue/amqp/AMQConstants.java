@@ -7,8 +7,8 @@ package com.netflix.conductor.contribs.queue.amqp;
  * @version $Id$
  */
 interface AMQConstants {
-    String AMQP_QUEUE_TYPE = "amqp-queue";
-    String AMQP_EXCHANGE_TYPE = "amqp-exchange";
+    String AMQP_QUEUE_TYPE = "amqp";
+    String AMQP_EXCHANGE_TYPE = "amqp_exchange";
 
     String PROPERTY_KEY_TEMPLATE = "workflow.event.queues.amqp.%s";
 

@@ -45,7 +45,7 @@ public class AMQModule extends AbstractModule {
     }
 
     @ProvidesIntoMap
-    @StringMapKey("amqp-queue")
+    @StringMapKey("amqp")
     @Singleton
     @Named(EVENT_QUEUE_PROVIDERS_QUALIFIER)
     public EventQueueProvider getAMQQueueEventQueueProvider(Configuration config) {
@@ -53,7 +53,7 @@ public class AMQModule extends AbstractModule {
     }
 
     @ProvidesIntoMap
-    @StringMapKey("amqp-exchange")
+    @StringMapKey("amqp_exchange")
     @Singleton
     @Named(EVENT_QUEUE_PROVIDERS_QUALIFIER)
     public EventQueueProvider getAMQExchangeEventQueueProvider(Configuration config) {
