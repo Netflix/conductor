@@ -122,7 +122,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         this.clusterHealthColor = config.getClusterHealthColor();
 
         // Set up a workerpool for performing async operations.
-        int corePoolSize = 10;
+        int corePoolSize = 1;
         int maximumPoolSize = config.getAsyncMaxPoolSize();
         long keepAliveTime = 1L;
         int workerQueueSize = config.getAsyncWorkerQueueSize();
