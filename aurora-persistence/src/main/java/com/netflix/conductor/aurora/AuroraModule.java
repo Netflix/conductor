@@ -20,6 +20,7 @@ package com.netflix.conductor.aurora;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.netflix.conductor.dao.MetadataDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,7 @@ public class AuroraModule extends AbstractModule {
 	@Override
 	protected void configure() {
         bind(DataSource.class).toProvider(AuroraDataSourceProvider.class).in(Scopes.SINGLETON);
+		bind(MetadataDAO.class).to(AuroraMetadataDAO.class);
 		logger.debug("Aurora Module configured ...");
 	}
 }
