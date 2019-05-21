@@ -1,15 +1,6 @@
 FROM openjdk:8-jdk AS base
 
-RUN git clone https://github.com/FRINXio/conductor.git
-
-# Conductor project version. Needed to pull additional .jar files.
-# One of the following commands run in conductor repo folder returns the version number:
-# git describe | grep -oP "\d+\.\d+\.\d+"
-# git for-each-ref refs/tags --sort=-taggerdate --format='%(tag)' --count=1 | cut -d "v" -f 2
-
-# Create gradle properties file
-RUN cd conductor && echo 'git.root=../../' > gradle.properties
-RUN cd conductor && echo "submodVersion=$(git for-each-ref refs/tags --sort=-taggerdate --format='%(tag)' --count=1 | cut -d "v" -f 2)" >> gradle.properties
+COPY ./ /conductor
 
 # Download and build .jar files needed
 RUN cd conductor/server && ../gradlew build --no-daemon -x test
