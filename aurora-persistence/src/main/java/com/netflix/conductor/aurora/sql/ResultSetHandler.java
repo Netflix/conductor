@@ -1,4 +1,4 @@
-package com.netflix.conductor.aurora;
+package com.netflix.conductor.aurora.sql;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

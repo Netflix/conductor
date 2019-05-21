@@ -1,4 +1,4 @@
-package com.netflix.conductor.aurora;
+package com.netflix.conductor.aurora.sql;
 
 
 import java.util.function.Supplier;
@@ -6,13 +6,13 @@ import java.util.function.Supplier;
 /**
  * Functional class to support the lazy execution of a String result.
  */
-class LazyToString {
+public class LazyToString {
     private final Supplier<String> supplier;
 
     /**
      * @param supplier Supplier to execute when {@link #toString()} is called.
      */
-    LazyToString(Supplier<String> supplier) {
+    public LazyToString(Supplier<String> supplier) {
         this.supplier = supplier;
     }
 

@@ -256,7 +256,16 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 
 	@Override
 	public List<Pair<String, String>> getConfigs() {
-		return Collections.emptyList();
+		final String READ_ALL_CONFIGS = "SELECT name, value FROM meta_config";
+		return queryWithTransaction(READ_ALL_CONFIGS, q -> q.executeAndFetch(rs -> {
+			List<Pair<String, String>> configs = new ArrayList<>();
+			while (rs.next()) {
+				Pair<String, String> entry = Pair.of(rs.getString(1), rs.getString(2));
+				configs.add(entry);
+			}
+
+			return configs;
+		}));
 	}
 
 	private void validate(TaskDef taskDef) {
@@ -270,7 +279,7 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 	}
 
 	private String insertOrUpdateTaskDef(TaskDef taskDef) {
-		final String UPDATE_TASKDEF_QUERY = "UPDATE meta_task_def SET json_data = ? WHERE name = ?";
+		final String UPDATE_TASKDEF_QUERY = "UPDATE meta_task_def SET json_data = ?, modified_on = CURRENT_TIMESTAMP WHERE name = ?";
 
 		final String INSERT_TASKDEF_QUERY = "INSERT INTO meta_task_def (name, json_data) VALUES (?, ?)";
 
