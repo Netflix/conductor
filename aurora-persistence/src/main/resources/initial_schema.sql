@@ -172,27 +172,30 @@ create table poll_data
 -- --------------------------------------------------------------------------------------------------------------
 -- schema for queue dao
 -- --------------------------------------------------------------------------------------------------------------
---
--- create table queue
--- (
---     id         int(11) unsigned not null auto_increment,
---     created_on timestamp default now(),
---     queue_name varchar(255) not null,
---     primary key (id),
---     unique key unique_queue_name (queue_name)
--- );
---
--- create table queue_message
--- (
---     id                  int(11) unsigned not null auto_increment,
---     created_on          timestamp    not null default now(),
---     deliver_on          timestamp             default now(),
---     queue_name          varchar(255) not null,
---     message_id          varchar(255) not null,
---     popped              boolean               default false,
---     offset_time_seconds long,
---     payload             mediumtext,
---     primary key (id),
---     unique key unique_queue_name_message_id (queue_name,message_id),
---     key                 combo_queue_message(queue_name, popped, deliver_on, created_on)
--- );
+
+create table queue
+(
+    id         serial primary key,
+    created_on timestamp    not null default now(),
+    queue_name varchar(255) not null
+);
+create unique index queue_name on queue (queue_name);
+alter table queue
+    add constraint queue_name unique using index queue_name;
+
+create table queue_message
+(
+    id                  serial primary key,
+    created_on          timestamp    not null default now(),
+    deliver_on          timestamp    not null default now(),
+    popped              boolean      not null default false,
+    queue_name          varchar(255) not null,
+    message_id          varchar(255) not null,
+    offset_time_seconds bigint,
+    payload             text
+);
+create index queue_name_combo on queue_message (queue_name, popped, deliver_on, created_on);
+create unique index queue_name_msg on queue_message (queue_name, message_id);
+alter table queue_message
+    add constraint queue_name_msg unique using index queue_name_msg;
+
