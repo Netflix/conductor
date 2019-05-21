@@ -30,7 +30,7 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
         poolConfig.setJdbcUrl(url);
         poolConfig.setUsername(user);
         poolConfig.setPassword(pwd);
-        poolConfig.setAutoCommit(true);
+        poolConfig.setAutoCommit(false);
 
         return new HikariDataSource(poolConfig);
     }
