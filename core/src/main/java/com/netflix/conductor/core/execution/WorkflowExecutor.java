@@ -1300,6 +1300,8 @@ public class WorkflowExecutor {
                     executionDAOFacade.removeTask(task.getTaskId());
                 }
             }
+            //reset start time of rerunTask
+            rerunFromTask.setStartTime(System.currentTimeMillis());
             if (rerunFromTask.getTaskType().equalsIgnoreCase(SubWorkflow.NAME)) {
                 // if task is sub workflow set task as IN_PROGRESS
                 rerunFromTask.setStatus(IN_PROGRESS);
