@@ -39,7 +39,7 @@ public class Elasticsearch6RestModule extends AbstractModule {
                 .map(HttpHost::create)
                 .toArray(HttpHost[]::new);
 
-        RestClientBuilder builder = RestClient.builder(hosts).setMaxRetryTimeoutMillis(60000);
+        RestClientBuilder builder = RestClient.builder(hosts).setMaxRetryTimeoutMillis(120000);
         RestHighLevelClient client = new RestHighLevelClient(builder);
 
         int connectAttempts = config.getIntProperty("workflow.elasticsearch.connection.attempts", 60);
