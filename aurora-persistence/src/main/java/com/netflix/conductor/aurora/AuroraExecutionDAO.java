@@ -527,7 +527,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		// We must not delete tags for RESET as it must be restarted right away
 		if (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
-			SQL.append(", tags = {}");
+			SQL.append(", tags = '{}'");
 		}
 
 		SQL.append(", modified_on = now() WHERE workflow_id = ?");
