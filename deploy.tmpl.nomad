@@ -224,7 +224,7 @@ job "conductor" {
 
         check {
           type     = "http"
-          path     = "/health"
+          path     = "/v1/health"
           interval = "10s"
           timeout  = "3s"
         }
