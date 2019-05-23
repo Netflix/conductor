@@ -5,4 +5,4 @@ services:
     image: gradle:4.8.1-jdk8
     volumes:
       - ${PWD}:/home/gradle
-    command: ["./gradlew", "clean", "build"]
+    command: ["/home/gradle/conductor/docker_zupme/run-ci.sh"]
