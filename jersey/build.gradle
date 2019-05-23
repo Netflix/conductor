@@ -8,6 +8,7 @@ dependencies {
 	compile 'io.swagger:swagger-jaxrs:1.5.9'
 	compile 'com.sun.jersey:jersey-bundle:1.19.1'
 
+	provided 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.3.1'
 	provided 'javax.servlet:javax.servlet-api:3.1.0'
 	provided 'log4j:log4j:1.2.17'
 }
