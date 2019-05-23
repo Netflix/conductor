@@ -48,29 +48,32 @@ abstract class Elasticsearch6RestAbstractDAO {
     private static final TypeReference MAP_ALL_TYPE = new TypeReference<Map<String, ?>>() {};
     private final static String DEFAULT = "_default_";
     private final static String NAMESPACE_SEP = ".";
-    private final static int BATCH_SIE = 1_000;
     RestHighLevelClient client;
     private Set<String> indexCache = ConcurrentHashMap.newKeySet();
     private ObjectMapper mapper;
     private String context;
     private String prefix;
     private String stack;
+    private int batchSize;
+    private int retryDelay;
 
     Elasticsearch6RestAbstractDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper, String context) {
         this.client = client;
         this.mapper = mapper;
         this.context = context;
 
+        batchSize = config.getIntProperty("workflow.elasticsearch.batch.size", 500);
+        retryDelay = config.getIntProperty("workflow.elasticsearch.retry.delay", 100);
         prefix = config.getProperty("workflow.namespace.prefix", "conductor");
         stack = config.getStack();
     }
 
     static boolean isVerConflictException(Exception ex) {
-        return ex.getMessage().contains("version_conflict_engine_exception");
+        return ex != null && StringUtils.isNotEmpty(ex.getMessage()) && ex.getMessage().contains("version_conflict_engine_exception");
     }
 
     static boolean isDocMissingException(Exception ex) {
-        return ex.getMessage().contains("document_missing_exception");
+        return ex != null && StringUtils.isNotEmpty(ex.getMessage()) && ex.getMessage().contains("document_missing_exception");
     }
 
     static boolean isConflictOrMissingException(Exception ex) {
@@ -378,7 +381,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.query(QueryBuilders.matchAllQuery());
             sourceBuilder.fetchSource(false);
-            sourceBuilder.size(BATCH_SIE);
+            sourceBuilder.size(batchSize);
 
             Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = new SearchRequest(indexName).types(typeName);
@@ -463,11 +466,11 @@ abstract class Elasticsearch6RestAbstractDAO {
     }
 
     <T> List<T> findAll(String indexName, String typeName, QueryBuilder query, Class<T> clazz) {
-        return findAll(indexName, typeName, query, BATCH_SIE, clazz);
+        return findAll(indexName, typeName, query, batchSize, clazz);
     }
 
     <T> List<T> findAll(String indexName, String typeName, Class<T> clazz) {
-        return findAll(indexName, typeName, QueryBuilders.matchAllQuery(), BATCH_SIE, clazz);
+        return findAll(indexName, typeName, QueryBuilders.matchAllQuery(), batchSize, clazz);
     }
 
     Long getCount(String indexName, String typeName, QueryBuilder query) {
@@ -500,7 +503,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             } catch (Exception ex) {
                 retry--;
                 if (retry > 0) {
-                    Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+                    Uninterruptibles.sleepUninterruptibly(retryDelay, TimeUnit.MILLISECONDS);
                 } else {
                     throw ex;
                 }
