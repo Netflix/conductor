@@ -1,11 +1,13 @@
+@Library('ZupSharedLibs@v_orchestrator') _
+
 node {
 
   try {
 
     buildWithCompose {
       composeFileName = "docker_zupme/docker-compose-ci.yml"
-      composeService = "zupme-conductor_server"
-      composeProjectName = "zupme-conductor_server"
+      composeService = "zupme-conductor"
+      composeProjectName = "zupme-conductor"
     }
 
     buildDockerContainer {
