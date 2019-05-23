@@ -72,7 +72,8 @@ create table workflow
     modified_on    timestamp    not null default now(),
     workflow_id    varchar(255) not null,
     json_data      text         not null,
-    correlation_id text
+    correlation_id text,
+    tags           text[]
 );
 create unique index workflow_workflow_id on workflow (workflow_id);
 alter table workflow
@@ -118,7 +119,6 @@ create unique index workflow_pending_fields on workflow_pending (workflow_type, 
 alter table workflow_pending
     add constraint workflow_pending_fields unique using index workflow_pending_fields;
 
-
 create table workflow_to_task
 (
     id          serial primary key,
@@ -132,43 +132,52 @@ alter table workflow_to_task
     add constraint workflow_to_task_fields unique using index workflow_to_task_fields;
 
 
-/*
-create table event_execution
-(
-    id                 serial primary key,
-    created_on         timestamp default now(),
-    modified_on        timestamp default now(),
-    event_handler_name varchar(255) not null,
-    event_name         varchar(255) not null,
-    message_id         varchar(255) not null,
-    execution_id       varchar(255) not null,
-    json_data          text         not null
---     unique key unique_event_execution (event_handler_name,event_name,message_id)
-);
-
-create table event_published
-(
-    id          serial primary key,
-    created_on  timestamp default now(),
-    modified_on timestamp default now(),
-
-    json_data   text not null
---     unique key unique_event_execution (event_handler_name,event_name,message_id)
-);
-
 create table poll_data
 (
     id          serial primary key,
-    created_on  timestamp default now(),
-    modified_on timestamp default now(),
+    created_on  timestamp    not null default now(),
+    modified_on timestamp    not null default now(),
     queue_name  varchar(255) not null,
     domain      varchar(255) not null,
     json_data   text         not null
---     unique key unique_poll_data (queue_name, domain),
---     key (queue_name)
 );
 
-*/
+create unique index poll_data_fields on poll_data (queue_name, domain);
+alter table poll_data
+    add constraint poll_data_fields unique using index poll_data_fields;
+
+create table event_execution
+(
+    id           serial primary key,
+    created_on   timestamp    not null default now(),
+    modified_on  timestamp    not null default now(),
+    handler_name varchar(255) not null,
+    event_name   varchar(255) not null,
+    message_id   varchar(255) not null,
+    execution_id varchar(255) not null,
+    status       varchar(255) not null,
+    subject      varchar(255) not null,
+    json_data    text         not null,
+    received_on  timestamp,
+    accepted_on  timestamp,
+    started_on   timestamp,
+    processed_on timestamp
+);
+create unique index event_execution_fields on event_execution (handler_name, event_name, message_id, execution_id);
+alter table event_execution
+    add constraint event_execution_fields unique using index event_execution_fields;
+
+create table event_published
+(
+    id           serial primary key,
+    created_on   timestamp    not null default now(),
+    json_data    text         not null,
+    message_id   varchar(255) not null,
+    type         varchar(255) not null,
+    subject      varchar(255) not null,
+    published_on timestamp    not null
+);
+
 -- --------------------------------------------------------------------------------------------------------------
 -- schema for queue dao
 -- --------------------------------------------------------------------------------------------------------------

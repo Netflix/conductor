@@ -75,8 +75,20 @@ public class Query implements AutoCloseable {
         return String.join(", ", questions);
     }
 
+    public Query addNullParameter(int sqlType) {
+        return addParameterInternal((ps, idx) -> ps.setNull(idx, sqlType));
+    }
+
     public Query addParameter(final String value) {
         return addParameterInternal((ps, idx) -> ps.setString(idx, value));
+    }
+
+    public Query addParameter(final Collection<String> value) {
+        return addParameterInternal((ps, idx) -> {
+            String[] strings = value.toArray(new String[0]);
+            Array arrayOf = ps.getConnection().createArrayOf("text", strings);
+            ps.setArray(idx, arrayOf);
+        });
     }
 
     public Query addParameter(final int value) {
@@ -137,7 +149,7 @@ public class Query implements AutoCloseable {
      * @return {@literal this}
      */
     public Query addTimestampParameter(long epochMillis) {
-        return addParameter(new Timestamp(epochMillis));
+        return epochMillis > 0 ? addParameter(new Timestamp(epochMillis)) : addNullParameter(Types.TIMESTAMP);
     }
 
     /**

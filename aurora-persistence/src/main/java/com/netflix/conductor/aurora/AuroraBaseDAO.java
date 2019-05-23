@@ -1,5 +1,6 @@
 package com.netflix.conductor.aurora;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.aurora.sql.*;
@@ -24,8 +25,8 @@ abstract class AuroraBaseDAO {
 	);
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	final DataSource dataSource;
-	ObjectMapper mapper;
+	private final DataSource dataSource;
+	private ObjectMapper mapper;
 
 	AuroraBaseDAO(DataSource dataSource, ObjectMapper mapper) {
 		this.dataSource = dataSource;
@@ -111,7 +112,7 @@ abstract class AuroraBaseDAO {
 		LazyToString callingMethod = getCallingMethod();
 		logger.trace("{} : starting transaction", callingMethod);
 
-		try(Connection tx = dataSource.getConnection()) {
+		try (Connection tx = dataSource.getConnection()) {
 			boolean previousAutoCommitMode = tx.getAutoCommit();
 			tx.setAutoCommit(false);
 			try {
@@ -120,7 +121,7 @@ abstract class AuroraBaseDAO {
 				return result;
 			} catch (Throwable th) {
 				tx.rollback();
-				logger.info(ApplicationException.Code.CONFLICT + " " +th.getMessage());
+				logger.info(ApplicationException.Code.CONFLICT + " " + th.getMessage());
 				return null;
 			} finally {
 				tx.setAutoCommit(previousAutoCommitMode);
@@ -132,4 +133,14 @@ abstract class AuroraBaseDAO {
 		}
 	}
 
+	String toJson(Object value) {
+		if (value == null) {
+			return "null";
+		}
+		try {
+			return mapper.writeValueAsString(value);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
