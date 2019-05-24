@@ -256,8 +256,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			}));
 
 		if (record == null) {
-			pushIfNotExists(queueName, id, 0);
-			return false;
+			return pushIfNotExists(queueName, id, 0);
 		}
 
 		// If the record pulled within threshold period - do nothing as it might be in sweeper right now
