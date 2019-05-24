@@ -2,7 +2,7 @@ version: '3'
 
 services:
   zupme-conductor:
-    image: gradle:4.8.1-jdk8
+    image: zupacr.azurecr.io/zupme-base-gradle:4.8.1-jdk8
     volumes:
       - ${PWD}:/home/gradle
     command: ["./docker_zupme/run-ci.sh"]
