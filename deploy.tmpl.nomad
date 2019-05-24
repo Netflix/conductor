@@ -216,7 +216,8 @@ job "conductor" {
         log4j_logger_org_eclipse_jetty = "INFO"
         log4j_logger_com_zaxxer_hikari = "INFO"
         log4j_logger_org_elasticsearch_client_RestClient = "INFO"
-        log4j_logger_com_jayway_jsonpath_internal_path_CompiledPath = "OFF"
+        log4j_logger_com_jayway_jsonpath_internal_path_CompiledPath = "INFO"
+        log4j_logger_com_netflix_conductor_core_execution_tasks_SystemTaskWorkerCoordinator = "INFO"
       }
 
       service {
