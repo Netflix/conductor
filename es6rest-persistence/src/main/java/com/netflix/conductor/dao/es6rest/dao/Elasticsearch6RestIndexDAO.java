@@ -89,6 +89,8 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     private String logIndexPrefix;
     private ObjectMapper om;
 
+    private int retryDelay;
+
     @Inject
     public Elasticsearch6RestIndexDAO(RestHighLevelClient client, Configuration config, ObjectMapper om) {
         this.om = om;
@@ -100,6 +102,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         this.logIndexPrefix = rootIndexName + "." + taskLogPrefix + "." + stack;
         this.execTaskIndexName = rootIndexName + ".executions." + stack + ".task";
         this.execWorkflowIndexName = rootIndexName + ".executions." + stack + ".workflow";
+        this.retryDelay = config.getIntProperty("workflow.elasticsearch.retry.delay", 100);
 
         try {
 
@@ -217,7 +220,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
                 log.error("Indexing failed {}", e.getMessage(), e);
                 retry--;
                 if (retry > 0) {
-                    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+                    Uninterruptibles.sleepUninterruptibly(retryDelay, TimeUnit.MILLISECONDS);
                 }
             }
         }
@@ -293,7 +296,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
                 log.error("Indexing failed {}", e.getMessage(), e);
                 retry--;
                 if (retry > 0) {
-                    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+                    Uninterruptibles.sleepUninterruptibly(retryDelay, TimeUnit.MILLISECONDS);
                 }
             }
         }
@@ -330,7 +333,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
                     log.error("Indexing failed for {}, {}: {}", request.index(), request.type(), e.getMessage(), e);
                     retry--;
                     if (retry > 0) {
-                        Uninterruptibles.sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+                        Uninterruptibles.sleepUninterruptibly(retryDelay, TimeUnit.MILLISECONDS);
                     }
                 }
             }
