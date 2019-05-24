@@ -99,15 +99,14 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					.executeAndFetch(rs -> {
 						List<String> ids = new LinkedList<>();
 						while (rs.next()) {
-							long id = rs.getLong("id"); // id = 1
-							long version = rs.getLong("version"); // version=0
+							long id = rs.getLong("id");
+							long version = rs.getLong("version");
 							String message_id = rs.getString("message_id");
 
 
 							withTransaction(connection -> {
 								long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
-								// update ... where id = 1 and version = 0
 								int updated = query(connection, UPDATE, u -> u.addTimestampParameter(unack_on)
 									.addParameter(id).addParameter(version).executeUpdate());
 
