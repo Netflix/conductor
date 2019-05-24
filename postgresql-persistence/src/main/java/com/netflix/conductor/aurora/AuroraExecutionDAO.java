@@ -62,6 +62,16 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	@Override
+	public List<Task> getPendingSystemTasks(String taskType) {
+		String SQL = "SELECT t.json_data FROM task_in_progress tip " +
+			"INNER JOIN task t ON t.task_id = tip.task_id " +
+			"WHERE t.task_type = ?";
+
+		return queryWithTransaction(SQL,
+			q -> q.addParameter(taskType).executeAndFetch(Task.class));
+	}
+
+	@Override
 	public List<Task> getTasks(String taskType, String startKey, int count) {
 		List<Task> tasks = Lists.newLinkedList();
 
