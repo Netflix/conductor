@@ -211,6 +211,7 @@ job "conductor" {
         loadSample = "false"
 
         // Disable logging for system level libraries
+        log4j_logger_io_swagger        = "INFO"
         log4j_logger_io_grpc_netty     = "INFO"
         log4j_logger_org_apache_http   = "INFO"
         log4j_logger_org_eclipse_jetty = "INFO"

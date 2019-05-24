@@ -99,13 +99,15 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					.executeAndFetch(rs -> {
 						List<String> ids = new LinkedList<>();
 						while (rs.next()) {
-							long id = rs.getLong("id");
-							long version = rs.getLong("version");
+							long id = rs.getLong("id"); // id = 1
+							long version = rs.getLong("version"); // version=0
 							String message_id = rs.getString("message_id");
+
 
 							withTransaction(connection -> {
 								long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
+								// update ... where id = 1 and version = 0
 								int updated = query(connection, UPDATE, u -> u.addTimestampParameter(unack_on)
 									.addParameter(id).addParameter(version).executeUpdate());
 
@@ -259,16 +261,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			return false;
 		}
 
-		// This method used on conjunction with checking of sweeper queue (see workflow executor)
-		// If no record in sweeper queue then this method will be invoked to wake up sweeper for this record
-		// But at this time, the record might already been pulled. Tiny moment, but possible to happen
-		// So, need to check poppedOn + threshold period.
-		if (record.popped_on == null) {
-			record.popped_on = new Timestamp(System.currentTimeMillis());
-		}
-
 		// If the record pulled within threshold period - do nothing as it might be in sweeper right now
-		if (System.currentTimeMillis() - record.popped_on.getTime() < POPPED_THRESHOLD) {
+		if (record.popped && System.currentTimeMillis() - record.popped_on.getTime() < POPPED_THRESHOLD) {
+			logger.debug("wakeup record pulled within threshold period for " + queueName + "/" + id);
 			return false;
 		}
 
@@ -278,7 +273,8 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			"WHERE id = ? AND version = ?";
 
 		return queryWithTransaction(UPDATE, q -> q.addParameter(record.id)
-			.addParameter(record.version).executeUpdate()) > 0;
+			.addParameter(record.version)
+			.executeUpdate()) > 0;
 	}
 
 	private boolean existsMessage(Connection connection, String queueName, String messageId) {
