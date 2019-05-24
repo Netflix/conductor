@@ -14,16 +14,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Logger logger = LoggerFactory.getLogger(AuroraQueueDAO.class);
+	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final Long UNACK_SCHEDULE_MS = 60_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
 	private final int stalePeriod;
@@ -145,13 +144,13 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
-		final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND (now() + interval '60 second') > deliver_on";
+		final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND deliver_on < now() + interval '60 second'";
 		executeWithTransaction(PROCESS_UNACKS, q -> q.addParameter(queueName).executeUpdate());
 	}
 
 	@Override
 	public boolean exists(String queueName, String id) {
-		return false;
+		return getWithTransaction(tx -> existsMessage(tx, queueName, id));
 	}
 
 	@Override
@@ -167,19 +166,43 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private boolean existsMessage(Connection connection, String queueName, String messageId) {
-		final String EXISTS_MESSAGE = "SELECT EXISTS(SELECT 1 FROM queue_message WHERE queue_name = ? AND message_id = ?)";
-		return query(connection, EXISTS_MESSAGE, q -> q.addParameter(queueName).addParameter(messageId).exists());
+		final String SQL = "SELECT true FROM queue_message WHERE queue_name = ? AND message_id = ?";
+		return query(connection, SQL, q -> q.addParameter(queueName).addParameter(messageId).exists());
 	}
 
-	private void pushMessage(Connection connection, String queueName, String messageId, String payload,
-							 long offsetTimeInSecond) {
+	public boolean pushIfNotExists(Connection connection, String queueName, String id, long offsetTimeInSecond) {
+		return getWithTransaction(tx -> {
+			if (!existsMessage(tx, queueName, id)) {
+				pushMessage(tx, queueName, id, null, offsetTimeInSecond);
+				return true;
+			}
+			return false;
+		});
+	}
 
-		String PUSH_MESSAGE = "INSERT INTO queue_message (deliver_on, queue_name, message_id, offset_time_seconds, payload) VALUES (TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP), ?, ?,?,?) ON DUPLICATE KEY UPDATE payload=VALUES(payload), deliver_on=VALUES(deliver_on)";
-
+	private void pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
 		createQueueIfNotExists(connection, queueName);
 
-		execute(connection, PUSH_MESSAGE, q -> q.addParameter(offsetTimeInSecond).addParameter(queueName)
-			.addParameter(messageId).addParameter(offsetTimeInSecond).addParameter(payload).executeUpdate());
+		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
+			"VALUES (TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP), ?, ?,?,?) ";
+
+		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
+
+		/*
+		id                  serial primary key,
+		queue_name          varchar(255) not null,
+			message_id          varchar(255) not null,
+			popped              boolean,
+		offset_time_seconds bigint,
+		deliver_on          timestamp,
+		popped_on           timestamp,
+		unack_on            timestamp,
+		payload             text,
+		version             bigint
+		*/
+
+		execute(connection, SQL, q -> q.addParameter(offsetSeconds).addParameter(queueName)
+			.addParameter(messageId).addParameter(offsetSeconds).addParameter(payload).executeUpdate());
 
 	}
 
@@ -215,7 +238,11 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		if (count < 1)
 			return Collections.emptyList();
 
-		final String SQL = "SELECT message_id, payload FROM queue_message WHERE queue_name = ? AND popped = false AND deliver_on <= now() ORDER BY deliver_on, created_on LIMIT ?";
+		final String SQL = "SELECT message_id, payload FROM queue_message " +
+			"WHERE queue_name = ? " +
+			"AND popped = false " +
+			"AND deliver_on <= now() " +
+			"ORDER BY deliver_on, created_on LIMIT ?";
 
 		return query(connection, SQL, p -> p.addParameter(queueName)
 			.addParameter(count).executeAndFetch(rs -> {
@@ -237,7 +264,11 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private void createQueueIfNotExists(Connection connection, String queueName) {
+		if (queues.contains(queueName)) {
+			return;
+		}
 		final String SQL = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT ON CONSTRAINT queue_name DO NOTHING";
 		execute(connection, SQL, q -> q.addParameter(queueName).executeUpdate());
+		queues.add(queueName);
 	}
 }
