@@ -105,6 +105,9 @@ create table task_in_progress
     workflow_id   varchar(255) not null
 );
 create unique index task_in_progress_fields on task_in_progress (task_def_name, workflow_id);
+alter table task_in_progress
+    add constraint task_in_progress_fields unique using index task_in_progress_fields;
+
 create index task_in_progress_def_id on task_in_progress (task_def_name, task_id);
 
 create table task
@@ -208,15 +211,15 @@ alter table queue
 
 create table queue_message
 (
-    id          serial primary key,
-    queue_name  varchar(255) not null,
-    message_id  varchar(255) not null,
-    version     bigint       not null default 0,
-    popped      boolean,
-    deliver_on  timestamp,
-    popped_on   timestamp,
-    unack_on    timestamp,
-    payload     text
+    id         serial primary key,
+    queue_name varchar(255) not null,
+    message_id varchar(255) not null,
+    version    bigint       not null default 0,
+    popped     boolean      not null default false,
+    deliver_on timestamp,
+    popped_on  timestamp,
+    unack_on   timestamp,
+    payload    text
 );
 create unique index queue_name_msg on queue_message (queue_name, message_id);
 alter table queue_message

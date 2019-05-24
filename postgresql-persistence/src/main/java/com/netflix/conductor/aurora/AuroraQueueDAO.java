@@ -2,16 +2,16 @@ package com.netflix.conductor.aurora;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.Uninterruptibles;
-import com.netflix.conductor.aurora.sql.Query;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.QueueDAO;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.*;
@@ -20,6 +20,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
+
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Logger logger = LoggerFactory.getLogger(AuroraQueueDAO.class);
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
@@ -27,18 +29,18 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Long UNACK_TIME_MS = 60_000L;
 	private final int stalePeriod;
 
+	@Inject
 	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
 		super(dataSource, mapper);
 		stalePeriod = config.getIntProperty("workflow.aurora.stale.period.seconds", 60);
 
 		Executors.newSingleThreadScheduledExecutor()
-			.scheduleAtFixedRate(this::processAllUnacks,
-				UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
+			.scheduleAtFixedRate(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
-	public void push(String queueName, String id, long offsetTimeInSecond) {
-		withTransaction(tx -> pushMessage(tx, queueName, id, null, offsetTimeInSecond));
+	public void push(String queueName, String id, long offsetSeconds) {
+		withTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds));
 	}
 
 	@Override
@@ -48,28 +50,120 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
-	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
+	public boolean pushIfNotExists(String queueName, String id, long offsetSeconds) {
 		return getWithTransaction(tx -> {
 			if (!existsMessage(tx, queueName, id)) {
-				pushMessage(tx, queueName, id, null, offsetTimeInSecond);
+				pushMessage(tx, queueName, id, null, offsetSeconds);
 				return true;
 			}
 			return false;
 		});
 	}
 
+	/**
+	 * The plan is
+	 * 1) Query eligible records including record id/version
+	 * 2) Update popped,poppedOn,unackOn,version++ where id/version = id/version from first step
+	 * 3) If update is success - then this session got the record, add it to the `foundIds`
+	 * 4) Otherwise some other node took it as we are dealing in the multi-threaded world
+	 * <p>
+	 * Steps 2+3 must be in separate session
+	 *
+	 * @param queueName Name of the queue
+	 * @param count     number of messages to be read from the queue
+	 * @param timeout   timeout in milliseconds
+	 * @return List of the message ids
+	 */
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
-		List<Message> messages = getWithTransactionWithOutErrorPropagation(tx -> popMessages(tx, queueName, count, timeout));
-		if (messages == null) return new ArrayList<>();
-		return messages.stream().map(Message::getId).collect(Collectors.toList());
+		createQueueIfNotExists(queueName);
+
+		try {
+			long start = System.currentTimeMillis();
+			Set<String> foundIds = new HashSet<>();
+
+			final String QUERY = "SELECT id, message_id, version FROM queue_message " +
+				"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
+				"ORDER BY deliver_on LIMIT ?";
+
+			final String UPDATE = "UPDATE queue_message " +
+				"SET popped = true, popped_on = now(), unack_on = ?, version = version + 1 " +
+				"WHERE id = ? AND version = ?";
+
+			while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
+
+				// Get the list of popped message ids
+				List<String> popped = queryWithTransaction(QUERY, q -> q.addParameter(queueName).addParameter(count)
+					.executeAndFetch(rs -> {
+						List<String> ids = new LinkedList<>();
+						while (rs.next()) {
+							long id = rs.getLong("id");
+							long version = rs.getLong("version");
+							String message_id = rs.getString("message_id");
+
+							withTransaction(connection -> {
+								long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+
+								int updated = query(connection, UPDATE, u -> u.addTimestampParameter(unack_on)
+									.addParameter(id).addParameter(version).executeUpdate());
+
+								// Means record being updated - we got it
+								if (updated > 0) {
+									ids.add(message_id);
+								}
+							});
+						}
+						return ids;
+					}));
+
+				if (CollectionUtils.isNotEmpty(popped))
+					foundIds.addAll(popped);
+
+				sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+			}
+
+			return Lists.newArrayList(foundIds);
+		} catch (Exception ex) {
+			logger.error("pop: failed for {} with {}", queueName, ex.getMessage(), ex);
+		}
+
+		return Collections.emptyList();
 	}
 
 	@Override
+	public void processUnacks(String queueName) {
+		long unack_on = System.currentTimeMillis() - stalePeriod;
+
+		final String SQL = "UPDATE queue_message " +
+			"SET popped = false, deliver_on = now(), popped_on = null, unack_on = null, version = version + 1" +
+			"WHERE queue_name = ? AND popped = true AND unack_on < ?";
+
+		executeWithTransaction(SQL, q -> q.addParameter(queueName).addTimestampParameter(unack_on).executeUpdate());
+	}
+
+	@Override
+	public boolean setUnackTimeout(String queueName, String messageId, long unackTimeout) {
+		long unack_on = System.currentTimeMillis() + unackTimeout;
+
+		final String UPDATE = "UPDATE queue_message " +
+			"SET popped = true, popped_on = now(), unack_on = ?, version = version + 1 " +
+			"WHERE queue_name = ? AND message_id = ?";
+
+		return queryWithTransaction(UPDATE,
+			q -> q.addTimestampParameter(unack_on)
+				.addParameter(queueName)
+				.addParameter(messageId)
+				.executeUpdate()) == 1;
+	}
+
+	@Override
+	@Deprecated
 	public List<Message> pollMessages(String queueName, int count, int timeout) {
-		List<Message> messages = getWithTransactionWithOutErrorPropagation(tx -> popMessages(tx, queueName, count, timeout));
-		if (messages == null) return new ArrayList<>();
-		return messages;
+		List<String> ids = pop(queueName, count, timeout);
+		if (CollectionUtils.isEmpty(ids))
+			return new ArrayList<>();
+
+		return getWithTransaction(tx -> ids.stream().map(id -> peekMessage(tx, queueName, id)).collect(Collectors.toList()));
 	}
 
 	@Override
@@ -86,19 +180,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public boolean ack(String queueName, String messageId) {
 		return getWithTransaction(tx -> removeMessage(tx, queueName, messageId));
-	}
-
-	@Override
-	public boolean setUnackTimeout(String queueName, String messageId, long unackTimeout) {
-		long offsetSeconds = unackTimeout / 1000;
-
-		final String SQL = "UPDATE queue_message SET offset_time_seconds = ?, deliver_on = now() + interval '" + offsetSeconds + " second' " +
-			" WHERE queue_name = ? AND message_id = ?";
-
-		return queryWithTransaction(SQL,
-			q -> q.addParameter(offsetSeconds)
-				.addParameter(queueName)
-				.addParameter(messageId).executeUpdate()) == 1;
 	}
 
 	@Override
@@ -143,12 +224,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
-	public void processUnacks(String queueName) {
-		final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND deliver_on < now() + interval '60 second'";
-		executeWithTransaction(PROCESS_UNACKS, q -> q.addParameter(queueName).executeUpdate());
-	}
-
-	@Override
 	public boolean exists(String queueName, String id) {
 		return getWithTransaction(tx -> existsMessage(tx, queueName, id));
 	}
@@ -158,104 +233,92 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		return false;
 	}
 
-	private void processAllUnacks() {
-		logger.trace("processAllUnacks started");
-
-		final String PROCESS_ALL_UNACKS = "UPDATE queue_message SET popped = false WHERE popped = true AND (now() + interval '60 second') > deliver_on";
-		executeWithTransaction(PROCESS_ALL_UNACKS, Query::executeUpdate);
-	}
-
 	private boolean existsMessage(Connection connection, String queueName, String messageId) {
 		final String SQL = "SELECT true FROM queue_message WHERE queue_name = ? AND message_id = ?";
 		return query(connection, SQL, q -> q.addParameter(queueName).addParameter(messageId).exists());
 	}
 
-	public boolean pushIfNotExists(Connection connection, String queueName, String id, long offsetTimeInSecond) {
-		return getWithTransaction(tx -> {
-			if (!existsMessage(tx, queueName, id)) {
-				pushMessage(tx, queueName, id, null, offsetTimeInSecond);
-				return true;
-			}
-			return false;
-		});
-	}
-
 	private void pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
-		createQueueIfNotExists(connection, queueName);
+		createQueueIfNotExists(queueName);
 
-		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
-			"VALUES (TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP), ?, ?,?,?) ";
+		String SQL = "INSERT INTO queue_message (queue_name, message_id, deliver_on, payload) VALUES (?, ?, ?, ?) " +
+			"ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
 		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
 
-		/*
-		id                  serial primary key,
-		queue_name          varchar(255) not null,
-			message_id          varchar(255) not null,
-			popped              boolean,
-		offset_time_seconds bigint,
-		deliver_on          timestamp,
-		popped_on           timestamp,
-		unack_on            timestamp,
-		payload             text,
-		version             bigint
-		*/
-
-		execute(connection, SQL, q -> q.addParameter(offsetSeconds).addParameter(queueName)
-			.addParameter(messageId).addParameter(offsetSeconds).addParameter(payload).executeUpdate());
-
+		execute(connection, SQL, q -> q.addParameter(queueName)
+			.addParameter(messageId)
+			.addTimestampParameter(deliverOn)
+			.addParameter(payload)
+			.executeUpdate());
 	}
 
-	private List<Message> popMessages(Connection connection, String queueName, int count, int timeout) {
-		long start = System.currentTimeMillis();
-		List<Message> messages = peekMessages(connection, queueName, count);
-
-		while (messages.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
-			Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
-			messages = peekMessages(connection, queueName, count);
-		}
-
-		if (messages.isEmpty()) {
-			return messages;
-		}
-
-		final String SQL = "UPDATE queue_message SET popped = true WHERE queue_name = ? AND message_id IN (%s) AND popped = false";
-
-		final List<String> Ids = messages.stream().map(Message::getId).collect(Collectors.toList());
-		final String query = String.format(SQL, Query.generateInBindings(messages.size()));
-
-		int result = query(connection, query, q -> q.addParameter(queueName).addParameters(Ids).executeUpdate());
-
-		if (result != messages.size()) {
-			String message = String.format("Could not pop all messages for given ids: %s (%d messages were popped)",
-				Ids, result);
-			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, message);
-		}
-		return messages;
-	}
-
-	private List<Message> peekMessages(Connection connection, String queueName, int count) {
-		if (count < 1)
-			return Collections.emptyList();
-
-		final String SQL = "SELECT message_id, payload FROM queue_message " +
-			"WHERE queue_name = ? " +
-			"AND popped = false " +
-			"AND deliver_on <= now() " +
-			"ORDER BY deliver_on, created_on LIMIT ?";
+	private Message peekMessage(Connection connection, String queueName, String messageId) {
+		final String SQL = "SELECT message_id, payload FROM queue_message WHERE queue_name = ? AND messageId = ?";
 
 		return query(connection, SQL, p -> p.addParameter(queueName)
-			.addParameter(count).executeAndFetch(rs -> {
-				List<Message> results = new ArrayList<>();
-				while (rs.next()) {
+			.addParameter(messageId).executeAndFetch(rs -> {
+				if (rs.next()) {
 					Message m = new Message();
 					m.setId(rs.getString("message_id"));
 					m.setPayload(rs.getString("payload"));
-					results.add(m);
+					return m;
 				}
-				return results;
+				return null;
 			}));
 	}
+
+//		long start = System.currentTimeMillis();
+//		List<Message> messages = peekMessages(connection, queueName, count);
+//
+//		while (messages.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
+//
+//			Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+//			messages = peekMessages(connection, queueName, count);
+//		}
+//
+//		if (messages.isEmpty()) {
+//			return messages;
+//		}
+//
+//		final String SQL = "UPDATE queue_message SET popped = true " +
+//			"WHERE queue_name = ? AND popped = false AND message_id IN (%s";
+//
+//		final List<String> Ids = messages.stream().map(Message::getId).collect(Collectors.toList());
+//		final String query = String.format(SQL, Query.generateInBindings(messages.size()));
+//
+//		int result = query(connection, query, q -> q.addParameter(queueName).addParameters(Ids).executeUpdate());
+//
+//		if (result != messages.size()) {
+//			String message = String.format("Could not pop all messages for given ids: %s (%d messages were popped)",
+//				Ids, result);
+//			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, message);
+//		}
+//		return messages;
+//}
+
+//	private List<Message> peekMessages(Connection connection, String queueName, int count) {
+//		if (count < 1)
+//			return Collections.emptyList();
+//
+//		final String SQL = "SELECT message_id, payload FROM queue_message " +
+//			"WHERE queue_name = ? " +
+//			"AND popped = false " +
+//			"AND deliver_on <= now() " +
+//			"ORDER BY deliver_on, created_on LIMIT ?";
+//
+//		return query(connection, SQL, p -> p.addParameter(queueName)
+//			.addParameter(count).executeAndFetch(rs -> {
+//				List<Message> results = new ArrayList<>();
+//				while (rs.next()) {
+//					Message m = new Message();
+//					m.setId(rs.getString("message_id"));
+//					m.setPayload(rs.getString("payload"));
+//					results.add(m);
+//				}
+//				return results;
+//			}));
+//	}
 
 	private boolean removeMessage(Connection connection, String queueName, String messageId) {
 		final String SQL = "DELETE FROM queue_message WHERE queue_name = ? AND message_id = ?";
@@ -263,12 +326,16 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			q -> q.addParameter(queueName).addParameter(messageId).executeDelete());
 	}
 
-	private void createQueueIfNotExists(Connection connection, String queueName) {
+	private void createQueueIfNotExists(String queueName) {
 		if (queues.contains(queueName)) {
 			return;
 		}
 		final String SQL = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT ON CONSTRAINT queue_name DO NOTHING";
-		execute(connection, SQL, q -> q.addParameter(queueName).executeUpdate());
+		executeWithTransaction(SQL, q -> q.addParameter(queueName).executeUpdate());
 		queues.add(queueName);
+	}
+
+	private void processAllUnacks() {
+		queues.forEach(this::processUnacks);
 	}
 }
