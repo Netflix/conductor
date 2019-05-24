@@ -95,7 +95,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
 
 				// Get the list of popped message ids
-				List<String> popped = queryWithTransaction(QUERY, q -> q.addParameter(queueName).addParameter(count)
+				List<String> popped = queryWithTransaction(QUERY, q -> q.addParameter(queueName.toLowerCase()).addParameter(count)
 					.executeAndFetch(rs -> {
 						List<String> ids = new LinkedList<>();
 						while (rs.next()) {
@@ -140,7 +140,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			"SET popped = false, deliver_on = now(), popped_on = null, unack_on = null, version = version + 1 " +
 			"WHERE queue_name = ? AND popped = true AND unack_on < ?";
 
-		executeWithTransaction(SQL, q -> q.addParameter(queueName).addTimestampParameter(unack_on).executeUpdate());
+		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).addTimestampParameter(unack_on).executeUpdate());
 	}
 
 	@Override
@@ -153,7 +153,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		return queryWithTransaction(UPDATE,
 			q -> q.addTimestampParameter(unack_on)
-				.addParameter(queueName)
+				.addParameter(queueName.toLowerCase())
 				.addParameter(messageId)
 				.executeUpdate()) == 1;
 	}
@@ -176,7 +176,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public int getSize(String queueName) {
 		final String SQL = "SELECT COUNT(*) FROM queue_message WHERE queue_name = ?";
-		return queryWithTransaction(SQL, q -> ((Long) q.addParameter(queueName).executeCount()).intValue());
+		return queryWithTransaction(SQL, q -> ((Long) q.addParameter(queueName.toLowerCase()).executeCount()).intValue());
 	}
 
 	@Override
@@ -187,7 +187,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public void flush(String queueName) {
 		final String SQL = "DELETE FROM queue_message WHERE queue_name = ?";
-		executeWithTransaction(SQL, q -> q.addParameter(queueName).executeDelete());
+		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).executeDelete());
 	}
 
 	@Override
@@ -233,9 +233,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public boolean wakeup(String queueName, String id) {
 		createQueueIfNotExists(queueName);
-		final String SQL = "SELECT * FROM queue_message WHERE queue_name = ? AND messageId = ?";
+		final String SQL = "SELECT * FROM queue_message WHERE queue_name = ? AND message_id = ?";
 
-		QueueMessage record = queryWithTransaction(SQL, p -> p.addParameter(queueName)
+		QueueMessage record = queryWithTransaction(SQL, p -> p.addParameter(queueName.toLowerCase())
 			.addParameter(id).executeAndFetch(rs -> {
 				if (rs.next()) {
 					QueueMessage m = new QueueMessage();
@@ -283,7 +283,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	private boolean existsMessage(Connection connection, String queueName, String messageId) {
 		final String SQL = "SELECT true FROM queue_message WHERE queue_name = ? AND message_id = ?";
-		return query(connection, SQL, q -> q.addParameter(queueName).addParameter(messageId).exists());
+		return query(connection, SQL, q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).exists());
 	}
 
 	private void pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
@@ -294,7 +294,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
 
-		execute(connection, SQL, q -> q.addParameter(queueName)
+		execute(connection, SQL, q -> q.addParameter(queueName.toLowerCase())
 			.addParameter(messageId)
 			.addTimestampParameter(deliverOn)
 			.addParameter(payload)
@@ -302,9 +302,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private Message peekMessage(Connection connection, String queueName, String messageId) {
-		final String SQL = "SELECT message_id, payload FROM queue_message WHERE queue_name = ? AND messageId = ?";
+		final String SQL = "SELECT message_id, payload FROM queue_message WHERE queue_name = ? AND message_id = ?";
 
-		return query(connection, SQL, p -> p.addParameter(queueName)
+		return query(connection, SQL, p -> p.addParameter(queueName.toLowerCase())
 			.addParameter(messageId).executeAndFetch(rs -> {
 				if (rs.next()) {
 					Message m = new Message();
@@ -319,7 +319,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private boolean removeMessage(Connection connection, String queueName, String messageId) {
 		final String SQL = "DELETE FROM queue_message WHERE queue_name = ? AND message_id = ?";
 		return query(connection, SQL,
-			q -> q.addParameter(queueName).addParameter(messageId).executeDelete());
+			q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeDelete());
 	}
 
 	private void createQueueIfNotExists(String queueName) {
@@ -327,7 +327,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			return;
 		}
 		final String SQL = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT ON CONSTRAINT queue_name DO NOTHING";
-		executeWithTransaction(SQL, q -> q.addParameter(queueName).executeUpdate());
+		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).executeUpdate());
 		queues.add(queueName);
 	}
 
