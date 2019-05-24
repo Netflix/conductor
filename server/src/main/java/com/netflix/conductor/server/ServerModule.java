@@ -101,11 +101,14 @@ public class ServerModule extends AbstractModule {
 			bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
 			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
 		} else if (ConductorServer.DB.aurora.equals(db)) {
-			bind(QueueDAO.class).to(AuroraQueueDAO.class);
-			bind(MetadataDAO.class).to(AuroraMetadataDAO.class);
 			bind(ExecutionDAO.class).to(AuroraExecutionDAO.class);
+			bind(MetadataDAO.class).to(AuroraMetadataDAO.class);
+			bind(QueueDAO.class).to(AuroraQueueDAO.class);
 
-			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
+			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class); // TODO Implement
+
+			// TODO Nice to have to implement `search`. Without implementing this, we cannot completely get rid of the ES
+			//bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
 		} else {
 			String localDC = localRack.replaceAll(region, "");
 			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
