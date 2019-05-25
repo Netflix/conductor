@@ -1107,6 +1107,11 @@ public class WorkflowExecutor {
 	public boolean decide(String workflowId) throws Exception {
 
 		Workflow workflow = edao.getWorkflow(workflowId, true);
+		if (workflow == null) {
+			logger.debug("No workflow found for " + workflowId);
+			return true;
+		}
+
 		if (workflow.getStatus().isTerminal()) {
 			logger.debug("Invoked decide for finished workflow " + workflowId);
 			return true;
