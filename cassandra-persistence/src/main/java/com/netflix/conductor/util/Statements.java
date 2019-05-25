@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.util;
 
+import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.netflix.conductor.cassandra.CassandraConfiguration;
 
@@ -19,6 +20,7 @@ import javax.inject.Inject;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.ne;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.netflix.conductor.util.Constants.ENTITY_KEY;
 import static com.netflix.conductor.util.Constants.ENTITY_TYPE_TASK;
@@ -30,6 +32,7 @@ import static com.netflix.conductor.util.Constants.TABLE_WORKFLOWS;
 import static com.netflix.conductor.util.Constants.TASK_ID_KEY;
 import static com.netflix.conductor.util.Constants.TOTAL_PARTITIONS_KEY;
 import static com.netflix.conductor.util.Constants.TOTAL_TASKS_KEY;
+import static com.netflix.conductor.util.Constants.UPDATE_COUNT_KEY;
 import static com.netflix.conductor.util.Constants.WORKFLOW_ID_KEY;
 
 /**
@@ -44,7 +47,7 @@ import static com.netflix.conductor.util.Constants.WORKFLOW_ID_KEY;
  * SELECT * FROM conductor.workflows WHERE workflow_id=? AND shard_id=?;
  * SELECT workflow_id FROM conductor.task_lookup WHERE task_id=?;
  * <p>
- * UPDATE conductor.workflows SET payload=? WHERE workflow_id=? AND shard_id=1 AND entity='workflow' AND task_id='';
+ * UPDATE conductor.workflows SET payload=?,update_count=? WHERE workflow_id=? AND shard_id=1 AND entity='workflow' AND task_id='' IF update_count=?;
  * UPDATE conductor.workflows SET total_tasks=? WHERE workflow_id=? AND shard_id=?;
  * UPDATE conductor.workflows SET total_partitions=?,total_tasks=? WHERE workflow_id=? AND shard_id=1;
  * UPDATE conductor.task_lookup SET workflow_id=? WHERE task_id=?;
@@ -75,6 +78,7 @@ public class Statements {
                 .value(PAYLOAD_KEY, bindMarker())
                 .value(TOTAL_TASKS_KEY, bindMarker())
                 .value(TOTAL_PARTITIONS_KEY, bindMarker())
+                .value(UPDATE_COUNT_KEY, bindMarker())
                 .getQueryString();
     }
 
@@ -159,10 +163,12 @@ public class Statements {
     public String getUpdateWorkflowStatement() {
         return QueryBuilder.update(keyspace, TABLE_WORKFLOWS)
                 .with(set(PAYLOAD_KEY, bindMarker()))
+                .and(set(UPDATE_COUNT_KEY, bindMarker()))
                 .where(eq(WORKFLOW_ID_KEY, bindMarker()))
                 .and(eq(SHARD_ID_KEY, 1))
                 .and(eq(ENTITY_KEY, ENTITY_TYPE_WORKFLOW))
                 .and(eq(TASK_ID_KEY, ""))
+                .onlyIf(eq(UPDATE_COUNT_KEY, bindMarker()))
                 .getQueryString();
     }
 

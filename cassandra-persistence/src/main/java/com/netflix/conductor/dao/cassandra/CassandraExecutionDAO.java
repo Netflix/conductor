@@ -270,7 +270,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
 
             recordCassandraDaoRequests("createWorkflow", "n/a", workflow.getWorkflowName());
             recordCassandraDaoPayloadSize("createWorkflow", payload.length(), "n/a", workflow.getWorkflowName());
-            session.execute(insertWorkflowStatement.bind(UUID.fromString(workflow.getWorkflowId()), 1, "", payload, 0, 1));
+            session.execute(insertWorkflowStatement.bind(UUID.fromString(workflow.getWorkflowId()), 1, "", payload, 0, 1, workflow.getUpdateCount()));
 
             workflow.setTasks(tasks);
             return workflow.getWorkflowId();
@@ -287,10 +287,11 @@ public class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
         try {
             List<Task> tasks = workflow.getTasks();
             workflow.setTasks(new LinkedList<>());
+            int updatedCount = workflow.getUpdateCount() + 1;
             String payload = toJson(workflow);
             recordCassandraDaoRequests("updateWorkflow", "n/a", workflow.getWorkflowName());
             recordCassandraDaoPayloadSize("updateWorkflow", payload.length(), "n/a", workflow.getWorkflowName());
-            session.execute(updateWorkflowStatement.bind(payload, UUID.fromString(workflow.getWorkflowId())));
+            session.execute(updateWorkflowStatement.bind(payload, updatedCount, UUID.fromString(workflow.getWorkflowId()), workflow.getUpdateCount()));
             workflow.setTasks(tasks);
             return workflow.getWorkflowId();
         } catch (Exception e) {

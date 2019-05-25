@@ -38,6 +38,7 @@ import static com.netflix.conductor.util.Constants.TABLE_WORKFLOWS;
 import static com.netflix.conductor.util.Constants.TASK_ID_KEY;
 import static com.netflix.conductor.util.Constants.TOTAL_PARTITIONS_KEY;
 import static com.netflix.conductor.util.Constants.TOTAL_TASKS_KEY;
+import static com.netflix.conductor.util.Constants.UPDATE_COUNT_KEY;
 import static com.netflix.conductor.util.Constants.WORKFLOW_ID_KEY;
 
 /**
@@ -62,8 +63,11 @@ import static com.netflix.conductor.util.Constants.WORKFLOW_ID_KEY;
  * workflow_id uuid,
  * PRIMARY KEY (task_id)
  * );
+ * <p>
+ * ALTER TABLE conductor.workflows
+ * ADD update_count int STATIC;
  */
-public class CassandraBaseDAO {
+public abstract class CassandraBaseDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraBaseDAO.class);
 
     private final ObjectMapper objectMapper;
@@ -84,10 +88,20 @@ public class CassandraBaseDAO {
             session.execute(getCreateKeyspaceStatement());
             session.execute(getCreateWorkflowsTableStatement());
             session.execute(getCreateTaskLookupTableStatement());
-            LOGGER.info("CassandraDAO initialization complete! Tables created!");
+            LOGGER.info("CassandraDAO initialization complete! Tables created.");
+            alterTables();
         } catch (Exception e) {
             LOGGER.error("Error initializing and setting up keyspace and table in cassandra", e);
             throw e;
+        }
+    }
+
+    private void alterTables() {
+        try {
+            session.execute(getAlterWorkflowsTableStatement());
+            LOGGER.info("Tables altered.");
+        } catch (Exception e) {
+            LOGGER.warn("Error altering workflows table", e);
         }
     }
 
@@ -110,6 +124,13 @@ public class CassandraBaseDAO {
                 .addColumn(PAYLOAD_KEY, DataType.text())
                 .addStaticColumn(TOTAL_TASKS_KEY, DataType.cint())
                 .addStaticColumn(TOTAL_PARTITIONS_KEY, DataType.cint())
+                .getQueryString();
+    }
+
+    private String getAlterWorkflowsTableStatement() {
+        return SchemaBuilder.alterTable(config.getCassandraKeyspace(), TABLE_WORKFLOWS)
+                .addStaticColumn(UPDATE_COUNT_KEY)
+                .type(DataType.cint())
                 .getQueryString();
     }
 

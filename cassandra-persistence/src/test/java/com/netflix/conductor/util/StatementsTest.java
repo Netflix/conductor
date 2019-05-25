@@ -18,7 +18,7 @@ public class StatementsTest {
 
     @Test
     public void testGetInsertWorkflowStatement() {
-        String statement = "INSERT INTO junit.workflows (workflow_id,shard_id,task_id,entity,payload,total_tasks,total_partitions) VALUES (?,?,?,'workflow',?,?,?);";
+        String statement = "INSERT INTO junit.workflows (workflow_id,shard_id,task_id,entity,payload,total_tasks,total_partitions,update_count) VALUES (?,?,?,'workflow',?,?,?,?);";
         assertEquals(statement, statements.getInsertWorkflowStatement());
     }
 
@@ -60,7 +60,7 @@ public class StatementsTest {
 
     @Test
     public void testGetUpdateWorkflowStatement() {
-        String statement = "UPDATE junit.workflows SET payload=? WHERE workflow_id=? AND shard_id=1 AND entity='workflow' AND task_id='';";
+        String statement = "UPDATE junit.workflows SET payload=?,update_count=? WHERE workflow_id=? AND shard_id=1 AND entity='workflow' AND task_id='' IF update_count=?;";
         assertEquals(statement, statements.getUpdateWorkflowStatement());
     }
 

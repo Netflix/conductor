@@ -159,7 +159,7 @@ public class TestConfiguration implements CassandraConfiguration {
 
     @Override
     public int getReplicationFactorValue() {
-        return CASSANDRA_REPLICATION_FACTOR_VALUE_DEFAULT_VALUE;
+        return 1;
     }
 
     @Override

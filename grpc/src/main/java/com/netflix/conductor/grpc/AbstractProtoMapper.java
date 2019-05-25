@@ -934,6 +934,7 @@ public abstract class AbstractProtoMapper {
         if (from.getExternalOutputPayloadStoragePath() != null) {
             to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
         }
+        to.setUpdateCount( from.getUpdateCount() );
         return to.build();
     }
 
@@ -969,6 +970,7 @@ public abstract class AbstractProtoMapper {
         }
         to.setExternalInputPayloadStoragePath( from.getExternalInputPayloadStoragePath() );
         to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
+        to.setUpdateCount( from.getUpdateCount() );
         return to;
     }
 

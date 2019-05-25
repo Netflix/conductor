@@ -115,6 +115,9 @@ public class Workflow extends Auditable{
     @ProtoField(id = 21)
 	private String externalOutputPayloadStoragePath;
 
+	@ProtoField(id = 22)
+	private int updateCount;
+
 	public Workflow(){
 
 	}
@@ -414,6 +417,14 @@ public class Workflow extends Auditable{
 		this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
 	}
 
+	public int getUpdateCount() {
+		return updateCount;
+	}
+
+	public void setUpdateCount(int updateCount) {
+		this.updateCount = updateCount;
+	}
+
 	public Task getTaskByRefName(String refName) {
 		if (refName == null) {
 			throw new RuntimeException("refName passed is null.  Check the workflow execution.  For dynamic tasks, make sure referenceTaskName is set to a not null value");
@@ -493,7 +504,8 @@ public class Workflow extends Auditable{
                 Objects.equals(getFailedReferenceTaskNames(), workflow.getFailedReferenceTaskNames()) &&
                 Objects.equals(getExternalInputPayloadStoragePath(), workflow.getExternalInputPayloadStoragePath()) &&
                 Objects.equals(getExternalOutputPayloadStoragePath(), workflow.getExternalOutputPayloadStoragePath()) &&
-                Objects.equals(getWorkflowDefinition(), workflow.getWorkflowDefinition());
+                Objects.equals(getWorkflowDefinition(), workflow.getWorkflowDefinition()) &&
+				Objects.equals(getUpdateCount(), workflow.getUpdateCount());
     }
 
     @Override
@@ -518,7 +530,8 @@ public class Workflow extends Auditable{
                 getFailedReferenceTaskNames(),
                 getWorkflowDefinition(),
                 getExternalInputPayloadStoragePath(),
-                getExternalOutputPayloadStoragePath()
+                getExternalOutputPayloadStoragePath(),
+				getUpdateCount()
         );
     }
 }
