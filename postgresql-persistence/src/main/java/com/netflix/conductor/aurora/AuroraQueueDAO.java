@@ -54,11 +54,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public boolean pushIfNotExists(String queueName, String id, long offsetSeconds) {
 		return getWithTransaction(tx -> {
-			if (!existsMessage(tx, queueName, id)) {
-				pushMessage(tx, queueName, id, null, offsetSeconds);
-				return true;
-			}
-			return false;
+			return pushMessage(tx, queueName, id, null, offsetSeconds);
 		});
 	}
 
@@ -102,7 +98,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 							long id = rs.getLong("id");
 							long version = rs.getLong("version");
 							String message_id = rs.getString("message_id");
-
 
 							withTransaction(connection -> {
 								long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
@@ -256,6 +251,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			}));
 
 		if (record == null) {
+			logger.debug("wakeup no record exists for " + queueName + "/" + id);
 			return pushIfNotExists(queueName, id, 0);
 		}
 
@@ -280,7 +276,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		return query(connection, SQL, q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).exists());
 	}
 
-	private void pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
+	private boolean pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
 		createQueueIfNotExists(queueName);
 
 		String SQL = "INSERT INTO queue_message (queue_name, message_id, deliver_on, payload) VALUES (?, ?, ?, ?) " +
@@ -288,11 +284,11 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
 
-		execute(connection, SQL, q -> q.addParameter(queueName.toLowerCase())
+		return query(connection, SQL, q -> q.addParameter(queueName.toLowerCase())
 			.addParameter(messageId)
 			.addTimestampParameter(deliverOn)
 			.addParameter(payload)
-			.executeUpdate());
+			.executeUpdate() > 0);
 	}
 
 	private Message peekMessage(Connection connection, String queueName, String messageId) {
