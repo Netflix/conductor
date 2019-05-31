@@ -356,7 +356,7 @@ public class WorkflowResource {
 	@Path("/{workflowId}/cancel")
 	@ApiOperation("Cancel workflow execution")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	@Produces(MediaType.TEXT_PLAIN)
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
 	public Response cancel(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId, @QueryParam("reason") String reason) throws Exception {
 		executor.validateAuth(workflowId, headers);
 		Response.ResponseBuilder builder = Response.ok(workflowId);
