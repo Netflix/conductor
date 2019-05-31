@@ -29,12 +29,7 @@ public class TestIsolatedTaskQueueProducer {
 
 	}
 
-	@Test
-	public void notIsolatedIfSeparatorNotPresent() {
 
-		Assert.assertFalse(IsolatedTaskQueueProducer.isIsolatedQueue("notIsolated"));
-
-	}
 
 	@Test
 	public void interruptReturns() throws InterruptedException {

@@ -16,6 +16,7 @@
 package com.netflix.conductor.core.utils;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -33,6 +34,7 @@ public class QueueUtils {
 
     public static String getQueueName(
       String taskType, String domain, String isolationGroup) {
+
         String queueName = null;
         if (domain == null) {
             queueName = taskType;
@@ -49,4 +51,27 @@ public class QueueUtils {
         return queueName.substring(queueName.indexOf(DOMAIN_SEPARATOR) + 1);
     }
 
+    public static String getQueueDomain(String queueName) {
+        if(StringUtils.contains(queueName,DOMAIN_SEPARATOR)) {
+            return StringUtils.substringBefore(queueName,DOMAIN_SEPARATOR);
+        }
+        return StringUtils.EMPTY;
+    }
+
+
+    public static boolean isIsolatedQueue(String queue) {
+        return StringUtils.isNotBlank(getIsolationGroup(queue));
+    }
+
+    private static String getIsolationGroup(String queue) {
+        return StringUtils.substringAfter(queue, QueueUtils.ISOLATION_SEPARATOR);
+    }
+
+    public static String getTaskType(String queue) {
+        String queueWithoutIsolationGroup = StringUtils.substringBeforeLast(queue, ISOLATION_SEPARATOR);
+        if(StringUtils.contains(queueWithoutIsolationGroup,DOMAIN_SEPARATOR)) {
+            return StringUtils.substringAfterLast(queueWithoutIsolationGroup, DOMAIN_SEPARATOR);
+        }
+        return queueWithoutIsolationGroup;
+    }
 }

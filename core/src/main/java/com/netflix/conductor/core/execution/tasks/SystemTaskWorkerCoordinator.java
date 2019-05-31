@@ -25,8 +25,6 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
-import com.netflix.conductor.service.MetadataService;
-import com.netflix.conductor.service.TaskService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +74,8 @@ public class SystemTaskWorkerCoordinator {
 
 	private Configuration config;
 
+	private final String domain;
+
 	static BlockingQueue<String> queue = new LinkedBlockingQueue<>();
 
 	private static Set<String> listeningTaskQueues = new HashSet<>();
@@ -88,6 +88,8 @@ public class SystemTaskWorkerCoordinator {
 
 	private static final String className = SystemTaskWorkerCoordinator.class.getName();
 
+
+
 	@Inject
 	public SystemTaskWorkerCoordinator(QueueDAO queueDAO, WorkflowExecutor workflowExecutor, Configuration config) {
 		this.queueDAO = queueDAO;
@@ -99,6 +101,8 @@ public class SystemTaskWorkerCoordinator {
 		this.pollInterval = config.getIntProperty("workflow.system.task.worker.poll.interval", 50);
 		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
 		this.workerQueue = new LinkedBlockingQueue<>(workerQueueSize);
+		this.domain =config.getProperty("workflow.system.task.worker.domain","");
+
 		if(threadCount > 0) {
 			ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("system-task-worker-%d").build();
 			this.executorService = new ThreadPoolExecutor(threadCount, threadCount,
@@ -124,7 +128,7 @@ public class SystemTaskWorkerCoordinator {
 			//noinspection InfiniteLoopStatement
 			for(;;) {
 				String workflowSystemTaskQueueName = queue.poll(60, TimeUnit.SECONDS);
-				if (workflowSystemTaskQueueName != null && !listeningTaskQueues.contains(workflowSystemTaskQueueName) && isSystemTask(workflowSystemTaskQueueName)) {
+				if (workflowSystemTaskQueueName != null && !listeningTaskQueues.contains(workflowSystemTaskQueueName) && shouldListen(workflowSystemTaskQueueName)) {
 					listen(workflowSystemTaskQueueName);
 					listeningTaskQueues.add(workflowSystemTaskQueueName);
 				}
@@ -162,7 +166,7 @@ public class SystemTaskWorkerCoordinator {
 			for(String taskId : polledTaskIds) {
 				logger.debug("Task: {} from queue: {} being sent to the workflow executor", taskId, queueName);
 				try {
-					String taskName = stripIsolationGroup(queueName);
+					String taskName = QueueUtils.getTaskType(queueName);
 					WorkflowSystemTask systemTask = taskNameWorkFlowTaskMapping.get(taskName);
 					ExecutorService executorService = executionConfig.service;
 					executorService.submit(() -> workflowExecutor.executeSystemTask(systemTask, taskId, unackTimeout));
@@ -177,13 +181,23 @@ public class SystemTaskWorkerCoordinator {
 	}
 
 
+	public boolean isFromCoordinatorDomain(String queueName) {
+		String queueDomain = QueueUtils.getQueueDomain(queueName);
+		return StringUtils.equals(queueDomain, this.domain);
+	}
+
+	private boolean shouldListen(String workflowSystemTaskQueueName) {
+		return isFromCoordinatorDomain(workflowSystemTaskQueueName) && isSystemTask(workflowSystemTaskQueueName);
+	}
+
+
 	public static boolean isSystemTask(String queue) {
 
-		String isolationGroupStrippedQueue = stripIsolationGroup(queue);
+		String taskType = QueueUtils.getTaskType(queue);
 
-		if(StringUtils.isNotBlank(isolationGroupStrippedQueue)) {
+		if(StringUtils.isNotBlank(taskType)) {
 
-			WorkflowSystemTask task = taskNameWorkFlowTaskMapping.get(isolationGroupStrippedQueue);
+			WorkflowSystemTask task = taskNameWorkFlowTaskMapping.get(taskType);
 			return Objects.nonNull(task) && task.isAsync();
 
 		}
@@ -191,15 +205,11 @@ public class SystemTaskWorkerCoordinator {
 		return false;
 	}
 
-	static String stripIsolationGroup(String queue) {
 
-		return StringUtils.substringBefore(queue, QueueUtils.ISOLATION_SEPARATOR);
-
-	}
 
 	public ExecutionConfig getExecutionConfig(String taskQueue) {
 
-		if (!IsolatedTaskQueueProducer.isIsolatedQueue(taskQueue)) {
+		if (!QueueUtils.isIsolatedQueue(taskQueue)) {
 			return this.defaultExecutionConfig;
 		}
 

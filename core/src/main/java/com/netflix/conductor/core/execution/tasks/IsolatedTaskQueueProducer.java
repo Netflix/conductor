@@ -48,16 +48,7 @@ public class IsolatedTaskQueueProducer {
 
 	}
 
-	@VisibleForTesting
-	static boolean isIsolatedQueue(String queue) {
-		return StringUtils.isNotBlank(getIsolationGroup(queue));
-	}
 
-	private static String getIsolationGroup(String queue) {
-
-		return StringUtils.substringAfter(queue, QueueUtils.ISOLATION_SEPARATOR);
-
-	}
 
 	void syncTaskQueues() {
 		try {
@@ -73,14 +64,16 @@ public class IsolatedTaskQueueProducer {
 		}
 	}
 
-	private Set<String> getIsolationGroups() throws InterruptedException {
+	private Set<TaskDef> getIsolationDomain() throws InterruptedException {
 
-		Set<String> isolationGroups = Collections.emptySet();
+		Set<TaskDef> isolationDomainGroups = Collections.emptySet();
 
 		try {
 
 			List<TaskDef> taskDefs = metadataService.getTaskDefs();
-			isolationGroups = taskDefs.stream().filter(taskDef -> Objects.nonNull(taskDef.getIsolationGroupId())).map(taskDef -> taskDef.getIsolationGroupId()).collect(Collectors.toSet());
+			isolationDomainGroups = taskDefs.stream().
+					filter(taskDef -> StringUtils.isNotBlank(taskDef.getIsolationGroupId())|| StringUtils.isNotBlank(taskDef.getDomain())).
+					collect(Collectors.toSet());
 
 		} catch (RuntimeException unknownException) {
 
@@ -88,20 +81,19 @@ public class IsolatedTaskQueueProducer {
 			TimeUnit.SECONDS.sleep(pollingTimeOut);
 
 		}
-		return isolationGroups;
+		return isolationDomainGroups;
 	}
 
 	@VisibleForTesting
 	void addTaskQueues() throws InterruptedException {
 
-		Set<String> isolationGroup = getIsolationGroups();
-		logger.debug("Retrieved queues {}", isolationGroup);
+		Set<TaskDef> isolationDefs = getIsolationDomain();
+		logger.debug("Retrieved queues {}", isolationDefs);
 		Set<String> taskTypes = SystemTaskWorkerCoordinator.taskNameWorkFlowTaskMapping.keySet();
 
-		for (String group : isolationGroup) {
+		for (TaskDef isolatedTaskDef : isolationDefs) {
 			for (String taskType : taskTypes) {
-
-				String taskQueue = QueueUtils.getQueueName(taskType, null, group);
+				String taskQueue = QueueUtils.getQueueName(taskType, isolatedTaskDef.getDomain(), isolatedTaskDef.getIsolationGroupId());
 				logger.debug("Adding task={} to coordinator queue", taskQueue);
 				SystemTaskWorkerCoordinator.queue.add(taskQueue);
 
