@@ -64,12 +64,12 @@ Send a `POST` request to `/workflow` with payload like:
 	        },
 	        "taskDefinition": {
 	            "name": "fetch_data",
-			    "retryCount": 0,
-			    "timeoutSeconds": 3600,
-			    "timeoutPolicy": "TIME_OUT_WF",
-			    "retryLogic": "FIXED",
-			    "retryDelaySeconds": 0,
-			    "responseTimeoutSeconds": 3000
+		    "retryCount": 0,
+		    "timeoutSeconds": 3600,
+		    "timeoutPolicy": "TIME_OUT_WF",
+		    "retryLogic": "FIXED",
+		    "retryDelaySeconds": 0,
+		    "responseTimeoutSeconds": 3000
 	        }
 	    }
     ],
