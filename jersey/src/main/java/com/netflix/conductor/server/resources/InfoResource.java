@@ -82,7 +82,17 @@ public class InfoResource {
 	@ApiOperation(value = "Get the health status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> health() throws IOException {
-		boolean status = client.ping();
+		boolean status = false;
+
+		try {
+			status = client.ping();
+		} catch (Exception e) {
+			logger.error("Elasticsearch health check failed: " + e.getMessage(), e);
+			throw e;
+		}
+
+		logger.info("Elasticsearch health check result: " + status);
+
 		return Collections.singletonMap("is_ping_okay", status);
 	}
 

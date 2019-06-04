@@ -229,7 +229,7 @@ job "conductor" {
           timeout  = "3s"
           
            check_restart {
-            limit           = 1
+            limit           = 3
             grace           = "180s"
             ignore_warnings = false
           }
