@@ -306,10 +306,10 @@ public abstract class AbstractProtoMapper {
 
     public EventHandlerPb.EventHandler.Action.Type toProto(EventHandler.Action.Type from) {
         EventHandlerPb.EventHandler.Action.Type to;
-        switch (from) {
-            case start_workflow: to = EventHandlerPb.EventHandler.Action.Type.START_WORKFLOW; break;
-            case complete_task: to = EventHandlerPb.EventHandler.Action.Type.COMPLETE_TASK; break;
-            case fail_task: to = EventHandlerPb.EventHandler.Action.Type.FAIL_TASK; break;
+        switch (from.showType()) {
+            case "start_workflow": to = EventHandlerPb.EventHandler.Action.Type.START_WORKFLOW; break;
+            case "complete_task": to = EventHandlerPb.EventHandler.Action.Type.COMPLETE_TASK; break;
+            case "fail_task": to = EventHandlerPb.EventHandler.Action.Type.FAIL_TASK; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -318,9 +318,9 @@ public abstract class AbstractProtoMapper {
     public EventHandler.Action.Type fromProto(EventHandlerPb.EventHandler.Action.Type from) {
         EventHandler.Action.Type to;
         switch (from) {
-            case START_WORKFLOW: to = EventHandler.Action.Type.start_workflow; break;
-            case COMPLETE_TASK: to = EventHandler.Action.Type.complete_task; break;
-            case FAIL_TASK: to = EventHandler.Action.Type.fail_task; break;
+            case START_WORKFLOW: to = EventHandler.Action.ActionType.start_workflow; break;
+            case COMPLETE_TASK: to = EventHandler.Action.ActionType.complete_task; break;
+            case FAIL_TASK: to = EventHandler.Action.ActionType.fail_task; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;

@@ -62,12 +62,12 @@ public class ActionProcessor {
 			jsonObject = jsonUtils.expand(payloadObject);
 		}
 
-		switch (action.getAction()) {
-			case start_workflow:
+		switch (action.getAction().showType()) {
+			case "start_workflow":
 				return startWorkflow(action, jsonObject, event, messageId);
-			case complete_task:
+			case "complete_task":
 				return completeTask(action, jsonObject, action.getComplete_task(), Status.COMPLETED, event, messageId);
-			case fail_task:
+			case "fail_task":
 				return completeTask(action, jsonObject, action.getFail_task(), Status.FAILED, event, messageId);
 			default:
 				break;
