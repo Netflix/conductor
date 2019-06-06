@@ -20,10 +20,7 @@ package com.netflix.conductor.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.netflix.conductor.aurora.AuroraExecutionDAO;
-import com.netflix.conductor.aurora.AuroraMetadataDAO;
-import com.netflix.conductor.aurora.AuroraModule;
-import com.netflix.conductor.aurora.AuroraQueueDAO;
+import com.netflix.conductor.aurora.*;
 import com.netflix.conductor.contribs.AssetModule;
 import com.netflix.conductor.contribs.AuthModule;
 import com.netflix.conductor.contribs.HttpModule;
@@ -104,8 +101,7 @@ public class ServerModule extends AbstractModule {
 			bind(ExecutionDAO.class).to(AuroraExecutionDAO.class);
 			bind(MetadataDAO.class).to(AuroraMetadataDAO.class);
 			bind(QueueDAO.class).to(AuroraQueueDAO.class);
-
-			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class); // TODO Implement
+			bind(MetricsDAO.class).to(AuroraMetricsDAO.class);
 
 			// TODO Nice to have to implement `search`. Without implementing this, we cannot completely get rid of the ES
 			//bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
