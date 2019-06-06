@@ -409,18 +409,22 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		getWithTransaction(tx -> insertEventPublished(tx, ep));
 	}
 
-	// TODO
 	@Override
 	public List<Task> getPendingTasksByTags(String taskType, Set<String> tags) {
-		return Collections.emptyList();
+		String SQL = "SELECT t.json_data FROM task_in_progress tip " +
+			"INNER JOIN task t ON t.task_id = tip.task_id " +
+			"INNER JOIN workflow w ON w.workflow_id = tip.workflow_id " +
+			"WHERE t.task_status = 'IN_PROGRESS' AND t.task_type = ? AND w.tags = ?";
+
+		return queryWithTransaction(SQL, q -> q.addParameter(taskType)
+			.addParameter(tags)
+			.executeAndFetch(Task.class));
 	}
 
-	// TODO The workflow tables has `tags` array field. This method should return true
-	//  if there are ANY workflows which have at least one TAG in the fields matching the tags from the set
-	//  For performance reasons (If needed) the workflow id -> tags relationship might be moved to separate table
 	@Override
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
-		return false;
+		String SQL = "select true from workflow where tags = ? limit 1";
+		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeCount() > 0);
 	}
 
 	private static int dateStr(Long timeInMs) {
@@ -428,11 +432,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
 		return Integer.parseInt(format.format(date));
-	}
-
-	private static String dateStr(Date date) {
-		SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
-		return format.format(date);
 	}
 
 	private boolean addScheduledTask(Connection connection, Task task) {
