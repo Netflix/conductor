@@ -63,12 +63,15 @@ public class SimpleActionProcessor implements ActionProcessor {
             jsonObject = jsonUtils.expand(payloadObject);
         }
 
-        switch (action.getAction()) {
-            case start_workflow:
+        switch (action.getAction().getType()) {
+            case Action.ActionType
+                .START_WORKFLOW:
                 return startWorkflow(action, jsonObject, event, messageId);
-            case complete_task:
+            case Action.ActionType
+                .COMPLETE_TASK:
                 return completeTask(action, jsonObject, action.getComplete_task(), Status.COMPLETED, event, messageId);
-            case fail_task:
+            case Action.ActionType
+                .FAIL_TASK:
                 return completeTask(action, jsonObject, action.getFail_task(), Status.FAILED, event, messageId);
             default:
                 break;

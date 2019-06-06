@@ -70,7 +70,7 @@ public class TestSimpleActionProcessor {
         startWorkflow.setTaskToDomain(taskToDomain);
 
         Action action = new Action();
-        action.setAction(Type.start_workflow);
+        action.setAction(Action.ActionType.start_workflow);
         action.setStart_workflow(startWorkflow);
 
         Object payload = new ObjectMapper().readValue("{\"correlationId\":\"test-id\", \"testId\":\"test_1\"}", Object.class);
@@ -110,7 +110,7 @@ public class TestSimpleActionProcessor {
         startWorkflow.setTaskToDomain(taskToDomain);
 
         Action action = new Action();
-        action.setAction(Type.start_workflow);
+        action.setAction(Action.ActionType.start_workflow);
         action.setStart_workflow(startWorkflow);
 
         Object payload = new ObjectMapper().readValue("{\"testId\":\"test_1\"}", Object.class);
@@ -145,7 +145,7 @@ public class TestSimpleActionProcessor {
         taskDetails.setTaskRefName("testTask");
 
         Action action = new Action();
-        action.setAction(Type.complete_task);
+        action.setAction(Action.ActionType.complete_task);
         action.setComplete_task(taskDetails);
 
         Object payload = new ObjectMapper().readValue("{\"workflowId\":\"workflow_1\"}", Object.class);
@@ -175,7 +175,7 @@ public class TestSimpleActionProcessor {
         taskDetails.setTaskId("${taskId}");
 
         Action action = new Action();
-        action.setAction(Type.complete_task);
+        action.setAction(Action.ActionType.complete_task);
         action.setComplete_task(taskDetails);
 
         Object payload = new ObjectMapper().readValue("{\"workflowId\":\"workflow_1\", \"taskId\":\"task_1\"}", Object.class);

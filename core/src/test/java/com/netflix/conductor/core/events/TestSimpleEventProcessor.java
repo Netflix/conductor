@@ -117,7 +117,7 @@ public class TestSimpleEventProcessor {
         taskToDomain.put("*", "dev");
 
         Action startWorkflowAction = new Action();
-        startWorkflowAction.setAction(Type.start_workflow);
+        startWorkflowAction.setAction(Action.ActionType.start_workflow);
         startWorkflowAction.setStart_workflow(new StartWorkflow());
         startWorkflowAction.getStart_workflow().setName("workflow_x");
         startWorkflowAction.getStart_workflow().setVersion(1);
@@ -125,7 +125,7 @@ public class TestSimpleEventProcessor {
         eventHandler.getActions().add(startWorkflowAction);
 
         Action completeTaskAction = new Action();
-        completeTaskAction.setAction(Type.complete_task);
+        completeTaskAction.setAction(Action.ActionType.complete_task);
         completeTaskAction.setComplete_task(new TaskDetails());
         completeTaskAction.getComplete_task().setTaskRefName("task_x");
         completeTaskAction.getComplete_task().setWorkflowId(UUID.randomUUID().toString());
@@ -196,7 +196,7 @@ public class TestSimpleEventProcessor {
         startWorkflowInput.put("param2", "SQS-${MessageId}");
 
         Action startWorkflowAction = new Action();
-        startWorkflowAction.setAction(Type.start_workflow);
+        startWorkflowAction.setAction(Action.ActionType.start_workflow);
         startWorkflowAction.setStart_workflow(new StartWorkflow());
         startWorkflowAction.getStart_workflow().setName("cms_artwork_automation");
         startWorkflowAction.getStart_workflow().setVersion(1);
@@ -240,7 +240,7 @@ public class TestSimpleEventProcessor {
         eventHandler.setEvent(event);
 
         Action completeTaskAction = new Action();
-        completeTaskAction.setAction(Type.complete_task);
+        completeTaskAction.setAction(Action.ActionType.complete_task);
         completeTaskAction.setComplete_task(new TaskDetails());
         completeTaskAction.getComplete_task().setTaskRefName("task_x");
         completeTaskAction.getComplete_task().setWorkflowId(UUID.randomUUID().toString());
@@ -271,7 +271,7 @@ public class TestSimpleEventProcessor {
         eventHandler.setEvent(event);
 
         Action completeTaskAction = new Action();
-        completeTaskAction.setAction(Type.complete_task);
+        completeTaskAction.setAction(Action.ActionType.complete_task);
         completeTaskAction.setComplete_task(new TaskDetails());
         completeTaskAction.getComplete_task().setTaskRefName("task_x");
         completeTaskAction.getComplete_task().setWorkflowId(UUID.randomUUID().toString());
@@ -328,7 +328,7 @@ public class TestSimpleEventProcessor {
         eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
         eventExecution.setEvent("event");
         Action action = new Action();
-        action.setAction(Type.start_workflow);
+        action.setAction(Action.ActionType.start_workflow);
 
         eventProcessor.execute(eventExecution, action, "payload");
         assertEquals(1, executeInvoked.get());
@@ -349,7 +349,7 @@ public class TestSimpleEventProcessor {
         eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
         eventExecution.setEvent("event");
         Action action = new Action();
-        action.setAction(Type.start_workflow);
+        action.setAction(Action.ActionType.start_workflow);
 
         eventProcessor.execute(eventExecution, action, "payload");
         assertEquals(3, executeInvoked.get());

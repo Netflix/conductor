@@ -138,9 +138,31 @@ public class EventHandler {
 	@ProtoMessage
 	public static class Action {
 
+		public interface Type {
+			String getType();
+		}
+
 		@ProtoEnum
-		public enum Type {
-			start_workflow, complete_task, fail_task
+		public enum ActionType implements Type {
+			start_workflow {
+				@Override
+				public String getType() {
+					return START_WORKFLOW;
+				}
+			}, complete_task {
+				@Override
+				public String getType() {
+					return COMPLETE_TASK;
+				}
+			}, fail_task {
+				@Override
+				public String getType() {
+					return FAIL_TASK;
+				}
+			};
+			public static final String START_WORKFLOW = "start_workflow";
+			public static final String COMPLETE_TASK = "complete_task";
+			public static final String FAIL_TASK = "fail_task";
 		}
 
 		@ProtoField(id = 1)
