@@ -124,6 +124,15 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	}
 
 	@Override
+	public boolean ping(){
+		try {
+			return client.ping();
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}
+
+	@Override
 	public Map<String, Object> getMetrics() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 

@@ -15,8 +15,6 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -26,9 +24,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
-	private static final Logger logger = LoggerFactory.getLogger(AuroraExecutionDAO.class);
-	private static final String ARCHIVED_FIELD = "archived";
-	private static final String RAW_JSON_FIELD = "rawJSON";
 	private MetadataDAO metadata;
 	private IndexDAO indexer;
 

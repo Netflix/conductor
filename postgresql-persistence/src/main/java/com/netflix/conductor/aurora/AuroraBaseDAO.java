@@ -1,6 +1,5 @@
 package com.netflix.conductor.aurora;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.aurora.sql.*;
@@ -26,7 +25,7 @@ abstract class AuroraBaseDAO {
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	private final DataSource dataSource;
-	private ObjectMapper mapper;
+	private final ObjectMapper mapper;
 
 	AuroraBaseDAO(DataSource dataSource, ObjectMapper mapper) {
 		this.dataSource = dataSource;
@@ -76,6 +75,10 @@ abstract class AuroraBaseDAO {
 	}
 
 	<R> R query(Connection tx, String query, QueryFunction<R> function) {
+		if (logger.isTraceEnabled()) {
+			LazyToString callingMethod = getCallingMethod();
+			logger.trace("{} : executing {}", callingMethod, query);
+		}
 		try (Query q = new Query(mapper, tx, query)) {
 			return function.apply(q);
 		} catch (SQLException ex) {
@@ -84,6 +87,10 @@ abstract class AuroraBaseDAO {
 	}
 
 	void execute(Connection tx, String query, ExecuteFunction function) {
+		if (logger.isTraceEnabled()) {
+			LazyToString callingMethod = getCallingMethod();
+			logger.trace("{} : executing {}", callingMethod, query);
+		}
 		try (Query q = new Query(mapper, tx, query)) {
 			function.apply(q);
 		} catch (SQLException ex) {
@@ -104,17 +111,6 @@ abstract class AuroraBaseDAO {
 			return mapper.readValue(json, tClass);
 		} catch (IOException ex) {
 			throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, ex);
-		}
-	}
-
-	String toJson(Object value) {
-		if (value == null) {
-			return "null";
-		}
-		try {
-			return mapper.writeValueAsString(value);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException(e);
 		}
 	}
 }

@@ -9,8 +9,6 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.MetadataDAO;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -21,7 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
-	private static final Logger logger = LoggerFactory.getLogger(AuroraMetadataDAO.class);
 	private static final String PROP_TASKDEF_CACHE_REFRESH = "conductor.taskdef.cache.refresh.time.seconds";
 	private static final int DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS = 60;
 	private final ConcurrentHashMap<String, TaskDef> taskDefCache = new ConcurrentHashMap<>();

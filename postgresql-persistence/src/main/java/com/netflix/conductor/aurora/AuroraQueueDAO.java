@@ -8,8 +8,6 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
 import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -24,7 +22,6 @@ import java.util.stream.Collectors;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
-	private static final Logger logger = LoggerFactory.getLogger(AuroraQueueDAO.class);
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final Long UNACK_SCHEDULE_MS = 60_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
