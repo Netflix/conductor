@@ -85,7 +85,7 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 		withTransaction(connection -> {
 			for (TaskExecLog log : logs) {
 				execute(connection, SQL,
-					q -> q.addTimestampParameter(log.getCreatedTime() > 0 ? log.getCreatedTime() : System.currentTimeMillis())
+					q -> q.addTimestampParameter(log.getCreatedTime(), System.currentTimeMillis())
 						.addParameter(log.getTaskId())
 						.addParameter(log.getLog())
 						.executeUpdate());

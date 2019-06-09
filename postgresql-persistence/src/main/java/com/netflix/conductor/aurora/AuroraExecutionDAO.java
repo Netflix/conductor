@@ -231,9 +231,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		if (workflow == null)
 			return;
 
-		//Add to elasticsearch
-		indexer.update(workflowId, new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD}, new Object[]{toJson(workflow), true});
-
 		withTransaction(connection -> {
 			for (Task task : workflow.getTasks()) {
 				removeTask(connection, task);
@@ -243,6 +240,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	@Override
+	@Deprecated
 	public void removeFromPendingWorkflow(String workflowType, String workflowId) {
 		// not in use any more. See references
 	}
@@ -265,17 +263,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			return workflow;
 		}
 
-		// try from the archive
-		String json = indexer.get(workflowId, RAW_JSON_FIELD);
-		if (json == null) {
-			return null;
-		}
-		workflow = readValue(json, Workflow.class);
-		if (!includeTasks) {
-			workflow.getTasks().clear();
-		}
-
-		return workflow;
+		return null;
 	}
 
 	@Override
@@ -357,20 +345,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	@Override
+	@Deprecated
 	public List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max) {
-		List<EventExecution> executions = Lists.newLinkedList();
-		withTransaction(tx -> {
-			for (int i = 0; i < max; i++) {
-				String executionId = messageId + "_" + i; // see SimpleEventProcessor.handle to understand how the
-				// execution id is set
-				EventExecution ee = readEventExecution(tx, eventHandlerName, eventName, messageId, executionId);
-				if (ee == null) {
-					break;
-				}
-				executions.add(ee);
-			}
-		});
-		return executions;
+		// not in use any more. See references
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -405,6 +383,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	@Override
+	// TODO Review the logic!!!
 	public List<Task> getPendingTasksByTags(String taskType, Set<String> tags) {
 		String SQL = "SELECT t.json_data FROM task_in_progress tip " +
 			"INNER JOIN task t ON t.task_id = tip.task_id " +
@@ -417,6 +396,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	@Override
+	// TODO Review the logic!!!
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		String SQL = "select true from workflow where tags = ? limit 1";
 		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeCount() > 0);
@@ -482,8 +462,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			removeTaskInProgress(connection, task);
 		}
-
-		indexer.index(task);
 	}
 
 	private List<Task> getTasks(Connection connection, List<String> taskIds) {
@@ -517,7 +495,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		});
 
 		workflow.setTasks(tasks);
-		indexer.index(workflow);
 
 		return workflow.getWorkflowId();
 	}
@@ -628,8 +605,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	private boolean insertEventExecution(Connection connection, EventExecution ee) {
 		String SQL = "INSERT INTO event_execution" +
-			"(handler_name, event_name, message_id, execution_id, status, subject, json_data, received_on, accepted_on) " +
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+			"(handler_name, event_name, message_id, execution_id, status, subject, received_on, accepted_on) " +
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
 			"ON CONFLICT ON CONSTRAINT event_execution_fields DO NOTHING";
 		int count = query(connection, SQL, q -> q.addParameter(ee.getName())
 			.addParameter(ee.getEvent())
@@ -637,7 +614,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.addParameter(ee.getId())
 			.addParameter(ee.getStatus().name())
 			.addParameter(ee.getSubject())
-			.addJsonParameter(ee)
 			.addTimestampParameter(ee.getReceived())
 			.addTimestampParameter(ee.getAccepted())
 			.executeUpdate());
@@ -646,12 +622,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	private void updateEventExecution(Connection connection, EventExecution ee) {
 		String SQL = "UPDATE event_execution SET " +
-			"modified_on = now(), json_data = ?, status = ?, started_on = ?, processed_on = ?" +
+			"modified_on = now(), status = ?, started_on = ?, processed_on = ?" +
 			"WHERE handler_name = ? AND event_name = ? " +
 			"AND message_id = ? AND execution_id = ?";
 
-		execute(connection, SQL, q -> q.addJsonParameter(ee)
-			.addParameter(ee.getStatus().name())
+		execute(connection, SQL, q -> q.addParameter(ee.getStatus().name())
 			.addTimestampParameter(ee.getStarted())
 			.addTimestampParameter(ee.getProcessed())
 			.addParameter(ee.getName())
@@ -659,14 +634,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.addParameter(ee.getMessageId())
 			.addParameter(ee.getId())
 			.executeUpdate());
-	}
-
-	private EventExecution readEventExecution(Connection connection, String eventHandlerName, String eventName,
-											  String messageId, String executionId) {
-		String SQL = "SELECT json_data FROM event_execution WHERE handler_name = ? "
-			+ "AND event_name = ? AND message_id = ? AND execution_id = ?";
-		return query(connection, SQL, q -> q.addParameter(eventHandlerName).addParameter(eventName)
-			.addParameter(messageId).addParameter(executionId).executeAndFetchFirst(EventExecution.class));
 	}
 
 	private boolean insertEventPublished(Connection connection, EventPublished ep) {

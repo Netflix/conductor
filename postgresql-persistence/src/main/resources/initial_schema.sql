@@ -152,8 +152,8 @@ create table event_message
     created_on timestamp    not null default now(),
     queue_name varchar(255) not null,
     message_id varchar(255) not null,
-    receipt    text         not null,
-    json_data  text         not null
+    receipt    text,
+    json_data  text
 );
 
 create table event_execution
@@ -167,7 +167,6 @@ create table event_execution
     execution_id varchar(255) not null,
     status       varchar(255) not null,
     subject      varchar(255) not null,
-    json_data    text         not null,
     received_on  timestamp,
     accepted_on  timestamp,
     started_on   timestamp,

@@ -152,6 +152,17 @@ public class Query implements AutoCloseable {
         return epochMillis > 0 ? addParameter(new Timestamp(epochMillis)) : addNullParameter(Types.TIMESTAMP);
     }
 
+
+    /**
+     * Bind the given epoch millis to the PreparedStatement as a {@link Timestamp}.
+     * @param epochMillis The epoch ms to create a new {@literal Timestamp} from.
+     * @param defaultValue The epoch ms to create a new {@literal Timestamp} from.
+     * @return {@literal this}
+     */
+    public Query addTimestampParameter(long epochMillis, long defaultValue) {
+        return epochMillis > 0 ? addParameter(new Timestamp(epochMillis)) : addParameter(new Timestamp(defaultValue));
+    }
+
     /**
      * Add a collection of primitive values at once, in the order of the collection.
      *
