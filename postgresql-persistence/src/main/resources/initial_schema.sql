@@ -208,8 +208,8 @@ create table queue_message
     message_id varchar(255) not null,
     version    bigint       not null default 0,
     popped     boolean      not null default false,
+    unacked    boolean      not null default false,
     deliver_on timestamp,
-    popped_on  timestamp,
     unack_on   timestamp,
     payload    text
 );

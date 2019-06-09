@@ -28,7 +28,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final Long UNACK_SCHEDULE_MS = 60_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
-	private static final long POPPED_THRESHOLD = 500; // TODO What is the best value ?
 	private final int stalePeriod;
 
 	@Inject
@@ -85,7 +84,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				"ORDER BY deliver_on LIMIT ?";
 
 			final String UPDATE = "UPDATE queue_message " +
-				"SET popped = true, popped_on = now(), unack_on = ?, version = version + 1 " +
+				"SET popped = true, unack_on = ?, version = version + 1 " +
 				"WHERE id = ? AND version = ?";
 
 			while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
@@ -103,7 +102,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 								long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
 								int updated = query(connection, UPDATE, u -> u.addTimestampParameter(unack_on)
-									.addParameter(id).addParameter(version).executeUpdate());
+									.addParameter(id)
+									.addParameter(version)
+									.executeUpdate());
 
 								// Means record being updated - we got it
 								if (updated > 0) {
@@ -129,22 +130,11 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
-	public void processUnacks(String queueName) {
-		long unack_on = System.currentTimeMillis() - stalePeriod;
-
-		final String SQL = "UPDATE queue_message " +
-			"SET popped = false, deliver_on = now(), popped_on = null, unack_on = null, version = version + 1 " +
-			"WHERE queue_name = ? AND popped = true AND unack_on < ?";
-
-		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).addTimestampParameter(unack_on).executeUpdate());
-	}
-
-	@Override
 	public boolean setUnackTimeout(String queueName, String messageId, long unackTimeout) {
-		long unack_on = System.currentTimeMillis() + unackTimeout;
+		long unack_on = System.currentTimeMillis() + unackTimeout; // now + timeout
 
 		final String UPDATE = "UPDATE queue_message " +
-			"SET popped = true, popped_on = now(), unack_on = ?, version = version + 1 " +
+			"SET popped = true, unack_on = ?, unacked = true, version = version + 1 " +
 			"WHERE queue_name = ? AND message_id = ?";
 
 		return queryWithTransaction(UPDATE,
@@ -152,6 +142,17 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				.addParameter(queueName.toLowerCase())
 				.addParameter(messageId)
 				.executeUpdate()) == 1;
+	}
+
+	@Override
+	public void processUnacks(String queueName) {
+		long unack_on = System.currentTimeMillis() - stalePeriod;
+
+		final String SQL = "UPDATE queue_message " +
+			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
+			"WHERE queue_name = ? AND popped = true AND unack_on < ?";
+
+		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).addTimestampParameter(unack_on).executeUpdate());
 	}
 
 	@Override
@@ -242,8 +243,8 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					m.payload = rs.getString("payload");
 					m.popped = rs.getBoolean("popped");
 					m.deliver_on = rs.getTimestamp("deliver_on");
-					m.popped_on = rs.getTimestamp("popped_on");
 					m.unack_on = rs.getTimestamp("unack_on");
+					m.unacked = rs.getBoolean("unacked");
 
 					return m;
 				}
@@ -255,15 +256,15 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			return pushIfNotExists(queueName, id, 0);
 		}
 
-		// If the record pulled within threshold period - do nothing as it might be in sweeper right now
-		if (record.popped && System.currentTimeMillis() - record.popped_on.getTime() < POPPED_THRESHOLD) {
-			logger.debug("wakeup record pulled within threshold period for " + queueName + "/" + id);
+		// pop happened but setUnackTimeout dit not yet - mostly means the record in the decider at this moment
+		if (record.popped && !record.unacked) {
+			logger.debug("wakeup record popped for " + queueName + "/" + id);
 			return false;
 		}
 
 		// Otherwise make it visible right away
 		final String UPDATE = "UPDATE queue_message " +
-			"SET popped = false, deliver_on = now(), popped_on = null, unack_on = null, version = version + 1 " +
+			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
 			"WHERE id = ? AND version = ?";
 
 		return queryWithTransaction(UPDATE, q -> q.addParameter(record.id)
@@ -332,8 +333,8 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		String message_id;
 		String payload;
 		boolean popped;
+		boolean unacked;
 		Timestamp deliver_on;
-		Timestamp popped_on;
 		Timestamp unack_on;
 	}
 }
