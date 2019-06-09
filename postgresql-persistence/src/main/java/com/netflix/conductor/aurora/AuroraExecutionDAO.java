@@ -447,15 +447,21 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	private void insertOrUpdateTask(Connection connection, Task task) {
 		// Warning! Constraint name is also unique index name
-		String SQL = "INSERT INTO task (task_id, task_type, task_status, json_data, workflow_id) VALUES (?, ?, ?, ?, ?) " +
-			" ON CONFLICT ON CONSTRAINT task_task_id DO UPDATE SET modified_on=now(), task_status=?, json_data=?";
+		String SQL = "INSERT INTO task (task_id, task_type, task_refname, task_status, json_data, workflow_id, start_time, end_time) " +
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT task_task_id DO " +
+			"UPDATE SET modified_on=now(), task_status=?, json_data=?, start_time = ?, end_time = ?";
 		execute(connection, SQL, q -> q.addParameter(task.getTaskId())
 			.addParameter(task.getTaskType())
+			.addParameter(task.getReferenceTaskName())
 			.addParameter(task.getStatus().name())
 			.addJsonParameter(task)
 			.addParameter(task.getWorkflowInstanceId())
+			.addTimestampParameter(task.getStartTime())
+			.addTimestampParameter(task.getEndTime())
 			.addParameter(task.getStatus().name())
 			.addJsonParameter(task)
+			.addTimestampParameter(task.getStartTime())
+			.addTimestampParameter(task.getEndTime())
 			.executeUpdate());
 	}
 

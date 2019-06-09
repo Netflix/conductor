@@ -97,14 +97,17 @@ create index task_in_progress_def_id on task_in_progress (task_def_name, task_id
 
 create table task
 (
-    id          serial primary key,
-    created_on  timestamp    not null default now(),
-    modified_on timestamp    not null default now(),
-    task_id     varchar(255) not null,
-    task_type   varchar(255) not null,
-    task_status varchar(255) not null,
-    workflow_id varchar(255) not null,
-    json_data   text         not null
+    id           serial primary key,
+    created_on   timestamp    not null default now(),
+    modified_on  timestamp    not null default now(),
+    task_id      varchar(255) not null,
+    task_type    varchar(255) not null,
+    task_refname varchar(255) not null,
+    task_status  varchar(255) not null,
+    workflow_id  varchar(255) not null,
+    json_data    text         not null,
+    start_time   timestamp,
+    end_time     timestamp
 );
 create unique index task_task_id on task (task_id);
 alter table task
