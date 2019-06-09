@@ -23,6 +23,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.MetricsDAO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -46,13 +48,15 @@ import java.util.*;
 public class InfoResource {
 	private static Logger logger = LoggerFactory.getLogger(InfoResource.class);
 	private MetricsDAO metricsDAO;
+	private RestHighLevelClient client;
 	private Configuration config;
 	private String fullVersion;
 
 	@Inject
-	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
+	public InfoResource(Configuration config, MetricsDAO metricsDAO, RestHighLevelClient client) {
 		this.config = config;
 		this.metricsDAO = metricsDAO;
+		this.client = client;
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
@@ -71,6 +75,25 @@ public class InfoResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> status() {
 		return Collections.singletonMap("version", fullVersion);
+	}
+
+	@GET
+	@Path("/health")
+	@ApiOperation(value = "Get the health status")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> health() throws IOException {
+		boolean status = false;
+
+		try {
+			status = client.ping();
+		} catch (Exception e) {
+			logger.error("Elasticsearch health check failed: " + e.getMessage(), e);
+			throw e;
+		}
+
+		logger.debug("Elasticsearch health check result: " + status);
+
+		return Collections.singletonMap("is_ping_okay", status);
 	}
 
 	@GET

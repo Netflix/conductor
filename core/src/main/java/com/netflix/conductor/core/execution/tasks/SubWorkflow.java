@@ -158,7 +158,17 @@ public class SubWorkflow extends WorkflowSystemTask {
 		String rerunWorkflowId = (String) task.getOutputData().get("rerunWorkflowId");
 		if (StringUtils.isNotEmpty(rerunWorkflowId)) {
 			try {
-				provider.terminateWorkflow(rerunWorkflowId, "The sub-workflow cancellation requested");
+				Workflow rerunWorkflow = provider.getWorkflow(rerunWorkflowId, true);
+
+				if (workflow.getStatus() == WorkflowStatus.COMPLETED) {
+					provider.forceCompleteWorkflow(rerunWorkflowId, "Parent workflow force completed");
+				} else if (workflow.getStatus() == WorkflowStatus.CANCELLED) {
+					rerunWorkflow.setStatus(WorkflowStatus.CANCELLED);
+					rerunWorkflow.setCancelledBy(workflow.getCancelledBy());
+					provider.cancelWorkflow(rerunWorkflow, defaultIfEmpty(workflow.getReasonForIncompletion(), "Parent workflow has been cancelled"));
+				} else {
+					provider.terminateWorkflow(rerunWorkflowId, "The sub-workflow cancellation requested");
+				}
 			} catch (Exception ex) {
 				logger.warn("Rerun workflow termination failed " + ex.getMessage() + " for " + rerunWorkflowId);
 			}

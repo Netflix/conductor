@@ -395,7 +395,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             sourceBuilder.sort("unackOn", SortOrder.ASC);
             sourceBuilder.query(query);
             sourceBuilder.version(true);
-            sourceBuilder.size(1000);
+            sourceBuilder.size(500);
 
             SearchRequest request = new SearchRequest(indexName).types(typeName);
             request.source(sourceBuilder);
