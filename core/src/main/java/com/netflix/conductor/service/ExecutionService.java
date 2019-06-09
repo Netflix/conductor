@@ -412,9 +412,4 @@ public class ExecutionService {
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		return edao.anyRunningWorkflowsByTags(tags);
 	}
-
-	public List<Task> getPendingTasksByTags(String taskType, Set<String> tags) {
-		return edao.getPendingTasksByTags(taskType, tags);
-	}
-
 }

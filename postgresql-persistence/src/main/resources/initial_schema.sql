@@ -61,21 +61,22 @@ create table workflow
     modified_on        timestamp    not null default now(),
     start_time         timestamp,
     end_time           timestamp,
+    parent_workflow_id varchar(255),
     workflow_id        varchar(255) not null,
     workflow_type      varchar(255) not null,
     workflow_status    varchar(255) not null,
-    parent_workflow_id varchar(255),
+    date_str           integer      not null,
     json_data          text         not null,
     input              text,
     output             text,
     correlation_id     text,
-    tags               text[],
-    date_str           integer      not null
+    tags               text[]
 );
 create unique index workflow_workflow_id on workflow (workflow_id);
 alter table workflow
     add constraint workflow_workflow_id unique using index workflow_workflow_id;
 create index workflow_type_status_date on workflow (workflow_type, workflow_status, date_str);
+create index workflow_parent_workflow_id on workflow (parent_workflow_id);
 create index workflow_start_time on workflow (start_time);
 
 create table task_in_progress

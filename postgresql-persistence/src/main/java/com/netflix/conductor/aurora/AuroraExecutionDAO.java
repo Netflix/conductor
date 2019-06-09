@@ -382,24 +382,42 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		getWithTransaction(tx -> insertEventPublished(tx, ep));
 	}
 
+
+	/**
+	 * Function to find tasks in the workflows which associated with given tags
+	 *
+	 * Includes task into result if:
+	 * workflow.tags contains ALL values from the tags parameter
+	 * and task type matches the given task type
+	 * and the task status is IN_PROGRESS
+	 *
+	 * @param tags A set of tags
+	 * @return List of tasks
+	 */
 	@Override
-	// TODO Review the logic!!!
 	public List<Task> getPendingTasksByTags(String taskType, Set<String> tags) {
 		String SQL = "SELECT t.json_data FROM task_in_progress tip " +
 			"INNER JOIN task t ON t.task_id = tip.task_id " +
 			"INNER JOIN workflow w ON w.workflow_id = tip.workflow_id " +
-			"WHERE t.task_status = 'IN_PROGRESS' AND t.task_type = ? AND w.tags = ?";
+			"WHERE t.task_status = 'IN_PROGRESS' AND t.task_type = ? AND w.tags @> ?";
 
 		return queryWithTransaction(SQL, q -> q.addParameter(taskType)
 			.addParameter(tags)
 			.executeAndFetch(Task.class));
 	}
 
+	/**
+	 * Function to check is there any workflows associated with given tags
+	 * Returns true if workflow.tags contains ALL values from the tags parameter
+	 * Otherwise returns false
+	 *
+	 * @param tags A set of tags
+	 * @return Either true or false
+	 */
 	@Override
-	// TODO Review the logic!!!
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
-		String SQL = "select true from workflow where tags = ? limit 1";
-		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeCount() > 0);
+		String SQL = "select count(*) from workflow where tags @> ?";
+		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeScalar(Long.class) > 0);
 	}
 
 	private static int dateStr(Long timeInMs) {
