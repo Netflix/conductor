@@ -115,7 +115,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 							", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
 					continue;
 				}
-				addWorkflowToTaskMapping(connection, task);
 				addTaskInProgress(connection, task);
 				updateTask(connection, task);
 
@@ -209,7 +208,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public List<Task> getTasksForWorkflow(String workflowId) {
-		String SQL = "SELECT task_id FROM workflow_to_task WHERE workflow_id = ?";
+		String SQL = "SELECT task_id FROM task WHERE workflow_id = ?";
 		return getWithTransaction(tx -> query(tx, SQL, q -> {
 			List<String> taskIds = q.addParameter(workflowId).executeScalarList(String.class);
 			return getTasks(tx, taskIds);
@@ -239,16 +238,13 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			for (Task task : workflow.getTasks()) {
 				removeTask(connection, task);
 			}
-
-			removeWorkflowDefToWorkflowMapping(connection, workflow);
-			removePendingWorkflow(connection, workflow.getWorkflowType(), workflowId);
 			removeWorkflow(connection, workflowId);
 		});
 	}
 
 	@Override
 	public void removeFromPendingWorkflow(String workflowType, String workflowId) {
-		withTransaction(connection -> removePendingWorkflow(connection, workflowType, workflowId));
+		// not in use any more. See references
 	}
 
 	@Override
@@ -285,7 +281,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	@Override
 	public List<String> getRunningWorkflowIds(String workflowName) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-		String SQL = "SELECT workflow_id FROM workflow_pending WHERE workflow_type = ?";
+		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
 
 		return queryWithTransaction(SQL,
 			q -> q.addParameter(workflowName).executeScalarList(String.class));
@@ -300,7 +296,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	@Override
 	public long getPendingWorkflowCount(String workflowName) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-		String SQL = "SELECT COUNT(*) FROM workflow_pending WHERE workflow_type = ?";
+		String SQL = "SELECT COUNT(*) FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
 
 		return queryWithTransaction(SQL, q -> q.addParameter(workflowName).executeCount());
 	}
@@ -321,8 +317,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		List<Workflow> workflows = new LinkedList<>();
 
 		withTransaction(tx -> {
-			String SQL = "SELECT workflow_id FROM workflow_def_to_workflow " +
-				" WHERE workflow_def = ? AND date_str BETWEEN ? AND ?";
+			String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND date_str BETWEEN ? AND ?";
 
 			List<String> workflowIds = query(tx, SQL, q -> q.addParameter(workflowName)
 				.addParameter(dateStr(startTime)).addParameter(dateStr(endTime)).executeScalarList(String.class));
@@ -453,19 +448,19 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		final String taskKey = task.getReferenceTaskName() + task.getRetryCount();
 
 		removeScheduledTask(connection, task, taskKey);
-		removeWorkflowToTaskMapping(connection, task);
 		removeTaskInProgress(connection, task);
 		removeTaskData(connection, task);
 	}
 
 	private void insertOrUpdateTask(Connection connection, Task task) {
 		// Warning! Constraint name is also unique index name
-		String SQL = "INSERT INTO task (task_id, task_type, task_status, json_data) VALUES (?, ?, ?, ?) " +
+		String SQL = "INSERT INTO task (task_id, task_type, task_status, json_data, workflow_id) VALUES (?, ?, ?, ?, ?) " +
 			" ON CONFLICT ON CONSTRAINT task_task_id DO UPDATE SET modified_on=now(), task_status=?, json_data=?";
 		execute(connection, SQL, q -> q.addParameter(task.getTaskId())
 			.addParameter(task.getTaskType())
 			.addParameter(task.getStatus().name())
 			.addJsonParameter(task)
+			.addParameter(task.getWorkflowInstanceId())
 			.addParameter(task.getStatus().name())
 			.addJsonParameter(task)
 			.executeUpdate());
@@ -507,8 +502,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
 		Preconditions.checkNotNull(workflow, "workflow object cannot be null");
 
-		boolean terminal = workflow.getStatus().isTerminal();
-
 		if (workflow.getStatus().isTerminal()) {
 			workflow.setEndTime(System.currentTimeMillis());
 		}
@@ -520,13 +513,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				updateWorkflow(tx, workflow);
 			} else {
 				addWorkflow(tx, workflow);
-				addWorkflowDefToWorkflowMapping(tx, workflow);
-			}
-
-			if (terminal) {
-				removePendingWorkflow(tx, workflow.getWorkflowType(), workflow.getWorkflowId());
-			} else {
-				addPendingWorkflow(tx, workflow.getWorkflowType(), workflow.getWorkflowId());
 			}
 		});
 
@@ -537,17 +523,26 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	private void addWorkflow(Connection connection, Workflow workflow) {
-		String SQL = "INSERT INTO workflow (workflow_id, correlation_id, tags, json_data) VALUES (?, ?, ?, ?)";
+		String SQL = "INSERT INTO workflow (workflow_id, parent_workflow_id, workflow_type, workflow_status, " +
+			"correlation_id, tags, input, json_data, date_str, start_time) " +
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 		execute(connection, SQL, q -> q.addParameter(workflow.getWorkflowId())
+			.addParameter(workflow.getParentWorkflowId())
+			.addParameter(workflow.getWorkflowType())
+			.addParameter(workflow.getStatus().name())
 			.addParameter(workflow.getCorrelationId())
 			.addParameter(workflow.getTags())
-			.addJsonParameter(workflow).executeUpdate());
+			.addJsonParameter(workflow.getInput())
+			.addJsonParameter(workflow)
+			.addParameter(dateStr(workflow.getCreateTime()))
+			.addTimestampParameter(workflow.getCreateTime())
+			.executeUpdate());
 	}
 
 	private void updateWorkflow(Connection connection, Workflow workflow) {
 		StringBuilder SQL = new StringBuilder();
-		SQL.append("UPDATE workflow SET json_data = ?");
+		SQL.append("UPDATE workflow SET json_data = ?, workflow_status = ?, output = ?, end_time = ?");
 
 		// We must not delete tags for RESET as it must be restarted right away
 		if (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
@@ -557,7 +552,12 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		SQL.append(", modified_on = now() WHERE workflow_id = ?");
 
 		execute(connection, SQL.toString(),
-			q -> q.addJsonParameter(workflow).addParameter(workflow.getWorkflowId()).executeUpdate());
+			q -> q.addJsonParameter(workflow)
+				.addParameter(workflow.getStatus().name())
+				.addJsonParameter(workflow.getOutput())
+				.addTimestampParameter(workflow.getEndTime())
+				.addParameter(workflow.getWorkflowId())
+				.executeUpdate());
 	}
 
 	private Workflow readWorkflow(Connection connection, String workflowId) {
@@ -570,56 +570,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		String SQL = "DELETE FROM workflow WHERE workflow_id = ?";
 
 		execute(connection, SQL, q -> q.addParameter(workflowId).executeDelete());
-	}
-
-	private void addPendingWorkflow(Connection connection, String workflowType, String workflowId) {
-		// Warning! Constraint name is also unique index name
-		String SQL = "INSERT INTO workflow_pending (workflow_type, workflow_id) VALUES (?, ?) " +
-			" ON CONFLICT ON CONSTRAINT workflow_pending_fields DO NOTHING";
-
-		execute(connection, SQL,
-			q -> q.addParameter(workflowType).addParameter(workflowId).executeUpdate());
-	}
-
-	private void removePendingWorkflow(Connection connection, String workflowType, String workflowId) {
-		String SQL = "DELETE FROM workflow_pending WHERE workflow_type = ? AND workflow_id = ?";
-
-		execute(connection, SQL,
-			q -> q.addParameter(workflowType).addParameter(workflowId).executeDelete());
-	}
-
-	private void addWorkflowToTaskMapping(Connection connection, Task task) {
-		// Warning! Constraint name is also unique index name
-		String SQL = "INSERT INTO workflow_to_task (workflow_id, task_id) VALUES (?, ?) " +
-			" ON CONFLICT ON CONSTRAINT workflow_to_task_fields DO NOTHING";
-
-		execute(connection, SQL,
-			q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).executeUpdate());
-	}
-
-	private void removeWorkflowToTaskMapping(Connection connection, Task task) {
-		String SQL = "DELETE FROM workflow_to_task WHERE workflow_id = ? AND task_id = ?";
-
-		execute(connection, SQL,
-			q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).executeDelete());
-	}
-
-	private void addWorkflowDefToWorkflowMapping(Connection connection, Workflow workflow) {
-		// Warning! Constraint name is also unique index name
-		String SQL = "INSERT INTO workflow_def_to_workflow (workflow_def, date_str, workflow_id) VALUES (?, ?, ?) " +
-			" ON CONFLICT ON CONSTRAINT workflow_def_to_workflow_fields DO NOTHING";
-
-		execute(connection, SQL,
-			q -> q.addParameter(workflow.getWorkflowType()).addParameter(dateStr(workflow.getCreateTime()))
-				.addParameter(workflow.getWorkflowId()).executeUpdate());
-	}
-
-	private void removeWorkflowDefToWorkflowMapping(Connection connection, Workflow workflow) {
-		String SQL = "DELETE FROM workflow_def_to_workflow WHERE workflow_def = ? AND date_str = ? AND workflow_id = ?";
-
-		execute(connection, SQL,
-			q -> q.addParameter(workflow.getWorkflowType()).addParameter(dateStr(workflow.getCreateTime()))
-				.addParameter(workflow.getWorkflowId()).executeUpdate());
 	}
 
 	private void addTaskInProgress(Connection connection, Task task) {

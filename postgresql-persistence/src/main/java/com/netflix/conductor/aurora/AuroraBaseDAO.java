@@ -107,32 +107,6 @@ abstract class AuroraBaseDAO {
 		}
 	}
 
-	<R> R getWithTransactionWithOutErrorPropagation(TransactionalFunction<R> function) {
-		Instant start = Instant.now();
-		LazyToString callingMethod = getCallingMethod();
-		logger.trace("{} : starting transaction", callingMethod);
-
-		try (Connection tx = dataSource.getConnection()) {
-			boolean previousAutoCommitMode = tx.getAutoCommit();
-			tx.setAutoCommit(false);
-			try {
-				R result = function.apply(tx);
-				tx.commit();
-				return result;
-			} catch (Throwable th) {
-				tx.rollback();
-				logger.info(ApplicationException.Code.CONFLICT + " " + th.getMessage());
-				return null;
-			} finally {
-				tx.setAutoCommit(previousAutoCommitMode);
-			}
-		} catch (SQLException ex) {
-			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
-		} finally {
-			logger.trace("{} : took {}ms", callingMethod, Duration.between(start, Instant.now()).toMillis());
-		}
-	}
-
 	String toJson(Object value) {
 		if (value == null) {
 			return "null";

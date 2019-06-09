@@ -56,43 +56,27 @@ create table meta_event_handler
 -- --------------------------------------------------------------------------------------------------------------
 create table workflow
 (
-    id             serial primary key,
-    created_on     timestamp    not null default now(),
-    modified_on    timestamp    not null default now(),
-    workflow_id    varchar(255) not null,
-    json_data      text         not null,
-    correlation_id text,
-    tags           text[]
+    id                 serial primary key,
+    created_on         timestamp    not null default now(),
+    modified_on        timestamp    not null default now(),
+    start_time         timestamp,
+    end_time           timestamp,
+    workflow_id        varchar(255) not null,
+    workflow_type      varchar(255) not null,
+    workflow_status    varchar(255) not null,
+    parent_workflow_id varchar(255),
+    json_data          text         not null,
+    input              text,
+    output             text,
+    correlation_id     text,
+    tags               text[],
+    date_str           integer      not null
 );
 create unique index workflow_workflow_id on workflow (workflow_id);
 alter table workflow
     add constraint workflow_workflow_id unique using index workflow_workflow_id;
-
-create table workflow_def_to_workflow
-(
-    id           serial primary key,
-    created_on   timestamp    not null default now(),
-    modified_on  timestamp    not null default now(),
-    workflow_def varchar(255) not null,
-    workflow_id  varchar(255) not null,
-    date_str     integer      not null
-);
-create unique index workflow_def_to_workflow_fields on workflow_def_to_workflow (workflow_def, date_str, workflow_id);
-alter table workflow_def_to_workflow
-    add constraint workflow_def_to_workflow_fields unique using index workflow_def_to_workflow_fields;
-
-create table workflow_pending
-(
-    id            serial primary key,
-    created_on    timestamp    not null default now(),
-    modified_on   timestamp    not null default now(),
-    workflow_type varchar(255) not null,
-    workflow_id   varchar(255) not null
-);
-create unique index workflow_pending_fields on workflow_pending (workflow_type, workflow_id);
-alter table workflow_pending
-    add constraint workflow_pending_fields unique using index workflow_pending_fields;
-
+create index workflow_type_status_date on workflow (workflow_type, workflow_status, date_str);
+create index workflow_start_time on workflow (start_time);
 
 create table task_in_progress
 (
@@ -118,11 +102,13 @@ create table task
     task_id     varchar(255) not null,
     task_type   varchar(255) not null,
     task_status varchar(255) not null,
+    workflow_id varchar(255) not null,
     json_data   text         not null
 );
 create unique index task_task_id on task (task_id);
 alter table task
     add constraint task_task_id unique using index task_task_id;
+create index task_workflow_id on task (workflow_id);
 
 create table task_scheduled
 (
@@ -137,17 +123,14 @@ create unique index task_scheduled_wf_task on task_scheduled (workflow_id, task_
 alter table task_scheduled
     add constraint task_scheduled_wf_task unique using index task_scheduled_wf_task;
 
-create table workflow_to_task
+create table task_log
 (
-    id          serial primary key,
-    created_on  timestamp    not null default now(),
-    modified_on timestamp    not null default now(),
-    workflow_id varchar(255) not null,
-    task_id     varchar(255) not null
+    id         serial primary key,
+    created_on timestamp    not null default now(),
+    task_id    varchar(255) not null,
+    log        text         not null
 );
-create unique index workflow_to_task_fields on workflow_to_task (workflow_id, task_id);
-alter table workflow_to_task
-    add constraint workflow_to_task_fields unique using index workflow_to_task_fields;
+create index task_log_task_id on task_log (task_id);
 
 create table poll_data
 (
@@ -162,6 +145,16 @@ create table poll_data
 create unique index poll_data_fields on poll_data (queue_name, domain);
 alter table poll_data
     add constraint poll_data_fields unique using index poll_data_fields;
+
+create table event_message
+(
+    id         serial primary key,
+    created_on timestamp    not null default now(),
+    queue_name varchar(255) not null,
+    message_id varchar(255) not null,
+    receipt    text         not null,
+    json_data  text         not null
+);
 
 create table event_execution
 (
