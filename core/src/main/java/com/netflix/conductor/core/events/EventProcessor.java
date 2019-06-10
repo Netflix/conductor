@@ -84,7 +84,7 @@ public class EventProcessor {
 			refresh();
 			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
 		} else {
-			logger.warn("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
+			logger.debug("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
 		}
 	}
 
@@ -190,7 +190,7 @@ public class EventProcessor {
 				if (isNotEmpty(condition) || isNotEmpty(conditionClass)) {
 					boolean success = evalCondition(condition, conditionClass, payloadObj);
 					if (!success) {
-						logger.warn("Handler did not match payload. Handler={}, condition={}", handler.getName(), condition);
+						logger.debug("Handler did not match payload. Handler={}, condition={}", handler.getName(), condition);
 						EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 						ee.setAccepted(msg.getAccepted());
 						ee.setCreated(System.currentTimeMillis());
@@ -279,7 +279,7 @@ public class EventProcessor {
 						Future<Boolean> future = execute(ee, action, payload);
 						futures.add(future);
 					} else {
-						logger.warn("Duplicate delivery/execution? {}", id);
+						logger.debug("Duplicate delivery/execution? {}", id);
 					}
 				}
 			}
