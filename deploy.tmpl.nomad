@@ -462,8 +462,7 @@ job "conductor" {
           path     = "/v1/health"
           interval = "10s"
           timeout  = "3s"
-
-           check_restart {
+          check_restart {
             limit           = 3
             grace           = "180s"
             ignore_warnings = false
