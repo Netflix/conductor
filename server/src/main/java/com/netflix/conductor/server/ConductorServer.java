@@ -59,7 +59,7 @@ public class ConductorServer {
 	}
 
 	private enum SearchMode {
-		elasticsearch, memory
+		elasticsearch, memory, none
 	}
 
 	private ServerModule sm;
@@ -85,7 +85,7 @@ public class ConductorServer {
 			System.exit(1);
 		}
 
-		String modestring = cc.getProperty("workflow.elasticsearch.mode", "memory");
+		String modestring = cc.getProperty("workflow.elasticsearch.mode", "none");
 		try {
 			mode = SearchMode.valueOf(modestring);
 		} catch (IllegalArgumentException ie) {
@@ -182,6 +182,7 @@ public class ConductorServer {
 				break;
 
 			case elasticsearch:
+			case none:
 				break;
 		}
 
