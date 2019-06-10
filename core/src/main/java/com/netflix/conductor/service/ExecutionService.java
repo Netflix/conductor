@@ -84,6 +84,7 @@ public class ExecutionService {
 		this.indexer = indexer;
 		this.config = config;
 		this.taskRequeueTimeout = config.getIntProperty("task.requeue.timeout", 60_000);
+		reloadConfig();
 	}
 
 	public Task poll(String taskType, String workerId) throws Exception {
