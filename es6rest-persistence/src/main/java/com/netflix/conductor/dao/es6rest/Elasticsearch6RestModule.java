@@ -6,9 +6,11 @@ import com.google.inject.Provides;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.utils.WaitUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestClientBuilder.RequestConfigCallback;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +42,14 @@ public class Elasticsearch6RestModule extends AbstractModule {
                 .toArray(HttpHost[]::new);
 
         int timeout = config.getIntProperty("workflow.elasticsearch.timeout.seconds", 60) * 1000;
-        RestClientBuilder builder = RestClient.builder(hosts)
-            .setMaxRetryTimeoutMillis(timeout)
-            .setRequestConfigCallback(rcb -> rcb.setSocketTimeout(timeout));
+        RestClientBuilder builder = RestClient.builder(hosts).setMaxRetryTimeoutMillis(timeout)
+                .setRequestConfigCallback(new RequestConfigCallback() {
+                    @Override
+                    public RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder requestConfigBuilder) {
+                        return requestConfigBuilder.setConnectionRequestTimeout(0).setSocketTimeout(timeout)
+                                .setConnectTimeout(timeout);
+                    }
+                });
 
         RestHighLevelClient client = new RestHighLevelClient(builder);
 
