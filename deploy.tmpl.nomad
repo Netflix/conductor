@@ -179,6 +179,7 @@ job "conductor" {
         workflow_sweeper_batch_names                 = "sherlock"
         workflow_batch_sherlock_enabled              = "true"
         workflow_lazy_decider                        = "true"
+        workflow_elasticsearch_mode                  = "none"
 
         // Auth settings. Rest settings are in vault
         conductor_auth_service  = "auth.service.${meta.tld}"
