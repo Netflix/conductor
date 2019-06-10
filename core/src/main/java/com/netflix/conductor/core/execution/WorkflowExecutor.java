@@ -1106,13 +1106,13 @@ public class WorkflowExecutor {
 	 */
 	public boolean decide(String workflowId) throws Exception {
 		if (workflowId == null || workflowId.isEmpty()) {
-			logger.error("Invoked decide() with an empty or null Workflow ID");
+			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
 			return false;
 		}
 
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow == null) {
-			logger.error("getWorkflow() returned null for workflow: " + workflowId);
+			logger.error("ONECOND-1106: getWorkflow() returned null for workflow: " + workflowId);
 			return false;
 		}
 
