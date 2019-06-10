@@ -346,6 +346,7 @@ job "conductor" {
       }
     } // end ui task
   } // end ui group
+
   group "server" {
     count = 5
 
@@ -462,7 +463,7 @@ job "conductor" {
           interval = "10s"
           timeout  = "3s"
 
-          check_restart {
+           check_restart {
             limit           = 3
             grace           = "180s"
             ignore_warnings = false
@@ -493,7 +494,6 @@ job "conductor" {
       }
     } // end server task
   } // end server group
-
 } // end job
 
 //job "conductor-archiver" {
