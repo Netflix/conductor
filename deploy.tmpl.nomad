@@ -111,96 +111,6 @@ job "conductor" {
       }
     } // end ui task
   } // end ui group
-  group "ui-pg" {
-    count = 3
-
-    # vault declaration
-    vault {
-      change_mode = "noop"
-      env         = false
-      policies    = ["read-secrets"]
-    }
-
-    task "ui-pg" {
-      meta {
-        product-class = "custom"
-        stack-role    = "ui"
-      }
-
-      driver = "docker"
-
-      config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-ui"
-
-        port_map {
-          http = 5000
-        }
-
-        volumes = [
-          "local/secrets/conductor-ui.env:/app/config/secrets.env",
-        ]
-
-        labels {
-          service   = "${NOMAD_JOB_NAME}"
-          component = "${NOMAD_TASK_NAME}"
-        }
-
-        logging {
-          type = "syslog"
-
-          config {
-            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
-          }
-        }
-      }
-
-      env {
-        TLD         = "${meta.tld}"
-        APP_VERSION = "[[.app_version]]"
-        WF_SERVICE  = "${NOMAD_JOB_NAME}-server-pg.service.${meta.tld}"
-
-        // Auth settings. Rest settings are in vault
-        conductor_auth_service  = "auth.service.${meta.tld}"
-        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
-      }
-
-      service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
-        name = "${JOB}-${TASK}"
-        port = "http"
-
-        check {
-          type     = "http"
-          path     = "/"
-          interval = "10s"
-          timeout  = "3s"
-        }
-      }
-
-      # Write secrets to the file that can be mounted as volume
-      template {
-        data = <<EOF
-        {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
-        {{ end }}{{ end }}
-        EOF
-
-        destination   = "local/secrets/conductor-ui.env"
-        change_mode   = "signal"
-        change_signal = "SIGINT"
-      }
-
-      resources {
-        cpu    = 256 # MHz
-        memory = 512 # MB
-
-        network {
-          mbits = 4
-          port  "http"{}
-        }
-      }
-    } // end ui task
-  } // end ui group
-
   group "server" {
     count = 5
 
@@ -348,6 +258,96 @@ job "conductor" {
       }
     } // end server task
   } // end server group
+
+  group "ui-pg" {
+    count = 3
+
+    # vault declaration
+    vault {
+      change_mode = "noop"
+      env         = false
+      policies    = ["read-secrets"]
+    }
+
+    task "ui-pg" {
+      meta {
+        product-class = "custom"
+        stack-role    = "ui"
+      }
+
+      driver = "docker"
+
+      config {
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-ui"
+
+        port_map {
+          http = 5000
+        }
+
+        volumes = [
+          "local/secrets/conductor-ui.env:/app/config/secrets.env",
+        ]
+
+        labels {
+          service   = "${NOMAD_JOB_NAME}"
+          component = "${NOMAD_TASK_NAME}"
+        }
+
+        logging {
+          type = "syslog"
+
+          config {
+            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
+          }
+        }
+      }
+
+      env {
+        TLD         = "${meta.tld}"
+        APP_VERSION = "[[.app_version]]"
+        WF_SERVICE  = "${NOMAD_JOB_NAME}-server-pg.service.${meta.tld}"
+
+        // Auth settings. Rest settings are in vault
+        conductor_auth_service  = "auth.service.${meta.tld}"
+        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
+      }
+
+      service {
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
+        name = "${JOB}-${TASK}"
+        port = "http"
+
+        check {
+          type     = "http"
+          path     = "/"
+          interval = "10s"
+          timeout  = "3s"
+        }
+      }
+
+      # Write secrets to the file that can be mounted as volume
+      template {
+        data = <<EOF
+        {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
+        EOF
+
+        destination   = "local/secrets/conductor-ui.env"
+        change_mode   = "signal"
+        change_signal = "SIGINT"
+      }
+
+      resources {
+        cpu    = 256 # MHz
+        memory = 512 # MB
+
+        network {
+          mbits = 4
+          port  "http"{}
+        }
+      }
+    } // end ui task
+  } // end ui group
   group "server-pg" {
     count = 5
 
