@@ -91,8 +91,6 @@ public class InfoResource {
 			throw e;
 		}
 
-		logger.debug("Elasticsearch health check result: " + status);
-
 		return Collections.singletonMap("is_ping_okay", status);
 	}
 
