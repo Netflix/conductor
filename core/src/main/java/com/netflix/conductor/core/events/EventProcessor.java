@@ -84,7 +84,7 @@ public class EventProcessor {
 			refresh();
 			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
 		} else {
-			logger.warn("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
+			logger.debug("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
 		}
 	}
 
@@ -279,7 +279,7 @@ public class EventProcessor {
 						Future<Boolean> future = execute(ee, action, payload);
 						futures.add(future);
 					} else {
-						logger.warn("Duplicate delivery/execution? {}", id);
+						logger.debug("Duplicate delivery/execution? {}", id);
 					}
 				}
 			}
