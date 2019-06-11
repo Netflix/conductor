@@ -19,17 +19,28 @@ create table meta_config
     name  varchar(255) primary key,
     value varchar(255)
 );
-insert into meta_config values('log4j_logger_com_netflix_conductor_aurora','INFO');
-insert into meta_config values('log4j_logger_com_netflix_conductor_core_events_nats','DEBUG');
-insert into meta_config values('log4j_logger_com_netflix_conductor_core_events_shotgun','DEBUG');
-insert into meta_config values('log4j_logger_com_netflix_conductor_core_events_EventProcessor','DEBUG');
-insert into meta_config values('log4j_logger_com_netflix_conductor_core_execution_WorkflowSweeper','INFO');
-insert into meta_config values('log4j_logger_com_netflix_conductor_core_execution_DeciderService','INFO');
-insert into meta_config values('log4j_logger_com_netflix_conductor_core_execution_WorkflowExecutor','INFO');
-insert into meta_config values('log4j_logger_com_netflix_conductor_contribs_http','INFO');
-insert into meta_config values('log4j_logger_com_netflix_conductor_contribs_queue_nats','DEBUG');
-insert into meta_config values('log4j_logger_com_netflix_conductor_contribs_queue_shotgun','DEBUG');
-insert into meta_config values('log4j_logger_com_netflix_conductor_core_execution_tasks_SystemTaskWorkerCoordinator','INFO');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_aurora', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_core_events_nats', 'DEBUG');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_core_events_shotgun', 'DEBUG');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_core_events_EventProcessor', 'DEBUG');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_core_execution_WorkflowSweeper', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_core_execution_DeciderService', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_core_execution_WorkflowExecutor', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_contribs_http', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_contribs_queue_nats', 'DEBUG');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_contribs_queue_shotgun', 'DEBUG');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_core_execution_tasks_SystemTaskWorkerCoordinator', 'INFO');
 commit;
 
 create table meta_task_def
@@ -104,7 +115,6 @@ create table task_in_progress
 create unique index task_in_progress_fields on task_in_progress (task_def_name, workflow_id);
 alter table task_in_progress
     add constraint task_in_progress_fields unique using index task_in_progress_fields;
-
 create index task_in_progress_def_id on task_in_progress (task_def_name, task_id);
 
 create table task
@@ -157,7 +167,6 @@ create table poll_data
     domain      varchar(255) not null,
     json_data   text         not null
 );
-
 create unique index poll_data_fields on poll_data (queue_name, domain);
 alter table poll_data
     add constraint poll_data_fields unique using index poll_data_fields;
@@ -206,7 +215,6 @@ create index event_published_subject_date on event_published (subject, published
 -- --------------------------------------------------------------------------------------------------------------
 -- schema for queue dao
 -- --------------------------------------------------------------------------------------------------------------
-
 create table queue
 (
     id         serial primary key,
@@ -233,4 +241,3 @@ create unique index queue_name_msg on queue_message (queue_name, message_id);
 alter table queue_message
     add constraint queue_name_msg unique using index queue_name_msg;
 create index queue_name_combo on queue_message (queue_name, popped, deliver_on);
-
