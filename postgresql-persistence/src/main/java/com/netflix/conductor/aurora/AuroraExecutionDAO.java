@@ -532,7 +532,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.addJsonParameter(workflow.getInput())
 			.addJsonParameter(workflow)
 			.addParameter(dateStr(workflow.getCreateTime()))
-			.addTimestampParameter(workflow.getCreateTime())
+			.addTimestampParameter(workflow.getStartTime())
 			.executeUpdate());
 	}
 

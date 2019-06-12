@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-abstract class AuroraBaseDAO {
+public abstract class AuroraBaseDAO {
 	private static final List<String> EXCLUDED_STACKTRACE_CLASS = ImmutableList.of(
 		AuroraBaseDAO.class.getName(),
 		Thread.class.getName()
@@ -27,7 +27,7 @@ abstract class AuroraBaseDAO {
 	private final DataSource dataSource;
 	private final ObjectMapper mapper;
 
-	AuroraBaseDAO(DataSource dataSource, ObjectMapper mapper) {
+	public AuroraBaseDAO(DataSource dataSource, ObjectMapper mapper) {
 		this.dataSource = dataSource;
 		this.mapper = mapper;
 	}
@@ -74,7 +74,7 @@ abstract class AuroraBaseDAO {
 			.orElseThrow(() -> new NullPointerException("Cannot find Caller")));
 	}
 
-	<R> R query(Connection tx, String query, QueryFunction<R> function) {
+	public <R> R query(Connection tx, String query, QueryFunction<R> function) {
 		if (logger.isTraceEnabled()) {
 			LazyToString callingMethod = getCallingMethod();
 			logger.trace("{} : executing {}", callingMethod, query);
@@ -86,7 +86,7 @@ abstract class AuroraBaseDAO {
 		}
 	}
 
-	void execute(Connection tx, String query, ExecuteFunction function) {
+	public void execute(Connection tx, String query, ExecuteFunction function) {
 		if (logger.isTraceEnabled()) {
 			LazyToString callingMethod = getCallingMethod();
 			logger.trace("{} : executing {}", callingMethod, query);
@@ -98,18 +98,26 @@ abstract class AuroraBaseDAO {
 		}
 	}
 
-	<R> R queryWithTransaction(String query, QueryFunction<R> function) {
+	public <R> R queryWithTransaction(String query, QueryFunction<R> function) {
 		return getWithTransaction(tx -> query(tx, query, function));
 	}
 
-	void executeWithTransaction(String query, ExecuteFunction function) {
+	public void executeWithTransaction(String query, ExecuteFunction function) {
 		withTransaction(tx -> execute(tx, query, function));
 	}
 
-	<T> T readValue(String json, Class<T> tClass) {
+	public <T> T readValue(String json, Class<T> tClass) {
 		try {
 			return mapper.readValue(json, tClass);
 		} catch (IOException ex) {
+			throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, ex);
+		}
+	}
+
+	public <T> T convertValue(Object value, Class<T> tClass) {
+		try {
+			return mapper.convertValue(value, tClass);
+		} catch (Exception ex) {
 			throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, ex);
 		}
 	}
