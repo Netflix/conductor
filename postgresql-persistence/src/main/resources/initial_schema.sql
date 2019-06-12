@@ -128,6 +128,8 @@ create table task
     task_status  varchar(255) not null,
     workflow_id  varchar(255) not null,
     json_data    text         not null,
+    input        text,
+    output       text,
     start_time   timestamp,
     end_time     timestamp
 );
