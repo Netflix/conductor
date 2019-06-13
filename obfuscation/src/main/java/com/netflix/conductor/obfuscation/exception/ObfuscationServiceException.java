@@ -1,4 +1,4 @@
-package com.netflix.conductor.exception;
+package com.netflix.conductor.obfuscation.exception;
 
 public class ObfuscationServiceException extends RuntimeException {
 

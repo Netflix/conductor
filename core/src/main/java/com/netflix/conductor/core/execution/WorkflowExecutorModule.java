@@ -1,8 +1,6 @@
 package com.netflix.conductor.core.execution;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.consumer.WorkflowObfuscationQueueConsumer;
-import com.netflix.conductor.publisher.WorkflowObfuscationQueuePublisher;
 import com.netflix.conductor.service.*;
 
 /**
@@ -14,8 +12,8 @@ public class WorkflowExecutorModule extends AbstractModule {
     protected void configure() {
         bind(WorkflowStatusListener.class).to(WorkflowStatusListenerStub.class);//default implementation
 
-        bind(WorkflowObfuscationQueuePublisher.class).asEagerSingleton();
-        bind(WorkflowObfuscationQueueConsumer.class).asEagerSingleton();
+//        bind(WorkflowObfuscationQueuePublisher.class).asEagerSingleton();
+//        bind(WorkflowObfuscationQueueConsumer.class).asEagerSingleton();
 
         //service layer
         bind(AdminService.class).to(AdminServiceImpl.class);
@@ -24,6 +22,6 @@ public class WorkflowExecutorModule extends AbstractModule {
         bind(TaskService.class).to(TaskServiceImpl.class);
         bind(EventService.class).to(EventServiceImpl.class);
         bind(MetadataService.class).to(MetadataServiceImpl.class);
-        bind(ObfuscationService.class).to(ObfuscationServiceImpl.class);
+//        bind(ObfuscationService.class).to(ObfuscationServiceImpl.class);
     }
 }

@@ -1,4 +1,4 @@
-package com.netflix.conductor.publisher;
+package com.netflix.conductor.obfuscation.publisher;
 
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;

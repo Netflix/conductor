@@ -1,4 +1,4 @@
-package com.netflix.conductor.publisher;
+package com.netflix.conductor.obfuscation.publisher;
 
 import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -10,7 +10,6 @@ import org.mockito.Mockito;
 
 import java.util.HashMap;
 
-import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;

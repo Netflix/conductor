@@ -203,10 +203,4 @@ public class WorkflowResourceTest {
         verify(mockWorkflowService, times(1)).searchWorkflowsByTasks(anyInt(), anyInt(),
                 anyString(), anyString(), anyString());
     }
-
-    @Test
-    public void testWorkflowObfuscation() {
-        workflowResource.obfuscateWorkflows("name", 1);
-        verify(mockWorkflowService, times(1)).obfuscateWorkflows("name", 1);
-    }
 }

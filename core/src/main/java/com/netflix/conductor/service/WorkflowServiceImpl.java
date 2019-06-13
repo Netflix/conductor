@@ -406,14 +406,4 @@ public class WorkflowServiceImpl implements WorkflowService {
             return executionService.getExternalStorageLocation(ExternalPayloadStorage.Operation.WRITE, ExternalPayloadStorage.PayloadType.WORKFLOW_INPUT, path);
         }
     }
-
-    /**
-     * Obfuscate the defined workflow fields for previously executed workflows
-     *
-     * @param name      Name of the workflow you want to have the fields obfuscated
-     * @param version   Version of the workflow you want to have the fields obfuscated
-     */
-    public void obfuscateWorkflows(String name, Integer version) {
-        workflowExecutor.obfuscateWorkflows(name, version);
-    }
 }

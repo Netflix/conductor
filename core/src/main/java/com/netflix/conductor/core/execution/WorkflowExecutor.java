@@ -14,16 +14,11 @@ package com.netflix.conductor.core.execution;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.jayway.jsonpath.JsonPath;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
-import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
-import com.netflix.conductor.common.metadata.workflow.TaskType;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.metadata.workflow.*;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
@@ -41,37 +36,20 @@ import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
-import com.netflix.conductor.publisher.WorkflowObfuscationQueuePublisher;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.CANCELED;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED_WITH_TERMINAL_ERROR;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.SCHEDULED;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.SKIPPED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.*;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.valueOf;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.SUB_WORKFLOW;
 import static com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType.TASK_OUTPUT;
 import static com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType.WORKFLOW_INPUT;
-import static com.netflix.conductor.core.execution.ApplicationException.Code.CONFLICT;
-import static com.netflix.conductor.core.execution.ApplicationException.Code.INVALID_INPUT;
-import static com.netflix.conductor.core.execution.ApplicationException.Code.NOT_FOUND;
+import static com.netflix.conductor.core.execution.ApplicationException.Code.*;
 import static com.netflix.conductor.core.execution.tasks.SubWorkflow.SUB_WORKFLOW_ID;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -565,7 +543,10 @@ public class WorkflowExecutor {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             workflowStatusListener.onWorkflowCompleted(workflow);
         }
-        publisher.publish(workflow.getWorkflowId(), workflow.getWorkflowDefinition());
+
+        if(!workflow.getWorkflowDefinition().getObfuscationFields().isEmpty()) {
+            publisher.publish(workflow);
+        }
     }
 
     public void terminateWorkflow(String workflowId, String reason) {
@@ -663,7 +644,10 @@ public class WorkflowExecutor {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             workflowStatusListener.onWorkflowTerminated(workflow);
         }
-        publisher.publish(workflow.getWorkflowId(), workflow.getWorkflowDefinition());
+
+        if(!workflow.getWorkflowDefinition().getObfuscationFields().isEmpty()) {
+            publisher.publish(workflow);
+        }
     }
 
     /**
@@ -1061,31 +1045,6 @@ public class WorkflowExecutor {
 
         } catch (Exception e) {
             LOGGER.error("Error executing system task - {}, with id: {}", systemTask, taskId, e);
-        }
-    }
-
-    /**
-     * @param name Name of the Workflow
-     * @param version Version of the Workflow
-     * @throws ApplicationException If there was an error - caller should retry in this case.
-     */
-    public void obfuscateWorkflows(String name, Integer version) {
-        validateInput(name, version);
-        WorkflowDef workflowDef = getWorkflowDef(name, version);
-        long totalHits = searchWorkflowsToPublish(name, version, 0).getTotalHits();
-
-        if(totalHits > 0) {
-            int processedWorkflows = 0;
-            while(processedWorkflows < totalHits) {
-                SearchResult<String> results = searchWorkflowsToPublish(name, version, processedWorkflows);
-
-                List<String> workflowIds = results.getResults();
-
-                publisher.publishAll(workflowIds, workflowDef);
-                processedWorkflows = processedWorkflows + workflowIds.size();
-            }
-        } else {
-            LOGGER.info("no workflows were found to be obfuscated");
         }
     }
 

@@ -1,4 +1,4 @@
-package com.netflix.conductor.service;
+package com.netflix.conductor.obfuscation.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
@@ -10,7 +10,8 @@ import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.exception.ObfuscationServiceException;
+import com.netflix.conductor.obfuscation.exception.ObfuscationServiceException;
+import com.netflix.conductor.service.MetadataService;
 import org.junit.Before;
 import org.junit.Test;
 

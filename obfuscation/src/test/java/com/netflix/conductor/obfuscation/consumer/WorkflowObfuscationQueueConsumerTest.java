@@ -1,9 +1,9 @@
-package com.netflix.conductor.consumer;
+package com.netflix.conductor.obfuscation.consumer;
 
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.exception.ObfuscationServiceException;
-import com.netflix.conductor.service.ObfuscationService;
+import com.netflix.conductor.obfuscation.exception.ObfuscationServiceException;
+import com.netflix.conductor.obfuscation.service.ObfuscationService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
