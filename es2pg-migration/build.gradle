@@ -1,0 +1,34 @@
+plugins {
+    id 'application'
+    id 'java'
+}
+
+mainClassName = "com.bydeluxe.es2pg.migration.Main"
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+//    // Log4j
+    compile 'org.apache.logging.log4j:log4j-core:2.11.1'
+    compile 'org.slf4j:slf4j-simple:1.7.26'
+
+    compile project(':conductor-postgresql-persistence')
+
+    // ES6 Dependencies
+    compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.3.1'
+
+    // PostgreSQL
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.3.0'
+
+    // Tools
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
+    compile group: 'org.apache.commons', name: 'commons-configuration2', version: '2.2'
+    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
+    compile group: 'com.google.guava', name: 'guava', version: '19.0'
+    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+}

@@ -148,8 +148,8 @@ public class Query implements AutoCloseable {
      * @param epochMillis The epoch ms to create a new {@literal Timestamp} from.
      * @return {@literal this}
      */
-    public Query addTimestampParameter(long epochMillis) {
-        return epochMillis > 0 ? addParameter(new Timestamp(epochMillis)) : addNullParameter(Types.TIMESTAMP);
+    public Query addTimestampParameter(Long epochMillis) {
+        return epochMillis != null && epochMillis > 0 ? addParameter(new Timestamp(epochMillis)) : addNullParameter(Types.TIMESTAMP);
     }
 
 
@@ -159,8 +159,8 @@ public class Query implements AutoCloseable {
      * @param defaultValue The epoch ms to create a new {@literal Timestamp} from.
      * @return {@literal this}
      */
-    public Query addTimestampParameter(long epochMillis, long defaultValue) {
-        return epochMillis > 0 ? addParameter(new Timestamp(epochMillis)) : addParameter(new Timestamp(defaultValue));
+    public Query addTimestampParameter(Long epochMillis, long defaultValue) {
+        return epochMillis != null && epochMillis > 0 ? addParameter(new Timestamp(epochMillis)) : addParameter(new Timestamp(defaultValue));
     }
 
     /**
