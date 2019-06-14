@@ -81,6 +81,8 @@ public class Main {
 		poolConfig.setUsername(config.auroraUser());
 		poolConfig.setPassword(config.auroraPassword());
 		poolConfig.setAutoCommit(false);
+		poolConfig.setMaximumPoolSize(1000);
+		poolConfig.setConnectionTimeout(60_000);
 		poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 		poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 		poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
