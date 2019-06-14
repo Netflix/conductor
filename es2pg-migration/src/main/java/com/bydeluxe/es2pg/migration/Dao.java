@@ -3,12 +3,17 @@ package com.bydeluxe.es2pg.migration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.aurora.AuroraBaseDAO;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 class Dao extends AuroraBaseDAO {
 	Dao(DataSource dataSource, ObjectMapper mapper) {
@@ -54,6 +59,29 @@ class Dao extends AuroraBaseDAO {
 		} else {
 			addTaskInProgress(tx, task);
 		}
+	}
+
+	void requeueSweep(Connection tx) {
+		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_status = 'RUNNING'";
+		List<String> ids = query(tx, SQL, q -> q.executeAndFetch(String.class));
+		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null, 30));
+	}
+
+	void pushMessage(Connection tx, String queueName, String messageId, String payload, long offsetSeconds) {
+		String SQL = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT ON CONSTRAINT queue_name DO NOTHING";
+		execute(tx, SQL, q -> q.addParameter(queueName.toLowerCase()).executeUpdate());
+
+		SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
+			"VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
+
+		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
+
+		query(tx, SQL, q -> q.addParameter(queueName.toLowerCase())
+			.addParameter(messageId)
+			.addParameter(false)
+			.addTimestampParameter(deliverOn)
+			.addParameter(payload)
+			.executeUpdate());
 	}
 
 	private void addTaskInProgress(Connection connection, Task task) {
@@ -124,6 +152,74 @@ class Dao extends AuroraBaseDAO {
 			.addParameter(workflow.getCorrelationId())
 			.addParameter(workflow.getTags())
 			.executeUpdate());
+	}
+
+	void upsertTaskDef(Connection tx, TaskDef def) {
+		final String UPDATE_SQL = "UPDATE meta_task_def SET created_on = ?, modified_on = ?, json_data = ? WHERE name = ?";
+
+		final String INSERT_SQL = "INSERT INTO meta_task_def (created_on, modified_on, name, json_data) VALUES (?, ?, ?, ?)";
+
+		execute(tx, UPDATE_SQL, update -> {
+			int result = update
+				.addTimestampParameter(def.getCreateTime(), System.currentTimeMillis())
+				.addTimestampParameter(def.getUpdateTime(), System.currentTimeMillis())
+				.addJsonParameter(def)
+				.addParameter(def.getName())
+				.executeUpdate();
+
+			if (result == 0) {
+				execute(tx, INSERT_SQL,
+					insert -> insert
+						.addTimestampParameter(def.getCreateTime(), System.currentTimeMillis())
+						.addTimestampParameter(def.getUpdateTime(), System.currentTimeMillis())
+						.addParameter(def.getName())
+						.addJsonParameter(def)
+						.executeUpdate());
+			}
+		});
+	}
+
+	void upsertWorkflowDef(Connection tx, WorkflowDef def) {
+		Optional<Integer> version = getLatestVersion(tx, def);
+		if (!version.isPresent() || version.get() < def.getVersion()) {
+			final String SQL = "INSERT INTO meta_workflow_def (created_on, modified_on, name, version, json_data) " +
+				"VALUES (?, ?, ?, ?, ?)";
+
+			execute(tx, SQL, q -> q
+				.addTimestampParameter(def.getCreateTime(), System.currentTimeMillis())
+				.addTimestampParameter(def.getUpdateTime(), System.currentTimeMillis())
+				.addParameter(def.getName())
+				.addParameter(def.getVersion())
+				.addJsonParameter(def)
+				.executeUpdate());
+		} else {
+			final String SQL = "UPDATE meta_workflow_def SET created_on = ?, modified_on = ?, json_data = ? " +
+				"WHERE name = ? AND version = ?";
+
+			execute(tx, SQL, q -> q
+				.addTimestampParameter(def.getCreateTime(), System.currentTimeMillis())
+				.addTimestampParameter(def.getUpdateTime(), System.currentTimeMillis())
+				.addJsonParameter(def)
+				.addParameter(def.getName())
+				.addParameter(def.getVersion())
+				.executeUpdate());
+		}
+
+		updateLatestVersion(tx, def);
+	}
+
+	private Optional<Integer> getLatestVersion(Connection tx, WorkflowDef def) {
+		final String SQL = "SELECT max(version) AS version FROM meta_workflow_def WHERE name = ?";
+		Integer val = query(tx, SQL, q -> q.addParameter(def.getName()).executeScalar(Integer.class));
+
+		return Optional.ofNullable(val);
+	}
+
+	private void updateLatestVersion(Connection tx, WorkflowDef def) {
+		final String SQL = "UPDATE meta_workflow_def SET latest_version = ? WHERE name = ?";
+
+		execute(tx, SQL,
+			q -> q.addParameter(def.getVersion()).addParameter(def.getName()).executeUpdate());
 	}
 
 	private static int dateStr(Long timeInMs) {

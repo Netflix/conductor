@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -29,6 +31,9 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -47,6 +52,7 @@ public class Main {
 	private Dao dao;
 
 	public static void main(String[] args) {
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 		try {
 			logger.info("ES 2 PG Migration started");
 
@@ -90,9 +96,23 @@ public class Main {
 
 		dao = new Dao(dataSource, mapper);
 
+		logger.info("Grabbing definitions ...");
+		grabMetadata();
+
+		logger.info("Starting workers ...");
 		startWorkers();
+
+		logger.info("Grabbing workflows ...");
 		grabWorkflows();
-		waitUntilProcessed();
+
+		logger.info("Waiting for workers to complete");
+		waitWorkflows();
+
+		logger.info("Grabbing queues ...");
+		grabQueues();
+
+		logger.info("Requeue decider ...");
+		requeueDecider();
 
 		String duration = DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, FORMAT, true);
 		logger.info("ES2PG migration done, took " + duration);
@@ -155,8 +175,6 @@ public class Main {
 		searchRequest.types("workflow");
 		searchRequest.source(sourceBuilder);
 
-		logger.info("Grabbing workflows ...");
-
 		SearchResponse searchResponse = client.search(searchRequest);
 		String scrollId = searchResponse.getScrollId();
 		SearchHit[] searchHits = searchResponse.getHits().getHits();
@@ -182,13 +200,9 @@ public class Main {
 			clearScrollRequest.addScrollId(scrollId);
 			client.clearScroll(clearScrollRequest);
 		}
-
-//		findAll(client, searchRequest, hit -> {
-//			workflowQueue.add(hit.getId());
-//		});
 	}
 
-	private void waitUntilProcessed() {
+	private void waitWorkflows() {
 		int size;
 		while ((size = workflowQueue.size()) > 0) {
 			logger.info("Waiting ... workflows left " + size);
@@ -200,7 +214,6 @@ public class Main {
 		}
 
 		keepPooling.set(false);
-		logger.info("Waiting for workers to complete");
 		try {
 			latch.await();
 		} catch (InterruptedException e) {
@@ -208,6 +221,117 @@ public class Main {
 		}
 
 		logger.info("Done");
+	}
+
+	private void grabQueues() throws Exception {
+		RestHighLevelClient client = buildEsClient();
+
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.query(QueryBuilders.matchAllQuery());
+		sourceBuilder.size(config.batchSize());
+		sourceBuilder.fetchSource(true);
+
+		SearchRequest searchRequest = new SearchRequest();
+		searchRequest.scroll(new Scroll(TimeValue.timeValueHours(1L)));
+		searchRequest.indices(config.rootIndexName() + ".queues." + config.env() + ".*");
+		searchRequest.source(sourceBuilder);
+
+		try (Connection tx = dataSource.getConnection()) {
+
+			tx.setAutoCommit(false);
+			try {
+
+				findAll(client, searchRequest, hit -> {
+					if ("deciderqueue".equalsIgnoreCase(hit.getType())) {
+						return;
+					} else if ("sweeperqueue".equalsIgnoreCase(hit.getType())) {
+						return;
+					}
+
+					// otherwise migrate
+					Map<String, Object> map = hit.getSourceAsMap();
+					String payload = (String) map.get("payload");
+					dao.pushMessage(tx, hit.getType(), hit.getId(), payload, 0);
+				});
+
+				tx.commit();
+			} catch (Exception ex) {
+				tx.rollback();
+				throw ex;
+			}
+		}
+	}
+
+	private void grabMetadata() throws Exception {
+		RestHighLevelClient client = buildEsClient();
+
+		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		sourceBuilder.query(QueryBuilders.matchAllQuery());
+		sourceBuilder.size(config.batchSize());
+		sourceBuilder.fetchSource(true);
+
+		// workflow_defs
+		try (Connection tx = dataSource.getConnection()) {
+			SearchRequest searchRequest = new SearchRequest();
+			searchRequest.indices(config.rootIndexName() + ".metadata." + config.env() + ".workflow_defs");
+			searchRequest.types("workflowdefs");
+			searchRequest.source(sourceBuilder);
+
+			tx.setAutoCommit(false);
+			try {
+
+				findAll(client, searchRequest, hit -> {
+					WorkflowDef def = dao.convertValue(hit.getSourceAsMap(), WorkflowDef.class);
+					if (def == null) {
+						logger.error("Couldn't convert " + hit.getSourceAsMap() + " to WorkflowDef ");
+					}
+					dao.upsertWorkflowDef(tx, def);
+				});
+
+				tx.commit();
+			} catch (Exception ex) {
+				tx.rollback();
+				throw ex;
+			}
+		}
+
+		// task_defs
+		try (Connection tx = dataSource.getConnection()) {
+			SearchRequest searchRequest = new SearchRequest();
+			searchRequest.indices(config.rootIndexName() + ".metadata." + config.env() + ".task_defs");
+			searchRequest.types("taskdefs");
+			searchRequest.source(sourceBuilder);
+
+			tx.setAutoCommit(false);
+			try {
+
+				findAll(client, searchRequest, hit -> {
+					TaskDef def = dao.convertValue(hit.getSourceAsMap(), TaskDef.class);
+					if (def == null) {
+						logger.error("Couldn't convert " + hit.getSourceAsMap() + " to TaskDef ");
+					}
+					dao.upsertTaskDef(tx, def);
+				});
+
+				tx.commit();
+			} catch (Exception ex) {
+				tx.rollback();
+				throw ex;
+			}
+		}
+	}
+
+	private void requeueDecider() throws SQLException {
+		try (Connection tx = dataSource.getConnection()) {
+			tx.setAutoCommit(false);
+			try {
+				dao.requeueSweep(tx);
+				tx.commit();
+			} catch (Exception ex) {
+				tx.rollback();
+				throw ex;
+			}
+		}
 	}
 
 	private void processWorkflow(String workflowId, RestHighLevelClient client, Connection tx) throws Exception {
@@ -238,7 +362,7 @@ public class Main {
 		findAll(client, searchRequest, hit -> {
 			Task task = dao.convertValue(hit.getSourceAsMap(), Task.class);
 			if (task == null) {
-				System.out.println("No task converted for " + hit.getId());
+				logger.error("Couldn't convert " + hit.getSourceAsMap() + " to task ");
 			}
 			dao.upsertTask(tx, task);
 		});
@@ -274,7 +398,7 @@ public class Main {
 			.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
 				.setConnectionRequestTimeout(0)
 				.setSocketTimeout(120_000)
-			.setConnectTimeout(120_000));
+				.setConnectTimeout(120_000));
 
 		return new RestHighLevelClient(builder);
 	}
