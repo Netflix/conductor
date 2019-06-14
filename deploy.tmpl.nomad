@@ -165,7 +165,7 @@ job "conductor" {
         // Workflow settings
         workflow_failure_expandInline                = "false"
         decider_sweep_frequency_seconds              = "30"
-        workflow_event_processor_thread_count        = "10"
+        workflow_event_processor_thread_count        = "0" // Disables Event Processor
         workflow_event_processor_refresh_seconds     = "30"
         workflow_system_task_worker_poll_count       = "50"
         workflow_system_task_worker_poll_timeout     = "1000"
@@ -193,14 +193,8 @@ job "conductor" {
         io_shotgun_manualAck      = "true"
         com_bydeluxe_onemq_log    = "false"
 
-        // NATS settings
-        io_nats_streaming_url            = "nats://nats.service.${meta.tld}:4222"
-        io_nats_streaming_clusterId      = "events-streaming"
-        io_nats_streaming_durableName    = "conductor-server-${meta.tld}-pg"
-        io_nats_streaming_publishRetryIn = "5,10,15"
-
         // Additional nats & asset modules
-        conductor_additional_modules = "com.netflix.conductor.contribs.NatsStreamModule,com.netflix.conductor.contribs.ShotgunModule"
+        conductor_additional_modules = "com.netflix.conductor.contribs.ShotgunModule"
 
         // Exclude demo workflows
         loadSample = "false"
