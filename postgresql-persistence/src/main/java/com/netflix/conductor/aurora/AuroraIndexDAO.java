@@ -140,7 +140,7 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 			});
 
 			q.addParameter(count); // limit
-			q.addParameter(count * start); // offset
+			q.addParameter(start); // offset
 
 			return q.executeAndFetch(rs -> {
 				long totalHits = 0;

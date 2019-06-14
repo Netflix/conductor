@@ -429,7 +429,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		final String SQL = "INSERT INTO task_scheduled (workflow_id, task_key, task_id) " +
 			"VALUES (?, ?, ?) ON CONFLICT ON CONSTRAINT task_scheduled_wf_task DO NOTHING";
 
-		int count = query(connection, SQL, q -> q.addParameter(task.getWorkflowInstanceId())
+		int count = query(connection, SQL, q -> q
+			.addParameter(task.getWorkflowInstanceId())
 			.addParameter(taskKey)
 			.addParameter(task.getTaskId())
 			.executeUpdate());
@@ -449,9 +450,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		// Warning! Constraint name is also unique index name
 		String SQL = "INSERT INTO task (task_id, task_type, task_refname, task_status, json_data, workflow_id, " +
 			"start_time, end_time, input, output) " +
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT task_task_id DO " +
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT task_task_id DO " +
 			"UPDATE SET modified_on=now(), task_status=?, json_data=?, input = ?, output = ?, start_time = ?, end_time = ?";
-		execute(connection, SQL, q -> q.addParameter(task.getTaskId())
+		execute(connection, SQL, q -> q
+			.addParameter(task.getTaskId())
 			.addParameter(task.getTaskType())
 			.addParameter(task.getReferenceTaskName())
 			.addParameter(task.getStatus().name())
