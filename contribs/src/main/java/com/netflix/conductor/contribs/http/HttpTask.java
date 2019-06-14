@@ -140,7 +140,7 @@ public class HttpTask extends GenericHttpTask {
 			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
 					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
 					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
-					+ ",contextUser=" + workflow.getContextUser());
+					+ ",contextUser=" + workflow.getContextUser()+ ",body="+ input.getBody());
 
 			// true - means status been handled, otherwise should apply the original logic
 			boolean handled = handleStatusMapping(task, response);
