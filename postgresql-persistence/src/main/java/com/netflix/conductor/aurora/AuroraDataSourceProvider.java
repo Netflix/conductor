@@ -31,6 +31,8 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
         poolConfig.setUsername(user);
         poolConfig.setPassword(pwd);
         poolConfig.setAutoCommit(false);
+        poolConfig.setMaximumPoolSize(5000);
+        poolConfig.setConnectionTimeout(60_000);
 
         return new HikariDataSource(poolConfig);
     }
