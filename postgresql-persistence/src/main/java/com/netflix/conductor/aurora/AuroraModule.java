@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
-
 /**
  * @author Oleksiy Lysak
  *

@@ -1,3 +1,5 @@
 rootProject.name='conductor'
-include 'aurora-persistence', 'archiver', 'correlation', 'common', 'core', 'redis-persistence','es5-persistence','es6rest-persistence', 'jersey', 'client', 'test-harness', 'ui', 'contribs', 'server'
+include 'postgresql-persistence', 'archiver', 'correlation', 'common', 'core', 'redis-persistence','es5-persistence','es6rest-persistence', 'jersey', 'client', 'test-harness', 'ui', 'contribs', 'server'
 rootProject.children.each {it.name="conductor-${it.name}"}
+include 'es2pg-migration'
+

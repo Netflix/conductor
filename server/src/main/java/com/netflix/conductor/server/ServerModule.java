@@ -20,6 +20,7 @@ package com.netflix.conductor.server;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.netflix.conductor.aurora.*;
 import com.netflix.conductor.contribs.AssetModule;
 import com.netflix.conductor.contribs.AuthModule;
 import com.netflix.conductor.contribs.HttpModule;
@@ -87,19 +88,23 @@ public class ServerModule extends AbstractModule {
 		bind(Configuration.class).toInstance(config);
 		bind(Registry.class).toInstance(registry);
 
-
 		if (ConductorServer.DB.elasticsearch.equals(db)) {
 			install(new Elasticsearch6RestModule());
-			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
 
 			bind(ExecutionDAO.class).to(Elasticsearch6RestExecutionDAO.class);
 			bind(MetadataDAO.class).to(Elasticsearch6RestMetadataDAO.class);
 			bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
 			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
-		} else {
-			install(new Elasticsearch6RestModule());
 			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
+		} else if (ConductorServer.DB.aurora.equals(db)) {
+			install(new AuroraModule());
 
+			bind(ExecutionDAO.class).to(AuroraExecutionDAO.class);
+			bind(MetadataDAO.class).to(AuroraMetadataDAO.class);
+			bind(QueueDAO.class).to(AuroraQueueDAO.class);
+			bind(MetricsDAO.class).to(AuroraMetricsDAO.class);
+			bind(IndexDAO.class).to(AuroraIndexDAO.class);
+		} else {
 			String localDC = localRack.replaceAll(region, "");
 			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
 			DynoQueueDAO queueDao = new DynoQueueDAO(dynoConn, dynoConn, ss, config);

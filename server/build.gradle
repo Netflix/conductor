@@ -30,7 +30,7 @@ dependencies {
     compile project(':conductor-redis-persistence')
     compile project(':conductor-contribs')
     compile project(':conductor-es6rest-persistence')
-    compile project(':conductor-aurora-persistence')
+    compile project(':conductor-postgresql-persistence')
 
     //Jetty
     compile 'org.eclipse.jetty:jetty-server:9.3.9.+'

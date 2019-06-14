@@ -84,6 +84,7 @@ public class ExecutionService {
 		this.indexer = indexer;
 		this.config = config;
 		this.taskRequeueTimeout = config.getIntProperty("task.requeue.timeout", 60_000);
+		reloadConfig();
 	}
 
 	public Task poll(String taskType, String workerId) throws Exception {
@@ -316,20 +317,20 @@ public class ExecutionService {
 		SearchResult<String> result = indexer.searchWorkflows(query, freeText, start, size, sortOptions, from, end);
 		List<WorkflowSummary> workflows = result.getResults().stream().parallel().map(workflowId -> {
 			try {
-				
-				WorkflowSummary summary = new WorkflowSummary(edao.getWorkflow(workflowId, false));
-				return summary;
-				
+				Workflow workflow = edao.getWorkflow(workflowId, false);
+				if (workflow == null)
+					return null;
+
+				return new WorkflowSummary(workflow);
 			} catch(Exception e) {
 				logger.error(e.getMessage(), e);
 				return null;
 			}
-		}).filter(summary -> summary != null).collect(Collectors.toList());
+		}).filter(Objects::nonNull).collect(Collectors.toList());
 		int missing = result.getResults().size() - workflows.size();
 		long totalHits = result.getTotalHits() - missing;
-		SearchResult<WorkflowSummary> sr = new SearchResult<>(totalHits, workflows);
-		
-		return sr;
+
+		return new SearchResult<>(totalHits, workflows);
 	}
 
 	public List<Task> getPendingTasksForTaskType(String taskType) throws Exception {
@@ -412,9 +413,4 @@ public class ExecutionService {
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		return edao.anyRunningWorkflowsByTags(tags);
 	}
-
-	public List<Task> getPendingTasksByTags(String taskType, Set<String> tags) {
-		return edao.getPendingTasksByTags(taskType, tags);
-	}
-
 }

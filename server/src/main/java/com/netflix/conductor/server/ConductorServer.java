@@ -32,9 +32,7 @@ import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.sun.jersey.api.client.Client;
-
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -57,11 +55,11 @@ public class ConductorServer {
 	private static Logger logger = LoggerFactory.getLogger(ConductorServer.class);
 
 	enum DB {
-		redis, dynomite, memory, elasticsearch
+		redis, dynomite, memory, elasticsearch, aurora
 	}
 
 	private enum SearchMode {
-		elasticsearch, memory
+		elasticsearch, memory, none
 	}
 
 	private ServerModule sm;
@@ -87,7 +85,7 @@ public class ConductorServer {
 			System.exit(1);
 		}
 
-		String modestring = cc.getProperty("workflow.elasticsearch.mode", "memory");
+		String modestring = cc.getProperty("workflow.elasticsearch.mode", "none");
 		try {
 			mode = SearchMode.valueOf(modestring);
 		} catch (IllegalArgumentException ie) {
@@ -184,6 +182,7 @@ public class ConductorServer {
 				break;
 
 			case elasticsearch:
+			case none:
 				break;
 		}
 

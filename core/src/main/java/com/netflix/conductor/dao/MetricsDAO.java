@@ -24,6 +24,8 @@ import java.util.Map;
  * @author Oleksiy Lysak
  */
 public interface MetricsDAO {
+	boolean ping();
+
 	Map<String, Object> getMetrics();
 
 	Map<String, Object> getAdminCounters();

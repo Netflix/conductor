@@ -23,7 +23,6 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.MetricsDAO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,15 +47,13 @@ import java.util.*;
 public class InfoResource {
 	private static Logger logger = LoggerFactory.getLogger(InfoResource.class);
 	private MetricsDAO metricsDAO;
-	private RestHighLevelClient client;
 	private Configuration config;
 	private String fullVersion;
 
 	@Inject
-	public InfoResource(Configuration config, MetricsDAO metricsDAO, RestHighLevelClient client) {
+	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
 		this.config = config;
 		this.metricsDAO = metricsDAO;
-		this.client = client;
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
@@ -85,9 +82,9 @@ public class InfoResource {
 		boolean status = false;
 
 		try {
-			status = client.ping();
+			status = metricsDAO.ping();
 		} catch (Exception e) {
-			logger.error("Elasticsearch health check failed: " + e.getMessage(), e);
+			logger.error("Db health check failed: " + e.getMessage(), e);
 			throw e;
 		}
 
