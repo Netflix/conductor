@@ -281,7 +281,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		}
 
 		// Rerun workflow input
-		Map<String, Object> wfInput = getRerunInput(workflow, subWorkflow, task);
+		Map<String, Object> wfInput = getRerunInput(workflow, subWorkflow, task, param);
 
 		// Add latest rerun output to the map
 		if (rerunWorkflow != null) {
@@ -345,7 +345,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		return true;
 	}
 
-	private Map<String, Object> getRerunInput(Workflow workflow, Workflow subWorkflow, Task task) {
+	private Map<String, Object> getRerunInput(Workflow workflow, Workflow subWorkflow, Task task, SubWorkflowParams param) {
 		Map<String, Object> result = new HashMap<>();
 
 		// The workflow details.
@@ -404,6 +404,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 			originalFailed = map;
 		}
 		result.put("originalFailedTask", originalFailed);
+		result.put("rerunInput", param.getRerunWorkflow().getInput());
 
 		return result;
 	}
