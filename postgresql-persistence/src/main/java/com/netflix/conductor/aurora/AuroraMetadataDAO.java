@@ -361,16 +361,7 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 	private Optional<Integer> getLatestVersion(Connection tx, WorkflowDef def) {
 		final String SQL = "SELECT max(version) AS version FROM meta_workflow_def WHERE name = ?";
 
-		Integer val = query(tx, SQL, q -> {
-			q.addParameter(def.getName());
-			return q.executeAndFetch(rs -> {
-				if (!rs.next()) {
-					return null;
-				}
-
-				return rs.getInt(1);
-			});
-		});
+		Integer val = query(tx, SQL, q -> q.addParameter(def.getName()).executeScalar(Integer.class));
 
 		return Optional.ofNullable(val);
 	}

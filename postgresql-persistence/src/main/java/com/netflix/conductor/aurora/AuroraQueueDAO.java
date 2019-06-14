@@ -277,13 +277,14 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private boolean pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
 		createQueueIfNotExists(queueName);
 
-		String SQL = "INSERT INTO queue_message (queue_name, message_id, deliver_on, payload) VALUES (?, ?, ?, ?) " +
-			"ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
+		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
+			"VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
 		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
 
 		return query(connection, SQL, q -> q.addParameter(queueName.toLowerCase())
 			.addParameter(messageId)
+			.addParameter(false)
 			.addTimestampParameter(deliverOn)
 			.addParameter(payload)
 			.executeUpdate() > 0);
