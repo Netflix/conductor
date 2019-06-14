@@ -27,6 +27,7 @@ import java.util.Map;
 public class RerunWorkflowParams {
 	private String name;
 	private Object version;
+	private Map<String, Object> input;
 	private Map<String, String> conditions;
 
 	public String getName() {
@@ -43,6 +44,14 @@ public class RerunWorkflowParams {
 
 	public void setVersion(Object version) {
 		this.version = version;
+	}
+
+	public Map<String, Object> getInput() {
+		return input;
+	}
+
+	public void setInput(Map<String, Object> input) {
+		this.input = input;
 	}
 
 	public Map<String, String> getConditions() {
