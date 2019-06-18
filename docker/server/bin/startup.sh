@@ -44,7 +44,7 @@ if [[ "$log4j_aurora_appender" == "true" ]]; then
     echo "log4j.appender.DB.url=jdbc:postgresql://"${aurora_host}":"${aurora_port}"/"${aurora_db} >> /app/config/log4j.properties
     echo "log4j.appender.DB.user="${aurora_user} >> /app/config/log4j.properties
     echo "log4j.appender.DB.password="${aurora_password} >> /app/config/log4j.properties
-    echo "log4j.appender.DB.threshold=DEBUG" >> /app/config/log4j.properties
+    echo "log4j.appender.DB.threshold=TRACE" >> /app/config/log4j.properties
 fi
 
 
