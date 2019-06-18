@@ -7,8 +7,9 @@ import com.netflix.conductor.service.FloService;
 import com.netflix.conductor.service.WorkflowService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -29,6 +30,8 @@ import java.util.Map;
 @Consumes({MediaType.APPLICATION_JSON})
 @Singleton
 public class FloResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FloResource.class);
 
     public static final String TRACING_ID = "tracingId";
     private final FloService floService;
@@ -67,6 +70,7 @@ public class FloResource {
                                 @QueryParam("version") Integer version,
                                 @QueryParam("correlationId") String correlationId,@HeaderParam("x-TracingId") String tracingId,
                                 Map<String, Object> input) {
+        LOGGER.info("Received request with input {} tracingId {} correlationId {}, name {}, version {}", input, tracingId, correlationId, name, version);
         if(StringUtils.isBlank(tracingId)) {
             tracingId = IDGenerator.generate();
         }
