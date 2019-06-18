@@ -99,6 +99,9 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				poolConfig.setPassword(password);
 				poolConfig.setAutoCommit(true);
 				poolConfig.setPoolName("log4j");
+				poolConfig.addDataSourceProperty("cachePrepStmts", "true");
+				poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
+				poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
 				dataSource = new HikariDataSource(poolConfig);
 			}
@@ -119,8 +122,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		if (!initialized.get()) {
 			init();
 		}
-		try (Connection tx = dataSource.getConnection()) {
-			PreparedStatement st = tx.prepareStatement(INSERT_QUERY);
+		try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(INSERT_QUERY);) {
 
 			LogEntry entry = buffer.poll();
 			while (entry != null) {
