@@ -19,6 +19,7 @@ ext {
     revFlywayCore ='4.0.3'
     revGrpc = '1.14.+'
     revGuavaRetrying = '2.0.0'
+    revGuava = '28.0-jre'
     revGuice = '4.1.0'
     revGuiceMultiBindings = '4.1.0'
     revGuiceServlet = '4.1.0'

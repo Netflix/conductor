@@ -145,7 +145,6 @@ public class KafkaPublishTask extends WorkflowSystemTask {
 				null, key, om.writeValueAsString(input.getValue()), headers);
 
 		Future send = producer.send(rec);
-		producer.close();
 
 		long timeTakenToPublish = Instant.now().toEpochMilli() - startPublishingEpochMillis;
 

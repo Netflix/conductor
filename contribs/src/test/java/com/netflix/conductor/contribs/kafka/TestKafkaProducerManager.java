@@ -2,6 +2,7 @@ package com.netflix.conductor.contribs.kafka;
 
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.junit.Assert;
@@ -58,4 +59,38 @@ public class TestKafkaProducerManager {
 		Assert.assertEquals(props.getProperty(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG), "150");
 
 	}
+
+	@Test(expected = RuntimeException.class)
+	public void testExecutionException() {
+
+		Configuration configuration =  Mockito.mock(Configuration.class);
+		Mockito.when(configuration.getProperty(Mockito.eq("kafka.publish.request.timeout.ms"),Mockito.eq("100"))).thenReturn("150");
+		KafkaProducerManager manager = new KafkaProducerManager(configuration);
+		KafkaPublishTask.Input input = new KafkaPublishTask.Input();
+		input.setTopic("testTopic");
+		input.setValue("TestMessage");
+		input.setKeySerializer(LongSerializer.class.getCanonicalName());
+		input.setBootStrapServers("servers");
+		Producer producer = manager.getProducer(input);
+		Assert.assertNotNull(producer);
+
+	}
+
+	@Test
+	public void testCacheInvalidation() {
+		Configuration configuration =  Mockito.mock(Configuration.class);
+		Mockito.when(configuration.getProperty(Mockito.eq("kafka.publish.request.timeout.ms"),Mockito.eq("100"))).thenReturn("150");
+		KafkaProducerManager manager = new KafkaProducerManager(configuration);
+		KafkaPublishTask.Input input = new KafkaPublishTask.Input();
+		input.setTopic("testTopic");
+		input.setValue("TestMessage");
+		input.setKeySerializer(LongSerializer.class.getCanonicalName());
+		input.setBootStrapServers("");
+		Properties props = manager.getProducerProperties(input);
+		Producer producerMock = Mockito.mock(Producer.class);
+		Producer producer = manager.getFromCache(props, () -> producerMock);
+		Assert.assertNotNull(producer);
+		Mockito.verify(producerMock, Mockito.times(1)).close();
+	}
+
 }
