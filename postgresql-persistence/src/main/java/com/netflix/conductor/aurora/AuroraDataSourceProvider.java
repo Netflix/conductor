@@ -32,7 +32,7 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
         poolConfig.setPassword(pwd);
         poolConfig.setAutoCommit(false);
         poolConfig.setMinimumIdle(config.getIntProperty("aurora.idle.size", 5));
-        poolConfig.setMaximumPoolSize(config.getIntProperty("aurora.pool.size", 100));
+        poolConfig.setMaximumPoolSize(config.getIntProperty("aurora.pool.size", 50));
         poolConfig.addDataSourceProperty("cachePrepStmts", "true");
         poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
         poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
