@@ -98,6 +98,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				poolConfig.setUsername(user);
 				poolConfig.setPassword(password);
 				poolConfig.setAutoCommit(true);
+				poolConfig.setPoolName("log4j");
 
 				dataSource = new HikariDataSource(poolConfig);
 			}

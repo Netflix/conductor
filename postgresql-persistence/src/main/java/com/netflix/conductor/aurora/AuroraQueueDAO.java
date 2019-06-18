@@ -87,34 +87,36 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
 
 				// Get the list of popped message ids
-				List<String> popped = queryWithTransaction(QUERY, q -> q.addParameter(queueName.toLowerCase()).addParameter(count)
+				List<QueueMessage> messages = queryWithTransaction(QUERY, q -> q.addParameter(queueName.toLowerCase()).addParameter(count)
 					.executeAndFetch(rs -> {
-						List<String> ids = new LinkedList<>();
+						List<QueueMessage> popped = new LinkedList<>();
 						while (rs.next()) {
-							long id = rs.getLong("id");
-							long version = rs.getLong("version");
-							String message_id = rs.getString("message_id");
+							QueueMessage m = new QueueMessage();
+							m.id = rs.getLong("id");
+							m.version = rs.getLong("version");
+							m.message_id = rs.getString("message_id");
 
-							withTransaction(connection -> {
-								long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
-
-								int updated = query(connection, UPDATE, u -> u.addTimestampParameter(unack_on)
-									.addParameter(id)
-									.addParameter(version)
-									.executeUpdate());
-
-								// Means record being updated - we got it
-								if (updated > 0) {
-									ids.add(message_id);
-								}
-							});
+							popped.add(m);
 						}
-						return ids;
+						return popped;
 					}));
 
-				if (CollectionUtils.isNotEmpty(popped))
-					foundIds.addAll(popped);
+				messages.forEach(m -> {
+					withTransaction(connection -> {
+						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
+						int updated = query(connection, UPDATE, u -> u.addTimestampParameter(unack_on)
+							.addParameter(m.id)
+							.addParameter(m.version)
+							.executeUpdate());
+
+						// Means record being updated - we got it
+						if (updated > 0) {
+							foundIds.add(m.message_id);
+						}
+					});
+				});
+				
 				sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
 			}
 
