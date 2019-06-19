@@ -281,17 +281,14 @@ public class SubWorkflow extends WorkflowSystemTask {
 		}
 
 		// Rerun workflow input
-		Map<String, Object> wfInput = getRerunInput(workflow, subWorkflow, task, param);
+		Map<String, Object> wfInput = getRerunInput(workflow, subWorkflow, rerunWorkflow, task, param);
 
 		// Add latest rerun output to the map
 		if (rerunWorkflow != null) {
-			Map<String, Object> payload = new HashMap<>(wfInput);
-			payload.put("rerunOutput", rerunWorkflow.getOutput());
-
 			if (MapUtils.isEmpty(param.getRerunWorkflow().getConditions()))
 				throw new IllegalArgumentException("No defined rules in rerun options for " + task.getReferenceTaskName() + " sub-workflow task");
 
-			Map<String, Object> evaluatedMap = ScriptEvaluator.evaluateMap(param.getRerunWorkflow().getConditions(), payload);
+			Map<String, Object> evaluatedMap = ScriptEvaluator.evaluateMap(param.getRerunWorkflow().getConditions(), wfInput);
 			logger.debug("Rerun evaluated rules " + evaluatedMap);
 
 			boolean allowRerun = evaluatedMap.entrySet().stream().allMatch(entry -> {
@@ -345,7 +342,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 		return true;
 	}
 
-	private Map<String, Object> getRerunInput(Workflow workflow, Workflow subWorkflow, Task task, SubWorkflowParams param) {
+	private Map<String, Object> getRerunInput(Workflow workflow, Workflow subWorkflow, Workflow rerunWorkflow,
+											  Task task, SubWorkflowParams param) {
 		Map<String, Object> result = new HashMap<>();
 
 		// The workflow details.
@@ -405,6 +403,9 @@ public class SubWorkflow extends WorkflowSystemTask {
 		}
 		result.put("originalFailedTask", originalFailed);
 		result.put("rerunInput", param.getRerunWorkflow().getInput());
+		if (rerunWorkflow != null) {
+			result.put("rerunOutput", rerunWorkflow.getOutput());
+		}
 
 		return result;
 	}
