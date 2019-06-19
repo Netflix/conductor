@@ -43,7 +43,7 @@ public abstract class AuroraBaseDAO {
 		Instant start = Instant.now();
 		LazyToString callingMethod = getCallingMethod();
 		if (logger.isTraceEnabled())
-			logger.trace("{} : starting transaction", callingMethod);
+			logger.trace("{} : starting transaction", callingMethod.toString());
 
 		try (Connection tx = dataSource.getConnection()) {
 			try {
@@ -58,7 +58,7 @@ public abstract class AuroraBaseDAO {
 			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
 		} finally {
 			if (logger.isTraceEnabled())
-				logger.trace("{} : took {}ms", callingMethod, Duration.between(start, Instant.now()).toMillis());
+				logger.trace("{} : took {}ms", callingMethod.toString(), Duration.between(start, Instant.now()).toMillis());
 		}
 	}
 
