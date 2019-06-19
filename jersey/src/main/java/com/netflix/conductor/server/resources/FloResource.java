@@ -75,7 +75,7 @@ public class FloResource {
             tracingId = IDGenerator.generate();
         }
         input.put(TRACING_ID, tracingId);
-        LOGGER.info("Received request with input {} tracingId {} correlationId {}, name {}, version {} tracingId {}", input, tracingId, correlationId, name, version, tracingId);
+        LOGGER.info("Received request with input {} tracingId {} correlationId {}, name {}, version {}", input, tracingId, correlationId, name, version);
         return workflowService.startWorkflow(name, version, correlationId, input);
     }
 }
