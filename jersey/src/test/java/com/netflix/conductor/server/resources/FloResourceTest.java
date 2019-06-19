@@ -17,13 +17,13 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 public class FloResourceTest {
+
 	@Mock
 	private WorkflowService mockWorkflowService;
 
 	@Before
 	public void before() {
 		this.mockWorkflowService = Mockito.mock(WorkflowService.class);
-
 	}
 
 	@Test

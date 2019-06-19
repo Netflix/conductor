@@ -70,11 +70,12 @@ public class FloResource {
                                 @QueryParam("version") Integer version,
                                 @QueryParam("correlationId") String correlationId,@HeaderParam("x-TracingId") String tracingId,
                                 Map<String, Object> input) {
-        LOGGER.info("Received request with input {} tracingId {} correlationId {}, name {}, version {}", input, tracingId, correlationId, name, version);
+
         if(StringUtils.isBlank(tracingId)) {
             tracingId = IDGenerator.generate();
         }
         input.put(TRACING_ID, tracingId);
+        LOGGER.info("Received request with input {} tracingId {} correlationId {}, name {}, version {} tracingId {}", input, tracingId, correlationId, name, version, tracingId);
         return workflowService.startWorkflow(name, version, correlationId, input);
     }
 }

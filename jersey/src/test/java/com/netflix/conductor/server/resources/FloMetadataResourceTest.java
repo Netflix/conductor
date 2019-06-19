@@ -19,8 +19,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class FloMetadataResourceTest {
-	private MetadataResource metadataResource;
 
+	private MetadataResource metadataResource;
 	private MetadataService mockMetadataService;
 
 	@Before
