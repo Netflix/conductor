@@ -36,11 +36,12 @@ import java.util.List;
 
 
 
-@Api(value = "/flo/metadata", produces = MediaType.APPLICATION_JSON, consumes = MediaType.APPLICATION_JSON, tags = "Metadata Management")
+@Api(produces = MediaType.APPLICATION_JSON, consumes = MediaType.APPLICATION_JSON, tags = "Flo Metadata Management")
 @Path("/flo/metadata")
 @Produces({MediaType.APPLICATION_JSON})
 @Consumes({MediaType.APPLICATION_JSON})
 public class FloMetadataResource {
+
 	private final MetadataService metadataService;
 
 	@Inject

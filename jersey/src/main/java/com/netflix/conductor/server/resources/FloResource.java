@@ -39,7 +39,7 @@ public class FloResource {
     private final WorkflowService workflowService;
 
     @Inject
-    public FloResource(FloService floService,WorkflowService workflowService) {
+    public FloResource(FloService floService, WorkflowService workflowService) {
         this.floService = floService;
         this.workflowService = workflowService;
     }
