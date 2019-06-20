@@ -154,6 +154,11 @@ class Dao extends AuroraBaseDAO {
 			.executeUpdate());
 	}
 
+	long workflowCount(Connection tx) {
+		String SQL = "SELECT count(*) FROM workflow";
+		return query(tx, SQL, q -> q.executeScalar(Long.class));
+	}
+
 	void upsertTaskDef(Connection tx, TaskDef def) {
 		final String UPDATE_SQL = "UPDATE meta_task_def SET created_on = ?, modified_on = ?, json_data = ? WHERE name = ?";
 

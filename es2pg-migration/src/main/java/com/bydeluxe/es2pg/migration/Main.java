@@ -50,6 +50,7 @@ public class Main {
 	private CountDownLatch latch = new CountDownLatch(config.queueWorkers());
 	private HikariDataSource dataSource;
 	private Dao dao;
+	private long esTotalWorkflows;
 
 	public static void main(String[] args) {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -183,12 +184,12 @@ public class Main {
 		String scrollId = searchResponse.getScrollId();
 		SearchHit[] searchHits = searchResponse.getHits().getHits();
 
-		long total = searchResponse.getHits().getTotalHits();
-		logger.info("Workflows total " + total);
+		esTotalWorkflows = searchResponse.getHits().getTotalHits();
+		logger.info("Workflows total " + esTotalWorkflows);
 		AtomicLong retrieved = new AtomicLong(0);
 		try {
 			while (searchHits != null && searchHits.length > 0) {
-				logger.info("Retrieved " + retrieved.addAndGet(searchHits.length) + " of " + total);
+				logger.info("Retrieved " + retrieved.addAndGet(searchHits.length) + " of " + esTotalWorkflows);
 				for (SearchHit hit : searchHits) {
 					workflowQueue.add(hit.getId());
 				}
@@ -224,7 +225,14 @@ public class Main {
 			e.printStackTrace();
 		}
 
-		logger.info("Done");
+		try (Connection tx = dataSource.getConnection()) {
+			long pgTotal = dao.workflowCount(tx);
+
+			logger.info("Done. ES Workflow Count = " + esTotalWorkflows + ", PG Workflow Count = " + pgTotal);
+
+		} catch (Exception ex) {
+			logger.error(ex.getMessage(), ex);
+		}
 	}
 
 	private void grabQueues() throws Exception {
