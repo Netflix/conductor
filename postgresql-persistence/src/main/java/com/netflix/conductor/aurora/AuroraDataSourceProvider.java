@@ -6,6 +6,8 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 	private Configuration config;
@@ -14,6 +16,7 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 	public AuroraDataSourceProvider(Configuration config) {
 		this.config = config;
 	}
+
 
 	@Override
 	public HikariDataSource get() {
@@ -32,7 +35,7 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 		poolConfig.setPassword(pwd);
 		poolConfig.setAutoCommit(false);
 		poolConfig.setPoolName("core");
-		poolConfig.addDataSourceProperty("ApplicationName", "core");
+		poolConfig.addDataSourceProperty("ApplicationName", "core-" + getHostName());
 		poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 		poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 		poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -41,5 +44,13 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 		poolConfig.setLeakDetectionThreshold(config.getIntProperty("aurora.leakDetection.timeout", 0) * 1000);
 
 		return new HikariDataSource(poolConfig);
+	}
+
+	private String getHostName() {
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			return "unknown";
+		}
 	}
 }

@@ -100,7 +100,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				poolConfig.setPassword(password);
 				poolConfig.setAutoCommit(true);
 				poolConfig.setPoolName("log4j");
-				poolConfig.addDataSourceProperty("ApplicationName", "log4j");
+				poolConfig.addDataSourceProperty("ApplicationName", "log4j-" + hostname);
 				poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 				poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 				poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
