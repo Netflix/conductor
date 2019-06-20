@@ -26,22 +26,19 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 		String options = config.getProperty("aurora.options", "");
 		String url = String.format("jdbc:postgresql://%s:%s/%s?%s", host, port, db, options);
 
-		int poolSize = config.getIntProperty("aurora.pool.size", 10);
-		int poolTimeout = config.getIntProperty("aurora.connect.timeout", 30) * 1000;
-
 		HikariConfig poolConfig = new HikariConfig();
 		poolConfig.setJdbcUrl(url);
 		poolConfig.setUsername(user);
 		poolConfig.setPassword(pwd);
 		poolConfig.setAutoCommit(false);
 		poolConfig.setPoolName("core");
-		poolConfig.setMaximumPoolSize(poolSize);
-		poolConfig.setConnectionTimeout(poolTimeout);
-		poolConfig.setLeakDetectionThreshold(poolTimeout);
 		poolConfig.addDataSourceProperty("ApplicationName", "core");
 		poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 		poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 		poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+		poolConfig.setMaximumPoolSize(config.getIntProperty("aurora.pool.size", 10));
+		poolConfig.setConnectionTimeout(config.getIntProperty("aurora.connect.timeout", 30) * 1000);
+		poolConfig.setLeakDetectionThreshold(config.getIntProperty("aurora.leakDetection.timeout", 0) * 1000);
 
 		return new HikariDataSource(poolConfig);
 	}
