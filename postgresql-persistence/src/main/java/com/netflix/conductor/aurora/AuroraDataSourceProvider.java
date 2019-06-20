@@ -39,9 +39,9 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 		poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 		poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 		poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-		poolConfig.setMaximumPoolSize(config.getIntProperty("aurora.pool.size", 10));
-		poolConfig.setConnectionTimeout(config.getIntProperty("aurora.connect.timeout", 30) * 1000);
-		poolConfig.setLeakDetectionThreshold(config.getIntProperty("aurora.leakDetection.timeout", 0) * 1000);
+		poolConfig.setMaximumPoolSize(config.getIntProperty("aurora.core.pool.size", 10));
+		poolConfig.setConnectionTimeout(config.getIntProperty("aurora.core.connect.timeout", 30) * 1000);
+		poolConfig.setLeakDetectionThreshold(config.getIntProperty("aurora.core.leakDetection.timeout", 0) * 1000);
 
 		return new HikariDataSource(poolConfig);
 	}
