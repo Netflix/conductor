@@ -14,8 +14,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 class Dao extends AuroraBaseDAO {
+	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
+
 	Dao(DataSource dataSource, ObjectMapper mapper) {
 		super(dataSource, mapper);
 	}
@@ -67,11 +71,19 @@ class Dao extends AuroraBaseDAO {
 		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null, 30));
 	}
 
-	void pushMessage(Connection tx, String queueName, String messageId, String payload, long offsetSeconds) {
-		String SQL = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT ON CONSTRAINT queue_name DO NOTHING";
+	private void createQueueIfNotExists(Connection tx, String queueName) {
+		if (queues.contains(queueName)) {
+			return;
+		}
+		final String SQL = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT ON CONSTRAINT queue_name DO NOTHING";
 		execute(tx, SQL, q -> q.addParameter(queueName.toLowerCase()).executeUpdate());
+		queues.add(queueName);
+	}
 
-		SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
+	void pushMessage(Connection tx, String queueName, String messageId, String payload, long offsetSeconds) {
+		createQueueIfNotExists(tx, queueName);
+
+		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
 			"VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
 		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
