@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
@@ -99,6 +100,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				poolConfig.setPassword(password);
 				poolConfig.setAutoCommit(true);
 				poolConfig.setPoolName("log4j");
+				poolConfig.addDataSourceProperty("ApplicationName", "log4j");
 				poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 				poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 				poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -182,8 +184,8 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 	}
 
 	private void execute(String ddl) {
-		try (Connection tx = dataSource.getConnection()) {
-			tx.prepareCall(ddl).execute();
+		try (Connection tx = dataSource.getConnection(); CallableStatement st = tx.prepareCall(ddl);) {
+			st.execute();
 		} catch (Exception ex) {
 			if (!ex.getMessage().contains("already exists")) {
 				System.out.println("DeluxeAuroraAppender.execute failed " + ex.getMessage() + ", stack=" + throwable2String(ex));
