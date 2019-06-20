@@ -20,6 +20,7 @@ package com.netflix.conductor.aurora.log4j;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 
@@ -28,6 +29,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
@@ -99,6 +101,8 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				poolConfig.setPassword(password);
 				poolConfig.setAutoCommit(true);
 				poolConfig.setPoolName("log4j");
+				poolConfig.setMaximumPoolSize(getIntEnv("aurora_log4j_pool_size",1));
+				poolConfig.addDataSourceProperty("ApplicationName", "log4j-" + hostname);
 				poolConfig.addDataSourceProperty("cachePrepStmts", "true");
 				poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 				poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -182,8 +186,8 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 	}
 
 	private void execute(String ddl) {
-		try (Connection tx = dataSource.getConnection()) {
-			tx.prepareCall(ddl).execute();
+		try (Connection tx = dataSource.getConnection(); CallableStatement st = tx.prepareCall(ddl);) {
+			st.execute();
 		} catch (Exception ex) {
 			if (!ex.getMessage().contains("already exists")) {
 				System.out.println("DeluxeAuroraAppender.execute failed " + ex.getMessage() + ", stack=" + throwable2String(ex));
@@ -226,6 +230,12 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		} catch (UnknownHostException e) {
 			return "unknown";
 		}
+	}
+
+
+	private int getIntEnv(String name, int defValue) {
+		String value = System.getenv(name);
+		return StringUtils.isEmpty(value) ? defValue : Integer.parseInt(value);
 	}
 
 	private static class LogEntry {
