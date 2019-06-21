@@ -37,13 +37,17 @@ public class KafkaProducerManager {
 			logger.info("Closed producer for {}",notification.getKey());
 		}
 	};
+	private static final String KAFKA_PUBLISH_MAX_BLOCK_MS = "kafka.publish.max.block.ms";
+	private static final String DEFAULT_MAX_BLOCK_MS = "500";
 
 
 	public final String requestTimeoutConfig;
 	private Cache<Properties, Producer> kafkaProducerCache;
+	private final String maxBlockMsConfig;
 
 	public KafkaProducerManager(Configuration configuration) {
 		this.requestTimeoutConfig = configuration.getProperty(KAFKA_PUBLISH_REQUEST_TIMEOUT_MS, DEFAULT_REQUEST_TIMEOUT);
+		this.maxBlockMsConfig = configuration.getProperty(KAFKA_PUBLISH_MAX_BLOCK_MS, DEFAULT_MAX_BLOCK_MS);
 		int cacheSize = configuration.getIntProperty(KAFKA_PRODUCER_CACHE_SIZE, DEFAULT_CACHE_SIZE);
 		int cacheTimeInMs = configuration.getIntProperty(KAFKA_PRODUCER_CACHE_TIME_IN_MILLIS, DEFAULT_CACHE_TIME_IN_MILLIS);
 		this.kafkaProducerCache = CacheBuilder.newBuilder().removalListener(LISTENER)
@@ -82,8 +86,15 @@ public class KafkaProducerManager {
 		if (Objects.nonNull(input.getRequestTimeoutMs())) {
 			requestTimeoutMs = String.valueOf(input.getRequestTimeoutMs());
 		}
+		
+		String maxBlockMs = maxBlockMsConfig;
 
+		if (Objects.nonNull(input.getMaxBlockMs())) {
+			maxBlockMs = String.valueOf(input.getMaxBlockMs());
+		}
+		
 		configProperties.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeoutMs);
+		configProperties.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, maxBlockMs);
 		configProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, STRING_SERIALIZER);
 		return configProperties;
 	}

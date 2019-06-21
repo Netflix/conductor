@@ -196,10 +196,12 @@ public class KafkaPublishTask extends WorkflowSystemTask {
 		private Object value;
 
 		private Integer requestTimeoutMs;
+		private Integer maxBlockMs;
 
 		private String topic;
 
 		private String keySerializer = STRING_SERIALIZER;
+
 
 		public Map<String, Object> getHeaders() {
 			return headers;
@@ -257,13 +259,23 @@ public class KafkaPublishTask extends WorkflowSystemTask {
 			this.keySerializer = keySerializer;
 		}
 
+		public Integer getMaxBlockMs() {
+			return maxBlockMs;
+		}
+
+		public void setMaxBlockMs(Integer maxBlockMs) {
+			this.maxBlockMs = maxBlockMs;
+		}
+
 		@Override
 		public String toString() {
 			return "Input{" +
 					"headers=" + headers +
 					", bootStrapServers='" + bootStrapServers + '\'' +
+					", key=" + key +
 					", value=" + value +
 					", requestTimeoutMs=" + requestTimeoutMs +
+					", maxBlockMs=" + maxBlockMs +
 					", topic='" + topic + '\'' +
 					", keySerializer='" + keySerializer + '\'' +
 					'}';
