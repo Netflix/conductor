@@ -259,7 +259,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 	}
 
 	private boolean handleRerun(Workflow workflow, Workflow subWorkflow, Task task, SubWorkflowParams param, WorkflowExecutor provider) {
-		logger.debug("handleRerun invoked for sub-workflow=" + subWorkflow.getWorkflowId()
+		logger.trace("handleRerun invoked for sub-workflow=" + subWorkflow.getWorkflowId()
 			+ ", correlationId=" + subWorkflow.getCorrelationId()
 			+ ", contextUser=" + subWorkflow.getContextUser());
 
@@ -271,8 +271,6 @@ public class SubWorkflow extends WorkflowSystemTask {
 				logger.warn("Cannot found rerun workflow by id " + rerunWorkflowId);
 				return false;
 			}
-
-			logger.debug("Found rerunWorkflow " + rerunWorkflow);
 
 			// Exit if still in progress
 			if (!rerunWorkflow.getStatus().isTerminal()) {
@@ -289,10 +287,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 				throw new IllegalArgumentException("No defined rules in rerun options for " + task.getReferenceTaskName() + " sub-workflow task");
 
 			Map<String, Object> evaluatedMap = ScriptEvaluator.evaluateMap(param.getRerunWorkflow().getConditions(), wfInput);
-			logger.debug("Rerun evaluated rules " + evaluatedMap);
+			logger.trace("Rerun evaluated rules " + evaluatedMap);
 
 			boolean allowRerun = evaluatedMap.entrySet().stream().allMatch(entry -> {
-				logger.debug("Rerun rule: " + entry.getKey() + "=" + entry.getValue() + "/" + entry.getValue().getClass().getName());
+				logger.trace("Rerun rule: " + entry.getKey() + "=" + entry.getValue() + "/" + entry.getValue().getClass().getName());
 
 				if (entry.getValue() == null) {
 					return false;

@@ -235,7 +235,12 @@ public class WorkflowExecutor {
 			// send wf start message
 			notifyWorkflowStatus(wf, StartEndState.start);
 
-			decide(workflowId);
+			// Who calls decider ? Sweeper or current thread?
+			if (lazyDecider) {
+				wakeUpSweeper(workflowId);
+			} else {
+				decide(workflowId);
+			}
 			logger.debug("Workflow has started. Current status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId()
 					+ ",correlationId=" + wf.getCorrelationId()+ ",contextUser=" + wf.getContextUser());
 			return workflowId;
@@ -439,7 +444,12 @@ public class WorkflowExecutor {
 		// send wf start message
 		notifyWorkflowStatus(workflow, StartEndState.start);
 
-		decide(workflowId);
+		// Who calls decider ? Sweeper or current thread?
+		if (lazyDecider) {
+			wakeUpSweeper(workflowId);
+		} else {
+			decide(workflowId);
+		}
 		logger.debug("Workflow rewind. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()+",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
 	}
 
