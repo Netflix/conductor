@@ -544,21 +544,23 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	private void updateWorkflow(Connection connection, Workflow workflow) {
-		StringBuilder SQL = new StringBuilder();
-		SQL.append("UPDATE workflow SET json_data = ?, workflow_status = ?, output = ?, end_time = ?");
+		String SQL = "UPDATE workflow SET json_data = ?, workflow_status = ?, output = ?, end_time = ?, " +
+			"tags = ?, modified_on = now() WHERE workflow_id = ?";
 
 		// We must not delete tags for RESET as it must be restarted right away
+		Set<String> tags;
 		if (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
-			SQL.append(", tags = '{}'");
+			tags = Collections.emptySet();
+		} else {
+			tags = workflow.getTags();
 		}
 
-		SQL.append(", modified_on = now() WHERE workflow_id = ?");
-
-		execute(connection, SQL.toString(),
+		execute(connection, SQL,
 			q -> q.addJsonParameter(workflow)
 				.addParameter(workflow.getStatus().name())
 				.addJsonParameter(workflow.getOutput())
 				.addTimestampParameter(workflow.getEndTime())
+				.addParameter(tags)
 				.addParameter(workflow.getWorkflowId())
 				.executeUpdate());
 	}
