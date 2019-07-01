@@ -26,6 +26,7 @@ import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
@@ -41,7 +42,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * @author Viren
@@ -49,7 +50,6 @@ import static org.apache.commons.lang3.StringUtils.*;
  */
 @Singleton
 public class EventProcessor {
-	private static String EVENT_BUS_VAR = "${event_bus}";
 	private static Logger logger = LoggerFactory.getLogger(EventProcessor.class);
 
 	private MetadataService ms;
@@ -60,11 +60,12 @@ public class EventProcessor {
 
 	private Map<String, ObservableQueue> queuesMap = new ConcurrentHashMap<>();
 
+	private ParametersUtils pu = new ParametersUtils();
+
 	private ExecutorService executors;
 
 	private ObjectMapper om;
 
-	private String eventBus;
 
 	@Inject
 	public EventProcessor(ExecutionService es, MetadataService ms, ActionProcessor ap, Configuration config, ObjectMapper om) {
@@ -72,8 +73,6 @@ public class EventProcessor {
 		this.ms = ms;
 		this.ap = ap;
 		this.om = om;
-		this.eventBus = config.getProperty("event_bus", null);
-
 		int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
 
 		// default 60 for backward compatibility
@@ -109,7 +108,7 @@ public class EventProcessor {
 	}
 
 	public void refresh() {
-		Set<String> events = ms.getEventHandlers().stream().filter(EventHandler::isActive).map(EventHandler::getEvent).map(this::handleEventBus).collect(Collectors.toSet());
+		Set<String> events = ms.getEventHandlers().stream().filter(EventHandler::isActive).map(EventHandler::getEvent).collect(Collectors.toSet());
 
 		List<ObservableQueue> created = new LinkedList<>();
 		events.forEach(event -> queuesMap.computeIfAbsent(event, s -> {
@@ -132,11 +131,14 @@ public class EventProcessor {
 		});
 	}
 
-	private String handleEventBus(String event) {
-		if (StringUtils.isEmpty(eventBus)) {
-			return event;
-		}
-		return event.replace(EVENT_BUS_VAR, eventBus);
+	private List<EventHandler> getEventHandlersForEvent(String event) {
+		return ms.getEventHandlers().stream()
+			.filter(EventHandler::isActive)
+			.filter(e -> {
+				String replaced = (String) pu.replace(e.getEvent());
+				return replaced.equalsIgnoreCase(event);
+			})
+			.collect(Collectors.toList());
 	}
 
 	private void listen(ObservableQueue queue) {
@@ -163,15 +165,9 @@ public class EventProcessor {
 
 			es.addMessage(queue.getName(), msg);
 
-			// Find event handlers with direct event bus name as the prefix based on queue type
+			// Find event handlers by the event name considering variables in the handler's event
 			String event = queue.getType() + ":" + queue.getName();
-			List<EventHandler> handlers = ms.getEventHandlersForEvent(event, true);
-
-			// Find additional event handler which starts with ${event_bus} ...
-			if (isNotEmpty(eventBus)) {
-				event = EVENT_BUS_VAR + ":" + queue.getName();
-				handlers.addAll(ms.getEventHandlersForEvent(event, true));
-			}
+			List<EventHandler> handlers = getEventHandlersForEvent(event);
 
 			String subject = queue.getURI();
 			if (queue.getURI().contains(":")) {
