@@ -131,7 +131,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                             logger.debug("pop ({}): attempt for {}/{}", session, queueName, record.getId());
                         Map<String, Object> map = new HashMap<>();
                         map.put("popped", true);
-                        map.put("poppedOn", System.currentTimeMillis());
+                        map.put("unacked", false);
                         map.put("unackOn", System.currentTimeMillis() + unackTime);
                         map.put("deliverOn", 0L);
 
@@ -258,7 +258,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             Map<String, Object> map = new HashMap<>();
             map.put("popped", true);
             map.put("unackOn", System.currentTimeMillis() + unackTimeout);
-            map.put("poppedOn", System.currentTimeMillis());
+            map.put("unacked", true);
             map.put("deliverOn", 0L);
 
             UpdateRequest updateRequest = new UpdateRequest();
@@ -301,8 +301,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         Map<String, Long> result = new HashMap<>();
         try {
             TermsAggregationBuilder aggregationBuilder = AggregationBuilders
-                    .terms("countByQueue")
-                    .field("_index");
+                .terms("countByQueue")
+                .field("_index");
 
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.aggregation(aggregationBuilder);
@@ -416,14 +416,14 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 if (logger.isDebugEnabled()) {
                     Long recUnackOn = (Long) record.getSourceAsMap().get("unackOn");
                     logger.debug("processUnacks: stale unack {} for {}/{}",
-                            ISODateTimeFormat.dateTime().withZoneUTC().print(recUnackOn), queueName, record.getId());
+                        ISODateTimeFormat.dateTime().withZoneUTC().print(recUnackOn), queueName, record.getId());
                 }
 
                 try {
                     Map<String, Object> map = new HashMap<>();
                     map.put("popped", false);
+                    map.put("unacked", false);
                     map.put("deliverOn", System.currentTimeMillis());
-                    map.put("poppedOn", 0L);
                     map.put("unackOn", 0L);
 
                     UpdateRequest updateRequest = new UpdateRequest();
@@ -442,7 +442,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
                 } catch (Exception ex) {
                     if (!isConflictOrMissingException(ex)) {
                         logger.error("processUnacks: unable to execute for {}/{} with {}",
-                                queueName, record.getId(), ex.getMessage(), ex);
+                            queueName, record.getId(), ex.getMessage(), ex);
                     }
                 }
             }
@@ -458,12 +458,6 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         return record.isExists();
     }
 
-    public static void main(String[] args) {
-        Long l1 = null;
-        System.out.println("l1 = " + l1);
-
-    }
-
     @Override
     public boolean wakeup(String queueName, String id) {
         initQueue(queueName);
@@ -472,32 +466,29 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             String typeName = toTypeName(queueName);
             GetResponse record = findOne(indexName, typeName, id);
             if (!record.isExists()) {
-                pushIfNotExists(queueName, id, 0);
-                return false;
+                boolean created = pushIfNotExists(queueName, id, 0);
+                if (logger.isDebugEnabled())
+                    logger.debug("wakeup: created for " + queueName + "/" + id + "/" + created);
+                return created;
             }
 
-            // This method used on conjunction with checking of sweeper queue (see workflow executor)
-            // If no record in sweeper queue then this method will be invoked to wake up sweeper for this record
-            // But at this time, the record might already been pulled. Tiny moment, but possible to happen
-            // So, need to check poppedOn + threshold period.
-            Object objPoppedOn = record.getSourceAsMap().get("poppedOn");
-            long poppedOn;
-            if (objPoppedOn != null) {
-                poppedOn = Long.parseLong(objPoppedOn.toString());
-            } else {
-                poppedOn = System.currentTimeMillis();
-            }
+            Map<String, Object> recordMap = record.getSourceAsMap();
 
-            // If the record pulled within threshold period - do nothing as it might be in sweeper right now
-            if (System.currentTimeMillis() - poppedOn < poppedThreshold) {
+            boolean popped = Boolean.TRUE.equals(recordMap.get("popped"));
+            boolean unacked = Boolean.TRUE.equals(recordMap.get("unacked"));
+
+            // pop happened but setUnackTimeout dit not yet - means the record in the decider at this moment
+            if (popped && !unacked) {
+                if (logger.isDebugEnabled())
+                    logger.debug("wakeup: active decider for " + queueName + "/" + id);
                 return false;
             }
 
             // Otherwise make record visible for pulling
             Map<String, Object> map = new HashMap<>();
             map.put("popped", false);
+            map.put("unacked", false);
             map.put("deliverOn", System.currentTimeMillis());
-            map.put("poppedOn", 0L);
             map.put("unackOn", 0L);
 
             try {
@@ -511,6 +502,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
 
                 client.update(updateRequest);
 
+                if (logger.isDebugEnabled())
+                    logger.debug("wakeup: success for " + queueName + "/" + id);
                 return true;
             } catch (Exception ex) {
                 if (!isVerConflictException(ex)) {
@@ -532,11 +525,14 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             Long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
             Map<String, Object> map = new HashMap<>();
             map.put("popped", false);
+            map.put("unacked", false);
             map.put("payload", payload);
             map.put("deliverOn", deliverOn);
-            map.put("poppedOn", 0L);
             map.put("unackOn", 0L);
-            return insert(indexName, typeName, id, map);
+            boolean created = insert(indexName, typeName, id, map);
+            if (logger.isDebugEnabled())
+                logger.debug("pushMessage: result {}/{}/{}/{}", queueName, id, payload, created);
+            return created;
         } catch (Exception ex) {
             logger.error("pushMessage: failed for {}/{}/{} with {}", queueName, id, payload, ex.getMessage(), ex);
             return false;

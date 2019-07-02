@@ -173,7 +173,7 @@ job "conductor" {
         workflow_system_task_worker_poll_frequency   = "1000"
         workflow_system_task_worker_queue_size       = "300"
         workflow_system_task_http_unack_timeout      = "300"
-        workflow_sweeper_frequency                   = "500"
+        workflow_sweeper_frequency                   = "1000"
         workflow_sweeper_thread_count                = 50
         workflow_sweeper_batch_sherlock_service      = "sherlock.service.${meta.tld}"
         workflow_sweeper_batch_sherlock_worker_count = 100

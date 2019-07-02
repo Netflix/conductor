@@ -49,9 +49,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public boolean pushIfNotExists(String queueName, String id, long offsetSeconds) {
-		return getWithTransaction(tx -> {
-			return pushMessage(tx, queueName, id, null, offsetSeconds);
-		});
+		return getWithTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds));
 	}
 
 	/**
