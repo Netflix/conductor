@@ -52,6 +52,21 @@ public interface ElasticSearchConfiguration extends Configuration {
     String ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE = "workflow.elasticsearch.async.dao.max.pool.size";
     int DEFAULT_ASYNC_MAX_POOL_SIZE = 12;
 
+    String ELASTIC_SEARCH_SSL_ENABLED = "workflow.elasticsearch.ssl.enabled";
+    boolean DEFAULT_ELASTIC_SEARCH_SSL_ENABLED = false;
+
+    String ELASTIC_SEARCH_BASIC_AUTH_USERNAME = "workflow.elasticsearch.basic.auth.username";
+    String DEFAULT_ELASTIC_SEARCH_BASIC_AUTH_USERNAME = "username";
+
+    String ELASTIC_SEARCH_BASIC_AUTH_PASSWORD = "workflow.elasticsearch.basic.auth.password";
+    String DEFAULT_ELASTIC_SEARCH_BASIC_AUTH_PASSWORD = "password";
+
+    String JAVA_KEYSTORE_PATH = "workflow.java.keystore.path";
+    String DEFAULT_JAVA_KEYSTORE_PATH = "trustStore.jks";
+
+    String JAVA_KEYSTORE_PASS = "workflow.java.keystore.pass";
+    String DEFAULT_JAVA_KEYSTORE_PASS = "changeit";
+
     default String getURL() {
         return getProperty(ELASTIC_SEARCH_URL_PROPERTY_NAME, ELASTIC_SEARCH_URL_DEFAULT_VALUE);
     }
@@ -128,5 +143,27 @@ public interface ElasticSearchConfiguration extends Configuration {
 
     default int getAsyncMaxPoolSize() {
         return getIntProperty(ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE, DEFAULT_ASYNC_MAX_POOL_SIZE);
+    }
+
+    default boolean getElasticSearchSSLEnabled() {
+        return getBooleanProperty(ELASTIC_SEARCH_SSL_ENABLED, DEFAULT_ELASTIC_SEARCH_SSL_ENABLED);
+    }
+
+    default String getElasticSearchBasicAuthUsername() {
+        return getProperty(ELASTIC_SEARCH_BASIC_AUTH_USERNAME, DEFAULT_ELASTIC_SEARCH_BASIC_AUTH_USERNAME);
+    }
+
+    default String getElasticSearchBasicAuthPassword() {
+        return getProperty(ELASTIC_SEARCH_BASIC_AUTH_PASSWORD, DEFAULT_ELASTIC_SEARCH_BASIC_AUTH_PASSWORD);
+    }
+
+
+    default String getJavaKeystorePath() {
+        return getProperty(JAVA_KEYSTORE_PATH, DEFAULT_JAVA_KEYSTORE_PATH);
+    }
+
+
+    default String getJavaKeystorePass() {
+        return getProperty(JAVA_KEYSTORE_PASS, DEFAULT_JAVA_KEYSTORE_PASS);
     }
 }

@@ -153,6 +153,7 @@ public class ElasticSearchRestDAOV6 extends ElasticSearchBaseDAO implements Inde
         int workerQueueSize = config.getAsyncWorkerQueueSize();
         int maximumPoolSize = config.getAsyncMaxPoolSize();
 
+
         // Set up a workerpool for performing async operations.
         this.executorService = new ThreadPoolExecutor(CORE_POOL_SIZE, maximumPoolSize, KEEP_ALIVE_TIME, TimeUnit.MINUTES, new LinkedBlockingQueue<>(workerQueueSize),
                 (runnable, executor) -> {
