@@ -64,8 +64,8 @@ public interface ElasticSearchConfiguration extends Configuration {
     String JAVA_KEYSTORE_PATH = "workflow.java.keystore.path";
     String DEFAULT_JAVA_KEYSTORE_PATH = "trustStore.jks";
 
-    String JAVA_KEYSTORE_PASS = "workflow.java.keystore.pass";
-    String DEFAULT_JAVA_KEYSTORE_PASS = "changeit";
+    String JAVA_KEYSTORE_PASSWORD = "workflow.java.keystore.pass";
+    String DEFAULT_JAVA_KEYSTORE_PASSWORD = "changeit";
 
     default String getURL() {
         return getProperty(ELASTIC_SEARCH_URL_PROPERTY_NAME, ELASTIC_SEARCH_URL_DEFAULT_VALUE);
@@ -163,7 +163,7 @@ public interface ElasticSearchConfiguration extends Configuration {
     }
 
 
-    default String getJavaKeystorePass() {
-        return getProperty(JAVA_KEYSTORE_PASS, DEFAULT_JAVA_KEYSTORE_PASS);
+    default String getJavaKeystorePassword() {
+        return getProperty(JAVA_KEYSTORE_PASSWORD, DEFAULT_JAVA_KEYSTORE_PASSWORD);
     }
 }

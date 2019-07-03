@@ -4,15 +4,10 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.http.ssl.TrustStrategy;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.apache.http.client.CredentialsProvider;
@@ -20,19 +15,15 @@ import org.apache.http.client.CredentialsProvider;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.net.ssl.SSLContext;
-import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -71,15 +62,13 @@ public class ElasticSearchRestClientBuilderProvider implements Provider<RestClie
             credentialsProvider.setCredentials(AuthScope.ANY,
                     new UsernamePasswordCredentials(configuration.getElasticSearchBasicAuthUsername(), configuration.getElasticSearchBasicAuthPassword()));
 
-            String keyStorePass = configuration.getJavaKeystorePass();
+            String keyStorePass = configuration.getJavaKeystorePassword();
 
             try {
                 InputStream is = Files.newInputStream(Paths.get(configuration.getJavaKeystorePath()));
-                logger.info(configuration.getJavaKeystorePath());
-                logger.info(configuration.getJavaKeystorePass());
                 KeyStore truststore = KeyStore.getInstance("jks");
                 truststore.load(is, keyStorePass.toCharArray());
-                SSLContextBuilder sslBuilder = SSLContexts.custom().loadTrustMaterial(truststore, new TrustSelfSignedStrategy());
+                SSLContextBuilder sslBuilder = SSLContexts.custom().loadTrustMaterial(truststore, null);
 
                 SSLContext sslContext = sslBuilder.build();
 
