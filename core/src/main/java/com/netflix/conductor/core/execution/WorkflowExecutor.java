@@ -1360,6 +1360,7 @@ public class WorkflowExecutor {
 					} catch (Exception ex) {
 						task.setStatus(Status.FAILED);
 						task.setReasonForIncompletion(ex.getMessage());
+						logger.debug("Task {}/{} failed with Exception {}.", task.getTaskType(), task.getTaskId(),ex.getMessage());
 					}
 					break;
 
@@ -1761,6 +1762,7 @@ public class WorkflowExecutor {
 		try {
 			edao.removeWorkflow(workflowId);
 		} catch (Exception ignore) {
+			logger.debug("WorkflowId  " + workflowId + ", failed with " + ignore.getMessage(), ignore);
 		}
 	}
 
@@ -1849,6 +1851,7 @@ public class WorkflowExecutor {
 		try {
 			rerunWF(workflowId, cancelled, null, null, null, null, null);
 		} catch (Exception e) {
+			logger.debug("workflowId" + workflowId + ", failed in resumeSubWorkflow with " + e.getMessage(), e);
 			e.printStackTrace();
 		}
 	}
