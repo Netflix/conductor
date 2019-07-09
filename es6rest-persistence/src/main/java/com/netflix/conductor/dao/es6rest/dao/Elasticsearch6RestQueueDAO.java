@@ -12,6 +12,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -42,15 +43,14 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestQueueDAO.class);
     private static final Set<String> queues = ConcurrentHashMap.newKeySet();
     private static final int unackScheduleInMS = 60_000;
-    private static final long poppedThreshold = 500; // TODO What is the best value ?
     private static final int unackTime = 60_000;
     private static final String DEFAULT = "default";
     private final int stalePeriod;
     private String baseName;
 
     @Inject
-    public Elasticsearch6RestQueueDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper) {
-        super(client, config, mapper, "queues");
+    public Elasticsearch6RestQueueDAO(RestClientBuilder builder, Configuration config, ObjectMapper mapper) {
+        super(builder, config, mapper, "queues");
         this.baseName = toIndexName();
         this.stalePeriod = config.getIntProperty("workflow.elasticsearch.stale.period.seconds", 60) * 1000;
 
@@ -100,7 +100,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         long session = System.nanoTime();
         if (logger.isDebugEnabled())
             logger.debug("pop ({}): {}/{}/{}", session, queueName, count, timeout);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             String indexName = toIndexName(queueName);
             String typeName = toTypeName(queueName);
 
@@ -204,7 +204,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         if (logger.isDebugEnabled())
             logger.debug("getSize: " + queueName);
         initQueue(queueName);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.fetchSource(false);
             sourceBuilder.size(0);
@@ -247,7 +247,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             logger.debug("setUnackTimeout: {}/{}/{}", queueName, id, unackTimeout);
         initQueue(queueName);
 
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             GetResponse record = findMessage(queueName, id);
             if (!record.isExists()) {
                 if (logger.isDebugEnabled())
@@ -299,7 +299,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     @Override
     public Map<String, Long> queuesDetail() {
         Map<String, Long> result = new HashMap<>();
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             TermsAggregationBuilder aggregationBuilder = AggregationBuilders
                 .terms("countByQueue")
                 .field("_index");
@@ -333,7 +333,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     @Override
     public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose() {
         Map<String, Map<String, Map<String, Long>>> result = new HashMap<>();
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             TermsAggregationBuilder aggregationBuilder = AggregationBuilders.terms("countByQueue").field("_index");
             aggregationBuilder.subAggregation(AggregationBuilders.filter("size", QueryBuilders.matchQuery("popped", false)));
             aggregationBuilder.subAggregation(AggregationBuilders.filter("uacked", QueryBuilders.matchQuery("popped", true)));
@@ -382,7 +382,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         if (logger.isDebugEnabled())
             logger.debug("processUnacks: {}", queueName);
         initQueue(queueName);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             String indexName = toIndexName(queueName);
             String typeName = toTypeName(queueName);
 
@@ -461,7 +461,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     @Override
     public boolean wakeup(String queueName, String id) {
         initQueue(queueName);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             String indexName = toIndexName(queueName);
             String typeName = toTypeName(queueName);
             GetResponse record = findOne(indexName, typeName, id);
@@ -554,7 +554,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
 
         AtomicReference<SearchResponse> reference = new AtomicReference<>();
         doWithRetryNoisy(() -> {
-            try {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
                 reference.set(client.search(request));
             } catch (Exception ex) {
                 throw new RuntimeException(ex.getMessage(), ex);

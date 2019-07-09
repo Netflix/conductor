@@ -33,12 +33,16 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -80,7 +84,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         sdf.setTimeZone(gmt);
     }
 
-    private RestHighLevelClient client;
+    private RestClientBuilder builder;
     private String execWorkflowIndexName;
     private String execTaskIndexName;
     private String logMessageIndexName;
@@ -92,9 +96,9 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     private int retryDelay;
 
     @Inject
-    public Elasticsearch6RestIndexDAO(RestHighLevelClient client, Configuration config, ObjectMapper om) {
+    public Elasticsearch6RestIndexDAO(RestClientBuilder builder, Configuration config, ObjectMapper om) {
         this.om = om;
-        this.client = client;
+        this.builder = builder;
         String rootIndexName = config.getProperty("workflow.elasticsearch.index.name", "conductor");
         String taskLogPrefix = config.getProperty("workflow.elasticsearch.tasklog.index.name", "task_log");
 
@@ -118,7 +122,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     }
 
     private void ensureIndexExists(String name, String resourceFile, String type) {
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             GetIndexRequest request = new GetIndexRequest().indices(name);
             boolean exists = client.indices().exists(request);
             if (exists) {
@@ -126,9 +130,9 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
             }
 
             Settings settings = Settings.builder()
-                    .put("index.number_of_shards", 1)
-                    .put("index.number_of_replicas", 1)
-                    .build();
+                .put("index.number_of_shards", 1)
+                .put("index.number_of_replicas", 1)
+                .build();
 
             InputStream stream = Elasticsearch6RestIndexDAO.class.getResourceAsStream(resourceFile);
 
@@ -136,7 +140,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
             });
 
             CreateIndexRequest createIndexRequest = new CreateIndexRequest(name, settings)
-                    .mapping(type, (Map) mapping.get(type));
+                .mapping(type, (Map) mapping.get(type));
 
             client.indices().create(createIndexRequest);
         } catch (Exception ex) {
@@ -203,7 +207,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
 
         int retry = 3;
         while (retry > 0) {
-            try {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
                 BulkRequest brb = new BulkRequest();
                 for (TaskExecLog log : logs) {
                     IndexRequest request = new IndexRequest(logTaskIndexName, LOG_DOC_TYPE);
@@ -230,7 +234,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     @Override
     public List<TaskExecLog> getTaskLogs(String taskId) {
         List<TaskExecLog> logs = new LinkedList<>();
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             QueryBuilder qf = QueryBuilders.matchAllQuery();
             Expression expression = Expression.fromString("taskId='" + taskId + "'");
             qf = expression.getFilterBuilder();
@@ -280,7 +284,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     public void addMessage(String queue, Message msg) {
         int retry = 3;
         while (retry > 0) {
-            try {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
 
                 Map<String, Object> doc = new HashMap<>();
                 doc.put("messageId", msg.getId());
@@ -320,7 +324,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
     private void updateWithRetry(UpdateRequest request) {
         int retry = 3;
         while (retry > 0) {
-            try {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
 
                 client.update(request);
                 return;
@@ -352,7 +356,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
 
     @Override
     public void remove(String workflowId) {
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
 
             DeleteRequest req = new DeleteRequest(execWorkflowIndexName, WORKFLOW_DOC_TYPE, workflowId);
             DeleteResponse response = client.delete(req);
@@ -381,7 +385,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
             source.put(key, value);
         }
         request.doc(source);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             client.update(request);
         } catch (IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
@@ -393,7 +397,7 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         Object value = null;
         GetRequest request = new GetRequest(execWorkflowIndexName, WORKFLOW_DOC_TYPE, workflowInstanceId).storedFields(fieldToGet);
         GetResponse response = null;
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             response = client.get(request);
         } catch (IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
@@ -449,7 +453,10 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
         SearchRequest searchRequest = new SearchRequest(execWorkflowIndexName).types(WORKFLOW_DOC_TYPE);
         searchRequest.source(sourceBuilder);
 
-        SearchResponse searchResponse = client.search(searchRequest);
+        SearchResponse searchResponse;
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
+            searchResponse = client.search(searchRequest);
+        }
         SearchHits searchHits = searchResponse.getHits();
         long totalHits = searchHits.getTotalHits();
 

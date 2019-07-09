@@ -4,14 +4,12 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.utils.WaitUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestClientBuilder.RequestConfigCallback;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,25 +48,6 @@ public class Elasticsearch6RestModule extends AbstractModule {
                         .setConnectTimeout(timeout);
                 }
             });
-    }
-
-    @Provides
-    public RestHighLevelClient getClient(Configuration config, RestClientBuilder builder) {
-        RestHighLevelClient client = new RestHighLevelClient(builder);
-
-        int connectAttempts = config.getIntProperty("workflow.elasticsearch.connection.attempts", 60);
-        int connectSleepSecs = config.getIntProperty("workflow.elasticsearch.connection.sleep.seconds", 1);
-        WaitUtils.wait("elasticsearch", connectAttempts, connectSleepSecs, () -> {
-            try {
-                // Get cluster info
-                log.debug("Cluster info " + client.info());
-                return true;
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-        });
-
-        return client;
     }
 
     @Override
