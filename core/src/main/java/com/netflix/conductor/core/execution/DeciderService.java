@@ -610,11 +610,10 @@ public class DeciderService {
 		List<String> joinOnTaskRefs = new LinkedList<>();
 		// Create Dynamic tasks
 		for (WorkflowTask wft : dynForkTasks) {
-			joinOnTaskRefs.add(wft.getTaskReferenceName());
 			List<Task> forkedTasks = getTasksToBeScheduled(def, workflow, wft, retryCount);
 			tasks.addAll(forkedTasks);			
-			//Task last = forkedTasks.get(forkedTasks.size()-1);
-			//joinOnTaskRefs.add(last.getReferenceTaskName());
+			Task last = forkedTasks.get(forkedTasks.size()-1);
+			joinOnTaskRefs.add(last.getReferenceTaskName());
 			for(Task ft : forkedTasks){
 				Map<String, Object> forkedTaskInput = tasksInput.get(ft.getReferenceTaskName());
 				if( forkedTaskInput != null && (!(forkedTaskInput instanceof Map)) ){
