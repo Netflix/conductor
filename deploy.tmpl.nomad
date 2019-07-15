@@ -183,7 +183,7 @@ job "conductor" {
 
         // Elasticsearch settings.
         workflow_elasticsearch_mode                  = "elasticsearch"
-        workflow_elasticsearch_initial_sleep_seconds = "30"
+        workflow_elasticsearch_initial_sleep_seconds = "0"
         workflow_elasticsearch_stale_period_seconds  = "300"
 
         // Auth settings. Rest settings are in vault
