@@ -121,6 +121,15 @@ public class WorkflowResource {
         workflowService.deleteWorkflow(workflowId, archiveWorkflow);
     }
 
+    @DELETE
+    @Path("/{workflowId}/archiveonly")
+    @ApiOperation("Archive workflow but not delete in Redis")
+    @Consumes(MediaType.WILDCARD)
+    public void archiveOnly(@PathParam("workflowId") String workflowId,
+                       @QueryParam("retainInRedis") @DefaultValue("true") boolean retainInRedis) {
+        workflowService.archiveWorkflow(workflowId, retainInRedis);
+    }
+
     @GET
     @Path("/running/{name}")
     @ApiOperation("Retrieve all the running workflows")

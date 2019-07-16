@@ -98,8 +98,24 @@ public class WorkflowClient extends ClientBase {
         Preconditions.checkArgument(StringUtils.isNotBlank(workflowId), "Workflow id cannot be blank");
         stub.removeWorkflow(
                 WorkflowServicePb.RemoveWorkflowRequest.newBuilder()
-                        .setWorkflodId(workflowId)
+                        .setWorkflowId(workflowId)
                         .setArchiveWorkflow(archiveWorkflow)
+                        .build()
+        );
+    }
+
+     /**
+     * Archives a workflow in Redis
+     *
+     * @param workflowId      the id of the workflow to be archived
+     * @param retainInRedis flag to indicate if the workflow should be deleted from data store
+     */
+    public void archiveWorkflow(String workflowId, boolean retainInRedis) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(workflowId), "Workflow id cannot be blank");
+        stub.archiveWorkflow(
+                WorkflowServicePb.ArchiveWorkflowRequest.newBuilder()
+                        .setWorkflowId(workflowId)
+                        .setRetainInRedis(retainInRedis)
                         .build()
         );
     }

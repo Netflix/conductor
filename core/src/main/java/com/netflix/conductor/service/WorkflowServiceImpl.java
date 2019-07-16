@@ -204,6 +204,16 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     /**
+     * Archives the workflow in ES.
+     * @param workflowId WorkflowID of the workflow you want to archive in ES.
+     * @param retainInRedis delete/not delete the workflow from redis.
+     */
+    @Service
+    public void archiveWorkflow(String workflowId, boolean retainInRedis) {
+        executionService.archiveWorkflow(workflowId, retainInRedis);
+    }
+
+    /**
      * Retrieves all the running workflows.
      * @param workflowName Name of the workflow.
      * @param version Version of the workflow.
