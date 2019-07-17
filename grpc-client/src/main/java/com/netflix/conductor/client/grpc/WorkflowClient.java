@@ -105,7 +105,7 @@ public class WorkflowClient extends ClientBase {
     }
 
      /**
-     * Archives a workflow in Redis
+     * Archives a workflow in ES
      *
      * @param workflowId      the id of the workflow to be archived
      * @param retainInRedis flag to indicate if the workflow should be deleted from data store
