@@ -35,7 +35,7 @@ public class RedisClusterJedisProvider implements Provider<JedisCommands> {
             return new JedisCluster(new HostAndPort(host.getHostName(), host.getPort()), poolConfig);
         } else {
             return new JedisCluster(new HostAndPort(host.getHostName(), host.getPort()), 100000, 100000,
-            3, host.getPassword(), poolConfig);
+            3, password, poolConfig);
         }
     }
 }
