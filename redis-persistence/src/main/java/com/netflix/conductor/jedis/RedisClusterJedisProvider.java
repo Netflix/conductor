@@ -27,9 +27,15 @@ public class RedisClusterJedisProvider implements Provider<JedisCommands> {
     public JedisCommands get() {
         // FIXME This doesn't seem very safe, but is how it was in the code this was moved from.
         Host host = new ArrayList<Host>(hostSupplier.getHosts()).get(0);
+        String password = host.getPassword();
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
         poolConfig.setMinIdle(5);
         poolConfig.setMaxTotal(1000);
-        return new JedisCluster(new HostAndPort(host.getHostName(), host.getPort()), poolConfig);
+        if (password.length() == 0) {
+            return new JedisCluster(new HostAndPort(host.getHostName(), host.getPort()), poolConfig);
+        } else {
+            return new JedisCluster(new HostAndPort(host.getHostName(), host.getPort()), 100000, 100000,
+            3, host.getPassword(), poolConfig);
+        }
     }
 }
