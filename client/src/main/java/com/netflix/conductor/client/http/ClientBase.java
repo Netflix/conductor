@@ -158,7 +158,11 @@ public abstract class ClientBase {
         } catch (RuntimeException e) {
             handleRuntimeException(e, uri);
         }
-        return null;
+
+        // Handle all other exceptions without returning null.
+        String errorMessage = String.format("Unable to invoke Conductor API with uri: %s, unknown exception occurred", uri);
+        logger.error(errorMessage);
+        throw new ConductorClientException(errorMessage);
     }
 
     protected <T> T getForEntity(String url, Object[] queryParams, Class<T> responseType, Object... uriVariables) {
@@ -188,7 +192,11 @@ public abstract class ClientBase {
         } catch (RuntimeException e) {
             handleRuntimeException(e, uri);
         }
-        return null;
+
+        // Handle all other exceptions without returning null.
+        String errorMessage = String.format("Unable to invoke Conductor API with uri: %s, unknown exception occurred", uri);
+        logger.error(errorMessage);
+        throw new ConductorClientException(errorMessage);
     }
 
     /**
@@ -282,32 +290,6 @@ public abstract class ClientBase {
         } else {
             handleRuntimeException(e, uri);
         }
-    }
-
-    /**
-     * Converts ClientResponse object to string with detailed debug information including status code, media type,
-     * response headers, and response body if exists.
-     */
-    private String clientResponseToString(ClientResponse response) {
-        if (response == null) {
-            return null;
-        }
-        StringBuilder builder = new StringBuilder();
-        builder.append("[status: ").append(response.getStatus());
-        builder.append(", media type: ").append(response.getType());
-        if (response.getStatus() != 404) {
-            try {
-                String responseBody = response.getEntity(String.class);
-                if (responseBody != null) {
-                    builder.append(", response body: ").append(responseBody);
-                }
-            } catch (RuntimeException ignore) {
-                // Ignore if there is no response body, or IO error - it may have already been read in certain scenario.
-            }
-        }
-        builder.append(", response headers: ").append(response.getHeaders());
-        builder.append("]");
-        return builder.toString();
     }
 
     private UriBuilder getURIBuilder(String path, Object[] queryParams) {
