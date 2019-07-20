@@ -125,6 +125,13 @@ public class WorkflowExecutor {
     /**
      * @throws ApplicationException
      */
+    public String startWorkflow(String name, Integer version, String correlationId, Integer priority, Map<String, Object> input, String externalInputPayloadStoragePath) {
+        return startWorkflow(name, version, correlationId, priority, input, externalInputPayloadStoragePath, null);
+    }
+
+    /**
+     * @throws ApplicationException
+     */
     public String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> input, String externalInputPayloadStoragePath, String event) {
         return startWorkflow(
                 name,
@@ -141,10 +148,45 @@ public class WorkflowExecutor {
     /**
      * @throws ApplicationException
      */
+    public String startWorkflow(String name, Integer version, String correlationId, Integer priority, Map<String, Object> input, String externalInputPayloadStoragePath, String event) {
+        return startWorkflow(
+                name,
+                version,
+                input,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                null,
+                null,
+                event,
+                null
+        );
+    }
+
+    /**
+     * @throws ApplicationException
+     */
     public String startWorkflow(
             String name,
             Integer version,
             String correlationId,
+            Map<String, Object> input,
+            String externalInputPayloadStoragePath,
+            String event,
+            Map<String, String> taskToDomain
+    ) {
+        return startWorkflow(name, version, correlationId, 0, input, externalInputPayloadStoragePath,
+                event, taskToDomain);
+    }
+
+    /**
+     * @throws ApplicationException
+     */
+    public String startWorkflow(
+            String name,
+            Integer version,
+            String correlationId,
+            Integer priority,
             Map<String, Object> input,
             String externalInputPayloadStoragePath,
             String event,
@@ -156,6 +198,7 @@ public class WorkflowExecutor {
                 input,
                 externalInputPayloadStoragePath,
                 correlationId,
+                priority,
                 null,
                 null,
                 event,
@@ -205,6 +248,30 @@ public class WorkflowExecutor {
                 workflowInput,
                 externalInputPayloadStoragePath,
                 correlationId,
+                0,
+                event,
+                taskToDomain
+        );
+    }
+
+    /**
+     * @throws ApplicationException
+     */
+    public String startWorkflow(
+            WorkflowDef workflowDefinition,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            Integer priority,
+            String event,
+            Map<String, String> taskToDomain
+    ) {
+        return startWorkflow(
+                workflowDefinition,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
                 null,
                 null,
                 event,
@@ -226,6 +293,35 @@ public class WorkflowExecutor {
             String event,
             Map<String, String> taskToDomain
     ) {
+        return startWorkflow(
+                name,
+                version,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                0,
+                parentWorkflowId,
+                parentWorkflowTaskId,
+                event,
+                taskToDomain
+        );
+    }
+
+    /**
+     * @throws ApplicationException
+     */
+    public String startWorkflow(
+            String name,
+            Integer version,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            Integer priority,
+            String parentWorkflowId,
+            String parentWorkflowTaskId,
+            String event,
+            Map<String, String> taskToDomain
+    ) {
         WorkflowDef workflowDefinition = metadataMapperService.lookupForWorkflowDefinition(name, version);
 
         return startWorkflow(
@@ -233,6 +329,7 @@ public class WorkflowExecutor {
                 workflowInput,
                 externalInputPayloadStoragePath,
                 correlationId,
+                priority,
                 parentWorkflowId,
                 parentWorkflowTaskId,
                 event,
@@ -254,6 +351,7 @@ public class WorkflowExecutor {
             Map<String, Object> workflowInput,
             String externalInputPayloadStoragePath,
             String correlationId,
+            Integer priority,
             String parentWorkflowId,
             String parentWorkflowTaskId,
             String event,
@@ -272,6 +370,7 @@ public class WorkflowExecutor {
         Workflow workflow = new Workflow();
         workflow.setWorkflowId(workflowId);
         workflow.setCorrelationId(correlationId);
+        workflow.setPriority(priority);
         workflow.setWorkflowDefinition(workflowDefinition);
         workflow.setStatus(WorkflowStatus.RUNNING);
         workflow.setParentWorkflowId(parentWorkflowId);
@@ -391,8 +490,8 @@ public class WorkflowExecutor {
             throw new ApplicationException(CONFLICT, String.format("Workflow: %s is non-restartable", workflow));
         }
 
-        // Remove all the tasks...
-        workflow.getTasks().forEach(task -> executionDAOFacade.removeTask(task.getTaskId()));
+        // Remove the workflow from the primary datastore (archive in indexer) and re-create it
+        executionDAOFacade.removeWorkflow(workflowId, true);
         workflow.getTasks().clear();
         workflow.setReasonForIncompletion(null);
         workflow.setStartTime(System.currentTimeMillis());
@@ -401,7 +500,7 @@ public class WorkflowExecutor {
         workflow.setStatus(WorkflowStatus.RUNNING);
         workflow.setOutput(null);
         workflow.setExternalOutputPayloadStoragePath(null);
-        executionDAOFacade.updateWorkflow(workflow);
+        executionDAOFacade.createWorkflow(workflow);
         decide(workflowId);
     }
 
@@ -741,8 +840,7 @@ public class WorkflowExecutor {
                 long callBack = taskResult.getCallbackAfterSeconds();
                 queueDAO.remove(taskQueueName, task.getTaskId());
                 LOGGER.debug("Task: {} removed from taskQueue: {} since the task status is {}", task, taskQueueName, task.getStatus().name());
-
-                queueDAO.push(taskQueueName, task.getTaskId(), callBack); // Milliseconds
+                queueDAO.push(taskQueueName, task.getTaskId(), task.getWorkflowPriority(), callBack); // Milliseconds
                 LOGGER.debug("Task: {} pushed back to taskQueue: {} since the task status is {} with callbackAfterSeconds: {}", task, taskQueueName, task.getStatus().name(), callBack);
                 break;
             default:
@@ -761,7 +859,12 @@ public class WorkflowExecutor {
 
     public Task getTask(String taskId) {
         return Optional.ofNullable(executionDAOFacade.getTaskById(taskId))
-                .map(metadataMapperService::populateTaskWithDefinition)
+                .map(task -> {
+                    if (task.getWorkflowTask() != null) {
+                        return metadataMapperService.populateTaskWithDefinition(task);
+                    }
+                    return task;
+                })
                 .orElse(null);
     }
 
@@ -769,8 +872,8 @@ public class WorkflowExecutor {
         return executionDAOFacade.getTasksByName(taskType, startKey, count);
     }
 
-    public List<Workflow> getRunningWorkflows(String workflowName) {
-        return executionDAOFacade.getPendingWorkflowsByName(workflowName);
+    public List<Workflow> getRunningWorkflows(String workflowName, int version) {
+        return executionDAOFacade.getPendingWorkflowsByName(workflowName, version);
 
     }
 
@@ -783,8 +886,8 @@ public class WorkflowExecutor {
 
     }
 
-    public List<String> getRunningWorkflowIds(String workflowName) {
-        return executionDAOFacade.getRunningWorkflowIdsByName(workflowName);
+    public List<String> getRunningWorkflowIds(String workflowName, int version) {
+        return executionDAOFacade.getRunningWorkflowIds(workflowName, version);
     }
 
     /**
@@ -847,7 +950,7 @@ public class WorkflowExecutor {
             if (!outcome.tasksToBeUpdated.isEmpty() || !tasksToBeScheduled.isEmpty()) {
                 executionDAOFacade.updateTasks(tasksToBeUpdated);
                 executionDAOFacade.updateWorkflow(workflow);
-                queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), config.getSweepFrequency());
+                queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), workflow.getPriority(), config.getSweepFrequency());
             }
 
             stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
@@ -949,6 +1052,7 @@ public class WorkflowExecutor {
         theTask.setTaskId(IDGenerator.generate());
         theTask.setReferenceTaskName(taskReferenceName);
         theTask.setWorkflowInstanceId(workflowId);
+        theTask.setWorkflowPriority(wf.getPriority());
         theTask.setStatus(SKIPPED);
         theTask.setTaskType(wft.getName());
         theTask.setCorrelationId(wf.getCorrelationId());
@@ -971,11 +1075,11 @@ public class WorkflowExecutor {
         String taskQueueName = QueueUtils.getQueueName(task);
         queueDAO.remove(taskQueueName, task.getTaskId());
         if (task.getCallbackAfterSeconds() > 0) {
-            queueDAO.push(taskQueueName, task.getTaskId(), task.getCallbackAfterSeconds());
+            queueDAO.push(taskQueueName, task.getTaskId(), task.getWorkflowPriority(), task.getCallbackAfterSeconds());
         } else {
-            queueDAO.push(taskQueueName, task.getTaskId(), 0);
+            queueDAO.push(taskQueueName, task.getTaskId(), task.getWorkflowPriority(), 0);
         }
-        LOGGER.debug("Added task {} to queue {} with call back seconds {}", task, taskQueueName, task.getCallbackAfterSeconds());
+        LOGGER.debug("Added task {} with priority {} to queue {} with call back seconds {}", task, task.getWorkflowPriority(), taskQueueName, task.getCallbackAfterSeconds());
     }
 
     //Executes the async system task
@@ -1161,7 +1265,9 @@ public class WorkflowExecutor {
                 if (workflowSystemTask == null) {
                     throw new ApplicationException(NOT_FOUND, "No system task found by name " + task.getTaskType());
                 }
-                task.setStartTime(System.currentTimeMillis());
+                if (task.getStatus() != null && !task.getStatus().isTerminal() && task.getStartTime() == 0) {
+                    task.setStartTime(System.currentTimeMillis());
+                }
                 if (!workflowSystemTask.isAsync()) {
                     try {
                         workflowSystemTask.start(workflow, task, this);
@@ -1298,9 +1404,17 @@ public class WorkflowExecutor {
                     executionDAOFacade.removeTask(task.getTaskId());
                 }
             }
+            //reset fields before restarting the task
+            rerunFromTask.setScheduledTime(System.currentTimeMillis());
+            rerunFromTask.setStartTime(0);
+            rerunFromTask.setUpdateTime(0);
+            rerunFromTask.setEndTime(0);
+            rerunFromTask.setOutputData(null);
+            rerunFromTask.setExternalOutputPayloadStoragePath(null);
             if (rerunFromTask.getTaskType().equalsIgnoreCase(SubWorkflow.NAME)) {
-                // if task is sub workflow set task as IN_PROGRESS
+                // if task is sub workflow set task as IN_PROGRESS and reset start time
                 rerunFromTask.setStatus(IN_PROGRESS);
+                rerunFromTask.setStartTime(System.currentTimeMillis());
             } else {
                 // Set the task to rerun as SCHEDULED
                 rerunFromTask.setStatus(SCHEDULED);

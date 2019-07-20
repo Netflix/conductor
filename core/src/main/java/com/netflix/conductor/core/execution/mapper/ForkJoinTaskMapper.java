@@ -74,10 +74,11 @@ public class ForkJoinTaskMapper implements TaskMapper {
         forkTask.setWorkflowType(workflowInstance.getWorkflowName());
         forkTask.setCorrelationId(workflowInstance.getCorrelationId());
         forkTask.setScheduledTime(System.currentTimeMillis());
-        forkTask.setEndTime(System.currentTimeMillis());
+        forkTask.setStartTime(System.currentTimeMillis());
         forkTask.setInputData(taskInput);
         forkTask.setTaskId(taskId);
         forkTask.setStatus(Task.Status.COMPLETED);
+        forkTask.setWorkflowPriority(workflowInstance.getPriority());
         forkTask.setWorkflowTask(taskToSchedule);
 
         tasksToBeScheduled.add(forkTask);
