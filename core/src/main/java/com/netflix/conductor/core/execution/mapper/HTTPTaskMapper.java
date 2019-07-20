@@ -92,7 +92,7 @@
          httpTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
          httpTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
          httpTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
-         httpTask.setDomain(taskDefinition.getDomain());
+         httpTask.setDomain(taskDefinition.getExecutionNameSpace());
          return Collections.singletonList(httpTask);
      }
  }

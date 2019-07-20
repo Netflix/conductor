@@ -30,19 +30,4 @@ public class TestIsolatedTaskQueueProducer {
 	}
 
 
-
-	@Test
-	public void interruptReturns() throws InterruptedException {
-
-		MetadataService metadataService = Mockito.mock(MetadataService.class);
-		IsolatedTaskQueueProducer isolatedTaskQueueProducer = new IsolatedTaskQueueProducer(metadataService, Mockito.mock(Configuration.class));
-		Thread thread = new Thread(isolatedTaskQueueProducer::syncTaskQueues);
-		thread.start();
-		thread.interrupt();
-		thread.join();
-		
-		Assert.assertFalse(thread.isAlive());
-
-	}
-
 }

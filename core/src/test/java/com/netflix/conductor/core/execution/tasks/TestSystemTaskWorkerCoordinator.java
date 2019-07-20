@@ -6,7 +6,6 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.QueueDAO;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
@@ -126,7 +125,7 @@ public class TestSystemTaskWorkerCoordinator {
 		System.setProperty("workflow.system.task.worker.domain","domain");
 		Configuration configuration = new SystemPropertiesConfiguration();
 		SystemTaskWorkerCoordinator systemTaskWorkerCoordinator = new SystemTaskWorkerCoordinator(Mockito.mock(QueueDAO.class), Mockito.mock(WorkflowExecutor.class), configuration);
-		Assert.assertEquals(systemTaskWorkerCoordinator.isFromCoordinatorDomain("domain:testTaskType"), true);
+		Assert.assertEquals(systemTaskWorkerCoordinator.isFromCoordinatorExecutionNameSpace("domain:testTaskType"), true);
 
 	}
 }

@@ -108,7 +108,7 @@ public class TaskDef extends Auditable {
 	private String isolationGroupId;
 
 	@ProtoField(id = 17	)
-	private String domain;
+	private String executionNameSpace;
 
 	public TaskDef() {
 	}
@@ -353,12 +353,12 @@ public class TaskDef extends Auditable {
 		this.isolationGroupId = isolationGroupId;
 	}
 
-	public String getDomain() {
-		return domain;
+	public String getExecutionNameSpace() {
+		return executionNameSpace;
 	}
 
-	public void setDomain(String domain) {
-		this.domain = domain;
+	public void setExecutionNameSpace(String executionNameSpace) {
+		this.executionNameSpace = executionNameSpace;
 	}
 
 	@Override
@@ -385,7 +385,7 @@ public class TaskDef extends Auditable {
 				Objects.equals(getRateLimitPerFrequency(), taskDef.getRateLimitPerFrequency()) &&
 				Objects.equals(getInputTemplate(), taskDef.getInputTemplate()) &&
 				Objects.equals(getIsolationGroupId(), taskDef.getIsolationGroupId()) &&
-				Objects.equals(getDomain(), taskDef.getDomain());
+				Objects.equals(getExecutionNameSpace(), taskDef.getExecutionNameSpace());
 	}
 
 	@Override
@@ -393,6 +393,6 @@ public class TaskDef extends Auditable {
 
 		return Objects.hash(getName(), getDescription(), getRetryCount(), getTimeoutSeconds(), getInputKeys(),
 				getOutputKeys(), getTimeoutPolicy(), getRetryLogic(), getRetryDelaySeconds(),
-				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate(), getIsolationGroupId(), getDomain());
+				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate(), getIsolationGroupId(), getExecutionNameSpace());
 	}
 }

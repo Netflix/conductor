@@ -33,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -74,7 +75,7 @@ public class SystemTaskWorkerCoordinator {
 
 	private Configuration config;
 
-	private final String domain;
+	private final String executionNameSpace;
 
 	static BlockingQueue<String> queue = new LinkedBlockingQueue<>();
 
@@ -84,11 +85,9 @@ public class SystemTaskWorkerCoordinator {
 
 	ConcurrentHashMap<String, ExecutionConfig> queueExecutionConfigMap = new ConcurrentHashMap<>();
 
-	public static ConcurrentHashMap<String, WorkflowSystemTask> taskNameWorkFlowTaskMapping = new ConcurrentHashMap<>();
+	public static Map<String, WorkflowSystemTask> taskNameWorkFlowTaskMapping = new ConcurrentHashMap<>();
 
 	private static final String className = SystemTaskWorkerCoordinator.class.getName();
-
-
 
 	@Inject
 	public SystemTaskWorkerCoordinator(QueueDAO queueDAO, WorkflowExecutor workflowExecutor, Configuration config) {
@@ -101,7 +100,7 @@ public class SystemTaskWorkerCoordinator {
 		this.pollInterval = config.getIntProperty("workflow.system.task.worker.poll.interval", 50);
 		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
 		this.workerQueue = new LinkedBlockingQueue<>(workerQueueSize);
-		this.domain =config.getProperty("workflow.system.task.worker.domain","");
+		this.executionNameSpace =config.getProperty("workflow.system.task.worker.executionNameSpace","");
 
 		if(threadCount > 0) {
 			ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("system-task-worker-%d").build();
@@ -148,7 +147,7 @@ public class SystemTaskWorkerCoordinator {
 	void pollAndExecute(String queueName) {
 		try {
 			if(config.disableAsyncWorkers()) {
-				logger.warn("System Task Worker is DISABLED.  Not polling for queue : {}", queueName);
+				logger.warn("System Task Worker is DISABLED.  Not polling for system task in queue : {}", queueName);
 				return;
 			}
 			// get the remaining capacity of worker queue to prevent queue full exception
@@ -181,13 +180,13 @@ public class SystemTaskWorkerCoordinator {
 	}
 
 
-	public boolean isFromCoordinatorDomain(String queueName) {
-		String queueDomain = QueueUtils.getQueueDomain(queueName);
-		return StringUtils.equals(queueDomain, this.domain);
+	public boolean isFromCoordinatorExecutionNameSpace(String queueName) {
+		String queueExecutionNameSpace = QueueUtils.getExecutionNameSpace(queueName);
+		return StringUtils.equals(queueExecutionNameSpace, this.executionNameSpace);
 	}
 
 	private boolean shouldListen(String workflowSystemTaskQueueName) {
-		return isFromCoordinatorDomain(workflowSystemTaskQueueName) && isSystemTask(workflowSystemTaskQueueName);
+		return isFromCoordinatorExecutionNameSpace(workflowSystemTaskQueueName) && isSystemTask(workflowSystemTaskQueueName);
 	}
 
 
@@ -221,7 +220,7 @@ public class SystemTaskWorkerCoordinator {
 
 		int workerQueueSize = config.getIntProperty("workflow.isolated.system.task.worker.queue.size", 100);
 		LinkedBlockingQueue<Runnable> workerQueue = new LinkedBlockingQueue<>(workerQueueSize);
-		int threadCount = config.getIntProperty("workflow.isolated.system.task.worker.thread.count", 10);
+		int threadCount = config.getIntProperty("workflow.isolated.system.task.worker.thread.count", 1);
 		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("isolated-system-task-worker-%d").build();
 
 		return new ExecutionConfig(new ThreadPoolExecutor(threadCount, threadCount,
