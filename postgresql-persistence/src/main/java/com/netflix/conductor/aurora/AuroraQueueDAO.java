@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
 import org.apache.commons.collections.CollectionUtils;
@@ -23,17 +22,15 @@ import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterrup
 
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
-	private static final Long UNACK_SCHEDULE_MS = 60_000L;
+	private static final Long UNACK_SCHEDULE_MS = 5_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
-	private final int stalePeriod;
 
 	@Inject
-	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
+	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper) {
 		super(dataSource, mapper);
-		stalePeriod = config.getIntProperty("workflow.aurora.stale.period.seconds", 60);
 
 		Executors.newSingleThreadScheduledExecutor()
-			.scheduleAtFixedRate(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
+			.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -143,7 +140,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
-		long unack_on = System.currentTimeMillis() - stalePeriod;
+		long unack_on = System.currentTimeMillis();
 
 		final String SQL = "UPDATE queue_message " +
 			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +

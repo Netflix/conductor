@@ -11,10 +11,7 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 class Dao extends AuroraBaseDAO {
@@ -135,6 +132,14 @@ class Dao extends AuroraBaseDAO {
 			"UPDATE SET created_on=?, modified_on=?, start_time=?, end_time=?, parent_workflow_id=?, " +
 			"workflow_type=?, workflow_status=?, date_str=?, json_data=?, input=?, output=?, correlation_id=?, tags=?";
 
+		// We must not clear tags for RESET as it must be restarted right away
+		Set<String> tags;
+		if (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
+			tags = Collections.emptySet();
+		} else {
+			tags = workflow.getTags();
+		}
+
 		execute(tx, SQL, q -> q
 			.addTimestampParameter(workflow.getCreateTime(), System.currentTimeMillis())
 			.addTimestampParameter(workflow.getUpdateTime(), System.currentTimeMillis())
@@ -149,7 +154,7 @@ class Dao extends AuroraBaseDAO {
 			.addJsonParameter(workflow.getInput())
 			.addJsonParameter(workflow.getOutput())
 			.addParameter(workflow.getCorrelationId())
-			.addParameter(workflow.getTags()) // end insert
+			.addParameter(tags) // end insert
 			.addTimestampParameter(workflow.getCreateTime(), System.currentTimeMillis())
 			.addTimestampParameter(workflow.getUpdateTime(), System.currentTimeMillis())
 			.addTimestampParameter(workflow.getStartTime())
@@ -162,7 +167,7 @@ class Dao extends AuroraBaseDAO {
 			.addJsonParameter(workflow.getInput())
 			.addJsonParameter(workflow.getOutput())
 			.addParameter(workflow.getCorrelationId())
-			.addParameter(workflow.getTags())
+			.addParameter(tags)
 			.executeUpdate());
 	}
 
