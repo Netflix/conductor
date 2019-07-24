@@ -377,7 +377,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		getWithTransaction(tx -> insertEventPublished(tx, ep));
 	}
 
-
 	/**
 	 * Function to find tasks in the workflows which associated with given tags
 	 *
@@ -413,6 +412,22 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		String SQL = "select count(*) from workflow where tags @> ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeScalar(Long.class) > 0);
+	}
+
+	@Override
+	public void resetStartTime(Task task, boolean updateOutput) {
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("startTime", task.getStartTime());
+		payload.put("endTime", task.getEndTime());
+		if (updateOutput) {
+			payload.put("outputData", task.getOutputData());
+		}
+
+		String SQL = "UPDATE task SET json_data = (json_data::jsonb || ?::jsonb)::text WHERE task_id = ?";
+		executeWithTransaction(SQL, q -> q
+			.addJsonParameter(payload)
+			.addParameter(task.getTaskId())
+			.executeUpdate());
 	}
 
 	private static int dateStr(Long timeInMs) {

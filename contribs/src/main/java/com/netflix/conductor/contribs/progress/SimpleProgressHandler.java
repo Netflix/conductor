@@ -82,6 +82,7 @@ public class SimpleProgressHandler implements JavaEventAction {
 		TaskResult taskResult = new TaskResult(task);
 		taskResult.setResetStartTime(params.resetStartTime);
 		if (params.payloadToOutput) {
+			taskResult.setUpdateOutput(true);
 			taskResult.getOutputData().put("payload", payload);
 		}
 
