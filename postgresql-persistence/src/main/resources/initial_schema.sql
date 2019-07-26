@@ -1,5 +1,6 @@
 create table log4j_logs
 (
+    id       serial primary key,
     log_time timestamp,
     logger   text,
     level    text,

@@ -46,6 +46,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 	private static final String CREATE_INDEX = "create index log4j_logs_log_time_idx on log4j_logs (log_time)";
 
 	private static final String CREATE_TABLE = "create table log4j_logs(\n" +
+		"  id       serial primary key,\n" +
 		"  log_time timestamp,\n" +
 		"  logger varchar,\n" +
 		"  level varchar,\n" +
