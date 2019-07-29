@@ -18,7 +18,7 @@ create index log4j_logs_log_time_idx on log4j_logs (log_time);
 create table meta_config
 (
     name  varchar(255) primary key,
-    value varchar(255)
+    value text
 );
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_aurora', 'INFO');
