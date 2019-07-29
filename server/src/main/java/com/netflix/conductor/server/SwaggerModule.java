@@ -14,9 +14,15 @@ public class SwaggerModule extends ServletModule {
     protected void configureServlets() {
         bind(DefaultServlet.class).in(Scopes.SINGLETON);
         Map<String, String> params = new HashMap<>();
+
         params.put("resourceBase", getResourceBasePath());
         params.put("redirectWelcome", "true");
-        serve("/*").with(DefaultServlet.class, params);
+
+
+       // params.put("dirAllowed", "true");
+        params.put("pathInfoOnly", "true");
+
+        serve("/swagger/*").with(DefaultServlet.class, params);
     }
 
     private String getResourceBasePath() {
