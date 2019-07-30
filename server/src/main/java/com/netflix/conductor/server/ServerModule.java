@@ -118,6 +118,12 @@ public class ServerModule extends AbstractModule {
 			bind(QueueDAO.class).to(DynoQueueDAO.class);
 		}
 
+		List<AbstractModule> additionalModules = config.getAdditionalModules();
+		if (additionalModules != null) {
+			for (AbstractModule additionalModule : additionalModules) {
+				install(additionalModule);
+			}
+		}
 		install(new CoreModule());
 		install(new JerseyModule());
 		install(new HttpModule());
@@ -126,12 +132,6 @@ public class ServerModule extends AbstractModule {
 		install(new ProgressModule());
 		new JsonJqTransform();
 		new ValidationTask();
-		List<AbstractModule> additionalModules = config.getAdditionalModules();
-		if (additionalModules != null) {
-			for (AbstractModule additionalModule : additionalModules) {
-				install(additionalModule);
-			}
-		}
 	}
 
 	@Provides
