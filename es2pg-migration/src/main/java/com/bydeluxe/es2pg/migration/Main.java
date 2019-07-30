@@ -37,9 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
@@ -48,6 +50,7 @@ public class Main {
 	private static Logger logger = LogManager.getLogger(Main.class);
 	private AtomicBoolean keepPooling = new AtomicBoolean(true);
 	private BlockingDeque<String> workflowQueue = new LinkedBlockingDeque<>();
+	private Map<String, AtomicInteger> failedStats = new ConcurrentHashMap<>();
 	private AppConfig config = AppConfig.getInstance();
 	private CountDownLatch latch = new CountDownLatch(config.queueWorkers());
 	private HikariDataSource dataSource;
@@ -118,6 +121,9 @@ public class Main {
 		logger.info("Grabbing queues ...");
 		grabQueues();
 
+		logger.info("Requeue async ...");
+		requeueAsync();
+
 		logger.info("Requeue decider ...");
 		requeueDecider();
 
@@ -145,8 +151,13 @@ public class Main {
 							}
 						}
 					} catch (Throwable th) {
-						workflowQueue.add(workflowId); // Add it back to the processing queue
-						logger.error(th.getMessage() + " occurred for " + workflowId, th);
+						AtomicInteger stats = failedStats.computeIfAbsent(workflowId, s -> new AtomicInteger(0));
+						int failed = stats.incrementAndGet();
+						if (failed <= 3) {
+							workflowQueue.add(workflowId);
+						} else {
+							logger.error("Repeated (!!!) error " + th.getMessage() + " occurred for " + workflowId + ". Excluding from migration!", th);
+						}
 					}
 				} else {
 					try {
@@ -321,6 +332,19 @@ public class Main {
 					dao.upsertTaskDef(tx, def);
 				});
 
+				tx.commit();
+			} catch (Exception ex) {
+				tx.rollback();
+				throw ex;
+			}
+		}
+	}
+
+	private void requeueAsync() throws SQLException {
+		try (Connection tx = dataSource.getConnection()) {
+			tx.setAutoCommit(false);
+			try {
+				dao.requeueAsync(tx);
 				tx.commit();
 			} catch (Exception ex) {
 				tx.rollback();

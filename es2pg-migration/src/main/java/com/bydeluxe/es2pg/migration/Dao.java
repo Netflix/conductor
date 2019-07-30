@@ -68,6 +68,12 @@ class Dao extends AuroraBaseDAO {
 		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null, 30));
 	}
 
+	void requeueAsync(Connection tx) {
+		String SQL = "SELECT task_id FROM task WHERE task_type = 'HTTP' AND task_status IN ('SCHEDULED', 'IN_PROGRESS')";
+		List<String> ids = query(tx, SQL, q -> q.executeAndFetch(String.class));
+		ids.forEach(id -> pushMessage(tx, "http", id, null, 30));
+	}
+
 	private void createQueueIfNotExists(Connection tx, String queueName) {
 		if (queues.contains(queueName)) {
 			return;
