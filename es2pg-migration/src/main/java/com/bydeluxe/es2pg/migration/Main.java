@@ -54,6 +54,7 @@ public class Main {
 	private AppConfig config = AppConfig.getInstance();
 	private CountDownLatch latch = new CountDownLatch(config.queueWorkers());
 	private HikariDataSource dataSource;
+	private RestClientBuilder builder;
 	private Dao dao;
 	private long esTotalWorkflows;
 
@@ -79,6 +80,13 @@ public class Main {
 		if (StringUtils.isEmpty(clusterAddress)) {
 			throw new RuntimeException("No ElasticSearch Url defined. Exiting");
 		}
+
+		builder = RestClient.builder(HttpHost.create(config.source()));
+		builder.setMaxRetryTimeoutMillis(60_000)
+			.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
+				.setConnectionRequestTimeout(0)
+				.setSocketTimeout(60_000)
+				.setConnectTimeout(60_000));
 
 		String url = String.format("jdbc:postgresql://%s:%s/%s", config.auroraHost(), config.auroraPort(), config.auroraDb());
 
@@ -430,13 +438,6 @@ public class Main {
 	}
 
 	private RestHighLevelClient buildEsClient() {
-		RestClientBuilder builder = RestClient.builder(HttpHost.create(config.source()));
-		builder.setMaxRetryTimeoutMillis(60_000)
-			.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
-				.setConnectionRequestTimeout(0)
-				.setSocketTimeout(60_000)
-				.setConnectTimeout(60_000));
-
 		return new RestHighLevelClient(builder);
 	}
 
