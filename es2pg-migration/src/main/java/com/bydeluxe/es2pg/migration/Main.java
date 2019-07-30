@@ -431,11 +431,11 @@ public class Main {
 
 	private RestHighLevelClient buildEsClient() {
 		RestClientBuilder builder = RestClient.builder(HttpHost.create(config.source()));
-		builder.setMaxRetryTimeoutMillis(120_000)
+		builder.setMaxRetryTimeoutMillis(60_000)
 			.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
 				.setConnectionRequestTimeout(0)
-				.setSocketTimeout(120_000)
-				.setConnectTimeout(120_000));
+				.setSocketTimeout(60_000)
+				.setConnectTimeout(60_000));
 
 		return new RestHighLevelClient(builder);
 	}
