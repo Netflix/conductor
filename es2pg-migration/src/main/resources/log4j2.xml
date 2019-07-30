@@ -4,9 +4,13 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %level %logger - %msg%n"/>
         </Console>
+        <File name="File" fileName="migration.log">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %level %logger - %msg%n"/>
+        </File>
     </Appenders>
     <Loggers>
         <Root level="INFO">
+            <AppenderRef ref="File"/>
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
