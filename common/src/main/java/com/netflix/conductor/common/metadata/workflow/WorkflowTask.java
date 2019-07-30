@@ -77,6 +77,8 @@ public class WorkflowTask {
 	private String caseValueParam;
 	
 	private String caseExpression;
+
+	private String scriptExpression;
 	
 	//Populates for the tasks of the decision type
 	private Map<String, List<WorkflowTask>> decisionCases = new LinkedHashMap<>();
@@ -379,6 +381,14 @@ public class WorkflowTask {
 		this.optional = optional;
 	}
 
+
+	public String getScriptExpression() {
+		return scriptExpression;
+	}
+
+	public void setScriptExpression(String expression) {
+		this.scriptExpression = expression;
+	}
 	/**
 	 *
 	 * @return workflow name to be started once the task timed out
