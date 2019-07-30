@@ -32,6 +32,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.BlockingDeque;
@@ -126,8 +128,6 @@ public class Main {
 	private void startWorkers() {
 		Runnable runnable = () -> {
 
-			RestHighLevelClient client = buildEsClient();
-
 			while (keepPooling.get() || !workflowQueue.isEmpty()) {
 				String workflowId = workflowQueue.poll();
 				if (workflowId != null) {
@@ -136,7 +136,7 @@ public class Main {
 							tx.setAutoCommit(false);
 							try {
 
-								processWorkflow(workflowId, client, tx);
+								processWorkflow(workflowId, tx);
 								tx.commit();
 
 							} catch (Throwable th) {
@@ -145,6 +145,7 @@ public class Main {
 							}
 						}
 					} catch (Throwable th) {
+						workflowQueue.add(workflowId); // Add it back to the processing queue
 						logger.error(th.getMessage() + " occurred for " + workflowId, th);
 					}
 				} else {
@@ -167,43 +168,43 @@ public class Main {
 	}
 
 	private void grabWorkflows() throws IOException {
-		RestHighLevelClient client = buildEsClient();
+		try (RestHighLevelClient client = buildEsClient()) {
+			SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+			sourceBuilder.query(QueryBuilders.matchAllQuery());
+			sourceBuilder.size(config.batchSize());
+			sourceBuilder.fetchSource(false);
 
-		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-		sourceBuilder.query(QueryBuilders.matchAllQuery());
-		sourceBuilder.size(config.batchSize());
-		sourceBuilder.fetchSource(false);
+			SearchRequest searchRequest = new SearchRequest();
+			searchRequest.scroll(new Scroll(TimeValue.timeValueHours(1L)));
+			searchRequest.indices(config.rootIndexName() + ".runtime." + config.env() + ".workflow");
+			searchRequest.types("workflow");
+			searchRequest.source(sourceBuilder);
 
-		SearchRequest searchRequest = new SearchRequest();
-		searchRequest.scroll(new Scroll(TimeValue.timeValueHours(1L)));
-		searchRequest.indices(config.rootIndexName() + ".runtime." + config.env() + ".workflow");
-		searchRequest.types("workflow");
-		searchRequest.source(sourceBuilder);
+			SearchResponse searchResponse = client.search(searchRequest);
+			String scrollId = searchResponse.getScrollId();
+			SearchHit[] searchHits = searchResponse.getHits().getHits();
 
-		SearchResponse searchResponse = client.search(searchRequest);
-		String scrollId = searchResponse.getScrollId();
-		SearchHit[] searchHits = searchResponse.getHits().getHits();
+			esTotalWorkflows = searchResponse.getHits().getTotalHits();
+			logger.info("Workflows total " + esTotalWorkflows);
+			AtomicLong retrieved = new AtomicLong(0);
+			try {
+				while (searchHits != null && searchHits.length > 0) {
+					logger.info("Retrieved " + retrieved.addAndGet(searchHits.length) + " of " + esTotalWorkflows);
+					for (SearchHit hit : searchHits) {
+						workflowQueue.add(hit.getId());
+					}
 
-		esTotalWorkflows = searchResponse.getHits().getTotalHits();
-		logger.info("Workflows total " + esTotalWorkflows);
-		AtomicLong retrieved = new AtomicLong(0);
-		try {
-			while (searchHits != null && searchHits.length > 0) {
-				logger.info("Retrieved " + retrieved.addAndGet(searchHits.length) + " of " + esTotalWorkflows);
-				for (SearchHit hit : searchHits) {
-					workflowQueue.add(hit.getId());
+					SearchScrollRequest scroll = new SearchScrollRequest(scrollId);
+					scroll.scroll(searchRequest.scroll());
+					searchResponse = client.searchScroll(scroll);
+					scrollId = searchResponse.getScrollId();
+					searchHits = searchResponse.getHits().getHits();
 				}
-
-				SearchScrollRequest scroll = new SearchScrollRequest(scrollId);
-				scroll.scroll(searchRequest.scroll());
-				searchResponse = client.searchScroll(scroll);
-				scrollId = searchResponse.getScrollId();
-				searchHits = searchResponse.getHits().getHits();
+			} finally {
+				ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+				clearScrollRequest.addScrollId(scrollId);
+				client.clearScroll(clearScrollRequest);
 			}
-		} finally {
-			ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
-			clearScrollRequest.addScrollId(scrollId);
-			client.clearScroll(clearScrollRequest);
 		}
 	}
 
@@ -236,8 +237,6 @@ public class Main {
 	}
 
 	private void grabQueues() throws Exception {
-		RestHighLevelClient client = buildEsClient();
-
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.query(QueryBuilders.matchAllQuery());
 		sourceBuilder.size(config.batchSize());
@@ -248,15 +247,14 @@ public class Main {
 		searchRequest.indices(config.rootIndexName() + ".queues." + config.env() + ".*");
 		searchRequest.source(sourceBuilder);
 
+		List<String> ignored = Arrays.asList("wait", "deciderqueue", "sweeperqueue");
 		try (Connection tx = dataSource.getConnection()) {
 
 			tx.setAutoCommit(false);
 			try {
 
-				findAll(client, searchRequest, hit -> {
-					if ("deciderqueue".equalsIgnoreCase(hit.getType())) {
-						return;
-					} else if ("sweeperqueue".equalsIgnoreCase(hit.getType())) {
+				findAll(searchRequest, hit -> {
+					if (ignored.contains(hit.getType())) {
 						return;
 					}
 
@@ -275,8 +273,6 @@ public class Main {
 	}
 
 	private void grabMetadata() throws Exception {
-		RestHighLevelClient client = buildEsClient();
-
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.query(QueryBuilders.matchAllQuery());
 		sourceBuilder.size(config.batchSize());
@@ -292,7 +288,7 @@ public class Main {
 			tx.setAutoCommit(false);
 			try {
 
-				findAll(client, searchRequest, hit -> {
+				findAll(searchRequest, hit -> {
 					WorkflowDef def = dao.convertValue(hit.getSourceAsMap(), WorkflowDef.class);
 					if (def == null) {
 						logger.error("Couldn't convert " + hit.getSourceAsMap() + " to WorkflowDef ");
@@ -317,7 +313,7 @@ public class Main {
 			tx.setAutoCommit(false);
 			try {
 
-				findAll(client, searchRequest, hit -> {
+				findAll(searchRequest, hit -> {
 					TaskDef def = dao.convertValue(hit.getSourceAsMap(), TaskDef.class);
 					if (def == null) {
 						logger.error("Couldn't convert " + hit.getSourceAsMap() + " to TaskDef ");
@@ -346,22 +342,25 @@ public class Main {
 		}
 	}
 
-	private void processWorkflow(String workflowId, RestHighLevelClient client, Connection tx) throws Exception {
+	private void processWorkflow(String workflowId, Connection tx) throws Exception {
 		String indexName = config.rootIndexName() + ".runtime." + config.env() + ".workflow";
 		GetRequest request = new GetRequest().index(indexName).type("workflow").id(workflowId);
-		GetResponse record = client.get(request);
-		if (!record.isExists()) {
-			throw new RuntimeException("No workflow found for " + workflowId);
+
+		try (RestHighLevelClient client = buildEsClient()) {
+			GetResponse record = client.get(request);
+			if (!record.isExists()) {
+				throw new RuntimeException("No workflow found for " + workflowId);
+			}
+
+			Workflow workflow = dao.convertValue(record.getSourceAsMap(), Workflow.class);
+			dao.upsertWorkflow(tx, workflow);
 		}
 
-		Workflow workflow = dao.convertValue(record.getSourceAsMap(), Workflow.class);
-		dao.upsertWorkflow(tx, workflow);
-
-		processTasks(workflowId, client, tx);
+		processTasks(workflowId, tx);
 	}
 
 	// task, scheduled_tasks, in_progress_tasks
-	private void processTasks(String workflowId, RestHighLevelClient client, Connection tx) throws Exception {
+	private void processTasks(String workflowId, Connection tx) throws Exception {
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.query(QueryBuilders.termsQuery("workflowInstanceId", workflowId));
 		sourceBuilder.size(config.batchSize());
@@ -371,7 +370,7 @@ public class Main {
 		searchRequest.types("task");
 		searchRequest.source(sourceBuilder);
 
-		findAll(client, searchRequest, hit -> {
+		findAll(searchRequest, hit -> {
 			Task task = dao.convertValue(hit.getSourceAsMap(), Task.class);
 			if (task == null) {
 				logger.error("Couldn't convert " + hit.getSourceAsMap() + " to task ");
@@ -380,27 +379,29 @@ public class Main {
 		});
 	}
 
-	private void findAll(RestHighLevelClient client, SearchRequest request, SearchHitHandler handler) throws IOException {
-		request.scroll(new Scroll(TimeValue.timeValueHours(1L)));
-		SearchResponse response = client.search(request);
-		String scrollId = response.getScrollId();
-		SearchHit[] searchHits = response.getHits().getHits();
-		try {
-			while (searchHits != null && searchHits.length > 0) {
-				for (SearchHit hit : searchHits) {
-					handler.apply(hit);
-				}
+	private void findAll(SearchRequest request, SearchHitHandler handler) throws Exception {
+		try (RestHighLevelClient client = buildEsClient()) {
+			request.scroll(new Scroll(TimeValue.timeValueHours(1L)));
+			SearchResponse response = client.search(request);
+			String scrollId = response.getScrollId();
+			SearchHit[] searchHits = response.getHits().getHits();
+			try {
+				while (searchHits != null && searchHits.length > 0) {
+					for (SearchHit hit : searchHits) {
+						handler.apply(hit);
+					}
 
-				SearchScrollRequest scroll = new SearchScrollRequest(scrollId);
-				scroll.scroll(request.scroll());
-				response = client.searchScroll(scroll);
-				scrollId = response.getScrollId();
-				searchHits = response.getHits().getHits();
+					SearchScrollRequest scroll = new SearchScrollRequest(scrollId);
+					scroll.scroll(request.scroll());
+					response = client.searchScroll(scroll);
+					scrollId = response.getScrollId();
+					searchHits = response.getHits().getHits();
+				}
+			} finally {
+				ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
+				clearScrollRequest.addScrollId(scrollId);
+				client.clearScroll(clearScrollRequest);
 			}
-		} finally {
-			ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
-			clearScrollRequest.addScrollId(scrollId);
-			client.clearScroll(clearScrollRequest);
 		}
 	}
 
