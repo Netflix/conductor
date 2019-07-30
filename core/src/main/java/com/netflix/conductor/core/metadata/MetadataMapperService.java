@@ -16,6 +16,7 @@
 package com.netflix.conductor.core.metadata;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.validation.constraints.NotEmpty;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -78,18 +80,18 @@ public class MetadataMapperService {
 
     @VisibleForTesting
     Optional<WorkflowDef> lookupWorkflowDefinition(String workflowName, int workflowVersion) {
-        ServiceUtils.checkNotNullOrEmpty(workflowName, "Workflow name must be specified when searching for a definition");
+        Preconditions.checkArgument(StringUtils.isNotBlank(workflowName), "Workflow name must be specified when searching for a definition");
         return metadataDAO.get(workflowName, workflowVersion);
     }
 
     @VisibleForTesting
     Optional<WorkflowDef> lookupLatestWorkflowDefinition(String workflowName) {
-        ServiceUtils.checkNotNullOrEmpty(workflowName, "Workflow name must be specified when searching for a definition");
+        Preconditions.checkArgument(StringUtils.isNotBlank(workflowName), "Workflow name must be specified when searching for a definition");
         return metadataDAO.getLatest(workflowName);
     }
 
     public Workflow populateWorkflowWithDefinitions(Workflow workflow) {
-
+        Preconditions.checkNotNull(workflow, "workflow cannot be null");
         WorkflowDef workflowDefinition = Optional.ofNullable(workflow.getWorkflowDefinition())
                 .orElseGet(() -> {
                     WorkflowDef wd = lookupForWorkflowDefinition(workflow.getWorkflowName(), workflow.getWorkflowVersion());
@@ -113,6 +115,7 @@ public class MetadataMapperService {
     }
 
     public WorkflowDef populateTaskDefinitions(WorkflowDef workflowDefinition) {
+        Preconditions.checkNotNull(workflowDefinition, "workflowDefinition cannot be null");
         workflowDefinition.collectTasks().forEach(
                 this::populateWorkflowTaskWithDefinition
         );
@@ -121,6 +124,7 @@ public class MetadataMapperService {
     }
 
     private WorkflowTask populateWorkflowTaskWithDefinition(WorkflowTask workflowTask) {
+        Preconditions.checkNotNull(workflowTask, "WorkflowTask cannot be null");
         if (shouldPopulateDefinition(workflowTask)) {
             workflowTask.setTaskDefinition(metadataDAO.getTaskDef(workflowTask.getName()));
         } else if (workflowTask.getType().equals(TaskType.SUB_WORKFLOW.name())) {
@@ -130,6 +134,7 @@ public class MetadataMapperService {
     }
 
     private void populateVersionForSubWorkflow(WorkflowTask workflowTask) {
+        Preconditions.checkNotNull(workflowTask, "WorkflowTask cannot be null");
         SubWorkflowParams subworkflowParams = workflowTask.getSubWorkflowParam();
         if (subworkflowParams.getVersion() == null) {
             String subWorkflowName = subworkflowParams.getName();
@@ -148,6 +153,7 @@ public class MetadataMapperService {
     }
 
     private void checkNotEmptyDefinitions(WorkflowDef workflowDefinition) {
+        Preconditions.checkNotNull(workflowDefinition, "WorkflowDefinition cannot be null");
 
         // Obtain the names of the tasks with missing definitions
         Set<String> missingTaskDefinitionNames = workflowDefinition.collectTasks().stream()
@@ -163,11 +169,14 @@ public class MetadataMapperService {
     }
 
     public Task populateTaskWithDefinition(Task task) {
+        Preconditions.checkNotNull(task, "Task cannot be null");
         populateWorkflowTaskWithDefinition(task.getWorkflowTask());
         return task;
     }
 
     public static boolean shouldPopulateDefinition(WorkflowTask workflowTask) {
+        Preconditions.checkNotNull(workflowTask, "WorkflowTask cannot be null");
+        Preconditions.checkNotNull(workflowTask.getType(), "WorkflowTask type cannot be null");
         return workflowTask.getType().equals(TaskType.SIMPLE.name()) &&
                 workflowTask.getTaskDefinition() == null;
     }

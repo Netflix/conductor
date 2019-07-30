@@ -24,41 +24,25 @@ import com.google.inject.multibindings.ProvidesIntoMap;
 import com.google.inject.multibindings.StringMapKey;
 import com.google.inject.name.Named;
 import com.netflix.conductor.core.events.ActionProcessor;
+import com.netflix.conductor.core.events.ActionProcessorImpl;
 import com.netflix.conductor.core.events.EventProcessor;
+import com.netflix.conductor.core.events.EventProcessorImpl;
 import com.netflix.conductor.core.events.EventQueueProvider;
+import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.ParametersUtils;
-import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
-import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
-import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
-import com.netflix.conductor.core.execution.mapper.ForkJoinDynamicTaskMapper;
-import com.netflix.conductor.core.execution.mapper.ForkJoinTaskMapper;
-import com.netflix.conductor.core.execution.mapper.JoinTaskMapper;
-import com.netflix.conductor.core.execution.mapper.SimpleTaskMapper;
-import com.netflix.conductor.core.execution.mapper.SubWorkflowTaskMapper;
-import com.netflix.conductor.core.execution.mapper.TaskMapper;
-import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
-import com.netflix.conductor.core.execution.mapper.WaitTaskMapper;
-import com.netflix.conductor.core.execution.tasks.Event;
-import com.netflix.conductor.core.execution.tasks.SubWorkflow;
-import com.netflix.conductor.core.execution.tasks.SystemTaskWorkerCoordinator;
-import com.netflix.conductor.core.execution.tasks.Wait;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.execution.mapper.*;
+import com.netflix.conductor.core.execution.tasks.*;
 import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.service.ExecutionService;
+import com.netflix.conductor.service.MetadataService;
 
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DECISION;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DYNAMIC;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EVENT;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_FORK_JOIN;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_JOIN;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_SIMPLE;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_SUB_WORKFLOW;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_USER_DEFINED;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_WAIT;
+import static com.netflix.conductor.common.metadata.workflow.TaskType.*;
 import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDERS_QUALIFIER;
-
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EXCLUSIVE_JOIN;
 /**
  * @author Viren
  */
@@ -70,12 +54,12 @@ public class CoreModule extends AbstractModule {
     @Override
     protected void configure() {
         install(MultibindingsScanner.asModule());
-        bind(ActionProcessor.class).asEagerSingleton();
-        bind(EventProcessor.class).asEagerSingleton();
         bind(SystemTaskWorkerCoordinator.class).asEagerSingleton();
         bind(SubWorkflow.class).asEagerSingleton();
         bind(Wait.class).asEagerSingleton();
         bind(Event.class).asEagerSingleton();
+        bind(Lambda.class).asEagerSingleton();
+        bind(Terminate.class).asEagerSingleton();
     }
 
     @Provides
@@ -88,6 +72,19 @@ public class CoreModule extends AbstractModule {
     @Singleton
     public JsonUtils getJsonUtils() {
         return new JsonUtils();
+    }
+
+    @Provides
+    @Singleton
+    public ActionProcessor getActionProcessor(WorkflowExecutor executor, ParametersUtils parametersUtils, JsonUtils jsonUtils) {
+        return new ActionProcessorImpl(executor, parametersUtils, jsonUtils);
+    }
+
+    @Provides
+    @Singleton
+    public EventProcessor getEventProcessor(ExecutionService executionService, MetadataService metadataService,
+                                            ActionProcessor actionProcessor, EventQueues eventQueues, JsonUtils jsonUtils, Configuration configuration) {
+        return new EventProcessorImpl(executionService, metadataService, actionProcessor, eventQueues, jsonUtils, configuration);
     }
 
     @ProvidesIntoMap
@@ -178,4 +175,37 @@ public class CoreModule extends AbstractModule {
     public TaskMapper getSimpleTaskMapper(ParametersUtils parametersUtils) {
         return new SimpleTaskMapper(parametersUtils);
     }
+
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_HTTP)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getHTTPTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
+        return new HTTPTaskMapper(parametersUtils, metadataDAO);
+    }
+
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_LAMBDA)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getLambdaTaskMapper(ParametersUtils parametersUtils) {
+        return new LambdaTaskMapper(parametersUtils);
+    }
+    
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_EXCLUSIVE_JOIN)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getExclusiveJoinTaskMapper() {
+        return new ExclusiveJoinTaskMapper();
+    }
+
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_TERMINATE)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getTerminateTaskMapper(ParametersUtils parametersUtils) {
+        return new TerminateTaskMapper(parametersUtils);
+    }
+
 }

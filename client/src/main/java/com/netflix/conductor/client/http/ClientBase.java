@@ -107,8 +107,10 @@ public abstract class ClientBase {
         try {
             uri = getURIBuilder(root + url, queryParams).build(uriVariables);
             client.resource(uri).delete();
+        } catch (UniformInterfaceException e) {
+            handleUniformInterfaceException(e, uri);
         } catch (RuntimeException e) {
-            handleException(uri, e);
+            handleRuntimeException(e, uri);
         }
     }
 
@@ -221,7 +223,7 @@ public abstract class ClientBase {
         try (InputStream inputStream = payloadStorage.download(externalStorageLocation.getUri())) {
             return objectMapper.readValue(inputStream, Map.class);
         } catch (IOException e) {
-            String errorMsg = String.format("Unable to download payload frome external storage location: %s", path);
+            String errorMsg = String.format("Unable to download payload from external storage location: %s", path);
             logger.error(errorMsg, e);
             throw new ConductorClientException(errorMsg, e);
         }
@@ -253,7 +255,7 @@ public abstract class ClientBase {
                 return;
             }
             String errorMessage = clientResponse.getEntity(String.class);
-            logger.error("Unable to invoke Conductor API with uri: {}, unexpected response from server: {}", uri, clientResponseToString(exception.getResponse()), exception);
+            logger.error("Unable to invoke Conductor API with uri: {}, unexpected response from server: statusCode={}, responseBody='{}'.", uri, clientResponse.getStatus(), errorMessage);
             ErrorResponse errorResponse;
             try {
                 errorResponse = objectMapper.readValue(errorMessage, ErrorResponse.class);

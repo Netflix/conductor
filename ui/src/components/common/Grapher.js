@@ -132,8 +132,10 @@ class Grapher extends Component {
         let inner = svg.select("g");
         inner.attr("transform", "translate(20,20)");
         this.grapher(inner, g);
-        let w = g.graph().width + 50;
+
+        let w = g.graph().width + 200;
         let h = g.graph().height + 50;
+
         svg.attr("width", w + "px").attr("height", h + "px");
 
 
@@ -188,7 +190,9 @@ class Grapher extends Component {
                     p.propsDivElem.style.display = "block"
                     p.setState({selectedTask: data.task, showSideBar: true, subGraph: null, showSubGraph: false});
                 }
-            });
+            })
+            .append("svg:title")
+            .text(function(v) { return vertices[v].description; });
 
         return (
             <div className="graph-ui-content" id="graph-ui-content">

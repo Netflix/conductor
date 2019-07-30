@@ -213,6 +213,7 @@ public abstract class AbstractProtoMapper {
         if (from.getInputMessage() != null) {
             to.setInputMessage( toProto( from.getInputMessage() ) );
         }
+        to.putAllTaskToDomain( from.getTaskToDomain() );
         return to.build();
     }
 
@@ -229,6 +230,7 @@ public abstract class AbstractProtoMapper {
         if (from.hasInputMessage()) {
             to.setInputMessage( fromProto( from.getInputMessage() ) );
         }
+        to.setTaskToDomain( from.getTaskToDomainMap() );
         return to;
     }
 
@@ -457,6 +459,7 @@ public abstract class AbstractProtoMapper {
         if (from.getVersion() != null) {
             to.setVersion( from.getVersion() );
         }
+        to.putAllTaskToDomain( from.getTaskToDomain() );
         return to.build();
     }
 
@@ -464,6 +467,7 @@ public abstract class AbstractProtoMapper {
         SubWorkflowParams to = new SubWorkflowParams();
         to.setName( from.getName() );
         to.setVersion( from.getVersion() );
+        to.setTaskToDomain( from.getTaskToDomainMap() );
         return to;
     }
 
@@ -806,7 +810,6 @@ public abstract class AbstractProtoMapper {
             case FAILED: to = TaskResultPb.TaskResult.Status.FAILED; break;
             case FAILED_WITH_TERMINAL_ERROR: to = TaskResultPb.TaskResult.Status.FAILED_WITH_TERMINAL_ERROR; break;
             case COMPLETED: to = TaskResultPb.TaskResult.Status.COMPLETED; break;
-            case SCHEDULED: to = TaskResultPb.TaskResult.Status.SCHEDULED; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -819,7 +822,6 @@ public abstract class AbstractProtoMapper {
             case FAILED: to = TaskResult.Status.FAILED; break;
             case FAILED_WITH_TERMINAL_ERROR: to = TaskResult.Status.FAILED_WITH_TERMINAL_ERROR; break;
             case COMPLETED: to = TaskResult.Status.COMPLETED; break;
-            case SCHEDULED: to = TaskResult.Status.SCHEDULED; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -870,6 +872,12 @@ public abstract class AbstractProtoMapper {
         }
         if (from.getTaskId() != null) {
             to.setTaskId( from.getTaskId() );
+        }
+        if (from.getExternalInputPayloadStoragePath() != null) {
+            to.setExternalInputPayloadStoragePath( from.getExternalInputPayloadStoragePath() );
+        }
+        if (from.getExternalOutputPayloadStoragePath() != null) {
+            to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
         }
         return to.build();
     }
@@ -1076,6 +1084,12 @@ public abstract class AbstractProtoMapper {
         if (from.getFailedReferenceTaskNames() != null) {
             to.setFailedReferenceTaskNames( from.getFailedReferenceTaskNames() );
         }
+        if (from.getExternalInputPayloadStoragePath() != null) {
+            to.setExternalInputPayloadStoragePath( from.getExternalInputPayloadStoragePath() );
+        }
+        if (from.getExternalOutputPayloadStoragePath() != null) {
+            to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
+        }
         return to.build();
     }
 
@@ -1095,6 +1109,8 @@ public abstract class AbstractProtoMapper {
         to.setExecutionTime( from.getExecutionTime() );
         to.setEvent( from.getEvent() );
         to.setFailedReferenceTaskNames( from.getFailedReferenceTaskNames() );
+        to.setExternalInputPayloadStoragePath( from.getExternalInputPayloadStoragePath() );
+        to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
         return to;
     }
 
@@ -1123,6 +1139,9 @@ public abstract class AbstractProtoMapper {
         }
         if (from.getCaseExpression() != null) {
             to.setCaseExpression( from.getCaseExpression() );
+        }
+        if (from.getScriptExpression() != null) {
+            to.setScriptExpression( from.getScriptExpression() );
         }
         for (Map.Entry<String, List<WorkflowTask>> pair : from.getDecisionCases().entrySet()) {
             to.putDecisionCases( pair.getKey(), toProto( pair.getValue() ) );
@@ -1154,6 +1173,10 @@ public abstract class AbstractProtoMapper {
         if (from.isRateLimited() != null) {
             to.setRateLimited( from.isRateLimited() );
         }
+        to.addAllDefaultExclusiveJoinTask( from.getDefaultExclusiveJoinTask() );
+        if (from.isAsyncComplete() != null) {
+            to.setAsyncComplete( from.isAsyncComplete() );
+        }
         return to.build();
     }
 
@@ -1171,6 +1194,7 @@ public abstract class AbstractProtoMapper {
         to.setDynamicTaskNameParam( from.getDynamicTaskNameParam() );
         to.setCaseValueParam( from.getCaseValueParam() );
         to.setCaseExpression( from.getCaseExpression() );
+        to.setScriptExpression( from.getScriptExpression() );
         Map<String, List<WorkflowTask>> decisionCasesMap = new HashMap<String, List<WorkflowTask>>();
         for (Map.Entry<String, WorkflowTaskPb.WorkflowTask.WorkflowTaskList> pair : from.getDecisionCasesMap().entrySet()) {
             decisionCasesMap.put( pair.getKey(), fromProto( pair.getValue() ) );
@@ -1191,6 +1215,8 @@ public abstract class AbstractProtoMapper {
             to.setTaskDefinition( fromProto( from.getTaskDefinition() ) );
         }
         to.setRateLimited( from.getRateLimited() );
+        to.setDefaultExclusiveJoinTask( from.getDefaultExclusiveJoinTaskList().stream().collect(Collectors.toCollection(ArrayList::new)) );
+        to.setAsyncComplete( from.getAsyncComplete() );
         return to;
     }
 

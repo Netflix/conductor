@@ -42,12 +42,16 @@ import java.util.Date;
 /**
  * An implementation of {@link ExternalPayloadStorage} using AWS S3 for storing large JSON payload data.
  * The S3 client assumes that access to S3 is configured on the instance.
- * see <a href="https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/index.html?com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html">DefaultAWSCredentialsProviderChain</a>
+ * @see <a href="https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/index.html?com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html">DefaultAWSCredentialsProviderChain</a>
  */
 @Singleton
 public class S3PayloadStorage implements ExternalPayloadStorage {
     private static final Logger logger = LoggerFactory.getLogger(S3PayloadStorage.class);
     private static final String CONTENT_TYPE = "application/json";
+
+    private static final String DEFAULT_BUCKET = "conductor_payloads";
+    private static final int DEFAULT_SIGNED_URL_EXPIRATION_SECONDS = 5;
+    private static final String DEFAULT_REGION = "us-east-1";
 
     private final AmazonS3 s3Client;
     private final String bucketName;
@@ -55,9 +59,11 @@ public class S3PayloadStorage implements ExternalPayloadStorage {
 
     @Inject
     public S3PayloadStorage(Configuration config) {
-        s3Client = AmazonS3ClientBuilder.standard().withRegion("us-east-1").build();
-        bucketName = config.getProperty("workflow.external.payload.storage.s3.bucket", "");
-        expirationSec = config.getIntProperty("workflow.external.payload.storage.s3.signedurlexpirationseconds", 5);
+        bucketName = config.getProperty("workflow.external.payload.storage.s3.bucket", DEFAULT_BUCKET);
+        expirationSec = config.getIntProperty("workflow.external.payload.storage.s3.signedurlexpirationseconds", DEFAULT_SIGNED_URL_EXPIRATION_SECONDS);
+
+        String region = config.getProperty("workflow.external.payload.storage.s3.region", DEFAULT_REGION);
+        s3Client = AmazonS3ClientBuilder.standard().withRegion(region).build();
     }
 
     /**

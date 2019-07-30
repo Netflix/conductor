@@ -33,6 +33,7 @@ import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ForkJoinDynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ForkJoinTaskMapper;
+import com.netflix.conductor.core.execution.mapper.HTTPTaskMapper;
 import com.netflix.conductor.core.execution.mapper.JoinTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SimpleTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SubWorkflowTaskMapper;
@@ -112,6 +113,7 @@ public class TestDeciderService {
         metadataDAO = mock(MetadataDAO.class);
         externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
         QueueDAO queueDAO = mock(QueueDAO.class);
+        MetadataDAO metadataDAO = mock(MetadataDAO.class);
 
         TaskDef taskDef = new TaskDef();
 
@@ -133,8 +135,9 @@ public class TestDeciderService {
         taskMappers.put("SUB_WORKFLOW", new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put("EVENT", new EventTaskMapper(parametersUtils));
         taskMappers.put("WAIT", new WaitTaskMapper(parametersUtils));
+        taskMappers.put("HTTP", new HTTPTaskMapper(parametersUtils, metadataDAO));
 
-        deciderService = new DeciderService(parametersUtils, queueDAO, externalPayloadStorageUtils, taskMappers);
+        deciderService = new DeciderService(parametersUtils, queueDAO, metadataDAO, externalPayloadStorageUtils, taskMappers);
     }
 
     @Test
@@ -590,16 +593,16 @@ public class TestDeciderService {
         workflowTask.getInputParameters().put("task_id", "${CPEWF_TASK_ID}");
         workflowTask.getInputParameters().put("env", env);
 
-        Task task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
+        Optional<Task> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
         System.out.println(task.getTaskId() + ":\n" + task.getInputData());
-        System.out.println(task2.getTaskId() + ":\n" + task2.getInputData());
+        System.out.println(task2.get().getTaskId() + ":\n" + task2.get().getInputData());
 
         assertEquals("t1", task.getInputData().get("task_id"));
         assertEquals("t1", ((Map<String, Object>) task.getInputData().get("env")).get("env_task_id"));
 
-        assertNotSame(task.getTaskId(), task2.getTaskId());
-        assertEquals(task2.getTaskId(), task2.getInputData().get("task_id"));
-        assertEquals(task2.getTaskId(), ((Map<String, Object>) task2.getInputData().get("env")).get("env_task_id"));
+        assertNotSame(task.getTaskId(), task2.get().getTaskId());
+        assertEquals(task2.get().getTaskId(), task2.get().getInputData().get("task_id"));
+        assertEquals(task2.get().getTaskId(), ((Map<String, Object>) task2.get().getInputData().get("env")).get("env_task_id"));
 
         Task task3 = new Task();
         task3.getInputData().putAll(taskInput);

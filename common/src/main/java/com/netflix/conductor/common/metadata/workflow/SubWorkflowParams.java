@@ -20,6 +20,10 @@ package com.netflix.conductor.common.metadata.workflow;
 
 import com.github.vmg.protogen.annotations.*;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import java.util.Map;
+
 /**
  * @author Viren
  *
@@ -28,10 +32,15 @@ import com.github.vmg.protogen.annotations.*;
 public class SubWorkflowParams {
 
     @ProtoField(id = 1)
+    @NotNull(message = "SubWorkflowParams name cannot be null")
+    @NotEmpty(message = "SubWorkflowParams name cannot be empty")
     private String name;
 
     @ProtoField(id = 2)
     private Integer version;
+
+    @ProtoField(id = 3)
+    private Map<String, String> taskToDomain;
 
     /**
      * @return the name
@@ -61,5 +70,16 @@ public class SubWorkflowParams {
         this.version = version;
     }
 
-
+    /**
+     * @return the taskToDomain
+     */
+    public Map<String, String> getTaskToDomain() {
+        return taskToDomain;
+    }
+    /**
+     * @param taskToDomain the taskToDomain to set
+     */
+    public void setTaskToDomain(Map<String, String> taskToDomain) {
+        this.taskToDomain = taskToDomain;
+    }
 }

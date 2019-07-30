@@ -14,7 +14,11 @@ public enum TaskType {
     SUB_WORKFLOW(true),
     EVENT(true),
     WAIT(true),
-    USER_DEFINED(false);
+    USER_DEFINED(false),
+    HTTP(true),
+    LAMBDA(true),
+    EXCLUSIVE_JOIN(true),
+    TERMINATE(true);
 
     /**
      * TaskType constants representing each of the possible enumeration values.
@@ -31,7 +35,11 @@ public enum TaskType {
     public static final String TASK_TYPE_FORK_JOIN = "FORK_JOIN";
     public static final String TASK_TYPE_USER_DEFINED = "USER_DEFINED";
     public static final String TASK_TYPE_SIMPLE = "SIMPLE";
-
+    public static final String TASK_TYPE_HTTP = "HTTP";
+    public static final String TASK_TYPE_LAMBDA= "LAMBDA";
+    public static final String TASK_TYPE_EXCLUSIVE_JOIN = "EXCLUSIVE_JOIN";
+    public static final String TASK_TYPE_TERMINATE = "TERMINATE";
+    
     private boolean isSystemTask;
 
     TaskType(boolean isSystemTask) {

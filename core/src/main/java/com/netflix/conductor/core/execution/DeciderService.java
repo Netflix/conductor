@@ -30,6 +30,7 @@ import com.netflix.conductor.core.execution.mapper.TaskMapperContext;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.QueueUtils;
+import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.lang3.StringUtils;
@@ -70,6 +71,7 @@ public class DeciderService {
     private final QueueDAO queueDAO;
     private final ParametersUtils parametersUtils;
     private final ExternalPayloadStorageUtils externalPayloadStorageUtils;
+    private final MetadataDAO metadataDAO;
 
     private final Map<String, TaskMapper> taskMappers;
 
@@ -78,10 +80,11 @@ public class DeciderService {
     private final Predicate<Task> isNonPendingTask = task -> !task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted() || SystemTaskType.isBuiltIn(task.getTaskType());
 
     @Inject
-    public DeciderService(ParametersUtils parametersUtils, QueueDAO queueDAO,
+    public DeciderService(ParametersUtils parametersUtils, QueueDAO queueDAO, MetadataDAO metadataDAO,
                           ExternalPayloadStorageUtils externalPayloadStorageUtils,
                           @Named("TaskMappers") Map<String, TaskMapper> taskMappers) {
         this.queueDAO = queueDAO;
+        this.metadataDAO = metadataDAO;
         this.parametersUtils = parametersUtils;
         this.taskMappers = taskMappers;
         this.externalPayloadStorageUtils = externalPayloadStorageUtils;
@@ -90,15 +93,17 @@ public class DeciderService {
     //QQ public method validation of the input params
     public DeciderOutcome decide(Workflow workflow) throws TerminateWorkflowException {
 
-        //In case of a new workflow the list of tasks will be empty
+        //In case of a new workflow the list of tasks will be empty.
         final List<Task> tasks = workflow.getTasks();
-        //In case of a new workflow the list of executedTasks will also be empty
-        List<Task> executedTasks = tasks.stream()
+        // Filter the list of tasks and include only tasks that are not executed,
+        // not marked to be skipped and not ready for rerun.
+        // For a new workflow, the list of unprocessedTasks will be empty
+        List<Task> unprocessedTasks = tasks.stream()
                 .filter(t -> !t.getStatus().equals(SKIPPED) && !t.getStatus().equals(READY_FOR_RERUN) && !t.isExecuted())
                 .collect(Collectors.toList());
 
         List<Task> tasksToBeScheduled = new LinkedList<>();
-        if (executedTasks.isEmpty()) {
+        if (unprocessedTasks.isEmpty()) {
             //this is the flow that the new workflow will go through
             tasksToBeScheduled = startWorkflow(workflow);
             if (tasksToBeScheduled == null) {
@@ -168,13 +173,14 @@ public class DeciderService {
                 if (workflowTask == null) {
                     workflowTask = workflow.getWorkflowDefinition().getTaskByRefName(pendingTask.getReferenceTaskName());
                 }
-                if (workflowTask != null && workflowTask.isOptional()) {
-                    pendingTask.setStatus(COMPLETED_WITH_ERRORS);
-                } else {
-                    Task retryTask = retry(taskDefinition.orElse(null), workflowTask, pendingTask, workflow);
-                    tasksToBeScheduled.put(retryTask.getReferenceTaskName(), retryTask);
-                    executedTaskRefNames.remove(retryTask.getReferenceTaskName());
+
+                Optional<Task> retryTask = retry(taskDefinition.orElse(null), workflowTask, pendingTask, workflow);
+                if (retryTask.isPresent()) {
+                    tasksToBeScheduled.put(retryTask.get().getReferenceTaskName(), retryTask.get());
+                    executedTaskRefNames.remove(retryTask.get().getReferenceTaskName());
                     outcome.tasksToBeUpdated.add(pendingTask);
+                } else {
+                    pendingTask.setStatus(COMPLETED_WITH_ERRORS);
                 }
             }
 
@@ -196,14 +202,14 @@ public class DeciderService {
                 .filter(task -> !executedTaskRefNames.contains(task.getReferenceTaskName()))
                 .collect(Collectors.toList());
         if (!unScheduledTasks.isEmpty()) {
-            LOGGER.debug("Scheduling Tasks {} for workflow: {}", unScheduledTasks.stream()
+            LOGGER.debug("Scheduling Tasks: {} for workflow: {}", unScheduledTasks.stream()
                     .map(Task::getTaskDefName)
                     .collect(Collectors.toList()),
                     workflow.getWorkflowId());
             outcome.tasksToBeScheduled.addAll(unScheduledTasks);
         }
         if (outcome.tasksToBeScheduled.isEmpty() && checkForWorkflowCompletion(workflow)) {
-            LOGGER.debug("Marking workflow as complete.  workflow=" + workflow.getWorkflowId() + ", tasks=" + workflow.getTasks());
+            LOGGER.debug("Marking workflow: {} as complete.", workflow);
             outcome.isComplete = true;
         }
 
@@ -213,7 +219,7 @@ public class DeciderService {
     private List<Task> startWorkflow(Workflow workflow) throws TerminateWorkflowException {
         final WorkflowDef workflowDef = workflow.getWorkflowDefinition();
 
-        LOGGER.debug("Starting workflow {}, version{}, id {}", workflowDef.getName(), workflowDef.getVersion(), workflow.getWorkflowId());
+        LOGGER.debug("Starting workflow: {}", workflow);
 
         //The tasks will be empty in case of new workflow
         List<Task> tasks = workflow.getTasks();
@@ -230,7 +236,7 @@ public class DeciderService {
                 taskToSchedule = workflowDef.getNextTask(taskToSchedule.getTaskReferenceName());
             }
 
-            //In case of a new workflow a the first non-skippable task will be scheduled
+            //In case of a new workflow, the first non-skippable task will be scheduled
             return getTasksToBeScheduled(workflow, taskToSchedule, 0);
         }
 
@@ -347,10 +353,18 @@ public class DeciderService {
     }
 
     @VisibleForTesting
-    Task retry(TaskDef taskDefinition, WorkflowTask workflowTask, Task task, Workflow workflow) throws TerminateWorkflowException {
+    Optional<Task> retry(TaskDef taskDefinition, WorkflowTask workflowTask, Task task, Workflow workflow) throws TerminateWorkflowException {
 
         int retryCount = task.getRetryCount();
+
+        if(taskDefinition == null) {
+            taskDefinition = metadataDAO.getTaskDef(task.getTaskDefName());
+        }
+
         if (!task.getStatus().isRetriable() || SystemTaskType.isBuiltIn(task.getTaskType()) || taskDefinition == null || taskDefinition.getRetryCount() <= retryCount) {
+            if (workflowTask != null && workflowTask.isOptional()) {
+                return Optional.empty();
+            }
             WorkflowStatus status = task.getStatus().equals(TIMED_OUT) ? WorkflowStatus.TIMED_OUT : WorkflowStatus.FAILED;
             updateWorkflowOutput(workflow, task);
             throw new TerminateWorkflowException(task.getReasonForIncompletion(), status, task);
@@ -380,7 +394,7 @@ public class DeciderService {
         rescheduled.setPollCount(0);
         rescheduled.setInputData(new HashMap<>());
         rescheduled.getInputData().putAll(task.getInputData());
-
+        rescheduled.setReasonForIncompletion(null);
 
         if (StringUtils.isNotBlank(task.getExternalInputPayloadStoragePath())) {
             rescheduled.setExternalInputPayloadStoragePath(task.getExternalInputPayloadStoragePath());
@@ -394,7 +408,7 @@ public class DeciderService {
         }
         externalPayloadStorageUtils.verifyAndUpload(rescheduled, ExternalPayloadStorage.PayloadType.TASK_INPUT);
         //for the schema version 1, we do not have to recompute the inputs
-        return rescheduled;
+        return Optional.of(rescheduled);
     }
 
     /**

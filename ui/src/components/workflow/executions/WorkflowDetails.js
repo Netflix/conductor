@@ -6,7 +6,7 @@ import {getWorkflowDetails} from '../../../actions/WorkflowActions';
 import WorkflowAction from './WorkflowAction';
 import WorkflowMetaDia from '../WorkflowMetaDia';
 import moment from 'moment';
-import http from '../../../core/HttpClient';
+import http from '../../../core/HttpClientClientSide';
 import Clipboard from 'clipboard';
 import map from "lodash/fp/map";
 import Tab from "../../common/Tab";
@@ -215,7 +215,7 @@ class WorkflowDetails extends React.Component {
                                                        data-clipboard-target="#wfoutput"/></strong>
                             <pre style={{height: '200px'}}
                                  id="wfoutput">{JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
-                            {wf.status === 'FAILED' ? <div><strong>Workflow Faiure Reason (if any)</strong>
+                            {wf.status === 'FAILED' ? <div><strong>Workflow Failure Reason (if any)</strong>
                                 <pre>{wf.reasonForIncompletion ? JSON.stringify(wf.reasonForIncompletion, null, 3) : ''}</pre>
                             </div> : ''}
                         </div>

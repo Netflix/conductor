@@ -19,6 +19,9 @@ import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,9 +68,11 @@ public class WorkflowTask {
 	}
 
 	@ProtoField(id = 1)
+	@NotEmpty(message = "WorkflowTask name cannot be empty or null")
 	private String name;
 
 	@ProtoField(id = 2)
+	@NotEmpty(message = "WorkflowTask taskReferenceName name cannot be empty or null")
 	private String taskReferenceName;
 
 	@ProtoField(id = 3)
@@ -90,6 +95,9 @@ public class WorkflowTask {
 	@ProtoField(id = 8)
 	private String caseExpression;
 
+	@ProtoField(id = 22)
+	private String scriptExpression;
+
 	@ProtoMessage(wrapper = true)
 	public static class WorkflowTaskList {
 		public List<WorkflowTask> getTasks() {
@@ -106,7 +114,7 @@ public class WorkflowTask {
 
 	//Populates for the tasks of the decision type
 	@ProtoField(id = 9)
-	private Map<String, List<WorkflowTask>> decisionCases = new LinkedHashMap<>();
+	private Map<String,@Valid List<@Valid WorkflowTask>> decisionCases = new LinkedHashMap<>();
 
 	@Deprecated
 	private String dynamicForkJoinTasksParam;
@@ -118,15 +126,17 @@ public class WorkflowTask {
 	private String dynamicForkTasksInputParamName;
 
 	@ProtoField(id = 12)
-	private List<WorkflowTask> defaultCase = new LinkedList<>();
+	private List<@Valid WorkflowTask> defaultCase = new LinkedList<>();
 
 	@ProtoField(id = 13)
-	private List<List<WorkflowTask>> forkTasks = new LinkedList<>();
+	private List<@Valid List<@Valid WorkflowTask>> forkTasks = new LinkedList<>();
 
 	@ProtoField(id = 14)
-	private int startDelay;		//No. of seconds (at-least) to wait before starting a task.
+    @PositiveOrZero
+	private int startDelay;	//No. of seconds (at-least) to wait before starting a task.
 
 	@ProtoField(id = 15)
+    @Valid
 	private SubWorkflowParams subWorkflowParam;
 
 	@ProtoField(id = 16)
@@ -143,6 +153,12 @@ public class WorkflowTask {
 
 	@ProtoField(id = 20)
 	private Boolean rateLimited;
+	
+	@ProtoField(id = 21)
+	private List<String> defaultExclusiveJoinTask = new LinkedList<>();
+
+	@ProtoField(id = 23)
+	private Boolean asyncComplete = false;
 
 	/**
 	 * @return the name
@@ -214,7 +230,7 @@ public class WorkflowTask {
 	/**
 	 * @param type the type to set
 	 */
-	public void setType(String type) {
+	public void setType(@NotEmpty(message = "WorkTask type cannot be null or empty") String type) {
 		this.type = type;
 	}
 
@@ -231,7 +247,6 @@ public class WorkflowTask {
 	public void setDecisionCases(Map<String, List<WorkflowTask>> decisionCases) {
 		this.decisionCases = decisionCases;
 	}
-
 	
 	/**
 	 * @return the defaultCase
@@ -260,7 +275,6 @@ public class WorkflowTask {
 	public void setForkTasks(List<List<WorkflowTask>> forkTasks) {
 		this.forkTasks = forkTasks;
 	}
-
 	
 	/**
 	 * @return the startDelay in seconds
@@ -292,7 +306,6 @@ public class WorkflowTask {
 		this.dynamicTaskNameParam = dynamicTaskNameParam;
 	}
 
-	
 	/**
 	 * @return the caseValueParam
 	 */
@@ -350,6 +363,15 @@ public class WorkflowTask {
 		this.caseExpression = caseExpression;
 	}
 
+
+	public String getScriptExpression() {
+		return scriptExpression;
+	}
+
+	public void setScriptExpression(String expression) {
+		this.scriptExpression = expression;
+	}
+
 	
 	/**
 	 * @return the subWorkflow
@@ -394,7 +416,19 @@ public class WorkflowTask {
 	public void setSink(String sink) {
 		this.sink = sink;
 	}
-	
+
+	/**
+	 *
+	 * @return whether wait for an external event to complete the task, for EVENT and HTTP tasks
+	 */
+	public Boolean isAsyncComplete() {
+		return asyncComplete;
+	}
+
+	public void setAsyncComplete(Boolean asyncComplete) {
+		this.asyncComplete = asyncComplete;
+	}
+
 	/**
 	 *
 	 * @return If the task is optional.  When set to true, the workflow execution continues even when the task is in failed status.
@@ -419,7 +453,7 @@ public class WorkflowTask {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param optional when set to true, the task is marked as optional
 	 */
 	public void setOptional(boolean optional) {
@@ -436,6 +470,14 @@ public class WorkflowTask {
 
 	public Boolean isRateLimited() {
 		return rateLimited != null && rateLimited;
+	}
+
+	public List<String> getDefaultExclusiveJoinTask() {
+		return defaultExclusiveJoinTask;
+	}
+
+	public void setDefaultExclusiveJoinTask(List<String> defaultExclusiveJoinTask) {
+		this.defaultExclusiveJoinTask = defaultExclusiveJoinTask;
 	}
 
 	private Collection<List<WorkflowTask>> children() {
@@ -607,7 +649,9 @@ public class WorkflowTask {
                 Objects.equals(getForkTasks(), that.getForkTasks()) &&
                 Objects.equals(getSubWorkflowParam(), that.getSubWorkflowParam()) &&
                 Objects.equals(getJoinOn(), that.getJoinOn()) &&
-                Objects.equals(getSink(), that.getSink());
+                Objects.equals(getSink(), that.getSink()) &&
+				Objects.equals(isAsyncComplete(), that.isAsyncComplete()) &&
+                Objects.equals(getDefaultExclusiveJoinTask(), that.getDefaultExclusiveJoinTask());
     }
 
     @Override
@@ -632,7 +676,9 @@ public class WorkflowTask {
                 getSubWorkflowParam(),
                 getJoinOn(),
                 getSink(),
-                isOptional()
+                isAsyncComplete(),
+                isOptional(),
+                getDefaultExclusiveJoinTask()
         );
     }
 }
