@@ -65,7 +65,7 @@ class Dao extends AuroraBaseDAO {
 	void requeueSweep(Connection tx) {
 		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_status = 'RUNNING'";
 		List<String> ids = query(tx, SQL, q -> q.executeAndFetch(String.class));
-		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null, 30));
+		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null, 0));
 	}
 
 	void requeueAsync(Connection tx) {
