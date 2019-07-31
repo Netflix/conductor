@@ -304,6 +304,7 @@ public class Main {
 			searchRequest.indices(config.rootIndexName() + ".metadata." + config.env() + ".workflow_defs");
 			searchRequest.types("workflowdefs");
 			searchRequest.source(sourceBuilder);
+			searchRequest.scroll(new Scroll(TimeValue.timeValueHours(1L)));
 
 			tx.setAutoCommit(false);
 			try {
@@ -329,6 +330,7 @@ public class Main {
 			searchRequest.indices(config.rootIndexName() + ".metadata." + config.env() + ".task_defs");
 			searchRequest.types("taskdefs");
 			searchRequest.source(sourceBuilder);
+			searchRequest.scroll(new Scroll(TimeValue.timeValueHours(1L)));
 
 			tx.setAutoCommit(false);
 			try {
@@ -354,6 +356,7 @@ public class Main {
 			searchRequest.indices(config.rootIndexName() + ".metadata." + config.env() + ".event_handlers");
 			searchRequest.types("eventhandlers");
 			searchRequest.source(sourceBuilder);
+			searchRequest.scroll(new Scroll(TimeValue.timeValueHours(1L)));
 
 			tx.setAutoCommit(false);
 			try {
@@ -417,16 +420,16 @@ public class Main {
 		processTasks(workflowId, tx);
 	}
 
-	// task, scheduled_tasks, in_progress_tasks
 	private void processTasks(String workflowId, Connection tx) throws Exception {
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 		sourceBuilder.query(QueryBuilders.termsQuery("workflowInstanceId", workflowId));
-		sourceBuilder.size(config.batchSize());
+		sourceBuilder.size(1); // Some task size is huge and better to fetch them one by one
 
 		SearchRequest searchRequest = new SearchRequest();
 		searchRequest.indices(config.rootIndexName() + ".runtime." + config.env() + ".task");
 		searchRequest.types("task");
 		searchRequest.source(sourceBuilder);
+		searchRequest.scroll(new Scroll(TimeValue.timeValueHours(1L)));
 
 		findAll(searchRequest, hit -> {
 			Task task = dao.convertValue(hit.getSourceAsMap(), Task.class);
@@ -439,7 +442,6 @@ public class Main {
 
 	private void findAll(SearchRequest request, SearchHitHandler handler) throws Exception {
 		try (RestHighLevelClient client = buildEsClient()) {
-			request.scroll(new Scroll(TimeValue.timeValueHours(1L)));
 			SearchResponse response = client.search(request);
 			String scrollId = response.getScrollId();
 			SearchHit[] searchHits = response.getHits().getHits();
