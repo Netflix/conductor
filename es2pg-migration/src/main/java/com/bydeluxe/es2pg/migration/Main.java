@@ -3,6 +3,7 @@ package com.bydeluxe.es2pg.migration;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -338,6 +339,31 @@ public class Main {
 						logger.error("Couldn't convert " + hit.getSourceAsMap() + " to TaskDef ");
 					}
 					dao.upsertTaskDef(tx, def);
+				});
+
+				tx.commit();
+			} catch (Exception ex) {
+				tx.rollback();
+				throw ex;
+			}
+		}
+
+		//event_handlers
+		try (Connection tx = dataSource.getConnection()) {
+			SearchRequest searchRequest = new SearchRequest();
+			searchRequest.indices(config.rootIndexName() + ".metadata." + config.env() + ".event_handlers");
+			searchRequest.types("eventhandlers");
+			searchRequest.source(sourceBuilder);
+
+			tx.setAutoCommit(false);
+			try {
+
+				findAll(searchRequest, hit -> {
+					EventHandler def = dao.convertValue(hit.getSourceAsMap(), EventHandler.class);
+					if (def == null) {
+						logger.error("Couldn't convert " + hit.getSourceAsMap() + " to EventHandler ");
+					}
+					dao.upsertEventHandler(tx, def);
 				});
 
 				tx.commit();

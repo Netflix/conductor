@@ -2,6 +2,7 @@ package com.bydeluxe.es2pg.migration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.aurora.AuroraBaseDAO;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -180,6 +181,34 @@ class Dao extends AuroraBaseDAO {
 	long workflowCount(Connection tx) {
 		String SQL = "SELECT count(*) FROM workflow";
 		return query(tx, SQL, q -> q.executeScalar(Long.class));
+	}
+
+	void upsertEventHandler(Connection tx, EventHandler def) {
+		final String UPDATE_SQL = "UPDATE meta_event_handler SET " +
+			"event = ?, active = ?, json_data = ?, " +
+			"modified_on = now() WHERE name = ?";
+
+		final String INSERT_SQL = "INSERT INTO meta_event_handler (name, event, active, json_data) " +
+			"VALUES (?, ?, ?, ?)";
+
+		execute(tx, UPDATE_SQL, update -> {
+			int result = update
+				.addParameter(def.getEvent())
+				.addParameter(def.isActive())
+				.addJsonParameter(def)
+				.addParameter(def.getName())
+				.executeUpdate();
+
+			if (result == 0) {
+				execute(tx, INSERT_SQL,
+					insert -> insert
+						.addParameter(def.getName())
+						.addParameter(def.getEvent())
+						.addParameter(def.isActive())
+						.addJsonParameter(def)
+						.executeUpdate());
+			}
+		});
 	}
 
 	void upsertTaskDef(Connection tx, TaskDef def) {
