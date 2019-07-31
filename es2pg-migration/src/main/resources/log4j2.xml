@@ -2,10 +2,10 @@
 <Configuration status="WARN">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %level %logger - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] - %msg%n"/>
         </Console>
         <File name="File" fileName="migration.log">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %level %logger - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] - %msg%n"/>
         </File>
     </Appenders>
     <Loggers>
