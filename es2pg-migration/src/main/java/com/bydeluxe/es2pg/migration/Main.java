@@ -280,7 +280,7 @@ public class Main {
 					// otherwise migrate
 					Map<String, Object> map = hit.getSourceAsMap();
 					String payload = (String) map.get("payload");
-					dao.pushMessage(tx, hit.getType(), hit.getId(), payload, 0);
+					dao.pushMessage(tx, hit.getType(), hit.getId(), payload);
 				});
 
 				tx.commit();

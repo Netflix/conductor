@@ -65,13 +65,13 @@ class Dao extends AuroraBaseDAO {
 	void requeueSweep(Connection tx) {
 		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_status = 'RUNNING'";
 		List<String> ids = query(tx, SQL, q -> q.executeAndFetch(String.class));
-		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null, 0));
+		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null));
 	}
 
 	void requeueAsync(Connection tx) {
 		String SQL = "SELECT task_id FROM task WHERE task_type = 'HTTP' AND task_status IN ('SCHEDULED', 'IN_PROGRESS')";
 		List<String> ids = query(tx, SQL, q -> q.executeAndFetch(String.class));
-		ids.forEach(id -> pushMessage(tx, "http", id, null, 0));
+		ids.forEach(id -> pushMessage(tx, "http", id, null));
 	}
 
 	private void createQueueIfNotExists(Connection tx, String queueName) {
@@ -83,13 +83,13 @@ class Dao extends AuroraBaseDAO {
 		queues.add(queueName);
 	}
 
-	void pushMessage(Connection tx, String queueName, String messageId, String payload, long offsetSeconds) {
+	void pushMessage(Connection tx, String queueName, String messageId, String payload) {
 		createQueueIfNotExists(tx, queueName);
 
 		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
 			"VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
-		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
+		long deliverOn = System.currentTimeMillis();
 
 		query(tx, SQL, q -> q.addParameter(queueName.toLowerCase())
 			.addParameter(messageId)

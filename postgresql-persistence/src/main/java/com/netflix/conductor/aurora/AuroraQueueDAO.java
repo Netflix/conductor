@@ -318,7 +318,13 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private void processAllUnacks() {
-		queues.forEach(this::processUnacks);
+		long unack_on = System.currentTimeMillis();
+
+		final String SQL = "UPDATE queue_message " +
+			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
+			"WHERE popped = true AND unack_on < ?";
+
+		executeWithTransaction(SQL, q -> q.addTimestampParameter(unack_on).executeUpdate());
 	}
 
 	private static class QueueMessage {
