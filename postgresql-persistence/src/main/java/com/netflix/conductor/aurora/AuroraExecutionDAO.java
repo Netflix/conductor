@@ -92,15 +92,15 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	public List<Task> createTasks(List<Task> tasks) {
 		List<Task> created = Lists.newLinkedList();
 
-		withTransaction(connection -> {
-			for (Task task : tasks) {
+		for (Task task : tasks) {
+			Preconditions.checkNotNull(task, "task object cannot be null");
+			Preconditions.checkNotNull(task.getTaskId(), "Task id cannot be null");
+			Preconditions.checkNotNull(task.getWorkflowInstanceId(), "Workflow instance id cannot be null");
+			Preconditions.checkNotNull(task.getReferenceTaskName(), "Task reference name cannot be null");
 
-				Preconditions.checkNotNull(task, "task object cannot be null");
-				Preconditions.checkNotNull(task.getTaskId(), "Task id cannot be null");
-				Preconditions.checkNotNull(task.getWorkflowInstanceId(), "Workflow instance id cannot be null");
-				Preconditions.checkNotNull(task.getReferenceTaskName(), "Task reference name cannot be null");
+			task.setScheduledTime(System.currentTimeMillis());
 
-				task.setScheduledTime(System.currentTimeMillis());
+			withTransaction(connection -> {
 
 				boolean taskAdded = addScheduledTask(connection, task);
 				if (!taskAdded) {
@@ -108,14 +108,14 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 					if (logger.isDebugEnabled())
 						logger.debug("Task already scheduled, skipping the run " + task.getTaskId() +
 							", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
-					continue;
+					return;
 				}
 				addTaskInProgress(connection, task);
 				updateTask(connection, task);
 
 				created.add(task);
-			}
-		});
+			});
+		}
 
 		return created;
 	}

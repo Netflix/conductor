@@ -49,6 +49,7 @@ public abstract class AuroraBaseDAO {
 			logger.trace("{} : starting transaction", callingMethod.toString());
 
 		try (Connection tx = dataSource.getConnection()) {
+			tx.setAutoCommit(false);
 			try {
 				R result = function.apply(tx);
 				tx.commit();

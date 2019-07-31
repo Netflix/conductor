@@ -441,7 +441,7 @@ public class Query implements AutoCloseable {
     @Override
     public void close() {
         try {
-            if (null != statement && !statement.isClosed()) {
+            if (statement != null) {
                 statement.close();
             }
         } catch (SQLException ex) {
