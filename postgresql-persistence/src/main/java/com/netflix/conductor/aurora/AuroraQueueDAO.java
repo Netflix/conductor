@@ -18,8 +18,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
-
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final Long UNACK_SCHEDULE_MS = 5_000L;
@@ -97,22 +95,18 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					}));
 
 				messages.forEach(m -> {
-					withTransaction(connection -> {
-						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+					long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
-						int updated = query(connection, UPDATE, u -> u.addTimestampParameter(unack_on)
-							.addParameter(m.id)
-							.addParameter(m.version)
-							.executeUpdate());
+					int updated = queryWithTransaction(UPDATE, u -> u.addTimestampParameter(unack_on)
+						.addParameter(m.id)
+						.addParameter(m.version)
+						.executeUpdate());
 
-						// Means record being updated - we got it
-						if (updated > 0) {
-							foundIds.add(m.message_id);
-						}
-					});
+					// Means record being updated - we got it
+					if (updated > 0) {
+						foundIds.add(m.message_id);
+					}
 				});
-				
-				sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
 			}
 
 			return Lists.newArrayList(foundIds);
