@@ -71,7 +71,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			long start = System.currentTimeMillis();
 			Set<String> foundIds = new HashSet<>();
 
-			final String QUERY = "SELECT id, message_id, version FROM queue_message " +
+			final String QUERY = "SELECT * FROM queue_message " +
 				"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
 				"ORDER BY deliver_on LIMIT ?";
 
