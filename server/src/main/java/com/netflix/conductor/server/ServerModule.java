@@ -29,6 +29,8 @@ import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.contribs.validation.ValidationTask;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.execution.TaskStatusListener;
+import com.netflix.conductor.core.execution.WorkflowStatusListener;
 import com.netflix.conductor.dao.*;
 import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
@@ -118,6 +120,12 @@ public class ServerModule extends AbstractModule {
 			bind(QueueDAO.class).to(DynoQueueDAO.class);
 		}
 
+		List<AbstractModule> additionalModules = config.getAdditionalModules();
+		if (additionalModules != null) {
+			for (AbstractModule additionalModule : additionalModules) {
+				install(additionalModule);
+			}
+		}
 		install(new CoreModule());
 		install(new JerseyModule());
 		install(new HttpModule());
@@ -126,12 +134,8 @@ public class ServerModule extends AbstractModule {
 		install(new ProgressModule());
 		new JsonJqTransform();
 		new ValidationTask();
-		List<AbstractModule> additionalModules = config.getAdditionalModules();
-		if (additionalModules != null) {
-			for (AbstractModule additionalModule : additionalModules) {
-				install(additionalModule);
-			}
-		}
+		bind(TaskStatusListener.class).to(StatusEventPublisher.class);
+		bind(WorkflowStatusListener.class).to(StatusEventPublisher.class);
 	}
 
 	@Provides

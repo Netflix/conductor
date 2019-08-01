@@ -48,7 +48,10 @@ const TaskMetaList = React.createClass({
               <option value="TIME_OUT_WF">TIME_OUT_WF</option>
             </Input><br/>
             <Input type="text" ref="timeoutSeconds" value={row.timeoutSeconds} addonBefore="Time Out" addonAfter="Seconds"></Input><br/>
-            <Input type="text" ref="restimeoutSeconds" value={row.responseTimeoutSeconds} addonBefore="Response Time Out" addonAfter="timeoutSeconds"></Input><br/>
+            <Input type="text" ref="restimeoutSeconds" value={row.responseTimeoutSeconds} addonBefore="Response Time Out" addonAfter="Seconds"></Input><br/>
+            <Input type="text" ref="concurrentExecLimit" value={row.concurrentExecLimit} addonBefore="Concurrent Exec Limit" addonAfter="Count"></Input><br/>
+            <Input type="text" ref="rateLimitPerFrequency" value={row.rateLimitPerFrequency} addonBefore="Rate Limit Amount" addonAfter="Count"></Input><br/>
+            <Input type="text" ref="rateLimitFrequencyInSeconds" value={row.rateLimitFrequencyInSeconds} addonBefore="Rate Limit Frequency" addonAfter="Seconds"></Input><br/>
             <Input type="textarea" label="Task Description" ref="description" value={row.description} readonly={true}/><br/>
           </form>
         </div></Popover>

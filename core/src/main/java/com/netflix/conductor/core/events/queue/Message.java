@@ -34,6 +34,8 @@ public class Message {
 
 	private long accepted;
 
+	private String traceId;
+
 	public Message() {
 		
 	}
@@ -116,6 +118,20 @@ public class Message {
 	 */
 	public void setAccepted(long accepted) {
 		this.accepted = accepted;
+	}
+
+	/**
+	 * @return The Platform Trace Id
+	 */
+	public String getTraceId() {
+		return traceId;
+	}
+
+	/**
+	 * @param traceId Platform Trace Id
+	 */
+	public void setTraceId(String traceId) {
+		this.traceId = traceId;
 	}
 
 	@Override

@@ -93,12 +93,12 @@ class GenericHttpTask extends WorkflowSystemTask {
 		WebResource webResource = client.resource(input.getUri());
 
 		ClientResponse response = webResource
-				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-				.post(ClientResponse.class, formData);
+			.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
+			.post(ClientResponse.class, formData);
 
 		if (response.getStatus() != 201 && response.getStatus() != 200) {
 			throw new RuntimeException("Failed : HTTP error code : "
-					+ response.getStatus() + response.getEntity(String.class));
+				+ response.getStatus() + response.getEntity(String.class));
 		}
 		HttpResponse responsehttp = new HttpResponse();
 
@@ -135,10 +135,15 @@ class GenericHttpTask extends WorkflowSystemTask {
 			setAuthToken(input, workflow);
 		}
 
+		if (input.isTraceId()) {
+			input.getHeaders().put(CommonParams.PLATFORM_TRACE_ID,
+				StringUtils.defaultIfEmpty(workflow.getTraceId(), ""));
+		}
+
 		// Attach Authorization-Context: {SSO token} if present and enabled
 		if (authContextEnabled) {
 			input.getHeaders().put(CommonParams.AUTH_CONTEXT,
-					StringUtils.defaultIfEmpty(workflow.getContextToken(), ""));
+				StringUtils.defaultIfEmpty(workflow.getContextToken(), ""));
 		}
 
 		// Attach Deluxe Owf Context header
@@ -339,8 +344,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (resetStartTime.isEmpty()) {
 			return;
 		}
-		String workflowId = (String)resetStartTime.get("workflowId");
-		String taskRefName = (String)resetStartTime.get("taskRefName");
+		String workflowId = (String) resetStartTime.get("workflowId");
+		String taskRefName = (String) resetStartTime.get("taskRefName");
 		if (StringUtils.isNoneEmpty(workflowId, taskRefName)) {
 			executor.resetStartTime(workflowId, taskRefName);
 		}
