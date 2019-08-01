@@ -107,6 +107,8 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 						foundIds.add(m.message_id);
 					}
 				});
+
+				Thread.sleep(10);
 			}
 
 			return Lists.newArrayList(foundIds);
