@@ -17,4 +17,6 @@ package com.netflix.conductor.common.run;
 
 public class CommonParams {
     public static final String AUTH_CONTEXT = "Authorization-Context";
+    public static final String PLATFORM_TRACE_ID = "Platform-Trace-Id";
+    public static final String DELUXE_OWF_CONTEXT = "Deluxe-Owf-Context";
 }

@@ -17,6 +17,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
@@ -310,6 +311,28 @@ abstract class Elasticsearch6RestAbstractDAO {
             } catch (Exception ex) {
                 if (!isVerConflictException(ex)) {
                     logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+                    throw new RuntimeException(ex.getMessage(), ex);
+                }
+            }
+        });
+    }
+
+    void merge(String indexName, String typeName, String id, Map<String, Object> payload) {
+        ensureIndexExists(indexName);
+        doWithRetry(() -> {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
+
+                UpdateRequest request = new UpdateRequest()
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .doc(payload)
+                    .index(indexName)
+                    .type(typeName)
+                    .id(id);
+
+                client.update(request);
+            } catch (Exception ex) {
+                if (!isVerConflictException(ex)) {
+                    logger.error("merge: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
                     throw new RuntimeException(ex.getMessage(), ex);
                 }
             }

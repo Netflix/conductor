@@ -160,6 +160,60 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	@Override
+	public boolean exceedsRateLimitPerFrequency(Task task) {
+		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
+		if (taskDef == null) {
+			return false;
+		}
+
+		Integer rateLimitPerFrequency = taskDef.getRateLimitPerFrequency();
+		Integer rateLimitFrequencyInSeconds = taskDef.getRateLimitFrequencyInSeconds();
+		if (rateLimitPerFrequency == null || rateLimitPerFrequency <= 0 ||
+			rateLimitFrequencyInSeconds == null || rateLimitFrequencyInSeconds <= 0) {
+			return false;
+		}
+
+		logger.debug("Evaluating rate limiting for Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {}",
+			task, rateLimitPerFrequency, rateLimitFrequencyInSeconds);
+
+		long currentTimeEpochMillis = System.currentTimeMillis();
+		long currentTimeEpochMinusRateLimitBucket = currentTimeEpochMillis - (rateLimitFrequencyInSeconds * 1000);
+
+		// Delete the expired records first
+		String SQL = "DELETE FROM task_rate_limit WHERE task_def_name = ? AND created_on < ?";
+		executeWithTransaction(SQL, q -> q
+			.addParameter(taskDef.getName())
+			.addTimestampParameter(currentTimeEpochMinusRateLimitBucket)
+			.executeDelete());
+
+		// Count how many left between currentTimeEpochMinusRateLimitBucket and currentTimeEpochMillis
+		SQL = "SELECT COUNT(*) FROM task_rate_limit WHERE task_def_name = ? AND created_on BETWEEN ? AND ?";
+		long currentBucketCount = queryWithTransaction(SQL, q -> q
+			.addParameter(taskDef.getName())
+			.addTimestampParameter(currentTimeEpochMinusRateLimitBucket)
+			.addTimestampParameter(currentTimeEpochMillis)
+			.executeScalar(Long.class));
+
+		// Within the rate limit
+		if (currentBucketCount < rateLimitPerFrequency) {
+			SQL = "INSERT INTO task_rate_limit(created_on,expires_on,task_def_name) VALUES (?,?,?)";
+			executeWithTransaction(SQL, q -> q
+				.addTimestampParameter(currentTimeEpochMillis)
+				.addTimestampParameter(System.currentTimeMillis() + (rateLimitFrequencyInSeconds * 1000))
+				.addParameter(taskDef.getName())
+				.executeUpdate());
+
+			logger.debug("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} within the rate limit with current count {}",
+				task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, ++currentBucketCount);
+			return false;
+		}
+
+		logger.debug("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} is out of bounds of rate limit with current count {}",
+			task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, currentBucketCount);
+		return true;
+	}
+
+	@Override
 	public void updateTasks(List<Task> tasks) {
 		withTransaction(connection -> {
 			for (Task task : tasks) {
@@ -377,10 +431,9 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		getWithTransaction(tx -> insertEventPublished(tx, ep));
 	}
 
-
 	/**
 	 * Function to find tasks in the workflows which associated with given tags
-	 *
+	 * <p>
 	 * Includes task into result if:
 	 * workflow.tags contains ALL values from the tags parameter
 	 * and task type matches the given task type
@@ -413,6 +466,22 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		String SQL = "select count(*) from workflow where tags @> ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeScalar(Long.class) > 0);
+	}
+
+	@Override
+	public void resetStartTime(Task task, boolean updateOutput) {
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("startTime", task.getStartTime());
+		payload.put("endTime", task.getEndTime());
+		if (updateOutput) {
+			payload.put("outputData", task.getOutputData());
+		}
+
+		String SQL = "UPDATE task SET json_data = (json_data::jsonb || ?::jsonb)::text WHERE task_id = ?";
+		executeWithTransaction(SQL, q -> q
+			.addJsonParameter(payload)
+			.addParameter(task.getTaskId())
+			.executeUpdate());
 	}
 
 	private static int dateStr(Long timeInMs) {

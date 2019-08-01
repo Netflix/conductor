@@ -117,6 +117,15 @@ alter table task_in_progress
     add constraint task_in_progress_fields unique using index task_in_progress_fields;
 create index task_in_progress_def_id on task_in_progress (task_def_name, task_id);
 
+create table task_rate_limit
+(
+    id            serial primary key,
+    created_on    timestamp    not null default now(),
+    expires_on    timestamp    not null,
+    task_def_name varchar(255) not null
+);
+create index task_rate_limit_name_created on task_rate_limit (task_def_name, created_on);
+
 create table task
 (
     id           serial primary key,

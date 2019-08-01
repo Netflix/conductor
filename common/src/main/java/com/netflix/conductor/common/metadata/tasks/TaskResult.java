@@ -55,6 +55,8 @@ public class TaskResult {
 
 	private boolean resetStartTime;
 
+	private boolean updateOutput;
+
 	public TaskResult(Task task) {
 		this.workflowInstanceId = task.getWorkflowInstanceId();
 		this.taskId = task.getTaskId();
@@ -227,6 +229,20 @@ public class TaskResult {
 		this.inputData = inputData;
 	}
 
+
+	/**
+	 * @return updateOutput flag
+	 */
+	public boolean isUpdateOutput() {
+		return updateOutput;
+	}
+
+	/**
+	 * @param updateOutput flag
+	 */
+	public void setUpdateOutput(boolean updateOutput) {
+		this.updateOutput = updateOutput;
+	}
 
 	@Override
 	public String toString() {

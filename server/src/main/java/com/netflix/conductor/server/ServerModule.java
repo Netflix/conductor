@@ -21,7 +21,10 @@ package com.netflix.conductor.server;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.netflix.conductor.aurora.*;
-import com.netflix.conductor.contribs.*;
+import com.netflix.conductor.contribs.AssetModule;
+import com.netflix.conductor.contribs.AuthModule;
+import com.netflix.conductor.contribs.HttpModule;
+import com.netflix.conductor.contribs.ProgressModule;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.contribs.validation.ValidationTask;
 import com.netflix.conductor.core.config.Configuration;
@@ -117,6 +120,12 @@ public class ServerModule extends AbstractModule {
 			bind(QueueDAO.class).to(DynoQueueDAO.class);
 		}
 
+		List<AbstractModule> additionalModules = config.getAdditionalModules();
+		if (additionalModules != null) {
+			for (AbstractModule additionalModule : additionalModules) {
+				install(additionalModule);
+			}
+		}
 		install(new CoreModule());
 		install(new JerseyModule());
 		install(new HttpModule());
@@ -125,12 +134,6 @@ public class ServerModule extends AbstractModule {
 		install(new ProgressModule());
 		new JsonJqTransform();
 		new ValidationTask();
-		List<AbstractModule> additionalModules = config.getAdditionalModules();
-		if (additionalModules != null) {
-			for (AbstractModule additionalModule : additionalModules) {
-				install(additionalModule);
-			}
-		}
 		bind(TaskStatusListener.class).to(StatusEventPublisher.class);
 		bind(WorkflowStatusListener.class).to(StatusEventPublisher.class);
 	}
