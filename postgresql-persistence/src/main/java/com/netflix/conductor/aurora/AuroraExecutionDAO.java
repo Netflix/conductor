@@ -3,7 +3,6 @@ package com.netflix.conductor.aurora;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.netflix.conductor.aurora.sql.Query;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -100,9 +99,9 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 			task.setScheduledTime(System.currentTimeMillis());
 
-			withTransaction(connection -> {
+			withTransaction(tx -> {
 
-				boolean taskAdded = addScheduledTask(connection, task);
+				boolean taskAdded = addScheduledTask(tx, task);
 				if (!taskAdded) {
 					String taskKey = task.getReferenceTaskName() + task.getRetryCount();
 					if (logger.isDebugEnabled())
@@ -110,8 +109,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 							", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
 					return;
 				}
-				addTaskInProgress(connection, task);
-				updateTask(connection, task);
+				addTaskInProgress(tx, task);
+				updateTask(tx, task);
 
 				created.add(task);
 			});
@@ -122,7 +121,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public void updateTask(Task task) {
-		withTransaction(connection -> updateTask(connection, task));
+		withTransaction(tx -> updateTask(tx, task));
 	}
 
 	@Override
@@ -215,9 +214,9 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public void updateTasks(List<Task> tasks) {
-		withTransaction(connection -> {
+		withTransaction(tx -> {
 			for (Task task : tasks) {
-				updateTask(connection, task);
+				updateTask(tx, task);
 			}
 		});
 	}
@@ -236,32 +235,36 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			return;
 		}
 
-		withTransaction(connection -> {
-			removeTask(connection, task);
-		});
+		withTransaction(tx -> removeTask(tx, task));
 	}
 
 	@Override
 	public Task getTask(String taskId) {
+		return getWithTransaction(tx -> getTask(tx, taskId));
+	}
+
+	private Task getTask(Connection tx, String taskId) {
 		String GET_TASK = "SELECT json_data FROM task WHERE task_id = ?";
-		return queryWithTransaction(GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(Task.class));
+		return query(tx, GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(Task.class));
 	}
 
 	@Override
 	public List<Task> getTasks(List<String> taskIds) {
-		if (taskIds.isEmpty()) {
+		if (taskIds == null || taskIds.isEmpty()) {
 			return Lists.newArrayList();
 		}
-		return getWithTransaction(c -> getTasks(c, taskIds));
+		return getWithTransaction(tx -> getTasks(tx, taskIds));
 	}
 
 	@Override
 	public List<Task> getTasksForWorkflow(String workflowId) {
+		return getWithTransaction(tx -> getTasksForWorkflow(tx, workflowId));
+	}
+
+	private List<Task> getTasksForWorkflow(Connection tx, String workflowId) {
 		String SQL = "SELECT task_id FROM task WHERE workflow_id = ?";
-		return getWithTransaction(tx -> query(tx, SQL, q -> {
-			List<String> taskIds = q.addParameter(workflowId).executeScalarList(String.class);
-			return getTasks(tx, taskIds);
-		}));
+		List<String> taskIds = query(tx, SQL, q -> q.addParameter(workflowId).executeScalarList(String.class));
+		return getTasks(tx, taskIds);
 	}
 
 	@Override
@@ -280,11 +283,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		if (workflow == null)
 			return;
 
-		withTransaction(connection -> {
+		withTransaction(tx -> {
 			for (Task task : workflow.getTasks()) {
-				removeTask(connection, task);
+				removeTask(tx, task);
 			}
-			removeWorkflow(connection, workflowId);
+			removeWorkflow(tx, workflowId);
 		});
 	}
 
@@ -296,16 +299,20 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public Workflow getWorkflow(String workflowId) {
-		return getWorkflow(workflowId, true);
+		return getWithTransaction(tx -> getWorkflow(tx, workflowId, true));
 	}
 
 	@Override
 	public Workflow getWorkflow(String workflowId, boolean includeTasks) {
-		Workflow workflow = getWithTransaction(tx -> readWorkflow(tx, workflowId));
+		return getWithTransaction(tx -> getWorkflow(tx, workflowId, includeTasks));
+	}
+
+	private Workflow getWorkflow(Connection tx, String workflowId, boolean includeTasks) {
+		Workflow workflow = readWorkflow(tx, workflowId);
 
 		if (workflow != null) {
 			if (includeTasks) {
-				List<Task> tasks = getTasksForWorkflow(workflowId);
+				List<Task> tasks = getTasksForWorkflow(tx, workflowId);
 				tasks.sort(Comparator.comparingLong(Task::getScheduledTime).thenComparingInt(Task::getSeq));
 				workflow.setTasks(tasks);
 			}
@@ -317,17 +324,27 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public List<String> getRunningWorkflowIds(String workflowName) {
+		return getWithTransaction(tx -> getRunningWorkflowIds(tx, workflowName));
+	}
+
+	private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
 
-		return queryWithTransaction(SQL,
-			q -> q.addParameter(workflowName).executeScalarList(String.class));
+		return query(tx, SQL, q -> q.addParameter(workflowName).executeScalarList(String.class));
 	}
 
 	@Override
 	public List<Workflow> getPendingWorkflowsByType(String workflowName) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-		return getRunningWorkflowIds(workflowName).stream().map(this::getWorkflow).collect(Collectors.toList());
+
+		return getWithTransaction(tx -> {
+			List<String> workflowIds = getRunningWorkflowIds(tx, workflowName);
+			return workflowIds.stream()
+				.map(id -> getWorkflow(tx, id, true))
+				.filter(Objects::nonNull)
+				.collect(Collectors.toList());
+		});
 	}
 
 	@Override
@@ -491,14 +508,14 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return Integer.parseInt(format.format(date));
 	}
 
-	private boolean addScheduledTask(Connection connection, Task task) {
+	private boolean addScheduledTask(Connection tx, Task task) {
 		String taskKey = task.getReferenceTaskName() + task.getRetryCount();
 
 		// Warning! Constraint name is also unique index name
 		final String SQL = "INSERT INTO task_scheduled (workflow_id, task_key, task_id) " +
 			"VALUES (?, ?, ?) ON CONFLICT ON CONSTRAINT task_scheduled_wf_task DO NOTHING";
 
-		int count = query(connection, SQL, q -> q
+		int count = query(tx, SQL, q -> q
 			.addParameter(task.getWorkflowInstanceId())
 			.addParameter(taskKey)
 			.addParameter(task.getTaskId())
@@ -507,21 +524,21 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return count > 0;
 	}
 
-	private void removeTask(Connection connection, Task task) {
+	private void removeTask(Connection tx, Task task) {
 		final String taskKey = task.getReferenceTaskName() + task.getRetryCount();
 
-		removeScheduledTask(connection, task, taskKey);
-		removeTaskInProgress(connection, task);
-		removeTaskData(connection, task);
+		removeScheduledTask(tx, task, taskKey);
+		removeTaskInProgress(tx, task);
+		removeTaskData(tx, task);
 	}
 
-	private void insertOrUpdateTask(Connection connection, Task task) {
+	private void insertOrUpdateTask(Connection tx, Task task) {
 		// Warning! Constraint name is also unique index name
 		String SQL = "INSERT INTO task (task_id, task_type, task_refname, task_status, json_data, workflow_id, " +
 			"start_time, end_time, input, output) " +
 			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT task_task_id DO " +
 			"UPDATE SET modified_on=now(), task_status=?, json_data=?, input = ?, output = ?, start_time = ?, end_time = ?";
-		execute(connection, SQL, q -> q
+		execute(tx, SQL, q -> q
 			.addParameter(task.getTaskId())
 			.addParameter(task.getTaskType())
 			.addParameter(task.getReferenceTaskName())
@@ -541,7 +558,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.executeUpdate());
 	}
 
-	private void updateTask(Connection connection, Task task) {
+	private void updateTask(Connection tx, Task task) {
 		task.setUpdateTime(System.currentTimeMillis());
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			task.setEndTime(System.currentTimeMillis());
@@ -549,27 +566,22 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
 		if (taskDef != null && taskDef.concurrencyLimit() > 0) {
-			updateInProgressStatus(connection, task);
+			updateInProgressStatus(tx, task);
 		}
 
-		insertOrUpdateTask(connection, task);
+		insertOrUpdateTask(tx, task);
 
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
-			removeTaskInProgress(connection, task);
+			removeTaskInProgress(tx, task);
 		}
 	}
 
-	private List<Task> getTasks(Connection connection, List<String> taskIds) {
-		if (taskIds.isEmpty()) {
+	private List<Task> getTasks(Connection tx, List<String> taskIds) {
+		if (taskIds == null || taskIds.isEmpty()) {
 			return Lists.newArrayList();
 		}
 
-		// Generate a formatted query string with a variable number of bind params based
-		// on taskIds.size()
-		final String SQL = String.format("SELECT json_data FROM task WHERE task_id IN (%s) AND json_data IS NOT NULL",
-			Query.generateInBindings(taskIds.size()));
-
-		return query(connection, SQL, q -> q.addParameters(taskIds).executeAndFetch(Task.class));
+		return taskIds.stream().map(id -> getTask(tx, id)).collect(Collectors.toList());
 	}
 
 	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
@@ -594,12 +606,12 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return workflow.getWorkflowId();
 	}
 
-	private void addWorkflow(Connection connection, Workflow workflow) {
+	private void addWorkflow(Connection tx, Workflow workflow) {
 		String SQL = "INSERT INTO workflow (workflow_id, parent_workflow_id, workflow_type, workflow_status, " +
 			"correlation_id, tags, input, json_data, date_str, start_time) " +
 			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-		execute(connection, SQL, q -> q.addParameter(workflow.getWorkflowId())
+		execute(tx, SQL, q -> q.addParameter(workflow.getWorkflowId())
 			.addParameter(workflow.getParentWorkflowId())
 			.addParameter(workflow.getWorkflowType())
 			.addParameter(workflow.getStatus().name())
@@ -612,7 +624,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.executeUpdate());
 	}
 
-	private void updateWorkflow(Connection connection, Workflow workflow) {
+	private void updateWorkflow(Connection tx, Workflow workflow) {
 		String SQL = "UPDATE workflow SET json_data = ?, workflow_status = ?, output = ?, end_time = ?, " +
 			"tags = ?, modified_on = now() WHERE workflow_id = ?";
 
@@ -624,7 +636,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			tags = workflow.getTags();
 		}
 
-		execute(connection, SQL,
+		execute(tx, SQL,
 			q -> q.addJsonParameter(workflow)
 				.addParameter(workflow.getStatus().name())
 				.addJsonParameter(workflow.getOutput())
@@ -634,49 +646,49 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				.executeUpdate());
 	}
 
-	private Workflow readWorkflow(Connection connection, String workflowId) {
+	private Workflow readWorkflow(Connection tx, String workflowId) {
 		String SQL = "SELECT json_data FROM workflow WHERE workflow_id = ?";
 
-		return query(connection, SQL, q -> q.addParameter(workflowId).executeAndFetchFirst(Workflow.class));
+		return query(tx, SQL, q -> q.addParameter(workflowId).executeAndFetchFirst(Workflow.class));
 	}
 
-	private void removeWorkflow(Connection connection, String workflowId) {
+	private void removeWorkflow(Connection tx, String workflowId) {
 		String SQL = "DELETE FROM workflow WHERE workflow_id = ?";
 
-		execute(connection, SQL, q -> q.addParameter(workflowId).executeDelete());
+		execute(tx, SQL, q -> q.addParameter(workflowId).executeDelete());
 	}
 
-	private void addTaskInProgress(Connection connection, Task task) {
+	private void addTaskInProgress(Connection tx, Task task) {
 		String SQL = "SELECT true FROM task_in_progress WHERE task_def_name = ? AND task_id = ?";
 
-		boolean exist = query(connection, SQL,
+		boolean exist = query(tx, SQL,
 			q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).exists());
 
 		if (!exist) {
 			SQL = "INSERT INTO task_in_progress (task_def_name, task_id, workflow_id) VALUES (?, ?, ?) " +
 				"ON CONFLICT ON CONSTRAINT task_in_progress_fields DO NOTHING";
 
-			execute(connection, SQL, q -> q.addParameter(task.getTaskDefName())
+			execute(tx, SQL, q -> q.addParameter(task.getTaskDefName())
 				.addParameter(task.getTaskId())
 				.addParameter(task.getWorkflowInstanceId())
 				.executeUpdate());
 		}
 	}
 
-	private void removeTaskInProgress(Connection connection, Task task) {
+	private void removeTaskInProgress(Connection tx, Task task) {
 		String SQL = "DELETE FROM task_in_progress WHERE task_def_name = ? AND task_id = ?";
 
-		execute(connection, SQL,
+		execute(tx, SQL,
 			q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
 	}
 
-	private void updateInProgressStatus(Connection connection, Task task) {
+	private void updateInProgressStatus(Connection tx, Task task) {
 		boolean inProgress = Task.Status.IN_PROGRESS.equals(task.getStatus());
 
 		String SQL = "UPDATE task_in_progress SET in_progress = ?, modified_on = now() "
 			+ "WHERE task_def_name = ? AND task_id = ?";
 
-		execute(connection, SQL, q -> q.addParameter(inProgress)
+		execute(tx, SQL, q -> q.addParameter(inProgress)
 			.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
 	}
 
@@ -687,25 +699,25 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
 	}
 
-	private void removeScheduledTask(Connection connection, Task task, String taskKey) {
+	private void removeScheduledTask(Connection tx, Task task, String taskKey) {
 		String SQL = "DELETE FROM task_scheduled WHERE workflow_id = ? AND task_key = ?";
 
-		execute(connection, SQL,
+		execute(tx, SQL,
 			q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(taskKey).executeDelete());
 	}
 
-	private void removeTaskData(Connection connection, Task task) {
+	private void removeTaskData(Connection tx, Task task) {
 		String SQL = "DELETE FROM task WHERE task_id = ?";
 
-		execute(connection, SQL, q -> q.addParameter(task.getTaskId()).executeDelete());
+		execute(tx, SQL, q -> q.addParameter(task.getTaskId()).executeDelete());
 	}
 
-	private boolean insertEventExecution(Connection connection, EventExecution ee) {
+	private boolean insertEventExecution(Connection tx, EventExecution ee) {
 		String SQL = "INSERT INTO event_execution" +
 			"(handler_name, event_name, message_id, execution_id, status, subject, received_on, accepted_on) " +
 			"VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
 			"ON CONFLICT ON CONSTRAINT event_execution_fields DO NOTHING";
-		int count = query(connection, SQL, q -> q.addParameter(ee.getName())
+		int count = query(tx, SQL, q -> q.addParameter(ee.getName())
 			.addParameter(ee.getEvent())
 			.addParameter(ee.getMessageId())
 			.addParameter(ee.getId())
@@ -717,13 +729,13 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return count > 0;
 	}
 
-	private void updateEventExecution(Connection connection, EventExecution ee) {
+	private void updateEventExecution(Connection tx, EventExecution ee) {
 		String SQL = "UPDATE event_execution SET " +
 			"modified_on = now(), status = ?, started_on = ?, processed_on = ?" +
 			"WHERE handler_name = ? AND event_name = ? " +
 			"AND message_id = ? AND execution_id = ?";
 
-		execute(connection, SQL, q -> q.addParameter(ee.getStatus().name())
+		execute(tx, SQL, q -> q.addParameter(ee.getStatus().name())
 			.addTimestampParameter(ee.getStarted())
 			.addTimestampParameter(ee.getProcessed())
 			.addParameter(ee.getName())
@@ -733,11 +745,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.executeUpdate());
 	}
 
-	private boolean insertEventPublished(Connection connection, EventPublished ep) {
+	private boolean insertEventPublished(Connection tx, EventPublished ep) {
 		String SQL = "INSERT INTO event_published" +
 			"(json_data, message_id, subject, published_on) " +
 			"VALUES (?, ?, ?, ?)";
-		int count = query(connection, SQL, q -> q.addJsonParameter(ep)
+		int count = query(tx, SQL, q -> q.addJsonParameter(ep)
 			.addParameter(ep.getId())
 			.addParameter(ep.getSubject())
 			.addTimestampParameter(ep.getPublished())
@@ -745,20 +757,20 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return count > 0;
 	}
 
-	private void insertOrUpdatePollData(Connection connection, PollData pollData, String domain) {
+	private void insertOrUpdatePollData(Connection tx, PollData pollData, String domain) {
 		// Warning! Constraint name is also unique index name
 		String SQL = "INSERT INTO poll_data (queue_name, domain, json_data) VALUES (?, ?, ?) " +
 			"ON CONFLICT ON CONSTRAINT poll_data_fields DO UPDATE SET json_data=?, modified_on=now()";
-		execute(connection, SQL, q -> q.addParameter(pollData.getQueueName())
+		execute(tx, SQL, q -> q.addParameter(pollData.getQueueName())
 			.addParameter(domain)
 			.addJsonParameter(pollData)
 			.addJsonParameter(pollData)
 			.executeUpdate());
 	}
 
-	private PollData readPollData(Connection connection, String queueName, String domain) {
+	private PollData readPollData(Connection tx, String queueName, String domain) {
 		String SQL = "SELECT json_data FROM poll_data WHERE queue_name = ? AND domain = ?";
-		return query(connection, SQL,
+		return query(tx, SQL,
 			q -> q.addParameter(queueName).addParameter(domain).executeAndFetchFirst(PollData.class));
 	}
 
