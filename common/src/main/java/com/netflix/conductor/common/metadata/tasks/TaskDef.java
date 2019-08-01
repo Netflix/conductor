@@ -18,12 +18,12 @@
  */
 package com.netflix.conductor.common.metadata.tasks;
 
+import com.netflix.conductor.common.metadata.Auditable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.netflix.conductor.common.metadata.Auditable;
 
 /**
  * @author Viren
@@ -61,9 +61,13 @@ public class TaskDef extends Auditable {
 	private int responseTimeoutSeconds = ONE_HOUR;
 	
 	private Integer concurrentExecLimit;
-	
+
 	private Map<String, Object> inputTemplate = new HashMap<>();
-		
+
+	private Integer rateLimitPerFrequency;
+
+	private Integer rateLimitFrequencyInSeconds;
+
 	public TaskDef() {
 	}
 	
@@ -263,6 +267,38 @@ public class TaskDef extends Auditable {
 	 */
 	public void setInputTemplate(Map<String, Object> inputTemplate) {
 		this.inputTemplate = inputTemplate;
+	}
+
+	/**
+	 *
+	 * @return rate Limit Per Frequency
+	 */
+	public Integer getRateLimitPerFrequency() {
+		return rateLimitPerFrequency;
+	}
+
+	/**
+	 *
+	 * @param rateLimitPerFrequency rate Limit Per Frequency
+	 */
+	public void setRateLimitPerFrequency(Integer rateLimitPerFrequency) {
+		this.rateLimitPerFrequency = rateLimitPerFrequency;
+	}
+
+	/**
+	 *
+	 * @return rate Limit Frequency In Seconds
+	 */
+	public Integer getRateLimitFrequencyInSeconds() {
+		return rateLimitFrequencyInSeconds;
+	}
+
+	/**
+	 *
+	 * @param rateLimitFrequencyInSeconds rate Limit Frequency In Seconds
+	 */
+	public void setRateLimitFrequencyInSeconds(Integer rateLimitFrequencyInSeconds) {
+		this.rateLimitFrequencyInSeconds = rateLimitFrequencyInSeconds;
 	}
 
 	@Override

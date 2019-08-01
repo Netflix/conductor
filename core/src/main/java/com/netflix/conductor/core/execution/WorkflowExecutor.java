@@ -1350,7 +1350,14 @@ public class WorkflowExecutor {
 			if(task.getStatus().equals(Status.SCHEDULED)) {
 
 				if(edao.exceedsInProgressLimit(task)) {
-					logger.debug("Rate limited for {}", task.getTaskDefName());
+					logger.debug("Concurrent Execution limited for {}:{}", taskId, task.getTaskDefName());
+					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+					return;
+				}
+
+				if (edao.exceedsRateLimitPerFrequency(task)) {
+					logger.debug("RateLimit Execution limited for {}:{}", taskId, task.getTaskDefName());
+					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 					return;
 				}
 			}
