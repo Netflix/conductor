@@ -21,6 +21,7 @@ package com.netflix.conductor.core.execution.batch;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.TaskStatusListener;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.QueueDAO;
@@ -48,13 +49,15 @@ public class BatchSweeper {
     private static Logger logger = LoggerFactory.getLogger(BatchSweeper.class);
 
     private Map<String, AbstractBatchProcessor> processors = new HashMap<>();
+    private TaskStatusListener taskStatusListener;
     private WorkflowExecutor workflowExecutor;
     private Configuration config;
     private QueueDAO queues;
 
     @Inject
     public BatchSweeper(WorkflowExecutor workflowExecutor, Configuration config, QueueDAO queues,
-                        SherlockBatchProcessor sherlockBatchProcessor) {
+                        SherlockBatchProcessor sherlockBatchProcessor, TaskStatusListener taskStatusListener) {
+        this.taskStatusListener = taskStatusListener;
         this.workflowExecutor = workflowExecutor;
         this.config = config;
         this.queues = queues;
@@ -145,7 +148,7 @@ public class BatchSweeper {
             task.setWorkerId(workerId);
             task.setPollCount(task.getPollCount() + 1);
             workflowExecutor.updateTask(task);
-            workflowExecutor.notifyTaskStatus(task, WorkflowExecutor.StartEndState.start);
+            taskStatusListener.onTaskStarted(task);
 
             tasks.add(task);
         }
