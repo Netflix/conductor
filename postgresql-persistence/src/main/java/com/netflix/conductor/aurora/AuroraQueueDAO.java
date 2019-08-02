@@ -71,7 +71,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 			final String QUERY = "SELECT * FROM queue_message " +
 				"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
-				"ORDER BY deliver_on LIMIT ?";
+				"ORDER BY deliver_on, version, id LIMIT ?";
 
 			final String UPDATE = "UPDATE queue_message " +
 				"SET popped = true, unack_on = ?, version = version + 1 " +
