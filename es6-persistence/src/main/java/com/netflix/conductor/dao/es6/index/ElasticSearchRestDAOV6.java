@@ -569,21 +569,28 @@ public class ElasticSearchRestDAOV6 extends ElasticSearchBaseDAO implements Inde
         }
     }
 
-    @Override
-    public void removeWorkflow(String workflowId) {
-
-        DeleteRequest request = new DeleteRequest(workflowIndexName, WORKFLOW_DOC_TYPE, workflowId);
-
+    private void removeDocument(String indexName, String docType, String docId) {
         try {
+            DeleteRequest request = new DeleteRequest(indexName, docType, docId);
             DeleteResponse response = elasticSearchClient.delete(request);
 
             if (response.getResult() == DocWriteResponse.Result.NOT_FOUND) {
-                logger.error("Index removal failed - document not found by id: {}", workflowId);
+                logger.error(docType + " removal failed - document not found by id: {}", docId);
             }
-
-        } catch (IOException e) {
-            logger.error("Failed to remove workflow {} from index", workflowId, e);
+        } catch (Throwable e) {
+            logger.error("Failed to remove " + docType + " {} from index", docId, e);
             Monitors.error(className, "remove");
+        }
+    }
+
+    @Override
+    public void removeWorkflow(String workflowId) {
+        removeDocument(workflowIndexName, WORKFLOW_DOC_TYPE, workflowId);
+
+        List<String> taskIds = searchTasks("", "workflowId:\"" + workflowId + "\"", 0, 100, Collections.emptyList()).getResults();
+
+        for (String taskId : taskIds) {
+            removeDocument(taskIndexName, TASK_DOC_TYPE, taskId);
         }
     }
 

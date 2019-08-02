@@ -68,6 +68,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -467,17 +468,28 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
         return search(query, start, count, sort, freeText, TASK_DOC_TYPE);
     }
 
-    @Override
-    public void removeWorkflow(String workflowId) {
+    private void removeDocument(String indexName, String docType, String docId) {
         try {
-            DeleteRequest request = new DeleteRequest(workflowIndexName, WORKFLOW_DOC_TYPE, workflowId);
+            DeleteRequest request = new DeleteRequest(indexName, docType, docId);
             DeleteResponse response = elasticSearchClient.delete(request).actionGet();
-            if (response.getResult() == DocWriteResponse.Result.DELETED) {
-                logger.error("Index removal failed - document not found by id: {}", workflowId);
+
+            if (response.getResult() == DocWriteResponse.Result.NOT_FOUND) {
+                logger.error(docType + " removal failed - document not found by id: {}", docId);
             }
         } catch (Throwable e) {
-            logger.error("Failed to remove workflow {} from index", workflowId, e);
+            logger.error("Failed to remove " + docType + " {} from index", docId, e);
             Monitors.error(className, "remove");
+        }
+    }
+
+    @Override
+    public void removeWorkflow(String workflowId) {
+        removeDocument(workflowIndexName, WORKFLOW_DOC_TYPE, workflowId);
+
+        List<String> taskIds = searchTasks("", "workflowId:\"" + workflowId + "\"", 0, 100, Collections.emptyList()).getResults();
+
+        for (String taskId : taskIds) {
+            removeDocument(taskIndexName, TASK_DOC_TYPE, taskId);
         }
     }
 

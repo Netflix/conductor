@@ -188,16 +188,23 @@ public class TestElasticSearchRestDAOV6 {
     public void shouldRemoveWorkflow() {
         Workflow workflow = TestUtils.loadWorkflowSnapshot("workflow");
         indexDAO.indexWorkflow(workflow);
+        indexDAO.indexTask(workflow.getTasks().get(0));
 
         // wait for workflow to be indexed
         List<String> workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 1);
         assertEquals(1, workflows.size());
+
+        List<String> tasks = tryFindResults(() -> searchTasks(workflow), 1);
+        assertEquals(1, tasks.size());
 
         indexDAO.removeWorkflow(workflow.getWorkflowId());
 
         workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 0);
 
         assertTrue("Workflow was not removed.", workflows.isEmpty());
+
+        tasks = tryFindResults(() -> searchTasks(workflow), 0);
+        assertTrue("Task was not removed.", tasks.isEmpty());
     }
 
     @Test
