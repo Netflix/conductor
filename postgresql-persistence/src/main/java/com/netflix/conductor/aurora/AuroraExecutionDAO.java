@@ -142,18 +142,15 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			return true;
 		}
 
-		logger.info("Task execution count for {}: limit={}, current={}", task.getTaskDefName(), limit,
-			getInProgressTaskCount(task.getTaskDefName()));
+		logger.debug("Task execution count for {}: limit={}, current={}", task.getTaskDefName(), limit, current);
 
-		String taskId = task.getTaskId();
+		String SQL = "SELECT task_id FROM task_in_progress WHERE task_def_name = ? ORDER BY id LIMIT ?";
+		List<String> taskIds = queryWithTransaction(SQL,
+			q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
 
-		List<String> tasksInProgressInOrderOfArrival = findAllTasksInProgressInOrderOfArrival(task, limit);
-
-		boolean rateLimited = !tasksInProgressInOrderOfArrival.contains(taskId);
-
+		boolean rateLimited = !taskIds.contains(task.getTaskId());
 		if (rateLimited) {
-			logger.info("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit,
-				getInProgressTaskCount(task.getTaskDefName()));
+			logger.debug("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
 		}
 
 		return rateLimited;
@@ -691,13 +688,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		execute(tx, SQL, q -> q.addParameter(inProgress)
 			.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
-	}
-
-	private List<String> findAllTasksInProgressInOrderOfArrival(Task task, int limit) {
-		String SQL = "SELECT task_id FROM task_in_progress WHERE task_def_name = ? ORDER BY id LIMIT ?";
-
-		return queryWithTransaction(SQL,
-			q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
 	}
 
 	private void removeScheduledTask(Connection tx, Task task, String taskKey) {
