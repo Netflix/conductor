@@ -35,6 +35,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	@Override
+	@Deprecated // Not used by core engine
 	public List<Task> getPendingTasksByWorkflow(String taskName, String workflowId) {
 		String SQL = "SELECT t.json_data FROM task_in_progress tip " +
 			"INNER JOIN task t ON t.task_id = tip.task_id " +
@@ -57,12 +58,12 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public List<Task> getPendingSystemTasks(String taskType) {
-		String SQL = "SELECT t.json_data FROM task_in_progress tip " +
-			"INNER JOIN task t ON t.task_id = tip.task_id " +
-			"WHERE t.task_type = ?";
+		String SQL = "SELECT json_data FROM task WHERE task_type = ? AND task_status = ?";
 
 		return queryWithTransaction(SQL,
-			q -> q.addParameter(taskType).executeAndFetch(Task.class));
+			q -> q.addParameter(taskType)
+				.addParameter("IN_PROGRESS")
+				.executeAndFetch(Task.class));
 	}
 
 	@Override
