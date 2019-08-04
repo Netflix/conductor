@@ -657,20 +657,13 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	private void addTaskInProgress(Connection tx, Task task) {
-		String SQL = "SELECT true FROM task_in_progress WHERE task_def_name = ? AND task_id = ?";
+		String SQL = "INSERT INTO task_in_progress (task_def_name, task_id, workflow_id) VALUES (?, ?, ?) " +
+			"ON CONFLICT ON CONSTRAINT task_in_progress_fields DO NOTHING";
 
-		boolean exist = query(tx, SQL,
-			q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).exists());
-
-		if (!exist) {
-			SQL = "INSERT INTO task_in_progress (task_def_name, task_id, workflow_id) VALUES (?, ?, ?) " +
-				"ON CONFLICT ON CONSTRAINT task_in_progress_fields DO NOTHING";
-
-			execute(tx, SQL, q -> q.addParameter(task.getTaskDefName())
-				.addParameter(task.getTaskId())
-				.addParameter(task.getWorkflowInstanceId())
-				.executeUpdate());
-		}
+		execute(tx, SQL, q -> q.addParameter(task.getTaskDefName())
+			.addParameter(task.getTaskId())
+			.addParameter(task.getWorkflowInstanceId())
+			.executeUpdate());
 	}
 
 	private void removeTaskInProgress(Connection tx, Task task) {
