@@ -459,12 +459,12 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	 */
 	@Override
 	public List<Task> getPendingTasksByTags(String taskType, Set<String> tags) {
-		String SQL = "SELECT t.json_data FROM task_in_progress tip " +
-			"INNER JOIN task t ON t.task_id = tip.task_id " +
-			"INNER JOIN workflow w ON w.workflow_id = tip.workflow_id " +
-			"WHERE t.task_status = 'IN_PROGRESS' AND t.task_type = ? AND w.tags @> ?";
+		String SQL = "SELECT t.json_data FROM task t " +
+			"INNER JOIN workflow w ON w.workflow_id = t.workflow_id " +
+			"WHERE t.task_type = ? AND t.task_status = ? AND w.tags @> ?";
 
 		return queryWithTransaction(SQL, q -> q.addParameter(taskType)
+			.addParameter("IN_PROGRESS")
 			.addParameter(tags)
 			.executeAndFetch(Task.class));
 	}
