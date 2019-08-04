@@ -8,6 +8,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -70,9 +71,48 @@ class Dao extends AuroraBaseDAO {
 	}
 
 	void requeueAsync(Connection tx) {
-		String SQL = "SELECT task_id FROM task WHERE task_type = 'HTTP' AND task_status IN ('SCHEDULED', 'IN_PROGRESS')";
+		String SQL = "SELECT task_id FROM task WHERE task_type IN ('HTTP','BATCH') AND task_status IN ('SCHEDULED', 'IN_PROGRESS')";
 		List<String> ids = query(tx, SQL, q -> q.executeAndFetch(String.class));
 		ids.forEach(id -> pushMessage(tx, "http", id, null));
+	}
+
+	void dataCleanup(Connection tx) {
+		fixTask(tx, "SUB_WORKFLOW", "SCHEDULED");
+		fixTask(tx, "JSON_JQ_TRANSFORM", "SCHEDULED");
+	}
+
+	private void fixTask(Connection tx, String type, String status) {
+		String TASK_TYPE_STATUS = "SELECT t.json_data FROM task t " +
+			"INNER JOIN workflow w ON w.workflow_id = t.workflow_id " +
+			"WHERE w.workflow_status = 'RUNNING' " +
+			"AND t.task_type = ? AND t.task_status = ?";
+
+		String FIND_PREV_RETRIED = "SELECT task_id FROM task " +
+			"WHERE workflow_id = ? " +
+			"AND json_data::jsonb->'retried' = 'true' " +
+			"ORDER BY json_data::jsonb->'seq' DESC LIMIT 1";
+
+		String RESET_FLAG = "UPDATE task " +
+			"SET json_data = (json_data::jsonb || '{\"retried\": false}'::jsonb) " +
+			"WHERE task_id = ?";
+
+		logger.info("Looking for " + type + "/" + status);
+		List<Task> tasks = query(tx, TASK_TYPE_STATUS, q -> q.addParameter(type).addParameter(status).executeAndFetch(Task.class));
+		tasks.forEach(task -> {
+			logger.info("Task to cleanup" + task);
+
+			// Cleanup stuck task
+			execute(tx, "DELETE FROM task_in_progress WHERE task_id = ?", q -> q.addParameter(task.getTaskId()).executeDelete());
+			execute(tx, "DELETE FROM task_scheduled WHERE task_id = ?", q -> q.addParameter(task.getTaskId()).executeDelete());
+			execute(tx, "DELETE FROM task WHERE task_id = ?", q -> q.addParameter(task.getTaskId()).executeDelete());
+
+			String prevTaskId = query(tx, FIND_PREV_RETRIED, q -> q.addParameter(task.getWorkflowInstanceId()).executeScalar(String.class));
+			if (StringUtils.isNotEmpty(prevTaskId)) {
+				// Reset flag
+				logger.info("Task to reset retried flag " + prevTaskId);
+				execute(tx, RESET_FLAG, q -> q.addParameter(prevTaskId).executeUpdate());
+			}
+		});
 	}
 
 	private void createQueueIfNotExists(Connection tx, String queueName) {

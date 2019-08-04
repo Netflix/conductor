@@ -127,6 +127,9 @@ public class Main {
 		logger.info("Waiting for workers to complete");
 		waitWorkflows();
 
+		logger.info("Post migration data cleanup...");
+		dataCleanup();
+
 		logger.info("Grabbing queues ...");
 		grabQueues();
 
@@ -369,6 +372,19 @@ public class Main {
 					dao.upsertEventHandler(tx, def);
 				});
 
+				tx.commit();
+			} catch (Exception ex) {
+				tx.rollback();
+				throw ex;
+			}
+		}
+	}
+
+	private void dataCleanup() throws SQLException {
+		try (Connection tx = dataSource.getConnection()) {
+			tx.setAutoCommit(false);
+			try {
+				dao.dataCleanup(tx);
 				tx.commit();
 			} catch (Exception ex) {
 				tx.rollback();
