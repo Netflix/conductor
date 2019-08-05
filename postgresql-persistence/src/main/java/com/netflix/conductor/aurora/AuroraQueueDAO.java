@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
 import org.apache.commons.collections.CollectionUtils;
@@ -19,21 +18,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
-
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
-	private static final Long UNACK_SCHEDULE_MS = 60_000L;
+	private static final Long UNACK_SCHEDULE_MS = 5_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
-	private final int stalePeriod;
 
 	@Inject
-	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
+	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper) {
 		super(dataSource, mapper);
-		stalePeriod = config.getIntProperty("workflow.aurora.stale.period.seconds", 60);
 
 		Executors.newSingleThreadScheduledExecutor()
-			.scheduleAtFixedRate(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
+			.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -74,9 +69,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			long start = System.currentTimeMillis();
 			Set<String> foundIds = new HashSet<>();
 
-			final String QUERY = "SELECT id, message_id, version FROM queue_message " +
+			final String QUERY = "SELECT * FROM queue_message " +
 				"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
-				"ORDER BY deliver_on LIMIT ?";
+				"ORDER BY deliver_on, version, id LIMIT ?";
 
 			final String UPDATE = "UPDATE queue_message " +
 				"SET popped = true, unack_on = ?, version = version + 1 " +
@@ -100,22 +95,20 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					}));
 
 				messages.forEach(m -> {
-					withTransaction(connection -> {
-						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+					long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
-						int updated = query(connection, UPDATE, u -> u.addTimestampParameter(unack_on)
-							.addParameter(m.id)
-							.addParameter(m.version)
-							.executeUpdate());
+					int updated = queryWithTransaction(UPDATE, u -> u.addTimestampParameter(unack_on)
+						.addParameter(m.id)
+						.addParameter(m.version)
+						.executeUpdate());
 
-						// Means record being updated - we got it
-						if (updated > 0) {
-							foundIds.add(m.message_id);
-						}
-					});
+					// Means record being updated - we got it
+					if (updated > 0) {
+						foundIds.add(m.message_id);
+					}
 				});
-				
-				sleepUninterruptibly(10, TimeUnit.MILLISECONDS);
+
+				Thread.sleep(10);
 			}
 
 			return Lists.newArrayList(foundIds);
@@ -143,7 +136,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
-		long unack_on = System.currentTimeMillis() - stalePeriod;
+		long unack_on = System.currentTimeMillis();
 
 		final String SQL = "UPDATE queue_message " +
 			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
@@ -321,7 +314,13 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private void processAllUnacks() {
-		queues.forEach(this::processUnacks);
+		long unack_on = System.currentTimeMillis();
+
+		final String SQL = "UPDATE queue_message " +
+			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
+			"WHERE popped = true AND unack_on < ?";
+
+		executeWithTransaction(SQL, q -> q.addTimestampParameter(unack_on).executeUpdate());
 	}
 
 	private static class QueueMessage {

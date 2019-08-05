@@ -1,5 +1,6 @@
 create table log4j_logs
 (
+    id       serial primary key,
     log_time timestamp,
     logger   text,
     level    text,
@@ -17,7 +18,7 @@ create index log4j_logs_log_time_idx on log4j_logs (log_time);
 create table meta_config
 (
     name  varchar(255) primary key,
-    value varchar(255)
+    value text
 );
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_aurora', 'INFO');
@@ -112,10 +113,9 @@ create table task_in_progress
     task_id       varchar(255) not null,
     workflow_id   varchar(255) not null
 );
-create unique index task_in_progress_fields on task_in_progress (task_def_name, workflow_id);
+create unique index task_in_progress_fields on task_in_progress (task_def_name, task_id);
 alter table task_in_progress
     add constraint task_in_progress_fields unique using index task_in_progress_fields;
-create index task_in_progress_def_id on task_in_progress (task_def_name, task_id);
 
 create table task_rate_limit
 (
@@ -145,6 +145,7 @@ create table task
 create unique index task_task_id on task (task_id);
 alter table task
     add constraint task_task_id unique using index task_task_id;
+create index task_type_status on task (task_type,task_status);
 create index task_workflow_id on task (workflow_id);
 
 create table task_scheduled

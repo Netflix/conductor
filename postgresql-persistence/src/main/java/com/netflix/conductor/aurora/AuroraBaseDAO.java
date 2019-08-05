@@ -22,6 +22,9 @@ public abstract class AuroraBaseDAO {
 		AuroraBaseDAO.class.getName(),
 		Thread.class.getName()
 	);
+	private static final List<String> EXCLUDED_STACKTRACE_METHODS = ImmutableList.of(
+		"toString"
+	);
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	private final DataSource dataSource;
@@ -46,6 +49,7 @@ public abstract class AuroraBaseDAO {
 			logger.trace("{} : starting transaction", callingMethod.toString());
 
 		try (Connection tx = dataSource.getConnection()) {
+			tx.setAutoCommit(false);
 			try {
 				R result = function.apply(tx);
 				tx.commit();
@@ -65,6 +69,7 @@ public abstract class AuroraBaseDAO {
 	private LazyToString getCallingMethod() {
 		return new LazyToString(() -> Arrays.stream(Thread.currentThread().getStackTrace())
 			.filter(ste -> !EXCLUDED_STACKTRACE_CLASS.contains(ste.getClassName()))
+			.filter(ste -> !EXCLUDED_STACKTRACE_METHODS.contains(ste.getMethodName()))
 			.findFirst()
 			.map(StackTraceElement::getMethodName)
 			.orElse("Cannot find Caller"));
