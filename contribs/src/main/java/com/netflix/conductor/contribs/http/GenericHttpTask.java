@@ -51,6 +51,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 	protected ObjectMapper om;
 	private AuthManager auth;
 	private RestClientManager rcm;
+	private boolean traceIdEnabled;
 	private boolean authContextEnabled;
 
 	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
@@ -65,6 +66,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		this.rcm = rcm;
 		this.om = om;
 		this.auth = auth;
+		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceId.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 	}
 
@@ -135,7 +137,8 @@ class GenericHttpTask extends WorkflowSystemTask {
 			setAuthToken(input, workflow);
 		}
 
-		if (input.isTraceId()) {
+		// Enabled per task & on app level
+		if (input.isTraceId() && traceIdEnabled) {
 			input.getHeaders().put(CommonParams.PLATFORM_TRACE_ID,
 				StringUtils.defaultIfEmpty(workflow.getTraceId(), ""));
 		}
