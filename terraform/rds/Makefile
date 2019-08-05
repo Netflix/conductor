@@ -1,16 +1,16 @@
 SERVICE = conductor
 REGION = us-west-2
-ENV = test
 TFSTATE = $(SERVICE)/$(REGION)-$(ENV)-aurora-postgres.tfstate
 
 # Target Specific Variables
+## corp
 ### enclave
-plan-db-shared-% apply-db-shared-% destroy-db-shared-%: ENCLAVE=shared
+plan-db-corp-% apply-db-corp-% destroy-db-corp-%: ENCLAVE=corp
 
 ### env and tld
-%-shared-test: ENV=test
-%-shared-int: ENV=int
-%-shared-live: ENV=live
+%-db-corp-test: ENV=test
+%-db-corp-live: ENV=live
+%-db-corp-int: ENV=int
 
 # clean terraform modules
 clean:
@@ -47,15 +47,15 @@ plan-db-%: clean show-vars check-vars init
 		-target=aws_elasticache_subnet_group.conductor-subnet-grp
 
 # dummy target for autocompletion
-plan-db-shared-test:
-apply-db-shared-test:
-destroy-db-shared-test:
+plan-db-corp-test:
+apply-db-corp-test:
+destroy-db-corp-test:
 
-plan-db-shared-int:
-apply-db-shared-int:
-destroy-db-shared-int:
+plan-db-corp-int:
+apply-db-corp-int:
+destroy-db-corp-int:
 
 
-plan-db-shared-live:
-apply-db-shared-live:
-destroy-db-shared-live:
+plan-db-corp-live:
+apply-db-corp-live:
+destroy-db-corp-live:

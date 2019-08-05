@@ -24,9 +24,10 @@ resource "aws_rds_cluster" "rds_cluster" {
   cluster_identifier = "conductor-aurora-postgresql-${var.enclave}-${var.env}"
 
   # Cluster Options
-  engine            = "${var.engine}"
-  engine_version    = "${var.engine_version}"
-  apply_immediately = "${var.apply_immediately}"
+  engine                          = "${var.engine}"
+  engine_version                  = "${var.engine_version}"
+  apply_immediately               = "${var.apply_immediately}"
+  db_cluster_parameter_group_name = "${var.service}-rds-postgresql-${var.enclave}-${var.env}-pg"
 
   # Database Options
   database_name   = "${lookup(var.database_name, "${var.env}")}"

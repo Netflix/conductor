@@ -17,13 +17,6 @@ variable "service" {
   default     = "conductor"
 }
 
-module "vars" {
-  source  = "git@github.com:d3sw/terraform-platform//modules//vars?ref=v1.0.3"
-  region  = "${var.region}"
-  enclave = "${var.enclave}"
-  env     = "${var.env}"
-}
-
 variable "cluster_size" {
   default = 2
 }
@@ -37,7 +30,7 @@ variable "engine_version" {
 }
 
 variable "instance_class" {
-  default = "db.r4.8xlarge"
+  default = "db.r4.2xlarge"
 }
 
 variable "apply_immediately" {
@@ -95,4 +88,11 @@ variable "allowed_subnets" {
     shared-test-vpc = ["172.31.96.0/20"]
     shared-live-vpc = ["10.131.96.0/20"]
   }
+}
+
+module "vars" {
+  source  = "github.com/d3sw/terraform-modules//vars?ref=v0.1.30"
+  region  = "${var.region}"
+  env     = "${var.env}"
+  enclave = "${var.enclave}"
 }
