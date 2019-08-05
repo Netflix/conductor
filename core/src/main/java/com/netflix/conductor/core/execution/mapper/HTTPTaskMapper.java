@@ -92,8 +92,11 @@
          httpTask.setRetryCount(retryCount);
          httpTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
          httpTask.setWorkflowTask(taskToSchedule);
+         httpTask.setWorkflowPriority(workflowInstance.getPriority());
          httpTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
          httpTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+         httpTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
+         httpTask.setDomain(taskDefinition.getExecutionNameSpace());
          return Collections.singletonList(httpTask);
      }
  }

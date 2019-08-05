@@ -122,7 +122,7 @@ public class ExecutionService {
 			throw new ApplicationException(ApplicationException.Code.INVALID_INPUT,
 					"Long Poll Timeout value cannot be more than 5 seconds");
 		}
-		String queueName = QueueUtils.getQueueName(taskType, domain);
+		String queueName = QueueUtils.getQueueName(taskType, domain, null,null);
 
 		List<Task> tasks = new LinkedList<>();
 		try {
@@ -244,7 +244,7 @@ public class ExecutionService {
 		List<WorkflowDef> workflowDefs = metadataDAO.getAll();
 		int count = 0;
 		for (WorkflowDef workflowDef : workflowDefs) {
-			List<Workflow> workflows = workflowExecutor.getRunningWorkflows(workflowDef.getName());
+			List<Workflow> workflows = workflowExecutor.getRunningWorkflows(workflowDef.getName(), workflowDef.getVersion());
 			for (Workflow workflow : workflows) {
 				count += requeuePendingTasks(workflow, threshold);
 			}
@@ -270,7 +270,7 @@ public class ExecutionService {
 				if (callback < 0) {
 					callback = 0;
 				}
-				boolean pushed = queueDAO.pushIfNotExists(QueueUtils.getQueueName(pending), pending.getTaskId(), callback);
+				boolean pushed = queueDAO.pushIfNotExists(QueueUtils.getQueueName(pending), pending.getTaskId(), workflow.getPriority(), callback);
 				if (pushed) {
 					count++;
 				}
@@ -314,7 +314,7 @@ public class ExecutionService {
 		if(callback < 0) {
 			callback = 0;
 		}
-		return queueDAO.pushIfNotExists(QueueUtils.getQueueName(pending), pending.getTaskId(), callback);
+		return queueDAO.pushIfNotExists(QueueUtils.getQueueName(pending), pending.getTaskId(), pending.getWorkflowPriority(), callback);
 	}
 
 	public List<Workflow> getWorkflowInstances(String workflowName, String correlationId, boolean includeClosed, boolean includeTasks) {
@@ -334,8 +334,8 @@ public class ExecutionService {
 		return executionDAOFacade.getWorkflowById(workflowId, includeTasks);
 	}
 
-	public List<String> getRunningWorkflows(String workflowName) {
-		return executionDAOFacade.getRunningWorkflowIdsByName(workflowName);
+	public List<String> getRunningWorkflows(String workflowName, int version) {
+		return executionDAOFacade.getRunningWorkflowIds(workflowName, version);
 	}
 
 	public void removeWorkflow(String workflowId, boolean archiveWorkflow) {

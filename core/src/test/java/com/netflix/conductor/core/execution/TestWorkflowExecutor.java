@@ -49,6 +49,7 @@ import com.netflix.conductor.dao.QueueDAO;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -230,13 +231,14 @@ public class TestWorkflowExecutor {
                 .updateTask(any());
 
         AtomicInteger queuedTaskCount = new AtomicInteger(0);
-        doAnswer(invocation -> {
+        final Answer answer = invocation -> {
             String queueName = invocation.getArgumentAt(0, String.class);
             System.out.println(queueName);
             queuedTaskCount.incrementAndGet();
             return null;
-        }).when(queueDAO)
-                .push(any(), any(), anyInt());
+        };
+        doAnswer(answer).when(queueDAO).push(any(), any(), anyInt());
+        doAnswer(answer).when(queueDAO).push(any(), any(), anyInt(), anyInt());
 
         boolean stateChanged = workflowExecutor.scheduleTask(workflow, tasks);
         assertEquals(2, startedTaskCount.get());
@@ -723,8 +725,7 @@ public class TestWorkflowExecutor {
         forkTask.setSeq(1);
         forkTask.setRetryCount(1);
         forkTask.setStatus(Status.COMPLETED);
-        forkTask.setTaskDefName("task1");
-        forkTask.setReferenceTaskName("task1_ref1");
+        forkTask.setReferenceTaskName("task_fork");
 
         Task task_1_1 = new Task();
         task_1_1.setTaskId(UUID.randomUUID().toString());
@@ -750,8 +751,7 @@ public class TestWorkflowExecutor {
         joinTask.setSeq(25);
         joinTask.setRetryCount(1);
         joinTask.setStatus(Status.CANCELED);
-        joinTask.setTaskDefName("task1");
-        joinTask.setReferenceTaskName("task1_ref1");
+        joinTask.setReferenceTaskName("task_join");
         joinTask.getInputData().put("joinOn", Arrays.asList(task_1_1.getReferenceTaskName(), task_2_1.getReferenceTaskName()));
 
         workflow.getTasks().addAll(Arrays.asList(forkTask, task_1_1, task_2_1, joinTask));
@@ -766,7 +766,6 @@ public class TestWorkflowExecutor {
 
         assertEquals(6, workflow.getTasks().size());
         assertEquals(Workflow.WorkflowStatus.RUNNING, workflow.getStatus());
-
     }
 
     @Test
