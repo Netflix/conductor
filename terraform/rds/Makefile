@@ -33,7 +33,7 @@ init: check-vars creds
 	@if [ -f .terraform/terraform.tfstate ]; then rm .terraform/terraform.tfstate; fi
 	terraform init -backend-config="key=$(TFSTATE)"
 
-#/#/#/#/#/
+
 # dry run
 plan-db-%: clean show-vars check-vars init
 	terraform plan \
@@ -46,6 +46,29 @@ plan-db-%: clean show-vars check-vars init
 		-target=aws_security_group.conductor-sg \
 		-target=aws_elasticache_subnet_group.conductor-subnet-grp
 
+# deploy resources
+apply-db-%: clean show-vars check-vars init
+	terraform apply \
+		-var region="$(REGION)" \
+		-var enclave="$(ENCLAVE)" \
+		-var env="$(ENV)" \
+		-target=aws_rds_cluster.rds_cluster \
+		-target=aws_rds_cluster_instance.rds_cluster_instances \
+		-target=aws_db_subnet_group.rds_db_subnet_group \
+		-target=aws_security_group.conductor-sg \
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp
+
+# destroy resources
+destroy-db-%: clean show-vars check-vars init
+	terraform destroy \
+		-var region="$(REGION)" \
+		-var enclave="$(ENCLAVE)" \
+		-var env="$(ENV)" \
+		-target=aws_rds_cluster.rds_cluster \
+		-target=aws_rds_cluster_instance.rds_cluster_instances \
+		-target=aws_db_subnet_group.rds_db_subnet_group \
+		-target=aws_security_group.conductor-sg \
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp
 # dummy target for autocompletion
 plan-db-corp-test:
 apply-db-corp-test:
