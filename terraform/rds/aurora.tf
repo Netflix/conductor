@@ -24,22 +24,21 @@ resource "aws_rds_cluster" "rds_cluster" {
   cluster_identifier = "conductor-aurora-postgresql-${var.enclave}-${var.env}"
 
   # Cluster Options
-  engine                          = "${var.engine}"
-  engine_version                  = "${var.engine_version}"
-  apply_immediately               = "${var.apply_immediately}"
-  db_cluster_parameter_group_name = "${var.service}-rds-postgresql-${var.enclave}-${var.env}-pg"
+  engine            = "${var.engine}"
+  engine_version    = "${var.engine_version}"
+  apply_immediately = "${var.apply_immediately}"
+
+  //db_cluster_parameter_group_name = "${var.service}-rds-postgresql-${var.enclave}-${var.env}-pg"
 
   # Database Options
   database_name   = "${lookup(var.database_name, "${var.env}")}"
   port            = "${var.database_port}"
   master_username = "${lookup(var.database_user, "${var.env}")}"
   master_password = "${lookup(var.database_password, "${var.env}")}"
-
   # Network and Security Options
   db_subnet_group_name   = "${aws_db_subnet_group.rds_db_subnet_group.id}"
   availability_zones     = ["${var.availability_zones}"]
   vpc_security_group_ids = ["${aws_security_group.conductor-aurora-sg.id}"]
-
   # Tags
   tags {
     Name        = "conductor-aurora-postgresql-${var.enclave}-${var.env}"
@@ -49,8 +48,9 @@ resource "aws_rds_cluster" "rds_cluster" {
 }
 
 resource "aws_db_subnet_group" "rds_db_subnet_group" {
-  name       = "conductor-aurora-postgresql-${var.enclave}-${var.env}-subnetgrp"
-  subnet_ids = ["${split(",", "${module.vars.private_subnets}")}"]
+  name        = "conductor-aurora-postgresql-${var.enclave}-${var.env}-subnetgrp"
+  description = "conductor-aurora-postgresql-${var.enclave}-${var.env}-subnetgrp"
+  subnet_ids  = ["${split(",", "${module.vars.private_subnets}")}"]
 }
 
 resource "aws_security_group" "conductor-aurora-sg" {

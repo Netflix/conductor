@@ -6,12 +6,15 @@ TFSTATE = $(SERVICE)/$(REGION)-$(ENV)-aurora-postgres.tfstate
 ## corp
 ### enclave
 plan-db-corp-% apply-db-corp-% destroy-db-corp-%: ENCLAVE=corp
-
+plan-db-shared-% apply-db-shared-% destroy-db-shared-%: ENCLAVE=shared
 ### env and tld
 %-db-corp-test: ENV=test
 %-db-corp-live: ENV=live
 %-db-corp-int: ENV=int
 
+%-db-shared-test: ENV=test
+%-db-shared-live: ENV=live
+%-db-shared-int: ENV=int
 # clean terraform modules
 clean:
 		rm -rf ./.terraform
@@ -70,6 +73,7 @@ destroy-db-%: clean show-vars check-vars init
 		-target=aws_security_group.conductor-sg \
 		-target=aws_elasticache_subnet_group.conductor-subnet-grp
 # dummy target for autocompletion
+
 plan-db-corp-test:
 apply-db-corp-test:
 destroy-db-corp-test:
@@ -82,3 +86,16 @@ destroy-db-corp-int:
 plan-db-corp-live:
 apply-db-corp-live:
 destroy-db-corp-live:
+
+plan-db-shared-test:
+apply-db-shared-test:
+destroy-db-shared-test:
+
+plan-db-shared-int:
+apply-db-shared-int:
+destroy-db-shared-int:
+
+
+plan-db-shared-live:
+apply-db-shared-live:
+destroy-db-shared-live:

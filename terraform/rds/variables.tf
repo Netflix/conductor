@@ -29,8 +29,9 @@ variable "engine_version" {
   default = "10.6"
 }
 
+// default set to the min db instance_class available
 variable "instance_class" {
-  default = "db.r4.2xlarge"
+  default = "db.r5.large"
 }
 
 variable "apply_immediately" {
