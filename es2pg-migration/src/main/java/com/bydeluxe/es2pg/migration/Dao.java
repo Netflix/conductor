@@ -64,10 +64,21 @@ class Dao extends AuroraBaseDAO {
 		}
 	}
 
-	void requeueSweep(Connection tx) {
-		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_status = 'RUNNING'";
-		List<String> ids = query(tx, SQL, q -> q.executeAndFetch(String.class));
-		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null));
+	void requeueSweep(Connection tx, long jsonLimit) {
+		String SQL = "SELECT (COALESCE(length(json_data),0) + COALESCE((select sum(length(json_data)) task_size from task t where t.workflow_id = w.workflow_id), 0)) as total_size, w.workflow_id " +
+			"FROM workflow w WHERE w.workflow_status = 'RUNNING'";
+		execute(tx, SQL, q -> q.executeAndFetch(rs -> {
+			while (rs.next()) {
+				String workflowId = rs.getString("workflow_id");
+				long totalSize = rs.getLong("total_size");
+				if (totalSize < jsonLimit) {
+					pushMessage(tx, WorkflowExecutor.deciderQueue, workflowId, null);
+				} else {
+					logger.warn("Requeue sweeper skipped! Total JSON size " + totalSize + " exceeds limit ("  + jsonLimit + ") for " + workflowId);
+				}
+			}
+			return null;
+		}));
 	}
 
 	void requeueAsync(Connection tx) {

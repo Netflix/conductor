@@ -137,7 +137,7 @@ public class Main {
 		requeueAsync();
 
 		logger.info("Requeue decider ...");
-		requeueDecider();
+		requeueSweep();
 
 		String duration = DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, FORMAT, true);
 		logger.info("ES2PG migration done, took " + duration);
@@ -406,11 +406,11 @@ public class Main {
 		}
 	}
 
-	private void requeueDecider() throws SQLException {
+	private void requeueSweep() throws SQLException {
 		try (Connection tx = dataSource.getConnection()) {
 			tx.setAutoCommit(false);
 			try {
-				dao.requeueSweep(tx);
+				dao.requeueSweep(tx, config.jsonLimit());
 				tx.commit();
 			} catch (Exception ex) {
 				tx.rollback();

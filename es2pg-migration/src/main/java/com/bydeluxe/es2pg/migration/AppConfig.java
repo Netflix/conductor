@@ -68,4 +68,8 @@ public class AppConfig {
 	public String rootIndexName() {
 		return config.getString("workflow_elasticsearch_index_name", "conductor");
 	}
+
+	public long jsonLimit() {
+		return config.getLong("json_limit_size", 30 * 1024 * 1024);
+	}
 }
