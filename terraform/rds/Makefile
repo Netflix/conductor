@@ -3,19 +3,27 @@ REGION = us-west-2
 ENV = test
 TFSTATE = $(SERVICE)/$(REGION)-$(ENV)-aurora-postgres.tfstate
 
+# Target Specific Variables
+### enclave
+plan-db-shared-% apply-db-shared-% destroy-db-shared-%: ENCLAVE=shared
+
+### env and tld
+%-shared-test: ENV=test
+%-shared-int: ENV=int
+%-shared-live: ENV=live
 
 # clean terraform modules
 clean:
-	rm -rf ./.terraform
+		rm -rf ./.terraform
 
 creds:
-	# ensure there is an active aws-vault session
-	@aws-vault exec -j deluxemediaplatform >/dev/null
+		# ensure there is an active aws-vault session
+		@aws-vault exec -j deluxemediaplatform >/dev/null
 
 show-vars:
-	@echo "REGION:\t\t\t$(REGION)"
-	@echo "ENV:\t\t\t$(ENV)"
-	@echo ""
+			@echo "REGION:\t\t\t$(REGION)"
+			@echo "ENV:\t\t\t$(ENV)"
+			@echo ""
 
 check-vars: show-vars
 	@if [ -z "$(ENV)" ]; then echo ENV not set!; exit 1; fi
@@ -24,3 +32,30 @@ check-vars: show-vars
 init: check-vars creds
 	@if [ -f .terraform/terraform.tfstate ]; then rm .terraform/terraform.tfstate; fi
 	terraform init -backend-config="key=$(TFSTATE)"
+
+#/#/#/#/#/
+# dry run
+plan-db-%: clean show-vars check-vars init
+	terraform plan \
+		-var region="$(REGION)" \
+		-var enclave="$(ENCLAVE)" \
+		-var env="$(ENV)" \
+		-target=aws_rds_cluster.rds_cluster \
+		-target=aws_rds_cluster_instance.rds_cluster_instances \
+		-target=aws_db_subnet_group.rds_db_subnet_group \
+		-target=aws_security_group.conductor-sg \
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp
+
+# dummy target for autocompletion
+plan-db-shared-test:
+apply-db-shared-test:
+destroy-db-shared-test:
+
+plan-db-shared-int:
+apply-db-shared-int:
+destroy-db-shared-int:
+
+
+plan-db-shared-live:
+apply-db-shared-live:
+destroy-db-shared-live:
