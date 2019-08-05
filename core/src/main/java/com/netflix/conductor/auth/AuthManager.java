@@ -115,7 +115,8 @@ public class AuthManager {
 		ClientResponse response;
 
 		if (traceIdEnabled) {
-			webResource.header(CommonParams.PLATFORM_TRACE_ID, workflow.getTraceId());
+			webResource.header(CommonParams.PLATFORM_TRACE_ID,
+				StringUtils.defaultIfEmpty(workflow.getTraceId(), ""));
 		}
 
 		if (StringUtils.isNotEmpty(workflow.getCorrelationId())) {

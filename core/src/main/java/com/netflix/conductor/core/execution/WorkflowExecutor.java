@@ -95,6 +95,7 @@ public class WorkflowExecutor {
 	private WorkflowStatusListener workflowStatusListener;
 
 	private boolean validateAuth;
+	private boolean traceIdEnabled;
 	private boolean authContextEnabled;
 	private boolean lazyDecider;
 
@@ -116,6 +117,7 @@ public class WorkflowExecutor {
 		this.workflowStatusListener = workflowStatusListener;
 		this.decider = new DeciderService(metadata, om);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
+		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 	}
@@ -195,7 +197,9 @@ public class WorkflowExecutor {
 			wf.setContextToken(contextToken);
 			wf.setAuthorization(authorization);
 			wf.setContextUser(contextUser);
-			wf.setTraceId(traceId);
+			if (traceIdEnabled) {
+				wf.setTraceId(traceId);
+			}
 			// Add other ids if passed
 			if (CollectionUtils.isNotEmpty(workflowIds)) {
 				workflowIds.forEach(id -> {
