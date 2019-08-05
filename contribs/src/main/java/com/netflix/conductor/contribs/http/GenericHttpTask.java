@@ -66,7 +66,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		this.rcm = rcm;
 		this.om = om;
 		this.auth = auth;
-		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceId.enabled", "false"));
+		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 	}
 

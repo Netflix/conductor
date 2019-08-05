@@ -117,7 +117,7 @@ public class WorkflowExecutor {
 		this.workflowStatusListener = workflowStatusListener;
 		this.decider = new DeciderService(metadata, om);
 		this.validateAuth = Boolean.parseBoolean(config.getProperty("workflow.auth.validate", "false"));
-		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceId.enabled", "false"));
+		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 		this.lazyDecider = Boolean.parseBoolean(config.getProperty("workflow.lazy.decider", "false"));
 	}
