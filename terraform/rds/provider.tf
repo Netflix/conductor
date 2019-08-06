@@ -14,3 +14,7 @@ terraform {
     encrypt = true
   }
 }
+
+provider "vault" {
+  address = "http://vault.service.${module.vars.tld}:8200"
+}

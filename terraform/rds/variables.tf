@@ -91,6 +91,11 @@ variable "allowed_subnets" {
   }
 }
 
+variable "GenerateNewPass" {
+  description = "when this value is set to 1, a new password for db will be generated"
+  default     = 0
+}
+
 module "vars" {
   source  = "github.com/d3sw/terraform-modules//vars?ref=v0.1.30"
   region  = "${var.region}"

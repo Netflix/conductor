@@ -34,7 +34,8 @@ resource "aws_rds_cluster" "rds_cluster" {
   database_name   = "${lookup(var.database_name, "${var.env}")}"
   port            = "${var.database_port}"
   master_username = "${lookup(var.database_user, "${var.env}")}"
-  master_password = "${lookup(var.database_password, "${var.env}")}"
+  //master_password = "${lookup(var.database_password, "${var.env}")}"
+  master_password = "${random_string.password.result}"
   # Network and Security Options
   db_subnet_group_name   = "${aws_db_subnet_group.rds_db_subnet_group.id}"
   availability_zones     = ["${var.availability_zones}"]
@@ -77,4 +78,18 @@ resource "aws_security_group" "conductor-aurora-sg" {
     Owner       = "${var.owner}"
     Environment = "${var.env}"
   }
+}
+
+# generate a password
+resource "random_string" "password" {
+  keepers = {
+    #Generate a new password each time GenerateNewPass is set to 1
+    GenerateNewPass = 1
+  }
+
+  length      = 16
+  min_upper   = 4
+  min_lower   = 4
+  min_numeric = 4
+  special     = false
 }

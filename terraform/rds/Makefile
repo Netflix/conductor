@@ -49,6 +49,15 @@ plan-db-%: clean show-vars check-vars init
 		-target=aws_security_group.conductor-sg \
 		-target=aws_elasticache_subnet_group.conductor-subnet-grp
 
+# plan db pass
+plan-pass-%: clean show-vars check-vars init
+	terraform plan \
+		-var region="$(REGION)" \
+		-var enclave="$(ENCLAVE)" \
+		-var env="$(ENV)" \
+		-target=random_string.password
+
+
 # deploy resources
 apply-db-%: clean show-vars check-vars init
 	terraform apply \
@@ -99,3 +108,5 @@ destroy-db-shared-int:
 plan-db-shared-live:
 apply-db-shared-live:
 destroy-db-shared-live:
+
+plan-pass:
