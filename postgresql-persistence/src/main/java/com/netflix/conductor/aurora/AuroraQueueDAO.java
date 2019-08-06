@@ -253,8 +253,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		}
 
 		// Otherwise make it visible right away
+		// Also reset the version to be picked up earlier. See `pop` order by
 		final String UPDATE = "UPDATE queue_message " +
-			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
+			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = 0 " +
 			"WHERE id = ? AND version = ?";
 
 		return queryWithTransaction(UPDATE, q -> q.addParameter(record.id)
