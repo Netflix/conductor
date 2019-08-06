@@ -488,7 +488,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
             Map<String, Object> map = new HashMap<>();
             map.put("popped", false);
             map.put("unacked", false);
-            map.put("deliverOn", System.currentTimeMillis());
+            map.put("deliverOn", 0L);
             map.put("unackOn", 0L);
 
             try {
