@@ -121,7 +121,6 @@ public class ReferenceKeysMatchAction implements JavaEventAction {
 
                 // Array match
                 if (!matches(taskRefKeys, eventRefKeys)) {
-                    logger.trace("Task does not match. Task={" + task + "}, taskRefKeys=" + taskRefKeys + ", eventRefKeys=" + eventRefKeys);
                     return;
                 }
 
