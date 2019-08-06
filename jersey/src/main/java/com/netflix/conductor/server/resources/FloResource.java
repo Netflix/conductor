@@ -68,14 +68,8 @@ public class FloResource {
     @ApiOperation("Start a new workflow. Returns the ID of the workflow instance that can be later used for tracking")
     public String startWorkflow(@PathParam("name") String name,
                                 @QueryParam("version") Integer version,
-                                @QueryParam("correlationId") String correlationId,@HeaderParam("x-TracingId") String tracingId,
+                                @QueryParam("correlationId") String correlationId,
                                 Map<String, Object> input) {
-
-        if(StringUtils.isBlank(tracingId)) {
-            tracingId = IDGenerator.generate();
-        }
-        input.put(TRACING_ID, tracingId);
-        LOGGER.info("Received request with input {} tracingId {} correlationId {}, name {}, version {}", input, tracingId, correlationId, name, version);
-        return workflowService.startWorkflow(name, version, correlationId, input);
+           return workflowService.startWorkflow(name, version, correlationId, input);
     }
 }
