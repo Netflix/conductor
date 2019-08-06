@@ -118,4 +118,13 @@ public class TestSystemTaskWorkerCoordinator {
 		Assert.assertEquals(systemTaskWorkerCoordinator.getExecutionConfig("test-iso").workerQueue.remainingCapacity(), 100);
 
 	}
+         
+        @Test
+	public void testIsFromCoordinatorDomain() {
+		System.setProperty("workflow.system.task.worker.domain","domain");
+		Configuration configuration = new SystemPropertiesConfiguration();
+		SystemTaskWorkerCoordinator systemTaskWorkerCoordinator = new SystemTaskWorkerCoordinator(Mockito.mock(QueueDAO.class), Mockito.mock(WorkflowExecutor.class), configuration);
+		Assert.assertEquals(systemTaskWorkerCoordinator.isFromCoordinatorExecutionNameSpace("domain:testTaskType"), true);
+
+	}
 }

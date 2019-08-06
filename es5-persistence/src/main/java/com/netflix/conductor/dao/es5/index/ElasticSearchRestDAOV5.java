@@ -18,7 +18,6 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
-import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.io.IOUtils;
@@ -131,8 +130,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                 keepAliveTime,
                 TimeUnit.MINUTES,
                 new LinkedBlockingQueue<>(workerQueueSize),
-                (r, e) -> {
-                    logger.warn("Discarding messages to executor service '{}' ,{}, {} ", r, e, e.getQueue().size());
+                (runnable, executor) -> {
+                    logger.warn("Request  {} to async dao discarded in executor {}", runnable, executor);
                 });
 
     }
@@ -146,7 +145,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             updateIndexName();
             Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexName, 0, 1, TimeUnit.HOURS);
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.error("Error creating index templates", e);
         }
 
         //1. Create the required index
