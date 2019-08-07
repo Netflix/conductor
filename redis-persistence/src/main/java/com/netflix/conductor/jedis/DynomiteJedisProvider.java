@@ -37,6 +37,7 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
                 .setLocalDataCenter(configuration.getRegion())
                 .setSocketTimeout(0)
                 .setConnectTimeout(0)
+                .setMaxTimeoutWhenExhausted(4000)
                 .setMaxConnsPerHost(
                         configuration.getMaxConnectionsPerHost()
                 );
