@@ -111,7 +111,7 @@ job "conductor" {
       }
     } // end ui task
   } // end ui group
-  group "ui-pg" {
+  group "ui-es" {
     count = 3
 
     # vault declaration
@@ -121,7 +121,7 @@ job "conductor" {
       policies    = ["read-secrets"]
     }
 
-    task "ui-g" {
+    task "ui-es" {
       meta {
         product-class = "custom"
         stack-role    = "ui"
@@ -157,7 +157,7 @@ job "conductor" {
       env {
         TLD         = "${meta.tld}"
         APP_VERSION = "[[.app_version]]"
-        WF_SERVICE  = "${NOMAD_JOB_NAME}-server-pg.service.${meta.tld}"
+        WF_SERVICE  = "${NOMAD_JOB_NAME}-server-es.service.${meta.tld}"
 
         // Auth settings. Rest settings are in vault
         conductor_auth_service  = "auth.service.${meta.tld}"
@@ -202,7 +202,7 @@ job "conductor" {
   } // end ui group
 
   group "server" {
-    count = 5
+    count = 10
 
     # vault declaration
     vault {
@@ -250,7 +250,7 @@ job "conductor" {
         APP_VERSION = "[[.app_version]]"
 
         // Database settings
-        db = "elasticsearch"
+        db = "aurora"
 
         // Workflow settings
         workflow_failure_expandInline                = "false"
@@ -263,8 +263,9 @@ job "conductor" {
         workflow_system_task_worker_poll_frequency   = "1000"
         workflow_system_task_worker_queue_size       = "300"
         workflow_system_task_http_unack_timeout      = "300"
-        workflow_sweeper_frequency                   = "1000"
+        workflow_sweeper_frequency                   = "500"
         workflow_sweeper_thread_count                = "50"
+        workflow_sweeper_pool_timeout                = "1000"
         workflow_sweeper_batch_sherlock_service      = "sherlock.service.${meta.tld}"
         workflow_sweeper_batch_sherlock_worker_count = "100"
         workflow_sweeper_batch_names                 = "sherlock"
@@ -272,9 +273,7 @@ job "conductor" {
         workflow_lazy_decider                        = "true"
 
         // Elasticsearch settings.
-        workflow_elasticsearch_mode                  = "elasticsearch"
-        workflow_elasticsearch_initial_sleep_seconds = "0"
-        workflow_elasticsearch_stale_period_seconds  = "300"
+        workflow_elasticsearch_mode = "none"
 
         // Auth settings. Rest settings are in vault
         conductor_auth_service  = "auth.service.${meta.tld}"
@@ -342,8 +341,8 @@ job "conductor" {
       }
     } // end server task
   } // end server group
-  group "server-pg" {
-    count = 10
+  group "server-es" {
+    count = 5
 
     # vault declaration
     vault {
@@ -352,7 +351,7 @@ job "conductor" {
       policies    = ["read-secrets"]
     }
 
-    task "server-pg" {
+    task "server-es" {
       meta {
         product-class = "custom"
         stack-role    = "api"
@@ -391,7 +390,7 @@ job "conductor" {
         APP_VERSION = "[[.app_version]]"
 
         // Database settings
-        db = "aurora"
+        db = "elasticsearch"
 
         // Workflow settings
         workflow_failure_expandInline                = "false"
@@ -404,9 +403,8 @@ job "conductor" {
         workflow_system_task_worker_poll_frequency   = "1000"
         workflow_system_task_worker_queue_size       = "300"
         workflow_system_task_http_unack_timeout      = "300"
-        workflow_sweeper_frequency                   = "500"
+        workflow_sweeper_frequency                   = "1000"
         workflow_sweeper_thread_count                = "50"
-        workflow_sweeper_pool_timeout                = "1000"
         workflow_sweeper_batch_sherlock_service      = "sherlock.service.${meta.tld}"
         workflow_sweeper_batch_sherlock_worker_count = "100"
         workflow_sweeper_batch_names                 = "sherlock"
@@ -414,7 +412,9 @@ job "conductor" {
         workflow_lazy_decider                        = "true"
 
         // Elasticsearch settings.
-        workflow_elasticsearch_mode = "none"
+        workflow_elasticsearch_mode                  = "elasticsearch"
+        workflow_elasticsearch_initial_sleep_seconds = "0"
+        workflow_elasticsearch_stale_period_seconds  = "300"
 
         // Auth settings. Rest settings are in vault
         conductor_auth_service  = "auth.service.${meta.tld}"
