@@ -13,8 +13,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -23,87 +23,57 @@ public class IsolatedTaskQueueProducer {
 
 	private static Logger logger = LoggerFactory.getLogger(IsolatedTaskQueueProducer.class);
 	private MetadataService metadataService;
-	private Configuration config;
 	private int pollingTimeOut;
 
 
 	@Inject
-	public IsolatedTaskQueueProducer(MetadataService metadataService, Configuration configuration) {
-		this.metadataService = metadataService;
-		this.config = configuration;
-		this.pollingTimeOut = config.getIntProperty("workflow.isolated.system.task.poll.time.secs", 10);
+	public IsolatedTaskQueueProducer(MetadataService metadataService, Configuration config) {
 
+		this.metadataService = metadataService;
 		boolean listenForIsolationGroups = config.getBooleanProperty("workflow.isolated.system.task.enable", false);
 
 		if (listenForIsolationGroups) {
 
+			this.pollingTimeOut = config.getIntProperty("workflow.isolated.system.task.poll.time.secs", 10);
 			logger.info("Listening for isolation groups");
-			new Thread(this::syncTaskQueues).start();
 
+			Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> addTaskQueues(), 1000, pollingTimeOut, TimeUnit.SECONDS);
 		} else {
 			logger.info("Isolated System Task Worker DISABLED");
 		}
 
 	}
 
-	@VisibleForTesting
-	static boolean isIsolatedQueue(String queue) {
-		return StringUtils.isNotBlank(getIsolationGroup(queue));
-	}
 
-	private static String getIsolationGroup(String queue) {
+	private Set<TaskDef> getIsolationExecutionNameSpaces() {
 
-		return StringUtils.substringAfter(queue, QueueUtils.ISOLATION_SEPARATOR);
-
-	}
-
-	void syncTaskQueues() {
-		try {
-
-			for (; !Thread.currentThread().isInterrupted(); ) {
-				addTaskQueues();
-				TimeUnit.SECONDS.sleep(pollingTimeOut);
-			}
-
-		} catch (InterruptedException ie) {
-			Thread.currentThread().interrupt();
-			logger.info("Received interrupt - returning", ie);
-		}
-	}
-
-	private Set<String> getIsolationGroups() throws InterruptedException {
-
-		Set<String> isolationGroups = Collections.emptySet();
+		Set<TaskDef> isolationExecutionNameSpaces = Collections.emptySet();
 
 		try {
 
 			List<TaskDef> taskDefs = metadataService.getTaskDefs();
-			isolationGroups = taskDefs.stream()
-					.filter(taskDef -> Objects.nonNull(taskDef.getIsolationGroupId()))
-					.map(taskDef -> taskDef.getIsolationGroupId())
-					.collect(Collectors.toSet());
+			isolationExecutionNameSpaces = taskDefs.stream().
+					filter(taskDef -> StringUtils.isNotBlank(taskDef.getIsolationGroupId())|| StringUtils.isNotBlank(taskDef.getExecutionNameSpace())).
+					collect(Collectors.toSet());
 
 		} catch (RuntimeException unknownException) {
 
 			logger.error("Unknown exception received in getting isolation groups, sleeping and retrying", unknownException);
-			TimeUnit.SECONDS.sleep(pollingTimeOut);
-
 		}
-		return isolationGroups;
+		return isolationExecutionNameSpaces;
 	}
 
 	@VisibleForTesting
-	void addTaskQueues() throws InterruptedException {
+	void addTaskQueues() {
 
-		Set<String> isolationGroups = getIsolationGroups();
-		logger.info("Retrieved queues {}", isolationGroups);
+		Set<TaskDef> isolationDefs = getIsolationExecutionNameSpaces();
+		logger.debug("Retrieved queues {}", isolationDefs);
 		Set<String> taskTypes = SystemTaskWorkerCoordinator.taskNameWorkFlowTaskMapping.keySet();
 
-		for (String group : isolationGroups) {
+		for (TaskDef isolatedTaskDef : isolationDefs) {
 			for (String taskType : taskTypes) {
-
-				String taskQueue = QueueUtils.getQueueName(taskType, null, group);
-				logger.info("Adding task={} to coordinator queue", taskQueue);
+				String taskQueue = QueueUtils.getQueueName(taskType,null, isolatedTaskDef.getExecutionNameSpace(), isolatedTaskDef.getIsolationGroupId());
+				logger.debug("Adding task={} to coordinator queue", taskQueue);
 				SystemTaskWorkerCoordinator.queue.add(taskQueue);
 
 			}
@@ -112,3 +82,4 @@ public class IsolatedTaskQueueProducer {
 	}
 
 }
+

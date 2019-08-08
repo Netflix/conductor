@@ -161,11 +161,11 @@ public abstract class ClientBase {
         return null;
     }
 
-    <T> T getForEntity(String url, Object[] queryParams, Class<T> responseType, Object... uriVariables) {
+    protected <T> T getForEntity(String url, Object[] queryParams, Class<T> responseType, Object... uriVariables) {
         return getForEntity(url, queryParams, response -> response.getEntity(responseType), uriVariables);
     }
 
-    <T> T getForEntity(String url, Object[] queryParams, GenericType<T> responseType, Object... uriVariables) {
+    protected <T> T getForEntity(String url, Object[] queryParams, GenericType<T> responseType, Object... uriVariables) {
         return getForEntity(url, queryParams, response -> response.getEntity(responseType), uriVariables);
     }
 
@@ -223,7 +223,7 @@ public abstract class ClientBase {
         try (InputStream inputStream = payloadStorage.download(externalStorageLocation.getUri())) {
             return objectMapper.readValue(inputStream, Map.class);
         } catch (IOException e) {
-            String errorMsg = String.format("Unable to download payload frome external storage location: %s", path);
+            String errorMsg = String.format("Unable to download payload from external storage location: %s", path);
             logger.error(errorMsg, e);
             throw new ConductorClientException(errorMsg, e);
         }
