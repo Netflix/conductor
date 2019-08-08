@@ -32,6 +32,7 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -46,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -59,6 +61,8 @@ public abstract class ClientBase {
     protected final Client client;
 
     protected String root = "";
+
+    protected Map<String, String> requestHeaders = new HashMap<>();
 
     protected ObjectMapper objectMapper;
 
@@ -98,6 +102,10 @@ public abstract class ClientBase {
         this.root = root;
     }
 
+    public void setRequestHeaders(Map<String, String> headers) {
+        this.requestHeaders = headers;
+    }
+
     protected void delete(String url, Object... uriVariables) {
         delete(null, url, uriVariables);
     }
@@ -106,7 +114,9 @@ public abstract class ClientBase {
         URI uri = null;
         try {
             uri = getURIBuilder(root + url, queryParams).build(uriVariables);
-            client.resource(uri).delete();
+            WebResource webResource = client.resource(uri);
+            addRequestHeaders(webResource);
+            webResource.delete();
         } catch (UniformInterfaceException e) {
             handleUniformInterfaceException(e, uri);
         } catch (RuntimeException e) {
@@ -118,7 +128,9 @@ public abstract class ClientBase {
         URI uri = null;
         try {
             uri = getURIBuilder(root + url, queryParams).build(uriVariables);
-            getWebResourceBuilder(uri, request).put();
+            Builder webResourceBuilder = getWebResourceBuilder(uri, request);
+            addRequestHeaders(webResourceBuilder);
+            webResourceBuilder.put();
         } catch (RuntimeException e) {
             handleException(uri, e);
         }
@@ -148,6 +160,7 @@ public abstract class ClientBase {
         try {
             uri = getURIBuilder(root + url, queryParams).build(uriVariables);
             Builder webResourceBuilder = getWebResourceBuilder(uri, request);
+            addRequestHeaders(webResourceBuilder);
             if (responseType == null) {
                 webResourceBuilder.post();
                 return null;
@@ -174,7 +187,9 @@ public abstract class ClientBase {
         ClientResponse clientResponse;
         try {
             uri = getURIBuilder(root + url, queryParams).build(uriVariables);
-            clientResponse = client.resource(uri)
+            WebResource webResource = client.resource(uri);
+            addRequestHeaders(webResource);
+            clientResponse = webResource
                     .accept(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN)
                     .get(ClientResponse.class);
             if (clientResponse.getStatus() < 300) {
@@ -330,5 +345,17 @@ public abstract class ClientBase {
             }
         }
         return builder;
+    }
+
+    private void addRequestHeaders(WebResource webResource) {
+        for (Map.Entry<String, String> header : this.requestHeaders.entrySet()) {
+            webResource.header(header.getKey(), header.getValue());
+        }
+    }
+
+    private void addRequestHeaders(Builder webResourceBuilder) {
+        for (Map.Entry<String, String> header : this.requestHeaders.entrySet()) {
+            webResourceBuilder.header(header.getKey(), header.getValue());
+        }
     }
 }
