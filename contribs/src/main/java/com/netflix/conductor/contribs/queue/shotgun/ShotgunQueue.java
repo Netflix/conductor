@@ -38,9 +38,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,7 +47,6 @@ import java.util.concurrent.TimeUnit;
 public class ShotgunQueue implements ObservableQueue {
     private static Logger logger = LoggerFactory.getLogger(ShotgunQueue.class);
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
-    private ScheduledExecutorService execs;
     private Duration[] publishRetryIn;
     private final String queueURI;
     private final String service;
@@ -79,20 +76,6 @@ public class ShotgunQueue implements ObservableQueue {
 
         try {
             conn = new OneMQ();
-            conn.connect(dns, null, null);
-        } catch (Exception ex) {
-            logger.error("OneMQ client connect failed {}", ex.getMessage(), ex);
-        }
-        execs = Executors.newScheduledThreadPool(1);
-        execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
-    }
-
-    private void monitor() {
-        if (conn.isConnected()) {
-            return;
-        }
-        try {
-            conn.close();
             conn.connect(dns, null, null);
         } catch (Exception ex) {
             logger.error("OneMQ client connect failed {}", ex.getMessage(), ex);
@@ -183,10 +166,6 @@ public class ShotgunQueue implements ObservableQueue {
     @Override
     public void close() {
         logger.debug("Closing connection for " + queueURI);
-        if (execs != null) {
-            execs.shutdownNow();
-            execs = null;
-        }
         if (subs != null) {
             try {
                 conn.unsubscribe(subs);
