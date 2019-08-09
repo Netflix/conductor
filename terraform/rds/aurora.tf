@@ -80,7 +80,7 @@ resource "aws_security_group" "conductor-aurora-sg" {
   }
 }
 
-# generate a password
+# generate password
 resource "random_string" "password" {
   keepers = {
     #Generate a new password each time GenerateNewPass is set to 1
