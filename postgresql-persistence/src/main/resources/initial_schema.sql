@@ -21,9 +21,17 @@ create table meta_config
     value text
 );
 insert into meta_config
-values ('log4j_logger_com_netflix_conductor_aurora', 'INFO');
+values ('log4j_logger_io_grpc_netty', 'INFO');
 insert into meta_config
-values ('log4j_logger_com_netflix_conductor_core_events_nats', 'DEBUG');
+values ('log4j_logger_org_apache_http', 'INFO');
+insert into meta_config
+values ('log4j_logger_org_eclipse_jetty', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_zaxxer_hikari', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_jayway_jsonpath_internal_path_CompiledPath', 'OFF');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_aurora', 'INFO');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_core_events_shotgun', 'DEBUG');
 insert into meta_config
@@ -36,8 +44,6 @@ insert into meta_config
 values ('log4j_logger_com_netflix_conductor_core_execution_WorkflowExecutor', 'INFO');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_contribs_http', 'INFO');
-insert into meta_config
-values ('log4j_logger_com_netflix_conductor_contribs_queue_nats', 'DEBUG');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_contribs_queue_shotgun', 'DEBUG');
 insert into meta_config
