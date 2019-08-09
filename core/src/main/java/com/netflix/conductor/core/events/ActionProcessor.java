@@ -154,7 +154,7 @@ public class ActionProcessor {
 
 			String id = executor.startWorkflow(def.getName(), def.getVersion(), workflowInput,
 				params.getCorrelationId(), null, null, event, null,
-				null, null, null, null, true);
+				null, null, null, null, null, true);
 
 			op.put("workflowId", id);
 			op.put("conductor.event.success", true);
