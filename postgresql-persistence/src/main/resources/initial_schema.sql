@@ -33,8 +33,6 @@ values ('log4j_logger_com_jayway_jsonpath_internal_path_CompiledPath', 'OFF');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_aurora', 'INFO');
 insert into meta_config
-values ('log4j_logger_com_netflix_conductor_core_events_nats', 'DEBUG');
-insert into meta_config
 values ('log4j_logger_com_netflix_conductor_core_events_shotgun', 'DEBUG');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_core_events_EventProcessor', 'DEBUG');
@@ -46,8 +44,6 @@ insert into meta_config
 values ('log4j_logger_com_netflix_conductor_core_execution_WorkflowExecutor', 'INFO');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_contribs_http', 'INFO');
-insert into meta_config
-values ('log4j_logger_com_netflix_conductor_contribs_queue_nats', 'DEBUG');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_contribs_queue_shotgun', 'DEBUG');
 insert into meta_config
