@@ -298,8 +298,8 @@ public class EventProcessor {
 				}
 			}
 
-			// Ack for legacy mode
-			if (!retryEnabled) {
+			// Ack for legacy mode or when no actions submitted (e.g. handler/actions did not match payload)
+			if (!retryEnabled || futures.isEmpty()) {
 				logger.debug("Ack for messageId=" + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 			} else {
