@@ -216,7 +216,8 @@ public class ShotgunQueue implements ObservableQueue {
 
         NDC.push("event-"+dstMsg.getId());
         try {
-            logger.info(String.format("Received message for %s %s=%s", subscription.getSubject(), dstMsg.getId(), payload));
+            logger.info(String.format("Received message for %s/%s %s=%s",
+                subscription.getSubject(), subscription.getGroupID(), dstMsg.getId(), payload));
         } finally {
             NDC.remove();
         }
