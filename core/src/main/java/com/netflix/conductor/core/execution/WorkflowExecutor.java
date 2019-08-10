@@ -1293,6 +1293,10 @@ public class WorkflowExecutor {
 		return edao.getWorkflow(workflowId, includeTasks);
 	}
 
+	public Task getTask(String workflowId, String taskRefName) {
+		return edao.getTask(workflowId, taskRefName);
+	}
+
 	public void addTaskToQueue(Task task) throws Exception {
 		// put in queue
 		queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
