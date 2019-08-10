@@ -327,6 +327,18 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 	}
 
 	@Override
+	public Task getTask(String workflowId, String taskRefName) {
+		QueryBuilder termTaskRefName = QueryBuilders.termQuery("referenceTaskName", taskRefName);
+		QueryBuilder termWorkflowId = QueryBuilders.termQuery("workflowInstanceId", workflowId);
+		QueryBuilder query = QueryBuilders.boolQuery().must(termWorkflowId).must(termTaskRefName);
+
+		List<Task> tasks = findAll(indexes.get(TASK), types.get(TASK), query, 1, Task.class);
+		if (tasks.isEmpty())
+			return null;
+		return tasks.get(0);
+	}
+
+	@Override
 	public List<Task> getTasks(List<String> taskIds) {
 		if (logger.isDebugEnabled())
 			logger.debug("getTasks: taskIds={}", taskIds);

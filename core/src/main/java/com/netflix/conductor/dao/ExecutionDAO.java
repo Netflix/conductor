@@ -306,4 +306,8 @@ public interface ExecutionDAO {
 	public default void addEventPublished(EventPublished ep) {}
 
 	public default void resetStartTime(Task task, boolean updateOutput) {}
+
+	public default Task getTask(String workflowId, String taskRefName) {
+		throw new IllegalStateException("Not implemented");
+	}
 }

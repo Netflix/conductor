@@ -45,7 +45,7 @@ public class SimpleProgressHandler implements JavaEventAction {
 			return Collections.emptyList();
 		}
 
-		Workflow workflow = executor.getWorkflow(workflowId, true);
+		Workflow workflow = executor.getWorkflow(workflowId, false);
 		if (workflow == null) {
 			logger.debug("Skipping. No workflow found for given id " + workflowId);
 			return Collections.emptyList();
@@ -59,7 +59,7 @@ public class SimpleProgressHandler implements JavaEventAction {
 			return Collections.emptyList();
 		}
 
-		Task task = workflow.getTaskByRefName(params.taskRefName);
+		Task task = executor.getTask(workflowId, params.taskRefName);
 		if (task == null) {
 			logger.debug("Skipping. No task " + params.taskRefName + " found in workflow"
 				+ ", workflowId=" + workflow.getWorkflowId()
