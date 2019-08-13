@@ -517,7 +517,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	private boolean addScheduledTask(Connection tx, Task task) {
 		String taskKey = task.getReferenceTaskName() + task.getRetryCount();
-		String CHECK_SQL = "SELECT true FROM task_scheduled WHERE workflow_id = ? AND task_key = ?";
+		final String CHECK_SQL = "SELECT true FROM task_scheduled WHERE workflow_id = ? AND task_key = ?";
 		boolean exists = query(tx, CHECK_SQL, q -> q
 			.addParameter(task.getWorkflowInstanceId())
 			.addParameter(taskKey)
