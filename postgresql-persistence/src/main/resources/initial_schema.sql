@@ -100,8 +100,8 @@ alter table workflow
     add constraint workflow_workflow_id unique using index workflow_workflow_id;
 create index workflow_type_status_date on workflow (workflow_type, workflow_status, date_str);
 create index workflow_parent_workflow_id on workflow (parent_workflow_id);
-create index workflow_start_start_time on workflow (start_time);
-create index workflow_start_end_time on workflow (end_time);
+create index workflow_start_time on workflow (start_time);
+create index workflow_end_time on workflow (end_time);
 
 create table task_in_progress
 (
