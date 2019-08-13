@@ -2,11 +2,11 @@ resource "aws_rds_cluster_instance" "rds_cluster_instances" {
   identifier = "conductor-aurora-postgresql-${var.enclave}-${var.env}-${count.index}"
 
   # instance Options
-  count              = "${var.cluster_size}"
+  count              = "${lookup(var.cluster_size, "${var.env}")}"
   engine             = "${var.engine}"
   engine_version     = "${var.engine_version}"
   cluster_identifier = "${aws_rds_cluster.rds_cluster.id}"
-  instance_class     = "${var.instance_class}"
+  instance_class     = "${lookup(var.instance_class, "${var.env}")}"
   apply_immediately  = "${var.apply_immediately}"
 
   # network and Security Options
@@ -34,7 +34,6 @@ resource "aws_rds_cluster" "rds_cluster" {
   database_name   = "${lookup(var.database_name, "${var.env}")}"
   port            = "${var.database_port}"
   master_username = "${lookup(var.database_user, "${var.env}")}"
-  //master_password = "${lookup(var.database_password, "${var.env}")}"
   master_password = "${random_string.password.result}"
   # Network and Security Options
   db_subnet_group_name   = "${aws_db_subnet_group.rds_db_subnet_group.id}"
@@ -80,16 +79,30 @@ resource "aws_security_group" "conductor-aurora-sg" {
   }
 }
 
-# generate password
+#Generate a new password each time generate_new_password is set to 1
 resource "random_string" "password" {
   keepers = {
-    #Generate a new password each time GenerateNewPass is set to 1
-    GenerateNewPass = 1
+    generate_new_password = "${var.generate_new_password}"
   }
 
-  length      = 16
+  length      = 22
   min_upper   = 4
   min_lower   = 4
   min_numeric = 4
   special     = false
+}
+
+# push credentials to vault
+resource "vault_generic_secret" "db-password" {
+  path = "secret/${var.service}/aurora"
+
+  data_json = <<EOT
+{
+  "aurora_host": "${aws_rds_cluster.rds_cluster.endpoint}",
+  "aurora_db": "${lookup(var.database_name, "${var.env}")}",
+  "aurora_user": "${lookup(var.database_user, "${var.env}")}",
+  "aurora_password": "${random_string.password.result}",
+  "aurora_port": "${var.database_port}"
+}
+EOT
 }

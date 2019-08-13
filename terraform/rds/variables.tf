@@ -18,7 +18,11 @@ variable "service" {
 }
 
 variable "cluster_size" {
-  default = 2
+  default = {
+    test = 1
+    live = 1
+    int  = 1
+  }
 }
 
 variable "engine" {
@@ -29,9 +33,12 @@ variable "engine_version" {
   default = "10.6"
 }
 
-// default set to the min db instance_class available
 variable "instance_class" {
-  default = "db.r5.large"
+  default = {
+    test = "db.r5.large"
+    live = "db.r4.8xlarge"
+    int  = "db.r4.4xlarge"
+  }
 }
 
 variable "apply_immediately" {
@@ -70,14 +77,6 @@ variable "database_user" {
   }
 }
 
-variable "database_password" {
-  default = {
-    test = "zQxzzuuw7fXI5VS9"
-    live = "3yKJAU2gc3ez63Uq"
-    int  = "KufypBk23F2gKtzr"
-  }
-}
-
 variable "allowed_subnets" {
   description = "Allowed subnets for security groups."
 
@@ -91,9 +90,9 @@ variable "allowed_subnets" {
   }
 }
 
-variable "GenerateNewPass" {
+variable "generate_new_password" {
   description = "when this value is set to 1, a new password for db will be generated"
-  default     = 0
+  default     = 1
 }
 
 module "vars" {

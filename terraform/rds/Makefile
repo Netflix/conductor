@@ -7,6 +7,9 @@ TFSTATE = $(SERVICE)/$(REGION)-$(ENV)-aurora-postgres.tfstate
 ### enclave
 plan-db-corp-% apply-db-corp-% destroy-db-corp-%: ENCLAVE=corp
 plan-db-shared-% apply-db-shared-% destroy-db-shared-%: ENCLAVE=shared
+plan-pass-db-shared-%: ENCLAVE=shared
+apply-pass-db-shared-%: ENCLAVE=shared
+rotate-pass-db-shared-%: ENCLAVE=shared
 ### env and tld
 %-db-corp-test: ENV=test
 %-db-corp-live: ENV=live
@@ -47,16 +50,9 @@ plan-db-%: clean show-vars check-vars init
 		-target=aws_rds_cluster_instance.rds_cluster_instances \
 		-target=aws_db_subnet_group.rds_db_subnet_group \
 		-target=aws_security_group.conductor-sg \
-		-target=aws_elasticache_subnet_group.conductor-subnet-grp
-
-# plan db pass
-plan-pass-%: clean show-vars check-vars init
-	terraform plan \
-		-var region="$(REGION)" \
-		-var enclave="$(ENCLAVE)" \
-		-var env="$(ENV)" \
-		-target=random_string.password
-
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
 
 # deploy resources
 apply-db-%: clean show-vars check-vars init
@@ -68,11 +64,13 @@ apply-db-%: clean show-vars check-vars init
 		-target=aws_rds_cluster_instance.rds_cluster_instances \
 		-target=aws_db_subnet_group.rds_db_subnet_group \
 		-target=aws_security_group.conductor-sg \
-		-target=aws_elasticache_subnet_group.conductor-subnet-grp
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
 
-# destroy resources
+## destroy resources
 destroy-db-%: clean show-vars check-vars init
-	terraform destroy \
+	terraform plan \
 		-var region="$(REGION)" \
 		-var enclave="$(ENCLAVE)" \
 		-var env="$(ENV)" \
@@ -80,9 +78,40 @@ destroy-db-%: clean show-vars check-vars init
 		-target=aws_rds_cluster_instance.rds_cluster_instances \
 		-target=aws_db_subnet_group.rds_db_subnet_group \
 		-target=aws_security_group.conductor-sg \
-		-target=aws_elasticache_subnet_group.conductor-subnet-grp
-# dummy target for autocompletion
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
 
+# plan db password
+plan-pass-%: clean show-vars check-vars init
+	terraform plan \
+		-var region="$(REGION)" \
+		-var enclave="$(ENCLAVE)" \
+		-var env="$(ENV)" \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
+
+# apply auto generated db password
+apply-pass-%: clean show-vars check-vars init
+	terraform apply \
+		-var region="$(REGION)" \
+		-var enclave="$(ENCLAVE)" \
+		-var env="$(ENV)" \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
+
+# WARNING USE WITH CAUTION . THIS MAY CAUSE A SHORT OUTAGE
+# rotate db password
+rotate-pass-%: clean show-vars check-vars init
+	terraform apply \
+		-var region="$(REGION)" \
+		-var enclave="$(ENCLAVE)" \
+		-var env="$(ENV)" \
+		-var generate_new_password=1 \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
+
+# dummy target for autocompletion
 plan-db-corp-test:
 apply-db-corp-test:
 destroy-db-corp-test:
@@ -109,4 +138,14 @@ plan-db-shared-live:
 apply-db-shared-live:
 destroy-db-shared-live:
 
-plan-pass:
+plan-pass-db-shared-test:
+apply-pass-db-shared-test:
+rotate-pass-db-shared-test:
+
+plan-pass-db-shared-int:
+apply-pass-db-shared-int:
+rotate-pass-db-shared-int:
+
+plan-pass-db-shared-live:
+apply-pass-db-shared-live:
+rotate-pass-db-shared-live:
