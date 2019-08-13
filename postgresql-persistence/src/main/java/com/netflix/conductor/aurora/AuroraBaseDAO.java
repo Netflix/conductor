@@ -56,6 +56,7 @@ public abstract class AuroraBaseDAO {
 				return result;
 			} catch (Throwable th) {
 				tx.rollback();
+				logger.debug("Rollback issued due to " + th.getMessage(), th);
 				throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, th.getMessage(), th);
 			}
 		} catch (SQLException ex) {
@@ -83,7 +84,8 @@ public abstract class AuroraBaseDAO {
 		try (Query q = new Query(mapper, tx, query)) {
 			return function.apply(q);
 		} catch (SQLException ex) {
-			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex);
+			logger.debug("query " + query + " failed " + ex.getMessage(), ex);
+			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
 		}
 	}
 
@@ -95,7 +97,8 @@ public abstract class AuroraBaseDAO {
 		try (Query q = new Query(mapper, tx, query)) {
 			function.apply(q);
 		} catch (SQLException ex) {
-			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex);
+			logger.debug("execute " + query + " failed " + ex.getMessage(), ex);
+			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
 		}
 	}
 
