@@ -517,12 +517,22 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	private boolean addScheduledTask(Connection tx, Task task) {
 		String taskKey = task.getReferenceTaskName() + task.getRetryCount();
+		String CHECK_SQL = "SELECT true FROM task_scheduled WHERE workflow_id = ? AND task_key = ?";
+		boolean exists = query(tx, CHECK_SQL, q -> q
+			.addParameter(task.getWorkflowInstanceId())
+			.addParameter(taskKey)
+			.executeScalar(Boolean.class));
+
+		// Return task not scheduled (false) if it is already exists
+		if (exists) {
+			return false;
+		}
 
 		// Warning! Constraint name is also unique index name
-		final String SQL = "INSERT INTO task_scheduled (workflow_id, task_key, task_id) " +
+		final String ADD_SQL = "INSERT INTO task_scheduled (workflow_id, task_key, task_id) " +
 			"VALUES (?, ?, ?) ON CONFLICT ON CONSTRAINT task_scheduled_wf_task DO NOTHING";
 
-		int count = query(tx, SQL, q -> q
+		int count = query(tx, ADD_SQL, q -> q
 			.addParameter(task.getWorkflowInstanceId())
 			.addParameter(taskKey)
 			.addParameter(task.getTaskId())
