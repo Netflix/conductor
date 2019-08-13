@@ -865,6 +865,7 @@ public class WorkflowExecutor {
         } catch (Exception e) {
             String errorMsg = String.format("Error updating task: %s for workflow: %s, terminating workflow.", task.getTaskId(), workflowId);
             LOGGER.error(errorMsg, e);
+            Monitors.recordTaskUpdateError(task.getTaskType(), workflowInstance.getWorkflowName());
             terminateWorkflow(workflowInstance, errorMsg, null);
             return;
         }
