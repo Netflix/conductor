@@ -155,7 +155,7 @@ public class ShotgunQueue implements ObservableQueue {
             String payload = message.getPayload();
             try {
                 logger.debug(String.format("Trying to publish to %s: %s", subject, payload));
-                conn.publish(subject, payload.getBytes(), message.getTraceId(), publishRetryIn);
+                conn.publish(subject, payload.getBytes(), service, message.getTraceId(), publishRetryIn);
                 logger.info(String.format("Published to %s: %s", subject, payload));
             } catch (Exception eo) {
                 logger.error(String.format("Failed to publish to %s: %s", subject, payload), eo);
