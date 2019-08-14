@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.DNSLookup;
@@ -67,6 +68,7 @@ public class AuthManager {
 	private final String authUrl;
 	private final String authService;
 	private String authEndpoint;
+	private boolean traceIdEnabled;
 
 	@Inject
 	public AuthManager(Configuration config) {
@@ -82,7 +84,7 @@ public class AuthManager {
 				throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_ENDPOINT);
 			}
 		}
-	
+
 		clientId = config.getProperty(PROPERTY_CLIENT, null);
 		if (StringUtils.isEmpty(clientId))
 			throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_CLIENT);
@@ -90,6 +92,8 @@ public class AuthManager {
 		clientSecret = config.getProperty(PROPERTY_SECRET, null);
 		if (StringUtils.isEmpty(clientSecret))
 			throw new IllegalArgumentException(MISSING_PROPERTY + PROPERTY_SECRET);
+
+		traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 	}
 
 	public AuthResponse authorize(Workflow workflow) throws Exception {
@@ -107,22 +111,22 @@ public class AuthManager {
 			url = hostAndPort + authEndpoint;
 		}
 
-		WebResource webResource = client.resource(url);
+		WebResource.Builder webResource = client.resource(url).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
 		ClientResponse response;
+
+		if (traceIdEnabled) {
+			webResource.header(CommonParams.PLATFORM_TRACE_ID,
+				StringUtils.defaultIfEmpty(workflow.getTraceId(), ""));
+		}
 
 		if (StringUtils.isNotEmpty(workflow.getCorrelationId())) {
 			Correlator correlator = new Correlator(logger, workflow.getCorrelationId());
 			correlator.updateSequenceNo();
 
-			response = webResource
-				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-				.header("Deluxe-Owf-Context", correlator.asCorrelationId())
-				.post(ClientResponse.class, data);			
-		} else {
-			response = webResource
-				.type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-				.post(ClientResponse.class, data);			
+			webResource.header(CommonParams.DELUXE_OWF_CONTEXT, correlator.asCorrelationId());
 		}
+
+		response = webResource.post(ClientResponse.class, data);
 
 		if (response.getStatus() == 200) {
 			String entity = response.getEntity(String.class);

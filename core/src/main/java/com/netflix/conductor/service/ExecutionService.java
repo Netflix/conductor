@@ -29,6 +29,7 @@ import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.SystemTaskType;
+import com.netflix.conductor.core.execution.TaskStatusListener;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -72,11 +73,13 @@ public class ExecutionService {
 	private MetadataDAO metadata;
 	
 	private int taskRequeueTimeout;
+	private TaskStatusListener taskStatusListener;
 
 	private Configuration config;
 
 	@Inject
-	public ExecutionService(WorkflowExecutor wfProvider, ExecutionDAO edao, QueueDAO queue, MetadataDAO metadata, IndexDAO indexer, Configuration config) {
+	public ExecutionService(WorkflowExecutor wfProvider, ExecutionDAO edao, QueueDAO queue, MetadataDAO metadata,
+							IndexDAO indexer, Configuration config, TaskStatusListener taskStatusListener) {
 		this.executor = wfProvider;
 		this.edao = edao;
 		this.queue = queue;
@@ -84,6 +87,7 @@ public class ExecutionService {
 		this.indexer = indexer;
 		this.config = config;
 		this.taskRequeueTimeout = config.getIntProperty("task.requeue.timeout", 60_000);
+		this.taskStatusListener = taskStatusListener;
 		reloadConfig();
 	}
 
@@ -127,7 +131,7 @@ public class ExecutionService {
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
 			edao.updateTask(task);
-			executor.notifyTaskStatus(task, WorkflowExecutor.StartEndState.start);
+			taskStatusListener.onTaskStarted(task);
 			tasks.add(task);
 		}
 		edao.updateLastPoll(taskType, domain, workerId);

@@ -271,12 +271,8 @@ public class EventProcessor {
 					ee.setStatus(Status.IN_PROGRESS);
 					ee.setSubject(subject);
 					ee.setTags(tags);
-					if (es.addEventExecution(ee)) {
-						Future<Boolean> future = execute(ee, action, payload);
-						futures.add(future);
-					} else {
-						logger.debug("Duplicate delivery/execution? {}", id);
-					}
+					Future<Boolean> future = execute(ee, action, payload);
+					futures.add(future);
 				}
 			}
 
@@ -298,8 +294,8 @@ public class EventProcessor {
 				}
 			}
 
-			// Ack for legacy mode
-			if (!retryEnabled) {
+			// Ack for legacy mode or when no actions submitted (e.g. handler/actions did not match payload)
+			if (!retryEnabled || futures.isEmpty()) {
 				logger.debug("Ack for messageId=" + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 			} else {
@@ -338,6 +334,9 @@ public class EventProcessor {
 			NDC.push("event-"+ee.getMessageId());
 			try {
 				logger.debug("Starting handler=" + ee.getName() + ", action=" + action);
+				if (!es.addEventExecution(ee)) {
+					logger.debug("Duplicate delivery/execution? {}", ee.getId());
+				}
 				ee.setStarted(System.currentTimeMillis());
 				Map<String, Object> output = ap.execute(action, payload, ee);
 				if (output != null) {

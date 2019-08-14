@@ -93,6 +93,8 @@ public class Workflow extends Auditable {
 
 	private String cancelledBy;
 
+	private String traceId;
+
 	public Workflow(){
 		
 	}
@@ -402,6 +404,14 @@ public class Workflow extends Auditable {
 
 	public void incRerunCount() {
 		this.rerunCount++;
+	}
+
+	public String getTraceId() {
+		return traceId;
+	}
+
+	public void setTraceId(String traceId) {
+		this.traceId = traceId;
 	}
 
 	@Override

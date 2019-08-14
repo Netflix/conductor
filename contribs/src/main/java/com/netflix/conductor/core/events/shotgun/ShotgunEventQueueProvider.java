@@ -37,9 +37,6 @@ import javax.inject.Singleton;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Oleksiy Lysak
@@ -92,8 +89,6 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 			} catch (Exception ex) {
 				logger.error("OneMQ client connect failed {}", ex.getMessage(), ex);
 			}
-			ScheduledExecutorService execs = Executors.newScheduledThreadPool(1);
-			execs.scheduleAtFixedRate(this::monitor, 0, 500, TimeUnit.MILLISECONDS);
 		}
 
 		EventQueues.registerProvider(QueueType.shotgun, this);
@@ -115,18 +110,6 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 		if (queue != null) {
 			queue.close();
 			queues.remove(queueURI);
-		}
-	}
-
-	private void monitor() {
-		if (mqClient.isConnected()) {
-			return;
-		}
-		try {
-			mqClient.close();
-			mqClient.connect(dns, null, null);
-		} catch (Exception ex) {
-			logger.error("OneMQ client connect failed {}", ex.getMessage(), ex);
 		}
 	}
 }

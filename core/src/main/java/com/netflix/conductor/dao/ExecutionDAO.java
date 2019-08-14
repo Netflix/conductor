@@ -83,7 +83,16 @@ public interface ExecutionDAO {
 	 * @see TaskDef#concurrencyLimit()
 	 */
 	public abstract boolean exceedsInProgressLimit(Task task);
-	
+
+	/**
+	 * Checks if the Task is rate limited or not based on the {@link TaskDef#getRateLimitPerFrequency()} and {@link TaskDef#getRateLimitFrequencyInSeconds()}
+	 * @param task: which needs to be evaluated whether it is rateLimited or not
+	 * @return true: If the {@link Task} is rateLimited
+	 * 		false: If the {@link Task} is not rateLimited
+	 */
+	default boolean exceedsRateLimitPerFrequency(Task task) {
+		return false;
+	}
 	/**
 	 * 
 	 * @param tasks Multiple tasks to be updated
@@ -297,4 +306,8 @@ public interface ExecutionDAO {
 	public default void addEventPublished(EventPublished ep) {}
 
 	public default void resetStartTime(Task task, boolean updateOutput) {}
+
+	public default Task getTask(String workflowId, String taskRefName) {
+		throw new IllegalStateException("Not implemented");
+	}
 }

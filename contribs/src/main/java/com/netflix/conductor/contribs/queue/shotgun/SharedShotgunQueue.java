@@ -146,7 +146,7 @@ public class SharedShotgunQueue implements ObservableQueue {
             String payload = message.getPayload();
             try {
                 logger.debug(String.format("Trying to publish to %s: %s", subject, payload));
-                conn.publish(subject, payload.getBytes(), publishRetryIn);
+                conn.publish(subject, payload.getBytes(), service, message.getTraceId(), publishRetryIn);
                 logger.info(String.format("Published to %s: %s", subject, payload));
             } catch (Exception eo) {
                 logger.error(String.format("Failed to publish to %s: %s", subject, payload), eo);
@@ -192,14 +192,16 @@ public class SharedShotgunQueue implements ObservableQueue {
         String payload = message.getContent().toStringUtf8();
 
         Message dstMsg = new Message();
-        dstMsg.setId(NUID.nextGlobal());
+        dstMsg.setId(UUID.randomUUID().toString());
         dstMsg.setReceipt(message.getID());
         dstMsg.setPayload(payload);
         dstMsg.setReceived(System.currentTimeMillis());
+        dstMsg.setTraceId(message.getTraceID());
 
         NDC.push("event-"+dstMsg.getId());
         try {
-            logger.info(String.format("Received message for %s %s=%s", subscription.getSubject(), dstMsg.getId(), payload));
+            logger.info(String.format("Received message for %s/%s %s=%s",
+                subscription.getSubject(), subscription.getGroupID(), dstMsg.getId(), payload));
         } finally {
             NDC.remove();
         }

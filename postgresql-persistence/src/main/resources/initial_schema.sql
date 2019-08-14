@@ -1,5 +1,6 @@
 create table log4j_logs
 (
+    id       serial primary key,
     log_time timestamp,
     logger   text,
     level    text,
@@ -17,12 +18,20 @@ create index log4j_logs_log_time_idx on log4j_logs (log_time);
 create table meta_config
 (
     name  varchar(255) primary key,
-    value varchar(255)
+    value text
 );
 insert into meta_config
-values ('log4j_logger_com_netflix_conductor_aurora', 'INFO');
+values ('log4j_logger_io_grpc_netty', 'INFO');
 insert into meta_config
-values ('log4j_logger_com_netflix_conductor_core_events_nats', 'DEBUG');
+values ('log4j_logger_org_apache_http', 'INFO');
+insert into meta_config
+values ('log4j_logger_org_eclipse_jetty', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_zaxxer_hikari', 'INFO');
+insert into meta_config
+values ('log4j_logger_com_jayway_jsonpath_internal_path_CompiledPath', 'OFF');
+insert into meta_config
+values ('log4j_logger_com_netflix_conductor_aurora', 'INFO');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_core_events_shotgun', 'DEBUG');
 insert into meta_config
@@ -35,8 +44,6 @@ insert into meta_config
 values ('log4j_logger_com_netflix_conductor_core_execution_WorkflowExecutor', 'INFO');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_contribs_http', 'INFO');
-insert into meta_config
-values ('log4j_logger_com_netflix_conductor_contribs_queue_nats', 'DEBUG');
 insert into meta_config
 values ('log4j_logger_com_netflix_conductor_contribs_queue_shotgun', 'DEBUG');
 insert into meta_config
@@ -101,6 +108,7 @@ alter table workflow
 create index workflow_type_status_date on workflow (workflow_type, workflow_status, date_str);
 create index workflow_parent_workflow_id on workflow (parent_workflow_id);
 create index workflow_start_time on workflow (start_time);
+create index workflow_end_time on workflow (end_time);
 
 create table task_in_progress
 (
@@ -112,10 +120,18 @@ create table task_in_progress
     task_id       varchar(255) not null,
     workflow_id   varchar(255) not null
 );
-create unique index task_in_progress_fields on task_in_progress (task_def_name, workflow_id);
+create unique index task_in_progress_fields on task_in_progress (task_def_name, task_id);
 alter table task_in_progress
     add constraint task_in_progress_fields unique using index task_in_progress_fields;
-create index task_in_progress_def_id on task_in_progress (task_def_name, task_id);
+
+create table task_rate_limit
+(
+    id            serial primary key,
+    created_on    timestamp    not null default now(),
+    expires_on    timestamp    not null,
+    task_def_name varchar(255) not null
+);
+create index task_rate_limit_name_created on task_rate_limit (task_def_name, created_on);
 
 create table task
 (
@@ -136,6 +152,7 @@ create table task
 create unique index task_task_id on task (task_id);
 alter table task
     add constraint task_task_id unique using index task_task_id;
+create index task_type_status on task (task_type, task_status);
 create index task_workflow_id on task (workflow_id);
 
 create table task_scheduled
@@ -159,6 +176,8 @@ create table task_log
     log        text         not null
 );
 create index task_log_task_id on task_log (task_id);
+alter table task_log
+    add constraint task_log_task_id_fkey foreign key (task_id) references task (task_id) on delete cascade;
 
 create table poll_data
 (
@@ -182,6 +201,7 @@ create table event_message
     receipt    text,
     json_data  text
 );
+create index event_message_created_on on event_message (created_on);
 
 create table event_execution
 (
@@ -199,6 +219,7 @@ create table event_execution
     started_on   timestamp,
     processed_on timestamp
 );
+create index event_execution_created_on on event_execution (created_on);
 create unique index event_execution_fields on event_execution (handler_name, event_name, message_id, execution_id);
 alter table event_execution
     add constraint event_execution_fields unique using index event_execution_fields;
@@ -213,6 +234,7 @@ create table event_published
     published_on timestamp    not null
 );
 create index event_published_subject_date on event_published (subject, published_on);
+create index event_published_created_on on event_published (created_on);
 
 -- --------------------------------------------------------------------------------------------------------------
 -- schema for queue dao
