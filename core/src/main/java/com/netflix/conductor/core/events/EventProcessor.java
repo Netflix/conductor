@@ -62,10 +62,10 @@ public class EventProcessor {
 
 	private ParametersUtils pu = new ParametersUtils();
 
-	private ExecutorService executors;
+	private Map<String, ExecutorService> executorMap = new ConcurrentHashMap<>();
+	//private ExecutorService executors;
 
 	private ObjectMapper om;
-
 
 	@Inject
 	public EventProcessor(ExecutionService es, MetadataService ms, ActionProcessor ap, Configuration config, ObjectMapper om) {
@@ -73,18 +73,23 @@ public class EventProcessor {
 		this.ms = ms;
 		this.ap = ap;
 		this.om = om;
-		int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
+		refresh();
 
-		// default 60 for backward compatibility
 		int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
 		int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
-		if (executorThreadCount > 0) {
-			this.executors = Executors.newFixedThreadPool(executorThreadCount);
-			refresh();
-			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
-		} else {
-			logger.debug("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
-		}
+		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
+		//int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
+
+		// default 60 for backward compatibility
+//		int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
+//		int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
+//		if (executorThreadCount > 0) {
+//			//this.executors = Executors.newFixedThreadPool(executorThreadCount);
+//			refresh();
+//			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
+//		} else {
+//			logger.debug("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
+//		}
 	}
 
 	/**
@@ -108,27 +113,53 @@ public class EventProcessor {
 	}
 
 	public void refresh() {
-		Set<String> events = ms.getEventHandlers().stream().filter(EventHandler::isActive).map(EventHandler::getEvent).collect(Collectors.toSet());
+		try {
+			List<EventHandler> handlers = ms.getEventHandlers().stream().filter(EventHandler::isActive).collect(Collectors.toList());
+			//Set<String> events = handlers.stream().map(EventHandler::getEvent).collect(Collectors.toSet());
 
-		List<ObservableQueue> created = new LinkedList<>();
-		events.forEach(event -> queuesMap.computeIfAbsent(event, s -> {
-			ObservableQueue q = EventQueues.getQueue(event, false);
-			created.add(q);
-			return q;
-		}));
-		if (!created.isEmpty()) {
-			created.stream().filter(Objects::nonNull).forEach(this::listen);
+			List<ObservableQueue> created = new LinkedList<>();
+			handlers.forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
+				ObservableQueue q = EventQueues.getQueue(handler.getEvent(), false, handler.isRetryEnabled(), handler.getPrefetchSize());
+				if (q != null) {
+					created.add(q);
+					executorMap.computeIfAbsent(q.getURI(), e -> Executors.newFixedThreadPool(handler.getThreadCount()));
+				}
+
+				return q;
+			}));
+			if (!created.isEmpty()) {
+				created.stream().filter(Objects::nonNull).forEach(this::listen);
+			}
+
+			// Find events which present in queuesMap but does not exist in the db (disabled/removed)
+			List<String> removed = new LinkedList<>();
+			queuesMap.forEach((event, q) -> {
+				boolean noneMatch = handlers.stream().noneMatch(e -> e.getEvent().equalsIgnoreCase(event));
+				if (noneMatch) {
+					removed.add(event);
+
+					ExecutorService executor = executorMap.get(q.getURI());
+					if (executor != null) {
+						try {
+							executor.shutdownNow();
+							executor.awaitTermination(1, TimeUnit.SECONDS);
+						} catch (Exception ex) {
+							logger.debug("executor shutdown failed for " + q.getType() + " " + ex.getMessage(), ex);
+						}
+						executorMap.remove(q.getURI());
+					}
+				}
+			});
+			//queuesMap.keySet().stream().filter(event -> !events.contains(event)).forEach(removed::add);
+
+			// Close found entries
+			removed.forEach(event -> {
+				queuesMap.remove(event);
+				EventQueues.remove(event);
+			});
+		} catch (Exception ex) {
+			logger.debug("refresh failed " + ex.getMessage(), ex);
 		}
-
-		// Find events which present in queuesMap but does not exist in the db (disabled/removed)
-		List<String> removed = new LinkedList<>();
-		queuesMap.keySet().stream().filter(event -> !events.contains(event)).forEach(removed::add);
-
-		// Close found entries
-		removed.forEach(event -> {
-			queuesMap.remove(event);
-			EventQueues.remove(event);
-		});
 	}
 
 	private List<EventHandler> getEventHandlersForEvent(String event) {
@@ -147,7 +178,7 @@ public class EventProcessor {
 
 	private void handle(ObservableQueue queue, Message msg) {
 
-		NDC.push("event-"+msg.getId());
+		NDC.push("event-" + msg.getId());
 		try {
 			msg.setAccepted(System.currentTimeMillis());
 
@@ -227,7 +258,7 @@ public class EventProcessor {
 							es.addEventExecution(ee);
 							tagsNotMatchCounter++;
 							continue;
-						} else  {
+						} else {
 							tagsMatchCounter++;
 						}
 					}
@@ -271,7 +302,8 @@ public class EventProcessor {
 					ee.setStatus(Status.IN_PROGRESS);
 					ee.setSubject(subject);
 					ee.setTags(tags);
-					Future<Boolean> future = execute(ee, action, payload);
+					ExecutorService executor = executorMap.get(queue.getURI());
+					Future<Boolean> future = execute(executor, ee, action, payload);
 					futures.add(future);
 				}
 			}
@@ -328,10 +360,10 @@ public class EventProcessor {
 		return true;
 	}
 
-	private Future<Boolean> execute(EventExecution ee, Action action, String payload) {
-		return executors.submit(() -> {
+	private Future<Boolean> execute(ExecutorService executor, EventExecution ee, Action action, String payload) {
+		return executor.submit(() -> {
 			boolean success = false;
-			NDC.push("event-"+ee.getMessageId());
+			NDC.push("event-" + ee.getMessageId());
 			try {
 				logger.debug("Starting handler=" + ee.getName() + ", action=" + action);
 				if (!es.addEventExecution(ee)) {

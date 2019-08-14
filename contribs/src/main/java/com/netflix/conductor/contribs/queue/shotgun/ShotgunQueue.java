@@ -52,17 +52,18 @@ public class ShotgunQueue implements ObservableQueue {
     private final String service;
     private final String subject;
     private final String groupId;
-    private final String dns;
     private Subscription subs;
     private OneMQClient conn;
     private boolean manualAck;
+    private int prefetchSize;
 
-    public ShotgunQueue(String dns, String service, String queueURI, Duration[] publishRetryIn, boolean manualAck) {
-        this.dns = dns;
+    public ShotgunQueue(String dns, String service, String queueURI, Duration[] publishRetryIn,
+                        boolean manualAck, int prefetchSize) {
         this.service = service;
         this.queueURI = queueURI;
         this.publishRetryIn = publishRetryIn;
         this.manualAck = manualAck;
+        this.prefetchSize = prefetchSize;
 
         // If groupId specified (e.g. subject:groupId) - split to subject & groupId
         if (queueURI.contains(":")) {
@@ -131,6 +132,9 @@ public class ShotgunQueue implements ObservableQueue {
 
     @Override
     public void unack(List<Message> messages) {
+		if (!manualAck) {
+			return;
+		}
         messages.forEach(msg -> {
             try {
                 conn.unack(msg.getReceipt());
@@ -193,11 +197,13 @@ public class ShotgunQueue implements ObservableQueue {
                 logger.debug("Creating subscription with subject={}, groupId={}", subject, groupId);
                 subs = conn.subscribe(subject, service, groupId, this::onMessage);
                 subs.setManualAck(manualAck);
+                subs.setPrefetchSize(prefetchSize);
             } else {
                 String uuid = UUID.randomUUID().toString();
                 logger.debug("Creating subscription with subject={}, groupId={}", subject, uuid);
                 subs = conn.subscribe(subject, service, uuid, this::onMessage);
                 subs.setManualAck(manualAck);
+                subs.setPrefetchSize(prefetchSize);
             }
         } catch (Exception ex) {
             logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);

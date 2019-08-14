@@ -48,21 +48,24 @@ public class SharedShotgunQueue implements ObservableQueue {
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     private Duration[] publishRetryIn;
     private boolean manualAck;
-    private final String queueURI;
+	private int prefetchSize;
+	private final String queueURI;
     private final String service;
     private final String subject;
     private final String groupId;
     private OneMQClient conn;
     private Subscription subs;
 
-    public SharedShotgunQueue(OneMQClient conn, String service, String queueURI, Duration[] publishRetryIn, boolean manualAck) {
+    public SharedShotgunQueue(OneMQClient conn, String service, String queueURI, Duration[] publishRetryIn,
+							  boolean manualAck, int prefetchSize) {
         this.conn = conn;
         this.service = service;
         this.queueURI = queueURI;
         this.publishRetryIn = publishRetryIn;
         this.manualAck = manualAck;
+		this.prefetchSize = prefetchSize;
 
-        // If groupId specified (e.g. subject:groupId) - split to subject & groupId
+		// If groupId specified (e.g. subject:groupId) - split to subject & groupId
         if (queueURI.contains(":")) {
             this.subject = queueURI.substring(0, queueURI.indexOf(':'));
             this.groupId = queueURI.substring(queueURI.indexOf(':') + 1);
@@ -122,6 +125,9 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     @Override
     public void unack(List<Message> messages) {
+		if (!manualAck) {
+			return;
+		}
         messages.forEach(msg -> {
             try {
                 conn.unack(msg.getReceipt());
@@ -177,11 +183,13 @@ public class SharedShotgunQueue implements ObservableQueue {
                 logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, groupId);
                 subs = conn.subscribe(subject, service, groupId, this::onMessage);
                 subs.setManualAck(manualAck);
+                subs.setPrefetchSize(prefetchSize);
             } else {
                 String uuid = UUID.randomUUID().toString();
                 logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, uuid);
                 subs = conn.subscribe(subject, service, uuid, this::onMessage);
                 subs.setManualAck(manualAck);
+				subs.setPrefetchSize(prefetchSize);
             }
         } catch (Exception ex) {
             logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);

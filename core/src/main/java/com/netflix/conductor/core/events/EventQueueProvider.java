@@ -28,6 +28,10 @@ public interface EventQueueProvider {
 
 	public ObservableQueue getQueue(String queueURI);
 
+	public default ObservableQueue getQueue(String queueURI, boolean manualAck, int prefetchSize) {
+		return null;
+	}
+
 	public default void remove(String queueURI) {
 	}
 }

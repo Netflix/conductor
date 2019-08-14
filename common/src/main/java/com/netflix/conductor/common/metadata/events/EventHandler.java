@@ -42,6 +42,10 @@ public class EventHandler {
 
 	private boolean retryEnabled;
 
+	private int threadCount = 1;
+
+	private int prefetchSize = 1;
+
 	public EventHandler() {
 
 	}
@@ -132,20 +136,60 @@ public class EventHandler {
 		this.active = active;
 	}
 
+	/**
+	 * @return JQ expression to filter the message
+	 */
 	public String getTags() {
 		return tags;
 	}
 
+	/**
+	 * @param tags JQ expression to filter the message
+	 */
 	public void setTags(String tags) {
 		this.tags = tags;
 	}
 
+	/**
+	 * @return Is AMQ retry enabled for the handler's action ?
+	 */
 	public boolean isRetryEnabled() {
 		return retryEnabled;
 	}
 
+	/**
+	 * @param retryEnabled Is AMQ retry enabled for the handler's action ?
+	 */
 	public void setRetryEnabled(boolean retryEnabled) {
 		this.retryEnabled = retryEnabled;
+	}
+
+	/**
+	 * @return Executors per the handler
+	 */
+	public int getThreadCount() {
+		return threadCount;
+	}
+
+	/**
+	 * @param threadCount Executors per the handler
+	 */
+	public void setThreadCount(int threadCount) {
+		this.threadCount = threadCount;
+	}
+
+	/**
+	 * @return Prefetch size from shotgun. Shotgun will delivery one by one or by batches
+	 */
+	public int getPrefetchSize() {
+		return prefetchSize;
+	}
+
+	/**
+	 * @param prefetchSize Prefetch size from shotgun. Shotgun will delivery one by one or by batches
+	 */
+	public void setPrefetchSize(int prefetchSize) {
+		this.prefetchSize = prefetchSize;
 	}
 
 	public static class Action {

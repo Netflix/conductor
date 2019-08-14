@@ -80,7 +80,7 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 		}
 
 		logger.debug("Shotgun Event Queue Provider settings are dns=" + dns + ", service=" + service
-				+ ", publishRetryIn=" + ArrayUtils.toString(publishRetryIn));
+			+ ", publishRetryIn=" + ArrayUtils.toString(publishRetryIn));
 
 		if (shared) {
 			try {
@@ -98,9 +98,22 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 	@Override
 	public ObservableQueue getQueue(String queueURI) {
 		if (shared) {
-			return queues.computeIfAbsent(queueURI, q -> new SharedShotgunQueue(mqClient, service, queueURI, publishRetryIn, manualAck));
+			return queues.computeIfAbsent(queueURI, q -> new SharedShotgunQueue(mqClient, service, queueURI,
+				publishRetryIn, manualAck, 1));
 		} else {
-			return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI, publishRetryIn, manualAck));
+			return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI,
+				publishRetryIn, manualAck, 1));
+		}
+	}
+
+	@Override
+	public ObservableQueue getQueue(String queueURI, boolean manualAck, int prefetchSize) {
+		if (shared) {
+			return queues.computeIfAbsent(queueURI, q -> new SharedShotgunQueue(mqClient, service, queueURI,
+				publishRetryIn, manualAck, prefetchSize));
+		} else {
+			return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI,
+				publishRetryIn, manualAck, prefetchSize));
 		}
 	}
 
