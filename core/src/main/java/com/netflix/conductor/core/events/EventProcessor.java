@@ -271,12 +271,8 @@ public class EventProcessor {
 					ee.setStatus(Status.IN_PROGRESS);
 					ee.setSubject(subject);
 					ee.setTags(tags);
-					if (es.addEventExecution(ee)) {
-						Future<Boolean> future = execute(ee, action, payload);
-						futures.add(future);
-					} else {
-						logger.debug("Duplicate delivery/execution? {}", id);
-					}
+					Future<Boolean> future = execute(ee, action, payload);
+					futures.add(future);
 				}
 			}
 
@@ -338,6 +334,9 @@ public class EventProcessor {
 			NDC.push("event-"+ee.getMessageId());
 			try {
 				logger.debug("Starting handler=" + ee.getName() + ", action=" + action);
+				if (!es.addEventExecution(ee)) {
+					logger.debug("Duplicate delivery/execution? {}", ee.getId());
+				}
 				ee.setStarted(System.currentTimeMillis());
 				Map<String, Object> output = ap.execute(action, payload, ee);
 				if (output != null) {
