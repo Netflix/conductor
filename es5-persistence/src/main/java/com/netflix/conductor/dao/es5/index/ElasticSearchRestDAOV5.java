@@ -307,11 +307,20 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     @Override
     public void indexWorkflow(Workflow workflow) {
-
         String workflowId = workflow.getWorkflowId();
         WorkflowSummary summary = new WorkflowSummary(workflow);
 
         indexObject(indexName, WORKFLOW_DOC_TYPE, workflowId, summary);
+    }
+
+    @Override
+    public void produceWorkflow(Workflow workflow) {
+
+    }
+
+    @Override
+    public void consumeWorkflow(byte[] doc, String type, String id) {
+
     }
 
     @Override
@@ -326,6 +335,16 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         TaskSummary summary = new TaskSummary(task);
 
         indexObject(indexName, TASK_DOC_TYPE, taskId, summary);
+    }
+
+    @Override
+    public void produceTask(Task task) {
+
+    }
+
+    @Override
+    public void consumeTask(byte[] doc, String type, String id) {
+
     }
 
     @Override
@@ -368,6 +387,11 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             List<String> taskIds = taskExecLogs.stream().map(TaskExecLog::getTaskId).collect(Collectors.toList());
             logger.error("Failed to index task execution logs for tasks: {}", taskIds, e);
         }
+    }
+
+    @Override
+    public void consumeTaskExecutionLog(String type, Object taskExecLog) {
+
     }
 
     @Override
@@ -415,6 +439,16 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         }
 
         return null;
+    }
+
+    @Override
+    public void produceMessage(String queue, Message message) {
+
+    }
+
+    @Override
+    public void consumeMessage(String type, Map message) {
+
     }
 
     @Override
@@ -637,6 +671,11 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         return workflowIds.getResults();
     }
 
+    @Override
+    public void produceTaskExecutionLogs(List<TaskExecLog> logs) {
+
+    }
+
     private void indexObject(final String index, final String docType, final Object doc) {
         indexObject(index, docType, null, doc);
     }
@@ -750,6 +789,16 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             logger.error("Failed to get executions for event: {}", event, e);
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void produceEventExecution(EventExecution eventExecution) {
+
+    }
+
+    @Override
+    public void consumeEventExecution(Object data, String eventExecution) {
+
     }
 
     private List<EventExecution> mapEventExecutionsResponse(SearchResponse response) throws IOException {

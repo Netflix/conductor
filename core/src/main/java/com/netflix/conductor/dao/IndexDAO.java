@@ -23,6 +23,7 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -44,6 +45,11 @@ public interface IndexDAO {
      */
     void indexWorkflow(Workflow workflow);
 
+
+    void produceWorkflow(Workflow workflow);
+
+    void consumeWorkflow(byte[] doc, String type, String id);
+
     /**
      * This method should return an unique identifier of the indexed doc
      * @param workflow Workflow to be indexed
@@ -55,6 +61,9 @@ public interface IndexDAO {
      * @param task Task to be indexed
      */
     void indexTask(Task task);
+
+    void produceTask(Task task);
+    void consumeTask(byte[] doc, String type, String id);
 
     /**
      *
@@ -129,6 +138,8 @@ public interface IndexDAO {
      */
     void addTaskExecutionLogs(List<TaskExecLog> logs);
 
+    void consumeTaskExecutionLog(String type, Object taskExecLog);
+
     /**
      *
      * @param logs Task Execution logs to be indexed
@@ -143,12 +154,20 @@ public interface IndexDAO {
      */
     List<TaskExecLog> getTaskExecutionLogs(String taskId);
 
+    void produceMessage(String queue, Message message);
+
+    void consumeMessage(String type, Map message);
+
     /**
      * @param eventExecution Event Execution to be indexed
      */
     void addEventExecution(EventExecution eventExecution);
 
     List<EventExecution> getEventExecutions(String event);
+
+    void produceEventExecution(EventExecution eventExecution);
+
+    void consumeEventExecution(Object data, String eventExecution);
 
     /**
      *
@@ -183,4 +202,5 @@ public interface IndexDAO {
      */
     List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo);
 
+    void produceTaskExecutionLogs(List<TaskExecLog> logs);
 }

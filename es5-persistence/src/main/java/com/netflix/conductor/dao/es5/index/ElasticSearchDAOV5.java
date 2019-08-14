@@ -30,7 +30,8 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
-import com.netflix.conductor.dao.kafka.index.KafkaPublishManager;
+import com.netflix.conductor.dao.kafka.index.KafkaConsumer;
+import com.netflix.conductor.dao.kafka.index.KafkaProducer;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import com.netflix.conductor.metrics.Monitors;
@@ -70,6 +71,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -101,11 +103,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
     private static Logger logger = LoggerFactory.getLogger(ElasticSearchDAOV5.class);
 
-    private static final String WORKFLOW_DOC_TYPE = "workflow";
-    private static final String TASK_DOC_TYPE = "task";
-    private static final String LOG_DOC_TYPE = "task_log";
-    private static final String EVENT_DOC_TYPE = "event";
-    private static final String MSG_DOC_TYPE = "message";
+    public static final String WORKFLOW_DOC_TYPE = "workflow";
+    public static final String TASK_DOC_TYPE = "task";
+    public static final String LOG_DOC_TYPE = "task_log";
+    public static final String EVENT_DOC_TYPE = "event";
+    public static final String MSG_DOC_TYPE = "message";
 
     private static final String className = ElasticSearchDAOV5.class.getSimpleName();
 
@@ -118,7 +120,8 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     private final String logIndexPrefix;
     private final ObjectMapper objectMapper;
     private final Client elasticSearchClient;
-    private final KafkaPublishManager kafkaPublishManager;
+    private final KafkaProducer kafkaProducerManager;
+    private final KafkaConsumer kafkaConsumer;
     private final ExecutorService executorService;
     private final int archiveSearchBatchSize;
 
@@ -128,13 +131,14 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
     @Inject
     public ElasticSearchDAOV5(Client elasticSearchClient, ElasticSearchConfiguration config,
-                              ObjectMapper objectMapper, KafkaPublishManager kafkaPublishManager) {
+                              ObjectMapper objectMapper, KafkaProducer kafkaProducerManager, KafkaConsumer kafkaConsumer) {
         this.objectMapper = objectMapper;
         this.elasticSearchClient = elasticSearchClient;
         this.indexName = config.getIndexName();
         this.logIndexPrefix = config.getTasklogIndexName();
         this.archiveSearchBatchSize = config.getArchiveSearchBatchSize();
-        this.kafkaPublishManager = kafkaPublishManager;
+        this.kafkaProducerManager = kafkaProducerManager;
+        this.kafkaConsumer = kafkaConsumer;
 
         int corePoolSize = 6;
         int maximumPoolSize = config.getAsyncMaxPoolSize();
@@ -294,10 +298,32 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.doc(doc, XContentType.JSON);
             req.upsert(doc, XContentType.JSON);
             req.retryOnConflict(5);
-            kafkaPublishManager.send(WORKFLOW_DOC_TYPE, summary);
             updateWithRetry(req, "Index workflow into doc_type workflow");
         } catch (Exception e) {
             logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
+        }
+    }
+
+    @Override
+    public void produceWorkflow(Workflow workflow) {
+        try {
+            WorkflowSummary summary = new WorkflowSummary(workflow);
+            kafkaProducerManager.send(WORKFLOW_DOC_TYPE, summary);
+        } catch (Exception e) {
+            logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
+        }
+    }
+
+    @Override
+    public void consumeWorkflow(byte[] doc, String docType, String id) {
+        try {
+            UpdateRequest req = new UpdateRequest(indexName, docType, id);
+            req.doc(doc, XContentType.JSON);
+            req.upsert(doc, XContentType.JSON);
+            req.retryOnConflict(5);
+            updateWithRetry(req, "Index workflow into doc_type workflow");
+        } catch (Exception e) {
+            logger.error("Failed to index workflow: {}", id, e);
         }
     }
 
@@ -316,10 +342,33 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             UpdateRequest req = new UpdateRequest(indexName, TASK_DOC_TYPE, id);
             req.doc(doc, XContentType.JSON);
             req.upsert(doc, XContentType.JSON);
-            kafkaPublishManager.send(TASK_DOC_TYPE, summary);
+            kafkaProducerManager.send(TASK_DOC_TYPE, summary);
             updateWithRetry(req, "Index workflow into doc_type workflow");
         } catch (Exception e) {
             logger.error("Failed to index task: {}", task.getTaskId(), e);
+        }
+    }
+
+    @Override
+    public void produceTask(Task task) {
+        try {
+            TaskSummary summary = new TaskSummary(task);
+            byte[] doc = objectMapper.writeValueAsBytes(summary);
+            kafkaProducerManager.send(TASK_DOC_TYPE, summary);
+        } catch (Exception e) {
+            logger.error("Failed to index task: {}", task.getTaskId(), e);
+        }
+    }
+
+    @Override
+    public void consumeTask(byte[] doc, String docType, String id) {
+        try {
+            UpdateRequest req = new UpdateRequest(indexName, docType, id);
+            req.doc(doc, XContentType.JSON);
+            req.upsert(doc, XContentType.JSON);
+            updateWithRetry(req, "Index workflow into doc_type workflow");
+        } catch (Exception e) {
+            logger.error("Failed to index task: {}", id, e);
         }
     }
 
@@ -354,6 +403,36 @@ public class ElasticSearchDAOV5 implements IndexDAO {
                 .map(TaskExecLog::getTaskId)
                 .collect(Collectors.toList());
             logger.error("Failed to index task execution logs for tasks: {}", taskIds, e);
+        }
+    }
+
+    @Override
+    public void produceTaskExecutionLogs(List<TaskExecLog> taskExecLogs) {
+        if (taskExecLogs.isEmpty()) {
+            return;
+        }
+
+        for (TaskExecLog log : taskExecLogs) {
+            kafkaProducerManager.send(LOG_DOC_TYPE, log);
+        }
+    }
+
+    @Override
+    public void consumeTaskExecutionLog(String type, Object taskExecLog) {
+
+        try {
+            IndexRequest request = new IndexRequest(logIndexName, type);
+            request.source(objectMapper.writeValueAsBytes(taskExecLog), XContentType.JSON);
+            new RetryUtil<IndexResponse>().retryOnException(
+                    () -> elasticSearchClient.index(request).actionGet(),
+                    null,
+                    null,
+                    RETRY_COUNT,
+                    "Indexing all execution logs into doc_type task",
+                    "addTaskExecutionLogs"
+            );
+        } catch (Exception e) {
+//            logger.error("Failed to index task execution logs for tasks: {}", taskExecLogs.getTaskId(), e);
         }
     }
 
@@ -423,6 +502,33 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 
     @Override
+    public void produceMessage(String queue, Message message) {
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("messageId", message.getId());
+        doc.put("payload", message.getPayload());
+        doc.put("queue", queue);
+        doc.put("created", System.currentTimeMillis());
+        kafkaProducerManager.send(MSG_DOC_TYPE, doc);
+    }
+
+    @Override
+    public void consumeMessage(String type, Map message) {
+        IndexRequest request = new IndexRequest(logIndexName, type);
+        request.source(message);
+        try {
+            new RetryUtil<>().retryOnException(
+                    () -> elasticSearchClient.index(request).actionGet(),
+                    null,
+                    null,
+                    RETRY_COUNT,
+                    "Indexing document in  for docType: message", "addMessage"
+            );
+        } catch (Exception e) {
+//            logger.error("Failed to index message: {}", message.getId(), e);
+        }
+    }
+
+    @Override
     public void addEventExecution(EventExecution eventExecution) {
         try {
             byte[] doc = objectMapper.writeValueAsBytes(eventExecution);
@@ -440,11 +546,30 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 
     @Override
+    public void produceEventExecution(EventExecution eventExecution) {
+        kafkaProducerManager.send(EVENT_DOC_TYPE, eventExecution);
+    }
+
+    @Override
+    public void consumeEventExecution(Object data, String eventExecution) {
+        try {
+            byte[] doc = objectMapper.writeValueAsBytes(data);
+            UpdateRequest req = new UpdateRequest(logIndexName, EVENT_DOC_TYPE, eventExecution);
+            req.doc(doc, XContentType.JSON);
+            req.upsert(doc, XContentType.JSON);
+            req.retryOnConflict(5);
+            updateWithRetry(req, "Update Event execution for doc_type event");
+        } catch (Exception e) {
+//            logger.error("Failed to index event execution: {}", eventExecution.getId(), e);
+        }
+    }
+
+    @Override
     public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
         return CompletableFuture.runAsync(() -> addEventExecution(eventExecution), executorService);
     }
 
-    private void updateWithRetry(UpdateRequest request, String operationDescription) {
+    public void updateWithRetry(UpdateRequest request, String operationDescription) {
         try {
             new RetryUtil<UpdateResponse>().retryOnException(
                 () -> elasticSearchClient.update(request).actionGet(),

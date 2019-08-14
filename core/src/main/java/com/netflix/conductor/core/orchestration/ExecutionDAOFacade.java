@@ -19,6 +19,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -47,12 +48,14 @@ public class ExecutionDAOFacade {
     private final ExecutionDAO executionDAO;
     private final IndexDAO indexDAO;
     private final ObjectMapper objectMapper;
+    private final Configuration configuration;
 
     @Inject
-    public ExecutionDAOFacade(ExecutionDAO executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper) {
+    public ExecutionDAOFacade(ExecutionDAO executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper, Configuration configuration) {
         this.executionDAO = executionDAO;
         this.indexDAO = indexDAO;
         this.objectMapper = objectMapper;
+        this.configuration = configuration;
     }
 
     /**
@@ -169,7 +172,11 @@ public class ExecutionDAOFacade {
     public String createWorkflow(Workflow workflow) {
         workflow.setCreateTime(System.currentTimeMillis());
         executionDAO.createWorkflow(workflow);
-        indexDAO.asyncIndexWorkflow(workflow);
+        if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
+            indexDAO.produceWorkflow(workflow);
+        } else {
+            indexDAO.asyncIndexWorkflow(workflow);
+        }
         return workflow.getWorkflowId();
     }
 
@@ -185,7 +192,11 @@ public class ExecutionDAOFacade {
             workflow.setEndTime(System.currentTimeMillis());
         }
         executionDAO.updateWorkflow(workflow);
-        indexDAO.asyncIndexWorkflow(workflow);
+        if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
+            indexDAO.produceWorkflow(workflow);
+        } else {
+            indexDAO.asyncIndexWorkflow(workflow);
+        }
         return workflow.getWorkflowId();
     }
 
@@ -270,7 +281,11 @@ public class ExecutionDAOFacade {
                 }
             }
             executionDAO.updateTask(task);
-            indexDAO.asyncIndexTask(task);
+            if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
+                indexDAO.produceTask(task);
+            } else {
+                indexDAO.asyncIndexTask(task);
+            }
         } catch (Exception e) {
             String errorMsg = String.format("Error updating task: %s in workflow: %s", task.getTaskId(), task.getWorkflowInstanceId());
             LOGGER.error(errorMsg, e);
@@ -308,7 +323,11 @@ public class ExecutionDAOFacade {
     public boolean addEventExecution(EventExecution eventExecution) {
         boolean added = executionDAO.addEventExecution(eventExecution);
         if (added) {
-            indexDAO.asyncAddEventExecution(eventExecution);
+            if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
+                indexDAO.produceEventExecution(eventExecution);
+            } else {
+                indexDAO.asyncAddEventExecution(eventExecution);
+            }
         }
         return added;
     }
@@ -331,11 +350,19 @@ public class ExecutionDAOFacade {
     }
 
     public void addTaskExecLog(List<TaskExecLog> logs) {
-        indexDAO.asyncAddTaskExecutionLogs(logs);
+        if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
+            indexDAO.produceTaskExecutionLogs(logs);
+        } else {
+            indexDAO.asyncAddTaskExecutionLogs(logs);
+        }
     }
 
     public void addMessage(String queue, Message message) {
-        indexDAO.addMessage(queue, message);
+        if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
+            indexDAO.produceMessage(queue, message);
+        } else {
+            indexDAO.addMessage(queue, message);
+        }
     }
 
     public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
