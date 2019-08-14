@@ -17,8 +17,8 @@ package com.netflix.conductor.dao;
 
 /**
  *
- * @author Viren
- * DAO to index the workflow and task details for searching.
+ * @author Manan
+ * DAO to send message to kafka.
  */
 public interface KafkaProducerDAO {
 

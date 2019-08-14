@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.netflix.conductor.annotations.Trace;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.KafkaConsumeDAO;
@@ -18,14 +19,11 @@ import org.apache.kafka.common.KafkaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
-@Trace
 @Singleton
 public class KafkaConsumer implements KafkaConsumeDAO {
 
@@ -88,9 +86,6 @@ public class KafkaConsumer implements KafkaConsumeDAO {
 				Monitors.getGauge(Monitors.classQualifier, "consumer_records", "consumer_records").set(records.count());
 				logger.info("polled {} messages from kafka topic.", records.count());
 				records.forEach(record -> {
-					logger.debug(
-							"Consumer Record: " + "key: {}, " + "value: {}, " + "partition: {}, " + "offset: {}",
-							record.key(), record.value(), record.partition(), record.offset());
 					try {
 						Record d = om.readValue(record.value(), Record.class);
 						byte[] data;
