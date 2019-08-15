@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Singleton
 public class TitleKeysMatchAction implements JavaEventAction {
-	private static Logger logger = LoggerFactory.getLogger(ReferenceKeysMatchAction.class);
+	private static Logger logger = LoggerFactory.getLogger(TitleKeysMatchAction.class);
 	private final WorkflowExecutor executor;
 	private final ObjectMapper mapper;
 
