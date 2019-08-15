@@ -227,7 +227,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		Task task = getTask(taskId);
 
 		if (task == null) {
-			logger.warn("No such task found by id {}", taskId);
+			logger.debug("No such task found by id {}", taskId);
 			return;
 		}
 
