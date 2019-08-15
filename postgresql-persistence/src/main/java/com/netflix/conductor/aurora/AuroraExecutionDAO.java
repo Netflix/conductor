@@ -92,30 +92,28 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	public List<Task> createTasks(List<Task> tasks) {
 		List<Task> created = Lists.newLinkedList();
 
-		for (Task task : tasks) {
-			Preconditions.checkNotNull(task, "task object cannot be null");
-			Preconditions.checkNotNull(task.getTaskId(), "Task id cannot be null");
-			Preconditions.checkNotNull(task.getWorkflowInstanceId(), "Workflow instance id cannot be null");
-			Preconditions.checkNotNull(task.getReferenceTaskName(), "Task reference name cannot be null");
+		withTransaction(tx -> {
+			for (Task task : tasks) {
+				Preconditions.checkNotNull(task, "task object cannot be null");
+				Preconditions.checkNotNull(task.getTaskId(), "Task id cannot be null");
+				Preconditions.checkNotNull(task.getWorkflowInstanceId(), "Workflow instance id cannot be null");
+				Preconditions.checkNotNull(task.getReferenceTaskName(), "Task reference name cannot be null");
 
-			task.setScheduledTime(System.currentTimeMillis());
-
-			withTransaction(tx -> {
+				task.setScheduledTime(System.currentTimeMillis());
 
 				boolean taskAdded = addScheduledTask(tx, task);
 				if (!taskAdded) {
 					String taskKey = task.getReferenceTaskName() + task.getRetryCount();
-					if (logger.isDebugEnabled())
-						logger.debug("Task already scheduled, skipping the run " + task.getTaskId() +
-							", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
-					return;
+					logger.debug("Task already scheduled, skipping the run " + task.getTaskId() +
+						", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
+					continue;
 				}
 				addTaskInProgress(tx, task);
 				updateTask(tx, task);
 
 				created.add(task);
-			});
-		}
+			}
+		});
 
 		return created;
 	}
@@ -268,6 +266,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return getWithTransaction(tx -> getTasksForWorkflow(tx, workflowId));
 	}
 
+	// For fetch performance reasons better to go over one by one instead of bulk fetch
 	private List<Task> getTasksForWorkflow(Connection tx, String workflowId) {
 		String SQL = "SELECT task_id FROM task WHERE workflow_id = ?";
 		List<String> taskIds = query(tx, SQL, q -> q.addParameter(workflowId).executeScalarList(String.class));
@@ -598,7 +597,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			return Lists.newArrayList();
 		}
 
-		return taskIds.stream().map(id -> getTask(tx, id)).collect(Collectors.toList());
+		return taskIds.parallelStream().map(id -> getTask(tx, id)).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {

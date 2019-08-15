@@ -11,6 +11,7 @@ import org.apache.commons.collections.CollectionUtils;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,23 +65,26 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
 		createQueueIfNotExists(queueName);
+		final String QUERY = "SELECT * FROM queue_message " +
+			"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
+			"ORDER BY deliver_on, version, id LIMIT ?";
 
-		try {
+		final String UPDATE = "UPDATE queue_message " +
+			"SET popped = true, unack_on = ?, version = version + 1 " +
+			"WHERE id = ? AND version = ?";
+
+		try (Connection tx = dataSource.getConnection()) {
+			tx.setAutoCommit(false);
+
 			long start = System.currentTimeMillis();
 			Set<String> foundIds = new HashSet<>();
-
-			final String QUERY = "SELECT * FROM queue_message " +
-				"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
-				"ORDER BY deliver_on, version, id LIMIT ?";
-
-			final String UPDATE = "UPDATE queue_message " +
-				"SET popped = true, unack_on = ?, version = version + 1 " +
-				"WHERE id = ? AND version = ?";
 
 			while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
 
 				// Get the list of popped message ids
-				List<QueueMessage> messages = queryWithTransaction(QUERY, q -> q.addParameter(queueName.toLowerCase()).addParameter(count)
+				List<QueueMessage> messages = query(tx, QUERY, q -> q
+					.addParameter(queueName.toLowerCase())
+					.addParameter(count)
 					.executeAndFetch(rs -> {
 						List<QueueMessage> popped = new LinkedList<>();
 						while (rs.next()) {
@@ -94,23 +98,37 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 						return popped;
 					}));
 
+				// Mark them as popped issuing commit after each of them
 				messages.forEach(m -> {
 					long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
-					int updated = queryWithTransaction(UPDATE, u -> u.addTimestampParameter(unack_on)
-						.addParameter(m.id)
-						.addParameter(m.version)
-						.executeUpdate());
+					try {
+						int updated = query(tx, UPDATE, u -> u
+							.addTimestampParameter(unack_on)
+							.addParameter(m.id)
+							.addParameter(m.version)
+							.executeUpdate());
 
-					// Means record being updated - we got it
-					if (updated > 0) {
-						foundIds.add(m.message_id);
+						// Means record being updated - we got it
+						if (updated > 0) {
+							foundIds.add(m.message_id);
+						}
+
+						tx.commit();
+					} catch (Throwable th) {
+						logger.error("pop: lock failed for {} with {}", queueName, th.getMessage(), th);
+						try {
+							tx.rollback();
+						} catch (SQLException ex) {
+							logger.error("pop: rollback failed for {} with {}", queueName, ex.getMessage(), ex);
+						}
 					}
 				});
 
 				Thread.sleep(10);
 			}
 
+			tx.commit();
 			return Lists.newArrayList(foundIds);
 		} catch (Exception ex) {
 			logger.error("pop: failed for {} with {}", queueName, ex.getMessage(), ex);
