@@ -144,7 +144,8 @@ public class Elasticsearch6RestIndexDAO implements IndexDAO {
 
             client.indices().create(createIndexRequest);
         } catch (Exception ex) {
-            if (!ex.getMessage().contains("index_already_exists_exception")) {
+            if (!ex.getMessage().contains("index_already_exists_exception") &&
+                !ex.getMessage().contains("resource_already_exists_exception")) {
                 log.error("ensureIndexExists failed for {} with {}", name, ex.getMessage(), ex);
             }
         }
