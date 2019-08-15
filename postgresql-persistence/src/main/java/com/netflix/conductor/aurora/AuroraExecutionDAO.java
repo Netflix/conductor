@@ -597,7 +597,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			return Lists.newArrayList();
 		}
 
-		return taskIds.stream().map(id -> getTask(tx, id)).filter(Objects::nonNull).collect(Collectors.toList());
+		return taskIds.parallelStream().map(id -> getTask(tx, id)).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
