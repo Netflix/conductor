@@ -965,13 +965,13 @@ public class WorkflowExecutor {
 		String workflowId = result.getWorkflowInstanceId();
 		Workflow wf = edao.getWorkflow(workflowId, false);
 		if (wf == null) {
-			logger.error("No workflow found for " + workflowId);
+			logger.debug("No workflow found for " + workflowId);
 			return;
 		}
 
 		Task task = edao.getTask(result.getTaskId());
 		if (task == null) {
-			logger.error("No task found for " + result.getTaskId() + " in " + wf);
+			logger.debug("No task found for " + result.getTaskId() + " in " + wf);
 			return;
 		}
 
