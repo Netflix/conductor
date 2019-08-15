@@ -27,7 +27,7 @@ public abstract class AuroraBaseDAO {
 	);
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	private final DataSource dataSource;
+	protected final DataSource dataSource;
 	private final ObjectMapper mapper;
 
 	public AuroraBaseDAO(DataSource dataSource, ObjectMapper mapper) {

@@ -964,7 +964,17 @@ public class WorkflowExecutor {
 		}
 		String workflowId = result.getWorkflowInstanceId();
 		Workflow wf = edao.getWorkflow(workflowId, false);
+		if (wf == null) {
+			logger.debug("No workflow found for " + workflowId);
+			return;
+		}
+
 		Task task = edao.getTask(result.getTaskId());
+		if (task == null) {
+			logger.debug("No task found for " + result.getTaskId() + " in " + wf);
+			return;
+		}
+
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
 			queue.remove(deciderQueue, wf.getWorkflowId());	//remove from the sweep queue
