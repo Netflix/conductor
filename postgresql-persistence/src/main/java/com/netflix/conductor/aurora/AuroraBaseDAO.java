@@ -27,7 +27,7 @@ public abstract class AuroraBaseDAO {
 	);
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	private final DataSource dataSource;
+	protected final DataSource dataSource;
 	private final ObjectMapper mapper;
 
 	public AuroraBaseDAO(DataSource dataSource, ObjectMapper mapper) {
@@ -43,6 +43,9 @@ public abstract class AuroraBaseDAO {
 	}
 
 	<R> R getWithTransaction(TransactionalFunction<R> function) {
+		if (function == null)
+			throw new IllegalArgumentException("No transaction function provided");
+
 		Instant start = Instant.now();
 		LazyToString callingMethod = getCallingMethod();
 		if (logger.isTraceEnabled())
