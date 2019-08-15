@@ -74,26 +74,20 @@ public class WorkflowSweeper {
     }
 
     public void init(WorkflowExecutor executor) {
+        boolean disable = config.disableSweep();
+        if (disable) {
+            logger.debug("Workflow sweep is disabled.");
+            return;
+        }
 
         ScheduledExecutorService deciderPool = Executors.newScheduledThreadPool(1);
-
         deciderPool.scheduleWithFixedDelay(() -> {
-
             try {
-                boolean disable = config.disableSweep();
-                if (disable) {
-                    logger.debug("Workflow sweep is disabled.");
-                    return;
-                }
                 List<String> workflowIds = queues.pop(WorkflowExecutor.deciderQueue, 2 * executorThreadPoolSize, poolTimeout);
                 sweep(workflowIds, executor);
-
-            } catch (Exception e) {
-                Monitors.error(className, "sweep");
-                logger.error(e.getMessage(), e);
-
+            } catch (Throwable e) {
+                logger.debug("Workflow sweep failed " + e.getMessage(), e);
             }
-
         }, 500, sweeperFrequency, TimeUnit.MILLISECONDS);
     }
 
@@ -103,7 +97,7 @@ public class WorkflowSweeper {
         for (String workflowId : workflowIds) {
             Future<?> future = es.submit(() -> {
 
-                NDC.push("sweep-"+ UUID.randomUUID().toString());
+                NDC.push("sweep-" + UUID.randomUUID().toString());
                 try {
 
                     WorkflowContext ctx = new WorkflowContext(config.getAppId());
@@ -127,13 +121,11 @@ public class WorkflowSweeper {
 
                 } catch (ApplicationException e) {
                     if (e.getCode().equals(Code.NOT_FOUND)) {
-                        logger.error("Workflow NOT found for id: " + workflowId, e);
+                        logger.debug("Workflow NOT found for id: " + workflowId, e);
                         queues.remove(WorkflowExecutor.deciderQueue, workflowId);
                     }
-
                 } catch (Exception e) {
-                    Monitors.error(className, "sweep");
-                    logger.error("Error running sweep for " + workflowId, e);
+                    logger.debug("Error running sweep for " + workflowId, e);
                 } finally {
                     queues.remove(WorkflowExecutor.sweeperQueue, workflowId);
                     NDC.remove();

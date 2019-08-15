@@ -54,7 +54,8 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
         this.baseName = toIndexName();
         this.stalePeriod = config.getIntProperty("workflow.elasticsearch.stale.period.seconds", 60) * 1000;
 
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::processUnacks, unackScheduleInMS, unackScheduleInMS, TimeUnit.MILLISECONDS);
+        Executors.newScheduledThreadPool(1)
+            .scheduleWithFixedDelay(this::processUnacks, unackScheduleInMS, unackScheduleInMS, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -576,10 +577,13 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     private void initQueue(String queueName) {
-        queues.add(queueName);
+        if (queues.contains(queueName)) {
+            return;
+        }
         String indexName = toIndexName(queueName);
         String typeName = toTypeName(queueName);
         ensureIndexExists(indexName, typeName, DEFAULT);
+        queues.add(queueName);
     }
 
     private GetResponse findMessage(String queueName, String id) {
