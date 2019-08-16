@@ -33,6 +33,7 @@ import com.netflix.conductor.service.MetadataService;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.reverse;
 
 /**
  * @author Viren
@@ -54,9 +56,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 @Singleton
 public class EventProcessor {
 	private static Logger logger = LoggerFactory.getLogger(EventProcessor.class);
-
-	private Map<String, ObservableQueue> queuesMap = new ConcurrentHashMap<>();
-	private Map<String, ExecutorService> executorMap = new ConcurrentHashMap<>();
+	private Map<String, Pair<ObservableQueue, ThreadPoolExecutor>> queuesMap = new ConcurrentHashMap<>();
 	private ParametersUtils pu = new ParametersUtils();
 	private volatile List<EventHandler> activeHandlers;
 	private MetadataService ms;
@@ -85,7 +85,7 @@ public class EventProcessor {
 	 */
 	public Map<String, String> getQueues() {
 		Map<String, String> queues = new HashMap<>();
-		queuesMap.entrySet().stream().forEach(q -> queues.put(q.getKey(), q.getValue().getName()));
+		queuesMap.entrySet().stream().forEach(q -> queues.put(q.getKey(), q.getValue().getLeft().getName()));
 		return queues;
 	}
 
@@ -93,7 +93,7 @@ public class EventProcessor {
 		Map<String, Map<String, Long>> queues = new HashMap<>();
 		queuesMap.entrySet().stream().forEach(q -> {
 			Map<String, Long> size = new HashMap<>();
-			size.put(q.getValue().getName(), q.getValue().size());
+			size.put(q.getValue().getLeft().getName(), q.getValue().getLeft().size());
 			queues.put(q.getKey(), size);
 		});
 		return queues;
@@ -105,8 +105,7 @@ public class EventProcessor {
 				.peek(handler -> {
 					String replaced = (String) pu.replace(handler.getEvent());
 					handler.setEvent(replaced);
-				})
-				.collect(Collectors.toList());
+				}).collect(Collectors.toList());
 
 			List<ObservableQueue> created = new LinkedList<>();
 			activeHandlers.forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
@@ -115,13 +114,13 @@ public class EventProcessor {
 				if (queue == null) {
 					return null;
 				}
-
 				created.add(queue);
 
 				logger.debug("Creating " + handler.getThreadCount() + " executors for " + handler.getName());
-				executorMap.computeIfAbsent(handler.getEvent(), e -> Executors.newFixedThreadPool(handler.getThreadCount()));
+				ThreadPoolExecutor executor = new ThreadPoolExecutor(handler.getThreadCount(), handler.getThreadCount(),
+					0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
-				return queue;
+				return Pair.of(queue, executor);
 			}));
 
 			// Init subscription (if not yet done)
@@ -131,36 +130,71 @@ public class EventProcessor {
 
 			// Find events which present in queuesMap but does not exist in the db (disabled/removed)
 			List<String> removed = new LinkedList<>();
-			queuesMap.forEach((event, queue) -> {
-				boolean noneMatch = activeHandlers.stream().noneMatch(e -> e.getEvent().equalsIgnoreCase(event));
+			queuesMap.keySet().forEach(event -> {
+				boolean noneMatch = activeHandlers.stream().noneMatch(handler -> handler.getEvent().equalsIgnoreCase(event));
 				if (noneMatch) {
 					removed.add(event);
 				}
 			});
 
-			// Close found entries
-			removed.forEach(event -> {
-				try {
-					queuesMap.remove(event);
-					EventQueues.remove(event);
-				} catch (Exception ex) {
-					logger.debug("Queue closed failed for " + event + " " + ex.getMessage(), ex);
-				}
+			// Close required  and remove from the mapping
+			removed.forEach(event -> queuesMap.computeIfPresent(event, (s, entry) -> {
+				closeQueue(event);
+				closeExecutor(event, entry.getRight());
+				return null;
+			}));
 
-				ExecutorService executor = executorMap.get(event);
-				if (executor != null) {
-					logger.debug("Executor shutdown for " + event);
-					try {
-						executor.shutdownNow();
-						executor.awaitTermination(1, TimeUnit.SECONDS);
-					} catch (Exception ex) {
-						logger.debug("Executor shutdown failed for " + event + " " + ex.getMessage(), ex);
-					}
-					executorMap.remove(event);
+			// Any prefetchSize or threadCount changed
+			// - close subscription to keep messages at provider
+			// - close/open executor
+			// - open subscription
+			List<ObservableQueue> changed = new LinkedList<>();
+			activeHandlers.forEach(handler -> queuesMap.computeIfPresent(handler.getEvent(), (s, entry) -> {
+				if (handler.getThreadCount() != entry.getRight().getCorePoolSize() ||
+					handler.getPrefetchSize() != entry.getLeft().getPrefetchSize()) {
+					logger.debug("Re-creating queue/executor for " + handler.getEvent());
+
+					closeQueue(handler.getEvent());
+					closeExecutor(handler.getEvent(), entry.getRight());
+
+					ThreadPoolExecutor executor = new ThreadPoolExecutor(handler.getThreadCount(), handler.getThreadCount(),
+						0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+
+					// Init the queue back
+					ObservableQueue queue = EventQueues.getQueue(handler.getEvent(), false,
+						handler.isRetryEnabled(), handler.getPrefetchSize(), this::handle);
+					changed.add(queue);
+
+					return Pair.of(queue, executor);
 				}
-			});
+				return entry;
+			}));
+
+			// Init subscription
+			if (!changed.isEmpty()) {
+				changed.stream().filter(Objects::nonNull).forEach(ObservableQueue::observe);
+			}
+
 		} catch (Exception ex) {
 			logger.debug("refresh failed " + ex.getMessage(), ex);
+		}
+	}
+
+	private void closeQueue(String event) {
+		try {
+			EventQueues.remove(event);
+		} catch (Exception ex) {
+			logger.debug("Queue closed failed for " + event + " " + ex.getMessage(), ex);
+		}
+	}
+
+	private void closeExecutor(String event, ThreadPoolExecutor executor) {
+		logger.debug("Executor shutdown for " + event);
+		try {
+			executor.shutdownNow();
+			executor.awaitTermination(1, TimeUnit.SECONDS);
+		} catch (Exception ex) {
+			logger.debug("Executor shutdown failed for " + event + " " + ex.getMessage(), ex);
 		}
 	}
 
@@ -290,7 +324,7 @@ public class EventProcessor {
 					ee.setStatus(Status.IN_PROGRESS);
 					ee.setSubject(subject);
 					ee.setTags(tags);
-					ExecutorService executor = executorMap.get(event);
+					ExecutorService executor = queuesMap.get(event).getRight();
 					Future<Boolean> future = execute(executor, ee, action, payload);
 					futures.add(future);
 				}

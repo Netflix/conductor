@@ -157,6 +157,11 @@ public class ShotgunQueue implements ObservableQueue {
     }
 
     @Override
+    public int getPrefetchSize() {
+        return prefetchSize;
+    }
+
+    @Override
     public void publish(List<Message> messages) {
         messages.forEach(message -> {
             String payload = message.getPayload();
@@ -211,10 +216,8 @@ public class ShotgunQueue implements ObservableQueue {
                 ack(Collections.singletonList(dstMsg));
                 logger.debug("No handler - ack " + dstMsg.getReceipt());
             }
-
-            Monitors.recordEventQueueMessagesReceived(EventQueues.QueueType.shotgun.name(), queueURI);
         } catch (Exception ex) {
-            logger.debug("onMessage " + ex.getMessage(), ex);
+            logger.debug("onMessage failed " + ex.getMessage(), ex);
         } finally {
             NDC.remove();
         }
