@@ -18,7 +18,11 @@
  */
 package com.netflix.conductor.core.events;
 
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.events.queue.OnMessageHandler;
+
+import java.util.function.Consumer;
 
 /**
  * @author Viren
@@ -28,7 +32,7 @@ public interface EventQueueProvider {
 
 	public ObservableQueue getQueue(String queueURI);
 
-	public default ObservableQueue getQueue(String queueURI, boolean manualAck, int prefetchSize) {
+	public default ObservableQueue getQueue(String queueURI, boolean manualAck, int prefetchSize, OnMessageHandler handler) {
 		return null;
 	}
 

@@ -18,7 +18,9 @@
  */
 package com.netflix.conductor.core.events;
 
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.events.queue.OnMessageHandler;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -77,7 +80,7 @@ public class EventQueues {
 	}
 
 	public static ObservableQueue getQueue(String eventt, boolean throwException,
-										   boolean manualAck, int prefetchSize) {
+										   boolean manualAck, int prefetchSize, OnMessageHandler handler) {
 		String event = pu.replace(eventt).toString();
 		String typeVal = event.substring(0, event.indexOf(':'));
 		String queueURI = event.substring(event.indexOf(':') + 1);
@@ -85,7 +88,7 @@ public class EventQueues {
 		EventQueueProvider provider = providers.get(type);
 		if (provider != null) {
 			try {
-				return provider.getQueue(queueURI, manualAck, prefetchSize);
+				return provider.getQueue(queueURI, manualAck, prefetchSize, handler);
 			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
 				if (throwException) {

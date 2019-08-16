@@ -32,14 +32,17 @@ import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -52,19 +55,13 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 public class EventProcessor {
 	private static Logger logger = LoggerFactory.getLogger(EventProcessor.class);
 
-	private MetadataService ms;
-
-	private ExecutionService es;
-
-	private ActionProcessor ap;
-
 	private Map<String, ObservableQueue> queuesMap = new ConcurrentHashMap<>();
-
-	private ParametersUtils pu = new ParametersUtils();
-
 	private Map<String, ExecutorService> executorMap = new ConcurrentHashMap<>();
-	//private ExecutorService executors;
-
+	private ParametersUtils pu = new ParametersUtils();
+	private volatile List<EventHandler> activeHandlers;
+	private MetadataService ms;
+	private ExecutionService es;
+	private ActionProcessor ap;
 	private ObjectMapper om;
 
 	@Inject
@@ -78,19 +75,8 @@ public class EventProcessor {
 
 		int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
 		int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
-		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
-		//int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
-
-		// default 60 for backward compatibility
-//		int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
-//		int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
-//		if (executorThreadCount > 0) {
-//			//this.executors = Executors.newFixedThreadPool(executorThreadCount);
-//			refresh();
-//			Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
-//		} else {
-//			logger.debug("Event processing is DISABLED.  executorThreadCount set to {}", executorThreadCount);
-//		}
+		Executors.newScheduledThreadPool(1)
+			.scheduleWithFixedDelay(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
 	}
 
 	/**
@@ -115,75 +101,67 @@ public class EventProcessor {
 
 	public void refresh() {
 		try {
-			List<EventHandler> handlers = ms.getEventHandlers().stream().filter(EventHandler::isActive).collect(Collectors.toList());
-			//Set<String> events = handlers.stream().map(EventHandler::getEvent).collect(Collectors.toSet());
+			activeHandlers = ms.getEventHandlers().stream().filter(EventHandler::isActive)
+				.peek(handler -> {
+					String replaced = (String) pu.replace(handler.getEvent());
+					handler.setEvent(replaced);
+				})
+				.collect(Collectors.toList());
+			System.out.println("*** Active handlers = " + activeHandlers);
 
 			List<ObservableQueue> created = new LinkedList<>();
-			handlers.forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
-				ObservableQueue q = EventQueues.getQueue(handler.getEvent(), false,
-					handler.isRetryEnabled(), handler.getPrefetchSize());
-
-				if (q != null) {
-					created.add(q);
-
-					logger.debug("Creating " + handler.getThreadCount() + " executors for " + handler.getName());
-					executorMap.computeIfAbsent(q.getURI(), e -> Executors.newFixedThreadPool(handler.getThreadCount()));
+			activeHandlers.forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
+				ObservableQueue queue = EventQueues.getQueue(handler.getEvent(), false,
+					handler.isRetryEnabled(), handler.getPrefetchSize(), this::handle);
+				if (queue == null) {
+					return null;
 				}
 
-				return q;
+				created.add(queue);
+
+				logger.debug("Creating " + handler.getThreadCount() + " executors for " + handler.getEvent());
+				executorMap.computeIfAbsent(handler.getEvent(), e -> Executors.newFixedThreadPool(handler.getThreadCount()));
+
+				return queue;
 			}));
+
+			// Init subscription (if not yet done)
 			if (!created.isEmpty()) {
-				created.stream().filter(Objects::nonNull).forEach(this::listen);
+				created.stream().filter(Objects::nonNull).forEach(ObservableQueue::observe);
 			}
 
 			// Find events which present in queuesMap but does not exist in the db (disabled/removed)
 			List<String> removed = new LinkedList<>();
-			queuesMap.forEach((event, q) -> {
-				boolean noneMatch = handlers.stream().noneMatch(e -> e.getEvent().equalsIgnoreCase(event));
+			queuesMap.forEach((event, queue) -> {
+				boolean noneMatch = activeHandlers.stream().noneMatch(e -> e.getEvent().equalsIgnoreCase(event));
 				if (noneMatch) {
 					removed.add(event);
-
-					ExecutorService executor = executorMap.get(q.getURI());
-					if (executor != null) {
-						try {
-							executor.shutdownNow();
-							executor.awaitTermination(1, TimeUnit.SECONDS);
-						} catch (Exception ex) {
-							logger.debug("executor shutdown failed for " + q.getType() + " " + ex.getMessage(), ex);
-						}
-						executorMap.remove(q.getURI());
-					}
 				}
 			});
-			//queuesMap.keySet().stream().filter(event -> !events.contains(event)).forEach(removed::add);
 
 			// Close found entries
 			removed.forEach(event -> {
 				queuesMap.remove(event);
 				EventQueues.remove(event);
+
+				ExecutorService executor = executorMap.get(event);
+				if (executor != null) {
+					logger.debug("Executor shutdown for " + event);
+					try {
+						executor.shutdownNow();
+						executor.awaitTermination(1, TimeUnit.SECONDS);
+					} catch (Exception ex) {
+						logger.debug("Executor shutdown failed for " + event + " " + ex.getMessage(), ex);
+					}
+					executorMap.remove(event);
+				}
 			});
 		} catch (Exception ex) {
 			logger.debug("refresh failed " + ex.getMessage(), ex);
 		}
 	}
 
-	private List<EventHandler> getEventHandlersForEvent(String event) {
-		return ms.getEventHandlers().stream()
-			.filter(EventHandler::isActive)
-			.filter(e -> {
-				String replaced = (String) pu.replace(e.getEvent());
-				return replaced.equalsIgnoreCase(event);
-			})
-			.collect(Collectors.toList());
-	}
-
-	private void listen(ObservableQueue queue) {
-		queue.observe().subscribe((Message msg) -> handle(queue, msg));
-	}
-
 	private void handle(ObservableQueue queue, Message msg) {
-
-		NDC.push("event-" + msg.getId());
 		try {
 			msg.setAccepted(System.currentTimeMillis());
 
@@ -202,8 +180,10 @@ public class EventProcessor {
 			es.addMessage(queue.getName(), msg);
 
 			// Find event handlers by the event name considering variables in the handler's event
-			String event = queue.getType() + ":" + queue.getName();
-			List<EventHandler> handlers = getEventHandlersForEvent(event);
+			String event = queue.getType() + ":" + queue.getURI();
+			List<EventHandler> handlers = activeHandlers.stream()
+				.filter(handler -> handler.getEvent().equalsIgnoreCase(event))
+				.collect(Collectors.toList());
 
 			String subject = queue.getURI();
 			if (queue.getURI().contains(":")) {
@@ -348,9 +328,6 @@ public class EventProcessor {
 		} catch (Exception e) {
 			logger.error(e.getMessage() + " occurred for " + msg.getPayload(), e);
 			queue.unack(Collections.singletonList(msg));
-		} finally {
-			NDC.remove();
-			Monitors.recordEventQueueMessagesProcessed(queue.getType(), queue.getName(), 1);
 		}
 	}
 

@@ -192,6 +192,14 @@ public class EventHandler {
 		this.prefetchSize = prefetchSize;
 	}
 
+	@Override
+	public String toString() {
+		return "EventHandler{" +
+			"name='" + name + '\'' +
+			", event='" + event + '\'' +
+			'}';
+	}
+
 	public static class Action {
 
 		public enum Type {start_workflow, complete_task, fail_task, update_task, find_update, java_action}

@@ -27,7 +27,6 @@ import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.WorkflowContext;
-import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -222,7 +221,6 @@ public class MetadataService {
 		if (existing != null) {
 			throw new ApplicationException(ApplicationException.Code.CONFLICT, "EventHandler with name " + eventHandler.getName() + " already exists!");
 		}
-		validateQueue(eventHandler);
 		metadata.addEventHandler(eventHandler);
 	}
 
@@ -235,18 +233,6 @@ public class MetadataService {
 		if (existing == null) {
 			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
 		}
-
-		// Are subject:queue the same or been updated ?
-		boolean eventEquals = existing.getEvent().equalsIgnoreCase(eventHandler.getEvent());
-
-		// The new handler is disabled - close old queue
-		if (existing.isActive() && !eventHandler.isActive()) {
-			EventQueues.remove(existing.getEvent());
-		} else if (!eventEquals) { // if subject:queue was updated
-			EventQueues.remove(existing.getEvent());
-		}
-
-		validateQueue(eventHandler);
 		metadata.updateEventHandler(eventHandler);
 	}
 
@@ -258,7 +244,6 @@ public class MetadataService {
 		if (existing == null) {
 			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
 		}
-		EventQueues.remove(existing.getEvent());
 		metadata.removeEventHandlerStatus(name);
 	}
 
@@ -287,19 +272,6 @@ public class MetadataService {
 		Preconditions.checkNotNull(eh.getName(), "Missing event handler name");
 		Preconditions.checkNotNull(eh.getEvent(), "Missing event location");
 		Preconditions.checkNotNull(eh.getActions(), "No actions specified.  Please specify at-least one action");
-	}
-
-	/**
-	 * This method was created to divide event handler validation logic and the queue validation.
-	 * We do not want to register queue in the EventQueues if existence logic fails
-	 *
-	 * @param eh Event handler definition
-	 */
-	private void validateQueue(EventHandler eh) {
-		String event = eh.getEvent();
-		if (eh.isActive()) {
-			EventQueues.getQueue(event, true);
-		}
 	}
 
 	private EventHandler getEventHandler(String name) {
