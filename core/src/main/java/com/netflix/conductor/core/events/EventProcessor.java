@@ -152,11 +152,12 @@ public class EventProcessor {
 			activeHandlers.forEach(handler -> queuesMap.computeIfPresent(handler.getEvent(), (s, entry) -> {
 				if (handler.getThreadCount() != entry.getRight().getCorePoolSize() ||
 					handler.getPrefetchSize() != entry.getLeft().getPrefetchSize()) {
-					logger.debug("Re-creating queue/executor for " + handler.getEvent());
+					logger.debug("Re-creating queue/executor for " + handler.getName());
 
 					closeQueue(handler.getEvent());
 					closeExecutor(handler.getEvent(), entry.getRight());
 
+					logger.debug("Creating " + handler.getThreadCount() + " executors for " + handler.getName());
 					ThreadPoolExecutor executor = new ThreadPoolExecutor(handler.getThreadCount(), handler.getThreadCount(),
 						0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
@@ -181,7 +182,7 @@ public class EventProcessor {
 	}
 
 	private void closeQueue(String event) {
-		logger.debug("Close queue for " + event);
+		logger.debug("Closing queue " + event);
 		try {
 			EventQueues.remove(event);
 		} catch (Exception ex) {
@@ -190,12 +191,12 @@ public class EventProcessor {
 	}
 
 	private void closeExecutor(String event, ThreadPoolExecutor executor) {
-		logger.debug("Executor shutdown for " + event);
+		logger.debug("Closing executor " + event);
 		try {
 			executor.shutdownNow();
 			executor.awaitTermination(1, TimeUnit.SECONDS);
 		} catch (Exception ex) {
-			logger.debug("Executor shutdown failed for " + event + " " + ex.getMessage(), ex);
+			logger.debug("Executor close failed for " + event + " " + ex.getMessage(), ex);
 		}
 	}
 
