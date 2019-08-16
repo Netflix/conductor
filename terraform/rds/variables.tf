@@ -91,8 +91,8 @@ variable "allowed_subnets" {
 }
 
 variable "generate_new_password" {
-  description = "when this value is set to 1, a new password for db will be generated"
-  default     = 1
+  description = "when this value is changed from what is in tf_state, a new password for db will be generated"
+  default     = "1"
 }
 
 module "vars" {

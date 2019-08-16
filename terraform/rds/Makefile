@@ -1,15 +1,16 @@
 SERVICE = conductor
 REGION = us-west-2
 TFSTATE = $(SERVICE)/$(REGION)-$(ENV)-aurora-postgres.tfstate
+GENERATE_NEW_PASSOWRD = "$$RANDOM"
 
 # Target Specific Variables
 ## corp
 ### enclave
 plan-db-corp-% apply-db-corp-% destroy-db-corp-%: ENCLAVE=corp
 plan-db-shared-% apply-db-shared-% destroy-db-shared-%: ENCLAVE=shared
-plan-pass-db-shared-%: ENCLAVE=shared
-apply-pass-db-shared-%: ENCLAVE=shared
-rotate-pass-db-shared-%: ENCLAVE=shared
+plan-rotate-pass-db-shared-%: ENCLAVE=shared
+apply-rotate-pass-db-shared-%: ENCLAVE=shared
+
 ### env and tld
 %-db-corp-test: ENV=test
 %-db-corp-live: ENV=live
@@ -29,6 +30,8 @@ creds:
 show-vars:
 			@echo "REGION:\t\t\t$(REGION)"
 			@echo "ENV:\t\t\t$(ENV)"
+			@echo "SERVICE:\t\t$(SERVICE)"
+			@echo "RANDOM:\t\t\t$(GENERATE_NEW_PASSOWRD)"
 			@echo ""
 
 check-vars: show-vars
@@ -82,35 +85,26 @@ destroy-db-%: clean show-vars check-vars init
 		-target=random_string.password \
 		-target=vault_generic_secret.db-password
 
-# plan db password
-plan-pass-%: clean show-vars check-vars init
+# WARNING USE WITH CAUTION . THIS MAY CAUSE OUTAGE
+# plan db password change
+plan-rotate-pass-%: clean show-vars check-vars init
 	terraform plan \
 		-var region="$(REGION)" \
 		-var enclave="$(ENCLAVE)" \
 		-var env="$(ENV)" \
+		-var generate_new_password="$(GENERATE_NEW_PASSOWRD)" \
 		-target=random_string.password \
 		-target=vault_generic_secret.db-password
 
-# apply auto generated db password
-apply-pass-%: clean show-vars check-vars init
+# apply db password change
+apply-rotate-pass-%: clean show-vars check-vars init
 	terraform apply \
 		-var region="$(REGION)" \
 		-var enclave="$(ENCLAVE)" \
 		-var env="$(ENV)" \
+		-var generate_new_password="$(GENERATE_NEW_PASSOWRD)" \
 		-target=random_string.password \
 		-target=vault_generic_secret.db-password
-
-# WARNING USE WITH CAUTION . THIS MAY CAUSE A SHORT OUTAGE
-# rotate db password
-rotate-pass-%: clean show-vars check-vars init
-	terraform apply \
-		-var region="$(REGION)" \
-		-var enclave="$(ENCLAVE)" \
-		-var env="$(ENV)" \
-		-var generate_new_password=1 \
-		-target=random_string.password \
-		-target=vault_generic_secret.db-password
-
 # dummy target for autocompletion
 plan-db-corp-test:
 apply-db-corp-test:
@@ -138,14 +132,11 @@ plan-db-shared-live:
 apply-db-shared-live:
 destroy-db-shared-live:
 
-plan-pass-db-shared-test:
-apply-pass-db-shared-test:
-rotate-pass-db-shared-test:
+plan-rotate-pass-db-shared-test:
+apply-rotate-pass-db-shared-test:
 
-plan-pass-db-shared-int:
-apply-pass-db-shared-int:
-rotate-pass-db-shared-int:
+plan-rotate-pass-db-shared-int:
+apply-rotate-pass-db-shared-int:
 
-plan-pass-db-shared-live:
-apply-pass-db-shared-live:
-rotate-pass-db-shared-live:
+plan-rotate-pass-db-shared-live:
+apply-rotate-pass-db-shared-live:
