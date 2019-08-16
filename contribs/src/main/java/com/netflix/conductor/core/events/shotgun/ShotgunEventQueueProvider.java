@@ -21,7 +21,7 @@ package com.netflix.conductor.core.events.shotgun;
 import com.bydeluxe.onemq.OneMQ;
 import com.bydeluxe.onemq.OneMQClient;
 import com.netflix.conductor.contribs.queue.shotgun.SharedShotgunQueue;
-import com.netflix.conductor.contribs.queue.shotgun.ShotgunQueue;
+import com.netflix.conductor.contribs.queue.shotgun.DedicatedShotgunQueue;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
@@ -45,10 +45,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class ShotgunEventQueueProvider implements EventQueueProvider {
 	private static Logger logger = LoggerFactory.getLogger(ShotgunEventQueueProvider.class);
+	private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
 	private static final String PROP_SERVICE = "io.shotgun.service";
 	private static final String PROP_SHARED = "io.shotgun.shared";
 	private static final String PROP_DNS = "io.shotgun.dns";
-	private Map<String, ObservableQueue> queues = new ConcurrentHashMap<>();
 	private Duration[] publishRetryIn;
 	private OneMQClient mqClient;
 	private boolean shared;
@@ -105,7 +105,7 @@ public class ShotgunEventQueueProvider implements EventQueueProvider {
 			return queues.computeIfAbsent(queueURI, q -> new SharedShotgunQueue(mqClient, service, queueURI,
 				publishRetryIn, manualAck, prefetchSize, handler));
 		} else {
-			return queues.computeIfAbsent(queueURI, q -> new ShotgunQueue(dns, service, queueURI,
+			return queues.computeIfAbsent(queueURI, q -> new DedicatedShotgunQueue(dns, service, queueURI,
 				publishRetryIn, manualAck, prefetchSize, handler));
 		}
 	}

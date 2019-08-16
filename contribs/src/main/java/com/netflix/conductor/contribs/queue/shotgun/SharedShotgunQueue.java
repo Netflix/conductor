@@ -45,18 +45,17 @@ import java.util.concurrent.TimeUnit;
  * @author Oleksiy Lysak
  */
 public class SharedShotgunQueue implements ObservableQueue {
-    private static Logger logger = LoggerFactory.getLogger(SharedShotgunQueue.class);
-    protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
+    protected Logger logger = LoggerFactory.getLogger(getClass());
     private Duration[] publishRetryIn;
+    protected OnMessageHandler handler;
+    protected final String service;
+    protected final String subject;
+    private final String groupId;
     private boolean manualAck;
     private int prefetchSize;
-    private OnMessageHandler handler;
-    private final String queueURI;
-    private final String service;
-    private final String subject;
-    private final String groupId;
-    private OneMQClient conn;
-    private Subscription subs;
+    final String queueURI;
+    OneMQClient conn;
+    Subscription subs;
 
     public SharedShotgunQueue(OneMQClient conn, String service, String queueURI, Duration[] publishRetryIn,
                               boolean manualAck, int prefetchSize, OnMessageHandler handler) {
@@ -76,25 +75,26 @@ public class SharedShotgunQueue implements ObservableQueue {
             this.subject = queueURI;
             this.groupId = UUID.randomUUID().toString();
         }
+
         logger.debug(String.format("Init queueURI=%s, subject=%s, groupId=%s, manualAck=%s, prefetchSize=%s",
             queueURI, subject, groupId, manualAck, prefetchSize));
     }
 
     @Override
     public Observable<Message> observe() {
-        logger.debug("Observe for " + queueURI);
+        if (subs != null) {
+            return null;
+        }
 
-        subscribe();
+        try {
+            logger.debug(String.format("Start subscription subject=%s, groupId=%s, manualAck=%s, prefetchSize=%s",
+                subject, groupId, manualAck, prefetchSize));
+            subs = conn.subscribe(subject, service, groupId, manualAck, prefetchSize, this::onMessage);
+        } catch (Exception ex) {
+            logger.debug("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
+        }
 
-        Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
-            Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
-            interval.flatMap((Long x) -> {
-                List<Message> available = new LinkedList<>();
-                messages.drainTo(available);
-                return Observable.from(available);
-            }).subscribe(subscriber::onNext, subscriber::onError);
-        };
-        return Observable.create(onSubscribe);
+        return null;
     }
 
     @Override
@@ -147,7 +147,7 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     @Override
     public long size() {
-        return messages.size();
+        return 0;
     }
 
     @Override
@@ -171,7 +171,6 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     @Override
     public void close() {
-        logger.debug("Close for " + queueURI);
         if (subs != null) {
             try {
                 conn.unsubscribe(subs);
@@ -179,20 +178,7 @@ public class SharedShotgunQueue implements ObservableQueue {
             }
             subs = null;
         }
-    }
-
-    private void subscribe() {
-        if (subs != null) {
-            return;
-        }
-
-        try {
-            logger.debug(String.format("Start subscription subject=%s, groupId=%s, manualAck=%s, prefetchSize=%s",
-                subject, groupId, manualAck, prefetchSize));
-            subs = conn.subscribe(subject, service, groupId, manualAck, prefetchSize, this::onMessage);
-        } catch (Exception ex) {
-            logger.debug("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
-        }
+        logger.debug("Closed for " + queueURI);
     }
 
     private void onMessage(Subscription subscription, ShotgunOuterClass.Message message) {

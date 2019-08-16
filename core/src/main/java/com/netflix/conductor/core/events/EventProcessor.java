@@ -181,6 +181,7 @@ public class EventProcessor {
 	}
 
 	private void closeQueue(String event) {
+		logger.debug("Close queue for " + event);
 		try {
 			EventQueues.remove(event);
 		} catch (Exception ex) {
