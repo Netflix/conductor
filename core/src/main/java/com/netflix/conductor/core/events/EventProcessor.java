@@ -107,7 +107,6 @@ public class EventProcessor {
 					handler.setEvent(replaced);
 				})
 				.collect(Collectors.toList());
-			System.out.println("*** Active handlers = " + activeHandlers);
 
 			List<ObservableQueue> created = new LinkedList<>();
 			activeHandlers.forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
@@ -119,7 +118,7 @@ public class EventProcessor {
 
 				created.add(queue);
 
-				logger.debug("Creating " + handler.getThreadCount() + " executors for " + handler.getEvent());
+				logger.debug("Creating " + handler.getThreadCount() + " executors for " + handler.getName());
 				executorMap.computeIfAbsent(handler.getEvent(), e -> Executors.newFixedThreadPool(handler.getThreadCount()));
 
 				return queue;
@@ -141,8 +140,12 @@ public class EventProcessor {
 
 			// Close found entries
 			removed.forEach(event -> {
-				queuesMap.remove(event);
-				EventQueues.remove(event);
+				try {
+					queuesMap.remove(event);
+					EventQueues.remove(event);
+				} catch (Exception ex) {
+					logger.debug("Queue closed failed for " + event + " " + ex.getMessage(), ex);
+				}
 
 				ExecutorService executor = executorMap.get(event);
 				if (executor != null) {
