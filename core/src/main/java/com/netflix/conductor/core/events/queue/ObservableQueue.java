@@ -89,4 +89,11 @@ public interface ObservableQueue {
 	 */
 	default void unack(List<Message> messages) {}
 
+	/**
+	 *
+	 * @return prefetchSize limit
+	 */
+	default int getPrefetchSize() {
+		return -1;
+	}
 }

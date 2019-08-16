@@ -23,6 +23,7 @@ import com.bydeluxe.onemq.Subscription;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import com.netflix.conductor.core.events.queue.OnMessageHandler;
 import com.netflix.conductor.metrics.Monitors;
 import d3sw.shotgun.shotgunpb.ShotgunOuterClass;
 import io.nats.client.NUID;
@@ -44,23 +45,27 @@ import java.util.concurrent.TimeUnit;
  * @author Oleksiy Lysak
  */
 public class SharedShotgunQueue implements ObservableQueue {
-    private static Logger logger = LoggerFactory.getLogger(SharedShotgunQueue.class);
-    protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
+    protected Logger logger = LoggerFactory.getLogger(getClass());
     private Duration[] publishRetryIn;
-    private boolean manualAck;
-    private final String queueURI;
-    private final String service;
-    private final String subject;
+    protected OnMessageHandler handler;
+    protected final String service;
+    protected final String subject;
     private final String groupId;
-    private OneMQClient conn;
-    private Subscription subs;
+    private boolean manualAck;
+    private int prefetchSize;
+    final String queueURI;
+    OneMQClient conn;
+    Subscription subs;
 
-    public SharedShotgunQueue(OneMQClient conn, String service, String queueURI, Duration[] publishRetryIn, boolean manualAck) {
+    public SharedShotgunQueue(OneMQClient conn, String service, String queueURI, Duration[] publishRetryIn,
+                              boolean manualAck, int prefetchSize, OnMessageHandler handler) {
         this.conn = conn;
         this.service = service;
         this.queueURI = queueURI;
         this.publishRetryIn = publishRetryIn;
         this.manualAck = manualAck;
+        this.prefetchSize = prefetchSize;
+        this.handler = handler;
 
         // If groupId specified (e.g. subject:groupId) - split to subject & groupId
         if (queueURI.contains(":")) {
@@ -68,26 +73,28 @@ public class SharedShotgunQueue implements ObservableQueue {
             this.groupId = queueURI.substring(queueURI.indexOf(':') + 1);
         } else {
             this.subject = queueURI;
-            this.groupId = null;
+            this.groupId = UUID.randomUUID().toString();
         }
-        logger.debug(String.format("Initialized with queueURI=%s, subject=%s, groupId=%s", queueURI, subject, groupId));
+
+        logger.debug(String.format("Init queueURI=%s, subject=%s, groupId=%s, manualAck=%s, prefetchSize=%s",
+            queueURI, subject, groupId, manualAck, prefetchSize));
     }
 
     @Override
     public Observable<Message> observe() {
-        logger.debug("Observe invoked for queueURI " + queueURI);
+        if (subs != null) {
+            return null;
+        }
 
-        subscribe();
+        try {
+            logger.debug(String.format("Start subscription subject=%s, groupId=%s, manualAck=%s, prefetchSize=%s",
+                subject, groupId, manualAck, prefetchSize));
+            subs = conn.subscribe(subject, service, groupId, manualAck, prefetchSize, this::onMessage);
+        } catch (Exception ex) {
+            logger.debug("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
+        }
 
-        Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
-            Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
-            interval.flatMap((Long x) -> {
-                List<Message> available = new LinkedList<>();
-                messages.drainTo(available);
-                return Observable.from(available);
-            }).subscribe(subscriber::onNext, subscriber::onError);
-        };
-        return Observable.create(onSubscribe);
+        return null;
     }
 
     @Override
@@ -114,7 +121,7 @@ public class SharedShotgunQueue implements ObservableQueue {
             try {
                 conn.ack(msg.getReceipt());
             } catch (Exception e) {
-                logger.error("ack failed with " + e.getMessage() + " for " + msg.getId(), e);
+                logger.debug("ack failed with " + e.getMessage() + " for " + msg.getId(), e);
             }
         });
         return Collections.emptyList();
@@ -122,11 +129,14 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     @Override
     public void unack(List<Message> messages) {
+        if (!manualAck) {
+            return;
+        }
         messages.forEach(msg -> {
             try {
                 conn.unack(msg.getReceipt());
             } catch (Exception e) {
-                logger.error("unack failed with " + e.getMessage() + " for " + msg.getId(), e);
+                logger.debug("unack failed with " + e.getMessage() + " for " + msg.getId(), e);
             }
         });
     }
@@ -137,7 +147,12 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     @Override
     public long size() {
-        return messages.size();
+        return 0;
+    }
+
+    @Override
+    public int getPrefetchSize() {
+        return prefetchSize;
     }
 
     @Override
@@ -145,18 +160,17 @@ public class SharedShotgunQueue implements ObservableQueue {
         messages.forEach(message -> {
             String payload = message.getPayload();
             try {
-                logger.debug(String.format("Trying to publish to %s: %s", subject, payload));
+                logger.debug(String.format("Publishing to %s: %s", subject, payload));
                 conn.publish(subject, payload.getBytes(), service, message.getTraceId(), publishRetryIn);
                 logger.info(String.format("Published to %s: %s", subject, payload));
             } catch (Exception eo) {
-                logger.error(String.format("Failed to publish to %s: %s", subject, payload), eo);
+                logger.debug(String.format("Publish failed for %s: %s", subject, payload), eo);
             }
         });
     }
 
     @Override
     public void close() {
-        logger.debug("Closing connection for " + queueURI);
         if (subs != null) {
             try {
                 conn.unsubscribe(subs);
@@ -164,49 +178,35 @@ public class SharedShotgunQueue implements ObservableQueue {
             }
             subs = null;
         }
-    }
-
-    private void subscribe() {
-        if (subs != null) {
-            return;
-        }
-
-        try {
-            // Create subject/groupId subscription if the groupId has been provided
-            if (StringUtils.isNotEmpty(groupId)) {
-                logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, groupId);
-                subs = conn.subscribe(subject, service, groupId, this::onMessage);
-                subs.setManualAck(manualAck);
-            } else {
-                String uuid = UUID.randomUUID().toString();
-                logger.debug("No subscription. Creating subscription with subject={}, groupId={}", subject, uuid);
-                subs = conn.subscribe(subject, service, uuid, this::onMessage);
-                subs.setManualAck(manualAck);
-            }
-        } catch (Exception ex) {
-            logger.error("Subscription failed with " + ex.getMessage() + " for queueURI " + queueURI, ex);
-        }
+        logger.debug("Closed for " + queueURI);
     }
 
     private void onMessage(Subscription subscription, ShotgunOuterClass.Message message) {
-        String payload = message.getContent().toStringUtf8();
-
-        Message dstMsg = new Message();
-        dstMsg.setId(UUID.randomUUID().toString());
-        dstMsg.setReceipt(message.getID());
-        dstMsg.setPayload(payload);
-        dstMsg.setReceived(System.currentTimeMillis());
-        dstMsg.setTraceId(message.getTraceID());
-
-        NDC.push("event-"+dstMsg.getId());
+        String uuid = UUID.randomUUID().toString();
+        NDC.push("event-" + uuid);
         try {
-            logger.info(String.format("Received message for %s/%s %s=%s",
-                subscription.getSubject(), subscription.getGroupID(), dstMsg.getId(), payload));
+            String payload = message.getContent().toStringUtf8();
+
+            Message dstMsg = new Message();
+            dstMsg.setId(uuid);
+            dstMsg.setReceipt(message.getID());
+            dstMsg.setPayload(payload);
+            dstMsg.setReceived(System.currentTimeMillis());
+            dstMsg.setTraceId(message.getTraceID());
+
+            logger.info(String.format("Received message for %s/%s/%s %s=%s",
+                subscription.getSubject(), subscription.getGroupID(), message.getTraceID(), dstMsg.getId(), payload));
+
+            if (handler != null) {
+                handler.apply(this, dstMsg);
+            } else {
+                ack(Collections.singletonList(dstMsg));
+                logger.debug("No handler - ack " + dstMsg.getReceipt());
+            }
+        } catch (Exception ex) {
+            logger.debug("onMessage failed " + ex.getMessage(), ex);
         } finally {
             NDC.remove();
         }
-
-        messages.add(dstMsg);
-        Monitors.recordEventQueueMessagesReceived(EventQueues.QueueType.shotgun.name(), queueURI);
     }
 }
