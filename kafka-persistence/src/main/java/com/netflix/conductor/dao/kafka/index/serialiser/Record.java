@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.kafka.index;
+package com.netflix.conductor.dao.kafka.index.serialiser;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -6,10 +6,19 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Record {
+
     String type;
     Object payload;
 
-    Record(String type, Object payload) {
+    public String getType() {
+        return type;
+    }
+
+    public Object getPayload() {
+        return payload;
+    }
+
+    public Record(String type, Object payload) {
         this.type = type;
         this.payload = payload;
     }

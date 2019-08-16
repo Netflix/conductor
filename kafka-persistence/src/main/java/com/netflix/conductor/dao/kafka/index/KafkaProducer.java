@@ -1,13 +1,19 @@
 package com.netflix.conductor.dao.kafka.index;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.netflix.conductor.annotations.Trace;
+import com.netflix.conductor.common.metadata.events.EventExecution;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
+import com.netflix.conductor.common.run.TaskSummary;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.KafkaProducerDAO;
+import com.netflix.conductor.dao.kafka.index.serialiser.DataSerializer;
+import com.netflix.conductor.dao.kafka.index.serialiser.Record;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -18,7 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +41,11 @@ public class KafkaProducer implements KafkaProducerDAO {
 	public static final String PRODUCER_DEFAULT_TOPIC = "test";
 	public static final String DEFAULT_REQUEST_TIMEOUT = "100";
 	public static final String DEFAULT_BOOTSTRAP_SERVERS_CONFIG = "localhost:9092";
+	public static final String WORKFLOW_DOC_TYPE = "workflow";
+	public static final String TASK_DOC_TYPE = "task";
+	public static final String LOG_DOC_TYPE = "task_log";
+	public static final String EVENT_DOC_TYPE = "event";
+	public static final String MSG_DOC_TYPE = "message";
 	private static final Logger logger = LoggerFactory.getLogger(KafkaProducer.class);
 	private final String topic;
 	private ObjectMapper om = Record.objectMapper();
@@ -72,27 +85,51 @@ public class KafkaProducer implements KafkaProducerDAO {
 		}
 	}
 
-}
-
-class DataSerializer extends StdSerializer<Record> {
-
-	public DataSerializer() {
-		this(null);
-	}
-
-	public DataSerializer(Class<Record> t) {
-		super(t);
+	@Override
+	public void produceWorkflow(Workflow workflow) {
+		try {
+			WorkflowSummary summary = new WorkflowSummary(workflow);
+			send(WORKFLOW_DOC_TYPE, summary);
+		} catch (Exception e) {
+			logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
+		}
 	}
 
 	@Override
-	public void serialize(
-			Record value, JsonGenerator jgen, SerializerProvider provider)
-			throws IOException {
+	public void produceTask(Task task) {
+		try {
+			TaskSummary summary = new TaskSummary(task);
+			send(TASK_DOC_TYPE, summary);
+		} catch (Exception e) {
+			logger.error("Failed to index task: {}", task.getTaskId(), e);
+		}
+	}
 
-		jgen.writeStartObject();
-		jgen.writeStringField("type", value.type);
-		jgen.writeObjectField("payload", value.payload);
-		jgen.writeEndObject();
+	@Override
+	public void produceTaskExecutionLogs(List<TaskExecLog> taskExecLogs) {
+		if (taskExecLogs.isEmpty()) {
+			return;
+		}
+
+		for (TaskExecLog log : taskExecLogs) {
+			send(LOG_DOC_TYPE, log);
+		}
+	}
+
+	@Override
+	public void produceMessage(String queue, Message message) {
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("messageId", message.getId());
+		doc.put("payload", message.getPayload());
+		doc.put("queue", queue);
+		doc.put("created", System.currentTimeMillis());
+		send(MSG_DOC_TYPE, doc);
+	}
+
+	@Override
+	public void produceEventExecution(EventExecution eventExecution) {
+		send(EVENT_DOC_TYPE, eventExecution);
 	}
 
 }
+

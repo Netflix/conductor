@@ -18,9 +18,11 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.TestDeciderService;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
+import com.sun.xml.internal.xsom.util.ComponentNameFunction;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,13 +52,15 @@ public class ExecutionDAOFacadeTest {
     private IndexDAO indexDAO;
     private ObjectMapper objectMapper;
     private ExecutionDAOFacade executionDAOFacade;
+    private Configuration configuration;
 
     @Before
     public void setUp() {
         executionDAO = mock(ExecutionDAO.class);
         indexDAO = mock(IndexDAO.class);
+        configuration = mock(Configuration.class);
         objectMapper = new JsonMapperProvider().get();
-        executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper);
+        executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper, configuration);
     }
     
     @Test (expected = java.lang.Exception.class)

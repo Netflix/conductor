@@ -15,12 +15,24 @@
  */
 package com.netflix.conductor.dao;
 
+import java.util.Map;
+
 /**
  *
  * @author Manan
  * DAO to consume message from kafka.
  */
-public interface KafkaConsumeDAO {
+public interface KafkaConsumerDAO {
 
     void consume();
+
+    void consumeWorkflow(byte[] doc, String docType, String id);
+
+    void consumeTask(byte[] doc, String docType, String id);
+
+    void consumeTaskExecutionLog(String type, Object taskExecLog);
+
+    void consumeMessage(String type, Map message);
+
+    void consumeEventExecution(Object data, String eventExecution);
 }

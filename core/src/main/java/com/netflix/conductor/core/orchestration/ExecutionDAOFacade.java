@@ -24,6 +24,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.dao.KafkaProducerDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,13 +50,16 @@ public class ExecutionDAOFacade {
     private final IndexDAO indexDAO;
     private final ObjectMapper objectMapper;
     private final Configuration configuration;
+    private final KafkaProducerDAO kafkaProducerDAO;
+
 
     @Inject
-    public ExecutionDAOFacade(ExecutionDAO executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper, Configuration configuration) {
+    public ExecutionDAOFacade(ExecutionDAO executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper, Configuration configuration, KafkaProducerDAO kafkaProducerDAO) {
         this.executionDAO = executionDAO;
         this.indexDAO = indexDAO;
         this.objectMapper = objectMapper;
         this.configuration = configuration;
+        this.kafkaProducerDAO = kafkaProducerDAO;
     }
 
     /**
@@ -173,7 +177,7 @@ public class ExecutionDAOFacade {
         workflow.setCreateTime(System.currentTimeMillis());
         executionDAO.createWorkflow(workflow);
         if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-            indexDAO.produceWorkflow(workflow);
+            kafkaProducerDAO.produceWorkflow(workflow);
         } else {
             indexDAO.asyncIndexWorkflow(workflow);
         }
@@ -193,7 +197,7 @@ public class ExecutionDAOFacade {
         }
         executionDAO.updateWorkflow(workflow);
         if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-            indexDAO.produceWorkflow(workflow);
+            kafkaProducerDAO.produceWorkflow(workflow);
         } else {
             indexDAO.asyncIndexWorkflow(workflow);
         }
@@ -282,7 +286,7 @@ public class ExecutionDAOFacade {
             }
             executionDAO.updateTask(task);
             if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-                indexDAO.produceTask(task);
+                kafkaProducerDAO.produceTask(task);
             } else {
                 indexDAO.asyncIndexTask(task);
             }
@@ -324,7 +328,7 @@ public class ExecutionDAOFacade {
         boolean added = executionDAO.addEventExecution(eventExecution);
         if (added) {
             if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-                indexDAO.produceEventExecution(eventExecution);
+                kafkaProducerDAO.produceEventExecution(eventExecution);
             } else {
                 indexDAO.asyncAddEventExecution(eventExecution);
             }
@@ -351,7 +355,7 @@ public class ExecutionDAOFacade {
 
     public void addTaskExecLog(List<TaskExecLog> logs) {
         if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-            indexDAO.produceTaskExecutionLogs(logs);
+            kafkaProducerDAO.produceTaskExecutionLogs(logs);
         } else {
             indexDAO.asyncAddTaskExecutionLogs(logs);
         }
@@ -359,7 +363,7 @@ public class ExecutionDAOFacade {
 
     public void addMessage(String queue, Message message) {
         if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-            indexDAO.produceMessage(queue, message);
+            kafkaProducerDAO.produceMessage(queue, message);
         } else {
             indexDAO.addMessage(queue, message);
         }

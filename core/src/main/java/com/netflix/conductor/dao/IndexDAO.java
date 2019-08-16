@@ -45,22 +45,6 @@ public interface IndexDAO {
      */
     void indexWorkflow(Workflow workflow);
 
-
-    /**
-     * Publish workflow to kafka.
-     * @param workflow Workflow to be indexed
-     *
-     */
-    void produceWorkflow(Workflow workflow);
-
-    /**
-     * Index workflow.
-     * @param doc data
-     * @param type type
-     * @param id workflow id
-     */
-    void consumeWorkflow(byte[] doc, String type, String id);
-
     /**
      * This method should return an unique identifier of the indexed doc
      * @param workflow Workflow to be indexed
@@ -72,18 +56,6 @@ public interface IndexDAO {
      * @param task Task to be indexed
      */
     void indexTask(Task task);
-
-    /**
-     * @param task Task to be indexed
-     */
-    void produceTask(Task task);
-    /**
-     * Index workflow.
-     * @param doc data
-     * @param type type
-     * @param id workflow id
-     */
-    void consumeTask(byte[] doc, String type, String id);
 
     /**
      *
@@ -158,19 +130,6 @@ public interface IndexDAO {
      */
     void addTaskExecutionLogs(List<TaskExecLog> logs);
 
-
-    /**
-     * @param logs TaskExecution logs
-     */
-    void produceTaskExecutionLogs(List<TaskExecLog> logs);
-
-    /**
-     * Index workflow.
-     * @param type type
-     * @param taskExecLog log
-     */
-    void consumeTaskExecutionLog(String type, Object taskExecLog);
-
     /**
      *
      * @param logs Task Execution logs to be indexed
@@ -186,38 +145,11 @@ public interface IndexDAO {
     List<TaskExecLog> getTaskExecutionLogs(String taskId);
 
     /**
-     * send message to kafka
-     * @param queue queue
-     * @param message message
-     */
-    void produceMessage(String queue, Message message);
-
-    /**
-     * consume message.
-     * @param type type
-     * @param message message
-     */
-    void consumeMessage(String type, Map message);
-
-    /**
      * @param eventExecution Event Execution to be indexed
      */
     void addEventExecution(EventExecution eventExecution);
 
     List<EventExecution> getEventExecutions(String event);
-
-    /**
-     * send event execution to kafka
-     * @param eventExecution event execution
-     */
-    void produceEventExecution(EventExecution eventExecution);
-
-    /**
-     * Index workflow.
-     * @param data data
-     * @param eventExecution event execution
-     */
-    void consumeEventExecution(Object data, String eventExecution);
 
     /**
      *

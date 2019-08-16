@@ -314,16 +314,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     }
 
     @Override
-    public void produceWorkflow(Workflow workflow) {
-
-    }
-
-    @Override
-    public void consumeWorkflow(byte[] doc, String type, String id) {
-
-    }
-
-    @Override
     public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
         return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
     }
@@ -335,16 +325,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         TaskSummary summary = new TaskSummary(task);
 
         indexObject(indexName, TASK_DOC_TYPE, taskId, summary);
-    }
-
-    @Override
-    public void produceTask(Task task) {
-
-    }
-
-    @Override
-    public void consumeTask(byte[] doc, String type, String id) {
-
     }
 
     @Override
@@ -389,10 +369,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         }
     }
 
-    @Override
-    public void consumeTaskExecutionLog(String type, Object taskExecLog) {
-
-    }
 
     @Override
     public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {
@@ -439,16 +415,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         }
 
         return null;
-    }
-
-    @Override
-    public void produceMessage(String queue, Message message) {
-
-    }
-
-    @Override
-    public void consumeMessage(String type, Map message) {
-
     }
 
     @Override
@@ -671,11 +637,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         return workflowIds.getResults();
     }
 
-    @Override
-    public void produceTaskExecutionLogs(List<TaskExecLog> logs) {
-
-    }
-
     private void indexObject(final String index, final String docType, final Object doc) {
         indexObject(index, docType, null, doc);
     }
@@ -789,16 +750,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             logger.error("Failed to get executions for event: {}", event, e);
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, e.getMessage(), e);
         }
-    }
-
-    @Override
-    public void produceEventExecution(EventExecution eventExecution) {
-
-    }
-
-    @Override
-    public void consumeEventExecution(Object data, String eventExecution) {
-
     }
 
     private List<EventExecution> mapEventExecutionsResponse(SearchResponse response) throws IOException {
