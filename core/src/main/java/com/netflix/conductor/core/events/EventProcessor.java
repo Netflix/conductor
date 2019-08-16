@@ -73,6 +73,7 @@ public class EventProcessor {
 		this.ms = ms;
 		this.ap = ap;
 		this.om = om;
+
 		refresh();
 
 		int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
@@ -119,9 +120,13 @@ public class EventProcessor {
 
 			List<ObservableQueue> created = new LinkedList<>();
 			handlers.forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
-				ObservableQueue q = EventQueues.getQueue(handler.getEvent(), false, handler.isRetryEnabled(), handler.getPrefetchSize());
+				ObservableQueue q = EventQueues.getQueue(handler.getEvent(), false,
+					handler.isRetryEnabled(), handler.getPrefetchSize());
+
 				if (q != null) {
 					created.add(q);
+
+					logger.debug("Creating " + handler.getThreadCount() + " executors for " + handler.getName());
 					executorMap.computeIfAbsent(q.getURI(), e -> Executors.newFixedThreadPool(handler.getThreadCount()));
 				}
 
@@ -341,7 +346,7 @@ public class EventProcessor {
 				}
 			}
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.error(e.getMessage() + " occurred for " + msg.getPayload(), e);
 			queue.unack(Collections.singletonList(msg));
 		} finally {
 			NDC.remove();
