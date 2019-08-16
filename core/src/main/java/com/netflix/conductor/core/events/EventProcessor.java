@@ -71,12 +71,17 @@ public class EventProcessor {
 		this.ap = ap;
 		this.om = om;
 
-		refresh();
+		boolean disabled = Boolean.parseBoolean(config.getProperty("workflow.event.processor.disabled", "false"));
+		if (!disabled) {
+			refresh();
 
-		int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
-		int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
-		Executors.newScheduledThreadPool(1)
-			.scheduleWithFixedDelay(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
+			int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
+			int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
+			Executors.newScheduledThreadPool(1)
+				.scheduleWithFixedDelay(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
+		} else {
+			logger.debug("Event processing is DISABLED");
+		}
 	}
 
 	/**
