@@ -290,7 +290,7 @@ public class EventProcessor {
 					ee.setStatus(Status.IN_PROGRESS);
 					ee.setSubject(subject);
 					ee.setTags(tags);
-					ExecutorService executor = executorMap.get(queue.getURI());
+					ExecutorService executor = executorMap.get(event);
 					Future<Boolean> future = execute(executor, ee, action, payload);
 					futures.add(future);
 				}
