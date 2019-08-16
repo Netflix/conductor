@@ -146,6 +146,7 @@ public class AssetMonitor implements JavaEventAction {
 			Message msg = new Message();
 			msg.setId(UUID.randomUUID().toString());
 			msg.setPayload(om.writeValueAsString(message));
+			msg.setTraceId(workflow.getTraceId());
 
 			ObservableQueue queue = EventQueues.getQueue(sink, true);
 			if (queue == null) {

@@ -112,7 +112,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			// Feed preProcessed map as defaults so that already processed for JQ engine
 			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
 			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, null, null, null);
-			sendMessage(doc);
+			sendMessage(doc, workflow.getTraceId());
 		} catch (Exception ex) {
 			logger.debug("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
@@ -145,18 +145,19 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			// Feed preProcessed map as defaults so that already processed for JQ engine
 			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
 			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, task.getTaskId(), null, null);
-			sendMessage(doc);
+			sendMessage(doc, workflow.getTraceId());
 		} catch (Exception ex) {
 			logger.debug("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
 		}
 	}
 
-	private void sendMessage(Map<String, Object> actionMap) throws Exception {
+	private void sendMessage(Map<String, Object> actionMap, String traceId) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 
 		Message msg = new Message();
 		msg.setId(UUID.randomUUID().toString());
+		msg.setTraceId(traceId);
 
 		String payload = mapper.writeValueAsString(actionMap.get("inputParameters"));
 		msg.setPayload(payload);
