@@ -35,15 +35,11 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.*;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -103,6 +99,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private final RestHighLevelClient elasticSearchClient;
     private final RestClient elasticSearchAdminClient;
     private final ExecutorService executorService;
+    private final BulkRequest bulkRequests;
 
 
     static {
@@ -118,6 +115,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         this.indexName = config.getIndexName();
         this.logIndexPrefix = config.getTasklogIndexName();
         this.clusterHealthColor = config.getClusterHealthColor();
+        this.bulkRequests = new BulkRequest();
 
         // Set up a workerpool for performing async operations.
         int corePoolSize = 6;
@@ -653,7 +651,12 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         IndexRequest request = new IndexRequest(index, docType, docId);
         request.source(docBytes, XContentType.JSON);
 
-        indexWithRetry(request, "Indexing " + docType + ": " + docId);
+        if(bulkRequests.numberOfActions() <= 100) {
+            bulkRequests.add(request);
+        }
+        else {
+            indexWithRetry(bulkRequests, "Indexing " + docType + ": " + docId);
+        }
     }
 
     /**
@@ -661,19 +664,22 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
      * @param request The index request that we want to perform.
      * @param operationDescription The type of operation that we are performing.
      */
-    private void indexWithRetry(final IndexRequest request, final String operationDescription) {
+    private void indexWithRetry(final BulkRequest request, final String operationDescription) {
 
         try {
-            new RetryUtil<IndexResponse>().retryOnException(() -> {
+            long startTime = Instant.now().toEpochMilli();
+            new RetryUtil<BulkResponse>().retryOnException(() -> {
                 try {
-                    return elasticSearchClient.index(request);
+                    return elasticSearchClient.bulk(request);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }, null, null, RETRY_COUNT, operationDescription, "indexWithRetry");
+            logger.info("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, request, request);
+            logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
         } catch (Exception e) {
             Monitors.error(className, "index");
-            logger.error("Failed to index {} for request type: {}", request.id(), request.type(), e);
+            logger.error("Failed to index {} for request type: {}", request.toString(), e);
         }
     }
 

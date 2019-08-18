@@ -36,6 +36,7 @@ import com.netflix.conductor.metrics.Monitors;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -119,7 +120,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     private final Client elasticSearchClient;
     private final ExecutorService executorService;
     private final int archiveSearchBatchSize;
-
+    BulkRequestBuilder bulkRequestBuilder;
     static {
         SIMPLE_DATE_FORMAT.setTimeZone(GMT);
     }
@@ -132,6 +133,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         this.indexName = config.getIndexName();
         this.logIndexPrefix = config.getTasklogIndexName();
         this.archiveSearchBatchSize = config.getArchiveSearchBatchSize();
+        this.bulkRequestBuilder = elasticSearchClient.prepareBulk();
 
         int corePoolSize = 6;
         int maximumPoolSize = config.getAsyncMaxPoolSize();
@@ -291,7 +293,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.doc(doc, XContentType.JSON);
             req.upsert(doc, XContentType.JSON);
             req.retryOnConflict(5);
-            updateWithRetry(req, "Index workflow into doc_type workflow");
+            if (bulkRequestBuilder.numberOfActions() < 10) {
+                bulkRequestBuilder.add(req);
+            } else {
+                updateWithRetry(bulkRequestBuilder);
+            }
         } catch (Exception e) {
             logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
         }
@@ -312,7 +318,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             UpdateRequest req = new UpdateRequest(indexName, TASK_DOC_TYPE, id);
             req.doc(doc, XContentType.JSON);
             req.upsert(doc, XContentType.JSON);
-            updateWithRetry(req, "Index workflow into doc_type workflow");
+            if (bulkRequestBuilder.numberOfActions() < 10) {
+                bulkRequestBuilder.add(req);
+            } else {
+                updateWithRetry(bulkRequestBuilder);
+            }
         } catch (Exception e) {
             logger.error("Failed to index task: {}", task.getTaskId(), e);
         }
@@ -428,7 +438,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.doc(doc, XContentType.JSON);
             req.upsert(doc, XContentType.JSON);
             req.retryOnConflict(5);
-            updateWithRetry(req, "Update Event execution for doc_type event");
+            if (bulkRequestBuilder.numberOfActions() < 10) {
+                bulkRequestBuilder.add(req);
+            } else {
+                updateWithRetry(bulkRequestBuilder);
+            }
         } catch (Exception e) {
             logger.error("Failed to index event execution: {}", eventExecution.getId(), e);
         }
@@ -439,19 +453,21 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         return CompletableFuture.runAsync(() -> addEventExecution(eventExecution), executorService);
     }
 
-    private void updateWithRetry(UpdateRequest request, String operationDescription) {
+        public void updateWithRetry(BulkRequestBuilder request) {
         try {
-            new RetryUtil<UpdateResponse>().retryOnException(
-                () -> elasticSearchClient.update(request).actionGet(),
-                null,
-                null,
-                RETRY_COUNT,
-                operationDescription,
-                "updateWithRetry"
+            long startTime = Instant.now().toEpochMilli();
+            new RetryUtil<BulkResponse>().retryOnException(
+                    () -> bulkRequestBuilder.execute().actionGet(),
+                    null,
+                    BulkResponse::hasFailures,
+                    RETRY_COUNT,
+                    "Indexing all execution logs into doc_type task",
+                    "addTaskExecutionLogs"
             );
+            logger.info("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, request, request);
         } catch (Exception e) {
             Monitors.error(className, "index");
-            logger.error("Failed to index {} for request type: {}", request.index(), request.type(),
+            logger.error("Failed to index {} for request type: {}", request, request,
                 e);
         }
     }
