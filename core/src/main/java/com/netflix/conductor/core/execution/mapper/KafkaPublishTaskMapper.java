@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public class KafkaPublishTaskMapper implements TaskMapper  {
@@ -47,11 +48,8 @@ public class KafkaPublishTaskMapper implements TaskMapper  {
 		int retryCount = taskMapperContext.getRetryCount();
 
 		TaskDef taskDefinition = Optional.ofNullable(taskMapperContext.getTaskDefinition())
-				.orElseGet(() -> Optional.ofNullable(metadataDAO.getTaskDef(taskToSchedule.getName()))
-						.orElseThrow(() -> {
-							String reason = String.format("Invalid task specified. Cannot find task by name %s in the task definitions", taskToSchedule.getName());
-							return new TerminateWorkflowException(reason);
-						}));
+						.orElseGet(() -> Optional.ofNullable(metadataDAO.getTaskDef(taskToSchedule.getName()))
+						.orElse(null));
 
 		Map<String, Object> input = parametersUtils.getTaskInputV2(taskToSchedule.getInputParameters(), workflowInstance, taskId, taskDefinition);
 
@@ -69,8 +67,11 @@ public class KafkaPublishTaskMapper implements TaskMapper  {
 		kafkaPublishTask.setRetryCount(retryCount);
 		kafkaPublishTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
 		kafkaPublishTask.setWorkflowTask(taskToSchedule);
-		kafkaPublishTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
-		kafkaPublishTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+		kafkaPublishTask.setWorkflowPriority(workflowInstance.getPriority());
+		if (Objects.nonNull(taskDefinition)) {
+			kafkaPublishTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
+			kafkaPublishTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+		}
 		return Collections.singletonList(kafkaPublishTask);
 	}
 }
