@@ -612,8 +612,7 @@ public class WorkflowExecutor {
 		// If the following task, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 		Monitors.recordWorkflowCompletion(workflow);
 
