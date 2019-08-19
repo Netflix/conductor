@@ -33,7 +33,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static com.netflix.conductor.dao.kafka.index.KafkaProducer.EVENT_DOC_TYPE;
+import static com.netflix.conductor.dao.kafka.index.KafkaProducer.*;
 
 @Singleton
 @Trace
@@ -109,21 +109,21 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 						byte[] data;
 						long start = System.currentTimeMillis();
 						switch (d.getType()) {
-							case "workflow":
+							case WORKFLOW_DOC_TYPE:
 								data = om.writeValueAsBytes(d.getPayload());
 								consumeWorkflow(data, d.getType(), om.readTree(data).get("workflowId").asText());
 								break;
-							case "task":
+							case TASK_DOC_TYPE:
 								data = om.writeValueAsBytes(d.getPayload());
 								consumeTask(data, d.getType(), om.readTree(data).get("taskId").asText());
 								break;
-							case "task_log":
+							case LOG_DOC_TYPE:
 								consumeTaskExecutionLog(d.getType(), d.getPayload());
 								break;
-							case "event":
+							case EVENT_DOC_TYPE:
 								consumeEventExecution(d.getPayload(), d.getType());
 								break;
-							case "message":
+							case MSG_DOC_TYPE:
 								consumeMessage(d.getType(), om.convertValue(d.getPayload(), Map.class));
 								break;
 							default:

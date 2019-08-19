@@ -22,6 +22,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.TestDeciderService;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.dao.KafkaProducerDAO;
 import com.sun.xml.internal.xsom.util.ComponentNameFunction;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -53,14 +54,16 @@ public class ExecutionDAOFacadeTest {
     private ObjectMapper objectMapper;
     private ExecutionDAOFacade executionDAOFacade;
     private Configuration configuration;
+    private KafkaProducerDAO kafkaProducer;
 
     @Before
     public void setUp() {
         executionDAO = mock(ExecutionDAO.class);
         indexDAO = mock(IndexDAO.class);
         configuration = mock(Configuration.class);
+        kafkaProducer = mock(KafkaProducerDAO.class);
         objectMapper = new JsonMapperProvider().get();
-        executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper, configuration);
+        executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper, configuration, kafkaProducer);
     }
     
     @Test (expected = java.lang.Exception.class)

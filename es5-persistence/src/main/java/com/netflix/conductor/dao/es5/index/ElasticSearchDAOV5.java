@@ -29,7 +29,6 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.KafkaProducerDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.query.parser.ParserException;
@@ -118,7 +117,6 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     private final String logIndexPrefix;
     private final ObjectMapper objectMapper;
     private final Client elasticSearchClient;
-    private final KafkaProducerDAO kafkaProducer;
     private final ExecutorService executorService;
     private final int archiveSearchBatchSize;
 
@@ -127,14 +125,12 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 
     @Inject
-    public ElasticSearchDAOV5(Client elasticSearchClient, ElasticSearchConfiguration config,
-                              ObjectMapper objectMapper, KafkaProducerDAO kafkaProducerDAO) {
+    public ElasticSearchDAOV5(Client elasticSearchClient, ElasticSearchConfiguration config, ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.elasticSearchClient = elasticSearchClient;
         this.indexName = config.getIndexName();
         this.logIndexPrefix = config.getTasklogIndexName();
         this.archiveSearchBatchSize = config.getArchiveSearchBatchSize();
-        this.kafkaProducer = kafkaProducerDAO;
 
         int corePoolSize = 6;
         int maximumPoolSize = config.getAsyncMaxPoolSize();
@@ -315,7 +311,6 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             UpdateRequest req = new UpdateRequest(indexName, TASK_DOC_TYPE, id);
             req.doc(doc, XContentType.JSON);
             req.upsert(doc, XContentType.JSON);
-            kafkaProducer.send(TASK_DOC_TYPE, summary);
             updateWithRetry(req, "Index workflow into doc_type workflow");
         } catch (Exception e) {
             logger.error("Failed to index task: {}", task.getTaskId(), e);
