@@ -88,6 +88,8 @@ class Dao extends AuroraBaseDAO {
 	}
 
 	void dataCleanup(Connection tx) {
+		fixTask(tx, "VALIDATION", "SCHEDULED");
+		fixTask(tx, "EVENT", "SCHEDULED");
 		fixTask(tx, "SUB_WORKFLOW", "SCHEDULED");
 		fixTask(tx, "JSON_JQ_TRANSFORM", "SCHEDULED");
 	}
