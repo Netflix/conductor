@@ -165,9 +165,7 @@ job "conductor" {
 
         // Workflow settings
         workflow_failure_expandInline                = "false"
-        decider_sweep_frequency_seconds              = "30"
-        workflow_event_processor_thread_count        = "10"
-        workflow_event_processor_refresh_seconds     = "30"
+        decider_sweep_frequency_seconds              = "60"
         workflow_system_task_worker_thread_count     = "5"
         workflow_system_task_worker_poll_count       = "50"
         workflow_system_task_worker_poll_timeout     = "1000"
@@ -195,7 +193,6 @@ job "conductor" {
         io_shotgun_service        = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}-${meta.tld}"
         io_shotgun_publishRetryIn = "5,10,15"
         io_shotgun_shared         = "false"
-        io_shotgun_manualAck      = "true"
         com_bydeluxe_onemq_log    = "false"
 
         // Additional modules
