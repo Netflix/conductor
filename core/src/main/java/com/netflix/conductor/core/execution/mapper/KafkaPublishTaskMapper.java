@@ -68,11 +68,9 @@ public class KafkaPublishTaskMapper implements TaskMapper  {
 		kafkaPublishTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
 		kafkaPublishTask.setWorkflowTask(taskToSchedule);
 		kafkaPublishTask.setWorkflowPriority(workflowInstance.getPriority());
-		kafkaPublishTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
-		kafkaPublishTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
-		kafkaPublishTask.setDomain(taskDefinition.getExecutionNameSpace());
-		kafkaPublishTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
 		if (Objects.nonNull(taskDefinition)) {
+			kafkaPublishTask.setExecutionNameSpace(taskDefinition.getExecutionNameSpace());
+			kafkaPublishTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
 			kafkaPublishTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
 			kafkaPublishTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
 		}
