@@ -660,7 +660,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         }
 
         bulkRequests.get(docType).add(request);
-        if (bulkRequests.get(docType).size() == this.indexBatchSize) {
+        if (bulkRequests.get(docType).size() >= this.indexBatchSize) {
             indexWithRetry(bulkRequests.get(docType), "Indexing " + docType + ": " + docId);
             bulkRequests.put(docType, new ArrayList<>());
         }
@@ -687,7 +687,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             request.clear();
             logger.info("Time taken {} ", Instant.now().toEpochMilli() - startTime);
             logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
-            Monitors.getTimer(Monitors.classQualifier, "index_time", "index_time").record(Instant.now().toEpochMilli(), TimeUnit.MILLISECONDS);
+            Monitors.recordESIndexTime("index_time", Instant.now().toEpochMilli() - startTime);
             Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             Monitors.error(className, "index");
