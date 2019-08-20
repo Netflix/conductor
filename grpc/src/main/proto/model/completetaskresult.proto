@@ -1,0 +1,19 @@
+syntax = "proto3";
+package conductor.proto;
+
+import "model/task.proto";
+
+option java_package = "com.netflix.conductor.proto";
+option java_outer_classname = "CompleteTaskResultPb";
+option go_package = "github.com/netflix/conductor/client/gogrpc/conductor/model";
+
+message CompleteTaskResult {
+    enum CompletionStatus {
+        NO_IN_PROGRESS_WAIT_TASK_FOUND_IN_WF = 0;
+        COMPLETED = 1;
+        NO_IN_PROGRESS_WAIT_TASK_FOUND_FOR_STATE = 2;
+    }
+    int32 code = 1;
+    string message = 2;
+    Task in_progress_task = 3;
+}
