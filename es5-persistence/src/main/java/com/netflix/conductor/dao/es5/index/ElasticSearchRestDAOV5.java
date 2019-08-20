@@ -687,6 +687,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             request.clear();
             logger.info("Time taken {} ", Instant.now().toEpochMilli() - startTime);
             logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
+            Monitors.getTimer(Monitors.classQualifier, "index_time", "index_time").record(Instant.now().toEpochMilli(), TimeUnit.MILLISECONDS);
+            Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             Monitors.error(className, "index");
             logger.error("Failed to index {} for request type: {}", request.toString(), e);
