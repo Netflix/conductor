@@ -96,6 +96,7 @@ public class TestElasticSearchRestDAOV5 {
     public static void startServer() throws Exception {
         System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9204");
         System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "http://localhost:9204");
+        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, "1");
 
         configuration = new SystemPropertiesElasticSearchConfiguration();
 
