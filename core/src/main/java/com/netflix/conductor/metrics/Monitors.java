@@ -116,7 +116,7 @@ public class Monitors {
 		});
 	}
 
-	private static AtomicLong getGauge(String className, String name, String... additionalTags) {
+	public static AtomicLong getGauge(String className, String name, String... additionalTags) {
 		Map<String, String> tags = toMap(className, additionalTags);
 
 		return gauges.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {

@@ -296,6 +296,8 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             indexObject(req, WORKFLOW_DOC_TYPE);
 
             logger.info("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
+            Monitors.getTimer(Monitors.classQualifier, "index_workflow", "index_time").record(Instant.now().toEpochMilli(), TimeUnit.MILLISECONDS);
+            Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
         }
@@ -319,6 +321,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.upsert(doc, XContentType.JSON);
             indexObject(req, TASK_DOC_TYPE);
             logger.info("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
+            Monitors.getTimer(Monitors.classQualifier, "index_task", "index_time").record(Instant.now().toEpochMilli(), TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             logger.error("Failed to index task: {}", task.getTaskId(), e);
         }
