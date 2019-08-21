@@ -29,7 +29,6 @@ import org.apache.http.nio.entity.NByteArrayEntity;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -656,13 +655,13 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         request.source(docBytes, XContentType.JSON);
 
         if(bulkRequests.get(docType) == null) {
-            bulkRequests.put(docType, new ArrayList<>());
+            bulkRequests.put(docType, new ArrayList<>(this.indexBatchSize));
         }
 
         bulkRequests.get(docType).add(request);
         if (bulkRequests.get(docType).size() >= this.indexBatchSize) {
             indexWithRetry(bulkRequests.get(docType), "Indexing " + docType + ": " + docId);
-            bulkRequests.put(docType, new ArrayList<>());
+            bulkRequests.put(docType, new ArrayList<>(this.indexBatchSize));
         }
     }
 
