@@ -12,6 +12,8 @@ configurations.all {
     resolutionStrategy {
         force 'com.fasterxml.jackson.core:jackson-core:2.7.5'
     }
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'log4j', module: 'log4j'
 }
 
 apply plugin: 'war'
@@ -39,6 +41,11 @@ dependencies {
     compile "com.sun.jersey.contribs:jersey-guice:${revJerseyGuice}"
     compile "com.google.inject:guice:${revGuice}"
     compile "com.google.inject.extensions:guice-servlet:${revGuiceServlet}"
+
+    //https://www.eclipse.org/jetty/documentation/current/configuring-logging-modules.html
+    compile "org.apache.logging.log4j:log4j-api:${revLog4jApi}"
+    compile "org.apache.logging.log4j:log4j-core:${revLog4jCore}"
+    compile "org.apache.logging.log4j:log4j-slf4j-impl:${revLog4jCore}"
 
     //Swagger
     compile "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
@@ -86,6 +93,6 @@ task server(type: JavaExec) {
     systemProperty 'org.eclipse.jetty.LEVEL', 'INFO'
     systemProperties System.properties
     main = 'com.netflix.conductor.bootstrap.Main'
-    args  'src/main/resources/server.properties', 'src/main/resources/log4j.properties'
+    args  'src/main/resources/server.properties', 'src/main/resources/log4j2.xml'
     classpath = sourceSets.test.runtimeClasspath
 }

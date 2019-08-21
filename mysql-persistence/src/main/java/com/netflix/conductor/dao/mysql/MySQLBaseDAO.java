@@ -21,6 +21,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+
+import static com.netflix.conductor.core.execution.ApplicationException.Code.*;
+
 public abstract class MySQLBaseDAO {
     private static final List<String> EXCLUDED_STACKTRACE_CLASS = ImmutableList.of(
             MySQLBaseDAO.class.getName(),
@@ -28,15 +31,15 @@ public abstract class MySQLBaseDAO {
     );
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    protected final ObjectMapper objectMapper;
-    protected final DataSource dataSource;
+    private final ObjectMapper objectMapper;
+    private final DataSource dataSource;
 
-    protected MySQLBaseDAO(ObjectMapper om, DataSource dataSource) {
+    MySQLBaseDAO(ObjectMapper om, DataSource dataSource) {
         this.objectMapper = om;
         this.dataSource = dataSource;
     }
 
-    protected final LazyToString getCallingMethod() {
+    private final LazyToString getCallingMethod() {
         return new LazyToString(() -> Arrays.stream(Thread.currentThread().getStackTrace())
                 .filter(ste -> !EXCLUDED_STACKTRACE_CLASS.contains(ste.getClassName()))
                 .findFirst()
@@ -48,15 +51,15 @@ public abstract class MySQLBaseDAO {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (JsonProcessingException ex) {
-            throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, ex);
+            throw new ApplicationException(INTERNAL_ERROR, ex);
         }
     }
 
-    protected <T> T readValue(String json, Class<T> tClass) {
+    <T> T readValue(String json, Class<T> tClass) {
         try {
             return objectMapper.readValue(json, tClass);
         } catch (IOException ex) {
-            throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, ex);
+            throw new ApplicationException(INTERNAL_ERROR, ex);
         }
     }
 
@@ -64,7 +67,7 @@ public abstract class MySQLBaseDAO {
         try {
             return objectMapper.readValue(json, typeReference);
         } catch (IOException ex) {
-            throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, ex);
+            throw new ApplicationException(INTERNAL_ERROR, ex);
         }
     }
 
@@ -86,7 +89,7 @@ public abstract class MySQLBaseDAO {
      * @return The result of {@code TransactionalFunction#apply(Connection)}
      * @throws ApplicationException If any errors occur.
      */
-    protected <R> R getWithTransaction(TransactionalFunction<R> function) {
+    <R> R getWithTransaction(TransactionalFunction<R> function) {
         Instant start = Instant.now();
         LazyToString callingMethod = getCallingMethod();
         logger.trace("{} : starting transaction", callingMethod);
@@ -100,18 +103,18 @@ public abstract class MySQLBaseDAO {
                 return result;
             } catch (Throwable th) {
                 tx.rollback();
-                throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, th.getMessage(), th);
+                throw new ApplicationException(BACKEND_ERROR, th.getMessage(), th);
             } finally {
                 tx.setAutoCommit(previousAutoCommitMode);
             }
         } catch (SQLException ex) {
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
+            throw new ApplicationException(BACKEND_ERROR, ex.getMessage(), ex);
         } finally {
             logger.trace("{} : took {}ms", callingMethod, Duration.between(start, Instant.now()).toMillis());
         }
     }
 
-    protected <R> R getWithTransactionWithOutErrorPropagation(TransactionalFunction<R> function) {
+    <R> R getWithTransactionWithOutErrorPropagation(TransactionalFunction<R> function) {
         Instant start = Instant.now();
         LazyToString callingMethod = getCallingMethod();
         logger.trace("{} : starting transaction", callingMethod);
@@ -125,13 +128,13 @@ public abstract class MySQLBaseDAO {
                 return result;
             } catch (Throwable th) {
                 tx.rollback();
-                logger.info(ApplicationException.Code.CONFLICT + " " +th.getMessage());
+                logger.info(CONFLICT + " " +th.getMessage());
                 return null;
             } finally {
                 tx.setAutoCommit(previousAutoCommitMode);
             }
         } catch (SQLException ex) {
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
+            throw new ApplicationException(BACKEND_ERROR, ex.getMessage(), ex);
         } finally {
             logger.trace("{} : took {}ms", callingMethod, Duration.between(start, Instant.now()).toMillis());
         }
@@ -148,7 +151,7 @@ public abstract class MySQLBaseDAO {
      * @throws ApplicationException If any errors occur.
      * @see #getWithTransaction(TransactionalFunction)
      */
-    protected void withTransaction(Consumer<Connection> consumer) {
+    void withTransaction(Consumer<Connection> consumer) {
         getWithTransaction(connection -> {
             consumer.accept(connection);
             return null;
@@ -181,7 +184,7 @@ public abstract class MySQLBaseDAO {
         try (Query q = new Query(objectMapper, tx, query)) {
             return function.apply(q);
         } catch (SQLException ex) {
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(BACKEND_ERROR, ex);
         }
     }
 
@@ -196,7 +199,7 @@ public abstract class MySQLBaseDAO {
         try (Query q = new Query(objectMapper, tx, query)) {
             function.apply(q);
         } catch (SQLException ex) {
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(BACKEND_ERROR, ex);
         }
     }
 
@@ -206,7 +209,7 @@ public abstract class MySQLBaseDAO {
      * @param query    The query string to prepare.
      * @param function The functional callback to pass a {@link Query} to.
      */
-    protected void executeWithTransaction(String query, ExecuteFunction function) {
+    void executeWithTransaction(String query, ExecuteFunction function) {
         withTransaction(tx -> execute(tx, query, function));
     }
 }

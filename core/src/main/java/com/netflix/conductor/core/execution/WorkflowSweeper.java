@@ -20,14 +20,8 @@ package com.netflix.conductor.core.execution;
 
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -35,6 +29,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+import static com.netflix.conductor.core.execution.ApplicationException.Code.NOT_FOUND;
 
 /**
  * @author Viren
@@ -114,7 +115,7 @@ public class WorkflowSweeper {
 					}
 
 				} catch (ApplicationException e) {
-					if(e.getCode().equals(Code.NOT_FOUND)) {
+					if(e.getCode().equals(NOT_FOUND)) {
 						logger.error("Workflow NOT found for id: " + workflowId, e);
 						queueDAO.remove(WorkflowExecutor.DECIDER_QUEUE, workflowId);
 					}

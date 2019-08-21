@@ -22,11 +22,11 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.netflix.conductor.bootstrap.ModulesProvider;
 import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 
-import org.apache.log4j.PropertyConfigurator;
-
 import java.io.FileInputStream;
 import java.util.Optional;
 import java.util.Properties;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.Configurator;
 
 /**
  * @author Viren
@@ -60,7 +60,8 @@ public class ServletContextListner extends GuiceServletContextListener {
             key = "log4j_properties";
             String log4jConfig = Optional.ofNullable(System.getProperty(key)).orElse(System.getenv(key));
             if (log4jConfig != null) {
-                PropertyConfigurator.configure(new FileInputStream(log4jConfig));
+                ConfigurationSource source = new ConfigurationSource(new FileInputStream(log4jConfig));
+                Configurator.initialize(null, source);
             }
 
         } catch (Exception e) {

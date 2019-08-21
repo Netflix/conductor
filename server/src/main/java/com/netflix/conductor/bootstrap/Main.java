@@ -9,8 +9,6 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
- */
-/**
  *
  */
 package com.netflix.conductor.bootstrap;
@@ -24,13 +22,15 @@ import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.grpc.server.GRPCServerProvider;
 import com.netflix.conductor.jetty.server.JettyServerProvider;
 
-import org.apache.log4j.PropertyConfigurator;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.Properties;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+
+import static org.apache.logging.log4j.core.config.Configurator.initialize;
 
 /**
  * @author Viren Entry point for the server
@@ -44,8 +44,14 @@ public class Main {
         loadConfigFile(args.length > 0 ? args[0] : System.getenv("CONDUCTOR_CONFIG_FILE"));
 
         if (args.length == 2) {
-            System.out.println("Using log4j config " + args[1]);
-            PropertyConfigurator.configure(new FileInputStream(new File(args[1])));
+            final String configFile = args[1];
+            System.out.println("Using log4j config " + configFile);
+            try {
+                initialize(null, new ConfigurationSource(new FileInputStream(new File(configFile))));
+            } catch (Exception ex) {
+                System.out.println(String.format("Can not load log4j config %s", configFile));
+                ex.printStackTrace(System.err);
+            }
         }
 
         Injector bootstrapInjector = Guice.createInjector(new BootstrapModule());

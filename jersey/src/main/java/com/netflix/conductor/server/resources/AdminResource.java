@@ -21,6 +21,8 @@ import com.netflix.conductor.service.AdminService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
+import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
@@ -32,52 +34,82 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.Map;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.spi.AbstractLogger;
+
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * @author Viren
- *
  */
 @Api(value = "/admin", produces = MediaType.APPLICATION_JSON, consumes = MediaType.APPLICATION_JSON, tags = "Admin")
 @Path("/admin")
-@Produces({ MediaType.APPLICATION_JSON })
-@Consumes({ MediaType.APPLICATION_JSON })
+@Produces({MediaType.APPLICATION_JSON})
+@Consumes({MediaType.APPLICATION_JSON})
 @Singleton
 public class AdminResource {
-	private final AdminService adminService;
+    private final AdminService adminService;
 
     @Inject
-	public AdminResource(AdminService adminService) {
-		this.adminService = adminService;
-	}
+    public AdminResource(AdminService adminService) {
+        this.adminService = adminService;
+    }
 
-	@ApiOperation(value = "Get all the configuration parameters")
-	@GET
-	@Consumes(MediaType.TEXT_PLAIN)
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/config")
-	public Map<String, Object> getAllConfig() {
+    @ApiOperation(value = "Get all the configuration parameters")
+    @GET
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/config")
+    public Map<String, Object> getAllConfig() {
         return adminService.getAllConfig();
-	}
-	
-	@GET
-	@Path("/task/{tasktype}")
-	@ApiOperation("Get the list of pending tasks for a given task type")
-	@Consumes({ MediaType.WILDCARD })
-	public List<Task> view(@PathParam("tasktype") String taskType,
+    }
+
+    @GET
+    @Path("/task/{tasktype}")
+    @ApiOperation("Get the list of pending tasks for a given task type")
+    @Consumes({MediaType.WILDCARD})
+    public List<Task> view(@PathParam("tasktype") String taskType,
                            @DefaultValue("0") @QueryParam("start") Integer start,
                            @DefaultValue("100") @QueryParam("count") Integer count) {
         return adminService.getListOfPendingTask(taskType, start, count);
-	}
+    }
 
-	@POST
-	@Path("/sweep/requeue/{workflowId}")
-	@ApiOperation("Queue up all the running workflows for sweep")
-	@Consumes({ MediaType.WILDCARD })
-	@Produces({ MediaType.TEXT_PLAIN })
-	public String requeueSweep(@PathParam("workflowId") String workflowId) {
+    @POST
+    @Path("/sweep/requeue/{workflowId}")
+    @ApiOperation("Queue up all the running workflows for sweep")
+    @Consumes({MediaType.WILDCARD})
+    @Produces({MediaType.TEXT_PLAIN})
+    public String requeueSweep(@PathParam("workflowId") String workflowId) {
         return adminService.requeueSweep(workflowId);
-	}
+    }
 
+    @ApiOperation(value = "adjust logging on the fly.")
+    @GET
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/config/log")
+    public Map<String, String> getLog() {
+        return LoggerContext.getContext()
+                .getLoggers()
+                .stream()
+                .collect(toMap(AbstractLogger::getName, l->l.getLevel().toString()));
+    }
+
+    @ApiOperation(value = "adjust logging on the fly.")
+    @GET
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/config/log/{logger}/{level}")
+    public Map<String, String> setLog(
+            @PathParam("logger") String logger,
+            @PathParam("level") String lvl) {
+        Configurator.setAllLevels(logger, Level.getLevel(lvl));
+        return LoggerContext.getContext()
+                .getLoggers()
+                .stream()
+                .collect(toMap(AbstractLogger::getName, l->l.getLevel().toString()));
+    }
 }

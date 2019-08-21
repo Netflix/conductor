@@ -9,6 +9,7 @@ dependencies {
     compile "io.swagger:swagger-jaxrs:${revSwagger}"
     compile "com.sun.jersey:jersey-bundle:${revJerseyBundle}"
     compile "org.hibernate:hibernate-validator:${revHiberante}"
-
+    compile "org.apache.logging.log4j:log4j-api:${revLog4jApi}"
+    compile "org.apache.logging.log4j:log4j-core:${revLog4jCore}"
     compileOnly "javax.servlet:javax.servlet-api:${revServletApi}"
 }
