@@ -15,7 +15,7 @@ package main
 
 import (
 	conductor "github.com/netflix/conductor/client/go"
-	"github.com/netflix/conductor/task/sample"
+	"github.com/netflix/conductor/client/go/task/sample"
 )
 
 func main() {
