@@ -35,15 +35,11 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.*;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -104,6 +100,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private final RestHighLevelClient elasticSearchClient;
     private final RestClient elasticSearchAdminClient;
     private final ExecutorService executorService;
+    private final ConcurrentHashMap<String, List<IndexRequest>> bulkRequests;
+    private final int indexBatchSize;
 
 
     static {
@@ -119,6 +117,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         this.indexName = config.getIndexName();
         this.logIndexPrefix = config.getTasklogIndexName();
         this.clusterHealthColor = config.getClusterHealthColor();
+        this.bulkRequests = new ConcurrentHashMap<>();
+        this.indexBatchSize = config.getIndexBatchSize();
 
         // Set up a workerpool for performing async operations.
         int corePoolSize = 1;
@@ -654,7 +654,15 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         IndexRequest request = new IndexRequest(index, docType, docId);
         request.source(docBytes, XContentType.JSON);
 
-        indexWithRetry(request, "Indexing " + docType + ": " + docId);
+        if(bulkRequests.get(docType) == null) {
+            bulkRequests.put(docType, new ArrayList<>(this.indexBatchSize));
+        }
+
+        bulkRequests.get(docType).add(request);
+        if (bulkRequests.get(docType).size() >= this.indexBatchSize) {
+            indexWithRetry(bulkRequests.get(docType), "Indexing " + docType + ": " + docId);
+            bulkRequests.put(docType, new ArrayList<>(this.indexBatchSize));
+        }
     }
 
     /**
@@ -662,22 +670,27 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
      * @param request The index request that we want to perform.
      * @param operationDescription The type of operation that we are performing.
      */
-    private void indexWithRetry(final IndexRequest request, final String operationDescription) {
+    private void indexWithRetry(final List<IndexRequest> request, final String operationDescription) {
 
         try {
+            BulkRequest bulkRequest = new BulkRequest();
+            request.stream().forEach(req -> bulkRequest.add(req));
             long startTime = Instant.now().toEpochMilli();
-            new RetryUtil<IndexResponse>().retryOnException(() -> {
+            new RetryUtil<BulkResponse>().retryOnException(() -> {
                 try {
-                    return elasticSearchClient.index(request);
+                    return elasticSearchClient.bulk(bulkRequest);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }, null, null, RETRY_COUNT, operationDescription, "indexWithRetry");
-            logger.info("Time taken {} for  request {}, type {} ,id {} , index {}", Instant.now().toEpochMilli() - startTime, request, request.type(), request.id(), request.index());
+            request.clear();
+            logger.info("Time taken {} ", Instant.now().toEpochMilli() - startTime);
             logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
+            Monitors.recordESIndexTime("index_time", Instant.now().toEpochMilli() - startTime);
+            Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             Monitors.error(className, "index");
-            logger.error("Failed to index {} for request type: {}", request.id(), request.type(), e);
+            logger.error("Failed to index {} for request type: {}", request.toString(), e);
         }
     }
 
