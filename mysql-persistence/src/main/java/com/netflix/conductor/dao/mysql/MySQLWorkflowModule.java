@@ -10,6 +10,7 @@ import com.netflix.conductor.dao.QueueDAO;
 import com.zaxxer.hikari.HikariDataSource;
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +30,12 @@ public class MySQLWorkflowModule extends AbstractModule {
         dataSource.setUsername(config.getProperty("jdbc.username", "conductor"));
         dataSource.setPassword(config.getProperty("jdbc.password", "password"));
         dataSource.setAutoCommit(false);
-        
+
         dataSource.setMaximumPoolSize(config.getIntProperty("jdbc.maxPoolSize", 20));
         dataSource.setMinimumIdle(config.getIntProperty("jdbc.minIdleSize", 5));
         dataSource.setIdleTimeout(config.getIntProperty("jdbc.idleTimeout", 1000*300));
         dataSource.setTransactionIsolation(config.getProperty("jdbc.isolationLevel", "TRANSACTION_REPEATABLE_READ"));
-        
+
         flywayMigrate(config, dataSource);
 
         return dataSource;
@@ -49,22 +50,20 @@ public class MySQLWorkflowModule extends AbstractModule {
 
     private void flywayMigrate(Configuration config, DataSource dataSource) {
         boolean enabled = getBool(config.getProperty("flyway.enabled", "true"), true);
-        if(!enabled) {
+        if (!enabled) {
             logger.debug("Flyway migrations are disabled");
             return;
         }
 
-        String migrationTable = config.getProperty("flyway.table", null);
-
-        Flyway flyway = new Flyway();
-        if(null != migrationTable) {
-            logger.debug("Using Flyway migration table '{}'", migrationTable);
-            flyway.setTable(migrationTable);
+        final String migrationTable = config.getProperty("flyway.table", null);
+        final FluentConfiguration flywayConfig = Flyway.configure()
+                .dataSource(dataSource)
+                .placeholderReplacement(false);
+        if (null != migrationTable) {
+            flywayConfig.table(migrationTable);
         }
 
-        flyway.setDataSource(dataSource);
-        flyway.setPlaceholderReplacement(false);
-        flyway.migrate();
+        new Flyway(flywayConfig).migrate();
     }
 
     private boolean getBool(String value, boolean defaultValue) {

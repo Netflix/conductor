@@ -1485,7 +1485,7 @@
             ]
         },
         "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
+            "locked": "6.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
             ]
@@ -3139,7 +3139,7 @@
             ]
         },
         "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
+            "locked": "6.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
             ]
@@ -4793,7 +4793,7 @@
             ]
         },
         "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
+            "locked": "6.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
             ]
@@ -6447,7 +6447,7 @@
             ]
         },
         "org.flywaydb:flyway-core": {
-            "locked": "4.0.3",
+            "locked": "6.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
             ]

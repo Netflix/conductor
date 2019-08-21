@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,21 +55,19 @@ public class MySQLDataSourceProvider implements Provider<DataSource> {
     }
     // TODO Move this into a class that has complete lifecycle for the connection, i.e. startup and shutdown.
     private void flywayMigrate(DataSource dataSource) {
-        boolean enabled = configuration.isFlywayEnabled();
-        if (!enabled) {
+        if (!configuration.isFlywayEnabled()) {
             logger.debug("Flyway migrations are disabled");
             return;
         }
 
+        final FluentConfiguration config = Flyway.configure()
+                .dataSource(dataSource)
+                .placeholderReplacement(false);
 
-        Flyway flyway = new Flyway();
         configuration.getFlywayTable().ifPresent(tableName -> {
-            logger.debug("Using Flyway migration table '{}'", tableName);
-            flyway.setTable(tableName);
-        });
-
-        flyway.setDataSource(dataSource);
-        flyway.setPlaceholderReplacement(false);
-        flyway.migrate();
+                    logger.debug("Using Flyway migration table '{}'", tableName);
+                    config.table(tableName);
+                });
+        new Flyway(config).migrate();
     }
 }
