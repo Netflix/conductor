@@ -1,6 +1,6 @@
 create table log4j_logs
 (
-    id       serial primary key,
+    id       bigserial primary key,
     log_time timestamp,
     logger   text,
     level    text,
@@ -52,7 +52,7 @@ commit;
 
 create table meta_task_def
 (
-    id          serial primary key,
+    id          bigserial primary key,
     created_on  timestamp    not null default now(),
     modified_on timestamp    not null default now(),
     name        varchar(255) not null,
@@ -61,7 +61,7 @@ create table meta_task_def
 
 create table meta_workflow_def
 (
-    id             serial primary key,
+    id             bigserial primary key,
     created_on     timestamp    not null default now(),
     modified_on    timestamp    not null default now(),
     name           varchar(255) not null,
@@ -72,7 +72,7 @@ create table meta_workflow_def
 
 create table meta_event_handler
 (
-    id          serial primary key,
+    id          bigserial primary key,
     created_on  timestamp    not null default now(),
     modified_on timestamp    not null default now(),
     name        varchar(255) not null,
@@ -86,7 +86,7 @@ create table meta_event_handler
 -- --------------------------------------------------------------------------------------------------------------
 create table workflow
 (
-    id                 serial primary key,
+    id                 bigserial primary key,
     created_on         timestamp    not null default now(),
     modified_on        timestamp    not null default now(),
     start_time         timestamp,
@@ -112,7 +112,7 @@ create index workflow_end_time on workflow (end_time);
 
 create table task_in_progress
 (
-    id            serial primary key,
+    id            bigserial primary key,
     created_on    timestamp    not null default now(),
     modified_on   timestamp    not null default now(),
     in_progress   boolean      not null default false,
@@ -126,7 +126,7 @@ alter table task_in_progress
 
 create table task_rate_limit
 (
-    id            serial primary key,
+    id            bigserial primary key,
     created_on    timestamp    not null default now(),
     expires_on    timestamp    not null,
     task_def_name varchar(255) not null
@@ -135,7 +135,7 @@ create index task_rate_limit_name_created on task_rate_limit (task_def_name, cre
 
 create table task
 (
-    id           serial primary key,
+    id           bigserial primary key,
     created_on   timestamp    not null default now(),
     modified_on  timestamp    not null default now(),
     task_id      varchar(255) not null,
@@ -157,7 +157,7 @@ create index task_workflow_id on task (workflow_id);
 
 create table task_scheduled
 (
-    id          serial primary key,
+    id          bigserial primary key,
     created_on  timestamp    not null default now(),
     modified_on timestamp    not null default now(),
     workflow_id varchar(255) not null,
@@ -170,7 +170,7 @@ alter table task_scheduled
 
 create table task_log
 (
-    id         serial primary key,
+    id         bigserial primary key,
     created_on timestamp    not null default now(),
     task_id    varchar(255) not null,
     log        text         not null
@@ -181,7 +181,7 @@ alter table task_log
 
 create table poll_data
 (
-    id          serial primary key,
+    id          bigserial primary key,
     created_on  timestamp    not null default now(),
     modified_on timestamp    not null default now(),
     queue_name  varchar(255) not null,
@@ -194,7 +194,7 @@ alter table poll_data
 
 create table event_message
 (
-    id         serial primary key,
+    id         bigserial primary key,
     created_on timestamp    not null default now(),
     queue_name varchar(255) not null,
     message_id varchar(255) not null,
@@ -205,7 +205,7 @@ create index event_message_created_on on event_message (created_on);
 
 create table event_execution
 (
-    id           serial primary key,
+    id           bigserial primary key,
     created_on   timestamp    not null default now(),
     modified_on  timestamp    not null default now(),
     handler_name varchar(255) not null,
@@ -226,7 +226,7 @@ alter table event_execution
 
 create table event_published
 (
-    id           serial primary key,
+    id           bigserial primary key,
     created_on   timestamp    not null default now(),
     json_data    text         not null,
     message_id   varchar(255) not null,
@@ -241,7 +241,7 @@ create index event_published_created_on on event_published (created_on);
 -- --------------------------------------------------------------------------------------------------------------
 create table queue
 (
-    id         serial primary key,
+    id         bigserial primary key,
     created_on timestamp    not null default now(),
     queue_name varchar(255) not null
 );
@@ -251,7 +251,7 @@ alter table queue
 
 create table queue_message
 (
-    id         serial primary key,
+    id         bigserial primary key,
     queue_name varchar(255) not null,
     message_id varchar(255) not null,
     version    bigint       not null default 0,
