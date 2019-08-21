@@ -68,7 +68,6 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -295,7 +294,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
             indexObject(req, WORKFLOW_DOC_TYPE);
 
-            logger.info("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
+            logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
             Monitors.recordESIndexTime("index_workflow", Instant.now().toEpochMilli() - startTime);
             Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
@@ -320,7 +319,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.doc(doc, XContentType.JSON);
             req.upsert(doc, XContentType.JSON);
             indexObject(req, TASK_DOC_TYPE);
-            logger.info("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
+            logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
             Monitors.recordESIndexTime("index_task", Instant.now().toEpochMilli() - startTime);
             Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
