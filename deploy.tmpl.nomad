@@ -201,11 +201,14 @@ job "conductor" {
         // Exclude demo workflows
         loadSample = "false"
 
-        // The following will be provided by secret/conductor
-        //  - conductor_auth_url
-        //  - conductor_auth_clientId
-        //  - conductor_auth_clientSecret
-        //  - workflow_elasticsearch_url
+        // Disable system-level loggers by default
+        log4j_logger_com_jayway_jsonpath = "OFF"
+        log4j_logger_com_zaxxer_hikari = "INFO"
+        log4j_logger_org_eclipse_jetty = "INFO"
+        log4j_logger_org_apache_http = "INFO"
+        log4j_logger_io_grpc_netty = "INFO"
+        log4j_logger_io_swagger = "OFF"
+        log4j_logger_tracer = "OFF"
       }
 
       service {
