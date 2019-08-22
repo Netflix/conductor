@@ -17,6 +17,8 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -48,7 +50,7 @@ abstract class Elasticsearch6RestAbstractDAO {
     private static final TypeReference MAP_ALL_TYPE = new TypeReference<Map<String, ?>>() {};
     private final static String DEFAULT = "_default_";
     private final static String NAMESPACE_SEP = ".";
-    RestHighLevelClient client;
+    RestClientBuilder builder;
     private Set<String> indexCache = ConcurrentHashMap.newKeySet();
     private ObjectMapper mapper;
     private String context;
@@ -57,8 +59,8 @@ abstract class Elasticsearch6RestAbstractDAO {
     private int batchSize;
     private int retryDelay;
 
-    Elasticsearch6RestAbstractDAO(RestHighLevelClient client, Configuration config, ObjectMapper mapper, String context) {
-        this.client = client;
+    Elasticsearch6RestAbstractDAO(RestClientBuilder builder, Configuration config, ObjectMapper mapper, String context) {
+        this.builder = builder;
         this.mapper = mapper;
         this.context = context;
 
@@ -125,7 +127,7 @@ abstract class Elasticsearch6RestAbstractDAO {
         // Check index existence first
         doWithRetryNoisy(() -> {
             GetIndexRequest request = new GetIndexRequest().indices(indexName);
-            try {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
                 boolean result = client.indices().exists(request);
                 exists.set(result);
             } catch (IOException e) {
@@ -151,11 +153,11 @@ abstract class Elasticsearch6RestAbstractDAO {
 
             // Create it otherwise
             doWithRetryNoisy(() -> {
-                try {
+                try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
                     Settings settings = Settings.builder()
-                            .put("index.number_of_shards", 1)
-                            .put("index.number_of_replicas", 1)
-                            .build();
+                        .put("index.number_of_shards", 1)
+                        .put("index.number_of_replicas", 1)
+                        .build();
 
                     CreateIndexRequest request = new CreateIndexRequest(indexName, settings);
                     client.indices().create(request);
@@ -210,14 +212,14 @@ abstract class Elasticsearch6RestAbstractDAO {
 
             // Create it otherwise
             doWithRetryNoisy(() -> {
-                try {
+                try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
                     Settings settings = Settings.builder()
-                            .put("index.number_of_shards", 1)
-                            .put("index.number_of_replicas", 1)
-                            .build();
+                        .put("index.number_of_shards", 1)
+                        .put("index.number_of_replicas", 1)
+                        .build();
 
                     CreateIndexRequest request = new CreateIndexRequest(indexName, settings)
-                            .mapping(typeName, mapping);
+                        .mapping(typeName, mapping);
 
                     client.indices().create(request);
                     indexCache.add(indexName);
@@ -249,12 +251,12 @@ abstract class Elasticsearch6RestAbstractDAO {
     void delete(String indexName, String typeName, String id) {
         ensureIndexExists(indexName);
         doWithRetry(() -> {
-            try {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
                 DeleteRequest request = new DeleteRequest()
-                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .index(indexName)
-                        .type(typeName)
-                        .id(id);
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .index(indexName)
+                    .type(typeName)
+                    .id(id);
 
                 client.delete(request);
             } catch (Exception ex) {
@@ -271,14 +273,14 @@ abstract class Elasticsearch6RestAbstractDAO {
         AtomicBoolean result = new AtomicBoolean(false);
 
         doWithRetry(() -> {
-            try {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
                 IndexRequest request = new IndexRequest()
-                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .source(toMap(payload))
-                        .create(true)
-                        .index(indexName)
-                        .type(typeName)
-                        .id(id);
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .source(toMap(payload))
+                    .create(true)
+                    .index(indexName)
+                    .type(typeName)
+                    .id(id);
 
                 client.index(request);
                 result.set(true);
@@ -296,19 +298,41 @@ abstract class Elasticsearch6RestAbstractDAO {
     void update(String indexName, String typeName, String id, Object payload) {
         ensureIndexExists(indexName);
         doWithRetry(() -> {
-            try {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
 
                 IndexRequest request = new IndexRequest()
-                        .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
-                        .source(toMap(payload))
-                        .index(indexName)
-                        .type(typeName)
-                        .id(id);
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .source(toMap(payload))
+                    .index(indexName)
+                    .type(typeName)
+                    .id(id);
 
                 client.index(request);
             } catch (Exception ex) {
                 if (!isVerConflictException(ex)) {
                     logger.error("update: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
+                    throw new RuntimeException(ex.getMessage(), ex);
+                }
+            }
+        });
+    }
+
+    void merge(String indexName, String typeName, String id, Map<String, Object> payload) {
+        ensureIndexExists(indexName);
+        doWithRetry(() -> {
+            try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
+
+                UpdateRequest request = new UpdateRequest()
+                    .setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE)
+                    .doc(payload)
+                    .index(indexName)
+                    .type(typeName)
+                    .id(id);
+
+                client.update(request);
+            } catch (Exception ex) {
+                if (!isVerConflictException(ex)) {
+                    logger.error("merge: failed for {}/{}/{} with {} {}", indexName, typeName, id, ex.getMessage(), toJson(payload), ex);
                     throw new RuntimeException(ex.getMessage(), ex);
                 }
             }
@@ -325,7 +349,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
     GetResponse findOne(String indexName, String typeName, String id) {
         ensureIndexExists(indexName);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             GetRequest request = new GetRequest().index(indexName).type(typeName).id(id);
 
             AtomicReference<GetResponse> result = new AtomicReference<>();
@@ -340,13 +364,13 @@ abstract class Elasticsearch6RestAbstractDAO {
             return result.get();
         } catch (Exception ex) {
             logger.error("findOne: failed for {}/{}/{} with {}", indexName, typeName, id, ex.getMessage(), ex);
-            throw ex;
+            throw new RuntimeException(ex.getMessage(), ex);
         }
     }
 
     <T> T findOne(String indexName, String typeName, String id, Class<T> clazz) {
         ensureIndexExists(indexName);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             GetRequest request = new GetRequest().index(indexName).type(typeName).id(id);
 
             AtomicReference<GetResponse> result = new AtomicReference<>();
@@ -365,7 +389,7 @@ abstract class Elasticsearch6RestAbstractDAO {
             return null;
         } catch (Exception ex) {
             logger.error("findOne: failed for {}/{}/{}/{} with {}", indexName, typeName, id, clazz, ex.getMessage(), ex);
-            throw ex;
+            throw new RuntimeException(ex.getMessage(), ex);
         }
     }
 
@@ -375,7 +399,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
         // This type of the search fails if no such index
         ensureIndexExists(indexName);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             List<String> result = new LinkedList<>();
 
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
@@ -423,7 +447,7 @@ abstract class Elasticsearch6RestAbstractDAO {
 
         // This type of the search fails if no such index
         ensureIndexExists(indexName);
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             List<T> result = new LinkedList<>();
 
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
@@ -474,7 +498,7 @@ abstract class Elasticsearch6RestAbstractDAO {
     }
 
     Long getCount(String indexName, String typeName, QueryBuilder query) {
-        try {
+        try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             sourceBuilder.fetchSource(false);
             sourceBuilder.query(query);

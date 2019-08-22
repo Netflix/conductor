@@ -82,9 +82,9 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 
 		String SQL = "INSERT INTO task_log(created_on, task_id, log) VALUES (?, ?, ?)";
 
-		withTransaction(connection -> {
+		withTransaction(tx -> {
 			for (TaskExecLog log : logs) {
-				execute(connection, SQL,
+				execute(tx, SQL,
 					q -> q.addTimestampParameter(log.getCreatedTime(), System.currentTimeMillis())
 						.addParameter(log.getTaskId())
 						.addParameter(log.getLog())
@@ -103,8 +103,8 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 		String SQL = "INSERT INTO event_message(queue_name, message_id, receipt, json_data) " +
 			"VALUES (?, ?, ?, ?)";
 
-		withTransaction(connection -> {
-			execute(connection, SQL,
+		withTransaction(tx -> {
+			execute(tx, SQL,
 				q -> q.addParameter(queue)
 					.addParameter(msg.getId())
 					.addParameter(msg.getReceipt())

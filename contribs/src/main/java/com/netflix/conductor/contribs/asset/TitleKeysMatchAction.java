@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Singleton
 public class TitleKeysMatchAction implements JavaEventAction {
-	private static Logger logger = LoggerFactory.getLogger(ReferenceKeysMatchAction.class);
+	private static Logger logger = LoggerFactory.getLogger(TitleKeysMatchAction.class);
 	private final WorkflowExecutor executor;
 	private final ObjectMapper mapper;
 
@@ -72,8 +72,17 @@ public class TitleKeysMatchAction implements JavaEventAction {
 
 		// Lets find WAIT + IN_PROGRESS tasks directly via edao
 		String ndcValue = NDC.peek();
+		// Get the tasks either by
+		// a) tags -> workflows -> WAIT + IN_PROGRESS task
+		// b) backward compatible for all 'WAIT + IN_PROGRESS'
+		List<Task> tasks;
+		if (CollectionUtils.isNotEmpty(ee.getTags())) {
+			tasks = executor.getPendingTasksByTags(Wait.NAME, ee.getTags());
+		} else {
+			tasks = executor.getPendingSystemTasks(Wait.NAME);
+		}
+
 		boolean taskNamesDefined = CollectionUtils.isNotEmpty(params.taskRefNames);
-		List<Task> tasks = executor.getPendingSystemTasks(Wait.NAME);
 		tasks.parallelStream().forEach(task -> {
 			boolean ndcCleanup = false;
 			try {
@@ -111,7 +120,6 @@ public class TitleKeysMatchAction implements JavaEventAction {
 
 				// Array match
 				if (!matches(taskRefKeys, eventRefKeys)) {
-					logger.trace("Task does not match. Task={" + task + "}, taskRefKeys=" + taskRefKeys + ", eventRefKeys=" + eventRefKeys);
 					return;
 				}
 

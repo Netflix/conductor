@@ -2,19 +2,18 @@ package com.bydeluxe.es2pg.migration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.aurora.AuroraBaseDAO;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 class Dao extends AuroraBaseDAO {
@@ -65,10 +64,68 @@ class Dao extends AuroraBaseDAO {
 		}
 	}
 
-	void requeueSweep(Connection tx) {
-		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_status = 'RUNNING'";
+	void requeueSweep(Connection tx, long jsonLimit) {
+		String SQL = "SELECT (COALESCE(length(json_data),0) + COALESCE((select sum(length(json_data)) task_size from task t where t.workflow_id = w.workflow_id), 0)) as total_size, w.workflow_id " +
+			"FROM workflow w WHERE w.workflow_status = 'RUNNING'";
+		execute(tx, SQL, q -> q.executeAndFetch(rs -> {
+			while (rs.next()) {
+				String workflowId = rs.getString("workflow_id");
+				long totalSize = rs.getLong("total_size");
+				if (totalSize < jsonLimit) {
+					pushMessage(tx, WorkflowExecutor.deciderQueue, workflowId, null);
+				} else {
+					logger.warn("Requeue sweeper skipped! Total JSON size " + totalSize + " exceeds limit ("  + jsonLimit + ") for " + workflowId);
+				}
+			}
+			return null;
+		}));
+	}
+
+	void requeueAsync(Connection tx) {
+		String SQL = "SELECT task_id FROM task WHERE task_type IN ('HTTP','BATCH') AND task_status IN ('SCHEDULED', 'IN_PROGRESS')";
 		List<String> ids = query(tx, SQL, q -> q.executeAndFetch(String.class));
-		ids.forEach(id -> pushMessage(tx, WorkflowExecutor.deciderQueue, id, null, 30));
+		ids.forEach(id -> pushMessage(tx, "http", id, null));
+	}
+
+	void dataCleanup(Connection tx) {
+		fixTask(tx, "EVENT", "SCHEDULED");
+		fixTask(tx, "VALIDATION", "SCHEDULED");
+		fixTask(tx, "SUB_WORKFLOW", "SCHEDULED");
+		fixTask(tx, "JSON_JQ_TRANSFORM", "SCHEDULED");
+	}
+
+	private void fixTask(Connection tx, String type, String status) {
+		String TASK_TYPE_STATUS = "SELECT t.json_data FROM task t " +
+			"INNER JOIN workflow w ON w.workflow_id = t.workflow_id " +
+			"WHERE w.workflow_status = 'RUNNING' " +
+			"AND t.task_type = ? AND t.task_status = ?";
+
+		String FIND_PREV_RETRIED = "SELECT task_id FROM task " +
+			"WHERE workflow_id = ? " +
+			"AND json_data::jsonb->'retried' = 'true' " +
+			"ORDER BY json_data::jsonb->'seq' DESC LIMIT 1";
+
+		String RESET_FLAG = "UPDATE task " +
+			"SET json_data = (json_data::jsonb || '{\"retried\": false}'::jsonb) " +
+			"WHERE task_id = ?";
+
+		logger.info("Looking for " + type + "/" + status);
+		List<Task> tasks = query(tx, TASK_TYPE_STATUS, q -> q.addParameter(type).addParameter(status).executeAndFetch(Task.class));
+		tasks.forEach(task -> {
+			logger.info("Task to cleanup" + task);
+
+			// Cleanup stuck task
+			execute(tx, "DELETE FROM task_in_progress WHERE task_id = ?", q -> q.addParameter(task.getTaskId()).executeDelete());
+			execute(tx, "DELETE FROM task_scheduled WHERE task_id = ?", q -> q.addParameter(task.getTaskId()).executeDelete());
+			execute(tx, "DELETE FROM task WHERE task_id = ?", q -> q.addParameter(task.getTaskId()).executeDelete());
+
+			String prevTaskId = query(tx, FIND_PREV_RETRIED, q -> q.addParameter(task.getWorkflowInstanceId()).executeScalar(String.class));
+			if (StringUtils.isNotEmpty(prevTaskId)) {
+				// Reset flag
+				logger.info("Task to reset retried flag " + prevTaskId);
+				execute(tx, RESET_FLAG, q -> q.addParameter(prevTaskId).executeUpdate());
+			}
+		});
 	}
 
 	private void createQueueIfNotExists(Connection tx, String queueName) {
@@ -80,13 +137,13 @@ class Dao extends AuroraBaseDAO {
 		queues.add(queueName);
 	}
 
-	void pushMessage(Connection tx, String queueName, String messageId, String payload, long offsetSeconds) {
+	void pushMessage(Connection tx, String queueName, String messageId, String payload) {
 		createQueueIfNotExists(tx, queueName);
 
 		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
 			"VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
-		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
+		long deliverOn = System.currentTimeMillis();
 
 		query(tx, SQL, q -> q.addParameter(queueName.toLowerCase())
 			.addParameter(messageId)
@@ -135,6 +192,14 @@ class Dao extends AuroraBaseDAO {
 			"UPDATE SET created_on=?, modified_on=?, start_time=?, end_time=?, parent_workflow_id=?, " +
 			"workflow_type=?, workflow_status=?, date_str=?, json_data=?, input=?, output=?, correlation_id=?, tags=?";
 
+		// We must not clear tags for RESET as it must be restarted right away
+		Set<String> tags;
+		if (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
+			tags = Collections.emptySet();
+		} else {
+			tags = workflow.getTags();
+		}
+
 		execute(tx, SQL, q -> q
 			.addTimestampParameter(workflow.getCreateTime(), System.currentTimeMillis())
 			.addTimestampParameter(workflow.getUpdateTime(), System.currentTimeMillis())
@@ -149,7 +214,7 @@ class Dao extends AuroraBaseDAO {
 			.addJsonParameter(workflow.getInput())
 			.addJsonParameter(workflow.getOutput())
 			.addParameter(workflow.getCorrelationId())
-			.addParameter(workflow.getTags()) // end insert
+			.addParameter(tags) // end insert
 			.addTimestampParameter(workflow.getCreateTime(), System.currentTimeMillis())
 			.addTimestampParameter(workflow.getUpdateTime(), System.currentTimeMillis())
 			.addTimestampParameter(workflow.getStartTime())
@@ -162,13 +227,41 @@ class Dao extends AuroraBaseDAO {
 			.addJsonParameter(workflow.getInput())
 			.addJsonParameter(workflow.getOutput())
 			.addParameter(workflow.getCorrelationId())
-			.addParameter(workflow.getTags())
+			.addParameter(tags)
 			.executeUpdate());
 	}
 
 	long workflowCount(Connection tx) {
 		String SQL = "SELECT count(*) FROM workflow";
 		return query(tx, SQL, q -> q.executeScalar(Long.class));
+	}
+
+	void upsertEventHandler(Connection tx, EventHandler def) {
+		final String UPDATE_SQL = "UPDATE meta_event_handler SET " +
+			"event = ?, active = ?, json_data = ?, " +
+			"modified_on = now() WHERE name = ?";
+
+		final String INSERT_SQL = "INSERT INTO meta_event_handler (name, event, active, json_data) " +
+			"VALUES (?, ?, ?, ?)";
+
+		execute(tx, UPDATE_SQL, update -> {
+			int result = update
+				.addParameter(def.getEvent())
+				.addParameter(def.isActive())
+				.addJsonParameter(def)
+				.addParameter(def.getName())
+				.executeUpdate();
+
+			if (result == 0) {
+				execute(tx, INSERT_SQL,
+					insert -> insert
+						.addParameter(def.getName())
+						.addParameter(def.getEvent())
+						.addParameter(def.isActive())
+						.addJsonParameter(def)
+						.executeUpdate());
+			}
+		});
 	}
 
 	void upsertTaskDef(Connection tx, TaskDef def) {

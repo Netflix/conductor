@@ -22,9 +22,12 @@ public abstract class AuroraBaseDAO {
 		AuroraBaseDAO.class.getName(),
 		Thread.class.getName()
 	);
+	private static final List<String> EXCLUDED_STACKTRACE_METHODS = ImmutableList.of(
+		"toString"
+	);
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	private final DataSource dataSource;
+	protected final DataSource dataSource;
 	private final ObjectMapper mapper;
 
 	public AuroraBaseDAO(DataSource dataSource, ObjectMapper mapper) {
@@ -46,12 +49,14 @@ public abstract class AuroraBaseDAO {
 			logger.trace("{} : starting transaction", callingMethod.toString());
 
 		try (Connection tx = dataSource.getConnection()) {
+			tx.setAutoCommit(false);
 			try {
 				R result = function.apply(tx);
 				tx.commit();
 				return result;
 			} catch (Throwable th) {
 				tx.rollback();
+				logger.debug("Rollback issued due to " + th.getMessage(), th);
 				throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, th.getMessage(), th);
 			}
 		} catch (SQLException ex) {
@@ -65,6 +70,7 @@ public abstract class AuroraBaseDAO {
 	private LazyToString getCallingMethod() {
 		return new LazyToString(() -> Arrays.stream(Thread.currentThread().getStackTrace())
 			.filter(ste -> !EXCLUDED_STACKTRACE_CLASS.contains(ste.getClassName()))
+			.filter(ste -> !EXCLUDED_STACKTRACE_METHODS.contains(ste.getMethodName()))
 			.findFirst()
 			.map(StackTraceElement::getMethodName)
 			.orElse("Cannot find Caller"));
@@ -78,7 +84,8 @@ public abstract class AuroraBaseDAO {
 		try (Query q = new Query(mapper, tx, query)) {
 			return function.apply(q);
 		} catch (SQLException ex) {
-			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex);
+			logger.debug("query " + query + " failed " + ex.getMessage(), ex);
+			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
 		}
 	}
 
@@ -90,7 +97,8 @@ public abstract class AuroraBaseDAO {
 		try (Query q = new Query(mapper, tx, query)) {
 			function.apply(q);
 		} catch (SQLException ex) {
-			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex);
+			logger.debug("execute " + query + " failed " + ex.getMessage(), ex);
+			throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
 		}
 	}
 

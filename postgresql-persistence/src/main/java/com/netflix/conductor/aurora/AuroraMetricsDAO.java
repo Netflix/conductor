@@ -7,8 +7,10 @@ import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.MetricsDAO;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -58,23 +60,21 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 		"deluxe.conductor.workflow.update"
 	);
 
-	private static final List<String> WORKFLOWS = Arrays.asList(
-		"deluxe.dependencygraph.conformancegroup.delivery.process", // Conformance Group
-		"deluxe.dependencygraph.assembly.conformancegroup.process", // Sherlock V1 Assembly Conformance
-		"deluxe.dependencygraph.sourcewait.process",                // Sherlock V2 Sourcewait
-		"deluxe.dependencygraph.execute.process",                   // Sherlock V2 Execute
-		"deluxe.deluxeone.sky.compliance.process",                  // Sky Compliance
-		"deluxe.delivery.itune.process"                             // iTune
-	);
-
 	private static final String VERSION = "\\.\\d+\\.\\d+"; // covers '.X.Y' where X and Y any number/digit
 	private static final String PREFIX = "deluxe.conductor";
+	private static ParametersUtils pu = new ParametersUtils();
+	private final List<String> WORKFLOWS;
 	private MetadataDAO metadataDAO;
 
 	@Inject
 	public AuroraMetricsDAO(DataSource dataSource, ObjectMapper mapper, MetadataDAO metadataDAO, Configuration config) {
 		super(dataSource, mapper);
 		this.metadataDAO = metadataDAO;
+		String workflows = config.getProperty("aurora_metrics_main_workflows", "");
+		if (StringUtils.isEmpty(workflows)) {
+			logger.warn("No 'aurora_metrics_main_workflows' parameter defined");
+		}
+		WORKFLOWS = Arrays.asList(workflows.split(","));
 	}
 
 	@Override
@@ -375,6 +375,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	private Set<String> getSubjects() {
 		return getHandlers().stream()
 			.map(eh -> eh.getEvent().split(":")[1]) // 0 - event bus, 1 - subject, 2 - queue
+			.map(event -> pu.replace(event).toString())
 			.collect(Collectors.toSet());
 	}
 

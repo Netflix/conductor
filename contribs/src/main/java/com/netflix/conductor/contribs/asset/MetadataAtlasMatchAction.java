@@ -119,7 +119,6 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 
 				// Array match
 				if (!matches(taskRefKeys, atlasId)) {
-					logger.trace("Task does not match. Task={" + task + "}, taskRefKeys=" + taskRefKeys + ", atlasId=" + atlasId);
 					return;
 				}
 

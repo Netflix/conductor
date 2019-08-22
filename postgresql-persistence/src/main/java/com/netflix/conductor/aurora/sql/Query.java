@@ -288,7 +288,7 @@ public class Query implements AutoCloseable {
 
             return val;
         } catch (SQLException ex) {
-            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage());
+            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
@@ -311,7 +311,7 @@ public class Query implements AutoCloseable {
         try {
             return this.statement.executeQuery();
         } catch (SQLException ex) {
-            throw new ApplicationException(Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         } finally {
             if (null != start && logger.isTraceEnabled()) {
                 long end = System.currentTimeMillis();
@@ -330,7 +330,7 @@ public class Query implements AutoCloseable {
             }
             return rs.getObject(1);
         } catch (SQLException ex) {
-            throw new ApplicationException(Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
@@ -360,7 +360,7 @@ public class Query implements AutoCloseable {
                 return getScalarFromResultSet(rs, returnType);
             }
         } catch (SQLException ex) {
-            throw new ApplicationException(Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
@@ -382,7 +382,7 @@ public class Query implements AutoCloseable {
             }
             return values;
         } catch (SQLException ex) {
-            throw new ApplicationException(Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
@@ -419,7 +419,7 @@ public class Query implements AutoCloseable {
             }
             return list;
         } catch (SQLException ex) {
-            throw new ApplicationException(Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
@@ -434,14 +434,14 @@ public class Query implements AutoCloseable {
         try (ResultSet rs = executeQuery()) {
             return handler.apply(rs);
         } catch (SQLException ex) {
-            throw new ApplicationException(Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
     @Override
     public void close() {
         try {
-            if (null != statement && !statement.isClosed()) {
+            if (statement != null) {
                 statement.close();
             }
         } catch (SQLException ex) {
@@ -593,7 +593,7 @@ public class Query implements AutoCloseable {
         try {
             return om.writeValueAsString(value);
         } catch (JsonProcessingException ex) {
-            throw new ApplicationException(Code.BACKEND_ERROR, ex);
+            throw new ApplicationException(Code.BACKEND_ERROR, ex.getMessage(), ex);
         }
     }
 
