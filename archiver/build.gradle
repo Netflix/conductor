@@ -15,17 +15,12 @@ repositories {
 
 dependencies {
     // Log4j
-    compile 'org.apache.logging.log4j:log4j-api:2.11.1'
     compile 'org.apache.logging.log4j:log4j-core:2.11.1'
-
-    // ES6 Dependencies
-    compile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-high-level-client', version: '6.3.1'
-
-    // AWS S3
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.428'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
 
     // PostgreSQL
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.3.1'
 
     // Tools
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
@@ -33,6 +28,7 @@ dependencies {
     compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
     compile group: 'com.google.guava', name: 'guava', version: '19.0'
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
+    compile group: 'joda-time', name: 'joda-time', version: '2.9.9'
 }
 
 shadowJar {
