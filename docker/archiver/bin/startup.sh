@@ -22,7 +22,7 @@ addParam() {
 }
 
 addParam "${archiver_keep_days}" "keep_days" "30"
-addParam "${archiver_queue_workers}" "queue_workers" "100"
+addParam "${archiver_queue_workers}" "queue_workers" "50"
 
 addParam "${aurora_host}" "aurora_host" ""
 addParam "${aurora_port}" "aurora_port" ""
