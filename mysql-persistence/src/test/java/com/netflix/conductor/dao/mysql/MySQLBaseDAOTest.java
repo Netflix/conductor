@@ -17,6 +17,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 
+import static org.flywaydb.core.Flyway.configure;
+
+
 @SuppressWarnings("Duplicates")
 public class MySQLBaseDAOTest {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -60,10 +63,9 @@ public class MySQLBaseDAOTest {
         }
 
         synchronized (MySQLBaseDAOTest.class) {
-            Flyway flyway = new Flyway();
-            flyway.setDataSource(dataSource);
-            flyway.setPlaceholderReplacement(false);
-            flyway.migrate();
+            new Flyway(
+                    configure().dataSource(dataSource).placeholderReplacement(false)
+            ).migrate();
         }
     }
 

@@ -16,6 +16,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 
+import static org.flywaydb.core.Flyway.configure;
+
+
 @SuppressWarnings("Duplicates")
 public class MySQLDAOTestUtil {
     private static final Logger logger = LoggerFactory.getLogger(MySQLDAOTestUtil.class);
@@ -50,11 +53,9 @@ public class MySQLDAOTestUtil {
     }
 
     private void flywayMigrate(DataSource dataSource) {
-
-        Flyway flyway = new Flyway();
-        flyway.setDataSource(dataSource);
-        flyway.setPlaceholderReplacement(false);
-        flyway.migrate();
+        new Flyway(
+                configure().dataSource(dataSource).placeholderReplacement(false)
+        ).migrate();
     }
 
     public HikariDataSource getDataSource() {
