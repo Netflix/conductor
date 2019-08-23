@@ -113,7 +113,7 @@ job "conductor" {
   } // end ui group  
 
   group "server" {
-    count = 10
+    count = 5
 
     # vault declaration
     vault {
