@@ -132,12 +132,12 @@ public class WorkflowJob extends AbstractJob {
 		executeUpdate(tx, "DELETE FROM task_scheduled WHERE workflow_id = ?", workflowId);
 		executeUpdate(tx, "DELETE FROM task_in_progress WHERE workflow_id = ?", workflowId);
 		executeUpdate(tx, "DELETE FROM workflow WHERE workflow_id = ?", workflowId);
+		executeUpdate(tx, "DELETE FROM queue_message WHERE message_id = ?", workflowId);
 
 		processChildren(workflowId, tx);
 
 		processed.add(workflowId);
 	}
-
 
 	private void processChildren(String workflowId, Connection tx) throws SQLException {
 		try (PreparedStatement st = tx.prepareStatement("SELECT workflow_id FROM workflow WHERE parent_workflow_id = ?")) {
