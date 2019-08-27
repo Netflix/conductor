@@ -211,8 +211,8 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 				params.add(new Timestamp(to.getMillis()));
 			} else if (!s.equals("*")) { // Do none filtering "*", just to match UI expectation to fetch all data
 				// Otherwise apply filter by data
-				SQL.append("AND json_data LIKE ?");
-				params.add("%" + s + "%");
+				SQL.append("AND json_data LIKE ? ");
+				params.add("%" + s.replaceAll("\"", "") + "%");
 			}
 		});
 	}
