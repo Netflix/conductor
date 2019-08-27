@@ -37,7 +37,7 @@ variable "instance_class" {
   default = {
     test = "db.r5.large"
     live = "db.r5.4xlarge"
-    int  = "db.r4.4xlarge"
+    int  = "db.r5.4xlarge"
   }
 }
 
