@@ -46,7 +46,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
@@ -143,6 +149,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             new LinkedBlockingQueue<>(workerQueueSize),
                 (runnable, executor) -> {
                     logger.warn("Request  {} to async dao discarded in executor {}", runnable, executor);
+                    Monitors.recordDiscardedIndexingCount();
                 });
     }
 
@@ -296,7 +303,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
             logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
             Monitors.recordESIndexTime("index_workflow", Instant.now().toEpochMilli() - startTime);
-            Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
+            Monitors.recordWorkerQueueSize(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
         }
@@ -321,7 +328,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             indexObject(req, TASK_DOC_TYPE);
             logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
             Monitors.recordESIndexTime("index_task", Instant.now().toEpochMilli() - startTime);
-            Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
+            Monitors.recordWorkerQueueSize(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             logger.error("Failed to index task: {}", task.getTaskId(), e);
         }
@@ -460,7 +467,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         }
     }
 
-    public void updateWithRetry(BulkRequestBuilder request, String docType) {
+    public synchronized void updateWithRetry(BulkRequestBuilder request, String docType) {
         try {
             new RetryUtil<BulkResponse>().retryOnException(
                     () -> request.execute().actionGet(),

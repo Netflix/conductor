@@ -61,7 +61,13 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -100,7 +106,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private final RestHighLevelClient elasticSearchClient;
     private final RestClient elasticSearchAdminClient;
     private final ExecutorService executorService;
-    private final ConcurrentHashMap<String, List<IndexRequest>> bulkRequests;
+    private final ConcurrentHashMap<String, BulkRequest> bulkRequests;
     private final int indexBatchSize;
 
 
@@ -132,6 +138,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                 new LinkedBlockingQueue<>(workerQueueSize),
                 (runnable, executor) -> {
                     logger.warn("Request  {} to async dao discarded in executor {}", runnable, executor);
+                    Monitors.recordDiscardedIndexingCount();
                 });
 
     }
@@ -655,13 +662,13 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         request.source(docBytes, XContentType.JSON);
 
         if(bulkRequests.get(docType) == null) {
-            bulkRequests.put(docType, new ArrayList<>(this.indexBatchSize));
+            bulkRequests.put(docType, new BulkRequest());
         }
 
         bulkRequests.get(docType).add(request);
-        if (bulkRequests.get(docType).size() >= this.indexBatchSize) {
+        if (bulkRequests.get(docType).numberOfActions() >= this.indexBatchSize) {
             indexWithRetry(bulkRequests.get(docType), "Indexing " + docType + ": " + docId);
-            bulkRequests.put(docType, new ArrayList<>(this.indexBatchSize));
+            bulkRequests.put(docType, new BulkRequest());
         }
     }
 
@@ -670,24 +677,21 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
      * @param request The index request that we want to perform.
      * @param operationDescription The type of operation that we are performing.
      */
-    private void indexWithRetry(final List<IndexRequest> request, final String operationDescription) {
+    private synchronized void indexWithRetry(final BulkRequest request, final String operationDescription) {
 
         try {
-            BulkRequest bulkRequest = new BulkRequest();
-            request.stream().forEach(req -> bulkRequest.add(req));
             long startTime = Instant.now().toEpochMilli();
             new RetryUtil<BulkResponse>().retryOnException(() -> {
                 try {
-                    return elasticSearchClient.bulk(bulkRequest);
+                    return elasticSearchClient.bulk(request);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }, null, null, RETRY_COUNT, operationDescription, "indexWithRetry");
-            request.clear();
             logger.info("Time taken {} ", Instant.now().toEpochMilli() - startTime);
             logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
             Monitors.recordESIndexTime("index_time", Instant.now().toEpochMilli() - startTime);
-            Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
+            Monitors.recordWorkerQueueSize(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             Monitors.error(className, "index");
             logger.error("Failed to index {} for request type: {}", request.toString(), e);
