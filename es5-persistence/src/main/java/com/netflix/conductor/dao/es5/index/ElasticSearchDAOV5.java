@@ -300,9 +300,9 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.retryOnConflict(5);
 
             indexObject(req, WORKFLOW_DOC_TYPE);
-
-            logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
-            Monitors.recordESIndexTime("index_workflow", Instant.now().toEpochMilli() - startTime);
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for  request {}, index {}", endTime - startTime, req, req);
+            Monitors.recordESIndexTime("index_workflow", endTime - startTime);
             Monitors.recordWorkerQueueSize(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
@@ -326,8 +326,9 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.doc(doc, XContentType.JSON);
             req.upsert(doc, XContentType.JSON);
             indexObject(req, TASK_DOC_TYPE);
-            logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
-            Monitors.recordESIndexTime("index_task", Instant.now().toEpochMilli() - startTime);
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for  request {}, index {}", endTime - startTime, req, req);
+            Monitors.recordESIndexTime("index_task", endTime - startTime);
             Monitors.recordWorkerQueueSize(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             logger.error("Failed to index task: {}", task.getTaskId(), e);
