@@ -115,7 +115,7 @@ public class WorkflowClient extends ClientBase {
         stub.archiveWorkflow(
                 WorkflowServicePb.ArchiveWorkflowRequest.newBuilder()
                         .setWorkflowId(workflowId)
-                        .setretainState(retainState)
+                        .setRetainState(retainState)
                         .build()
         );
     }

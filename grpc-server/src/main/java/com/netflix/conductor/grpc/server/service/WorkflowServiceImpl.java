@@ -129,7 +129,7 @@ public class WorkflowServiceImpl extends WorkflowServiceGrpc.WorkflowServiceImpl
     @Override
     public void archiveWorkflow(WorkflowServicePb.ArchiveWorkflowRequest req, StreamObserver<WorkflowServicePb.ArchiveWorkflowResponse> response) {
         try {
-            workflowService.archiveWorkflow(req.getWorkflowId(), req.getretainState());
+            workflowService.archiveWorkflow(req.getWorkflowId(), req.getRetainState());
             response.onNext(WorkflowServicePb.ArchiveWorkflowResponse.getDefaultInstance());
             response.onCompleted();
         } catch (Exception e) {

@@ -126,8 +126,8 @@ public class WorkflowResource {
     @ApiOperation("Archive workflow but not delete in Redis")
     @Consumes(MediaType.WILDCARD)
     public void archiveOnly(@PathParam("workflowId") String workflowId,
-                       @QueryParam("retaintate") @DefaultValue("true") boolean retaintate) {
-        workflowService.archiveWorkflow(workflowId, retaintate);
+                       @QueryParam("retainState") @DefaultValue("true") boolean retainState) {
+        workflowService.archiveWorkflow(workflowId, retainState);
     }
 
     @GET
