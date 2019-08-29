@@ -99,7 +99,7 @@ message RemoveWorkflowResponse {}
 
 message ArchiveWorkflowRequest {
     string workflow_id = 1;
-    bool retain_in_redis = 2;
+    bool retain_state = 2;
 }
 
 message ArchiveWorkflowResponse {}

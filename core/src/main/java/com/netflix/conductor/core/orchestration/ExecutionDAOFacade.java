@@ -207,9 +207,9 @@ public class ExecutionDAOFacade {
      * Archives the workflow in ES.
      *
      * @param workflowId      the id of the workflow to be removed
-     * @param retainInRedis if true, the workflow will be not deleted from data store{@link ExecutionDAO}
+     * @param retainState if true, the workflow will be not deleted from data store{@link ExecutionDAO}
      */
-    public void archiveWorkflow(String workflowId, boolean retainInRedis) {
+    public void archiveWorkflow(String workflowId, boolean retainState) {
         try {
             Workflow workflow = getWorkflowById(workflowId, true);
 
@@ -223,7 +223,7 @@ public class ExecutionDAOFacade {
                 indexDAO.updateWorkflow(workflowId,
                         new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD},
                         new Object[]{rawJson, true});
-        if(!retainInRedis){
+        if(!retainState){
             // remove workflow from DAO when flag is set to false
             try {
                 executionDAO.removeWorkflow(workflowId);
