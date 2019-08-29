@@ -118,7 +118,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         this.elasticSearchClient = new RestHighLevelClient(lowLevelRestClient);
         this.indexName = config.getIndexName();
         this.logIndexPrefix = config.getTasklogIndexName();
-        this.clusterHealthColor = "yellow"; // Anish: changing this to yellow for now to carry on within on-prem
+        this.clusterHealthColor =config.getClusterHealthColor();
 
         // Set up a workerpool for performing async operations.
         int corePoolSize = 6;
@@ -197,16 +197,16 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private void initIndex() throws Exception {
 
         //0. Add the tasklog template
-        if (doesResourceNotExist("/_template/tasklog_template")) {
-            logger.info("Creating the index template 'tasklog_template'");
+        if (doesResourceNotExist("/_template/wfe_template")) {
+            logger.info("Creating the index template 'wfe_template'");
             InputStream stream = ElasticSearchDAOV5.class.getResourceAsStream("/template_tasklog.json");
             byte[] templateSource = IOUtils.toByteArray(stream);
 
             HttpEntity entity = new NByteArrayEntity(templateSource, ContentType.APPLICATION_JSON);
             try {
-                elasticSearchAdminClient.performRequest(HttpMethod.PUT, "/_template/tasklog_template", Collections.emptyMap(), entity);
+                elasticSearchAdminClient.performRequest(HttpMethod.PUT, "/_template/wfe_template", Collections.emptyMap(), entity);
             } catch (IOException e) {
-                logger.error("Failed to initialize tasklog_template", e);
+                logger.error("Failed to initialize wfe_template", e);
             }
         }
     }
@@ -241,7 +241,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                         errorCreatingIndex = false;
                     }
                 }
-
+		logger.info("Error response '{}' ", errorResponse);
                 if (errorCreatingIndex) {
                     throw e;
                 }

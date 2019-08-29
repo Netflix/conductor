@@ -1,6 +1,6 @@
 {
     "order": 0,
-    "template": "*task*log*",
+    "template": "conductor*",
     "settings": {
         "index": {
             "refresh_interval": "1s"
