@@ -24,13 +24,21 @@ public class MySQLDataSourceProvider implements Provider<DataSource> {
 
     @Override
     public DataSource get() {
-        HikariDataSource dataSource = new HikariDataSource(createConfiguration());
-        flywayMigrate(dataSource);
-
-        return dataSource;
+        HikariDataSource dataSource = null;
+        try {
+            dataSource = new HikariDataSource(createConfiguration());
+            flywayMigrate(dataSource);
+            return dataSource;
+        } catch (final Throwable t) {
+            if(null != dataSource && !dataSource.isClosed()){
+                dataSource.close();
+            }
+            logger.error("error migration DB", t);
+            throw t;
+        }
     }
 
-    private HikariConfig createConfiguration(){
+    private HikariConfig createConfiguration() {
         HikariConfig cfg = new HikariConfig();
         cfg.setJdbcUrl(configuration.getJdbcUrl());
         cfg.setUsername(configuration.getJdbcUserName());
@@ -52,6 +60,7 @@ public class MySQLDataSourceProvider implements Provider<DataSource> {
         cfg.setThreadFactory(tf);
         return cfg;
     }
+
     // TODO Move this into a class that has complete lifecycle for the connection, i.e. startup and shutdown.
     private void flywayMigrate(DataSource dataSource) {
         boolean enabled = configuration.isFlywayEnabled();
