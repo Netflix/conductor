@@ -23,6 +23,7 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.apache.commons.collections.MapUtils;
@@ -32,6 +33,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,11 +47,13 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
 	private static final String SUPPRESS_RESTART_PARAMETER = "suppressRestart";
-	private static final String RESTART_ON = "restartOn";
 	public static final String NAME = "SUB_WORKFLOW";
+	private final boolean async;
 
-	public SubWorkflow() {
+	@Inject
+	public SubWorkflow(Configuration config) {
 		super(NAME);
+		async = Boolean.parseBoolean(config.getProperty("workflow.system.task.subworkflow.async", "true"));
 	}
 
 	@Override
@@ -71,7 +75,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 				workflow.getWorkflowId(), task.getTaskId(), null,
 				workflow.getTaskToDomain(), workflow.getWorkflowIds(),
 				workflow.getAuthorization(), workflow.getContextToken(),
-				workflow.getContextUser(), workflow.getTraceId(), false);
+				workflow.getContextUser(), workflow.getTraceId(), async);
+
 			task.getOutputData().put("subWorkflowId", subWorkflowId);
 			task.getInputData().put("subWorkflowId", subWorkflowId);
 			task.setStatus(Status.IN_PROGRESS);
