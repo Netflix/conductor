@@ -42,35 +42,28 @@ pipeline {
       steps {
         container('maven') {
 
-        sh "git checkout master"
-        sh "git config --global credential.helper store"
-        sh "jx step git credentials"
+            // ensure we're not on a detached head
+            sh "git checkout master"
+            sh "git config --global credential.helper store"
+            sh "jx step git credentials"
 
-        sh "git clone https://github.com/fsa-streamotion/conductor.git $APP_NAME -b ${params.BUILD_BRANCH}"
+            // so we can retrieve the version in later steps
+            sh "echo \$(jx-release-version) > VERSION"
+            sh "mvn versions:set -DnewVersion=\$(cat VERSION)"
+            sh "jx step tag --version \$(cat VERSION)"
+            sh "skaffold version"
+            sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-server.yaml"
+            sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-ui.yaml"
 
-        sh "cp skaffold-server.yaml $APP_NAME"
-        sh "cp skaffold-ui.yaml $APP_NAME"
+            script {
+                def buildVersion =  readFile "${env.WORKSPACE}/VERSION"
+                currentBuild.description = "$buildVersion"
+                currentBuild.displayName = "$buildVersion"
+            }
 
-          dir("$APP_NAME") {
-              // ensure we're not on a detached head
+//            sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
+        }
 
-              // so we can retrieve the version in later steps
-              // sh "git rev-parse HEAD | cut -c 1-16 > VERSION"
-              // sh "jx step tag --version \$(cat VERSION)"
-              // sh "skaffold version"
-              script {
-                GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
-                GIT_COMMIT_HASH = GIT_COMMIT_HASH.substring(0,16)
-                currentBuild.description = "${params.BUILD_BRANCH} -> $GIT_COMMIT_HASH"
-                currentBuild.displayName = "${params.BUILD_BRANCH} -> $GIT_COMMIT_HASH"
-              }
-
-              sh "echo commitHash===${GIT_COMMIT_HASH}"
-              sh "export VERSION=${GIT_COMMIT_HASH} && skaffold build -f skaffold-server.yaml "
-              sh "export VERSION=${GIT_COMMIT_HASH} && skaffold build -f skaffold-ui.yaml "
-
-              // sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
-          }
         }
       }
     }
