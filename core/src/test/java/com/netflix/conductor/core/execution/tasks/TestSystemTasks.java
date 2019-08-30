@@ -32,7 +32,6 @@ public class TestSystemTasks {
 
 	@Test
 	public void test(){
-		new SubWorkflow();
 		assertTrue(SystemTaskType.is(SystemTaskType.JOIN.name()));
 		assertTrue(SystemTaskType.is(SystemTaskType.FORK.name()));
 		assertTrue(SystemTaskType.is(SystemTaskType.DECISION.name()));
