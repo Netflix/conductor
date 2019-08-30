@@ -12,7 +12,10 @@ dependencies {
 	compile 'com.sun.jersey.contribs.jersey-oauth:oauth-client:1.19.+'
 	compile 'com.sun.jersey.contribs.jersey-oauth:oauth-signature:1.19.+'
 	compile group: 'org.json', name: 'json', version: '20141113'
-	compile group: 'io.nats', name: 'java-nats-streaming', version: '2.0.2'
+	compile group: 'io.nats', name: 'jnats', version: '2.0.0'
+	compile (group: 'io.nats', name: 'java-nats-streaming', version: '2.0.2') {
+		exclude group: 'io.nats', module: 'jnats'
+	}
 
 	compile files('libs/one-mq-0.3.9.jar')
 	compile 'io.grpc:grpc-core:1.15.1'
