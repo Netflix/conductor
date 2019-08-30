@@ -19,7 +19,9 @@
 package com.netflix.conductor.core.execution.tasks;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
+import com.netflix.conductor.core.config.Configuration;
 import org.junit.Test;
 
 import com.netflix.conductor.core.execution.SystemTaskType;
@@ -32,6 +34,7 @@ public class TestSystemTasks {
 
 	@Test
 	public void test(){
+		new SubWorkflow(mock(Configuration.class));
 		assertTrue(SystemTaskType.is(SystemTaskType.JOIN.name()));
 		assertTrue(SystemTaskType.is(SystemTaskType.FORK.name()));
 		assertTrue(SystemTaskType.is(SystemTaskType.DECISION.name()));
