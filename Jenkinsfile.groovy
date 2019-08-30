@@ -10,32 +10,31 @@ pipeline {
   }
 
   stages {
-    stage('Build Release') {
-
-      stage('CI Build + PREVIEW') {
-        when {
-          branch 'PR-*'
-        }
-        environment {
-          PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
-          PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
-          HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
-        }
-        steps {
-          container('maven') {
-            sh "echo **************** PREVIEW_VERSION: $PREVIEW_VERSION , PREVIEW_NAMESPACE: $PREVIEW_NAMESPACE, HELM_RELEASE: $HELM_RELEASE"
-
-            sh "skaffold version"
-            sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml"
-
-            script {
-              def buildVersion =  readFile "${env.WORKSPACE}/PREVIEW_VERSION"
-              currentBuild.description = "$APP_NAME.$PREVIEW_NAMESPACE"
-            }
+      stage('PR Build + PREVIEW') {
+          when {
+              branch 'PR-*'
           }
-        }
+          environment {
+              PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
+              PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
+              HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
+          }
+          steps {
+              container('maven') {
+                  sh "echo **************** PREVIEW_VERSION: $PREVIEW_VERSION , PREVIEW_NAMESPACE: $PREVIEW_NAMESPACE, HELM_RELEASE: $HELM_RELEASE"
+
+                  sh "skaffold version"
+                  sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml"
+
+                  script {
+                      def buildVersion =  readFile "${env.WORKSPACE}/PREVIEW_VERSION"
+                      currentBuild.description = "$APP_NAME.$PREVIEW_NAMESPACE"
+                  }
+              }
+          }
       }
 
+      stage('Build Release') {
       when {
         branch 'master'
       }
