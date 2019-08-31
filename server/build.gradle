@@ -18,7 +18,7 @@ apply plugin: 'war'
 apply plugin: "org.akhikhl.gretty"
 
 dependencies {
- 
+
     //Conductor
     compile project(':conductor-core')
     compile project(':conductor-jersey')
