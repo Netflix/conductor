@@ -130,6 +130,14 @@ public class TaskSummary {
 				this.input = task.getInputData().toString();
 			}
 		}
+		if (task.getOutputData() != null) {
+                        ObjectMapper om = new ObjectMapper();
+                        try {
+                                this.output = om.writeValueAsString(task.getOutputData());
+                        } catch (Exception e) {
+                                this.output = task.getOutputData().toString();
+                        }
+                }
 
 		if (task.getOutputData() != null) {
 			this.output = task.getOutputData().toString();
