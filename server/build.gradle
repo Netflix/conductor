@@ -42,14 +42,6 @@ dependencies {
 
     //Swagger
     compile "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
-
-	//In memory
-	compile 'org.rarefiedredis.redis:redis-java:0.0.17'
-
-    //ElasticSearch RestClient
-    compile project(':conductor-es-restclient-persistence')
-
-
 }
 
 shadowJar {
