@@ -71,7 +71,7 @@ public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO {
 
     @Override
     public List<TaskDef> getAllTaskDefs() {
-        return getWithTransaction(this::findAllTaskDefs);
+        return getWithTransactionWithRetries(this::findAllTaskDefs);
     }
 
     @Override
@@ -431,7 +431,7 @@ public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO {
 
         final String INSERT_TASKDEF_QUERY = "INSERT INTO meta_task_def (name, json_data) VALUES (?, ?)";
 
-        return getWithTransaction(tx -> {
+        return getWithTransactionWithRetries(tx -> {
             execute(tx, UPDATE_TASKDEF_QUERY, update -> {
                 int result = update.addJsonParameter(taskDef).addParameter(taskDef.getName()).executeUpdate();
                 if (result == 0) {

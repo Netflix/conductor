@@ -20,7 +20,6 @@ public interface MySQLConfiguration extends Configuration {
     boolean FLYWAY_ENABLED_DEFAULT_VALUE = true;
 
     String FLYWAY_TABLE_PROPERTY_NAME = "flyway.table";
-    Optional<String> FLYWAY_TABLE_DEFAULT_VALUE = Optional.empty();
 
     // The defaults are currently in line with the HikariConfig defaults, which are unfortunately private.
     String CONNECTION_POOL_MAX_SIZE_PROPERTY_NAME = "conductor.mysql.connection.pool.size.max";

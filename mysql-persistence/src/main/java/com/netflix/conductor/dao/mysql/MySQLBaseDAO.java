@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import com.mysql.cj.exceptions.MysqlErrorNumbers;
+import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.sql.ExecuteFunction;
 import com.netflix.conductor.sql.QueryFunction;
@@ -21,7 +23,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static java.lang.Integer.parseInt;
+import static java.lang.System.getProperty;
+
 public abstract class MySQLBaseDAO {
+    private static final String MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME = "conductor.mysql.deadlock.retry.max";
+    private static final String MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE = "3";
+    private static int MAX_RETRY_ON_DEADLOCK = getMaxRetriesOnDeadLock();
+
     private static final List<String> EXCLUDED_STACKTRACE_CLASS = ImmutableList.of(
             MySQLBaseDAO.class.getName(),
             Thread.class.getName()
@@ -86,8 +95,19 @@ public abstract class MySQLBaseDAO {
      * @return The result of {@code TransactionalFunction#apply(Connection)}
      * @throws ApplicationException If any errors occur.
      */
-    protected <R> R getWithTransaction(TransactionalFunction<R> function) {
-        Instant start = Instant.now();
+    protected <R> R getWithTransactionWithRetries(final TransactionalFunction<R> function) {
+        return new RetryUtil<R>().retryOnException(
+                () -> getWithTransaction(function),
+                this::isDeadLockError,
+                null,
+                MAX_RETRY_ON_DEADLOCK,
+                "retry on deadlock",
+                "transactional"
+        );
+    }
+
+    private <R> R getWithTransaction(final TransactionalFunction<R> function){
+        final Instant start = Instant.now();
         LazyToString callingMethod = getCallingMethod();
         logger.trace("{} : starting transaction", callingMethod);
 
@@ -139,17 +159,17 @@ public abstract class MySQLBaseDAO {
 
 
     /**
-     * Wraps {@link #getWithTransaction(TransactionalFunction)} with no return value.
+     * Wraps {@link #getWithTransactionWithRetries(TransactionalFunction)} with no return value.
      * <p>
      * Generally this is used to wrap multiple {@link #execute(Connection, String, ExecuteFunction)} or
      * {@link #query(Connection, String, QueryFunction)} invocations that produce no expected return value.
      *
      * @param consumer The {@link Consumer} callback to pass a transactional {@link Connection} to.
      * @throws ApplicationException If any errors occur.
-     * @see #getWithTransaction(TransactionalFunction)
+     * @see #getWithTransactionWithRetries(TransactionalFunction)
      */
     protected void withTransaction(Consumer<Connection> consumer) {
-        getWithTransaction(connection -> {
+        getWithTransactionWithRetries(connection -> {
             consumer.accept(connection);
             return null;
         });
@@ -165,7 +185,7 @@ public abstract class MySQLBaseDAO {
      * @return The results of applying {@literal function}.
      */
     protected <R> R queryWithTransaction(String query, QueryFunction<R> function) {
-        return getWithTransaction(tx -> query(tx, query, function));
+        return getWithTransactionWithRetries(tx -> query(tx, query, function));
     }
 
     /**
@@ -208,5 +228,20 @@ public abstract class MySQLBaseDAO {
      */
     protected void executeWithTransaction(String query, ExecuteFunction function) {
         withTransaction(tx -> execute(tx, query, function));
+    }
+
+    private boolean isDeadLockError(Throwable throwable){
+        return throwable instanceof SQLException &&
+                MysqlErrorNumbers.ER_LOCK_DEADLOCK == ((SQLException)throwable).getErrorCode();
+    }
+
+    private static int getMaxRetriesOnDeadLock() {
+        try {
+            return parseInt(
+                    getProperty(MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME, MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE)
+            );
+        } catch (Exception e) {
+            return parseInt(MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE);
+        }
     }
 }
