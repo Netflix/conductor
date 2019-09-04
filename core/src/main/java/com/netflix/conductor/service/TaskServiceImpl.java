@@ -133,9 +133,9 @@ public class TaskServiceImpl implements TaskService {
      */
     @Service
     public String updateTask(TaskResult taskResult) {
-        LOGGER.debug("Update Task: {} with callback time: {}", taskResult, taskResult.getCallbackAfterSeconds());
+        LOGGER.info("Update Task: {} with callback time: {}", taskResult, taskResult.getCallbackAfterSeconds());
         executionService.updateTask(taskResult);
-        LOGGER.debug("Task: {} updated successfully with callback time: {}", taskResult, taskResult.getCallbackAfterSeconds());
+        LOGGER.info("Task: {} updated successfully with callback time: {}", taskResult, taskResult.getCallbackAfterSeconds());
         return taskResult.getTaskId();
     }
 
@@ -148,7 +148,7 @@ public class TaskServiceImpl implements TaskService {
      */
     @Service
     public String ackTaskReceived(String taskId, String workerId) {
-        LOGGER.debug("Ack received for task: {} from worker: {}", taskId, workerId);
+        LOGGER.info("Ack received for task: {} from worker: {}", taskId, workerId);
         return String.valueOf(ackTaskReceived(taskId));
     }
 
