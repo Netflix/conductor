@@ -307,6 +307,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     @Override
     public void indexWorkflow(Workflow workflow) {
+
         String workflowId = workflow.getWorkflowId();
         WorkflowSummary summary = new WorkflowSummary(workflow);
 
@@ -368,7 +369,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             logger.error("Failed to index task execution logs for tasks: {}", taskIds, e);
         }
     }
-
 
     @Override
     public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {

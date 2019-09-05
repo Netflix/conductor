@@ -23,7 +23,6 @@ import com.netflix.conductor.core.execution.TestDeciderService;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.KafkaProducerDAO;
-import com.sun.xml.internal.xsom.util.ComponentNameFunction;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

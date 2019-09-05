@@ -100,11 +100,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
     private static Logger logger = LoggerFactory.getLogger(ElasticSearchDAOV5.class);
 
-    public static final String WORKFLOW_DOC_TYPE = "workflow";
-    public static final String TASK_DOC_TYPE = "task";
-    public static final String LOG_DOC_TYPE = "task_log";
-    public static final String EVENT_DOC_TYPE = "event";
-    public static final String MSG_DOC_TYPE = "message";
+    private static final String WORKFLOW_DOC_TYPE = "workflow";
+    private static final String TASK_DOC_TYPE = "task";
+    private static final String LOG_DOC_TYPE = "task_log";
+    private static final String EVENT_DOC_TYPE = "event";
+    private static final String MSG_DOC_TYPE = "message";
 
     private static final String className = ElasticSearchDAOV5.class.getSimpleName();
 
@@ -125,7 +125,8 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 
     @Inject
-    public ElasticSearchDAOV5(Client elasticSearchClient, ElasticSearchConfiguration config, ObjectMapper objectMapper) {
+    public ElasticSearchDAOV5(Client elasticSearchClient, ElasticSearchConfiguration config,
+                              ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.elasticSearchClient = elasticSearchClient;
         this.indexName = config.getIndexName();
@@ -317,8 +318,6 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         }
     }
 
-
-
     @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
         return CompletableFuture.runAsync(() -> indexTask(task), executorService);
@@ -440,7 +439,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         return CompletableFuture.runAsync(() -> addEventExecution(eventExecution), executorService);
     }
 
-    public void updateWithRetry(UpdateRequest request, String operationDescription) {
+    private void updateWithRetry(UpdateRequest request, String operationDescription) {
         try {
             new RetryUtil<UpdateResponse>().retryOnException(
                 () -> elasticSearchClient.update(request).actionGet(),

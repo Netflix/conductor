@@ -10,7 +10,6 @@ import com.netflix.conductor.dao.KafkaConsumerDAO;
 import com.netflix.conductor.dao.kafka.index.serialiser.DataDeSerializer;
 import com.netflix.conductor.dao.kafka.index.serialiser.Record;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
-import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
