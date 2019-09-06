@@ -23,7 +23,6 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -183,4 +182,5 @@ public interface IndexDAO {
      * @return List of workflow Ids matching the pattern
      */
     List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo);
+
 }
