@@ -10,7 +10,6 @@ import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
-import com.netflix.conductor.dao.kafka.index.KafkaProducer;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.ElasticSearchTransportClientProvider;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
@@ -38,7 +37,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,8 +101,7 @@ public class TestElasticSearchDAOV5 {
 				.get();
 
 		ObjectMapper objectMapper = new ObjectMapper();
-		KafkaProducer kafkaProducer = Mockito.mock(KafkaProducer.class);
-		indexDAO = new ElasticSearchDAOV5(elasticSearchClient, configuration, objectMapper, kafkaProducer);
+		indexDAO = new ElasticSearchDAOV5(elasticSearchClient, configuration, objectMapper);
 	}
 
 	@AfterClass

@@ -40,11 +40,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class ExecutionDAOFacadeTest {
 
@@ -147,6 +143,18 @@ public class ExecutionDAOFacadeTest {
         executionDAOFacade.removeWorkflow("workflowId", true);
         verify(indexDAO, times(1)).updateWorkflow(any(), any(), any());
         verify(indexDAO, never()).removeWorkflow(any());
+    }
+
+    @Test
+    public void testPublishWorkflowToKafka() throws Exception {
+        InputStream stream = TestDeciderService.class.getResourceAsStream("/test.json");
+        Workflow workflow = objectMapper.readValue(stream, Workflow.class);
+        doReturn(true).when(configuration).getBooleanProperty("workflow.kafka.index.enable", false);
+        doReturn("").when(executionDAO).updateWorkflow(workflow);
+        doNothing().when(kafkaProducer).produceWorkflow(workflow);
+        executionDAOFacade.updateWorkflow(workflow);
+        verify(indexDAO, times(0)).asyncIndexWorkflow(any());
+        verify(kafkaProducer, times(1)).produceWorkflow(any());
     }
 
     @Test

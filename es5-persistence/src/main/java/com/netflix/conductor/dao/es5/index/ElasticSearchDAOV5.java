@@ -126,7 +126,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
     @Inject
     public ElasticSearchDAOV5(Client elasticSearchClient, ElasticSearchConfiguration config,
-                              ObjectMapper objectMapper) {
+        ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.elasticSearchClient = elasticSearchClient;
         this.indexName = config.getIndexName();
