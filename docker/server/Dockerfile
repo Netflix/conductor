@@ -15,7 +15,7 @@ WORKDIR /conductor
 RUN ./gradlew build -x test
 
 # 1. Bin stage
-FROM openjdk:8-jre-alpine
+FROM 053457794187.dkr.ecr.ap-southeast-2.amazonaws.com/fsa-streamotion/streamotion-java:corretto-0.0.3
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
