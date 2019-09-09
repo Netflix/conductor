@@ -23,7 +23,7 @@ import com.netflix.dyno.queues.Message;
 import com.netflix.dyno.queues.ShardSupplier;
 import com.netflix.dyno.queues.redis.RedisDynoQueue;
 import com.netflix.dyno.queues.redis.RedisQueues;
-import com.netflix.dyno.queues.shard.DynoShardSupplier;
+import com.netflix.dyno.queues.shard.SingleShardSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCommands;
@@ -95,7 +95,7 @@ public class DynoQueueDAO implements QueueDAO {
         }
 
         localDC = localDC.replaceAll(region, "");
-        this.ss = new DynoShardSupplier(dyno.getConnPool().getConfiguration().getHostSupplier(), region, localDC);
+	this.ss = new SingleShardSupplier("custom");
         init();
     }
 

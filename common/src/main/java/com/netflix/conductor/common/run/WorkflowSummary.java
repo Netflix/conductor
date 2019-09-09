@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.github.vmg.protogen.annotations.*;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
@@ -103,12 +104,17 @@ public class WorkflowSummary {
 			this.updateTime = sdf.format(new Date(workflow.getUpdateTime()));
 		}
 		this.status = workflow.getStatus();
-		if(workflow.getInput() != null){
-            this.input = workflow.getInput().toString();
+		ObjectMapper om = new ObjectMapper();
+		try {
+			this.input = om.writeValueAsString(workflow.getInput());
+		} catch (Exception e) {
+			this.input = workflow.getInput().toString();
 		}
-        if(workflow.getOutput() != null){
-            this.output = workflow.getOutput().toString();
-        }
+		try {
+			this.output = om.writeValueAsString(workflow.getOutput());
+		} catch (Exception e) {
+			this.output = workflow.getOutput().toString();
+		}
 		this.reasonForIncompletion = workflow.getReasonForIncompletion();
 		if(workflow.getEndTime() > 0){
 			this.executionTime = workflow.getEndTime() - workflow.getStartTime();

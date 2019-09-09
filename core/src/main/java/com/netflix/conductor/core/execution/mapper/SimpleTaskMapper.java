@@ -83,6 +83,7 @@ public class SimpleTaskMapper implements TaskMapper {
         simpleTask.setStatus(Task.Status.SCHEDULED);
         simpleTask.setTaskType(taskToSchedule.getName());
         simpleTask.setTaskDefName(taskToSchedule.getName());
+	simpleTask.setTaskDescription(taskToSchedule.getDescription());
         simpleTask.setCorrelationId(workflowInstance.getCorrelationId());
         simpleTask.setScheduledTime(System.currentTimeMillis());
         simpleTask.setRetryCount(retryCount);

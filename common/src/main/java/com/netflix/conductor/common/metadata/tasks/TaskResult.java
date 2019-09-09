@@ -35,7 +35,7 @@ public class TaskResult {
 
     @ProtoEnum
     public enum Status {
-        IN_PROGRESS, FAILED, FAILED_WITH_TERMINAL_ERROR, COMPLETED, SCHEDULED;        //SCHEDULED is added for the backward compatibility and should NOT be used when updating the task result
+        IN_PROGRESS, FAILED, FAILED_WITH_TERMINAL_ERROR, COMPLETED, SCHEDULED, NO_OP;        //SCHEDULED is added for the backward compatibility and should NOT be used when updating the task result
     }
 
     @NotEmpty(message = "Workflow Id cannot be null or empty")

@@ -3,7 +3,7 @@ package com.netflix.conductor.dyno;
 import com.google.inject.ProvisionException;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.queues.ShardSupplier;
-import com.netflix.dyno.queues.shard.DynoShardSupplier;
+import com.netflix.dyno.queues.shard.SingleShardSupplier;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -30,6 +30,6 @@ public class DynoShardSupplierProvider implements Provider<ShardSupplier> {
 
         String localDC = configuration.getAvailabilityZone().replaceAll(configuration.getRegion(), "");
 
-        return new DynoShardSupplier(hostSupplier, configuration.getRegion(), localDC);
+        return new SingleShardSupplier("custom");
     }
 }

@@ -471,7 +471,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
                 logger.error("Index removal failed - document not found by id: {}", workflowId);
             }
         } catch (Exception e) {
-            logger.error("Failed to remove workflow {} from index", workflowId, e);
+            logger.error("Failed to remove workflow {} from index", workflowId, e.getMessage());
             Monitors.error(className, "remove");
         }
     }
