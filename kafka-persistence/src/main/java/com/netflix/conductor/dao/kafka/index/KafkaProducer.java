@@ -37,7 +37,7 @@ public class KafkaProducer implements KafkaProducerDAO {
 
 	public static final String KAFKA_REQUEST_TIMEOUT_MS = "kafka.request.timeout.ms";
 	public static final String STRING_SERIALIZER = "org.apache.kafka.common.serialization.StringSerializer";
-	public static final String KAFKA_PRODUCER_TOPIC = "kafka.consumer.topic";
+	public static final String KAFKA_PRODUCER_TOPIC = "kafka.producer.topic";
 	public static final String PRODUCER_DEFAULT_TOPIC = "test";
 	public static final String DEFAULT_REQUEST_TIMEOUT = "100";
 	public static final String DEFAULT_BOOTSTRAP_SERVERS_CONFIG = "localhost:9092";

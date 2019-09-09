@@ -29,10 +29,15 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Properties;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
-import static com.netflix.conductor.dao.kafka.index.KafkaProducer.*;
 
 @Singleton
 @Trace
@@ -108,21 +113,21 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 						byte[] data;
 						long start = System.currentTimeMillis();
 						switch (d.getType()) {
-							case WORKFLOW_DOC_TYPE:
+							case KafkaProducer.WORKFLOW_DOC_TYPE:
 								data = om.writeValueAsBytes(d.getPayload());
 								consumeWorkflow(data, d.getType(), om.readTree(data).get("workflowId").asText());
 								break;
-							case TASK_DOC_TYPE:
+							case KafkaProducer.TASK_DOC_TYPE:
 								data = om.writeValueAsBytes(d.getPayload());
 								consumeTask(data, d.getType(), om.readTree(data).get("taskId").asText());
 								break;
-							case LOG_DOC_TYPE:
+							case KafkaProducer.LOG_DOC_TYPE:
 								consumeTaskExecutionLog(d.getType(), d.getPayload());
 								break;
-							case EVENT_DOC_TYPE:
+							case KafkaProducer.EVENT_DOC_TYPE:
 								consumeEventExecution(d.getPayload(), d.getType());
 								break;
-							case MSG_DOC_TYPE:
+							case KafkaProducer.MSG_DOC_TYPE:
 								consumeMessage(d.getType(), om.convertValue(d.getPayload(), Map.class));
 								break;
 							default:
@@ -196,7 +201,7 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	public void consumeEventExecution(Object data, String eventExecution) {
 		try {
 			byte[] doc = om.writeValueAsBytes(data);
-			UpdateRequest req = new UpdateRequest(logIndexName, EVENT_DOC_TYPE, eventExecution);
+			UpdateRequest req = new UpdateRequest(logIndexName, KafkaProducer.EVENT_DOC_TYPE, eventExecution);
 			req.doc(doc, XContentType.JSON);
 			req.upsert(doc, XContentType.JSON);
 			req.retryOnConflict(5);
