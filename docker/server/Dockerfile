@@ -15,9 +15,9 @@ WORKDIR /conductor
 RUN ./gradlew build -x test
 
 # 1. Bin stage
-FROM openjdk:8-jre-alpine
+FROM amazoncorretto:8
 
-MAINTAINER Netflix OSS <conductor@netflix.com>
+MAINTAINER Streamotion Pty Ltd <devops@kayosports.com.au>
 
 # Make app folders
 RUN mkdir -p /app/config /app/logs /app/libs
@@ -27,6 +27,8 @@ COPY --from=builder /conductor/docker/server/bin /app
 COPY --from=builder /conductor/docker/server/config /app/config
 COPY --from=builder /conductor/server/build/libs/conductor-server-*-all.jar /app/libs
 
+
+COPY docker/server/newrelic-agent-5.4.0 /newrelic
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh
 
