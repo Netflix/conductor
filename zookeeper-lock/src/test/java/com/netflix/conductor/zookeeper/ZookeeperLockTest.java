@@ -2,6 +2,7 @@ package com.netflix.conductor.zookeeper;
 
 import com.netflix.conductor.core.utils.Lock;
 import com.netflix.conductor.service.ExecutionLockService;
+import com.netflix.conductor.zookeeper.config.SystemPropertiesZookeeperConfiguration;
 import com.netflix.conductor.zookeeper.config.ZookeeperConfiguration;
 import org.apache.curator.test.TestingServer;
 import org.junit.After;
@@ -27,9 +28,7 @@ public class ZookeeperLockTest {
     @Before
     public void setUp() throws Exception {
         zkServer = new TestingServer(2181);
-        mockConfig = Mockito.mock(ZookeeperConfiguration.class);
-        Mockito.when(mockConfig.getZkConnection()).thenReturn("localhost:2181");
-        Mockito.when(mockConfig.enableWorkflowExecutionLock()).thenReturn(true);
+        mockConfig = new SystemPropertiesZookeeperConfiguration();
     }
 
     @After
