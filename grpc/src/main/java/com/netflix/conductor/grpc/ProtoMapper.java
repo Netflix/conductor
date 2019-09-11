@@ -1,7 +1,9 @@
 package com.netflix.conductor.grpc;
 
 import com.google.protobuf.*;
+import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.proto.SubWorkflowParamsPb;
 import com.netflix.conductor.proto.WorkflowTaskPb;
 
 import java.util.ArrayList;
@@ -143,5 +145,20 @@ public final class ProtoMapper extends AbstractProtoMapper {
     @Override
     public Any fromProto(Any in) {
         return in;
+    }
+
+    @Override
+    public SubWorkflowParamsPb.SubWorkflowParams toProto(SubWorkflowParams from) {
+        SubWorkflowParamsPb.SubWorkflowParams.Builder to = SubWorkflowParamsPb.SubWorkflowParams.newBuilder();
+        if (from.getName() != null) {
+            to.setName( from.getName() );
+        }
+        if (from.getVersion() != null) {
+            to.setVersion( from.getVersion() );
+        }
+        if (from.getTaskToDomain() != null) {
+            to.putAllTaskToDomain( from.getTaskToDomain() );
+        }
+        return to.build();
     }
 }

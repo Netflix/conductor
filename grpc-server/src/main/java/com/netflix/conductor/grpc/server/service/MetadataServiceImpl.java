@@ -34,6 +34,15 @@ public class MetadataServiceImpl extends MetadataServiceGrpc.MetadataServiceImpl
     }
 
     @Override
+    public void getWorkflows(MetadataServicePb.GetWorkflowsRequest req, StreamObserver<MetadataServicePb.GetWorkflowsResponse > response) {
+        response.onNext(
+            MetadataServicePb.GetWorkflowsResponse.newBuilder().addAllWorkflows(
+                service.getWorkflowDefs().stream().map(PROTO_MAPPER::toProto)::iterator
+            ).build());
+        response.onCompleted();
+    }
+
+    @Override
     public void createWorkflow(MetadataServicePb.CreateWorkflowRequest req, StreamObserver<MetadataServicePb.CreateWorkflowResponse> response) {
         WorkflowDef workflow = PROTO_MAPPER.fromProto(req.getWorkflow());
         service.registerWorkflowDef(workflow);
@@ -68,6 +77,15 @@ public class MetadataServiceImpl extends MetadataServiceGrpc.MetadataServiceImpl
                     .asRuntimeException()
             );
         }
+    }
+
+    @Override
+    public void getTasks(MetadataServicePb.GetTasksRequest req, StreamObserver<MetadataServicePb.GetTasksResponse > response) {
+        response.onNext(
+            MetadataServicePb.GetTasksResponse.newBuilder().addAllDefs(
+                service.getTaskDefs().stream().map(PROTO_MAPPER::toProto)::iterator
+            ).build());
+        response.onCompleted();
     }
 
     @Override

@@ -9,6 +9,9 @@ option java_outer_classname = "MetadataServicePb";
 option go_package = "github.com/netflix/conductor/client/gogrpc/conductor/grpc/metadata";
 
 service MetadataService {
+    // GET /workflow
+    rpc GetWorkflows(GetWorkflowsRequest) returns (GetWorkflowsResponse);
+
     // POST /workflow
     rpc CreateWorkflow(CreateWorkflowRequest) returns (CreateWorkflowResponse);
 
@@ -17,6 +20,9 @@ service MetadataService {
 
     // GET /workflow/{name}
     rpc GetWorkflow(GetWorkflowRequest) returns (GetWorkflowResponse);
+
+    // GET /taskdefs
+    rpc GetTasks(GetTasksRequest) returns (GetTasksResponse);
 
     // POST /taskdefs
     rpc CreateTasks(CreateTasksRequest) returns (CreateTasksResponse);
@@ -29,6 +35,12 @@ service MetadataService {
 
     // DELETE /taskdefs/{tasktype}
     rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
+}
+
+message GetWorkflowsRequest {}
+
+message GetWorkflowsResponse {
+    repeated conductor.proto.WorkflowDef workflows = 1;
 }
 
 message CreateWorkflowRequest {
@@ -50,6 +62,12 @@ message GetWorkflowRequest {
 
 message GetWorkflowResponse {
     conductor.proto.WorkflowDef workflow = 1;
+}
+
+message GetTasksRequest {}
+
+message GetTasksResponse {
+    repeated conductor.proto.TaskDef defs = 1;
 }
 
 message CreateTasksRequest {
