@@ -36,8 +36,8 @@ variable "engine_version" {
 variable "instance_class" {
   default = {
     test = "db.r5.large"
-    live = "db.r4.8xlarge"
-    int  = "db.r4.4xlarge"
+    live = "db.r5.4xlarge"
+    int  = "db.r5.4xlarge"
   }
 }
 
