@@ -246,7 +246,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public Task getTask(String workflowId, String taskRefName) {
-		String GET_TASK = "SELECT json_data FROM task WHERE workflow_id = ? and task_refname = ?";
+		String GET_TASK = "SELECT json_data FROM task WHERE workflow_id = ? and task_refname = ? ORDER BY id DESC";
 		return queryWithTransaction(GET_TASK, q -> q
 			.addParameter(workflowId)
 			.addParameter(taskRefName)
