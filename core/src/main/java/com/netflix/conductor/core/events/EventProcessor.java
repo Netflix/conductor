@@ -104,7 +104,7 @@ public class EventProcessor {
 		return queues;
 	}
 
-	public void refresh() {
+	public synchronized void refresh() {
 		try {
 			activeHandlers = ms.getEventHandlers().stream().filter(EventHandler::isActive)
 				.peek(handler -> {

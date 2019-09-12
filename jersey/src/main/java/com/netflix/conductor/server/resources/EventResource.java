@@ -76,7 +76,27 @@ public class EventResource {
 	public void updateEventHandler(EventHandler eventHandler) {
 		service.updateEventHandler(eventHandler);
 	}
-	
+
+	@PUT
+	@Path("/{name}/disable")
+	@ApiOperation("Disable an event handler")
+	public void disable(@PathParam("name") String name) {
+		service.disableEventHandler(name);
+	}
+
+	@PUT
+	@Path("/{name}/enable")
+	@ApiOperation("Enable an event handler")
+	public void enable(@PathParam("name") String name) {
+		service.enableEventHandler(name);
+	}
+
+	@POST
+	@Path("/refresh")
+	@ApiOperation("Force conductor to refresh event handlers")
+	public void refresh() {
+		ep.refresh();
+	}
 
 	@DELETE
 	@Path("/{name}")

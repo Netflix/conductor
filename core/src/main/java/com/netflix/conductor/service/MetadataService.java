@@ -264,6 +264,32 @@ public class MetadataService {
 	}
 
 	/**
+	 *  Disables event handler
+	 * @param name Handler name
+	 */
+	public void disableEventHandler(String name) {
+		EventHandler handler = getEventHandler(name);
+		if (handler == null) {
+			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
+		}
+		handler.setActive(false);
+		metadata.updateEventHandler(handler);
+	}
+
+	/**
+	 *  Enables event handler
+	 * @param name Handler name
+	 */
+	public void enableEventHandler(String name) {
+		EventHandler handler = getEventHandler(name);
+		if (handler == null) {
+			throw new ApplicationException(ApplicationException.Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
+		}
+		handler.setActive(true);
+		metadata.updateEventHandler(handler);
+	}
+
+	/**
 	 * This method just validates required fields
 	 *
 	 * @param eh Event handler definition
