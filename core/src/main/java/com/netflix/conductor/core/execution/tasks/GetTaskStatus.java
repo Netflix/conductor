@@ -77,7 +77,7 @@ public class GetTaskStatus extends WorkflowSystemTask {
 		} catch (Exception e) {
 			task.setStatus(Task.Status.FAILED);
 			task.setReasonForIncompletion(e.getMessage());
-			logger.error(e.getMessage(), e);
+			logger.debug(e.getMessage(), e);
 		}
 	}
 }
