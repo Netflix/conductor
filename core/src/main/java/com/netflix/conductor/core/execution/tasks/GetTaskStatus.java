@@ -57,8 +57,8 @@ public class GetTaskStatus extends WorkflowSystemTask {
 			else
 				targetTask = executionDao.getTask(workflowId, taskRefName);
 
-			String error = "No task found in workflow " + workflowId + " for ";
 			if (targetTask == null) {
+				String error = "No task found in workflow " + workflowId + " for ";
 				if (StringUtils.isNotEmpty(taskId))
 					throw new IllegalArgumentException(error + taskId);
 				else
