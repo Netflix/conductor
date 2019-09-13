@@ -1,173 +1,142 @@
+SERVICE = conductor
 REGION = us-west-2
+TFSTATE = $(SERVICE)/$(REGION)-$(ENV)-aurora-postgres.tfstate
+GENERATE_NEW_PASSOWRD = "$$RANDOM"
 
-# target specific variables
-## shared
+# Target Specific Variables
+## corp
 ### enclave
-plan-conductor-elastic-shared-% apply-conductor-elastic-shared-% destroy-conductor-elastic-shared-%: ENCLAVE=shared
-### env
-%-elastic-shared-test: ENV=test
-%-elastic-shared-int: ENV=int
-%-elastic-shared-live: ENV=live
+plan-db-corp-% apply-db-corp-% destroy-db-corp-%: ENCLAVE=corp
+plan-db-shared-% apply-db-shared-% destroy-db-shared-%: ENCLAVE=shared
+plan-rotate-pass-db-shared-%: ENCLAVE=shared
+apply-rotate-pass-db-shared-%: ENCLAVE=shared
 
-### domain
-%-conductor-elastic-shared-test: DOMAIN=conductor-aes-shared-test
-%-conductor-elastic-shared-int: DOMAIN=conductor-aes-shared-int
-%-conductor-elastic-shared-live: DOMAIN=conductor-aes-shared-live
+### env and tld
+%-db-corp-test: ENV=test
+%-db-corp-live: ENV=live
+%-db-corp-int: ENV=int
 
-### service
-%-conductor-elastic-shared-test %-conductor-elastic-shared-int %-conductor-elastic-shared-live: SERVICE=conductor
-
+%-db-shared-test: ENV=test
+%-db-shared-live: ENV=live
+%-db-shared-int: ENV=int
 # clean terraform modules
 clean:
-	rm -rf ./.terraform
+		rm -rf ./.terraform
 
-check:
-	@if test "$(ENV)" = "" ; then echo "ENV_TYPE is not set"; exit 1; fi
-	@if test "$(ENCLAVE)" = "" ; then echo "ENCLAVE is not set"; exit 1; fi
-	@if test "$(DOMAIN)" = "" ; then echo "DOMAIN is not set"; exit 1; fi
-	@echo "ARE THESE PARAMETERS CORRECT? [yes/no]" && read ans && [ $$ans == yes ]
+creds:
+		# ensure there is an active aws-vault session
+		@aws-vault exec -j deluxemediaplatform >/dev/null
 
 show-vars:
-	@echo "REGION:\t\t\t$(REGION)"
-	@echo "ENCLAVE:\t\t$(ENCLAVE)"
-	@echo "ENV:\t\t$(ENV)"
-	@echo "DOMAIN:\t\t$(DOMAIN)"
-	@echo ""
+			@echo "REGION:\t\t\t$(REGION)"
+			@echo "ENV:\t\t\t$(ENV)"
+			@echo "SERVICE:\t\t$(SERVICE)"
+			@echo "RANDOM:\t\t\t$(GENERATE_NEW_PASSOWRD)"
+			@echo ""
 
-init:
+check-vars: show-vars
+	@if [ -z "$(ENV)" ]; then echo ENV not set!; exit 1; fi
+	@echo "ARE THESE PARAMETERS CORRECT? [yes/no]" && read ans && [ $$ans == yes ]
+
+init: check-vars creds
 	@if [ -f .terraform/terraform.tfstate ]; then rm .terraform/terraform.tfstate; fi
-	terraform init -backend-config="key=$(SERVICE)/$(REGION)-$(ENCLAVE)-$(ENV)-$(DOMAIN).tfstate"
+	terraform init -backend-config="key=$(TFSTATE)"
 
-# conductor
-# different targets for different environments
-# LIVE
-## plan
-plan-conductor-elastic-shared-live: clean show-vars check init
+
+# dry run
+plan-db-%: clean show-vars check-vars init
 	terraform plan \
-		-var domain="$(DOMAIN)" \
 		-var region="$(REGION)" \
 		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
 		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-live \
-		-target=aws_security_group.conductor-aes-sg
+		-target=aws_rds_cluster.rds_cluster \
+		-target=aws_rds_cluster_instance.rds_cluster_instances \
+		-target=aws_db_subnet_group.rds_db_subnet_group \
+		-target=aws_security_group.conductor-sg \
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
 
-## apply
-apply-conductor-elastic-shared-live: clean show-vars check init
+# deploy resources
+apply-db-%: clean show-vars check-vars init
 	terraform apply \
-		-var domain="$(DOMAIN)" \
 		-var region="$(REGION)" \
 		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
 		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-live \
-		-target=aws_security_group.conductor-aes-sg
+		-target=aws_rds_cluster.rds_cluster \
+		-target=aws_rds_cluster_instance.rds_cluster_instances \
+		-target=aws_db_subnet_group.rds_db_subnet_group \
+		-target=aws_security_group.conductor-sg \
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
 
-## destroy
-destroy-conductor-elastic-shared-live: clean show-vars check init
-	terraform destroy \
-		-var domain="$(DOMAIN)" \
-		-var region="$(REGION)" \
-		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
-		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-live \
-		-target=aws_security_group.conductor-aes-sg
-
-# INT
-## plan
-plan-conductor-elastic-shared-int: clean show-vars check init
+## destroy resources
+destroy-db-%: clean show-vars check-vars init
 	terraform plan \
-		-var domain="$(DOMAIN)" \
 		-var region="$(REGION)" \
 		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
 		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-dev \
-		-target=aws_security_group.conductor-aes-sg
+		-target=aws_rds_cluster.rds_cluster \
+		-target=aws_rds_cluster_instance.rds_cluster_instances \
+		-target=aws_db_subnet_group.rds_db_subnet_group \
+		-target=aws_security_group.conductor-sg \
+		-target=aws_elasticache_subnet_group.conductor-subnet-grp \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
 
-## apply
-apply-conductor-elastic-shared-int: clean show-vars check init
-	terraform apply \
-		-var domain="$(DOMAIN)" \
-		-var region="$(REGION)" \
-		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
-		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-dev \
-		-target=aws_security_group.conductor-aes-sg
-
-## destroy
-destroy-conductor-elastic-shared-int: clean show-vars check init
-	terraform destroy \
-		-var domain="$(DOMAIN)" \
-		-var region="$(REGION)" \
-		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
-		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-dev \
-		-target=aws_security_group.conductor-aes-sg
-
-# TEST
-## plan
-plan-conductor-elastic-shared-test: clean show-vars check init
+# WARNING USE WITH CAUTION . THIS MAY CAUSE OUTAGE
+# plan db password change
+plan-rotate-pass-%: clean show-vars check-vars init
 	terraform plan \
-		-var domain="$(DOMAIN)" \
 		-var region="$(REGION)" \
 		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
 		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-dev \
-		-target=aws_security_group.conductor-aes-sg
+		-var generate_new_password="$(GENERATE_NEW_PASSOWRD)" \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
 
-## apply
-apply-conductor-elastic-shared-test: clean show-vars check init
+# apply db password change
+apply-rotate-pass-%: clean show-vars check-vars init
 	terraform apply \
-		-var domain="$(DOMAIN)" \
 		-var region="$(REGION)" \
 		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
 		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-dev \
-		-target=aws_security_group.conductor-aes-sg
-
-## destroy
-destroy-conductor-elastic-shared-test: clean show-vars check init
-	terraform destroy \
-		-var domain="$(DOMAIN)" \
-		-var region="$(REGION)" \
-		-var enclave="$(ENCLAVE)" \
-		-var owner="conductor_elastic_shared-$(ENV)" \
-		-var D_TAG="$(DOMAIN)" \
-		-var env="$(ENV)" \
-		-var service="${SERVICE}" \
-		-target=aws_elasticsearch_domain.es-dev \
-		-target=aws_security_group.conductor-aes-sg
-
+		-var generate_new_password="$(GENERATE_NEW_PASSOWRD)" \
+		-target=random_string.password \
+		-target=vault_generic_secret.db-password
 # dummy target for autocompletion
-#conductor
-plan-conductor-elastic-shared-test:
-plan-conductor-elastic-shared-live:
-plan-conductor-elastic-shared-int:
-apply-conductor-elastic-shared-test:
-apply-conductor-elastic-shared-live:
-apply-conductor-elastic-shared-int:
-destroy-conductor-elastic-shared-test:
-destroy-conductor-elastic-shared-live:
-destroy-conductor-elastic-shared-int:
+plan-db-corp-test:
+apply-db-corp-test:
+destroy-db-corp-test:
+
+plan-db-corp-int:
+apply-db-corp-int:
+destroy-db-corp-int:
+
+
+plan-db-corp-live:
+apply-db-corp-live:
+destroy-db-corp-live:
+
+plan-db-shared-test:
+apply-db-shared-test:
+destroy-db-shared-test:
+
+plan-db-shared-int:
+apply-db-shared-int:
+destroy-db-shared-int:
+
+
+plan-db-shared-live:
+apply-db-shared-live:
+destroy-db-shared-live:
+
+plan-rotate-pass-db-shared-test:
+apply-rotate-pass-db-shared-test:
+
+plan-rotate-pass-db-shared-int:
+apply-rotate-pass-db-shared-int:
+
+plan-rotate-pass-db-shared-live:
+apply-rotate-pass-db-shared-live:
