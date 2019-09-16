@@ -32,7 +32,7 @@ public interface KafkaConsumerDAO {
 
     void consumeTaskExecutionLog(String type, Object taskExecLog);
 
-    void consumeMessage(String type, Map message);
+    void consumeMessage(Map message);
 
     void consumeEventExecution(Object data, String eventExecution);
 }

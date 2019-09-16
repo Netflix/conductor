@@ -44,6 +44,7 @@ public interface ElasticSearchConfiguration extends Configuration {
     String EMBEDDED_SETTINGS_FILE_DEFAULT_VALUE = "embedded-es.yml";
 
     String ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_PROPERTY_NAME = "workflow.elasticsearch.archive.search.batchSize";
+    String KAFKA_INDEX_ENABLE = "workflow.kafka.index.enable";
 
 
     int ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE = 5000;
@@ -132,5 +133,9 @@ public interface ElasticSearchConfiguration extends Configuration {
 
     default int getAsyncMaxPoolSize() {
         return  getIntProperty(ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE, DEFAULT_ASYNC_MAX_POOL_SIZE);
+    }
+
+    default boolean getKafkaIndexEnable() {
+        return getBooleanProperty(KAFKA_INDEX_ENABLE, false);
     }
 }

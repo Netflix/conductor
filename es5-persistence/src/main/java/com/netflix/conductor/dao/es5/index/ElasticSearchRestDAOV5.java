@@ -96,14 +96,14 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     private static final String className = ElasticSearchRestDAOV5.class.getSimpleName();
 
-    private final String indexName;
+    protected final String indexName;
     private final String logIndexPrefix;
     private final String clusterHealthColor;
-    private String logIndexName;
-    private final ObjectMapper objectMapper;
-    private final RestHighLevelClient elasticSearchClient;
+    protected String logIndexName;
+    protected final ObjectMapper objectMapper;
+    protected final RestHighLevelClient elasticSearchClient;
     private final RestClient elasticSearchAdminClient;
-    private final ExecutorService executorService;
+    protected final ExecutorService executorService;
 
 
     static {
@@ -314,9 +314,18 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         indexObject(indexName, WORKFLOW_DOC_TYPE, workflowId, summary);
     }
 
+    private void indexWorkflowSummary(WorkflowSummary workflowSummary) {
+        indexObject(indexName, WORKFLOW_DOC_TYPE, workflowSummary.getWorkflowId(), workflowSummary);
+    }
+
     @Override
     public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
         return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncIndexWorkflowSummary(WorkflowSummary workflowSummary) {
+        return CompletableFuture.runAsync(() -> indexWorkflowSummary(workflowSummary), executorService);
     }
 
     @Override
@@ -331,6 +340,16 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
         return CompletableFuture.runAsync(() -> indexTask(task), executorService);
+    }
+
+    private void indexTaskSummary(TaskSummary taskSummary) {
+
+        indexObject(indexName, TASK_DOC_TYPE, taskSummary.getTaskId(), taskSummary);
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncIndexTaskSummary(TaskSummary taskSummary) {
+        return CompletableFuture.runAsync(() -> indexTaskSummary(taskSummary), executorService);
     }
 
     @Override
@@ -641,7 +660,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         indexObject(index, docType, null, doc);
     }
 
-    private void indexObject(final String index, final String docType, final String docId, final Object doc) {
+    protected void indexObject(final String index, final String docType, final String docId, final Object doc) {
 
         byte[] docBytes;
         try {

@@ -176,11 +176,7 @@ public class ExecutionDAOFacade {
     public String createWorkflow(Workflow workflow) {
         workflow.setCreateTime(System.currentTimeMillis());
         executionDAO.createWorkflow(workflow);
-        if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-            kafkaProducerDAO.produceWorkflow(workflow);
-        } else {
-            indexDAO.asyncIndexWorkflow(workflow);
-        }
+        indexDAO.indexWorkflow(workflow);
         return workflow.getWorkflowId();
     }
 
@@ -196,11 +192,7 @@ public class ExecutionDAOFacade {
             workflow.setEndTime(System.currentTimeMillis());
         }
         executionDAO.updateWorkflow(workflow);
-        if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-            kafkaProducerDAO.produceWorkflow(workflow);
-        } else {
-            indexDAO.asyncIndexWorkflow(workflow);
-        }
+        indexDAO.indexWorkflow(workflow);
         return workflow.getWorkflowId();
     }
 
@@ -221,12 +213,12 @@ public class ExecutionDAOFacade {
             // remove workflow from ES
             if (archiveWorkflow) {
                 //Add to elasticsearch
-                indexDAO.asyncUpdateWorkflow(workflowId,
+                indexDAO.updateWorkflow(workflowId,
                         new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD},
                         new Object[]{objectMapper.writeValueAsString(workflow), true});
             } else {
                 // Not archiving, also remove workflowId from index
-                indexDAO.asyncRemoveWorkflow(workflowId);
+                indexDAO.removeWorkflow(workflowId);
             }
 
             // remove workflow from DAO
@@ -285,11 +277,7 @@ public class ExecutionDAOFacade {
                 }
             }
             executionDAO.updateTask(task);
-            if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-                kafkaProducerDAO.produceTask(task);
-            } else {
-                indexDAO.asyncIndexTask(task);
-            }
+            indexDAO.indexTask(task);
         } catch (Exception e) {
             String errorMsg = String.format("Error updating task: %s in workflow: %s", task.getTaskId(), task.getWorkflowInstanceId());
             LOGGER.error(errorMsg, e);
@@ -327,18 +315,14 @@ public class ExecutionDAOFacade {
     public boolean addEventExecution(EventExecution eventExecution) {
         boolean added = executionDAO.addEventExecution(eventExecution);
         if (added) {
-            if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-                kafkaProducerDAO.produceEventExecution(eventExecution);
-            } else {
-                indexDAO.asyncAddEventExecution(eventExecution);
-            }
+            indexDAO.addEventExecution(eventExecution);
         }
         return added;
     }
 
     public void updateEventExecution(EventExecution eventExecution) {
         executionDAO.updateEventExecution(eventExecution);
-        indexDAO.asyncAddEventExecution(eventExecution);
+        indexDAO.addEventExecution(eventExecution);
     }
 
     public void removeEventExecution(EventExecution eventExecution) {
@@ -357,7 +341,7 @@ public class ExecutionDAOFacade {
         if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
             kafkaProducerDAO.produceTaskExecutionLogs(logs);
         } else {
-            indexDAO.asyncAddTaskExecutionLogs(logs);
+            indexDAO.addTaskExecutionLogs(logs);
         }
     }
 

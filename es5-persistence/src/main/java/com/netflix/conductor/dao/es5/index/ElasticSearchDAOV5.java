@@ -112,12 +112,12 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
     private static final int RETRY_COUNT = 3;
 
-    private final String indexName;
+    protected final String indexName;
     private String logIndexName;
     private final String logIndexPrefix;
-    private final ObjectMapper objectMapper;
-    private final Client elasticSearchClient;
-    private final ExecutorService executorService;
+    protected final ObjectMapper objectMapper;
+    protected final Client elasticSearchClient;
+    protected final ExecutorService executorService;
     private final int archiveSearchBatchSize;
 
     static {
@@ -297,9 +297,28 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         }
     }
 
+    private void indexWorkflowSummary(WorkflowSummary workflowSummary) {
+        try {
+            byte[] doc = objectMapper.writeValueAsBytes(workflowSummary);
+
+            UpdateRequest req = new UpdateRequest(indexName, WORKFLOW_DOC_TYPE, workflowSummary.getWorkflowId());
+            req.doc(doc, XContentType.JSON);
+            req.upsert(doc, XContentType.JSON);
+            req.retryOnConflict(5);
+            updateWithRetry(req, "Index workflow into doc_type workflow");
+        } catch (Exception e) {
+            logger.error("Failed to index workflow: {}", workflowSummary.getWorkflowId(), e);
+        }
+    }
+
     @Override
     public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
         return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncIndexWorkflowSummary(WorkflowSummary workflowSummary) {
+        return CompletableFuture.runAsync(() -> indexWorkflowSummary(workflowSummary), executorService);
     }
 
     @Override
@@ -318,9 +337,27 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         }
     }
 
+    private void indexTaskSummary(TaskSummary taskSummary) {
+        try {
+            byte[] doc = objectMapper.writeValueAsBytes(taskSummary);
+
+            UpdateRequest req = new UpdateRequest(indexName, TASK_DOC_TYPE, taskSummary.getTaskId());
+            req.doc(doc, XContentType.JSON);
+            req.upsert(doc, XContentType.JSON);
+            updateWithRetry(req, "Index workflow into doc_type workflow");
+        } catch (Exception e) {
+            logger.error("Failed to index task: {}", taskSummary.getTaskId(), e);
+        }
+    }
+
     @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
         return CompletableFuture.runAsync(() -> indexTask(task), executorService);
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncIndexTaskSummary(TaskSummary taskSummary) {
+        return CompletableFuture.runAsync(() -> indexTaskSummary(taskSummary), executorService);
     }
 
     @Override

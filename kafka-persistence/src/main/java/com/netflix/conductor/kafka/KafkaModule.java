@@ -1,25 +1,27 @@
 package com.netflix.conductor.kafka;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.KafkaProducerDAO;
 import com.netflix.conductor.dao.kafka.index.KafkaProducer;
+import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
+import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
+import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
+import com.netflix.conductor.elasticsearch.es5.EmbeddedElasticSearchV5Provider;
 
 
 public class KafkaModule extends AbstractModule {
 
-    private Configuration configuration;
-
-    public KafkaModule(Configuration configuration) {
-        this.configuration = configuration;
+    public KafkaModule() {
     }
 
     @Override
     protected void configure() {
-        if (this.configuration.getBoolProperty("workflow.kafka.index.enable", false)) {
-            install(new KafkaPersistenceModule());
+        ElasticSearchConfiguration esConfiguration = new SystemPropertiesElasticSearchConfiguration();
+        if (esConfiguration.getKafkaIndexEnable()) {
+            install(new KafkaPersistenceModule(esConfiguration));
         }
         bind(KafkaProducerDAO.class).to(KafkaProducer.class);
+        bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);
     }
 }
 

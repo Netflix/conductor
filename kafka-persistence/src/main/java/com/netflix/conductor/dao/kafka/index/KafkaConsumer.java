@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.inject.Singleton;
 import com.netflix.conductor.annotations.Trace;
-import com.netflix.conductor.common.utils.RetryUtil;
+import com.netflix.conductor.common.metadata.events.EventExecution;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
+import com.netflix.conductor.common.run.TaskSummary;
+import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.KafkaConsumerDAO;
 import com.netflix.conductor.dao.kafka.index.serialiser.DataDeSerializer;
 import com.netflix.conductor.dao.kafka.index.serialiser.Record;
-import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -17,22 +21,15 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.KafkaException;
 import javax.inject.Inject;
 
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Collections;
-import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -46,7 +43,7 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	public static final String KAFKA_REQUEST_TIMEOUT_MS = "kafka.request.timeout.ms";
 	public static final String KAFKA_CONSUMER_POLL_INTERVAL = "kafka.consumer.poll.interval.ms";
 	public static final String KAFKA_CONSUMER_TOPIC = "kafka.consumer.topic";
-	public static final String CONSUMER_DEFAULT_TOPIC = "test";
+	public static final String CONSUMER_DEFAULT_TOPIC = "mytest";
 	public static final String STRING_DESERIALIZER = "org.apache.kafka.common.serialization.StringDeserializer";
 	public static final String DEFAULT_REQUEST_TIMEOUT = "100";
 	public static final int CONSUMER_DEFAULT_POLL_INTERVAL = 1;
@@ -54,10 +51,7 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
 	private static final String KAFKA_CONSUMER_THREADS = "kafka.consumer.threads";
 	private static final int DEFAULT_KAFKA_CONSUMER_THREADS = 1;
-	private static final String className = KafkaConsumerDAO.class.getSimpleName();
 	private ObjectMapper om = Record.objectMapper();
-	private static final int RETRY_COUNT = 3;
-	private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyyMMww");
 
 	public String requestTimeoutConfig;
 	public int pollInterval;
@@ -66,13 +60,11 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	@Inject private String topic;
 	private int threads;
 	ScheduledExecutorService scheduler;
-	private String logIndexName;
-	private String indexName;
-	private Client elasticSearchClient;
+	private IndexDAO indexDAO;
 
 	@Inject
-	public void KafkaConsumer(Configuration configuration, Client elasticSearchClient, ElasticSearchConfiguration config) {
-		this.elasticSearchClient = elasticSearchClient;
+	public void KafkaConsumer(Configuration configuration, IndexDAO indexDAO) {
+		this.indexDAO = indexDAO;
 		this.requestTimeoutConfig = configuration.getProperty(KAFKA_REQUEST_TIMEOUT_MS, DEFAULT_REQUEST_TIMEOUT);
 		String requestTimeoutMs = requestTimeoutConfig;
 
@@ -90,8 +82,6 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 		consumer.subscribe(Collections.singleton(this.topic));
 
 		scheduler = Executors.newScheduledThreadPool(this.threads);
-		this.indexName = config.getIndexName();
-		this.logIndexName = config.getTasklogIndexName() + "_" + SIMPLE_DATE_FORMAT.format(new Date());
 		try {
 			scheduler.scheduleAtFixedRate(() -> consume(), 0, this.pollInterval, TimeUnit.MILLISECONDS);
 		} catch(RejectedExecutionException e) {
@@ -105,7 +95,7 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	public void consume() {
 			try {
 				ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
-				Monitors.getGauge(Monitors.classQualifier, "consumer_records", "consumer_records").set(records.count());
+				Monitors.getCounter(Monitors.classQualifier, "consumer_records", "consumer_records").increment(records.count());
 				logger.info("polled {} messages from kafka topic.", records.count());
 				records.forEach(record -> {
 					try {
@@ -128,7 +118,7 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 								consumeEventExecution(d.getPayload(), d.getType());
 								break;
 							case KafkaProducer.MSG_DOC_TYPE:
-								consumeMessage(d.getType(), om.convertValue(d.getPayload(), Map.class));
+								consumeMessage(om.convertValue(d.getPayload(), Map.class));
 								break;
 							default:
 								break;
@@ -148,11 +138,8 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	@Override
 	public void consumeWorkflow(byte[] doc, String docType, String id) {
 		try {
-			UpdateRequest req = new UpdateRequest(indexName, docType, id);
-			req.doc(doc, XContentType.JSON);
-			req.upsert(doc, XContentType.JSON);
-			req.retryOnConflict(5);
-			updateWithRetry(req, "Index workflow into doc_type workflow");
+			WorkflowSummary workflowSummary  = om.readValue(new String(doc), WorkflowSummary.class);
+			indexDAO.asyncIndexWorkflowSummary(workflowSummary);
 		} catch (Exception e) {
 			logger.error("Failed to index workflow: {}", id, e);
 		}
@@ -162,10 +149,8 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	@Override
 	public void consumeTask(byte[] doc, String docType, String id) {
 		try {
-			UpdateRequest req = new UpdateRequest(indexName, docType, id);
-			req.doc(doc, XContentType.JSON);
-			req.upsert(doc, XContentType.JSON);
-			updateWithRetry(req, "Index workflow into doc_type workflow");
+			TaskSummary taskSummary  = om.readValue(new String(doc), TaskSummary.class);
+			indexDAO.asyncIndexTaskSummary(taskSummary);
 		} catch (Exception e) {
 			logger.error("Failed to index task: {}", id, e);
 		}
@@ -175,56 +160,29 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	public void consumeTaskExecutionLog(String type, Object taskExecLog) {
 
 		try {
-			IndexRequest request = new IndexRequest(logIndexName, type);
-			request.source(om.writeValueAsBytes(taskExecLog), XContentType.JSON);
-			new RetryUtil<IndexResponse>().retryOnException(
-					() -> elasticSearchClient.index(request).actionGet(),
-					null,
-					null,
-					RETRY_COUNT,
-					"Indexing all execution logs into doc_type task",
-					"addTaskExecutionLogs"
-			);
+			TaskExecLog log  = om.readValue(new String(om.writeValueAsBytes(taskExecLog)), TaskExecLog.class);
+			indexDAO.asyncAddTaskExecutionLogs(Arrays.asList(log));
 		} catch (Exception e) {
             logger.error("Failed to index task execution logs for tasks: {}", taskExecLog, e);
 		}
 	}
 
 	@Override
-	public void consumeMessage(String type, Map message) {
-		IndexRequest request = new IndexRequest(logIndexName, type);
-		request.source(message);
-
+	public void consumeMessage(Map message) {
+		try {
+			indexDAO.addMessage(String.valueOf(message.get("queue")), om.readValue(message.toString(), Message.class));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void consumeEventExecution(Object data, String eventExecution) {
 		try {
-			byte[] doc = om.writeValueAsBytes(data);
-			UpdateRequest req = new UpdateRequest(logIndexName, KafkaProducer.EVENT_DOC_TYPE, eventExecution);
-			req.doc(doc, XContentType.JSON);
-			req.upsert(doc, XContentType.JSON);
-			req.retryOnConflict(5);
-			updateWithRetry(req, "Update Event execution for doc_type event");
+			EventExecution event  = om.readValue(new String(om.writeValueAsBytes(data)), EventExecution.class);
+			indexDAO.asyncAddEventExecution(event);
 		} catch (Exception e) {
 			logger.error("Failed to index event execution: {}", eventExecution, e);
-		}
-	}
-
-	public void updateWithRetry(UpdateRequest request, String operationDescription) {
-		try {
-			new RetryUtil<UpdateResponse>().retryOnException(
-					() -> elasticSearchClient.update(request).actionGet(),
-					null,
-					null,
-					RETRY_COUNT,
-					operationDescription,
-					"updateWithRetry"
-			);
-		} catch (Exception e) {
-			Monitors.error(className, "index");
-			logger.error("Failed to index {} for request type: {}", request.index(), request.type(),
-					e);
 		}
 	}
 
