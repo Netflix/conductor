@@ -57,7 +57,7 @@ public class GetTaskStatus extends WorkflowSystemTask {
 			else
 				targetTask = executionDao.getTask(workflowId, taskRefName);
 
-			if (targetTask == null) {
+			if (targetTask == null && errorOnNotFound(task)) {
 				String error = "No task found in workflow " + workflowId + " for ";
 				if (StringUtils.isNotEmpty(taskId))
 					throw new IllegalArgumentException(error + taskId);
@@ -65,19 +65,32 @@ public class GetTaskStatus extends WorkflowSystemTask {
 					throw new IllegalArgumentException(error + taskRefName);
 			}
 
-			Task.Status status = targetTask.getStatus();
-			if (status == null)
-				throw new IllegalArgumentException("No status in the task " + targetTask.getTaskId());
+			if (targetTask != null) {
+				Task.Status status = targetTask.getStatus();
+				if (status == null)
+					throw new IllegalArgumentException("No status in the task " + targetTask.getTaskId());
 
-			task.getOutputData().put("name", status.name());
-			task.getOutputData().put("isTerminal", status.isTerminal());
-			task.getOutputData().put("isSuccessful", status.isSuccessful());
-			task.getOutputData().put("isRetriable", status.isRetriable());
+				task.getOutputData().put("name", status.name());
+				task.getOutputData().put("isTerminal", status.isTerminal());
+				task.getOutputData().put("isSuccessful", status.isSuccessful());
+				task.getOutputData().put("isRetriable", status.isRetriable());
+			}
+
 			task.setStatus(Task.Status.COMPLETED);
 		} catch (Exception e) {
 			task.setStatus(Task.Status.FAILED);
 			task.setReasonForIncompletion(e.getMessage());
 			logger.debug(e.getMessage(), e);
 		}
+	}
+
+	private boolean errorOnNotFound(Task task) {
+		Object obj = task.getInputData().get("errorOnNotFound");
+		if (obj instanceof Boolean) {
+			return (boolean) obj;
+		} else if (obj instanceof String) {
+			return Boolean.parseBoolean((String) obj);
+		}
+		return true; //Enabled by default
 	}
 }
