@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label "dockerhub-maven"
+        label "jenkins-gradle"
     }
 
     environment {
@@ -20,10 +20,10 @@ pipeline {
                 HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
             }
             steps {
-                container('maven') {
+                container('gradle') {
                     sh "echo **************** PREVIEW_VERSION: $PREVIEW_VERSION , PREVIEW_NAMESPACE: $PREVIEW_NAMESPACE, HELM_RELEASE: $HELM_RELEASE"
                     sh "echo $PREVIEW_VERSION > PREVIEW_VERSION"
-                    sh "./gradlew build -x test"
+                    sh "gradle build -x test"
                     // sh "skaffold version"
                     // sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml"
                     // sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-ui.yaml"
