@@ -65,6 +65,14 @@ public class GetTaskData extends WorkflowSystemTask {
 			else
 				targetTask = executionDao.getTask(workflowId, taskRefName);
 
+			if (targetTask == null && errorOnNotFound(task)) {
+				String error = "No task found in workflow " + workflowId + " for ";
+				if (StringUtils.isNotEmpty(taskId))
+					throw new IllegalArgumentException(error + taskId);
+				else
+					throw new IllegalArgumentException(error + taskRefName);
+			}
+
 			if (targetTask != null) {
 				Map<String, Object> outputData = mapper.convertValue(targetTask, MAP_TYPE);
 				task.setOutputData(outputData);
@@ -76,5 +84,15 @@ public class GetTaskData extends WorkflowSystemTask {
 			task.setReasonForIncompletion(e.getMessage());
 			logger.debug(e.getMessage(), e);
 		}
+	}
+
+	private boolean errorOnNotFound(Task task) {
+		Object obj = task.getInputData().get("errorOnNotFound");
+		if (obj instanceof Boolean) {
+			return (boolean) obj;
+		} else if (obj instanceof String) {
+			return Boolean.parseBoolean((String) obj);
+		}
+		return true; //Enabled by default
 	}
 }
