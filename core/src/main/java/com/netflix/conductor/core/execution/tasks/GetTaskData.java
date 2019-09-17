@@ -65,17 +65,11 @@ public class GetTaskData extends WorkflowSystemTask {
 			else
 				targetTask = executionDao.getTask(workflowId, taskRefName);
 
-			if (targetTask == null) {
-				String error = "No task found in workflow " + workflowId + " for ";
-				if (StringUtils.isNotEmpty(taskId))
-					throw new IllegalArgumentException(error + taskId);
-				else
-					throw new IllegalArgumentException(error + taskRefName);
+			if (targetTask != null) {
+				Map<String, Object> outputData = mapper.convertValue(targetTask, MAP_TYPE);
+				task.setOutputData(outputData);
 			}
 
-			Map<String, Object> outputData = mapper.convertValue(targetTask, MAP_TYPE);
-
-			task.setOutputData(outputData);
 			task.setStatus(Task.Status.COMPLETED);
 		} catch (Exception e) {
 			task.setStatus(Task.Status.FAILED);
