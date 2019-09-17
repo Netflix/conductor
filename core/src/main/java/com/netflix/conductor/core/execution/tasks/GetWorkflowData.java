@@ -24,7 +24,6 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.ExecutionDAO;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +40,7 @@ public class GetWorkflowData extends WorkflowSystemTask {
 	private final TypeReference MAP_TYPE = new TypeReference<HashMap<String, Object>>() {};
 	private final ObjectMapper mapper = new ObjectMapper();
 
-	public GetWorkflowData(ObjectMapper mapper) {
+	public GetWorkflowData() {
 		super("GET_WORKFLOW_DATA");
 	}
 

@@ -28,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,7 +40,7 @@ public class GetTaskData extends WorkflowSystemTask {
 	private final TypeReference MAP_TYPE = new TypeReference<HashMap<String, Object>>() {};
 	private final ObjectMapper mapper = new ObjectMapper();
 
-	public GetTaskData(ObjectMapper mapper) {
+	public GetTaskData() {
 		super("GET_TASK_DATA");
 	}
 
