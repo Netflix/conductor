@@ -952,6 +952,10 @@ public class WorkflowExecutor {
 		return queue;
 	}
 
+	public ExecutionDAO getExecutionDao() {
+		return edao;
+	}
+
 	public void updateTask(Task task)  {
 		edao.updateTask(task);
 	}
