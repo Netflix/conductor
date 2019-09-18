@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import com.github.vmg.protogen.annotations.*;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Captures workflow summary info to be indexed in Elastic Search.
@@ -80,18 +81,28 @@ public class WorkflowSummary {
 
 	@ProtoField(id = 14)
 	private String failedReferenceTaskNames = "";
+
+	@ProtoField(id = 15)
+	private String externalInputPayloadStoragePath;
+
+	@ProtoField(id = 16)
+	private String externalOutputPayloadStoragePath;
+
+	@ProtoField(id = 17)
+	private int priority;
 	
 	public WorkflowSummary() {
 		
 	}
 	public WorkflowSummary(Workflow workflow) {
-		
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     	sdf.setTimeZone(gmt);
     	
 		this.workflowType = workflow.getWorkflowName();
 		this.version = workflow.getWorkflowVersion();
 		this.workflowId = workflow.getWorkflowId();
+		this.priority = workflow.getPriority();
 		this.correlationId = workflow.getCorrelationId();
 		if(workflow.getCreateTime() != null){
 			this.startTime = sdf.format(new Date(workflow.getCreateTime()));
@@ -115,6 +126,12 @@ public class WorkflowSummary {
 		}
 		this.event = workflow.getEvent();
 		this.failedReferenceTaskNames = workflow.getFailedReferenceTaskNames().stream().collect(Collectors.joining(","));
+		if (StringUtils.isNotBlank(workflow.getExternalInputPayloadStoragePath())) {
+			this.externalInputPayloadStoragePath = workflow.getExternalInputPayloadStoragePath();
+		}
+		if (StringUtils.isNotBlank(workflow.getExternalOutputPayloadStoragePath())) {
+			this.externalOutputPayloadStoragePath = workflow.getExternalOutputPayloadStoragePath();
+		}
 	}
 
 	/**
@@ -281,5 +298,47 @@ public class WorkflowSummary {
 
 	public void setExecutionTime(long executionTime) {
 		this.executionTime = executionTime;
+	}
+
+	/**
+	 * @return the external storage path of the workflow input payload
+	 */
+	public String getExternalInputPayloadStoragePath() {
+		return externalInputPayloadStoragePath;
+	}
+
+	/**
+	 * @param externalInputPayloadStoragePath the external storage path where the workflow input payload is stored
+	 */
+	public void setExternalInputPayloadStoragePath(String externalInputPayloadStoragePath) {
+		this.externalInputPayloadStoragePath = externalInputPayloadStoragePath;
+	}
+
+	/**
+	 * @return the external storage path of the workflow output payload
+	 */
+	public String getExternalOutputPayloadStoragePath() {
+		return externalOutputPayloadStoragePath;
+	}
+
+	/**
+	 * @param externalOutputPayloadStoragePath the external storage path where the workflow output payload is stored
+	 */
+	public void setExternalOutputPayloadStoragePath(String externalOutputPayloadStoragePath) {
+		this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
+	}
+
+	/**
+	 * @return the priority to define on tasks
+	 */
+	public int getPriority() {
+		return priority;
+	}
+
+	/**
+	 * @param priority priority of tasks (between 0 and 99)
+	 */
+	public void setPriority(int priority) {
+		this.priority = priority;
 	}
 }

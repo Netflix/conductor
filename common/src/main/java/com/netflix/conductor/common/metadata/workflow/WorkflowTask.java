@@ -37,7 +37,7 @@ import java.util.Set;
  * @author Viren
  *
  * This is the task definition definied as part of the {@link WorkflowDef}. The tasks definied in the Workflow definition are saved
- * as part of {@link WorkflowDef#tasks}
+ * as part of {@link WorkflowDef#getTasks}
  */
 @ProtoMessage
 public class WorkflowTask {
@@ -95,6 +95,9 @@ public class WorkflowTask {
 	@ProtoField(id = 8)
 	private String caseExpression;
 
+	@ProtoField(id = 22)
+	private String scriptExpression;
+
 	@ProtoMessage(wrapper = true)
 	public static class WorkflowTaskList {
 		public List<WorkflowTask> getTasks() {
@@ -150,6 +153,12 @@ public class WorkflowTask {
 
 	@ProtoField(id = 20)
 	private Boolean rateLimited;
+	
+	@ProtoField(id = 21)
+	private List<String> defaultExclusiveJoinTask = new LinkedList<>();
+
+	@ProtoField(id = 23)
+	private Boolean asyncComplete = false;
 
 	/**
 	 * @return the name
@@ -354,6 +363,15 @@ public class WorkflowTask {
 		this.caseExpression = caseExpression;
 	}
 
+
+	public String getScriptExpression() {
+		return scriptExpression;
+	}
+
+	public void setScriptExpression(String expression) {
+		this.scriptExpression = expression;
+	}
+
 	
 	/**
 	 * @return the subWorkflow
@@ -398,7 +416,19 @@ public class WorkflowTask {
 	public void setSink(String sink) {
 		this.sink = sink;
 	}
-	
+
+	/**
+	 *
+	 * @return whether wait for an external event to complete the task, for EVENT and HTTP tasks
+	 */
+	public Boolean isAsyncComplete() {
+		return asyncComplete;
+	}
+
+	public void setAsyncComplete(Boolean asyncComplete) {
+		this.asyncComplete = asyncComplete;
+	}
+
 	/**
 	 *
 	 * @return If the task is optional.  When set to true, the workflow execution continues even when the task is in failed status.
@@ -423,7 +453,7 @@ public class WorkflowTask {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param optional when set to true, the task is marked as optional
 	 */
 	public void setOptional(boolean optional) {
@@ -440,6 +470,14 @@ public class WorkflowTask {
 
 	public Boolean isRateLimited() {
 		return rateLimited != null && rateLimited;
+	}
+
+	public List<String> getDefaultExclusiveJoinTask() {
+		return defaultExclusiveJoinTask;
+	}
+
+	public void setDefaultExclusiveJoinTask(List<String> defaultExclusiveJoinTask) {
+		this.defaultExclusiveJoinTask = defaultExclusiveJoinTask;
 	}
 
 	private Collection<List<WorkflowTask>> children() {
@@ -611,7 +649,9 @@ public class WorkflowTask {
                 Objects.equals(getForkTasks(), that.getForkTasks()) &&
                 Objects.equals(getSubWorkflowParam(), that.getSubWorkflowParam()) &&
                 Objects.equals(getJoinOn(), that.getJoinOn()) &&
-                Objects.equals(getSink(), that.getSink());
+                Objects.equals(getSink(), that.getSink()) &&
+				Objects.equals(isAsyncComplete(), that.isAsyncComplete()) &&
+                Objects.equals(getDefaultExclusiveJoinTask(), that.getDefaultExclusiveJoinTask());
     }
 
     @Override
@@ -636,7 +676,9 @@ public class WorkflowTask {
                 getSubWorkflowParam(),
                 getJoinOn(),
                 getSink(),
-                isOptional()
+                isAsyncComplete(),
+                isOptional(),
+                getDefaultExclusiveJoinTask()
         );
     }
 }

@@ -134,7 +134,9 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 				continue;
 			}
 
-			task.setScheduledTime(System.currentTimeMillis());
+			if(task.getStatus() != null && !task.getStatus().isTerminal() && task.getScheduledTime() == 0){
+				task.setScheduledTime(System.currentTimeMillis());
+			}
 
 			correlateTaskToWorkflowInDS(task.getTaskId(), task.getWorkflowInstanceId());
 			logger.debug("Scheduled task added to WORKFLOW_TO_TASKS workflowId: {}, taskId: {}, taskType: {} during createTasks",
@@ -154,19 +156,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	}
 
 	@Override
-	public void updateTasks(List<Task> tasks) {
-		for (Task task : tasks) {
-			updateTask(task);
-		}
-	}
-
-	@Override
 	public void updateTask(Task task) {
-		task.setUpdateTime(System.currentTimeMillis());
-		if (task.getStatus() != null && task.getStatus().isTerminal() && task.getEndTime() == 0) {
-			task.setEndTime(System.currentTimeMillis());
-		}
-
 		Optional<TaskDef> taskDefinition = task.getTaskDefinition();
 
 		if(taskDefinition.isPresent() && taskDefinition.get().concurrencyLimit() > 0) {
@@ -174,11 +164,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			if(task.getStatus() != null && task.getStatus().equals(Status.IN_PROGRESS)) {
 				dynoClient.sadd(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
 				logger.debug("Workflow Task added to TASKS_IN_PROGRESS_STATUS with tasksInProgressKey: {}, workflowId: {}, taskId: {}, taskType: {}, taskStatus: {} during updateTask",
-						nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName(), task.getWorkflowInstanceId(), task.getTaskId(), task.getTaskType(), task.getStatus().name()));
+						nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName(), task.getTaskId()), task.getWorkflowInstanceId(), task.getTaskId(), task.getTaskType(), task.getStatus().name());
 			}else {
 				dynoClient.srem(nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
 				logger.debug("Workflow Task removed from TASKS_IN_PROGRESS_STATUS with tasksInProgressKey: {}, workflowId: {}, taskId: {}, taskType: {}, taskStatus: {} during updateTask",
-						nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName(), task.getWorkflowInstanceId(), task.getTaskId(), task.getTaskType(), task.getStatus().name()));
+						nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName(), task.getTaskId()), task.getWorkflowInstanceId(), task.getTaskId(), task.getTaskType(), task.getStatus().name());
 				String key = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
 				dynoClient.zrem(key, task.getTaskId());
 				logger.debug("Workflow Task removed from TASK_LIMIT_BUCKET with taskLimitBucketKey: {}, workflowId: {}, taskId: {}, taskType: {}, taskStatus: {} during updateTask",
@@ -362,13 +352,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	@Override
 	public String createWorkflow(Workflow workflow) {
-		workflow.setCreateTime(System.currentTimeMillis());
 		return insertOrUpdateWorkflow(workflow, false);
 	}
 
 	@Override
 	public String updateWorkflow(Workflow workflow) {
-		workflow.setUpdateTime(System.currentTimeMillis());
 		return insertOrUpdateWorkflow(workflow, true);
 	}
 
@@ -397,6 +385,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	@Override
 	public void removeFromPendingWorkflow(String workflowType, String workflowId) {
 		recordRedisDaoRequests("removePendingWorkflow");
+		dynoClient.del(nsKey(SCHEDULED_TASKS, workflowId));
 		dynoClient.srem(nsKey(PENDING_WORKFLOWS, workflowType), workflowId);
 	}
 
@@ -423,8 +412,14 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		return workflow;
 	}
 
+	/**
+	 * @param workflowName name of the workflow
+	 * @param version the workflow version
+	 * @return list of workflow ids that are in RUNNING state
+	 * <em>returns workflows of all versions for the given workflow name</em>
+	 */
 	@Override
-	public List<String> getRunningWorkflowIds(String workflowName) {
+	public List<String> getRunningWorkflowIds(String workflowName, int version) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 		List<String> workflowIds;
 		recordRedisDaoRequests("getRunningWorkflowsByName");
@@ -433,15 +428,19 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		return workflowIds;
 	}
 
+	/**
+	 * @param workflowName name of the workflow
+	 * @param version the workflow version
+	 * @return list of workflows that are in RUNNING state
+	 */
 	@Override
-	public List<Workflow> getPendingWorkflowsByType(String workflowName) {
+	public List<Workflow> getPendingWorkflowsByType(String workflowName, int version) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-		List<Workflow> workflows = new LinkedList<>();
-		List<String> wfIds = getRunningWorkflowIds(workflowName);
-		for(String wfId : wfIds) {
-			workflows.add(getWorkflow(wfId));
-		}
-		return workflows;
+		List<String> workflowIds = getRunningWorkflowIds(workflowName, version);
+		return workflowIds.stream()
+				.map(this::getWorkflow)
+				.filter(workflow -> workflow.getWorkflowVersion() == version)
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -493,9 +492,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
 		Preconditions.checkNotNull(workflow, "workflow object cannot be null");
 
-		if (workflow.getStatus().isTerminal()) {
-			workflow.setEndTime(System.currentTimeMillis());
-		}
 		List<Task> tasks = workflow.getTasks();
 		workflow.setTasks(new LinkedList<>());
 

@@ -129,9 +129,17 @@ public class WorkflowClient extends ClientBase {
         } catch (IOException e) {
             String errorMsg = String.format("Unable to start workflow:%s, version:%s", startWorkflowRequest.getName(), version);
             logger.error(errorMsg, e);
+            WorkflowTaskMetrics.incrementWorkflowStartErrorCount(startWorkflowRequest.getName(), e);
             throw new ConductorClientException(errorMsg, e);
         }
-        return postForEntity("workflow", startWorkflowRequest, null, String.class, startWorkflowRequest.getName());
+        try {
+            return postForEntity("workflow", startWorkflowRequest, null, String.class, startWorkflowRequest.getName());
+        } catch (ConductorClientException e) {
+            String errorMsg = String.format("Unable to send start workflow request:%s, version:%s", startWorkflowRequest.getName(), version);
+            logger.error(errorMsg, e);
+            WorkflowTaskMetrics.incrementWorkflowStartErrorCount(startWorkflowRequest.getName(), e);
+            throw e;
+        }
     }
 
     /**
@@ -283,13 +291,25 @@ public class WorkflowClient extends ClientBase {
     }
 
     /**
+     * This API has been marked as deprecated and will be removed in a future release.
+     * Please use {@link #restart(String, boolean)} instead.
+     */
+    @Deprecated
+    public void restart(String workflowId) {
+        restart(workflowId, false);
+    }
+
+    /**
      * Restart a completed workflow
      *
-     * @param workflowId the workflow id of the workflow to be restarted
+     * @param workflowId           the workflow id of the workflow to be restarted
+     * @param useLatestDefinitions if true, use the latest workflow and task definitions when restarting the workflow
+     *                             if false, use the workflow and task definitions embedded in the workflow execution when restarting the workflow
      */
-    public void restart(String workflowId) {
+    public void restart(String workflowId, boolean useLatestDefinitions) {
         Preconditions.checkArgument(StringUtils.isNotBlank(workflowId), "workflow id cannot be blank");
-        postForEntityWithUriVariablesOnly("workflow/{workflowId}/restart", workflowId);
+        Object[] params = new Object[]{"useLatestDefinitions", useLatestDefinitions};
+        postForEntity("workflow/{workflowId}/restart", null, params, Void.TYPE, workflowId);
     }
 
     /**

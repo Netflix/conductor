@@ -151,7 +151,13 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
         this.logIndexPrefix = this.indexPrefix + "_" + LOG_DOC_TYPE;
         this.messageIndexPrefix = this.indexPrefix + "_" + MSG_DOC_TYPE;
         this.eventIndexPrefix = this.indexPrefix + "_" + EVENT_DOC_TYPE;
-        this.executorService = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.MINUTES, new LinkedBlockingQueue<>());
+        int workerQueueSize = config.getAsyncWorkerQueueSize();
+        int maximumPoolSize = config.getAsyncMaxPoolSize();
+
+        this.executorService = new ThreadPoolExecutor(CORE_POOL_SIZE, maximumPoolSize, KEEP_ALIVE_TIME, TimeUnit.MINUTES, new LinkedBlockingQueue<>(workerQueueSize),
+                (runnable, executor) -> {
+                    logger.warn("Request  {} to async dao discarded in executor {}", runnable, executor);
+                });
     }
 
     @Override
@@ -184,7 +190,7 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
             updateIndexesNames();
             Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexesNames, 0, 1, TimeUnit.HOURS);
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.error("Error creating index templates", e);
         }
     }
 
@@ -565,6 +571,8 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
                 .must(QueryBuilders.rangeQuery("endTime").lt(LocalDate.now().minusDays(archiveTtlDays).toString()))
                 .should(QueryBuilders.termQuery("status", "COMPLETED"))
                 .should(QueryBuilders.termQuery("status", "FAILED"))
+                .should(QueryBuilders.termQuery("status", "TIMED_OUT"))
+                .should(QueryBuilders.termQuery("status", "TERMINATED"))
                 .mustNot(QueryBuilders.existsQuery("archived"))
                 .minimumShouldMatch(1);
         SearchRequestBuilder s = elasticSearchClient.prepareSearch(indexName)

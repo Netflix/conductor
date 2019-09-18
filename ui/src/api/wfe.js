@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import http from '../core/HttpClient';
+import http from '../core/HttpClientServerSide';
 import moment from 'moment';
 import filter from 'lodash/fp/filter';
 import forEach from 'lodash/fp/forEach';
@@ -59,7 +59,11 @@ router.get('/search-by-task/:taskId', async (req, res, next) => {
   try {
     let freeText = [];
     if (req.query.freeText != '') {
-      freeText.push(req.params.taskId);
+      if(req.query.entire === "t"){
+        freeText.push(`"${req.params.taskId}"`)
+      } else {
+        freeText.push(req.params.taskId);
+      }
     } else {
       freeText.push('*');
     }
@@ -77,6 +81,7 @@ router.get('/search-by-task/:taskId', async (req, res, next) => {
     }
 
     let query = req.query.q || '';
+
     const url =
       baseURL2 + 'search-by-tasks?size=100&sort=startTime:DESC&freeText=' + encodeURIComponent(freeText.join(' AND ')) + '&start=' + start;
     const result = await http.get(url, req.token);
@@ -195,6 +200,24 @@ router.post('/bulk/retry', async (req, res, next) => {
 });
 
 router.post('/bulk/restart', async (req, res, next) => {
+  try {
+    const result = await http.post(baseURL2 + "bulk/restart", req.body, req.token);
+    res.status(200).send(result);
+  } catch (err) {
+    next(err);
+  }
+})
+
+router.post('/bulk/restart_with_latest_definition', async (req, res, next) => {
+  try {
+    const result = await http.post(baseURL2 + "bulk/restart?useLatestDefinition=true", req.body, req.token);
+    res.status(200).send(result);
+  } catch (err) {
+    next(err);
+  }
+})
+
+router.post('/bulk/restart_with_current_definition', async (req, res, next) => {
   try {
     const result = await http.post(baseURL2 + "bulk/restart", req.body, req.token);
     res.status(200).send(result);

@@ -38,15 +38,18 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -115,7 +118,7 @@ public class TestHttpTask {
     public void setup() {
         workflowExecutor = mock(WorkflowExecutor.class);
         config = mock(Configuration.class);
-        RestClientManager rcm = new RestClientManager();
+        RestClientManager rcm = new RestClientManager(Mockito.mock(Configuration.class));
         when(config.getServerId()).thenReturn("test_server_id");
         httpTask = new HttpTask(rcm, config);
     }
@@ -189,6 +192,33 @@ public class TestHttpTask {
     }
 
     @Test
+    public void testPostAsyncComplete() {
+
+        Task task = new Task();
+        Input input = new Input();
+        input.setUri("http://localhost:7009/post");
+        Map<String, Object> body = new HashMap<>();
+        body.put("input_key1", "value1");
+        body.put("input_key2", 45.3d);
+        input.setBody(body);
+        input.setMethod("POST");
+        task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+        task.getInputData().put("asyncComplete", true);
+
+        httpTask.start(workflow, task, workflowExecutor);
+        assertEquals(task.getReasonForIncompletion(), Status.IN_PROGRESS, task.getStatus());
+        Map<String, Object> hr = (Map<String, Object>) task.getOutputData().get("response");
+        Object response = hr.get("body");
+        assertEquals(Status.IN_PROGRESS, task.getStatus());
+        assertTrue("response is: " + response, response instanceof Map);
+        Map<String, Object> map = (Map<String, Object>) response;
+        Set<String> inputKeys = body.keySet();
+        Set<String> responseKeys = map.keySet();
+        inputKeys.containsAll(responseKeys);
+        responseKeys.containsAll(inputKeys);
+    }
+
+    @Test
     public void testTextGET() {
 
         Task task = new Task();
@@ -252,6 +282,39 @@ public class TestHttpTask {
         boolean executed = httpTask.execute(workflow, task, workflowExecutor);
         assertFalse(executed);
 
+    }
+
+
+    @Test
+    public void testHTTPGetConnectionTimeOut() throws Exception{
+        Task task = new Task();
+        Input input = new Input();
+        Instant start  = Instant.now();
+        input.setConnectionTimeOut(110);
+        input.setMethod("GET");
+        input.setUri("http://10.255.255.255");
+        task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+        task.setStatus(Status.SCHEDULED);
+        task.setScheduledTime(0);
+        httpTask.start(workflow,task,workflowExecutor);
+        Instant end  = Instant.now();
+        long diff = end.toEpochMilli()-start.toEpochMilli();
+        Assert.assertEquals(task.getStatus(),Status.FAILED);
+        Assert.assertTrue(diff >= 110l);
+    }
+
+    @Test
+    public void testHTTPGETReadTimeOut() throws Exception{
+        Task task = new Task();
+        Input input = new Input();
+        input.setReadTimeOut(-1);
+        input.setMethod("GET");
+        input.setUri("http://localhost:7009/json");
+        task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+        task.setStatus(Status.SCHEDULED);
+        task.setScheduledTime(0);
+        httpTask.start(workflow,task,workflowExecutor);
+        Assert.assertEquals(task.getStatus(),Status.FAILED);
     }
 
     @Test
