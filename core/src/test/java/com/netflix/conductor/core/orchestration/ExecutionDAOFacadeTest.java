@@ -48,17 +48,13 @@ public class ExecutionDAOFacadeTest {
     private IndexDAO indexDAO;
     private ObjectMapper objectMapper;
     private ExecutionDAOFacade executionDAOFacade;
-    private Configuration configuration;
-    private KafkaProducerDAO kafkaProducer;
 
     @Before
     public void setUp() {
         executionDAO = mock(ExecutionDAO.class);
         indexDAO = mock(IndexDAO.class);
-        configuration = mock(Configuration.class);
-        kafkaProducer = mock(KafkaProducerDAO.class);
         objectMapper = new JsonMapperProvider().get();
-        executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper, configuration, kafkaProducer);
+        executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper);
     }
     
     @Test (expected = java.lang.Exception.class)
@@ -143,18 +139,6 @@ public class ExecutionDAOFacadeTest {
         executionDAOFacade.removeWorkflow("workflowId", true);
         verify(indexDAO, times(1)).updateWorkflow(any(), any(), any());
         verify(indexDAO, never()).removeWorkflow(any());
-    }
-
-    @Test
-    public void testPublishWorkflowToKafka() throws Exception {
-        InputStream stream = TestDeciderService.class.getResourceAsStream("/test.json");
-        Workflow workflow = objectMapper.readValue(stream, Workflow.class);
-        doReturn(true).when(configuration).getBooleanProperty("workflow.kafka.index.enable", false);
-        doReturn("").when(executionDAO).updateWorkflow(workflow);
-        doNothing().when(kafkaProducer).produceWorkflow(workflow);
-        executionDAOFacade.updateWorkflow(workflow);
-        verify(indexDAO, times(0)).asyncIndexWorkflow(any());
-        verify(kafkaProducer, times(1)).produceWorkflow(any());
     }
 
     @Test

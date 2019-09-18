@@ -3,14 +3,11 @@ package com.netflix.conductor.dao.kafka.index;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.netflix.conductor.annotations.Trace;
-import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.KafkaProducerDAO;
 import com.netflix.conductor.dao.kafka.index.serialiser.DataSerializer;
 import com.netflix.conductor.dao.kafka.index.serialiser.Record;
@@ -24,9 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -38,14 +32,11 @@ public class KafkaProducer implements KafkaProducerDAO {
 	public static final String KAFKA_REQUEST_TIMEOUT_MS = "kafka.request.timeout.ms";
 	public static final String STRING_SERIALIZER = "org.apache.kafka.common.serialization.StringSerializer";
 	public static final String KAFKA_PRODUCER_TOPIC = "kafka.producer.topic";
-	public static final String PRODUCER_DEFAULT_TOPIC = "mytest";
-	public static final String DEFAULT_REQUEST_TIMEOUT = "100";
+	public static final String PRODUCER_DEFAULT_TOPIC = "mytest1";
+	public static final String DEFAULT_REQUEST_TIMEOUT = "1000";
 	public static final String DEFAULT_BOOTSTRAP_SERVERS_CONFIG = "localhost:9092";
 	public static final String WORKFLOW_DOC_TYPE = "workflow";
 	public static final String TASK_DOC_TYPE = "task";
-	public static final String LOG_DOC_TYPE = "task_log";
-	public static final String EVENT_DOC_TYPE = "event";
-	public static final String MSG_DOC_TYPE = "message";
 	private static final Logger logger = LoggerFactory.getLogger(KafkaProducer.class);
 	private final String topic;
 	private ObjectMapper om = Record.objectMapper();
@@ -106,30 +97,9 @@ public class KafkaProducer implements KafkaProducerDAO {
 	}
 
 	@Override
-	public void produceTaskExecutionLogs(List<TaskExecLog> taskExecLogs) {
-		if (taskExecLogs.isEmpty()) {
-			return;
-		}
-
-		for (TaskExecLog log : taskExecLogs) {
-			send(LOG_DOC_TYPE, log);
-		}
-	}
-
-	@Override
-	public void produceMessage(String queue, Message message) {
-		Map<String, Object> doc = new HashMap<>();
-		doc.put("messageId", message.getId());
-		doc.put("payload", message.getPayload());
-		doc.put("queue", queue);
-		doc.put("created", System.currentTimeMillis());
-		send(MSG_DOC_TYPE, doc);
-	}
-
-	@Override
-	public void produceEventExecution(EventExecution eventExecution) {
-		send(EVENT_DOC_TYPE, eventExecution);
-	}
+    public void close() {
+	    producer.close();
+    }
 
 }
 

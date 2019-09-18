@@ -15,7 +15,6 @@
  */
 package com.netflix.conductor.dao;
 
-import java.util.Map;
 
 /**
  *
@@ -30,9 +29,5 @@ public interface KafkaConsumerDAO {
 
     void consumeTask(byte[] doc, String docType, String id);
 
-    void consumeTaskExecutionLog(String type, Object taskExecLog);
-
-    void consumeMessage(Map message);
-
-    void consumeEventExecution(Object data, String eventExecution);
+    void close();
 }

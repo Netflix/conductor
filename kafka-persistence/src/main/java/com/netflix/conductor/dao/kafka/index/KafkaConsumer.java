@@ -8,12 +8,12 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.WorkflowSummary;
-import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.KafkaConsumerDAO;
 import com.netflix.conductor.dao.kafka.index.serialiser.DataDeSerializer;
 import com.netflix.conductor.dao.kafka.index.serialiser.Record;
+import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -26,14 +26,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Collections;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 @Singleton
@@ -43,14 +39,12 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	public static final String KAFKA_REQUEST_TIMEOUT_MS = "kafka.request.timeout.ms";
 	public static final String KAFKA_CONSUMER_POLL_INTERVAL = "kafka.consumer.poll.interval.ms";
 	public static final String KAFKA_CONSUMER_TOPIC = "kafka.consumer.topic";
-	public static final String CONSUMER_DEFAULT_TOPIC = "mytest";
+	public static final String CONSUMER_DEFAULT_TOPIC = "mytest1";
 	public static final String STRING_DESERIALIZER = "org.apache.kafka.common.serialization.StringDeserializer";
-	public static final String DEFAULT_REQUEST_TIMEOUT = "100";
+	public static final String DEFAULT_REQUEST_TIMEOUT = "1000";
 	public static final int CONSUMER_DEFAULT_POLL_INTERVAL = 1;
 	public static final String DEFAULT_BOOTSTRAP_SERVERS_CONFIG = "localhost:9092";
 	private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
-	private static final String KAFKA_CONSUMER_THREADS = "kafka.consumer.threads";
-	private static final int DEFAULT_KAFKA_CONSUMER_THREADS = 1;
 	private ObjectMapper om = Record.objectMapper();
 
 	public String requestTimeoutConfig;
@@ -58,19 +52,18 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	private Consumer consumer;
 
 	@Inject private String topic;
-	private int threads;
-	ScheduledExecutorService scheduler;
+	ExecutorService scheduler;
 	private IndexDAO indexDAO;
+	private boolean shutdown;
 
 	@Inject
-	public void KafkaConsumer(Configuration configuration, IndexDAO indexDAO) {
+	public KafkaConsumer(ElasticSearchConfiguration configuration, IndexDAO indexDAO) {
 		this.indexDAO = indexDAO;
 		this.requestTimeoutConfig = configuration.getProperty(KAFKA_REQUEST_TIMEOUT_MS, DEFAULT_REQUEST_TIMEOUT);
 		String requestTimeoutMs = requestTimeoutConfig;
 
 		this.pollInterval = configuration.getIntProperty(KAFKA_CONSUMER_POLL_INTERVAL, CONSUMER_DEFAULT_POLL_INTERVAL);
 		this.topic = configuration.getProperty(KAFKA_CONSUMER_TOPIC, CONSUMER_DEFAULT_TOPIC);
-		this.threads = configuration.getIntProperty(KAFKA_CONSUMER_THREADS, DEFAULT_KAFKA_CONSUMER_THREADS);
 
 		Properties consumerConfig = new Properties();
 		consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, configuration.getProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, DEFAULT_BOOTSTRAP_SERVERS_CONFIG));
@@ -79,11 +72,12 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 		consumerConfig.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, STRING_DESERIALIZER);
 		consumerConfig.put("group.id",  "_group");
 		consumer = new org.apache.kafka.clients.consumer.KafkaConsumer(consumerConfig);
+
 		consumer.subscribe(Collections.singleton(this.topic));
 
-		scheduler = Executors.newScheduledThreadPool(this.threads);
+		scheduler = Executors.newSingleThreadExecutor();
 		try {
-			scheduler.scheduleAtFixedRate(() -> consume(), 0, this.pollInterval, TimeUnit.MILLISECONDS);
+			scheduler.submit(() -> consume());
 		} catch(RejectedExecutionException e) {
 			Monitors.getCounter(Monitors.classQualifier, "pending_tasks", "pending_tasks").increment();
 		}
@@ -93,11 +87,12 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	}
 
 	public void consume() {
+		while(!shutdown) {
 			try {
 				ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
 				Monitors.getCounter(Monitors.classQualifier, "consumer_records", "consumer_records").increment(records.count());
-				logger.info("polled {} messages from kafka topic.", records.count());
 				records.forEach(record -> {
+					logger.info("polled {} messages from kafka topic.", records.count());
 					try {
 						Record d = om.readValue(record.value(), Record.class);
 						byte[] data;
@@ -111,15 +106,6 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 								data = om.writeValueAsBytes(d.getPayload());
 								consumeTask(data, d.getType(), om.readTree(data).get("taskId").asText());
 								break;
-							case KafkaProducer.LOG_DOC_TYPE:
-								consumeTaskExecutionLog(d.getType(), d.getPayload());
-								break;
-							case KafkaProducer.EVENT_DOC_TYPE:
-								consumeEventExecution(d.getPayload(), d.getType());
-								break;
-							case KafkaProducer.MSG_DOC_TYPE:
-								consumeMessage(om.convertValue(d.getPayload(), Map.class));
-								break;
 							default:
 								break;
 						}
@@ -132,6 +118,7 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 				logger.error("kafka consumer message polling failed.", e);
 				Monitors.getCounter(Monitors.classQualifier, "consumer_error", "consumer_error").increment();
 			}
+		}
 	}
 
 
@@ -157,33 +144,15 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	}
 
 	@Override
-	public void consumeTaskExecutionLog(String type, Object taskExecLog) {
-
+	public void close() {
+		shutdown = true;
+		scheduler.shutdownNow();
 		try {
-			TaskExecLog log  = om.readValue(new String(om.writeValueAsBytes(taskExecLog)), TaskExecLog.class);
-			indexDAO.asyncAddTaskExecutionLogs(Arrays.asList(log));
-		} catch (Exception e) {
-            logger.error("Failed to index task execution logs for tasks: {}", taskExecLog, e);
-		}
-	}
-
-	@Override
-	public void consumeMessage(Map message) {
-		try {
-			indexDAO.addMessage(String.valueOf(message.get("queue")), om.readValue(message.toString(), Message.class));
-		} catch (IOException e) {
+			scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void consumeEventExecution(Object data, String eventExecution) {
-		try {
-			EventExecution event  = om.readValue(new String(om.writeValueAsBytes(data)), EventExecution.class);
-			indexDAO.asyncAddEventExecution(event);
-		} catch (Exception e) {
-			logger.error("Failed to index event execution: {}", eventExecution, e);
-		}
+		consumer.close();
 	}
 
 }

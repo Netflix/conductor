@@ -15,13 +15,8 @@
  */
 package com.netflix.conductor.dao;
 
-import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.events.queue.Message;
-
-import java.util.List;
 
 /**
  *
@@ -36,9 +31,5 @@ public interface KafkaProducerDAO {
 
     void produceTask(Task task);
 
-    void produceTaskExecutionLogs(List<TaskExecLog> taskExecLogs);
-
-    void produceMessage(String queue, Message message);
-
-    void produceEventExecution(EventExecution eventExecution);
+    void close();
 }

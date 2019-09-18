@@ -19,12 +19,10 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.KafkaProducerDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,17 +47,13 @@ public class ExecutionDAOFacade {
     private final ExecutionDAO executionDAO;
     private final IndexDAO indexDAO;
     private final ObjectMapper objectMapper;
-    private final Configuration configuration;
-    private final KafkaProducerDAO kafkaProducerDAO;
 
 
     @Inject
-    public ExecutionDAOFacade(ExecutionDAO executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper, Configuration configuration, KafkaProducerDAO kafkaProducerDAO) {
+    public ExecutionDAOFacade(ExecutionDAO executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper) {
         this.executionDAO = executionDAO;
         this.indexDAO = indexDAO;
         this.objectMapper = objectMapper;
-        this.configuration = configuration;
-        this.kafkaProducerDAO = kafkaProducerDAO;
     }
 
     /**
@@ -338,19 +332,11 @@ public class ExecutionDAOFacade {
     }
 
     public void addTaskExecLog(List<TaskExecLog> logs) {
-        if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-            kafkaProducerDAO.produceTaskExecutionLogs(logs);
-        } else {
-            indexDAO.addTaskExecutionLogs(logs);
-        }
+        indexDAO.addTaskExecutionLogs(logs);
     }
 
     public void addMessage(String queue, Message message) {
-        if (configuration.getBooleanProperty("workflow.kafka.index.enable", false)) {
-            kafkaProducerDAO.produceMessage(queue, message);
-        } else {
-            indexDAO.addMessage(queue, message);
-        }
+        indexDAO.addMessage(queue, message);
     }
 
     public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
