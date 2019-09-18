@@ -25,8 +25,8 @@ pipeline {
                     sh "echo $PREVIEW_VERSION > PREVIEW_VERSION"
                     sh "gradle build -x test"
                     // sh "skaffold version"
-                    // sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml"
-                    // sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-ui.yaml"
+                    sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml"
+                    sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-ui.yaml"
 
                     script {
                         def buildVersion = readFile "${env.WORKSPACE}/PREVIEW_VERSION"
