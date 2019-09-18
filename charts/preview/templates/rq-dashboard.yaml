@@ -1,0 +1,52 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: rq
+    role: dashboard
+    tier: frontend
+  name: rq-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rq
+      role: dashboard
+      tier: frontend
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: rq
+        role: dashboard
+        tier: frontend
+    spec:
+      containers:
+      - command:
+        - rq-dashboard
+        - --redis-host=preview-redis-master
+        - --redis-port=6379
+        - -p
+        - "9181"
+        - -b
+        - 0.0.0.0
+        image: aleksokanu/rq-dashboard
+        imagePullPolicy: Always
+        name: test
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
