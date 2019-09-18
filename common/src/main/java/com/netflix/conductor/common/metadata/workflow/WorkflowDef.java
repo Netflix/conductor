@@ -79,6 +79,9 @@ public class WorkflowDef extends Auditable {
 
 	@ProtoField(id = 10)
 	private boolean workflowStatusListenerEnabled = false;
+	
+	@ProtoField(id = 11)
+    private Map<String, Object> variables = new HashMap<>();
 
 	/**
 	 * @return the name
@@ -134,6 +137,19 @@ public class WorkflowDef extends Auditable {
 	 */
 	public void setInputParameters(List<String> inputParameters) {
 		this.inputParameters = inputParameters;
+	}
+	
+	/**
+	 * @return the global variables
+	 */
+	public Map<String, Object> getVariables() {
+		return variables;
+	}
+	/**
+	 * @param var the set of global variables to set
+	 */
+	public void setVariables(Map<String, Object> var) {
+		this.variables = var;
 	}
 
 	/**
@@ -282,6 +298,7 @@ public class WorkflowDef extends Auditable {
 				Objects.equals(getTasks(), that.getTasks()) &&
 				Objects.equals(getInputParameters(), that.getInputParameters()) &&
 				Objects.equals(getOutputParameters(), that.getOutputParameters()) &&
+				Objects.equals(getVariables(), that.getVariables()) &&
 				Objects.equals(getFailureWorkflow(), that.getFailureWorkflow());
 	}
 
@@ -293,6 +310,7 @@ public class WorkflowDef extends Auditable {
 				getVersion(),
 				getTasks(),
 				getInputParameters(),
+				getVariables(),
 				getOutputParameters(),
 				getFailureWorkflow(),
 				getSchemaVersion()
@@ -308,6 +326,7 @@ public class WorkflowDef extends Auditable {
 				.add("tasks", tasks)
 				.add("inputParameters", inputParameters)
 				.add("outputParameters", outputParameters)
+				.add("variables", variables)
 				.add("failureWorkflow", failureWorkflow)
 				.add("schemaVersion", schemaVersion)
 				.add("restartable", restartable)
