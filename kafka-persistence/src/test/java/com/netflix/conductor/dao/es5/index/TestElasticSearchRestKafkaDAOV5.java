@@ -104,7 +104,7 @@ public class TestElasticSearchRestKafkaDAOV5 {
         restClient.performRequest("GET", "/_cluster/health", params);
 
         objectMapper = new ObjectMapper();
-        embeddedKafka = new KafkaEmbedded(1, true, 1, "mytest1");
+        embeddedKafka = new KafkaEmbedded(1, true, 1, "mytest");
         kafkaProducerDAO = new KafkaProducer(configuration);
         indexDAO = new ElasticSearchRestKafkaDAOV5(restClient, configuration, objectMapper, kafkaProducerDAO);
         kafkaConsumerDAO = new KafkaConsumer(configuration, indexDAO);

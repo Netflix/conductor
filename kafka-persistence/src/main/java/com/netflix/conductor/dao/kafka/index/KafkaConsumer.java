@@ -39,7 +39,7 @@ public class KafkaConsumer implements KafkaConsumerDAO {
 	public static final String KAFKA_REQUEST_TIMEOUT_MS = "kafka.request.timeout.ms";
 	public static final String KAFKA_CONSUMER_POLL_INTERVAL = "kafka.consumer.poll.interval.ms";
 	public static final String KAFKA_CONSUMER_TOPIC = "kafka.consumer.topic";
-	public static final String CONSUMER_DEFAULT_TOPIC = "mytest1";
+	public static final String CONSUMER_DEFAULT_TOPIC = "mytest";
 	public static final String STRING_DESERIALIZER = "org.apache.kafka.common.serialization.StringDeserializer";
 	public static final String DEFAULT_REQUEST_TIMEOUT = "1000";
 	public static final int CONSUMER_DEFAULT_POLL_INTERVAL = 1;

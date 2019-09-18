@@ -660,7 +660,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         indexObject(index, docType, null, doc);
     }
 
-    protected void indexObject(final String index, final String docType, final String docId, final Object doc) {
+    private void indexObject(final String index, final String docType, final String docId, final Object doc) {
 
         byte[] docBytes;
         try {

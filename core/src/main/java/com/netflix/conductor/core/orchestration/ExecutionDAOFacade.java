@@ -48,7 +48,6 @@ public class ExecutionDAOFacade {
     private final IndexDAO indexDAO;
     private final ObjectMapper objectMapper;
 
-
     @Inject
     public ExecutionDAOFacade(ExecutionDAO executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper) {
         this.executionDAO = executionDAO;
@@ -309,14 +308,14 @@ public class ExecutionDAOFacade {
     public boolean addEventExecution(EventExecution eventExecution) {
         boolean added = executionDAO.addEventExecution(eventExecution);
         if (added) {
-            indexDAO.addEventExecution(eventExecution);
+            indexDAO.asyncAddEventExecution(eventExecution);
         }
         return added;
     }
 
     public void updateEventExecution(EventExecution eventExecution) {
         executionDAO.updateEventExecution(eventExecution);
-        indexDAO.addEventExecution(eventExecution);
+        indexDAO.asyncAddEventExecution(eventExecution);
     }
 
     public void removeEventExecution(EventExecution eventExecution) {
@@ -332,7 +331,7 @@ public class ExecutionDAOFacade {
     }
 
     public void addTaskExecLog(List<TaskExecLog> logs) {
-        indexDAO.addTaskExecutionLogs(logs);
+        indexDAO.asyncAddTaskExecutionLogs(logs);
     }
 
     public void addMessage(String queue, Message message) {

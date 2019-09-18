@@ -83,7 +83,7 @@ public class TestElasticSearchKafkaDAOV5 {
 				.get();
 
 		ObjectMapper objectMapper = new ObjectMapper();
-		embeddedKafka = new KafkaEmbedded(1, true, 1, "mytest1");
+		embeddedKafka = new KafkaEmbedded(1, true, 1, "mytest");
 		kafkaProducerDAO = new KafkaProducer(configuration);
 		indexDAO = new ElasticSearchKafkaDAOV5(elasticSearchClient, configuration, objectMapper, kafkaProducerDAO);
 		kafkaConsumerDAO = new KafkaConsumer(configuration, indexDAO);
