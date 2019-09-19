@@ -52,6 +52,7 @@ public class CoreModule extends AbstractModule {
 		bind(Batch.class).asEagerSingleton();
 		bind(Terminate.class).asEagerSingleton();
 		bind(Lambda.class).asEagerSingleton();
+		bind(GetWorkflowStatus.class).asEagerSingleton();
 	}
 	
 }
