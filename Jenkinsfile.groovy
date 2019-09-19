@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label "jenkins-gradle"
+        label "dockerhub-maven"
     }
 
     environment {
@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('PR Build + PREVIEW') {
             when {
-                branch 'feature/*'
+                branch 'PR-*'
             }
             environment {
                 PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
@@ -20,11 +20,10 @@ pipeline {
                 HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
             }
             steps {
-                container('gradle') {
+                container('maven') {
                     sh "echo **************** PREVIEW_VERSION: $PREVIEW_VERSION , PREVIEW_NAMESPACE: $PREVIEW_NAMESPACE, HELM_RELEASE: $HELM_RELEASE"
                     sh "echo $PREVIEW_VERSION > PREVIEW_VERSION"
-                    sh "gradle build -x test -x :conductor-client:findbugsMain "
-                    // sh "skaffold version"
+                    sh "skaffold version"
                     sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml"
                     sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-ui.yaml"
 
