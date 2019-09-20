@@ -26,4 +26,5 @@ dependencies:
 
 - alias: netflix-conductor
   name: netflix-conductor
+  version: 0.4.12
   repository: file://../netflix-conductor

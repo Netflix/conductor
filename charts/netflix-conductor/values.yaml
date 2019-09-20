@@ -30,7 +30,7 @@ server:
   appStartupOpts: ""
   newrelic:
     enabled: false
-    licenseKey: "1343afc7ff2720efc49da15a8b0e9847d3204b85"
+    licenseKey: ""
     tracing:
       enabled: false
 ui:
