@@ -28,6 +28,7 @@ server:
     type: ClusterIP
   jvmStartupOpts: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
   appStartupOpts: ""
+  loadSamples: false
   newrelic:
     enabled: false
     licenseKey: ""
