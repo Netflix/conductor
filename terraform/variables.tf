@@ -20,8 +20,9 @@ variable "service" {
 variable "cluster_size" {
   default = {
     test = 1
-    live = 1
     int  = 1
+    uat  = 1
+    live = 1
   }
 }
 
@@ -36,8 +37,9 @@ variable "engine_version" {
 variable "instance_class" {
   default = {
     test = "db.r5.large"
-    live = "db.r5.4xlarge"
     int  = "db.r5.4xlarge"
+    uat  = "db.r5.4xlarge"
+    live = "db.r5.4xlarge"
   }
 }
 
@@ -58,22 +60,24 @@ variable "database_port" {
 }
 
 variable "owner" {
-  default = "conductor_service"
+  default = "conductor"
 }
 
 variable "database_name" {
   default = {
     test = "conductor_development"
-    live = "conductor_production"
     int  = "conductor_integration"
+    uat  = "conductor_uat"
+    live = "conductor_production"
   }
 }
 
 variable "database_user" {
   default = {
     test = "conductor_development"
-    live = "conductor_production"
     int  = "conductor_integration"
+    uat  = "conductor_uat"
+    live = "conductor_production"
   }
 }
 
@@ -96,8 +100,9 @@ variable "generate_new_password" {
 }
 
 module "vars" {
-  source  = "github.com/d3sw/terraform-modules//vars?ref=v0.1.30"
+  source  = "github.com/d3sw/terraform-platform//modules/vars"
   region  = "${var.region}"
   env     = "${var.env}"
   enclave = "${var.enclave}"
+  service = "${var.service}"
 }
