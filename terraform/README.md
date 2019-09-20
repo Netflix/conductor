@@ -1,20 +1,20 @@
 # Terraform RDS
+
 - This is the Terraform config to deploy RDS resources in AWS.
-    - PLEASE DO NOT MODIFY FILES UNDER THIS DIRECTORY UNLESS YOU KNOW WHAT YOU ARE DOING.
+- PLEASE DO NOT MODIFY FILES UNDER THIS DIRECTORY UNLESS YOU KNOW WHAT YOU ARE DOING.
 - This config deploys an RDS instance in the specified `env` for the **Conductor** service.
 
 ## Components
 
-
 - The deployment is broken down into the following files:
 
-    - **Makefile**: acts as a wrapper for Terraform commands and contains specific targets to deploy resources.  
-    - **outputs**: contains the values that get written to `stdout` upon successful Terraform commands.
-    - **provider**: defines the provider type. In this case:
-      - aws
-      - vault
-    - **rds**: contains the configs pertaining to RDS and its dependencies.
-    - **vars**: contains variables that all resources in the directory can reference.
+  - **Makefile**: acts as a wrapper for Terraform commands and contains specific targets to deploy resources.  
+  - **outputs**: contains the values that get written to `stdout` upon successful Terraform commands.
+  - **provider**: defines the provider type. In this case:
+    - aws
+    - vault
+  - **rds**: contains the configs pertaining to RDS and its dependencies.
+  - **vars**: contains variables that all resources in the directory can reference.
 
 Usage
 -----
@@ -22,7 +22,9 @@ Usage
 - Take a look at the `Makefile` for details on the targets.
 
 ### Stage Resources
+
 Follow the auto complete targets for MAKE command in the `Makefile`
+
 - `make plan-db-corp-int`
 - `make plan-db-corp-live`
 - `make plan-db-corp-test`

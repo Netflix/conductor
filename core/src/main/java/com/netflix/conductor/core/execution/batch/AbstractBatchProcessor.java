@@ -26,5 +26,5 @@ import java.util.List;
  * @author Oleksiy Lysak
  */
 abstract class AbstractBatchProcessor {
-    abstract void run(List<Task> tasks);
+    abstract void run(List<TaskGroup> groups);
 }
