@@ -31,6 +31,14 @@ pipeline {
                         def buildVersion = readFile "${env.WORKSPACE}/PREVIEW_VERSION"
                         currentBuild.description = "$APP_NAME.$PREVIEW_NAMESPACE"
                     }
+
+                    dir('charts/preview') {
+                      sh "make preview"
+                      sh "jx preview --app $APP_NAME --namespace=$PREVIEW_NAMESPACE --dir ../.."
+                      sh "sleep 20"
+                      sh "kubectl describe pods -n=$PREVIEW_NAMESPACE"
+                    }
+
                 }
             }
         }
