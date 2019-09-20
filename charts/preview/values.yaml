@@ -35,7 +35,7 @@ netflix-conductor:
       preview_repository_server:
       preview_tag_server:
       pullPolicy: IfNotPresent
-    loadSamples: false
+    loadSamples: true
     newrelic:
       enabled: false
       tracing:
