@@ -31,7 +31,7 @@ pipeline {
 
                     script {
                         def buildVersion = readFile "${env.WORKSPACE}/PREVIEW_VERSION"
-                        currentBuild.description = "${DOCKER_REGISTRY}/netflixconductor:server-${PREVIEW_VERSION}" + "\n${DOCKER_REGISTRY}/netflixconductor:ui-${PREVIEW_VERSION}"
+                        currentBuild.description = "${DOCKER_REGISTRY}/netflixconductor:server-${PREVIEW_VERSION}"
                     }
 
                     dir('charts/preview') {
