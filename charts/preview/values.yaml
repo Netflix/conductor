@@ -27,9 +27,10 @@ netflix-conductor:
   fullnameOverride: "netflix-conductor"
 
   server:
+
     image:
       preview_repository_server:
-      preview_tag:
+      preview_tag_server:
       pullPolicy: IfNotPresent
 
     newrelic:
@@ -45,6 +46,11 @@ netflix-conductor:
         cpu: 400m
         memory: 1.5Gi
   ui:
+    ingress:
+      annotations:
+        fabric8.io/expose: "true"
+        fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+
     image:
       preview_repository_ui:
       preview_tag_ui:

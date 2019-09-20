@@ -7,6 +7,11 @@ metadata:
     chart: {{ include "netflix-conductor.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+{{- if .Values.ui.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.ui.ingress.annotations | indent 4 }}
+{{- end }}
+
 spec:
   type: {{ .Values.ui.service.type }}
   ports:
