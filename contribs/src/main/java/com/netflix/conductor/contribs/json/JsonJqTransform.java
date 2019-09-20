@@ -79,15 +79,37 @@ public class JsonJqTransform extends WorkflowSystemTask {
 				taskOutput.put("result", null);
 				taskOutput.put("resultList", result);
 			} else {
-				taskOutput.put("result", result.get(0));
-				taskOutput.put("resultList", result);
+				if (!isSuppressSingle(task))
+					taskOutput.put("result", result.get(0));
+				if (!isSuppressList(task))
+					taskOutput.put("resultList", result);
 			}
 		} catch(Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.debug(e.getMessage(), e);
 			task.setStatus(Task.Status.FAILED);
 			task.setReasonForIncompletion(e.getMessage());
 			taskOutput.put("error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
 		}
+	}
+
+	private boolean isSuppressList(Task task) {
+		Object obj = task.getInputData().get("suppressList");
+		if (obj instanceof Boolean) {
+			return (boolean) obj;
+		} else if (obj instanceof String) {
+			return Boolean.parseBoolean((String) obj);
+		}
+		return false;
+	}
+
+	private boolean isSuppressSingle(Task task) {
+		Object obj = task.getInputData().get("suppressSingle");
+		if (obj instanceof Boolean) {
+			return (boolean) obj;
+		} else if (obj instanceof String) {
+			return Boolean.parseBoolean((String) obj);
+		}
+		return false;
 	}
 
 	private LoadingCache<String, JsonQuery> createQueryCache() {

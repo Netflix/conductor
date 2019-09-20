@@ -92,16 +92,13 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 	}
 
 	@Override
-	public void run(List<Task> tasks) {
-		Map<String, List<Task>> groups = tasks.stream()
-			.collect(Collectors.groupingBy(o -> o.getInputData().get("uniqueness").toString()));
-
+	public void run(List<TaskGroup> groups) {
 		groups.forEach(this::processGroup);
 	}
 
-	private void processGroup(String key, List<Task> items) {
+	private void processGroup(TaskGroup group) {
 		// Get the first from the group
-		Task carried = items.get(0);
+		Task carried = group.getTasks().get(0);
 		String url = null;
 
 		Output response = new Output();
@@ -140,7 +137,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 			response.statusCode = cr.getStatus();
 			response.headers = cr.getHeaders();
 		} catch (UniformInterfaceException ex) {
-			logger.error("Group {} failed with {}", key, ex.getMessage(), ex);
+			logger.error("Group {} failed with {}", group.getKey(), ex.getMessage(), ex);
 			ClientResponse cr = ex.getResponse();
 			if (cr.getStatus() > 199 && cr.getStatus() < 300) {
 				if (cr.getStatus() != 204 && cr.hasEntity()) {
@@ -161,8 +158,8 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 		}
 
 		String effectiveUrl = url;
-		List<Future<?>> futures = new ArrayList<>(items.size());
-		items.forEach(task -> {
+		List<Future<?>> futures = new ArrayList<>(group.getTasks().size());
+		group.getTasks().forEach(task -> {
 			Future<?> future = threadExecutor.submit(() -> {
 				NDC.push("batch-sherlock-" + task.getTaskId());
 				try {

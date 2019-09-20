@@ -23,6 +23,7 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +108,8 @@ public class UpdateTask extends WorkflowSystemTask {
 			TaskResult taskResult = new TaskResult(targetTask);
 			taskResult.setResetStartTime(getResetStartTime(task));
 			taskResult.setReasonForIncompletion(getReasonForIncompletion(task));
+			taskResult.setUpdateOutput(MapUtils.isNotEmpty(output));
+
 			executor.updateTask(taskResult);
 		} catch (Exception e) {
 			task.setStatus(Status.FAILED);
