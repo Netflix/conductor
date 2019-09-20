@@ -27,6 +27,11 @@ netflix-conductor:
   fullnameOverride: "netflix-conductor"
 
   server:
+    image:
+      preview_repository_server:
+      preview_tag:
+      pullPolicy: IfNotPresent
+
     newrelic:
       enabled: false
       tracing:
@@ -40,6 +45,11 @@ netflix-conductor:
         cpu: 400m
         memory: 1.5Gi
   ui:
+    image:
+      preview_repository_ui:
+      preview_tag_ui:
+      pullPolicy: IfNotPresent
+
     resources:
       limits:
         memory: 100Mi
