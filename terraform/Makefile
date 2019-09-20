@@ -1,24 +1,18 @@
 SERVICE = conductor
 REGION = us-west-2
+ENCLAVE = shared
 TFSTATE = $(SERVICE)/$(REGION)-$(ENV)-aurora-postgres.tfstate
 GENERATE_NEW_PASSOWRD = "$$RANDOM"
 
 # Target Specific Variables
 ## corp
 ### enclave
-plan-db-corp-% apply-db-corp-% destroy-db-corp-%: ENCLAVE=corp
-plan-db-shared-% apply-db-shared-% destroy-db-shared-%: ENCLAVE=shared
-plan-rotate-pass-db-shared-%: ENCLAVE=shared
-apply-rotate-pass-db-shared-%: ENCLAVE=shared
 
-### env and tld
-%-db-corp-test: ENV=test
-%-db-corp-live: ENV=live
-%-db-corp-int: ENV=int
+%-db-test: ENV=test
+%-db-int: ENV=int
+%-db-uat: ENV=uat
+%-db-live: ENV=live
 
-%-db-shared-test: ENV=test
-%-db-shared-live: ENV=live
-%-db-shared-int: ENV=int
 # clean terraform modules
 clean:
 		rm -rf ./.terraform
@@ -106,37 +100,30 @@ apply-rotate-pass-%: clean show-vars check-vars init
 		-target=random_string.password \
 		-target=vault_generic_secret.db-password
 # dummy target for autocompletion
-plan-db-corp-test:
-apply-db-corp-test:
-destroy-db-corp-test:
+plan-db-test:
+apply-db-test:
+destroy-db-test:
 
-plan-db-corp-int:
-apply-db-corp-int:
-destroy-db-corp-int:
+plan-db-int:
+apply-db-int:
+destroy-db-int:
 
+plan-db-uat:
+apply-db-uat:
+destroy-db-uat:
 
-plan-db-corp-live:
-apply-db-corp-live:
-destroy-db-corp-live:
+plan-db-live:
+apply-db-live:
+destroy-db-live:
 
-plan-db-shared-test:
-apply-db-shared-test:
-destroy-db-shared-test:
+plan-rotate-pass-db-test:
+apply-rotate-pass-db-test:
 
-plan-db-shared-int:
-apply-db-shared-int:
-destroy-db-shared-int:
+plan-rotate-pass-db-int:
+apply-rotate-pass-db-int:
 
+plan-rotate-pass-db-uat:
+apply-rotate-pass-db-uat:
 
-plan-db-shared-live:
-apply-db-shared-live:
-destroy-db-shared-live:
-
-plan-rotate-pass-db-shared-test:
-apply-rotate-pass-db-shared-test:
-
-plan-rotate-pass-db-shared-int:
-apply-rotate-pass-db-shared-int:
-
-plan-rotate-pass-db-shared-live:
-apply-rotate-pass-db-shared-live:
+plan-rotate-pass-db-live:
+apply-rotate-pass-db-live:

@@ -17,4 +17,4 @@ dump.rdb
 deploy.nomad
 bin
 .vscode
-terraform/rds/.terraform
+terraform/.terraform

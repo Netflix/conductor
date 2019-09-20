@@ -14,9 +14,10 @@ resource "aws_rds_cluster_instance" "rds_cluster_instances" {
   db_subnet_group_name = "${aws_db_subnet_group.rds_db_subnet_group.id}"
 
   tags {
-    Name        = "conductor-aurora-postgresql-${var.enclave}-${var.env}-${count.index}"
-    Owner       = "${var.owner}"
-    Environment = "${var.env}"
+    Name            = "conductor-aurora-postgresql-${var.enclave}-${var.env}-${count.index}"
+    Environment     = "${var.env}"
+    PlatformService = "${var.enclave}"
+    Enclave         = "${var.enclave}"
   }
 }
 
@@ -41,16 +42,17 @@ resource "aws_rds_cluster" "rds_cluster" {
   vpc_security_group_ids = ["${aws_security_group.conductor-aurora-sg.id}"]
   # Tags
   tags {
-    Name        = "conductor-aurora-postgresql-${var.enclave}-${var.env}"
-    Owner       = "${var.owner}"
-    Environment = "${var.env}"
+    Name            = "conductor-aurora-postgresql-${var.enclave}-${var.env}"
+    Environment     = "${var.env}"
+    PlatformService = "${var.enclave}"
+    Enclave         = "${var.enclave}"
   }
 }
 
 resource "aws_db_subnet_group" "rds_db_subnet_group" {
   name        = "conductor-aurora-postgresql-${var.enclave}-${var.env}-subnetgrp"
   description = "conductor-aurora-postgresql-${var.enclave}-${var.env}-subnetgrp"
-  subnet_ids  = ["${split(",", "${module.vars.private_subnets}")}"]
+  subnet_ids  = ["${split(",", "${module.vars.private_subnet_ids}")}"]
 }
 
 resource "aws_security_group" "conductor-aurora-sg" {
@@ -73,9 +75,10 @@ resource "aws_security_group" "conductor-aurora-sg" {
   }
 
   tags {
-    Name        = "conductor-aurora-postgresql-${var.enclave}-${var.env}"
-    Owner       = "${var.owner}"
-    Environment = "${var.env}"
+    Name            = "conductor-aurora-postgresql-${var.enclave}-${var.env}"
+    Environment     = "${var.env}"
+    PlatformService = "${var.enclave}"
+    Enclave         = "${var.enclave}"
   }
 }
 
