@@ -26,7 +26,7 @@ server:
     # memory: 128Mi
   service:
     type: ClusterIP
-  jvmStartupOpts: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+  jvmStartupOpts: "  -Xms1g -Xmx1g  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
   appStartupOpts: ""
   loadSamples: false
   newrelic:

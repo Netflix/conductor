@@ -39,8 +39,9 @@ pipeline {
                       sh "make preview"
                       sh "jx preview --app $APP_NAME --namespace=$PREVIEW_NAMESPACE --dir ../.."
                       sh "make print"
-                      sh "sleep 20"
+                      sh "sleep 60"
                       sh "kubectl describe pods -n=$PREVIEW_NAMESPACE"
+                      sh "kubectl logs -n $PREVIEW_NAMESPACE  deployment/conductor-server --all-containers=true"
                     }
 
                 }
