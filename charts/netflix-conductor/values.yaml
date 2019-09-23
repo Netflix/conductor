@@ -9,7 +9,7 @@ server:
   repository: kayosportsau/netflixconductor
   tag: server-2019.0.3
   pullPolicy: IfNotPresent
-  replicaCount: 2
+  replicaCount: 1
   # nodeSelector: {}
   # tolerations: []
   # affinity: {}
