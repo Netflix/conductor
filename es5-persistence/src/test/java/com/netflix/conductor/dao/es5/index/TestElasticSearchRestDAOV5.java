@@ -98,6 +98,7 @@ public class TestElasticSearchRestDAOV5 {
     public static void startServer() throws Exception {
         System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9204");
         System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "http://localhost:9204");
+        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, "1");
 
         configuration = new SystemPropertiesElasticSearchConfiguration();
 
@@ -386,7 +387,9 @@ public class TestElasticSearchRestDAOV5 {
     }
 
     @Test
-    public void indexTaskSummary() throws Exception {
+    public void indexTaskWithBatchSizeTwo() throws Exception {
+        embeddedElasticSearch.stop();
+        startElasticSearchWithBatchSize(2);
         String correlationId = "some-correlation-id";
 
         Task task = new Task();
@@ -399,7 +402,8 @@ public class TestElasticSearchRestDAOV5 {
         task.setTaskDefName("some-task-def-name");
         task.setReasonForIncompletion("some-failure-reason");
 
-        indexDAO.asyncIndexTaskSummary(new TaskSummary(task));
+        indexDAO.indexTask(task);
+        indexDAO.indexTask(task);
 
         await()
                 .atMost(5, TimeUnit.SECONDS)
@@ -410,6 +414,37 @@ public class TestElasticSearchRestDAOV5 {
                     assertTrue("should return 1 or more search results", result.getResults().size() > 0);
                     assertEquals("taskId should match the indexed task", "some-task-id", result.getResults().get(0));
                 });
+
+        embeddedElasticSearch.stop();
+        startElasticSearchWithBatchSize(1);
+
+    }
+
+    private void startElasticSearchWithBatchSize(int i) throws Exception {
+        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, String.valueOf(i));
+
+        configuration = new SystemPropertiesElasticSearchConfiguration();
+
+        String host = configuration.getEmbeddedHost();
+        int port = configuration.getEmbeddedPort();
+        String clusterName = configuration.getEmbeddedClusterName();
+
+        embeddedElasticSearch = new EmbeddedElasticSearchV5(clusterName, host, port);
+        embeddedElasticSearch.start();
+
+        ElasticSearchRestClientProvider restClientProvider =
+                new ElasticSearchRestClientProvider(configuration);
+        restClient = restClientProvider.get();
+        elasticSearchClient = new RestHighLevelClient(restClient);
+
+        Map<String, String> params = new HashMap<>();
+        params.put("wait_for_status", "yellow");
+        params.put("timeout", "30s");
+
+        restClient.performRequest("GET", "/_cluster/health", params);
+
+        objectMapper = new ObjectMapper();
+        indexDAO = new ElasticSearchRestDAOV5(restClient, configuration, objectMapper);
     }
 
     @Test

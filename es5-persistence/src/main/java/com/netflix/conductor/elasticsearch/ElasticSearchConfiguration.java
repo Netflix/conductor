@@ -49,6 +49,8 @@ public interface ElasticSearchConfiguration extends Configuration {
 
     int ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE = 5000;
 
+    String ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME = "workflow.elasticsearch.index.batchSize";
+    int ELASTIC_SEARCH_INDEX_BATCH_SIZE_DEFAULT_VALUE = 10;
     String ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE = "workflow.elasticsearch.async.dao.max.pool.size";
     int DEFAULT_ASYNC_MAX_POOL_SIZE = 12;
 
@@ -125,6 +127,11 @@ public interface ElasticSearchConfiguration extends Configuration {
     default int getArchiveSearchBatchSize() {
         return getIntProperty(ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_PROPERTY_NAME,
             ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE);
+    }
+
+    default int getIndexBatchSize() {
+        return getIntProperty(ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME,
+                ELASTIC_SEARCH_INDEX_BATCH_SIZE_DEFAULT_VALUE);
     }
 
     default int getAsyncWorkerQueueSize() {
