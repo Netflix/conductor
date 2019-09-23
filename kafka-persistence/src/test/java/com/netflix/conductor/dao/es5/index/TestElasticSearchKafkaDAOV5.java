@@ -6,10 +6,10 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.KafkaConsumerDAO;
-import com.netflix.conductor.dao.KafkaProducerDAO;
-import com.netflix.conductor.dao.kafka.index.KafkaConsumer;
-import com.netflix.conductor.dao.kafka.index.KafkaProducer;
+import com.netflix.conductor.dao.ConsumerDAO;
+import com.netflix.conductor.dao.kafka.index.consumer.KafkaConsumer;
+import com.netflix.conductor.dao.ProducerDAO;
+import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.ElasticSearchTransportClientProvider;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
@@ -50,10 +50,10 @@ public class TestElasticSearchKafkaDAOV5 {
 	private static ElasticSearchConfiguration configuration;
 	private static Client elasticSearchClient;
 	private static IndexDAO indexDAO;
-	private static KafkaProducerDAO kafkaProducerDAO;
+	private static ProducerDAO producerDAO;
 	private static EmbeddedElasticSearch embeddedElasticSearch;
 	private static KafkaEmbedded embeddedKafka;
-	private static KafkaConsumerDAO kafkaConsumerDAO;
+	private static ConsumerDAO consumerDAO;
 
 	private Workflow workflow;
 
@@ -84,9 +84,10 @@ public class TestElasticSearchKafkaDAOV5 {
 
 		ObjectMapper objectMapper = new ObjectMapper();
 		embeddedKafka = new KafkaEmbedded(1, true, 1, "mytest");
-		kafkaProducerDAO = new KafkaProducer(configuration);
-		indexDAO = new ElasticSearchKafkaDAOV5(elasticSearchClient, configuration, objectMapper, kafkaProducerDAO);
-		kafkaConsumerDAO = new KafkaConsumer(configuration, indexDAO);
+		producerDAO = new KafkaProducer();
+		producerDAO.init(configuration);
+		indexDAO = new ElasticSearchKafkaDAOV5(elasticSearchClient, configuration, objectMapper, producerDAO);
+		consumerDAO = new KafkaConsumer(configuration, indexDAO);
 	}
 
 	@AfterClass
@@ -96,8 +97,8 @@ public class TestElasticSearchKafkaDAOV5 {
 		}
 
 		embeddedElasticSearch.stop();
-		kafkaConsumerDAO.close();
-		kafkaProducerDAO.close();
+		consumerDAO.close();
+		producerDAO.close();
 	}
 
 	@Before

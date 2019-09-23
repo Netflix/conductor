@@ -15,21 +15,17 @@
  */
 package com.netflix.conductor.dao;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
 
 /**
  *
  * @author Manan
- * DAO to send message to kafka.
+ * DAO to consume message from queue.
  */
-public interface KafkaProducerDAO {
+public interface ConsumerDAO {
 
-    void send(String t, Object value);
+    void init();
 
-    void produceWorkflow(Workflow workflow);
-
-    void produceTask(Task task);
+    void consumeData(String data);
 
     void close();
 }

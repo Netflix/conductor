@@ -15,19 +15,18 @@
  */
 package com.netflix.conductor.dao;
 
+import com.netflix.conductor.core.config.Configuration;
 
 /**
  *
  * @author Manan
- * DAO to consume message from kafka.
+ * DAO to send message to message broker.
  */
-public interface KafkaConsumerDAO {
+public interface ProducerDAO {
 
-    void consume();
+    void init(Configuration configuration);
 
-    void consumeWorkflow(byte[] doc, String docType, String id);
-
-    void consumeTask(byte[] doc, String docType, String id);
+    void send(String type, Object data);
 
     void close();
 }

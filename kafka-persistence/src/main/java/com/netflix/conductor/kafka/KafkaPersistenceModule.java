@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.ElasticSearchKafkaDAOV5;
 import com.netflix.conductor.dao.es5.index.ElasticSearchRestKafkaDAOV5;
-import com.netflix.conductor.dao.kafka.index.KafkaConsumer;
+import com.netflix.conductor.dao.kafka.index.consumer.KafkaConsumer;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 
 import java.util.HashSet;

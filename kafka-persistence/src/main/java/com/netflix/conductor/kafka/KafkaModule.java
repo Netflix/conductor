@@ -1,8 +1,8 @@
 package com.netflix.conductor.kafka;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.dao.KafkaProducerDAO;
-import com.netflix.conductor.dao.kafka.index.KafkaProducer;
+import com.netflix.conductor.dao.ProducerDAO;
+import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
@@ -20,7 +20,7 @@ public class KafkaModule extends AbstractModule {
         if (esConfiguration.getKafkaIndexEnable()) {
             install(new KafkaPersistenceModule(esConfiguration));
         }
-        bind(KafkaProducerDAO.class).to(KafkaProducer.class);
+        bind(ProducerDAO.class).to(KafkaProducer.class);
         bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);
     }
 }

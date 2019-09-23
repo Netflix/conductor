@@ -7,11 +7,11 @@ import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
-import com.netflix.conductor.dao.KafkaConsumerDAO;
-import com.netflix.conductor.dao.KafkaProducerDAO;
+import com.netflix.conductor.dao.ConsumerDAO;
+import com.netflix.conductor.dao.kafka.index.consumer.KafkaConsumer;
+import com.netflix.conductor.dao.ProducerDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
-import com.netflix.conductor.dao.kafka.index.KafkaConsumer;
-import com.netflix.conductor.dao.kafka.index.KafkaProducer;
+import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.ElasticSearchRestClientProvider;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
@@ -66,9 +66,9 @@ public class TestElasticSearchRestKafkaDAOV5 {
     private static ElasticSearchRestDAOV5 indexDAO;
     private static EmbeddedElasticSearch embeddedElasticSearch;
     private static ObjectMapper objectMapper;
-    private static KafkaProducerDAO kafkaProducerDAO;
+    private static ProducerDAO producerDAO;
     private static KafkaEmbedded embeddedKafka;
-    private static KafkaConsumerDAO kafkaConsumerDAO;
+    private static ConsumerDAO consumerDAO;
 
     private Workflow workflow;
 
@@ -105,9 +105,10 @@ public class TestElasticSearchRestKafkaDAOV5 {
 
         objectMapper = new ObjectMapper();
         embeddedKafka = new KafkaEmbedded(1, true, 1, "mytest");
-        kafkaProducerDAO = new KafkaProducer(configuration);
-        indexDAO = new ElasticSearchRestKafkaDAOV5(restClient, configuration, objectMapper, kafkaProducerDAO);
-        kafkaConsumerDAO = new KafkaConsumer(configuration, indexDAO);
+        producerDAO = new KafkaProducer();
+        producerDAO.init(configuration);
+        indexDAO = new ElasticSearchRestKafkaDAOV5(restClient, configuration, objectMapper, producerDAO);
+        consumerDAO = new KafkaConsumer(configuration, indexDAO);
 
     }
 
