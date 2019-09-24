@@ -100,6 +100,7 @@ public class WorkflowResource {
 	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
+		@ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	public Response startWorkflow(StartWorkflowRequest request, @Context HttpHeaders headers) throws Exception {
@@ -146,6 +147,7 @@ public class WorkflowResource {
 	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Start a new workflow.  Returns the ID of the workflow instance that can be later used for tracking")
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
+		@ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	public Response startWorkflow(@Context HttpHeaders headers,
