@@ -5,14 +5,13 @@ FROM java:8-jre-alpine
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
-RUN apk update && apk add jq curl
-
 # Make app folders
 RUN mkdir -p /app/config /app/logs /app/libs
 
 # Copy the project directly onto the image
 COPY ./docker/server/bin /app
 COPY ./docker/server/config /app/config
+COPY ./docker/server/lib/dd-java-agent-0.33.0.jar /app/libs
 COPY ./server/build/libs/conductor-server-*-all.jar /app/libs
 
 # Copy the files for the server into the app folders

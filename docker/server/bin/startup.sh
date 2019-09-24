@@ -23,16 +23,6 @@ if [ -f $secrets ]; then
     export $secrets
 fi
 
-if [[ "$workflow_elasticsearch_url" != "" ]]; then
-    config_url=$workflow_elasticsearch_url/conductor.metadata.${STACK}.config/_search?size=1000
-    for e in $(curl --silent --fail $config_url | jq -c '.hits.hits[]');
-    do
-        name=$(echo $e | jq '._id' | sed 's/"//g')
-        value=$(echo $e | jq '._source.value' | sed 's/"//g')
-        export $(echo $name"="$value)
-    done
-fi
-
 if [[ "$log4j_aurora_appender" == "true" ]]; then
     echo "log4j.rootLogger=ALL, CN, DB" > /app/config/log4j.properties
 
@@ -56,6 +46,10 @@ for logger in $(env | grep log4j_logger | sed 's/_/./g');
 do
     echo ${logger} >> /app/config/log4j.properties
 done
+
+if [[ "$DD_AGENT_HOST" != "" ]]; then
+    export JAVA_OPTS="-javaagent:/app/libs/dd-java-agent-0.33.0.jar $JAVA_OPTS"
+fi
 
 # Run java in the foreground and stream messages directly to stdout
 exec java $JAVA_OPTS -Dlog4j.configuration="file:/app/config/log4j.properties" -Dlog4j.configurationFile="file:/app/config/log4j.properties" -jar conductor-server-*-all.jar $config_file

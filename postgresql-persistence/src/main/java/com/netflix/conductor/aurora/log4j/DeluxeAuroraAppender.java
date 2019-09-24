@@ -29,7 +29,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
@@ -43,20 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author Oleksiy Lysak
  */
 public class DeluxeAuroraAppender extends AppenderSkeleton {
-	private static final String CREATE_INDEX = "create index log4j_logs_log_time_idx on log4j_logs (log_time)";
-
-	private static final String CREATE_TABLE = "create table log4j_logs(\n" +
-		"  id       serial primary key,\n" +
-		"  log_time timestamp,\n" +
-		"  logger   text,\n" +
-		"  level    text,\n" +
-		"  owner    text,\n" +
-		"  hostname text,\n" +
-		"  fromhost text,\n" +
-		"  message  text,\n" +
-		"  stack    text\n" +
-		")";
-
 	private static final String INSERT_QUERY = "INSERT INTO log4j_logs " +
 		"(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -110,9 +95,6 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 
 				dataSource = new HikariDataSource(poolConfig);
 			}
-
-			execute(CREATE_TABLE);
-			execute(CREATE_INDEX);
 
 			initialized.set(true);
 		} catch (Exception ex) {
@@ -184,16 +166,6 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 
 	public String getPassword() {
 		return password;
-	}
-
-	private void execute(String ddl) {
-		try (Connection tx = dataSource.getConnection(); CallableStatement st = tx.prepareCall(ddl);) {
-			st.execute();
-		} catch (Exception ex) {
-			if (!ex.getMessage().contains("already exists")) {
-				System.out.println("DeluxeAuroraAppender.execute failed " + ex.getMessage() + ", stack=" + throwable2String(ex));
-			}
-		}
 	}
 
 	private String normalizeMessage(String message) {
