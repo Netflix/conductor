@@ -1,14 +1,13 @@
 package com.netflix.conductor.dao.es5.index;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.kafka.index.constants.ProducerConstants;
-import com.netflix.conductor.dao.kafka.index.mapper.MapperFactory;
 import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
@@ -17,12 +16,10 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.elasticsearch.client.Client;
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -35,28 +32,24 @@ import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.ELA
 import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE;
 import static org.awaitility.Awaitility.await;
 
-public class ElasticSearchKafkaDAOV5Test {
+public class KafkaDAOTest {
 
-    private static ElasticSearchDAOV5 indexDAO;
-    private static Client restClient;
+    private static IndexDAO indexDAO;
     private static ElasticSearchConfiguration configuration;
-    private static ObjectMapper objectMapper;
     private static KafkaProducer producer;
     private static KafkaConsumer<String, String> consumer;
 
 
     @BeforeClass
     public static void start() throws Exception {
-        restClient = Mockito.mock(Client.class);
         System.setProperty(ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE, "6");
         System.setProperty(ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE, "1");
         System.setProperty(KAFKA_PRODUCER_TOPIC, "local");
         System.setProperty(KAFKA_INDEX_ENABLE, "true");
 
         configuration = new SystemPropertiesElasticSearchConfiguration();
-        objectMapper = MapperFactory.getObjectMapper();
         producer = new KafkaProducer(configuration);
-        indexDAO = new ElasticSearchKafkaDAOV5(restClient, configuration, objectMapper, producer);
+        indexDAO = new KafkaDAO(producer);
         consumer = new KafkaConsumer<>(
                 ImmutableMap.of(
                         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ProducerConstants.DEFAULT_BOOTSTRAP_SERVERS_CONFIG,
