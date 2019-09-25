@@ -5,14 +5,14 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.es5.index.KafkaDAO;
+import com.netflix.conductor.dao.kafka.index.KafkaConfiguration;
+import com.netflix.conductor.dao.kafka.index.KafkaDAO;
 import com.netflix.conductor.dao.kafka.index.constants.ProducerConstants;
 import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
-import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
-import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -29,26 +29,22 @@ import java.util.concurrent.TimeUnit;
 
 import static com.netflix.conductor.core.config.Configuration.KAFKA_INDEX_ENABLE;
 import static com.netflix.conductor.dao.kafka.index.constants.ProducerConstants.KAFKA_PRODUCER_TOPIC;
-import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE;
-import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE;
 import static org.awaitility.Awaitility.await;
 
 public class KafkaDAOTest {
 
     private static IndexDAO indexDAO;
-    private static ElasticSearchConfiguration configuration;
+    private static Configuration configuration;
     private static KafkaProducer producer;
     private static KafkaConsumer<String, String> consumer;
 
 
     @BeforeClass
     public static void start() throws Exception {
-        System.setProperty(ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE, "6");
-        System.setProperty(ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE, "1");
         System.setProperty(KAFKA_PRODUCER_TOPIC, "local");
         System.setProperty(KAFKA_INDEX_ENABLE, "true");
 
-        configuration = new SystemPropertiesElasticSearchConfiguration();
+        configuration = new KafkaConfiguration();
         producer = new KafkaProducer(configuration);
         indexDAO = new KafkaDAO(producer);
         consumer = new KafkaConsumer<>(
@@ -131,5 +127,6 @@ public class KafkaDAOTest {
 
             Assert.assertEquals(records.count(), 1);
             records.forEach(record -> Assert.assertTrue(record.value().contains(RecordTypeConstants.LOG_DOC_TYPE)));
-        });    }
+        });
+    }
 }

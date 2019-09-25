@@ -1,10 +1,9 @@
 package com.netflix.conductor.kafka;
 
 import com.google.inject.AbstractModule;
+import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import com.netflix.conductor.dao.ProducerDAO;
 import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
-import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
-import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
 
 
 public class KafkaModule extends AbstractModule {
@@ -14,7 +13,7 @@ public class KafkaModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        ElasticSearchConfiguration configuration = new SystemPropertiesElasticSearchConfiguration();
+        SystemPropertiesConfiguration configuration = new SystemPropertiesConfiguration();
         if (configuration.getKafkaIndexEnable()) {
             bind(ProducerDAO.class).to(KafkaProducer.class);
         }

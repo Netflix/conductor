@@ -3,11 +3,11 @@ package com.netflix.conductor.dao.kafka.index.producer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.netflix.conductor.annotations.Trace;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.ProducerDAO;
 import com.netflix.conductor.dao.kafka.index.constants.ProducerConstants;
 import com.netflix.conductor.dao.kafka.index.mapper.MapperFactory;
 import com.netflix.conductor.dao.kafka.index.data.Record;
-import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -33,7 +33,7 @@ public class KafkaProducer implements ProducerDAO {
 	private Producer producer;
 
 	@Inject
-	public KafkaProducer(ElasticSearchConfiguration configuration) {
+	public KafkaProducer(Configuration configuration) {
 		this.topic = configuration.getProperty(ProducerConstants.KAFKA_PRODUCER_TOPIC, ProducerConstants.PRODUCER_DEFAULT_TOPIC);
 		this.requestTimeoutConfig = configuration.getIntProperty(ProducerConstants.KAFKA_REQUEST_TIMEOUT_MS, ProducerConstants.DEFAULT_REQUEST_TIMEOUT);
 		this.maxBlockTimeMs = configuration.getIntProperty(ProducerConfig.MAX_BLOCK_MS_CONFIG, ProducerConstants.DEFAULT_REQUEST_BLOCK_TIMEOUT);
