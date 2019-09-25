@@ -24,5 +24,4 @@ public interface ProducerDAO {
 
     void send(String type, Object data);
 
-    void close();
 }
