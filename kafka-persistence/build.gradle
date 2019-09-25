@@ -13,6 +13,5 @@ dependencies {
 
     testCompile "org.slf4j:slf4j-log4j12:${revSlf4jlog4j}"
     testCompile group: 'org.testcontainers', name: 'kafka', version: '1.11.3'
-    testCompile group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '1.0.0.RELEASE'
     testCompile "org.awaitility:awaitility:${revAwaitility}"
 }
