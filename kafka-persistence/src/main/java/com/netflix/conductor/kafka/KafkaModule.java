@@ -16,9 +16,9 @@ public class KafkaModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        ElasticSearchConfiguration esConfiguration = new SystemPropertiesElasticSearchConfiguration();
-        if (esConfiguration.getKafkaIndexEnable()) {
-            install(new KafkaPersistenceModule(esConfiguration));
+        ElasticSearchConfiguration configuration = new SystemPropertiesElasticSearchConfiguration();
+        if (configuration.getKafkaIndexEnable()) {
+            install(new KafkaPersistenceModule(configuration));
         }
         bind(ProducerDAO.class).to(KafkaProducer.class);
         bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);

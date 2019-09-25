@@ -107,7 +107,7 @@ public class Monitors {
 		});
 	}
 
-	public static Counter getCounter(String className, String name, String... additionalTags) {
+	private static Counter getCounter(String className, String name, String... additionalTags) {
 		Map<String, String> tags = toMap(className, additionalTags);
 
 		return counters.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {
@@ -262,5 +262,9 @@ public class Monitors {
 
 	public static void recordESIndexTime(String docType, long val) {
 		getTimer(Monitors.classQualifier, docType, docType).record(val, TimeUnit.MILLISECONDS);
+	}
+
+	public static void recordKafkaPublishError() {
+		getCounter(classQualifier, "kafka_publishing_error", "").increment();
 	}
 }

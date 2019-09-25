@@ -9,9 +9,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
-import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
@@ -256,22 +254,6 @@ public class TestElasticSearchRestDAOV5 {
         String workflowId = "search-workflow-id";
         workflow.setWorkflowId(workflowId);
         indexDAO.indexWorkflow(workflow);
-        await()
-                .atMost(3, TimeUnit.SECONDS)
-                .untilAsserted(
-                        () -> {
-                            List<String> searchIds = indexDAO.searchWorkflows("", "workflowId:\"" + workflowId + "\"", 0, 100, Collections.singletonList("workflowId:ASC")).getResults();
-                            assertEquals(1, searchIds.size());
-                            assertEquals(workflowId, searchIds.get(0));
-                        }
-                );
-    }
-
-    @Test
-    public void testWorkflowSummary() {
-        String workflowId = "search-workflow-id";
-        workflow.setWorkflowId(workflowId);
-        indexDAO.asyncIndexWorkflowSummary(new WorkflowSummary(workflow));
         await()
                 .atMost(3, TimeUnit.SECONDS)
                 .untilAsserted(

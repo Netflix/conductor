@@ -23,7 +23,7 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ProducerDAO;
-import com.netflix.conductor.dao.kafka.index.utils.DataUtils;
+import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import org.elasticsearch.client.Client;
 
@@ -52,13 +52,13 @@ public class ElasticSearchKafkaDAOV5 extends ElasticSearchDAOV5 {
     @Override
     public void indexWorkflow(Workflow workflow) {
         WorkflowSummary summary = new WorkflowSummary(workflow);
-        producerDAO.send(DataUtils.WORKFLOW_DOC_TYPE, summary);
+        producerDAO.send(RecordTypeConstants.WORKFLOW_DOC_TYPE, summary);
     }
 
     @Override
     public void indexTask(Task task) {
         TaskSummary summary = new TaskSummary(task);
-        producerDAO.send(DataUtils.TASK_DOC_TYPE, summary);
+        producerDAO.send(RecordTypeConstants.TASK_DOC_TYPE, summary);
     }
 
     @Override
@@ -69,13 +69,13 @@ public class ElasticSearchKafkaDAOV5 extends ElasticSearchDAOV5 {
         doc.put("queue", queue);
         doc.put("created", System.currentTimeMillis());
 
-        producerDAO.send(DataUtils.MSG_DOC_TYPE, doc);
+        producerDAO.send(RecordTypeConstants.MSG_DOC_TYPE, doc);
     }
 
     @Override
     public void addEventExecution(EventExecution eventExecution) {
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
-        producerDAO.send( DataUtils.EVENT_DOC_TYPE, id);
+        producerDAO.send( RecordTypeConstants.EVENT_DOC_TYPE, id);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class ElasticSearchKafkaDAOV5 extends ElasticSearchDAOV5 {
         if (taskExecLogs.isEmpty()) {
             return;
         }
-        taskExecLogs.forEach(log -> producerDAO.send(DataUtils.LOG_DOC_TYPE , taskExecLogs));
+        taskExecLogs.forEach(log -> producerDAO.send(RecordTypeConstants.LOG_DOC_TYPE , taskExecLogs));
     }
 
 }

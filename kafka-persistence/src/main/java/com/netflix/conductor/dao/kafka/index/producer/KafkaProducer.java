@@ -61,7 +61,7 @@ public class KafkaProducer implements ProducerDAO {
 			Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			logger.error("Failed to publish to kafka - unknown exception:", e);
-			Monitors.getCounter(Monitors.classQualifier, "kafka_publishing_error", "").increment();
+			Monitors.recordKafkaPublishError();
 		}
 	}
 
