@@ -107,12 +107,12 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
     private static final int RETRY_COUNT = 3;
 
-    protected final String indexName;
+    private final String indexName;
     private String logIndexName;
     private final String logIndexPrefix;
-    protected final ObjectMapper objectMapper;
-    protected final Client elasticSearchClient;
-    protected final ExecutorService executorService;
+    private final ObjectMapper objectMapper;
+    private final Client elasticSearchClient;
+    private final ExecutorService executorService;
     private final int archiveSearchBatchSize;
     private ConcurrentHashMap<String, BulkRequestBuilder> bulkRequests;
     private final int indexBatchSize;
