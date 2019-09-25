@@ -19,9 +19,7 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
-import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 
 import java.util.List;
@@ -54,13 +52,6 @@ public interface IndexDAO {
     CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow);
 
     /**
-     * This method should return an unique identifier of the indexed doc
-     * @param workflowSummary WorkflowSummary to be indexed
-     * @return CompletableFuture of type void
-     */
-    CompletableFuture<Void> asyncIndexWorkflowSummary(WorkflowSummary workflowSummary);
-
-    /**
      * @param task Task to be indexed
      */
     void indexTask(Task task);
@@ -71,13 +62,6 @@ public interface IndexDAO {
      * @return CompletableFuture of type void
      */
     CompletableFuture<Void> asyncIndexTask(Task task);
-
-    /**
-     *
-     * @param taskSummary TaskSummary to be indexed asynchronously
-     * @return CompletableFuture of type void
-     */
-    CompletableFuture<Void> asyncIndexTaskSummary(TaskSummary taskSummary);
 
     /**
      *

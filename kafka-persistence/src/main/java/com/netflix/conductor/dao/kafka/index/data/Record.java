@@ -1,8 +1,13 @@
-package com.netflix.conductor.dao.kafka.index.serialiser;
+package com.netflix.conductor.dao.kafka.index.data;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Record {
 
+    @JsonProperty
     String type;
+
+    @JsonProperty
     Object payload;
 
     public String getType() {

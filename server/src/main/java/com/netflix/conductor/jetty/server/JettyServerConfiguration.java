@@ -7,7 +7,7 @@ public interface JettyServerConfiguration extends Configuration {
     boolean ENABLED_DEFAULT_VALUE = true;
 
     String PORT_PROPERTY_NAME = "conductor.jetty.server.port";
-    int PORT_DEFAULT_VALUE = 8081;
+    int PORT_DEFAULT_VALUE = 8080;
 
     String JOIN_PROPERTY_NAME = "conductor.jetty.server.join";
     boolean JOIN_DEFAULT_VALUE = true;

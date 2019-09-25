@@ -15,10 +15,13 @@ package com.netflix.conductor.dao.es5.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.annotations.Trace;
+import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ProducerDAO;
 import com.netflix.conductor.dao.kafka.index.utils.DataUtils;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
@@ -26,6 +29,9 @@ import org.elasticsearch.client.Client;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Manan
@@ -53,6 +59,31 @@ public class ElasticSearchKafkaDAOV5 extends ElasticSearchDAOV5 {
     public void indexTask(Task task) {
         TaskSummary summary = new TaskSummary(task);
         producerDAO.send(DataUtils.TASK_DOC_TYPE, summary);
+    }
+
+    @Override
+    public void addMessage(String queue, Message message) {
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("messageId", message.getId());
+        doc.put("payload", message.getPayload());
+        doc.put("queue", queue);
+        doc.put("created", System.currentTimeMillis());
+
+        producerDAO.send(DataUtils.MSG_DOC_TYPE, doc);
+    }
+
+    @Override
+    public void addEventExecution(EventExecution eventExecution) {
+        String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
+        producerDAO.send( DataUtils.EVENT_DOC_TYPE, id);
+    }
+
+    @Override
+    public void addTaskExecutionLogs(List<TaskExecLog> taskExecLogs) {
+        if (taskExecLogs.isEmpty()) {
+            return;
+        }
+        taskExecLogs.forEach(log -> producerDAO.send(DataUtils.LOG_DOC_TYPE , taskExecLogs));
     }
 
 }

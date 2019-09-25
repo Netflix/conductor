@@ -6,9 +6,8 @@ import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.ProducerDAO;
 import com.netflix.conductor.dao.kafka.index.constants.ProducerConstants;
-import com.netflix.conductor.dao.kafka.index.mapper.Mapper;
-import com.netflix.conductor.dao.kafka.index.serialiser.DataSerializer;
-import com.netflix.conductor.dao.kafka.index.serialiser.Record;
+import com.netflix.conductor.dao.kafka.index.mapper.MapperFactory;
+import com.netflix.conductor.dao.kafka.index.data.Record;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -17,6 +16,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Properties;
 import java.util.concurrent.Future;
@@ -28,13 +28,13 @@ public class KafkaProducer implements ProducerDAO {
 
 	private static final Logger logger = LoggerFactory.getLogger(KafkaProducer.class);
 	private String topic;
-	private ObjectMapper om = Mapper.getObjectMapper();
+	private ObjectMapper om = MapperFactory.getObjectMapper();
 
 	private String requestTimeoutConfig;
 	private Producer producer;
 
-	@Override
-	public void init(Configuration configuration) {
+	@Inject
+	public void KafkaProducer(Configuration configuration) {
 		this.topic = configuration.getProperty(ProducerConstants.KAFKA_PRODUCER_TOPIC, ProducerConstants.PRODUCER_DEFAULT_TOPIC);
 		this.requestTimeoutConfig = configuration.getProperty(ProducerConstants.KAFKA_REQUEST_TIMEOUT_MS, ProducerConstants.DEFAULT_REQUEST_TIMEOUT);
 		Properties producerConfig = new Properties();
@@ -46,16 +46,15 @@ public class KafkaProducer implements ProducerDAO {
 		producer = new org.apache.kafka.clients.producer.KafkaProducer<String, String>(producerConfig);
 
 		SimpleModule serializeModule = new SimpleModule();
-		serializeModule.addSerializer(Record.class, new DataSerializer());
 		om.registerModule(serializeModule);
 
 	}
 
 	@Override
-	public void send(String t, Object value) {
+	public void send(String type, Object value) {
 		try {
 			long start = System.currentTimeMillis();
-			Record d = new Record(t, value);
+			Record d = new Record(type, value);
 			ProducerRecord rec = new ProducerRecord(this.topic, om.writeValueAsString(d));
 			Future<RecordMetadata> recordMetaDataFuture = producer.send(rec);
 			recordMetaDataFuture.get();

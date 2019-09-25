@@ -1,8 +1,11 @@
 package com.netflix.conductor.dao.es5.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ProducerDAO;
 import com.netflix.conductor.dao.kafka.index.utils.DataUtils;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
@@ -11,6 +14,8 @@ import org.elasticsearch.client.Client;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.util.Arrays;
 
 import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.ELASTIC_SEARCH_ASYNC_DAO_MAX_POOL_SIZE;
 import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.ELASTIC_SEARCH_ASYNC_DAO_WORKER_QUEUE_SIZE;
@@ -52,5 +57,26 @@ public class ElasticSearchKafkaDAOV5Test {
         Task task = new Task();
         indexDAO.indexTask(task);
         Mockito.verify(producerDAO).send(eq(DataUtils.TASK_DOC_TYPE), any(Object.class));
+    }
+
+    @Test
+    public void testAddMessage() {
+        Message message = new Message();
+        indexDAO.addMessage("queue", message);
+        Mockito.verify(producerDAO).send(eq(DataUtils.MSG_DOC_TYPE), any(Object.class));
+    }
+
+    @Test
+    public void testAddEventExecution() {
+        EventExecution eventExecution = new EventExecution();
+        indexDAO.addEventExecution(eventExecution);
+        Mockito.verify(producerDAO).send(eq(DataUtils.EVENT_DOC_TYPE), any(Object.class));
+    }
+
+    @Test
+    public void testAddTaskExecutionLogs() {
+        TaskExecLog taskExecLog = new TaskExecLog();
+        indexDAO.addTaskExecutionLogs(Arrays.asList(taskExecLog));
+        Mockito.verify(producerDAO).send(eq(DataUtils.LOG_DOC_TYPE), any(Object.class));
     }
 }

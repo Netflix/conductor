@@ -15,16 +15,12 @@
  */
 package com.netflix.conductor.dao;
 
-import com.netflix.conductor.core.config.Configuration;
-
 /**
  *
  * @author Manan
  * DAO to send message to message broker.
  */
 public interface ProducerDAO {
-
-    void init(Configuration configuration);
 
     void send(String type, Object data);
 
