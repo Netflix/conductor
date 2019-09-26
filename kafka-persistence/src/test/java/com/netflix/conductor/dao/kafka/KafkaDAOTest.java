@@ -19,6 +19,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
+import org.junit.Ignore;
 import org.junit.Assert;
 import org.junit.Test;
 import org.testcontainers.containers.KafkaContainer;
@@ -32,6 +33,7 @@ import static com.netflix.conductor.core.config.Configuration.KAFKA_INDEX_ENABLE
 import static com.netflix.conductor.dao.kafka.index.constants.ProducerConstants.KAFKA_PRODUCER_TOPIC;
 import static org.awaitility.Awaitility.await;
 
+@Ignore
 public class KafkaDAOTest {
 
     private static IndexDAO indexDAO;
