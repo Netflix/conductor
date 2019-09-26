@@ -10,17 +10,18 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.kafka.index.KafkaConfiguration;
 import com.netflix.conductor.dao.kafka.index.KafkaDAO;
-import com.netflix.conductor.dao.kafka.index.constants.ProducerConstants;
 import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
+import org.testcontainers.containers.KafkaContainer;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -37,22 +38,24 @@ public class KafkaDAOTest {
     private static Configuration configuration;
     private static KafkaProducer producer;
     private static KafkaConsumer<String, String> consumer;
+    private static KafkaContainer kafka;
 
 
     @BeforeClass
     public static void start() throws Exception {
         System.setProperty(KAFKA_PRODUCER_TOPIC, "local");
         System.setProperty(KAFKA_INDEX_ENABLE, "true");
+        kafka = new KafkaContainer();
+        kafka.start();
+        System.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
 
         configuration = new KafkaConfiguration();
         producer = new KafkaProducer(configuration);
         indexDAO = new KafkaDAO(producer);
         consumer = new KafkaConsumer<>(
                 ImmutableMap.of(
-                        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ProducerConstants.DEFAULT_BOOTSTRAP_SERVERS_CONFIG,
+                        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers(),
                         ConsumerConfig.GROUP_ID_CONFIG, "conductor-" + UUID.randomUUID(),
-                        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer",
-                        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer",
                         ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"
                         ),
                 new StringDeserializer(),
@@ -63,6 +66,7 @@ public class KafkaDAOTest {
 
     @AfterClass
     public static void close() {
+        kafka.close();
         consumer.unsubscribe();
     }
 

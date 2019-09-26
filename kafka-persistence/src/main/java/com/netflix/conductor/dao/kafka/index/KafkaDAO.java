@@ -26,12 +26,16 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.ProducerDAO;
 import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
+import com.netflix.conductor.metrics.Monitors;
 
 import javax.inject.Singleton;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * @author Manan
@@ -54,33 +58,37 @@ public class KafkaDAO implements IndexDAO {
     @Override
     public void indexWorkflow(Workflow workflow) {
         WorkflowSummary summary = new WorkflowSummary(workflow);
+        long start = System.currentTimeMillis();
         producerDAO.send(RecordTypeConstants.WORKFLOW_DOC_TYPE, summary);
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public void indexTask(Task task) {
         TaskSummary summary = new TaskSummary(task);
+        long start = System.currentTimeMillis();
         producerDAO.send(RecordTypeConstants.TASK_DOC_TYPE, summary);
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public SearchResult<String> searchWorkflows(String query, String freeText, int start, int count, List<String> sort) {
-        return null;
+        return new SearchResult<>();
     }
 
     @Override
     public SearchResult<String> searchTasks(String query, String freeText, int start, int count, List<String> sort) {
-        return null;
+        return new SearchResult<>();
     }
 
     @Override
@@ -90,7 +98,7 @@ public class KafkaDAO implements IndexDAO {
 
     @Override
     public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId) {
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -100,12 +108,12 @@ public class KafkaDAO implements IndexDAO {
 
     @Override
     public CompletableFuture<Void> asyncUpdateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public String get(String workflowInstanceId, String key) {
-        return null;
+        return "";
     }
 
     @Override
@@ -116,38 +124,43 @@ public class KafkaDAO implements IndexDAO {
         doc.put("queue", queue);
         doc.put("created", System.currentTimeMillis());
 
+        long start = System.currentTimeMillis();
         producerDAO.send(RecordTypeConstants.MSG_DOC_TYPE, doc);
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+
     }
 
     @Override
     public List<Message> getMessages(String queue) {
-        return null;
+        return new ArrayList<>();
     }
 
     @Override
     public List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays) {
-        return null;
+        return new ArrayList<>();
     }
 
     @Override
     public List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo) {
-        return null;
+        return new ArrayList<>();
     }
 
     @Override
     public void addEventExecution(EventExecution eventExecution) {
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
+        long start = System.currentTimeMillis();
         producerDAO.send( RecordTypeConstants.EVENT_DOC_TYPE, id);
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public List<EventExecution> getEventExecutions(String event) {
-        return null;
+        return new ArrayList<>();
     }
 
     @Override
     public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -155,17 +168,20 @@ public class KafkaDAO implements IndexDAO {
         if (taskExecLogs.isEmpty()) {
             return;
         }
+        long start = System.currentTimeMillis();
         taskExecLogs.forEach(log -> producerDAO.send(RecordTypeConstants.LOG_DOC_TYPE , taskExecLogs));
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+
     }
 
     @Override
     public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public List<TaskExecLog> getTaskExecutionLogs(String taskId) {
-        return null;
+        return new ArrayList<>();
     }
 
 }
