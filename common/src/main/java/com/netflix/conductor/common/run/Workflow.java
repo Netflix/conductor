@@ -85,6 +85,8 @@ public class Workflow extends Auditable {
 
 	private String contextUser;
 
+	private String clientId;
+
 	private Set<String> tags = new HashSet<>();
 
 	private int restartCount;
@@ -364,6 +366,14 @@ public class Workflow extends Auditable {
 
 	public void setContextUser(String contextUser) {
 		this.contextUser = contextUser;
+	}
+
+	public String getClientId() {
+		return clientId;
+	}
+
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
 	}
 
 	public Set<String> getTags() {
