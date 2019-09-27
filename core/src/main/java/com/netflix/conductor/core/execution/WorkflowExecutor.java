@@ -757,9 +757,8 @@ public class WorkflowExecutor {
         // Send to atlas
         Monitors.recordWorkflowTermination(workflow.getWorkflowName(), workflow.getStatus(), workflow.getOwnerApp());
 
-        if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
-            workflowStatusListener.onWorkflowTerminated(workflow);
-        }
+        //Remove workflow from redis irrespective of status listener.
+        workflowStatusListener.onWorkflowTerminated(workflow);
     }
 
     /**
