@@ -661,9 +661,8 @@ public class WorkflowExecutor {
         Monitors.recordWorkflowCompletion(workflow.getWorkflowName(), workflow.getEndTime() - workflow.getStartTime(), wf.getOwnerApp());
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
 
-        if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
-            workflowStatusListener.onWorkflowCompleted(workflow);
-        }
+        //Remove workflow from redis irrespective of status listener.
+        workflowStatusListener.onWorkflowCompleted(workflow);
     }
 
     public void terminateWorkflow(String workflowId, String reason) {
