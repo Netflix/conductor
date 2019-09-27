@@ -169,7 +169,7 @@ public class ExecutionDAOFacade {
     public String createWorkflow(Workflow workflow) {
         workflow.setCreateTime(System.currentTimeMillis());
         executionDAO.createWorkflow(workflow);
-        indexDAO.asyncIndexWorkflow(workflow);
+        indexDAO.indexWorkflow(workflow);
         return workflow.getWorkflowId();
     }
 
@@ -185,7 +185,7 @@ public class ExecutionDAOFacade {
             workflow.setEndTime(System.currentTimeMillis());
         }
         executionDAO.updateWorkflow(workflow);
-        indexDAO.asyncIndexWorkflow(workflow);
+        indexDAO.indexWorkflow(workflow);
         return workflow.getWorkflowId();
     }
 
@@ -206,12 +206,12 @@ public class ExecutionDAOFacade {
             // remove workflow from ES
             if (archiveWorkflow) {
                 //Add to elasticsearch
-                indexDAO.asyncUpdateWorkflow(workflowId,
+                indexDAO.updateWorkflow(workflowId,
                         new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD},
                         new Object[]{objectMapper.writeValueAsString(workflow), true});
             } else {
                 // Not archiving, also remove workflowId from index
-                indexDAO.asyncRemoveWorkflow(workflowId);
+                indexDAO.removeWorkflow(workflowId);
             }
 
             // remove workflow from DAO
@@ -270,7 +270,7 @@ public class ExecutionDAOFacade {
                 }
             }
             executionDAO.updateTask(task);
-            indexDAO.asyncIndexTask(task);
+            indexDAO.indexTask(task);
         } catch (Exception e) {
             String errorMsg = String.format("Error updating task: %s in workflow: %s", task.getTaskId(), task.getWorkflowInstanceId());
             LOGGER.error(errorMsg, e);
