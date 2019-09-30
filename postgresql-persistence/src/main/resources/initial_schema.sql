@@ -8,7 +8,8 @@ create table log4j_logs
     hostname text,
     fromhost text,
     message  text,
-    stack    text
+    stack    text,
+    alloc_id text
 );
 create index log4j_logs_log_time_idx on log4j_logs (log_time);
 

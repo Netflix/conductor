@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DeluxeAuroraAppender extends AppenderSkeleton {
 	private static final String INSERT_QUERY = "INSERT INTO log4j_logs " +
-		"(log_time, logger, level, owner, hostname, fromhost, message, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+		"(log_time, logger, level, owner, hostname, fromhost, message, stack, alloc_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	private LinkedBlockingDeque<LogEntry> buffer = new LinkedBlockingDeque<>();
 	private AtomicBoolean initialized = new AtomicBoolean(false);
@@ -51,6 +51,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 	private DataSource dataSource;
 	private String hostname;
 	private String fromhost;
+	private String allocId;
 	private String url;
 	private String user;
 	private String password;
@@ -59,6 +60,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		super();
 		hostname = getHostName();
 		fromhost = getHostIp();
+		allocId = System.getenv("NOMAD_ALLOC_ID");
 		execs = Executors.newScheduledThreadPool(1);
 		execs.scheduleWithFixedDelay(this::flush, 500, 100, TimeUnit.MILLISECONDS);
 	}
@@ -121,6 +123,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				st.setString(6, fromhost);
 				st.setString(7, entry.message);
 				st.setString(8, entry.stack);
+				st.setString(9, allocId);
 				st.execute();
 
 				// Get the next
