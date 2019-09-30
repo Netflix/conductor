@@ -172,4 +172,13 @@ public interface MetadataDAO {
 	public default List<Pair<String, String>> getConfigs() {
 		return Collections.emptyList();
 	}
+
+	public default void addConfig(String name, String value) {
+	}
+
+	public default void updateConfig(String name, String value) {
+	}
+
+	public default void deleteConfig(String name) {
+	}
 }

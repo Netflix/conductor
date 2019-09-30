@@ -265,6 +265,34 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 		}));
 	}
 
+	@Override
+	public void addConfig(String name, String value) {
+		String SQL = "INSERT INTO meta_config (name, value) VALUES (?, ?) " +
+			"ON CONFLICT ON CONSTRAINT meta_config_pkey DO UPDATE SET value = ? ";
+		executeWithTransaction(SQL, q -> q
+			.addParameter(name)
+			.addParameter(value)
+			.addParameter(value)
+			.executeUpdate());
+	}
+
+	@Override
+	public void updateConfig(String name, String value) {
+		String SQL = "UPDATE meta_config SET value = ? WHERE upper(name) = ?";
+		executeWithTransaction(SQL, q -> q
+			.addParameter(value)
+			.addParameter(name.toUpperCase())
+			.executeUpdate());
+	}
+
+	@Override
+	public void deleteConfig(String name) {
+		String SQL = "DELETE FROM meta_config WHERE upper(name) = ?";
+		executeWithTransaction(SQL, q -> q
+			.addParameter(name.toUpperCase())
+			.executeDelete());
+	}
+
 	private void validate(TaskDef taskDef) {
 		Preconditions.checkNotNull(taskDef, "TaskDef object cannot be null");
 		Preconditions.checkNotNull(taskDef.getName(), "TaskDef name cannot be null");

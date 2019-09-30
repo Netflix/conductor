@@ -21,6 +21,7 @@ package com.netflix.conductor.server.resources;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionService;
 import io.swagger.annotations.Api;
@@ -33,6 +34,7 @@ import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -47,24 +49,20 @@ import java.util.Properties;
 @Consumes({ MediaType.APPLICATION_JSON })
 @Singleton
 public class AdminResource {
-
 	private static Logger logger = LoggerFactory.getLogger(AdminResource.class);
-	
-	private Configuration config;
-
 	private ExecutionService service;
-	
+	private MetadataDAO metadata;
+	private Configuration config;
 	private QueueDAO queue;
-	
 	private String version;
-	
 	private String buildDate;
 	
 	@Inject
-	public AdminResource(Configuration config, ExecutionService service, QueueDAO queue) {
+	public AdminResource(Configuration config, ExecutionService service, QueueDAO queue, MetadataDAO metadata) {
 		this.config = config;
 		this.service = service;
 		this.queue = queue;
+		this.metadata = metadata;
 		this.version = "UNKNOWN";
 		this.buildDate = "UNKNOWN";
 		
@@ -80,16 +78,45 @@ public class AdminResource {
 		}
 	}
 
-	@ApiOperation(value = "Get all the configuration parameters")
 	@GET
+	@Path("/config")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/config")
+	@ApiOperation(value = "Get all the configuration parameters")
 	public Map<String, Object> getAllConfig() {
-		Map<String, Object> map = config.getAll();
+		Map<String, Object> map = new HashMap<>();
 		map.put("version", version);
 		map.put("buildDate", buildDate);
+
+		metadata.getConfigs().forEach(entry -> {
+			map.put(entry.getLeft(), entry.getRight());
+		});
+
 		return map;
+	}
+
+	@POST
+	@Path("/config/{name}")
+	@Consumes({ MediaType.WILDCARD })
+	@ApiOperation(value = "Add the configuration parameter")
+	public void addConfig(@PathParam("name") String name, String value) {
+		metadata.addConfig(name, value);
+	}
+
+	@PUT
+	@Path("/config/{name}")
+	@Consumes({ MediaType.WILDCARD })
+	@ApiOperation(value = "Update the configuration parameter")
+	public void updateConfig(@PathParam("name") String name, String value) {
+		metadata.updateConfig(name, value);
+	}
+
+	@DELETE
+	@Path("/config/{name}")
+	@Consumes({ MediaType.WILDCARD })
+	@ApiOperation(value = "Delete the configuration parameter")
+	public void deleteConfig(@PathParam("name") String name) {
+		metadata.deleteConfig(name);
 	}
 
 	@POST
