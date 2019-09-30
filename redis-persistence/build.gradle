@@ -6,7 +6,7 @@ dependencies {
 	compile 'com.netflix.dyno:dyno-core:1.5.8-rc.3'
  	compile ('com.netflix.dyno-queues:dyno-queues-redis:1.0.6') {
  	}
-	compile 'org.elasticsearch:elasticsearch:2.+'
+	compile 'org.elasticsearch:elasticsearch:2.4.6'
 
 	//In memory redis for unit testing
  	testCompile 'org.rarefiedredis.redis:redis-java:0.0.17'

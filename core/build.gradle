@@ -5,7 +5,7 @@ dependencies {
 
 	compile 'com.datadoghq:dd-trace-api:0.33.0'
 	compile 'io.reactivex:rxjava:1.2.2'
-	compile 'com.google.inject:guice:4.0+'
+	compile 'com.google.inject:guice:4.1.0'
 	compile 'com.netflix.spectator:spectator-api:0.68.0'
 	compile 'com.netflix.eureka:eureka-client:latest.release'
 	compile ('com.fasterxml.jackson.core:jackson-databind:2.7.5') {force=true}
@@ -18,6 +18,6 @@ dependencies {
 	compile 'org.apache.commons:commons-lang3:3.2.1'
 	provided 'log4j:log4j:1.2.17'
 
-	testCompile 'org.eclipse.jetty:jetty-server:9.3.9.+'
-	testCompile 'org.eclipse.jetty:jetty-servlet:9.3.9.+'
+	testCompile 'org.eclipse.jetty:jetty-server:9.3.9.v20160517'
+	testCompile 'org.eclipse.jetty:jetty-servlet:9.3.9.v20160517'
 }
