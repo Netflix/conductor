@@ -319,6 +319,15 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
     }
 
+    private void indexWorkflowSummary(WorkflowSummary workflowSummary) {
+        indexObject(indexName, WORKFLOW_DOC_TYPE, workflowSummary.getWorkflowId(), workflowSummary);
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncIndexWorkflowSummary(WorkflowSummary workflowSummary) {
+        return CompletableFuture.runAsync(() -> indexWorkflowSummary(workflowSummary), executorService);
+    }
+
     @Override
     public void indexTask(Task task) {
 
@@ -331,6 +340,16 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
         return CompletableFuture.runAsync(() -> indexTask(task), executorService);
+    }
+
+    private void indexTaskSummary(TaskSummary taskSummary) {
+
+        indexObject(indexName, TASK_DOC_TYPE, taskSummary.getTaskId(), taskSummary);
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncIndexTaskSummary(TaskSummary taskSummary) {
+        return CompletableFuture.runAsync(() -> indexTaskSummary(taskSummary), executorService);
     }
 
     @Override
