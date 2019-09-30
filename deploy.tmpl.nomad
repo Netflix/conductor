@@ -211,10 +211,10 @@ job "conductor" {
         log4j_logger_tracer = "OFF"
 
         // DataDog Integration
-        DD_ENV = "${meta.tld}"
-        DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
-        DD_SERVICE_NAME = "conductor.server.webapi"
-        DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
+        //DD_ENV = "${meta.tld}"
+        //DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
+        //DD_SERVICE_NAME = "conductor.server.webapi"
+        //DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
       }
 
       service {
