@@ -58,6 +58,8 @@ public interface Configuration {
 
     String ADDITIONAL_MODULES_PROPERTY_NAME = "conductor.additional.modules";
 
+    String KAFKA_INDEX_ENABLE = "workflow.kafka.index.enable";
+
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -66,6 +68,10 @@ public interface Configuration {
 
     default String getDBString() {
         return getProperty(DB_PROPERTY_NAME, DB_DEFAULT_VALUE).toUpperCase();
+    }
+
+    default boolean getKafkaIndexEnable() {
+        return getBooleanProperty(KAFKA_INDEX_ENABLE, false);
     }
 
     /**

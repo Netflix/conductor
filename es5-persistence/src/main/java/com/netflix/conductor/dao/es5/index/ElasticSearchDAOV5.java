@@ -683,6 +683,43 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             .collect(Collectors.toCollection(LinkedList::new));
     }
 
+    private void indexWorkflowSummary(WorkflowSummary workflowSummary) {
+        try {
+            byte[] doc = objectMapper.writeValueAsBytes(workflowSummary);
+
+            UpdateRequest req = new UpdateRequest(indexName, WORKFLOW_DOC_TYPE, workflowSummary.getWorkflowId());
+            req.doc(doc, XContentType.JSON);
+            req.upsert(doc, XContentType.JSON);
+            req.retryOnConflict(5);
+            indexObject(req, WORKFLOW_DOC_TYPE);
+        } catch (Exception e) {
+            logger.error("Failed to index workflow: {}", workflowSummary.getWorkflowId(), e);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncIndexWorkflowSummary(WorkflowSummary workflowSummary) {
+        return CompletableFuture.runAsync(() -> indexWorkflowSummary(workflowSummary), executorService);
+    }
+
+    private void indexTaskSummary(TaskSummary taskSummary) {
+        try {
+            byte[] doc = objectMapper.writeValueAsBytes(taskSummary);
+
+            UpdateRequest req = new UpdateRequest(indexName, TASK_DOC_TYPE, taskSummary.getTaskId());
+            req.doc(doc, XContentType.JSON);
+            req.upsert(doc, XContentType.JSON);
+            indexObject(req, TASK_DOC_TYPE);
+        } catch (Exception e) {
+            logger.error("Failed to index task: {}", taskSummary.getTaskId(), e);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncIndexTaskSummary(TaskSummary taskSummary) {
+        return CompletableFuture.runAsync(() -> indexTaskSummary(taskSummary), executorService);
+    }
+
     @Override
     public List<Message> getMessages(String queue) {
         try {

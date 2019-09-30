@@ -279,4 +279,8 @@ public class Monitors {
 	public static void recordDiscardedIndexingCount() {
 		getCounter(Monitors.classQualifier, "discarded_index_count").increment();
 	}
+
+	public static void recordKafkaPublishError() {
+		getCounter(classQualifier, "kafka_publishing_error", "").increment();
+	}
 }
