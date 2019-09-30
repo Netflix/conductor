@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.SearchResult;
+import com.netflix.conductor.common.run.Error;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.contribs.correlation.Correlator;
@@ -39,6 +40,8 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
@@ -99,6 +102,14 @@ public class WorkflowResource {
 	@POST
 	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
@@ -146,6 +157,14 @@ public class WorkflowResource {
 	@Path("/{name}")
 	@Produces({MediaType.TEXT_PLAIN})
 	@ApiOperation("Start a new workflow.  Returns the ID of the workflow instance that can be later used for tracking")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
@@ -166,6 +185,14 @@ public class WorkflowResource {
 	@GET
 	@Path("/{name}/correlated/{correlationId}")
 	@ApiOperation("Lists workflows for the given correlation id")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", responseContainer = "List",response = Workflow.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
@@ -178,6 +205,14 @@ public class WorkflowResource {
 	@GET
 	@Path("/{workflowId}")
 	@ApiOperation("Gets the workflow by workflow id")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", response = Workflow.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
@@ -190,6 +225,14 @@ public class WorkflowResource {
 	@DELETE
 	@Path("/{workflowId}/remove")
 	@ApiOperation("Removes the workflow from the system")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
@@ -207,6 +250,14 @@ public class WorkflowResource {
 	@GET
 	@Path("/running/{name}")
 	@ApiOperation("Retrieve all the running workflows")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS",responseContainer = "List", response = String.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
@@ -222,6 +273,14 @@ public class WorkflowResource {
 	@PUT
 	@Path("/decide/{workflowId}")
 	@ApiOperation("Starts the decision task for a workflow")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS")})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
@@ -237,6 +296,14 @@ public class WorkflowResource {
 	@PUT
 	@Path("/{workflowId}/pause")
 	@ApiOperation("Pauses the workflow")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS")})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
@@ -258,6 +325,14 @@ public class WorkflowResource {
 	@PUT
 	@Path("/{workflowId}/resume")
 	@ApiOperation("Resumes the workflow")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS")})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
@@ -279,6 +354,14 @@ public class WorkflowResource {
 	@PUT
 	@Path("/{workflowId}/skiptask/{taskReferenceName}")
 	@ApiOperation("Skips a given task from a current running workflow")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 415, message = "NO_CONTENT")})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	@Consumes(MediaType.WILDCARD)
@@ -295,6 +378,14 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/rerun")
 	@ApiOperation("Reruns the workflow from a specific task")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
@@ -320,6 +411,14 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/restart")
 	@ApiOperation("Restarts a completed workflow")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS")})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
@@ -341,6 +440,14 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/retry")
 	@ApiOperation("Retries the last failed task")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS")})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
@@ -362,6 +469,14 @@ public class WorkflowResource {
 	@DELETE
 	@Path("/{workflowId}")
 	@ApiOperation("Terminate workflow execution")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS")})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
@@ -384,6 +499,14 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/cancel")
 	@ApiOperation("Cancel workflow execution")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
@@ -405,6 +528,14 @@ public class WorkflowResource {
 	@POST
 	@Path("/{workflowId}/complete")
 	@ApiOperation("Force complete workflow execution")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
@@ -424,6 +555,14 @@ public class WorkflowResource {
 	}
 
 	@ApiOperation(value = "Search for workflows based in payload and other parameters", notes = "use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC.  If order is not specified, defaults to ASC")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 200, message = "SUCCESS", responseContainer = "List",response = WorkflowSummary.class)})
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
 	@GET
