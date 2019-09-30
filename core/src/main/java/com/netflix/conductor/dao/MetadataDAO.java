@@ -29,30 +29,30 @@ import java.util.Optional;
  * @author Viren
  * Data access layer for the workflow metadata - task definitions and workflow definitions
  */
-public interface MetadataDAO {
+public interface MetadataDAO <T extends TaskDef, W extends WorkflowDef, E extends EventHandler> {
 
     /**
      * @param taskDef task definition to be created
      * @return name of the task definition
      */
-    String createTaskDef(TaskDef taskDef);
+    String createTaskDef(T taskDef);
 
     /**
      * @param taskDef task definition to be updated.
      * @return name of the task definition
      */
-    String updateTaskDef(TaskDef taskDef);
+    String updateTaskDef(T taskDef);
 
     /**
      * @param name Name of the task
      * @return Task Definition
      */
-    TaskDef getTaskDef(String name);
+    T getTaskDef(String name);
 
     /**
      * @return All the task definitions
      */
-    List<TaskDef> getAllTaskDefs();
+    List<T> getAllTaskDefs();
 
     /**
      * @param name Name of the task
@@ -67,20 +67,20 @@ public interface MetadataDAO {
     /**
      * @param def workflow definition
      */
-    void update(WorkflowDef def);
+    void update(W def);
 
     /**
      * @param name Name of the workflow
      * @return Workflow Definition
      */
-    Optional<WorkflowDef> getLatest(String name);
+    Optional<W> getLatest(String name);
 
     /**
      * @param name Name of the workflow
      * @param version version
      * @return workflow definition
      */
-    Optional<WorkflowDef> get(String name, int version);
+    Optional<W> get(String name, int version);
 
     /**
      * @param name Name of the workflow definition to be removed
@@ -96,24 +96,24 @@ public interface MetadataDAO {
     /**
      * @return List of all the workflow definitions
      */
-    List<WorkflowDef> getAll();
+    List<W> getAll();
 
     /**
      * @param name name of the workflow
      * @return List of all the workflow definitions
      */
-    List<WorkflowDef> getAllVersions(String name);
+    List<W> getAllVersions(String name);
 
     /**
      * @param eventHandler Event handler to be added. Will throw an exception if an event handler already exists with
      *                     the name
      */
-    void addEventHandler(EventHandler eventHandler);
+    void addEventHandler(E eventHandler);
 
     /**
      * @param eventHandler Event handler to be updated.
      */
-    void updateEventHandler(EventHandler eventHandler);
+    void updateEventHandler(E eventHandler);
 
     /**
      * @param name Removes the event handler from the system
@@ -123,12 +123,12 @@ public interface MetadataDAO {
     /**
      * @return All the event handlers registered in the system
      */
-    List<EventHandler> getEventHandlers();
+    List<E> getEventHandlers();
 
     /**
      * @param event      name of the event
      * @param activeOnly if true, returns only the active handlers
      * @return Returns the list of all the event handlers for a given event
      */
-    List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly);
+    List<E> getEventHandlersForEvent(String event, boolean activeOnly);
 }

@@ -30,7 +30,7 @@ import java.util.Map;
 @Audit
 @Singleton
 @Trace
-public class EventServiceImpl implements EventService {
+public class EventServiceImpl implements EventService <EventHandler>  {
 
     private final MetadataService metadataService;
     private final EventProcessor eventProcessor;

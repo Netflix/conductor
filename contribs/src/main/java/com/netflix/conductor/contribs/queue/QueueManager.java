@@ -75,7 +75,7 @@ public class QueueManager {
 		});
 	}
 	
-	private void startMonitor(Status status, ObservableQueue queue) {
+	private void startMonitor(Status status, ObservableQueue<Message> queue) {
 		
 		queue.observe().subscribe((Message msg) -> {
 			

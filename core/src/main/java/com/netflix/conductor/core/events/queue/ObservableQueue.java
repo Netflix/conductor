@@ -26,13 +26,13 @@ import java.util.List;
  * @author Viren
  *
  */
-public interface ObservableQueue {
+public interface ObservableQueue <M extends Message> {
 
 	/**
 	 *
 	 * @return An observable for the given queue
 	 */
-	Observable<Message> observe();
+	Observable<M> observe();
 
 	/**
 	 *
@@ -57,13 +57,13 @@ public interface ObservableQueue {
 	 * @param messages messages to be ack'ed
 	 * @return the id of the ones which could not be ack'ed
 	 */
-	List<String> ack(List<Message> messages);
+	List<String> ack(List<M> messages);
 
 	/**
 	 *
 	 * @param messages Messages to be published
 	 */
-	void publish(List<Message> messages);
+	void publish(List<M> messages);
 
 	/**
 	 * Used to determine if the queue supports unack/visibility timeout such that the messages
@@ -81,7 +81,7 @@ public interface ObservableQueue {
 	 * @param message Message for which the timeout has to be changed
 	 * @param unackTimeout timeout in milliseconds for which the unack lease should be extended. (replaces the current value with this value)
 	 */
-	void setUnackTimeout(Message message, long unackTimeout);
+	void setUnackTimeout(M message, long unackTimeout);
 
 	/**
 	 *

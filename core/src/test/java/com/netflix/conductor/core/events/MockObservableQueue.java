@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * @author Viren
  *
  */
-public class MockObservableQueue implements ObservableQueue {
+public class MockObservableQueue implements ObservableQueue<Message> {
 
 	private String uri;
 	

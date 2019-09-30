@@ -45,7 +45,7 @@ import java.util.Optional;
 @Audit
 @Singleton
 @Trace
-public class WorkflowServiceImpl implements WorkflowService {
+public class WorkflowServiceImpl implements WorkflowService <Workflow, WorkflowDef, WorkflowSummary> {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowServiceImpl.class);
 
     private final WorkflowExecutor workflowExecutor;

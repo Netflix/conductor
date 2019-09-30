@@ -37,7 +37,7 @@ import java.util.Optional;
 @Audit
 @Singleton
 @Trace
-public class MetadataServiceImpl implements MetadataService {
+public class MetadataServiceImpl implements MetadataService <TaskDef, WorkflowDef, EventHandler> {
     private final MetadataDAO metadataDAO;
     private final EventQueues eventQueues;
 

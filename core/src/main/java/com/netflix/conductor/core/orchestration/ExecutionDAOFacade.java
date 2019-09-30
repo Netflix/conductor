@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * Service that acts as a facade for accessing execution data from the {@link ExecutionDAO} and {@link IndexDAO} storage layers
  */
 @Singleton
-public class ExecutionDAOFacade {
+public class ExecutionDAOFacade <T extends Task, W extends Workflow, P extends PollData>{
     private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionDAOFacade.class);
 
     private static final String ARCHIVED_FIELD = "archived";
@@ -101,8 +101,8 @@ public class ExecutionDAOFacade {
      *                              <li>parsing the {@link Workflow} object fails</li>
      *                              </ul>
      */
-    public Workflow getWorkflowById(String workflowId, boolean includeTasks) {
-        Workflow workflow = executionDAO.getWorkflow(workflowId, includeTasks);
+    public W getWorkflowById(String workflowId, boolean includeTasks) {
+        W workflow = (W)executionDAO.getWorkflow(workflowId, includeTasks);
         if (workflow == null) {
             LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO", workflowId);
             String json = indexDAO.get(workflowId, RAW_JSON_FIELD);
@@ -113,7 +113,7 @@ public class ExecutionDAOFacade {
             }
 
             try {
-                workflow = objectMapper.readValue(json, Workflow.class);
+                workflow = (W)objectMapper.readValue(json, Workflow.class);
                 if (!includeTasks) {
                     workflow.getTasks().clear();
                 }
@@ -134,31 +134,31 @@ public class ExecutionDAOFacade {
      * @param includeTasks  if true, fetches the {@link Task} data within the workflows
      * @return the list of {@link Workflow} executions matching the correlationId
      */
-    public List<Workflow> getWorkflowsByCorrelationId(String correlationId, boolean includeTasks) {
+    public List<W> getWorkflowsByCorrelationId(String correlationId, boolean includeTasks) {
         if (!executionDAO.canSearchAcrossWorkflows()) {
             SearchResult<String> result = indexDAO.searchWorkflows("correlationId='" + correlationId + "'", "*", 0, 1000, null);
             return result.getResults().stream()
-                .parallel()
-                .map(workflowId -> {
-                    try {
-                        return getWorkflowById(workflowId, includeTasks);
-                    } catch (ApplicationException e) {
-                        // This might happen when the workflow archival failed and the workflow was removed from primary datastore
-                        LOGGER.error("Error getting the workflow: {}  for correlationId: {} from datastore/index", workflowId, correlationId, e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                    .parallel()
+                    .map(workflowId -> {
+                        try {
+                            return getWorkflowById(workflowId, includeTasks);
+                        } catch (ApplicationException e) {
+                            // This might happen when the workflow archival failed and the workflow was removed from primary datastore
+                            LOGGER.error("Error getting the workflow: {}  for correlationId: {} from datastore/index", workflowId, correlationId, e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
         }
         return executionDAO.getWorkflowsByCorrelationId(correlationId, includeTasks);
     }
 
-    public List<Workflow> getWorkflowsByName(String workflowName, Long startTime, Long endTime) {
+    public List<W> getWorkflowsByName(String workflowName, Long startTime, Long endTime) {
         return executionDAO.getWorkflowsByType(workflowName, startTime, endTime);
     }
 
-    public List<Workflow> getPendingWorkflowsByName(String workflowName, int version) {
+    public List<W> getPendingWorkflowsByName(String workflowName, int version) {
         return executionDAO.getPendingWorkflowsByType(workflowName, version);
     }
 
@@ -193,7 +193,7 @@ public class ExecutionDAOFacade {
      * @param workflow the workflow tp be updated
      * @return the id of the updated workflow
      */
-    public String updateWorkflow(Workflow workflow) {
+    public String updateWorkflow(W workflow) {
         workflow.setUpdateTime(System.currentTimeMillis());
         if (workflow.getStatus().isTerminal()) {
             workflow.setEndTime(System.currentTimeMillis());
@@ -262,23 +262,23 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public List<Task> createTasks(List<Task> tasks) {
+    public List<T> createTasks(List<T> tasks) {
         return executionDAO.createTasks(tasks);
     }
 
-    public List<Task> getTasksForWorkflow(String workflowId) {
+    public List<T> getTasksForWorkflow(String workflowId) {
         return executionDAO.getTasksForWorkflow(workflowId);
     }
 
-    public Task getTaskById(String taskId) {
-        return executionDAO.getTask(taskId);
+    public T getTaskById(String taskId) {
+        return (T)executionDAO.getTask(taskId);
     }
 
-    public List<Task> getTasksByName(String taskName, String startKey, int count) {
+    public List<T> getTasksByName(String taskName, String startKey, int count) {
         return executionDAO.getTasks(taskName, startKey, count);
     }
 
-    public List<Task> getPendingTasksForTaskType(String taskType) {
+    public List<T> getPendingTasksForTaskType(String taskType) {
         return executionDAO.getPendingTasksForTaskType(taskType);
     }
 
@@ -294,7 +294,7 @@ public class ExecutionDAOFacade {
      * @param task the task to be updated in the data store
      * @throws ApplicationException if the dao operations fail
      */
-    public void updateTask(Task task) {
+    public void updateTask(T task) {
         try {
             if (task.getStatus() != null) {
                 if (!task.getStatus().isTerminal() || (task.getStatus().isTerminal() && task.getUpdateTime() == 0)) {
@@ -312,7 +312,7 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public void updateTasks(List<Task> tasks) {
+    public void updateTasks(List<T> tasks) {
         tasks.forEach(this::updateTask);
     }
 
@@ -320,12 +320,12 @@ public class ExecutionDAOFacade {
         executionDAO.removeTask(taskId);
     }
 
-    public List<PollData> getTaskPollData(String taskName) {
+    public List<P> getTaskPollData(String taskName) {
         return executionDAO.getPollData(taskName);
     }
 
-    public PollData getTaskPollDataByDomain(String taskName, String domain) {
-        return executionDAO.getPollData(taskName, domain);
+    public P getTaskPollDataByDomain(String taskName, String domain) {
+        return (P)executionDAO.getPollData(taskName, domain);
     }
 
     public void updateTaskLastPoll(String taskName, String domain, String workerId) {
@@ -339,7 +339,7 @@ public class ExecutionDAOFacade {
      * @param eventExecution the {@link EventExecution} to be saved
      * @return true if save succeeds, false otherwise.
      */
-    public boolean addEventExecution(EventExecution eventExecution) {
+    public <E extends EventExecution> boolean addEventExecution(E eventExecution) {
         boolean added = executionDAO.addEventExecution(eventExecution);
         if (added) {
             if (config.enableAsyncIndexing()) {
@@ -351,7 +351,7 @@ public class ExecutionDAOFacade {
         return added;
     }
 
-    public void updateEventExecution(EventExecution eventExecution) {
+    public <E extends EventExecution> void updateEventExecution(E eventExecution) {
         executionDAO.updateEventExecution(eventExecution);
         if (config.enableAsyncIndexing()) {
             indexDAO.asyncAddEventExecution(eventExecution);
@@ -360,15 +360,15 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public void removeEventExecution(EventExecution eventExecution) {
+    public <E extends EventExecution> void removeEventExecution(E eventExecution) {
         executionDAO.removeEventExecution(eventExecution);
     }
 
-    public boolean exceedsInProgressLimit(Task task) {
+    public boolean exceedsInProgressLimit(T task) {
         return executionDAO.exceedsInProgressLimit(task);
     }
 
-    public boolean exceedsRateLimitPerFrequency(Task task) {
+    public boolean exceedsRateLimitPerFrequency(T task) {
         return executionDAO.exceedsRateLimitPerFrequency(task);
     }
 

@@ -1,5 +1,9 @@
 package com.netflix.conductor.grpc.server.service;
 
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.grpc.EventServiceGrpc;
 import com.netflix.conductor.grpc.EventServicePb;
 import com.netflix.conductor.grpc.ProtoMapper;
@@ -18,7 +22,7 @@ public class EventServiceImpl extends EventServiceGrpc.EventServiceImplBase {
     private static final ProtoMapper PROTO_MAPPER = ProtoMapper.INSTANCE;
 
     private final EventService eventService;
-    private final MetadataService metadataService;
+    private final MetadataService<TaskDef, WorkflowDef, EventHandler> metadataService;
 
     @Inject
     public EventServiceImpl(MetadataService metadataService, EventService eventService) {

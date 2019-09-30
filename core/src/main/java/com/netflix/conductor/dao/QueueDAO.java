@@ -26,7 +26,7 @@ import java.util.Map;
  * DAO responsible for managing queuing for the tasks.
  *
  */
-public interface QueueDAO {
+public interface QueueDAO <M extends Message> {
 
 	/**
 	 * 
@@ -87,7 +87,7 @@ public interface QueueDAO {
 	 * @param timeout timeout in milliseconds
 	 * @return list of elements from the named queue
 	 */
-	List<Message> pollMessages(String queueName, int count, int timeout);
+	List<M> pollMessages(String queueName, int count, int timeout);
 	
 	/**
 	 * 

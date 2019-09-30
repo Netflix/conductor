@@ -25,19 +25,19 @@ import java.util.List;
 import java.util.Map;
 
 
-public interface EventService {
+public interface EventService <E extends EventHandler> {
 
     /**
      * Add a new event handler.
      * @param eventHandler Instance of {@link EventHandler}
      */
-    void addEventHandler(@NotNull(message = "EventHandler cannot be null.") @Valid EventHandler eventHandler);
+    void addEventHandler(@NotNull(message = "EventHandler cannot be null.") @Valid E eventHandler);
 
     /**
      * Update an existing event handler.
      * @param eventHandler Instance of {@link EventHandler}
      */
-    void updateEventHandler(@NotNull(message = "EventHandler cannot be null.") @Valid EventHandler eventHandler);
+    void updateEventHandler(@NotNull(message = "EventHandler cannot be null.") @Valid E eventHandler);
 
     /**
      * Remove an event handler.
@@ -49,7 +49,7 @@ public interface EventService {
      * Get all the event handlers.
      * @return list of {@link EventHandler}
      */
-    List<EventHandler> getEventHandlers();
+    List<E> getEventHandlers();
 
     /**
      * Get event handlers for a given event.
@@ -57,7 +57,7 @@ public interface EventService {
      * @param activeOnly `true|false` for active only events
      * @return list of {@link EventHandler}
      */
-    List<EventHandler> getEventHandlersForEvent(@NotEmpty(message = "Event cannot be null or empty.") String event, boolean activeOnly);
+    List<E> getEventHandlersForEvent(@NotEmpty(message = "Event cannot be null or empty.") String event, boolean activeOnly);
 
     /**
      * Get registered queues.

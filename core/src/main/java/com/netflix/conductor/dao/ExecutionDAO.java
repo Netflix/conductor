@@ -27,7 +27,7 @@ import java.util.List;
  * @author Viren
  * Data access layer for storing workflow executions
  */
-public interface ExecutionDAO {
+public interface ExecutionDAO <T extends Task, W extends Workflow>  {
 
 	/**
 	 * 
@@ -36,7 +36,7 @@ public interface ExecutionDAO {
 	 * @return List of pending tasks (in_progress) 
 	 * 
 	 */
-	List<Task> getPendingTasksByWorkflow(String taskName, String workflowId);
+	List<T> getPendingTasksByWorkflow(String taskName, String workflowId);
 
 	/**
 	 * 
@@ -46,7 +46,7 @@ public interface ExecutionDAO {
 	 * @return List of tasks starting from startKey
 	 * 
 	 */
-	List<Task> getTasks(String taskType, String startKey, int count);
+	List<T> getTasks(String taskType, String startKey, int count);
 
 	/**
 	 * 
@@ -59,14 +59,14 @@ public interface ExecutionDAO {
 	 * </p>  
 	 *  
 	 */
-	List<Task> createTasks(List<Task> tasks);
+	List<T> createTasks(List<T> tasks);
 
 	/**
 	 * 
 	 * @param task Task to be updated
 	 *  
 	 */
-	void updateTask(Task task);
+	void updateTask(T task);
 	
 	/**
 	 * Checks if the number of tasks in progress for the given taskDef will exceed the limit if the task is scheduled to be in progress (given to the worker or for system tasks start() method called)
@@ -74,7 +74,7 @@ public interface ExecutionDAO {
 	 * @return true if by executing this task, the limit is breached.  false otherwise.
 	 * @see TaskDef#concurrencyLimit()
 	 */
-	boolean exceedsInProgressLimit(Task task);
+	boolean exceedsInProgressLimit(T task);
 
 	/**
 	 * Checks if the Task is rate limited or not based on the {@link Task#getRateLimitPerFrequency()} and {@link Task#getRateLimitFrequencyInSeconds()}
@@ -82,7 +82,7 @@ public interface ExecutionDAO {
 	 * @return true: If the {@link Task} is rateLimited
 	 * 		false: If the {@link Task} is not rateLimited
 	 */
-	boolean exceedsRateLimitPerFrequency(Task task);
+	boolean exceedsRateLimitPerFrequency(T task);
 	
 	/**
 	 * 
@@ -97,7 +97,7 @@ public interface ExecutionDAO {
 	 * @return Task
 	 *  
 	 */
-	Task getTask(String taskId);
+	T getTask(String taskId);
 
 	/**
 	 * 
@@ -105,7 +105,7 @@ public interface ExecutionDAO {
 	 * @return List of tasks
 	 * 
 	 */
-	List<Task> getTasks(List<String> taskIds);
+	List<T> getTasks(List<String> taskIds);
 	
 	/**
 	 * 
@@ -113,7 +113,7 @@ public interface ExecutionDAO {
 	 * @return List of pending tasks
 	 * 
 	 */
-	List<Task> getPendingTasksForTaskType(String taskType);
+	List<T> getPendingTasksForTaskType(String taskType);
 
 	/**
 	 * 
@@ -121,7 +121,7 @@ public interface ExecutionDAO {
 	 * @return List of tasks for the given workflow instance id
 	 *  
 	 */
-	List<Task> getTasksForWorkflow(String workflowId);
+	List<T> getTasksForWorkflow(String workflowId);
 	
 	/**
 	 * 
@@ -159,7 +159,7 @@ public interface ExecutionDAO {
 	 * @return Workflow
 	 *  
 	 */
-	Workflow getWorkflow(String workflowId);
+	W getWorkflow(String workflowId);
 
 	/**
 	 * 
@@ -168,7 +168,7 @@ public interface ExecutionDAO {
 	 * @return Workflow instance details
 	 *  
 	 */
-	Workflow getWorkflow(String workflowId, boolean includeTasks);
+	W getWorkflow(String workflowId, boolean includeTasks);
 
 	/**
 	 * @param workflowName name of the workflow
@@ -182,7 +182,7 @@ public interface ExecutionDAO {
 	 * @param version the workflow version
 	 * @return List of workflows that are running
 	 */
-	List<Workflow> getPendingWorkflowsByType(String workflowName, int version);
+	List<W> getPendingWorkflowsByType(String workflowName, int version);
 
 	/**
 	 * 
@@ -205,7 +205,7 @@ public interface ExecutionDAO {
 	 * @param endTime epoch time
 	 * @return List of workflows between start and end time
 	 */
-	List<Workflow> getWorkflowsByType(String workflowName, Long startTime, Long endTime);
+	List<W> getWorkflowsByType(String workflowName, Long startTime, Long endTime);
 
 	/**
 	 * 
@@ -214,7 +214,7 @@ public interface ExecutionDAO {
 	 * @return List of workflows by correlation id
 	 *  
 	 */
-	List<Workflow> getWorkflowsByCorrelationId(String correlationId, boolean includeTasks);
+	List<W> getWorkflowsByCorrelationId(String correlationId, boolean includeTasks);
 
 	/**
 	 *
@@ -252,12 +252,12 @@ public interface ExecutionDAO {
 	 * @param max max number of executions to return
 	 * @return list of matching events
 	 */
-	List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max);
+	<E extends EventExecution> List<E> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max);
 	
 	void updateLastPoll(String taskDefName, String domain, String workerId);
-	
-	PollData getPollData(String taskDefName, String domain);
 
-	List<PollData> getPollData(String taskDefName);
+	<P extends PollData> P getPollData(String taskDefName, String domain);
+
+	<P extends PollData> List<P> getPollData(String taskDefName);
 
 }

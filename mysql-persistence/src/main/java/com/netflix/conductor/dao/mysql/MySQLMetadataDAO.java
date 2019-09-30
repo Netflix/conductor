@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO {
+public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO <TaskDef, WorkflowDef, EventHandler> {
     public static final String PROP_TASKDEF_CACHE_REFRESH = "conductor.taskdef.cache.refresh.time.seconds";
     public static final int DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS = 60;
     private final ConcurrentHashMap<String, TaskDef> taskDefCache = new ConcurrentHashMap<>();

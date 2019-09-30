@@ -27,6 +27,7 @@ import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.RetryUtil;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.lang3.StringUtils;
@@ -46,13 +47,13 @@ import java.util.stream.Collectors;
 @Audit
 @Singleton
 @Trace
-public class TaskServiceImpl implements TaskService {
+public class TaskServiceImpl implements TaskService <Task, PollData, TaskSummary> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final ExecutionService executionService;
 
-    private final QueueDAO queueDAO;
+    private final QueueDAO<Message> queueDAO;
 
     @Inject
     public TaskServiceImpl(ExecutionService executionService, QueueDAO queueDAO) {

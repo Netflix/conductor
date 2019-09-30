@@ -41,7 +41,7 @@ import rx.Observable;
 /**
  * @author Oleksiy Lysak
  */
-public abstract class NATSAbstractQueue implements ObservableQueue {
+public abstract class NATSAbstractQueue implements ObservableQueue <Message> {
     private static Logger logger = LoggerFactory.getLogger(NATSAbstractQueue.class);
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     protected final Lock mu = new ReentrantLock();

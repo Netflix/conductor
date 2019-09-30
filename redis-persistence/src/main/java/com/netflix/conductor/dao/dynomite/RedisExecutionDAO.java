@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 @Trace
-public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
+public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO <Task, Workflow>  {
 
 	public static final Logger logger = LoggerFactory.getLogger(RedisExecutionDAO.class);
 

@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
-public interface TaskService {
+public interface TaskService <T extends Task, P extends PollData, S extends TaskSummary> {
     /*
      * Poll for a task of a certain type.
      *
@@ -38,7 +38,7 @@ public interface TaskService {
      * @param domain   Domain of the workflow
      * @return polled {@link Task}
      */
-    Task poll(@NotEmpty(message = "TaskType cannot be null or empty.") String taskType, String workerId, String domain);
+    T poll(@NotEmpty(message = "TaskType cannot be null or empty.") String taskType, String workerId, String domain);
 
     /**
      * Batch Poll for a task of a certain type.
@@ -50,7 +50,7 @@ public interface TaskService {
      * @param timeout  Timeout for polling in milliseconds
      * @return list of {@link Task}
      */
-    List<Task> batchPoll(@NotEmpty(message = "TaskType cannot be null or empty.") String taskType, String workerId, String domain, Integer count, Integer timeout);
+    List<T> batchPoll(@NotEmpty(message = "TaskType cannot be null or empty.") String taskType, String workerId, String domain, Integer count, Integer timeout);
 
     /**
      * Get in progress tasks. The results are paginated.
@@ -60,7 +60,7 @@ public interface TaskService {
      * @param count    Number of entries
      * @return list of {@link Task}
      */
-    List<Task> getTasks(@NotEmpty(message = "TaskType cannot be null or empty.") String taskType, String startKey, Integer count);
+    List<T> getTasks(@NotEmpty(message = "TaskType cannot be null or empty.") String taskType, String startKey, Integer count);
 
     /**
      * Get in progress task for a given workflow id.
@@ -69,7 +69,7 @@ public interface TaskService {
      * @param taskReferenceName Task reference name.
      * @return instance of {@link Task}
      */
-    Task getPendingTaskForWorkflow(@NotEmpty(message = "WorkflowId cannot be null or empty.") String workflowId,
+    T getPendingTaskForWorkflow(@NotEmpty(message = "WorkflowId cannot be null or empty.") String workflowId,
                                    @NotEmpty(message = "TaskReferenceName cannot be null or empty.") String taskReferenceName);
 
     /**
@@ -111,7 +111,7 @@ public interface TaskService {
      * @param taskId Id of the task.
      * @return list of {@link TaskExecLog}
      */
-    List<TaskExecLog> getTaskLogs(@NotEmpty(message = "TaskId cannot be null or empty.") String taskId);
+    <L extends TaskExecLog> List<L> getTaskLogs(@NotEmpty(message = "TaskId cannot be null or empty.") String taskId);
 
     /**
      * Get task by Id.
@@ -119,7 +119,7 @@ public interface TaskService {
      * @param taskId Id of the task.
      * @return instance of {@link Task}
      */
-    Task getTask(@NotEmpty(message = "TaskId cannot be null or empty.") String taskId);
+    T getTask(@NotEmpty(message = "TaskId cannot be null or empty.") String taskId);
 
     /**
      * Remove Task from a Task type queue.
@@ -165,14 +165,14 @@ public interface TaskService {
      * @param taskType Task Name
      * @return list of {@link PollData}
      */
-    List<PollData> getPollData(@NotEmpty(message = "TaskType cannot be null or empty.") String taskType);
+    List<P> getPollData(@NotEmpty(message = "TaskType cannot be null or empty.") String taskType);
 
     /**
      * Get the last poll data for all task types.
      *
      * @return list of {@link PollData}
      */
-    List<PollData> getAllPollData();
+    List<P> getAllPollData();
 
     /**
      * Requeue pending tasks for all the running workflows.
@@ -200,7 +200,7 @@ public interface TaskService {
      * @param query    Query you want to search
      * @return instance of {@link SearchResult}
      */
-    SearchResult<TaskSummary> search(int start, int size, String sort, String freeText, String query);
+     SearchResult<S> search(int start, int size, String sort, String freeText, String query);
 
     /**
      * Get the external storage location where the task output payload is stored/to be stored

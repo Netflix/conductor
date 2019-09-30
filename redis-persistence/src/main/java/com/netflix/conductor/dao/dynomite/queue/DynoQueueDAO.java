@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
-public class DynoQueueDAO implements QueueDAO {
+public class DynoQueueDAO implements QueueDAO <com.netflix.conductor.core.events.queue.Message> {
 
     private static Logger logger = LoggerFactory.getLogger(DynoQueueDAO.class);
 

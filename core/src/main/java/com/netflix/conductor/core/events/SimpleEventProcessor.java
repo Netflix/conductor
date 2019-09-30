@@ -21,6 +21,8 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventExecution.Status;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
@@ -62,7 +64,7 @@ public class SimpleEventProcessor implements EventProcessor {
     private static final int RETRY_COUNT = 3;
 
 
-    private final MetadataService metadataService;
+    private final MetadataService<TaskDef, WorkflowDef, EventHandler> metadataService;
     private final ExecutionService executionService;
     private final ActionProcessor actionProcessor;
     private final EventQueues eventQueues;
@@ -136,7 +138,7 @@ public class SimpleEventProcessor implements EventProcessor {
         }
     }
 
-    private void listen(ObservableQueue queue) {
+    private void listen(ObservableQueue<Message> queue) {
         queue.observe().subscribe((Message msg) -> handle(queue, msg));
     }
 

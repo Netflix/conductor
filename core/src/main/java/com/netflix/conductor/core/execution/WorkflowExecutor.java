@@ -30,6 +30,7 @@ import static com.netflix.conductor.core.execution.tasks.SubWorkflow.SUB_WORKFLO
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -45,6 +46,7 @@ import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -81,12 +83,12 @@ public class WorkflowExecutor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowExecutor.class);
 
-    private final MetadataDAO metadataDAO;
-    private final QueueDAO queueDAO;
+    protected final MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
+    private final QueueDAO<Message> queueDAO;
     private final DeciderService deciderService;
     private final Configuration config;
     private final MetadataMapperService metadataMapperService;
-    private final ExecutionDAOFacade executionDAOFacade;
+    private final ExecutionDAOFacade<Task, Workflow, PollData> executionDAOFacade;
 
     private WorkflowStatusListener workflowStatusListener;
     private ExternalPayloadStorageUtils externalPayloadStorageUtils;

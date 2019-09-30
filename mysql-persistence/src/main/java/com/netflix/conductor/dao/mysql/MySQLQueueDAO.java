@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
-public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
+public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO <Message> {
     private static final Long UNACK_SCHEDULE_MS = 60_000L;
 
     @Inject

@@ -56,7 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Trace
-public class CassandraExecutionDAO extends CassandraBaseDAO implements ExecutionDAO {
+public class CassandraExecutionDAO extends CassandraBaseDAO implements ExecutionDAO <Task, Workflow> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraExecutionDAO.class);
     private static final String CLASS_NAME = CassandraExecutionDAO.class.getSimpleName();
 

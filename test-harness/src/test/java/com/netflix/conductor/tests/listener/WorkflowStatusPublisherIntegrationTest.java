@@ -19,6 +19,7 @@
 package com.netflix.conductor.tests.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -55,10 +56,10 @@ public class WorkflowStatusPublisherIntegrationTest {
     private ObjectMapper mapper;
 
     @Inject
-    QueueDAO queueDAO;
+    QueueDAO<Message> queueDAO;
 
     @Inject
-    protected MetadataService metadataService;
+    protected MetadataService<TaskDef, WorkflowDef, EventHandler> metadataService;
 
     @Inject
     protected ExecutionService workflowExecutionService;

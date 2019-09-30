@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
-public interface WorkflowService {
+public interface WorkflowService <W extends Workflow, D extends WorkflowDef, S extends WorkflowSummary> {
 
     /**
      * Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain.
@@ -55,7 +55,7 @@ public interface WorkflowService {
      * @return the id of the workflow instance that can be use for tracking.
      */
     String startWorkflow(@NotEmpty(message = "Workflow name cannot be null or empty") String name, Integer version, String correlationId, Map<String, Object> input,
-                         String externalInputPayloadStoragePath, Map<String, String> taskToDomain, WorkflowDef workflowDef);
+                         String externalInputPayloadStoragePath, Map<String, String> taskToDomain, D workflowDef);
 
     /**
      * Start a new workflow.  Returns the ID of the workflow instance that can be later used for tracking.
@@ -92,7 +92,7 @@ public interface WorkflowService {
      * @param includeTasks  Includes tasks associated with workflows.
      * @return a list of {@link Workflow}
      */
-    List<Workflow> getWorkflows(@NotEmpty(message = "Workflow name cannot be null or empty") String name, String correlationId,
+    List<W> getWorkflows(@NotEmpty(message = "Workflow name cannot be null or empty") String name, String correlationId,
                                 boolean includeClosed, boolean includeTasks);
 
     /**
@@ -104,7 +104,7 @@ public interface WorkflowService {
      * @param correlationIds Includes tasks associated with workflows.
      * @return a {@link Map} of {@link String} as key and a list of {@link Workflow} as value
      */
-    Map<String, List<Workflow>> getWorkflows(@NotEmpty(message = "Workflow name cannot be null or empty") String name, boolean includeClosed,
+    Map<String, List<W>> getWorkflows(@NotEmpty(message = "Workflow name cannot be null or empty") String name, boolean includeClosed,
                                              boolean includeTasks, List<String> correlationIds);
 
     /**
@@ -114,7 +114,7 @@ public interface WorkflowService {
      * @param includeTasks Includes tasks associated with workflow.
      * @return an instance of {@link Workflow}
      */
-    Workflow getExecutionStatus(@NotEmpty(message = "WorkflowId cannot be null or empty.") String workflowId, boolean includeTasks);
+    W getExecutionStatus(@NotEmpty(message = "WorkflowId cannot be null or empty.") String workflowId, boolean includeTasks);
 
     /**
      * Removes the workflow from the system.
@@ -219,7 +219,7 @@ public interface WorkflowService {
      * @param query    Query you want to search
      * @return instance of {@link SearchResult}
      */
-    SearchResult<WorkflowSummary> searchWorkflows(int start, @Max(value = 5_000, message = "Cannot return more than {value} workflows. Please use pagination.") int size,
+    SearchResult<S> searchWorkflows(int start, @Max(value = 5_000, message = "Cannot return more than {value} workflows. Please use pagination.") int size,
                                                   String sort, String freeText, String query);
 
     /**
@@ -233,7 +233,7 @@ public interface WorkflowService {
      * @param query    Query you want to search
      * @return instance of {@link SearchResult}
      */
-    SearchResult<WorkflowSummary> searchWorkflows(int start, @Max(value = 5_000, message = "Cannot return more than {value} workflows. Please use pagination.") int size,
+    SearchResult<S> searchWorkflows(int start, @Max(value = 5_000, message = "Cannot return more than {value} workflows. Please use pagination.") int size,
                                                   List<String> sort, String freeText, String query);
 
 
@@ -248,7 +248,7 @@ public interface WorkflowService {
      * @param query    Query you want to search
      * @return instance of {@link SearchResult}
      */
-    SearchResult<WorkflowSummary> searchWorkflowsByTasks(int start, int size, String sort, String freeText, String query);
+    SearchResult<S> searchWorkflowsByTasks(int start, int size, String sort, String freeText, String query);
 
     /**
      * Search for workflows based on task parameters. Use sort options as sort ASC or DESC e.g.
@@ -261,7 +261,7 @@ public interface WorkflowService {
      * @param query    Query you want to search
      * @return instance of {@link SearchResult}
      */
-    SearchResult<WorkflowSummary> searchWorkflowsByTasks(int start, int size, List<String> sort, String freeText, String query);
+    SearchResult<S> searchWorkflowsByTasks(int start, int size, List<String> sort, String freeText, String query);
 
     /**
      * Get the external storage location where the workflow input payload is stored/to be stored

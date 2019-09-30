@@ -71,7 +71,7 @@ public class ExecutionService {
     private static final Logger logger = LoggerFactory.getLogger(ExecutionService.class);
 
     private final WorkflowExecutor workflowExecutor;
-    private final ExecutionDAOFacade executionDAOFacade;
+    private final ExecutionDAOFacade<Task, Workflow, PollData> executionDAOFacade;
     private final MetadataDAO metadataDAO;
     private final QueueDAO queueDAO;
 	private final ExternalPayloadStorage externalPayloadStorage;

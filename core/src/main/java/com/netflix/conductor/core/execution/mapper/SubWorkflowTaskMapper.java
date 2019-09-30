@@ -13,7 +13,9 @@
 package com.netflix.conductor.core.execution.mapper;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
@@ -37,7 +39,7 @@ public class SubWorkflowTaskMapper implements TaskMapper {
     private static final Logger logger = LoggerFactory.getLogger(SubWorkflowTaskMapper.class);
 
     private final ParametersUtils parametersUtils;
-    private final MetadataDAO metadataDAO;
+    private final MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
 
     @Inject
     public SubWorkflowTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {

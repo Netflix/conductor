@@ -39,7 +39,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
-public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
+public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO <Task, Workflow> {
 
     private static final String ARCHIVED_FIELD = "archived";
     private static final String RAW_JSON_FIELD = "rawJSON";

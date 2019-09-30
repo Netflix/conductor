@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 @Trace
-public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
+public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO <TaskDef, WorkflowDef, EventHandler> {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMetadataDAO.class);
 

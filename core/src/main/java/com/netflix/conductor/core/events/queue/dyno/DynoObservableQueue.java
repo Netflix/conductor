@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  *
  */
 @Singleton
-public class DynoObservableQueue implements ObservableQueue {
+public class DynoObservableQueue implements ObservableQueue <Message> {
 
     private static final Logger logger = LoggerFactory.getLogger(DynoObservableQueue.class);
 

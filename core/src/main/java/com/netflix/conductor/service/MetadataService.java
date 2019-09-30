@@ -27,17 +27,17 @@ import java.util.List;
 import java.util.Optional;
 
 
-public interface MetadataService {
+public interface MetadataService <T extends TaskDef, W extends WorkflowDef, E extends EventHandler> {
     /**
      * @param taskDefinitions Task Definitions to register
      */
     void registerTaskDef(@NotNull(message = "TaskDefList cannot be empty or null")
-                                @Size(min=1, message = "TaskDefList is empty") List<@Valid TaskDef> taskDefinitions);
+                                @Size(min=1, message = "TaskDefList is empty") List<@Valid T> taskDefinitions);
 
         /**
          * @param taskDefinition Task Definition to be updated
          */
-    void updateTaskDef(@NotNull(message = "TaskDef cannot be null") @Valid TaskDef taskDefinition);
+    void updateTaskDef(@NotNull(message = "TaskDef cannot be null") @Valid T taskDefinition);
 
     /**
      * @param taskType Remove task definition
@@ -47,18 +47,18 @@ public interface MetadataService {
     /**
      * @return List of all the registered tasks
      */
-    List<TaskDef> getTaskDefs();
+    List<T> getTaskDefs();
 
     /**
      * @param taskType Task to retrieve
      * @return Task Definition
      */
-    TaskDef getTaskDef(@NotEmpty(message="TaskType cannot be null or empty") String taskType);
+    T getTaskDef(@NotEmpty(message="TaskType cannot be null or empty") String taskType);
 
     /**
      * @param def Workflow definition to be updated
      */
-    void updateWorkflowDef(@NotNull(message = "WorkflowDef cannot be null") @Valid WorkflowDef def);
+    void updateWorkflowDef(@NotNull(message = "WorkflowDef cannot be null") @Valid W def);
 
     /**
      *
@@ -66,25 +66,25 @@ public interface MetadataService {
      */
     void updateWorkflowDef(@NotNull(message = "WorkflowDef list name cannot be null or empty")
                            @Size(min=1, message = "WorkflowDefList is empty")
-                                   List<@NotNull(message = "WorkflowDef cannot be null") @Valid WorkflowDef> workflowDefList);
+                                   List<@NotNull(message = "WorkflowDef cannot be null") @Valid W> workflowDefList);
 
     /**
      * @param name    Name of the workflow to retrieve
      * @param version Optional.  Version.  If null, then retrieves the latest
      * @return Workflow definition
      */
-    WorkflowDef getWorkflowDef(@NotEmpty(message = "Workflow name cannot be null or empty") String name, Integer version);
+    W getWorkflowDef(@NotEmpty(message = "Workflow name cannot be null or empty") String name, Integer version);
 
     /**
      * @param name Name of the workflow to retrieve
      * @return Latest version of the workflow definition
      */
-    Optional<WorkflowDef> getLatestWorkflow(@NotEmpty(message = "Workflow name cannot be null or empty") String name);
+    Optional<W> getLatestWorkflow(@NotEmpty(message = "Workflow name cannot be null or empty") String name);
 
-    List<WorkflowDef> getWorkflowDefs();
+    List<W> getWorkflowDefs();
 
     void registerWorkflowDef(@NotNull(message = "WorkflowDef cannot be null")
-                             @Valid WorkflowDef workflowDef);
+                             @Valid W workflowDef);
 
     /**
      *
@@ -98,12 +98,12 @@ public interface MetadataService {
      * @param eventHandler Event handler to be added.
      *                     Will throw an exception if an event handler already exists with the name
      */
-    void addEventHandler(@NotNull(message = "EventHandler cannot be null") @Valid EventHandler eventHandler);
+    void addEventHandler(@NotNull(message = "EventHandler cannot be null") @Valid E eventHandler);
 
     /**
      * @param eventHandler Event handler to be updated.
      */
-    void updateEventHandler(@NotNull(message = "EventHandler cannot be null") @Valid EventHandler eventHandler);
+    void updateEventHandler(@NotNull(message = "EventHandler cannot be null") @Valid E eventHandler);
 
     /**
      * @param name Removes the event handler from the system
@@ -113,7 +113,7 @@ public interface MetadataService {
     /**
      * @return All the event handlers registered in the system
      */
-    List<EventHandler> getEventHandlers();
+    List<E> getEventHandlers();
 
     /**
      * @param event      name of the event
@@ -121,5 +121,5 @@ public interface MetadataService {
      * @return Returns the list of all the event handlers for a given event
      */
 
-    List<EventHandler> getEventHandlersForEvent(@NotEmpty(message = "EventName cannot be null or empty") String event, boolean activeOnly);
+    List<E> getEventHandlersForEvent(@NotEmpty(message = "EventName cannot be null or empty") String event, boolean activeOnly);
 }

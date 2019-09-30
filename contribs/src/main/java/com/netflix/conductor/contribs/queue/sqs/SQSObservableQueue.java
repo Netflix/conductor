@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
  * @author Viren
  *
  */
-public class SQSObservableQueue implements ObservableQueue {
+public class SQSObservableQueue implements ObservableQueue <Message> {
 
 	private static Logger logger = LoggerFactory.getLogger(SQSObservableQueue.class);
 

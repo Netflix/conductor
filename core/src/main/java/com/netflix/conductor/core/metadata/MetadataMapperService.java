@@ -18,7 +18,9 @@ package com.netflix.conductor.core.metadata;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -49,7 +51,7 @@ public class MetadataMapperService {
 
     public static final Logger logger = LoggerFactory.getLogger(MetadataMapperService.class);
 
-    private final MetadataDAO metadataDAO;
+    private final MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
 
     @Inject
     public MetadataMapperService(MetadataDAO metadataDAO) {
