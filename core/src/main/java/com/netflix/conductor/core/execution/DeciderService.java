@@ -29,6 +29,7 @@ import com.netflix.conductor.common.metadata.workflow.*;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask.Type;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -60,11 +61,14 @@ public class DeciderService {
 	private ObjectMapper om;
 	
 	private ParametersUtils pu = new ParametersUtils();
+
+	private boolean tasksAutoCleanup;
 		
 	@Inject
-	public DeciderService(MetadataDAO metadata, ObjectMapper om) {
+	public DeciderService(MetadataDAO metadata, ObjectMapper om, Configuration config) {
 		this.metadata = metadata;
 		this.om = om;
+		tasksAutoCleanup = Boolean.parseBoolean(config.getProperty("workflow.system.task.auto.cleanup", "true"));
 	}
 
 	public DeciderOutcome decide(Workflow workflow, WorkflowDef def) throws TerminateWorkflow {
@@ -133,6 +137,16 @@ public class DeciderService {
 					tasksToBeScheduled.put(rt.getReferenceTaskName(), rt);
 					executedTaskRefNames.remove(rt.getReferenceTaskName());
 					outcome.tasksToBeUpdated.add(task);
+					if (tasksAutoCleanup) {
+						outcome.tasksToBeDeleted = workflow.getTasks().stream()
+							.filter(t -> t.getReferenceTaskName().equalsIgnoreCase(task.getReferenceTaskName())
+								&& t.getRetryCount() != 0 // Keep original
+								&& t.getRetryCount() < task.getRetryCount()) // Keep last failed
+							.collect(Collectors.toList());
+						if (!outcome.tasksToBeDeleted.isEmpty()) {
+							logger.debug("Tasks to be deleted " + outcome.tasksToBeDeleted);
+						}
+					}
 				}
 			}
 
@@ -712,7 +726,9 @@ public class DeciderService {
 		List<Task> tasksToBeScheduled = new LinkedList<>();
 		
 		List<Task> tasksToBeUpdated = new LinkedList<>();
-		
+
+		List<Task> tasksToBeDeleted = new LinkedList<>();
+
 		boolean isComplete;
 
 		private DeciderOutcome() { }

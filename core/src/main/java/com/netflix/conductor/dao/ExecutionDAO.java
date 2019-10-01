@@ -310,4 +310,8 @@ public interface ExecutionDAO {
 	public default Task getTask(String workflowId, String taskRefName) {
 		throw new IllegalStateException("Not implemented");
 	}
+
+	public default void removeTask(Task task) {
+		throw new IllegalStateException("Not implemented");
+	}
 }

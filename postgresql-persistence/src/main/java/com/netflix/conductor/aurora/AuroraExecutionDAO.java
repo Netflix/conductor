@@ -235,6 +235,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	@Override
+	public void removeTask(Task task) {
+		withTransaction(tx -> removeTask(tx, task));
+	}
+
+	@Override
 	public Task getTask(String taskId) {
 		return getWithTransaction(tx -> getTask(tx, taskId));
 	}

@@ -79,7 +79,7 @@ public class TestDeciderOutcomes {
 		TaskDef td = new TaskDef();
 		td.setRetryCount(1);
 		when(metadata.getTaskDef(any())).thenReturn(td);
-		this.ds = new DeciderService(metadata, om);
+		this.ds = new DeciderService(metadata, om, mock(Configuration.class));
 	}
 	
 	@Test
