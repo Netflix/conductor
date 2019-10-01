@@ -395,40 +395,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     }
 
     @Override
-    public void addTaskExecutionLog(TaskExecLog log) {
-
-        BulkRequest bulkRequest = new BulkRequest();
-
-            byte[] docBytes = new byte[0];
-            try {
-                docBytes = objectMapper.writeValueAsBytes(log);
-            } catch (JsonProcessingException e) {
-                logger.error("Failed to convert task log to JSON for task {}", log.getTaskId());
-            }
-
-            IndexRequest request = new IndexRequest(logIndexName, LOG_DOC_TYPE);
-            request.source(docBytes, XContentType.JSON);
-            bulkRequest.add(request);
-
-        try {
-            new RetryUtil<BulkResponse>().retryOnException(() -> {
-                try {
-                    return elasticSearchClient.bulk(bulkRequest);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }, null, BulkResponse::hasFailures, RETRY_COUNT, "Indexing all execution logs into doc_type task", "addTaskExecutionLogs");
-        } catch (Exception e) {
-            logger.error("Failed to index task execution logs for tasks: {}", log.getTaskId(), e);
-        }
-    }
-
-    @Override
-    public CompletableFuture<Void> asyncAddTaskExecutionLog(TaskExecLog log) {
-        return CompletableFuture.runAsync(() -> addTaskExecutionLog(log), executorService);
-    }
-
-    @Override
     public List<TaskExecLog> getTaskExecutionLogs(String taskId) {
 
         try {
@@ -482,17 +448,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     }
 
     @Override
-    public void indexMessage(String queue, Message message) {
-        Map<String, Object> doc = new HashMap<>();
-        doc.put("messageId", message.getId());
-        doc.put("payload", message.getPayload());
-        doc.put("queue", queue);
-        doc.put("created", System.currentTimeMillis());
-
-        indexObject(logIndexName, MSG_DOC_TYPE, doc);
-    }
-
-    @Override
     public void addEventExecution(EventExecution eventExecution) {
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
 
@@ -502,18 +457,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     @Override
     public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
         return CompletableFuture.runAsync(() -> addEventExecution(eventExecution), executorService);
-    }
-
-    @Override
-    public void indexEventExecution(EventExecution eventExecution) {
-        String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
-
-        indexObject(logIndexName, EVENT_DOC_TYPE, id, eventExecution);
-    }
-
-    @Override
-    public CompletableFuture<Void> asyncIndexEventExecution(EventExecution eventExecution) {
-        return CompletableFuture.runAsync(() -> indexEventExecution(eventExecution), executorService);
     }
 
     @Override
@@ -547,29 +490,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     @Override
     public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId) {
         return CompletableFuture.runAsync(() -> removeWorkflow(workflowId), executorService);
-    }
-
-    @Override
-    public void removeWorkflowId(String workflowId) {
-
-        DeleteRequest request = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
-
-        try {
-            DeleteResponse response = elasticSearchClient.delete(request);
-
-            if (response.getResult() == DocWriteResponse.Result.NOT_FOUND) {
-                logger.error("Index removal failed - document not found by id: {}", workflowId);
-            }
-
-        } catch (IOException e) {
-            logger.error("Failed to remove workflow {} from index", workflowId, e);
-            Monitors.error(className, "remove");
-        }
-    }
-
-    @Override
-    public CompletableFuture<Void> asyncRemoveWorkflowId(String workflowId) {
-        return CompletableFuture.runAsync(() -> removeWorkflowId(workflowId), executorService);
     }
 
     @Override
@@ -785,7 +705,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             request.clear();
             logger.info("Time taken {} ", Instant.now().toEpochMilli() - startTime);
             logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
-            Monitors.recordESIndexTime("index_time", Instant.now().toEpochMilli() - startTime);
+            Monitors.recordESIndexTime( Instant.now().toEpochMilli() - startTime);
             Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             Monitors.error(className, "index");

@@ -78,11 +78,6 @@ public interface IndexDAO {
      * @return CompletableFuture of type void
      */
     CompletableFuture<Void> asyncIndexTaskSummary(TaskSummary taskSummary);
-
-    void indexEventExecution(EventExecution eventExecution);
-
-    CompletableFuture<Void> asyncIndexEventExecution(EventExecution eventExecution);
-
     /**
      *
      * @param query SQL like query for workflow search parameters.
@@ -117,11 +112,6 @@ public interface IndexDAO {
      * @return CompletableFuture of type void
      */
     CompletableFuture<Void> asyncRemoveWorkflow(String workflowId);
-
-    void removeWorkflowId(String workflowId);
-
-    CompletableFuture<Void> asyncRemoveWorkflowId(String workflowId);
-
     /**
      *
      * Updates the index
@@ -161,25 +151,11 @@ public interface IndexDAO {
     CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs);
 
     /**
-     * @param log Task Execution log to be indexed
-     */
-    void addTaskExecutionLog(TaskExecLog log);
-
-    /**
-     *
-     * @param log Task Execution log to be indexed
-     * @return CompletableFuture of type void
-     */
-    CompletableFuture<Void> asyncAddTaskExecutionLog(TaskExecLog log);
-
-    /**
      *
      * @param taskId Id of the task for which to fetch the execution logs
      * @return Returns the task execution logs for given task id
      */
     List<TaskExecLog> getTaskExecutionLogs(String taskId);
-
-    void indexMessage(String queue, Message message);
 
     /**
      * @param eventExecution Event Execution to be indexed

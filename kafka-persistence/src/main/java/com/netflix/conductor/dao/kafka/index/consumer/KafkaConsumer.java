@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Collections;
 import java.util.concurrent.*;
@@ -124,7 +125,7 @@ public class KafkaConsumer {
 
     private void removeWorkflow(Object data) {
         try {
-            indexDAO.removeWorkflowId(om.writeValueAsString(data));
+            indexDAO.removeWorkflow(om.writeValueAsString(data));
         } catch (Exception e) {
             // JSON is not formatted. Workflow details in UI won't be available.
             logger.error("Failed to remove workflow: {}", data, e);
@@ -158,7 +159,7 @@ public class KafkaConsumer {
         try {
             byte[] payload = om.writeValueAsBytes(data);
             TaskExecLog log  = om.readValue(new String(payload), TaskExecLog.class);
-            indexDAO.asyncAddTaskExecutionLog(log);
+            indexDAO.asyncAddTaskExecutionLogs(Arrays.asList(log));
         } catch (Exception e) {
             // JSON is not formatted. Workflow details in UI won't be available.
             logger.error("Failed to index task log: {}", data, e);
@@ -169,7 +170,7 @@ public class KafkaConsumer {
         try {
             byte[] payload = om.writeValueAsBytes(data);
             EventExecution log  = om.readValue(new String(payload), EventExecution.class);
-            indexDAO.asyncIndexEventExecution(log);
+            indexDAO.asyncAddEventExecution(log);
         } catch (Exception e) {
             // JSON is not formatted. Workflow details in UI won't be available.
             logger.error("Failed to index event execution: {}", data, e);
@@ -180,7 +181,7 @@ public class KafkaConsumer {
         try {
             byte[] payload = om.writeValueAsBytes(data);
             Message message  = om.readValue(new String(payload), Message.class);
-            indexDAO.indexMessage(queue, message);
+            indexDAO.addMessage(queue, message);
         } catch (Exception e) {
             // JSON is not formatted. Workflow details in UI won't be available.
             logger.error("Failed to index message: {}", data, e);

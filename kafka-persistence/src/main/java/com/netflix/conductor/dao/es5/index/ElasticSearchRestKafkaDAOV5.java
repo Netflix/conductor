@@ -20,6 +20,7 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 
 @Trace
@@ -35,15 +36,17 @@ public class ElasticSearchRestKafkaDAOV5 extends ElasticSearchRestDAOV5 {
     }
 
     @Override
-    public void indexWorkflow(Workflow workflow) {
+    public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
         WorkflowSummary summary = new WorkflowSummary(workflow);
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.WORKFLOW_DOC_TYPE, summary);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public void indexTask(Task task) {
+    public CompletableFuture<Void> asyncIndexTask(Task task) {
         TaskSummary summary = new TaskSummary(task);
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.TASK_DOC_TYPE, summary);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -55,25 +58,32 @@ public class ElasticSearchRestKafkaDAOV5 extends ElasticSearchRestDAOV5 {
         doc.put("created", System.currentTimeMillis());
 
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.MSG_DOC_TYPE, doc);
+
     }
 
     @Override
-    public void addEventExecution(EventExecution eventExecution) {
+    public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution)  {
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.EVENT_DOC_TYPE, id);
+        return CompletableFuture.completedFuture(null);
+
     }
 
     @Override
-    public void addTaskExecutionLogs(List<TaskExecLog> taskExecLogs) {
+    public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> taskExecLogs)  {
         if (taskExecLogs.isEmpty()) {
-            return;
+            return CompletableFuture.completedFuture(null);
         }
         taskExecLogs.forEach(log -> producerDAO.send(OperationTypes.CREATE, DocumentTypes.LOG_DOC_TYPE , taskExecLogs));
+        return CompletableFuture.completedFuture(null);
+
     }
 
     @Override
-    public void removeWorkflow(String workflowId) {
+    public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId) {
         producerDAO.send(OperationTypes.DELETE, DocumentTypes.WORKFLOW_DOC_TYPE, workflowId);
+        return CompletableFuture.completedFuture(null);
+
     }
 
 

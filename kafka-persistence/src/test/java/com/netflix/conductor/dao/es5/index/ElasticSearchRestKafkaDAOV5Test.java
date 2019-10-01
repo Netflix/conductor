@@ -42,41 +42,41 @@ public class ElasticSearchRestKafkaDAOV5Test {
         objectMapper = Mockito.mock(ObjectMapper.class);
         producerDAO = Mockito.mock(ProducerDAO.class);
         indexDAO = new ElasticSearchRestKafkaDAOV5(restClient, configuration, objectMapper, producerDAO);
-        Mockito.doNothing().when(producerDAO).send(any(String.class), any(Object.class));
+        Mockito.doNothing().when(producerDAO).send(any(String.class), any(String.class), any(Object.class));
     }
 
     @Test
     public void testIndexWorkflow() {
         Workflow workflow = new Workflow();
         indexDAO.indexWorkflow(workflow);
-        Mockito.verify(producerDAO).send(eq(DocumentTypes.WORKFLOW_DOC_TYPE), any(Object.class));
+        Mockito.verify(producerDAO).send(any(String.class), eq(DocumentTypes.WORKFLOW_DOC_TYPE), any(Object.class));
     }
 
     @Test
     public void testIndexTask() {
         Task task = new Task();
         indexDAO.indexTask(task);
-        Mockito.verify(producerDAO).send(eq(DocumentTypes.TASK_DOC_TYPE), any(Object.class));
+        Mockito.verify(producerDAO).send(any(String.class), eq(DocumentTypes.TASK_DOC_TYPE), any(Object.class));
     }
 
     @Test
     public void testAddMessage() {
         Message message = new Message();
         indexDAO.addMessage("queue", message);
-        Mockito.verify(producerDAO).send(eq(DocumentTypes.MSG_DOC_TYPE), any(Object.class));
+        Mockito.verify(producerDAO).send(any(String.class), eq(DocumentTypes.MSG_DOC_TYPE), any(Object.class));
     }
 
     @Test
     public void testAddEventExecution() {
         EventExecution eventExecution = new EventExecution();
         indexDAO.addEventExecution(eventExecution);
-        Mockito.verify(producerDAO).send(eq(DocumentTypes.EVENT_DOC_TYPE), any(Object.class));
+        Mockito.verify(producerDAO).send(any(String.class), eq(DocumentTypes.EVENT_DOC_TYPE), any(Object.class));
     }
 
     @Test
     public void testAddTaskExecutionLogs() {
         TaskExecLog taskExecLog = new TaskExecLog();
         indexDAO.addTaskExecutionLogs(Arrays.asList(taskExecLog));
-        Mockito.verify(producerDAO).send(eq(DocumentTypes.LOG_DOC_TYPE), any(Object.class));
+        Mockito.verify(producerDAO).send(any(String.class), eq(DocumentTypes.LOG_DOC_TYPE), any(Object.class));
     }
 }
