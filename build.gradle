@@ -51,7 +51,7 @@ configure(javaProjects) {
     dependencyManagement {
       imports {
         mavenBom 'com.amazonaws:aws-java-sdk-bom:1.11.269'
-        mavenBom 'vc.inreach.aws:aws-signing-request-interceptor:0.0.20'
+        mavenBom 'vc.inreach.aws:aws-signing-request-interceptor:0.0.22'
         mavenBom 'com.google.guava:guava:18.0'
       }
     }
