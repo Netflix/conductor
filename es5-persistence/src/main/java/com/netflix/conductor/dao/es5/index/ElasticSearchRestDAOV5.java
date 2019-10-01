@@ -92,12 +92,12 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     private static final String className = ElasticSearchRestDAOV5.class.getSimpleName();
 
-    protected final String indexName;
+    private final String indexName;
     private final String logIndexPrefix;
     private final String clusterHealthColor;
-    protected String logIndexName;
-    protected final ObjectMapper objectMapper;
-    protected final RestHighLevelClient elasticSearchClient;
+    private String logIndexName;
+    private final ObjectMapper objectMapper;
+    private final RestHighLevelClient elasticSearchClient;
     private final RestClient elasticSearchAdminClient;
     private final ExecutorService executorService;
     private final ConcurrentHashMap<String, List<IndexRequest>> bulkRequests;

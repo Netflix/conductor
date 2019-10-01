@@ -45,6 +45,7 @@ public interface ElasticSearchConfiguration extends Configuration {
 
     String ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_PROPERTY_NAME = "workflow.elasticsearch.archive.search.batchSize";
 
+
     int ELASTIC_SEARCH_ARCHIVE_SEARCH_BATCH_SIZE_DEFAULT_VALUE = 5000;
 
     String ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME = "workflow.elasticsearch.index.batchSize";
