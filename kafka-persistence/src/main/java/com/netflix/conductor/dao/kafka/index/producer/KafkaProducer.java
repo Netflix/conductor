@@ -51,10 +51,10 @@ public class KafkaProducer implements ProducerDAO {
 	}
 
 	@Override
-	public void send(String type, Object value) {
+	public void send(String operationType, String documentType, Object value) {
 		try {
 			long start = System.currentTimeMillis();
-			Record d = new Record(type, value);
+			Record d = new Record(operationType, documentType, value);
 			ProducerRecord rec = new ProducerRecord(this.topic, om.writeValueAsString(d));
 			producer.send(rec);
 			Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);

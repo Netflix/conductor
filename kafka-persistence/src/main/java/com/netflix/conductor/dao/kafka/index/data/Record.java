@@ -5,21 +5,29 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Record {
 
     @JsonProperty
-    String type;
+    String documentType;
+
+    @JsonProperty
+    String operationType;
 
     @JsonProperty
     Object payload;
 
-    public String getType() {
-        return type;
+    public String getDocumentType() {
+        return documentType;
     }
 
     public Object getPayload() {
         return payload;
     }
 
-    public Record(String type, Object payload) {
-        this.type = type;
+    public String getOperationType() {
+        return operationType;
+    }
+
+    public Record(String operationType, String documentType, Object payload) {
+        this.operationType = operationType;
+        this.documentType = documentType;
         this.payload = payload;
     }
 }

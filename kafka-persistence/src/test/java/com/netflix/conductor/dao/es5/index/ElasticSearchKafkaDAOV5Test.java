@@ -10,7 +10,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.kafka.index.constants.ProducerConstants;
 import com.netflix.conductor.dao.kafka.index.mapper.MapperFactory;
 import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
-import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
+import com.netflix.conductor.dao.kafka.index.utils.DocumentTypes;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -87,7 +87,7 @@ public class ElasticSearchKafkaDAOV5Test {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
 
             Assert.assertEquals(records.count(), 1);
-            records.forEach(record -> Assert.assertTrue(record.value().contains(RecordTypeConstants.WORKFLOW_DOC_TYPE)));
+            records.forEach(record -> Assert.assertTrue(record.value().contains(DocumentTypes.WORKFLOW_DOC_TYPE)));
         });
     }
 
@@ -100,7 +100,7 @@ public class ElasticSearchKafkaDAOV5Test {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
 
             Assert.assertEquals(records.count(), 1);
-            records.forEach(record -> Assert.assertTrue(record.value().contains(RecordTypeConstants.TASK_DOC_TYPE)));
+            records.forEach(record -> Assert.assertTrue(record.value().contains(DocumentTypes.TASK_DOC_TYPE)));
         });    }
 
     @Test
@@ -112,7 +112,7 @@ public class ElasticSearchKafkaDAOV5Test {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
 
             Assert.assertEquals(records.count(), 1);
-            records.forEach(record -> Assert.assertTrue(record.value().contains(RecordTypeConstants.MSG_DOC_TYPE)));
+            records.forEach(record -> Assert.assertTrue(record.value().contains(DocumentTypes.MSG_DOC_TYPE)));
         });    }
 
     @Test
@@ -124,7 +124,7 @@ public class ElasticSearchKafkaDAOV5Test {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
 
             Assert.assertEquals(records.count(), 1);
-            records.forEach(record -> Assert.assertTrue(record.value().contains(RecordTypeConstants.EVENT_DOC_TYPE)));
+            records.forEach(record -> Assert.assertTrue(record.value().contains(DocumentTypes.EVENT_DOC_TYPE)));
         });    }
 
     @Test
@@ -136,6 +136,6 @@ public class ElasticSearchKafkaDAOV5Test {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
 
             Assert.assertEquals(records.count(), 1);
-            records.forEach(record -> Assert.assertTrue(record.value().contains(RecordTypeConstants.LOG_DOC_TYPE)));
+            records.forEach(record -> Assert.assertTrue(record.value().contains(DocumentTypes.LOG_DOC_TYPE)));
         });    }
 }

@@ -10,7 +10,8 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ProducerDAO;
-import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
+import com.netflix.conductor.dao.kafka.index.utils.DocumentTypes;
+import com.netflix.conductor.dao.kafka.index.utils.OperationTypes;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import org.elasticsearch.client.RestClient;
 
@@ -36,13 +37,13 @@ public class ElasticSearchRestKafkaDAOV5 extends ElasticSearchRestDAOV5 {
     @Override
     public void indexWorkflow(Workflow workflow) {
         WorkflowSummary summary = new WorkflowSummary(workflow);
-        producerDAO.send(RecordTypeConstants.WORKFLOW_DOC_TYPE, summary);
+        producerDAO.send(OperationTypes.CREATE, DocumentTypes.WORKFLOW_DOC_TYPE, summary);
     }
 
     @Override
     public void indexTask(Task task) {
         TaskSummary summary = new TaskSummary(task);
-        producerDAO.send(RecordTypeConstants.TASK_DOC_TYPE, summary);
+        producerDAO.send(OperationTypes.CREATE, DocumentTypes.TASK_DOC_TYPE, summary);
     }
 
     @Override
@@ -53,13 +54,13 @@ public class ElasticSearchRestKafkaDAOV5 extends ElasticSearchRestDAOV5 {
         doc.put("queue", queue);
         doc.put("created", System.currentTimeMillis());
 
-        producerDAO.send(RecordTypeConstants.MSG_DOC_TYPE, doc);
+        producerDAO.send(OperationTypes.CREATE, DocumentTypes.MSG_DOC_TYPE, doc);
     }
 
     @Override
     public void addEventExecution(EventExecution eventExecution) {
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
-        producerDAO.send( RecordTypeConstants.EVENT_DOC_TYPE, id);
+        producerDAO.send(OperationTypes.CREATE, DocumentTypes.EVENT_DOC_TYPE, id);
     }
 
     @Override
@@ -67,7 +68,14 @@ public class ElasticSearchRestKafkaDAOV5 extends ElasticSearchRestDAOV5 {
         if (taskExecLogs.isEmpty()) {
             return;
         }
-        taskExecLogs.forEach(log -> producerDAO.send(RecordTypeConstants.LOG_DOC_TYPE , taskExecLogs));
+        taskExecLogs.forEach(log -> producerDAO.send(OperationTypes.CREATE, DocumentTypes.LOG_DOC_TYPE , taskExecLogs));
     }
+
+    @Override
+    public void removeWorkflow(String workflowId) {
+        producerDAO.send(OperationTypes.DELETE, DocumentTypes.WORKFLOW_DOC_TYPE, workflowId);
+    }
+
+
 
 }

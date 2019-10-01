@@ -3,13 +3,17 @@ package com.netflix.conductor.dao.kafka.index.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Singleton;
 import com.netflix.conductor.annotations.Trace;
+import com.netflix.conductor.common.metadata.events.EventExecution;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.WorkflowSummary;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.kafka.index.constants.ConsumerConstants;
 import com.netflix.conductor.dao.kafka.index.data.Record;
 import com.netflix.conductor.dao.kafka.index.mapper.MapperFactory;
-import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
+import com.netflix.conductor.dao.kafka.index.utils.DocumentTypes;
+import com.netflix.conductor.dao.kafka.index.utils.OperationTypes;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -25,10 +29,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
 import java.util.Collections;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 @Singleton
@@ -43,7 +44,7 @@ public class KafkaConsumer {
     private Consumer consumer;
 
     @Inject private String topic;
-    ExecutorService scheduler;
+    ScheduledExecutorService scheduler;
     private IndexDAO indexDAO;
     private ElasticSearchConfiguration elasticSearchConfiguration;
 
@@ -70,38 +71,46 @@ public class KafkaConsumer {
 
         consumer.subscribe(Collections.singleton(this.topic));
 
-        scheduler = Executors.newSingleThreadExecutor();
+        scheduler = Executors.newScheduledThreadPool(elasticSearchConfiguration.getKafkaConsumerPoolSize());
         try {
-            scheduler.submit(() -> consume());
+            scheduler.scheduleAtFixedRate(() -> consume(), 0, 10, TimeUnit.MILLISECONDS);
         } catch(RejectedExecutionException e) {
             logger.error("Task Rejected in scheduler Exception {}", e);
         }
     }
 
     public void consume() {
-        while(true) {
-            try {
-                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(this.pollInterval));
-                records.forEach(record -> consumeData(record.value()));
-            } catch (KafkaException e) {
-                logger.error("kafka KafkaConsumer message polling failed.", e);
-            }
+        try {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(this.pollInterval));
+            records.forEach(record -> consumeData(record.value()));
+        } catch (KafkaException e) {
+            logger.error("kafka KafkaConsumer message polling failed.", e);
         }
     }
 
     public void consumeData(String data) {
         try {
             Record d = om.readValue(data, Record.class);
-            byte[] payload;
             long start = System.currentTimeMillis();
-            switch (d.getType()) {
-                case RecordTypeConstants.WORKFLOW_DOC_TYPE:
-                    payload = om.writeValueAsBytes(d.getPayload());
-                    consumeWorkflow(payload, om.readTree(data).get("workflowId").asText());
+            switch (d.getDocumentType()) {
+                case DocumentTypes.WORKFLOW_DOC_TYPE:
+                    if (d.getOperationType().equals(OperationTypes.DELETE)) {
+                        removeWorkflow(d.getPayload());
+                    } else {
+                        consumeWorkflow(d.getPayload(), om.readTree(data).get("workflowId").asText());
+                    }
                     break;
-                case RecordTypeConstants.TASK_DOC_TYPE:
-                    payload = om.writeValueAsBytes(d.getPayload());
-                    consumeTask(payload, om.readTree(data).get("taskId").asText());
+                case DocumentTypes.TASK_DOC_TYPE:
+                    consumeTask(d.getPayload(), om.readTree(data).get("taskId").asText());
+                    break;
+                case DocumentTypes.LOG_DOC_TYPE:
+                    consumeTaskLog(d.getPayload());
+                    break;
+                case DocumentTypes.EVENT_DOC_TYPE:
+                    consumeEventExecution(d.getPayload());
+                    break;
+                case DocumentTypes.MSG_DOC_TYPE:
+                    consumeMessage(d.getPayload(), om.readTree(data).get("queue").asText());
                     break;
                 default:
                     break;
@@ -113,9 +122,19 @@ public class KafkaConsumer {
         }
     }
 
-    private void consumeWorkflow(byte[] doc, String id) {
+    private void removeWorkflow(Object data) {
         try {
-            WorkflowSummary workflowSummary  = om.readValue(new String(doc), WorkflowSummary.class);
+            indexDAO.removeWorkflowId(om.writeValueAsString(data));
+        } catch (Exception e) {
+            // JSON is not formatted. Workflow details in UI won't be available.
+            logger.error("Failed to remove workflow: {}", data, e);
+        }
+    }
+
+    private void consumeWorkflow(Object data, String id) {
+        try {
+            byte[] payload = om.writeValueAsBytes(data);
+            WorkflowSummary workflowSummary  = om.readValue(new String(payload), WorkflowSummary.class);
             indexDAO.asyncIndexWorkflowSummary(workflowSummary);
         } catch (Exception e) {
             // JSON is not formatted. Workflow details in UI won't be available.
@@ -124,13 +143,47 @@ public class KafkaConsumer {
     }
 
 
-    private void consumeTask(byte[] doc, String id) {
+    private void consumeTask(Object data, String id) {
         try {
-            TaskSummary taskSummary  = om.readValue(new String(doc), TaskSummary.class);
+            byte[] payload = om.writeValueAsBytes(data);
+            TaskSummary taskSummary  = om.readValue(new String(payload), TaskSummary.class);
             indexDAO.asyncIndexTaskSummary(taskSummary);
         } catch (Exception e) {
             // JSON is not formatted. Workflow details in UI won't be available.
             logger.error("Failed to index task: {}", id, e);
+        }
+    }
+
+    private void consumeTaskLog(Object data) {
+        try {
+            byte[] payload = om.writeValueAsBytes(data);
+            TaskExecLog log  = om.readValue(new String(payload), TaskExecLog.class);
+            indexDAO.asyncAddTaskExecutionLog(log);
+        } catch (Exception e) {
+            // JSON is not formatted. Workflow details in UI won't be available.
+            logger.error("Failed to index task log: {}", data, e);
+        }
+    }
+
+    private void consumeEventExecution(Object data) {
+        try {
+            byte[] payload = om.writeValueAsBytes(data);
+            EventExecution log  = om.readValue(new String(payload), EventExecution.class);
+            indexDAO.asyncIndexEventExecution(log);
+        } catch (Exception e) {
+            // JSON is not formatted. Workflow details in UI won't be available.
+            logger.error("Failed to index event execution: {}", data, e);
+        }
+    }
+
+    private void consumeMessage(Object data, String queue) {
+        try {
+            byte[] payload = om.writeValueAsBytes(data);
+            Message message  = om.readValue(new String(payload), Message.class);
+            indexDAO.indexMessage(queue, message);
+        } catch (Exception e) {
+            // JSON is not formatted. Workflow details in UI won't be available.
+            logger.error("Failed to index message: {}", data, e);
         }
     }
 

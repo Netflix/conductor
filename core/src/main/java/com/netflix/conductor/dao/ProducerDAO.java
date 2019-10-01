@@ -22,6 +22,6 @@ package com.netflix.conductor.dao;
  */
 public interface ProducerDAO {
 
-    void send(String type, Object data);
+    void send(String operationType, String documentType, Object data);
 
 }
