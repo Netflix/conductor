@@ -20,6 +20,8 @@ package com.netflix.conductor.tests.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
+import com.netflix.conductor.common.metadata.tasks.PollData;
+import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -45,7 +47,7 @@ public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
     private static final String WORKFLOW_INSTANCE_ID_PLACEHOLDER = "WORKFLOW_INSTANCE_ID";
 
     @Inject
-    private ExecutionDAO executionDAO;
+    private ExecutionDAO<Task, Workflow> executionDAO;
 
     @Inject
     private ObjectMapper objectMapper;
@@ -54,7 +56,7 @@ public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
     private Configuration configuration;
 
     @Inject
-    ExecutionDAOFacade executionDAOFacade;
+    ExecutionDAOFacade<Task, Workflow, PollData> executionDAOFacade;
 
     @Override
     public String startOrLoadWorkflowExecution(String snapshotResourceName, String workflowName,

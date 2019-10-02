@@ -1,5 +1,6 @@
 package com.netflix.conductor.grpc.server.service;
 
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.execution.ApplicationException;
@@ -26,10 +27,10 @@ public class MetadataServiceImpl extends MetadataServiceGrpc.MetadataServiceImpl
     private static final ProtoMapper PROTO_MAPPER = ProtoMapper.INSTANCE;
     private static final GRPCHelper GRPC_HELPER = new GRPCHelper(LOGGER);
 
-    private final MetadataService service;
+    private final MetadataService<TaskDef, WorkflowDef, EventHandler> service;
 
     @Inject
-    public MetadataServiceImpl(MetadataService service) {
+    public MetadataServiceImpl(MetadataService<TaskDef, WorkflowDef, EventHandler> service) {
         this.service = service;
     }
 

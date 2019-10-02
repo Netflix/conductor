@@ -15,10 +15,17 @@ package com.netflix.conductor.tests.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.TypeLiteral;
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
 import com.netflix.conductor.core.execution.WorkflowStatusListenerStub;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -33,7 +40,6 @@ import com.netflix.conductor.server.LocalRedisModule;
 import com.netflix.conductor.service.MetadataService;
 import com.netflix.conductor.service.MetadataServiceImpl;
 import com.netflix.dyno.queues.redis.RedisQueues;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -59,14 +65,14 @@ public class TestModule extends AbstractModule {
         install(new LocalRedisModule());
         bind(RedisQueues.class).toProvider(RedisQueuesProvider.class);
 
-        bind(MetadataDAO.class).to(RedisMetadataDAO.class);
-        bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
-        bind(QueueDAO.class).to(DynoQueueDAO.class);
+        bind(new TypeLiteral<MetadataDAO<TaskDef, WorkflowDef, EventHandler>>() {}).to(RedisMetadataDAO.class);
+        bind(new TypeLiteral<ExecutionDAO<Task, Workflow>>() {}).to(RedisExecutionDAO.class);
+        bind(new TypeLiteral<QueueDAO<Message>>() {}).to(DynoQueueDAO.class);
         bind(IndexDAO.class).to(MockIndexDAO.class);
 
         bind(WorkflowStatusListener.class).to(WorkflowStatusListenerStub.class);
 
-        bind(MetadataService.class).to(MetadataServiceImpl.class);
+        bind(new TypeLiteral<MetadataService<TaskDef, WorkflowDef, EventHandler>>() {}).to(MetadataServiceImpl.class);
 
         install(new CoreModule());
         bind(UserTask.class).asEagerSingleton();

@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.dao;
 
+import com.google.inject.Provides;
 import com.netflix.conductor.core.events.queue.Message;
 
 import java.util.List;
@@ -87,7 +88,8 @@ public interface QueueDAO <M extends Message> {
 	 * @param timeout timeout in milliseconds
 	 * @return list of elements from the named queue
 	 */
-	List<M> pollMessages(String queueName, int count, int timeout);
+
+	@Provides List<M> pollMessages(String queueName, int count, int timeout);
 	
 	/**
 	 * 

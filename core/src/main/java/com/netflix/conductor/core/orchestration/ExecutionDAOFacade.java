@@ -48,7 +48,7 @@ public class ExecutionDAOFacade <T extends Task, W extends Workflow, P extends P
     private static final String ARCHIVED_FIELD = "archived";
     private static final String RAW_JSON_FIELD = "rawJSON";
 
-    private final ExecutionDAO executionDAO;
+    private final ExecutionDAO<T, W> executionDAO;
     private final IndexDAO indexDAO;
     private final ObjectMapper objectMapper;
     private final Configuration config;
@@ -56,7 +56,7 @@ public class ExecutionDAOFacade <T extends Task, W extends Workflow, P extends P
     private final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
 
     @Inject
-    public ExecutionDAOFacade(ExecutionDAO executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper, Configuration config) {
+    public ExecutionDAOFacade(ExecutionDAO<T, W> executionDAO, IndexDAO indexDAO, ObjectMapper objectMapper, Configuration config) {
         this.executionDAO = executionDAO;
         this.indexDAO = indexDAO;
         this.objectMapper = objectMapper;
@@ -102,7 +102,7 @@ public class ExecutionDAOFacade <T extends Task, W extends Workflow, P extends P
      *                              </ul>
      */
     public W getWorkflowById(String workflowId, boolean includeTasks) {
-        W workflow = (W)executionDAO.getWorkflow(workflowId, includeTasks);
+        W workflow = executionDAO.getWorkflow(workflowId, includeTasks);
         if (workflow == null) {
             LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO", workflowId);
             String json = indexDAO.get(workflowId, RAW_JSON_FIELD);

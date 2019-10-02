@@ -4,8 +4,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.netflix.conductor.annotations.Service;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
@@ -44,7 +46,7 @@ import static org.mockito.Mockito.when;
 public class MetadataMapperServiceTest {
 
     @Mock
-    private MetadataDAO metadataDAO;
+    private MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
 
     private MetadataMapperService metadataMapperService;
 
@@ -56,7 +58,7 @@ public class MetadataMapperServiceTest {
                         new AbstractModule() {
                             @Override
                             protected void configure() {
-                                bind(MetadataDAO.class).toInstance(metadataDAO);
+                                bind(new TypeLiteral<MetadataDAO<TaskDef, WorkflowDef, EventHandler>>() {}).toInstance(metadataDAO);
                                 install(new ValidationModule());
                                 bindInterceptor(Matchers.any(), Matchers.annotatedWith(Service.class), new ServiceInterceptor(getProvider(Validator.class)));
                             }

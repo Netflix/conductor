@@ -15,18 +15,33 @@ package com.netflix.conductor.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.netflix.archaius.guice.ArchaiusModule;
 import com.netflix.conductor.annotations.Service;
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
 import com.netflix.conductor.core.config.ValidationModule;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
+import com.netflix.conductor.dao.ExecutionDAO;
+import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
+import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
+import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
 import com.netflix.conductor.dyno.SystemPropertiesDynomiteConfiguration;
 import com.netflix.conductor.grpc.server.GRPCModule;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
 import com.netflix.conductor.jetty.server.JettyModule;
+import com.netflix.conductor.service.MetadataService;
+import com.netflix.conductor.service.MetadataServiceImpl;
 import com.netflix.runtime.health.guice.HealthModule;
 
 import javax.validation.Validator;
@@ -51,5 +66,9 @@ public class ServerModule extends AbstractModule {
         bind(Configuration.class).to(SystemPropertiesDynomiteConfiguration.class);
         bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Scopes.SINGLETON);
         bind(WorkflowSweeper.class).asEagerSingleton();
+        bind(new TypeLiteral<MetadataService<TaskDef, WorkflowDef, EventHandler>>() {}).to(MetadataServiceImpl.class);
+        bind(new TypeLiteral<QueueDAO<Message>>() {}).to(DynoQueueDAO.class);
+        bind(new TypeLiteral<ExecutionDAO<Task, Workflow>>() {}).to(RedisExecutionDAO.class);
+        bind(new TypeLiteral<MetadataDAO<TaskDef, WorkflowDef, EventHandler>>() {}).to(RedisMetadataDAO.class);
     }
 }

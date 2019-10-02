@@ -1,7 +1,9 @@
 package com.netflix.conductor.core.execution.tasks;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.service.MetadataService;
@@ -22,12 +24,12 @@ import java.util.stream.Collectors;
 public class IsolatedTaskQueueProducer {
 
 	private static Logger logger = LoggerFactory.getLogger(IsolatedTaskQueueProducer.class);
-	private MetadataService metadataService;
+	private MetadataService<TaskDef, WorkflowDef, EventHandler> metadataService;
 	private int pollingTimeOut;
 
 
 	@Inject
-	public IsolatedTaskQueueProducer(MetadataService metadataService, Configuration config) {
+	public IsolatedTaskQueueProducer(MetadataService<TaskDef, WorkflowDef, EventHandler> metadataService, Configuration config) {
 
 		this.metadataService = metadataService;
 		boolean listenForIsolationGroups = config.getBooleanProperty("workflow.isolated.system.task.enable", false);

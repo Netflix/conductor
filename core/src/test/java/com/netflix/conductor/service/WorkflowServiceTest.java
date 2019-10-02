@@ -20,6 +20,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.matcher.Matchers;
 import com.netflix.conductor.annotations.Service;
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
@@ -32,6 +34,7 @@ import com.netflix.conductor.core.config.ValidationModule;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,9 +68,9 @@ public class WorkflowServiceTest {
 
     private ExecutionService mockExecutionService;
 
-    private MetadataService mockMetadata;
+    private MetadataService<TaskDef, WorkflowDef, EventHandler> mockMetadata;
 
-    private WorkflowService workflowService;
+    private WorkflowService<Workflow, WorkflowDef, WorkflowSummary> workflowService;
 
     @Before
     public void before() {

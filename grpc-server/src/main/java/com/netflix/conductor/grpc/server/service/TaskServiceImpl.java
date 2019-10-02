@@ -1,8 +1,10 @@
 package com.netflix.conductor.grpc.server.service;
 
+import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.grpc.ProtoMapper;
 import com.netflix.conductor.grpc.TaskServiceGrpc;
 import com.netflix.conductor.grpc.TaskServicePb;
@@ -27,12 +29,12 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
     private static final int POLL_TIMEOUT_MS = 100;
     private static final int MAX_POLL_TIMEOUT_MS = 5000;
 
-    private final TaskService taskService;
+    private final TaskService<Task, PollData, TaskSummary> taskService;
 
     private final ExecutionService executionService;
 
     @Inject
-    public TaskServiceImpl(ExecutionService executionService, TaskService taskService) {
+    public TaskServiceImpl(ExecutionService executionService, TaskService<Task, PollData, TaskSummary> taskService) {
         this.executionService = executionService;
         this.taskService = taskService;
     }

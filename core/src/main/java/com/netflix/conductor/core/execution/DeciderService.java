@@ -22,6 +22,7 @@ import static com.netflix.conductor.common.metadata.tasks.Task.Status.SKIPPED;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.TIMED_OUT;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -30,6 +31,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.Operation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
 import com.netflix.conductor.common.utils.TaskUtils;
@@ -68,17 +71,17 @@ public class DeciderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeciderService.class);
 
-    private final QueueDAO queueDAO;
+    private final QueueDAO<Message> queueDAO;
     private final ParametersUtils parametersUtils;
     private final ExternalPayloadStorageUtils externalPayloadStorageUtils;
-    private final MetadataDAO metadataDAO;
+    private final MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
 
     private final Map<String, TaskMapper> taskMappers;
 
     private final Predicate<Task> isNonPendingTask = task -> !task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted();
 
     @Inject
-    public DeciderService(ParametersUtils parametersUtils, QueueDAO queueDAO, MetadataDAO metadataDAO,
+    public DeciderService(ParametersUtils parametersUtils, QueueDAO<Message> queueDAO, MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO,
                           ExternalPayloadStorageUtils externalPayloadStorageUtils,
                           @Named("TaskMappers") Map<String, TaskMapper> taskMappers) {
         this.queueDAO = queueDAO;

@@ -100,11 +100,11 @@ public class WorkflowExecutor {
     @Inject
     public WorkflowExecutor(
             DeciderService deciderService,
-            MetadataDAO metadataDAO,
-            QueueDAO queueDAO,
+            MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO,
+            QueueDAO<Message> queueDAO,
             MetadataMapperService metadataMapperService,
             WorkflowStatusListener workflowStatusListener,
-            ExecutionDAOFacade executionDAOFacade,
+            ExecutionDAOFacade<Task, Workflow, PollData> executionDAOFacade,
             ExternalPayloadStorageUtils externalPayloadStorageUtils,
             Configuration config
     ) {

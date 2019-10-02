@@ -23,11 +23,15 @@ import com.google.inject.multibindings.MultibindingsScanner;
 import com.google.inject.multibindings.ProvidesIntoMap;
 import com.google.inject.multibindings.StringMapKey;
 import com.google.inject.name.Named;
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.events.ActionProcessor;
 import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.SimpleActionProcessor;
 import com.netflix.conductor.core.events.SimpleEventProcessor;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
@@ -115,7 +119,7 @@ public class CoreModule extends AbstractModule {
     @StringMapKey(CONDUCTOR_QUALIFIER)
     @Singleton
     @Named(EVENT_QUEUE_PROVIDERS_QUALIFIER)
-    public EventQueueProvider getDynoEventQueueProvider(QueueDAO queueDAO, Configuration configuration) {
+    public EventQueueProvider getDynoEventQueueProvider(QueueDAO<Message> queueDAO, Configuration configuration) {
         return new DynoEventQueueProvider(queueDAO, configuration);
     }
 
@@ -131,7 +135,7 @@ public class CoreModule extends AbstractModule {
     @StringMapKey(TASK_TYPE_DO_WHILE)
     @Singleton
     @Named(TASK_MAPPERS_QUALIFIER)
-    public TaskMapper getDoWhileTaskMapper(MetadataDAO metadataDAO) {
+    public TaskMapper getDoWhileTaskMapper(MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO) {
         return new DoWhileTaskMapper(metadataDAO);
     }
 
@@ -139,7 +143,7 @@ public class CoreModule extends AbstractModule {
     @StringMapKey(TASK_TYPE_DYNAMIC)
     @Singleton
     @Named(TASK_MAPPERS_QUALIFIER)
-    public TaskMapper getDynamicTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
+    public TaskMapper getDynamicTaskMapper(ParametersUtils parametersUtils, MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO) {
         return new DynamicTaskMapper(parametersUtils, metadataDAO);
     }
 
@@ -156,7 +160,7 @@ public class CoreModule extends AbstractModule {
     @StringMapKey(TASK_TYPE_FORK_JOIN_DYNAMIC)
     @Singleton
     @Named(TASK_MAPPERS_QUALIFIER)
-    public TaskMapper getForkJoinDynamicTaskMapper(ParametersUtils parametersUtils, ObjectMapper objectMapper, MetadataDAO metadataDAO) {
+    public TaskMapper getForkJoinDynamicTaskMapper(ParametersUtils parametersUtils, ObjectMapper objectMapper, MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO) {
         return new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper, metadataDAO);
     }
 
@@ -180,7 +184,7 @@ public class CoreModule extends AbstractModule {
     @StringMapKey(TASK_TYPE_SUB_WORKFLOW)
     @Singleton
     @Named(TASK_MAPPERS_QUALIFIER)
-    public TaskMapper getSubWorkflowTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
+    public TaskMapper getSubWorkflowTaskMapper(ParametersUtils parametersUtils, MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO) {
         return new SubWorkflowTaskMapper(parametersUtils, metadataDAO);
     }
 
@@ -196,7 +200,7 @@ public class CoreModule extends AbstractModule {
     @StringMapKey(TASK_TYPE_USER_DEFINED)
     @Singleton
     @Named(TASK_MAPPERS_QUALIFIER)
-    public TaskMapper getUserDefinedTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
+    public TaskMapper getUserDefinedTaskMapper(ParametersUtils parametersUtils, MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO) {
         return new UserDefinedTaskMapper(parametersUtils, metadataDAO);
     }
 
@@ -212,7 +216,7 @@ public class CoreModule extends AbstractModule {
     @StringMapKey(TASK_TYPE_HTTP)
     @Singleton
     @Named(TASK_MAPPERS_QUALIFIER)
-    public TaskMapper getHTTPTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
+    public TaskMapper getHTTPTaskMapper(ParametersUtils parametersUtils, MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO) {
         return new HTTPTaskMapper(parametersUtils, metadataDAO);
     }
 
@@ -244,7 +248,7 @@ public class CoreModule extends AbstractModule {
     @StringMapKey(TASK_TYPE_KAFKA_PUBLISH)
     @Singleton
     @Named(TASK_MAPPERS_QUALIFIER)
-    public TaskMapper getKafkaPublishTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
+    public TaskMapper getKafkaPublishTaskMapper(ParametersUtils parametersUtils, MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO) {
         return new KafkaPublishTaskMapper(parametersUtils, metadataDAO);
     }
 

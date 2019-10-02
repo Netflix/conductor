@@ -56,7 +56,7 @@ public class QueueManager {
 
 	private static Logger logger = LoggerFactory.getLogger(QueueManager.class);
 	
-	private Map<Task.Status, ObservableQueue> queues;
+	private Map<Task.Status, ObservableQueue<Message>> queues;
 	
 	private ExecutionService executionService;
 	
@@ -65,12 +65,12 @@ public class QueueManager {
 	private ObjectMapper objectMapper = new ObjectMapper();
 	
 	@Inject
-	public QueueManager(Map<Task.Status, ObservableQueue> queues, ExecutionService executionService) {
+	public QueueManager(Map<Task.Status, ObservableQueue<Message>> queues, ExecutionService executionService) {
 		this.queues = queues;
 		this.executionService = executionService;
 		queues.entrySet().forEach(e -> {
 			Status status = e.getKey();
-			ObservableQueue queue = e.getValue();
+			ObservableQueue<Message> queue = e.getValue();
 			startMonitor(status, queue);
 		});
 	}

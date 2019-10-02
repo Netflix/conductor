@@ -54,7 +54,7 @@ public class MetadataMapperService {
     private final MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
 
     @Inject
-    public MetadataMapperService(MetadataDAO metadataDAO) {
+    public MetadataMapperService(MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO) {
         this.metadataDAO = metadataDAO;
     }
 

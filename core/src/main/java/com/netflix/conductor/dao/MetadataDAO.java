@@ -18,6 +18,7 @@
  */
 package com.netflix.conductor.dao;
 
+import com.google.inject.Provides;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -35,24 +36,28 @@ public interface MetadataDAO <T extends TaskDef, W extends WorkflowDef, E extend
      * @param taskDef task definition to be created
      * @return name of the task definition
      */
-    String createTaskDef(T taskDef);
+
+    @Provides String createTaskDef(T taskDef);
 
     /**
      * @param taskDef task definition to be updated.
      * @return name of the task definition
      */
-    String updateTaskDef(T taskDef);
+
+    @Provides String updateTaskDef(T taskDef);
 
     /**
      * @param name Name of the task
      * @return Task Definition
      */
-    T getTaskDef(String name);
+
+    @Provides T getTaskDef(String name);
 
     /**
      * @return All the task definitions
      */
-    List<T> getAllTaskDefs();
+
+    @Provides List<T> getAllTaskDefs();
 
     /**
      * @param name Name of the task
@@ -67,7 +72,8 @@ public interface MetadataDAO <T extends TaskDef, W extends WorkflowDef, E extend
     /**
      * @param def workflow definition
      */
-    void update(W def);
+
+    @Provides void update(W def);
 
     /**
      * @param name Name of the workflow

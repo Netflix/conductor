@@ -3,6 +3,7 @@ package com.netflix.conductor.service;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.netflix.conductor.annotations.Service;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -35,7 +36,7 @@ public class MetadataServiceTest{
 
     private MetadataServiceImpl metadataService;
 
-    private MetadataDAO metadataDAO;
+    private MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
 
     private EventQueues eventQueues;
 
@@ -50,7 +51,7 @@ public class MetadataServiceTest{
                             @Override
                             protected void configure() {
 
-                                bind(MetadataDAO.class).toInstance(metadataDAO);
+                                bind(new TypeLiteral<MetadataDAO<TaskDef, WorkflowDef, EventHandler>>() {}).toInstance(metadataDAO);
                                 bind(EventQueues.class).toInstance(eventQueues);
 
                                 install(new ValidationModule());

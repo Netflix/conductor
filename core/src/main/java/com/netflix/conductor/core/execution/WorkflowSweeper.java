@@ -20,6 +20,7 @@ package com.netflix.conductor.core.execution;
 
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
@@ -50,14 +51,14 @@ public class WorkflowSweeper {
 
 	private Configuration config;
 
-	private QueueDAO queueDAO;
+	private QueueDAO<Message> queueDAO;
 
 	private int executorThreadPoolSize;
 
 	private static final String className = WorkflowSweeper.class.getSimpleName();
 
 	@Inject
-	public WorkflowSweeper(WorkflowExecutor workflowExecutor, Configuration config, QueueDAO queueDAO) {
+	public WorkflowSweeper(WorkflowExecutor workflowExecutor, Configuration config, QueueDAO<Message> queueDAO) {
 		this.config = config;
 		this.queueDAO = queueDAO;
 		this.executorThreadPoolSize = config.getIntProperty("workflow.sweeper.thread.count", 5);

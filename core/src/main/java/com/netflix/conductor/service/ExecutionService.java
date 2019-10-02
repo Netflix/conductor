@@ -17,9 +17,11 @@ package com.netflix.conductor.service;
 
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
+import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -72,8 +74,8 @@ public class ExecutionService {
 
     private final WorkflowExecutor workflowExecutor;
     private final ExecutionDAOFacade<Task, Workflow, PollData> executionDAOFacade;
-    private final MetadataDAO metadataDAO;
-    private final QueueDAO queueDAO;
+    private final MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
+    private final QueueDAO<Message> queueDAO;
 	private final ExternalPayloadStorage externalPayloadStorage;
 
     private final int taskRequeueTimeout;
@@ -87,9 +89,9 @@ public class ExecutionService {
 
 	@Inject
 	public ExecutionService(WorkflowExecutor workflowExecutor,
-				ExecutionDAOFacade executionDAOFacade,
-				MetadataDAO metadataDAO,
-				QueueDAO queueDAO,
+				ExecutionDAOFacade<Task, Workflow, PollData> executionDAOFacade,
+				MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO,
+				QueueDAO<Message> queueDAO,
 				Configuration config,
 				ExternalPayloadStorage externalPayloadStorage) {
 		this.workflowExecutor = workflowExecutor;

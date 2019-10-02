@@ -20,7 +20,9 @@ package com.netflix.conductor.core.execution.tasks;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Provides;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.QueueDAO;
@@ -54,7 +56,7 @@ public class SystemTaskWorkerCoordinator {
 
 	private static final Logger logger = LoggerFactory.getLogger(SystemTaskWorkerCoordinator.class);
 
-	private QueueDAO queueDAO;
+	private QueueDAO<Message> queueDAO;
 
 	private WorkflowExecutor workflowExecutor;
 
@@ -89,7 +91,7 @@ public class SystemTaskWorkerCoordinator {
 	private static final String className = SystemTaskWorkerCoordinator.class.getName();
 
 	@Inject
-	public SystemTaskWorkerCoordinator(QueueDAO queueDAO, WorkflowExecutor workflowExecutor, Configuration config) {
+	public SystemTaskWorkerCoordinator(QueueDAO<Message> queueDAO, WorkflowExecutor workflowExecutor, Configuration config) {
 		this.queueDAO = queueDAO;
 		this.workflowExecutor = workflowExecutor;
 		this.config = config;

@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.service;
 
+import com.google.inject.Provides;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -47,13 +48,13 @@ public interface MetadataService <T extends TaskDef, W extends WorkflowDef, E ex
     /**
      * @return List of all the registered tasks
      */
-    List<T> getTaskDefs();
+    @Provides List<T> getTaskDefs();
 
     /**
      * @param taskType Task to retrieve
      * @return Task Definition
      */
-    T getTaskDef(@NotEmpty(message="TaskType cannot be null or empty") String taskType);
+    @Provides T getTaskDef(@NotEmpty(message="TaskType cannot be null or empty") String taskType);
 
     /**
      * @param def Workflow definition to be updated

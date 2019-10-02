@@ -75,7 +75,7 @@ public class SimpleEventProcessor implements EventProcessor {
     private final JsonUtils jsonUtils;
 
     @Inject
-    public SimpleEventProcessor(ExecutionService executionService, MetadataService metadataService,
+    public SimpleEventProcessor(ExecutionService executionService, MetadataService<TaskDef, WorkflowDef, EventHandler> metadataService,
                                 ActionProcessor actionProcessor, EventQueues eventQueues, JsonUtils jsonUtils, Configuration config) {
         this.executionService = executionService;
         this.metadataService = metadataService;
@@ -119,9 +119,9 @@ public class SimpleEventProcessor implements EventProcessor {
                     .map(EventHandler::getEvent)
                     .collect(Collectors.toSet());
 
-            List<ObservableQueue> createdQueues = new LinkedList<>();
+            List<ObservableQueue<Message>> createdQueues = new LinkedList<>();
             events.forEach(event -> eventToQueueMap.computeIfAbsent(event, s -> {
-                        ObservableQueue q = eventQueues.getQueue(event);
+                        ObservableQueue<Message> q = eventQueues.getQueue(event);
                         createdQueues.add(q);
                         return q;
                     }

@@ -38,14 +38,14 @@ import java.util.Collections;
 public class DynoQueueStatusPublisher implements WorkflowStatusListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynoQueueStatusPublisher.class);
-    private final QueueDAO queueDAO;
+    private final QueueDAO<Message> queueDAO;
     private final ObjectMapper objectMapper;
     private final Configuration config;
     private final String successStatusQueue;
     private final String failureStatusQueue;
 
     @Inject
-    public DynoQueueStatusPublisher(QueueDAO queueDAO, ObjectMapper objectMapper, Configuration config) {
+    public DynoQueueStatusPublisher(QueueDAO<Message>  queueDAO, ObjectMapper objectMapper, Configuration config) {
         this.queueDAO = queueDAO;
         this.objectMapper = objectMapper;
         this.config = config;

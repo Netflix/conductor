@@ -38,11 +38,11 @@ import java.util.Optional;
 @Singleton
 @Trace
 public class MetadataServiceImpl implements MetadataService <TaskDef, WorkflowDef, EventHandler> {
-    private final MetadataDAO metadataDAO;
+    private final MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO;
     private final EventQueues eventQueues;
 
     @Inject
-    public MetadataServiceImpl(MetadataDAO metadataDAO, EventQueues eventQueues) {
+    public MetadataServiceImpl(MetadataDAO<TaskDef, WorkflowDef, EventHandler> metadataDAO, EventQueues eventQueues) {
         this.metadataDAO = metadataDAO;
         this.eventQueues = eventQueues;
 

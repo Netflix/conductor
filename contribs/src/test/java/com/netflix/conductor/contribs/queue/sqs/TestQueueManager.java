@@ -135,7 +135,7 @@ public class TestQueueManager {
 
 	@Test
 	public void test() throws Exception {
-		Map<Status, ObservableQueue> queues = new HashMap<>();
+		Map<Status, ObservableQueue<Message>> queues = new HashMap<>();
 		queues.put(Status.COMPLETED, queue);
 		QueueManager qm = new QueueManager(queues, es);
 		qm.updateByTaskRefName("v_0", "t0", new HashMap<>(), Status.COMPLETED);
@@ -146,7 +146,7 @@ public class TestQueueManager {
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testFailure() throws Exception {
-		Map<Status, ObservableQueue> queues = new HashMap<>();
+		Map<Status, ObservableQueue<Message>> queues = new HashMap<>();
 		queues.put(Status.COMPLETED, queue);
 		QueueManager qm = new QueueManager(queues, es);
 		qm.updateByTaskRefName("v_1", "t1", new HashMap<>(), Status.CANCELED);
@@ -155,7 +155,7 @@ public class TestQueueManager {
 
 	@Test
 	public void testWithTaskId() throws Exception {
-		Map<Status, ObservableQueue> queues = new HashMap<>();
+		Map<Status, ObservableQueue<Message>> queues = new HashMap<>();
 		queues.put(Status.COMPLETED, queue);
 		QueueManager qm = new QueueManager(queues, es);
 		qm.updateByTaskId("v_2", "t2", new HashMap<>(), Status.COMPLETED);

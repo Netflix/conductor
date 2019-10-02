@@ -17,6 +17,7 @@ package com.netflix.conductor.grpc.server.service;
 
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
@@ -45,11 +46,11 @@ public class WorkflowServiceImpl extends WorkflowServiceGrpc.WorkflowServiceImpl
     private static final ProtoMapper PROTO_MAPPER = ProtoMapper.INSTANCE;
     private static final GRPCHelper GRPC_HELPER = new GRPCHelper(LOGGER);
 
-    private final WorkflowService workflowService;
+    private final WorkflowService<Workflow, WorkflowDef, WorkflowSummary> workflowService;
     private final int maxSearchSize;
 
     @Inject
-    public WorkflowServiceImpl(WorkflowService workflowService, Configuration config) {
+    public WorkflowServiceImpl(WorkflowService<Workflow, WorkflowDef, WorkflowSummary> workflowService, Configuration config) {
         this.workflowService = workflowService;
         this.maxSearchSize = config.getIntProperty("workflow.max.search.size", 5_000);
     }
