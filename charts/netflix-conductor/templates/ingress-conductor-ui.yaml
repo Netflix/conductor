@@ -1,0 +1,31 @@
+{{- if .Values.ingress.ui.enabled -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "netflix-conductor.name" . }}-ui
+  labels:
+    app: {{ include "netflix-conductor.name" . }}
+    chart: {{ include "netflix-conductor.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: ui
+  annotations:
+  {{- range $key, $value := .Values.ingress.ui.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+spec:
+{{- if .Values.ingress.ui.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.ui.host }}
+      secretName: {{ .Values.ingress.ui.tls.secretName }}
+{{- end }}
+  rules:
+    - http:
+        paths:
+          - path: {{ .Values.ingress.ui.path }}
+            backend:
+              serviceName: {{ template "netflix-conductor.name" . }}-ui
+              servicePort: ui
+      host: {{ .Values.ingress.ui.host }}
+{{- end }}

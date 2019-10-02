@@ -24,13 +24,26 @@ pipeline {
                     sh "echo **************** PREVIEW_VERSION: $PREVIEW_VERSION , PREVIEW_NAMESPACE: $PREVIEW_NAMESPACE, HELM_RELEASE: $HELM_RELEASE"
                     sh "echo $PREVIEW_VERSION > PREVIEW_VERSION"
                     sh "skaffold version"
+                    sh "./gradlew build -x test -x :conductor-client:findbugsMain "
+
                     sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml"
                     sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-ui.yaml"
 
                     script {
                         def buildVersion = readFile "${env.WORKSPACE}/PREVIEW_VERSION"
-                        currentBuild.description = "$APP_NAME.$PREVIEW_NAMESPACE"
+                        currentBuild.description = "${DOCKER_REGISTRY}/netflixconductor:server-${PREVIEW_VERSION}"
+                        currentBuild.displayName = "${DOCKER_REGISTRY}/netflixconductor:server-${PREVIEW_VERSION}" + "\n ${DOCKER_REGISTRY}/netflixconductor:ui-${PREVIEW_VERSION}"
                     }
+
+                    dir('charts/preview') {
+                      sh "make preview"
+                      sh "jx preview --app $APP_NAME --namespace=$PREVIEW_NAMESPACE --dir ../.."
+                      sh "make print"
+                      sh "sleep 60"
+                      sh "kubectl describe pods -n=$PREVIEW_NAMESPACE"
+                      sh "kubectl logs -n $PREVIEW_NAMESPACE  deployment/conductor-server --all-containers=true"
+                    }
+
                 }
             }
         }

@@ -1,0 +1,99 @@
+# Default values for netflix-conductor.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: "conductor"
+fullnameOverride: "netflix-conductor"
+
+server:
+  repository: kayosportsau/netflixconductor
+  tag: server-2019.0.3
+  pullPolicy: IfNotPresent
+  replicaCount: 1
+  # nodeSelector: {}
+  # tolerations: []
+  # affinity: {}
+  image:
+    pullSecret:
+  # extraVolumeMounts: []
+  # extraVolumes: []
+  resources: {}
+    # limits:
+    # cpu: 100m
+    # memory: 128Mi
+    # requests:
+    # cpu: 100m
+    # memory: 128Mi
+  service:
+    type: ClusterIP
+  jvmStartupOpts: "  -Xms1g -Xmx1g  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+  appStartupOpts: ""
+  loadSamples: false
+  newrelic:
+    enabled: false
+    licenseKey: ""
+    tracing:
+      enabled: false
+ui:
+  repository: kayosportsau/netflixconductor
+  tag: ui-2019.0.3
+  pullPolicy: IfNotPresent
+  serverUrl: "http://conductor-server:8080/api/"
+  replicaCount: 1
+  # nodeSelector: {}
+  # tolerations: []
+  # affinity: {}
+  image:
+    pullSecret:
+  resources: {}
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+  service:
+    type: ClusterIP
+
+ingress:
+  server:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls:
+      enabled: false
+      secretName:
+    host: ""
+    path: /
+  ui:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls:
+      enabled: false
+      secretName:
+    host: ""
+    path: /
+
+elasticsearch:
+  enabled: false
+  host: ""
+  port: 9300
+  indexName: ""
+
+maxConnsPerHost: 31
+
+redis:
+  enabled: false
+  host: ""
+  port: 6379
+
+mysql:
+  enabled: false
+  host: ""
+  port: 3306
+  username: ""
+  password: ""
+  dbName: ""
+  connectionPoolMaxSize: 50
+  connectionPoolMinIdle: 20

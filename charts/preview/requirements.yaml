@@ -1,0 +1,30 @@
+# !! File must end with empty line !!
+dependencies:
+- alias: expose
+  name: exposecontroller
+  repository: http://chartmuseum.jenkins-x.io
+  version: 2.3.92
+- alias: cleanup
+  name: exposecontroller
+  repository: http://chartmuseum.jenkins-x.io
+  version: 2.3.92
+
+- name: elasticsearch
+  version: 1.31.1
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  condition: elasticsearch.enabled
+
+- name: mysql
+  version: 1.2.0
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  condition: mysql.enabled
+
+- name: redis
+  version: 7.0.0
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  condition: redis.enabled
+
+- alias: netflix-conductor
+  name: netflix-conductor
+  version: 0.4.12
+  repository: file://../netflix-conductor

@@ -130,4 +130,3 @@ tasks.coveralls {
     description = "Uploads the aggregated coverage report to Coveralls"
     dependsOn codeCoverageReport
 }
-

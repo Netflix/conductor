@@ -21,3 +21,7 @@ bin/
 target/
 .DS_Store
 .vscode/
+
+# Helm chart artifacts
+*.lock
+*tgz
