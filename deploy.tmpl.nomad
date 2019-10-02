@@ -211,20 +211,20 @@ job "conductor" {
         log4j_logger_tracer = "OFF"
 
         // DataDog Integration
-        //DD_ENV = "${meta.tld}"
-        //DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
-        //DD_SERVICE_NAME = "conductor.server.webapi"
-        //DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
+        DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
+        DD_SERVICE_NAME = "conductor.server.webapi"
+        DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
+        DD_TRACE_GLOBAL_TAGS = "env:${meta.tld}"
       }
 
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/", "metrics=${NOMAD_JOB_NAME}"]
         name = "${JOB}-${TASK}"
         port = "http"
 
         check {
           type     = "http"
-          path     = "/v1/status"
+          path     = "/v1/health"
           interval = "10s"
           timeout  = "3s"
           check_restart {
