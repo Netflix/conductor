@@ -6,7 +6,7 @@ buildscript {
     
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
-        classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7'
+        classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.8'
         classpath 'org.apache.ant:ant:1.9.7'
     }
 }
