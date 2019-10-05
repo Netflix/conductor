@@ -24,7 +24,7 @@ public class MySQLWorkflowModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(SQLConfiguration.class).to(SystemPropertiesSQLConfiguration.class).in(Singleton.class);
-        bind(DataSource.class).toProvider(MySQLDatasourceProvider.class).in(Singleton.class);
+        bind(DataSource.class).toProvider(MySQLDataSourceProvider.class).in(Singleton.class);
         bind(MetadataDAO.class).to(MySQLMetadataDAO.class);
         bind(ExecutionDAO.class).to(MySQLExecutionDAO.class);
         bind(QueueDAO.class).to(MySQLQueueDAO.class);

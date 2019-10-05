@@ -6,10 +6,10 @@ import com.netflix.conductor.sql.SQLDataSourceProvider;
 import javax.inject.Inject;
 import java.nio.file.Paths;
 
-public class MySQLDatasourceProvider extends SQLDataSourceProvider {
+public class MySQLDataSourceProvider extends SQLDataSourceProvider {
 
   @Inject
-  public MySQLDatasourceProvider(SQLConfiguration configuration) {
+  public MySQLDataSourceProvider(SQLConfiguration configuration) {
     super(configuration);
   }
 
