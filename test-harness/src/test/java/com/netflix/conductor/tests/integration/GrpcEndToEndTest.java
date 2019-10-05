@@ -15,8 +15,6 @@
  */
 package com.netflix.conductor.tests.integration;
 
-import static org.junit.Assert.assertTrue;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.netflix.conductor.bootstrap.BootstrapModule;
@@ -26,13 +24,12 @@ import com.netflix.conductor.client.grpc.TaskClient;
 import com.netflix.conductor.client.grpc.WorkflowClient;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
-import com.netflix.conductor.grpc.server.GRPCServer;
 import com.netflix.conductor.grpc.server.GRPCServerConfiguration;
 import com.netflix.conductor.grpc.server.GRPCServerProvider;
 import com.netflix.conductor.tests.utils.TestEnvironment;
-import java.util.Optional;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Viren
@@ -56,19 +53,13 @@ public class GrpcEndToEndTest extends AbstractGrpcEndToEndTest {
         search = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get().get();
         search.start();
 
-        Optional<GRPCServer> server = serverInjector.getInstance(GRPCServerProvider.class).get();
+        server = serverInjector.getInstance(GRPCServerProvider.class).get();
         assertTrue("failed to instantiate GRPCServer", server.isPresent());
         server.get().start();
 
         taskClient = new TaskClient("localhost", SERVER_PORT);
         workflowClient = new WorkflowClient("localhost", SERVER_PORT);
         metadataClient = new MetadataClient("localhost", SERVER_PORT);
-    }
-
-    @AfterClass
-    public static void teardown() throws Exception {
-        TestEnvironment.teardown();
-        search.stop();
     }
 
 }
