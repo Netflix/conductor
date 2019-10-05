@@ -1,5 +1,6 @@
 dependencies {
     compile project(':conductor-core')
+    compile project(':sql-persistence')
     compile "com.google.inject:guice:${revGuice}"
 
     compile "commons-io:commons-io:${revCommonsIo}"
@@ -8,10 +9,12 @@ dependencies {
     compile "org.flywaydb:flyway-core:${revFlywayCore}"
 
     testCompile project(':conductor-core').sourceSets.test.output
+    testCompile project(':sql-persistence').sourceSets.test.output
+    testCompile "org.slf4j:slf4j-simple:1.7.25"
     testCompile "ch.vorburger.mariaDB4j:mariaDB4j:${revMariaDB4j}"
 }
 
 test {
-    //the MySQL unit tests must run within the same JVM to share the same embedded DB
+    //the SQL unit tests must run within the same JVM to share the same embedded DB
     maxParallelForks = 1
 }

@@ -1,12 +1,9 @@
 package com.netflix.conductor.dao.mysql;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.dao.sql.Query;
+import com.netflix.conductor.dao.sql.SQLQueueDAO;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -15,14 +12,9 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Singleton
-public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
-    private static final Long UNACK_SCHEDULE_MS = 60_000L;
+public class MySQLQueueDAO extends SQLQueueDAO {
 
     @Inject
     public MySQLQueueDAO(ObjectMapper om, DataSource ds) {
@@ -107,49 +99,6 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
                         .addParameter(queueName).addParameter(messageId).executeUpdate()) == 1;
     }
 
-    @Override
-    public void flush(String queueName) {
-        final String FLUSH_QUEUE = "DELETE FROM queue_message WHERE queue_name = ?";
-        executeWithTransaction(FLUSH_QUEUE, q -> q.addParameter(queueName).executeDelete());
-    }
-
-    @Override
-    public Map<String, Long> queuesDetail() {
-        final String GET_QUEUES_DETAIL = "SELECT queue_name, (SELECT count(*) FROM queue_message WHERE popped = false AND queue_name = q.queue_name) AS size FROM queue q";
-        return queryWithTransaction(GET_QUEUES_DETAIL, q -> q.executeAndFetch(rs -> {
-            Map<String, Long> detail = Maps.newHashMap();
-            while (rs.next()) {
-                String queueName = rs.getString("queue_name");
-                Long size = rs.getLong("size");
-                detail.put(queueName, size);
-            }
-            return detail;
-        }));
-    }
-
-    @Override
-    public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose() {
-        // @formatter:off
-        final String GET_QUEUES_DETAIL_VERBOSE = "SELECT queue_name, \n"
-                + "       (SELECT count(*) FROM queue_message WHERE popped = false AND queue_name = q.queue_name) AS size,\n"
-                + "       (SELECT count(*) FROM queue_message WHERE popped = true AND queue_name = q.queue_name) AS uacked \n"
-                + "FROM queue q";
-        // @formatter:on
-
-        return queryWithTransaction(GET_QUEUES_DETAIL_VERBOSE, q -> q.executeAndFetch(rs -> {
-            Map<String, Map<String, Map<String, Long>>> result = Maps.newHashMap();
-            while (rs.next()) {
-                String queueName = rs.getString("queue_name");
-                Long size = rs.getLong("size");
-                Long queueUnacked = rs.getLong("uacked");
-                result.put(queueName, ImmutableMap.of("a", ImmutableMap.of( // sharding not implemented, returning only
-                        // one shard with all the info
-                        "size", size, "uacked", queueUnacked)));
-            }
-            return result;
-        }));
-    }
-
     /**
      * Un-pop all un-acknowledged messages for all queues.
 
@@ -158,7 +107,6 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
     public void processAllUnacks() {
 
         logger.trace("processAllUnacks started");
-
 
         final String PROCESS_ALL_UNACKS = "UPDATE queue_message SET popped = false WHERE popped = true AND TIMESTAMPADD(SECOND,60,CURRENT_TIMESTAMP) > deliver_on";
         executeWithTransaction(PROCESS_ALL_UNACKS, Query::executeUpdate);
@@ -179,17 +127,8 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
                 .addParameter(offsetTimeInSecond).addParameter(queueName).addParameter(messageId).executeUpdate() == 1);
     }
 
-    @Override
-    public boolean exists(String queueName, String messageId) {
-        return getWithRetriedTransactions(tx -> existsMessage(tx, queueName, messageId));
-    }
 
-    private boolean existsMessage(Connection connection, String queueName, String messageId) {
-        final String EXISTS_MESSAGE = "SELECT EXISTS(SELECT 1 FROM queue_message WHERE queue_name = ? AND message_id = ?)";
-        return query(connection, EXISTS_MESSAGE, q -> q.addParameter(queueName).addParameter(messageId).exists());
-    }
-
-    private void pushMessage(Connection connection, String queueName, String messageId, String payload, Integer priority,
+    protected void pushMessage(Connection connection, String queueName, String messageId, String payload, Integer priority,
                              long offsetTimeInSecond) {
 
         String PUSH_MESSAGE = "INSERT INTO queue_message (deliver_on, queue_name, message_id, priority, offset_time_seconds, payload) VALUES (TIMESTAMPADD(SECOND,?,CURRENT_TIMESTAMP), ?, ?,?,?,?) ON DUPLICATE KEY UPDATE payload=VALUES(payload), deliver_on=VALUES(deliver_on)";
@@ -197,68 +136,33 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
         createQueueIfNotExists(connection, queueName);
 
         execute(connection, PUSH_MESSAGE, q -> q.addParameter(offsetTimeInSecond).addParameter(queueName)
-                .addParameter(messageId).addParameter(priority).addParameter(offsetTimeInSecond)
-                .addParameter(payload).executeUpdate());
+          .addParameter(messageId).addParameter(priority).addParameter(offsetTimeInSecond)
+          .addParameter(payload).executeUpdate());
     }
 
-    private boolean removeMessage(Connection connection, String queueName, String messageId) {
-        final String REMOVE_MESSAGE = "DELETE FROM queue_message WHERE queue_name = ? AND message_id = ?";
-        return query(connection, REMOVE_MESSAGE,
-                q -> q.addParameter(queueName).addParameter(messageId).executeDelete());
-    }
-
-    private List<Message> peekMessages(Connection connection, String queueName, int count) {
+    protected List<Message> peekMessages(Connection connection, String queueName, int count) {
         if (count < 1)
             return Collections.emptyList();
 
         final String PEEK_MESSAGES = "SELECT message_id, priority, payload FROM queue_message use index(combo_queue_message) WHERE queue_name = ? AND popped = false AND deliver_on <= TIMESTAMPADD(MICROSECOND, 1000, CURRENT_TIMESTAMP) ORDER BY priority DESC, deliver_on, created_on LIMIT ?";
 
         List<Message> messages = query(connection, PEEK_MESSAGES, p -> p.addParameter(queueName)
-                .addParameter(count).executeAndFetch(rs -> {
-                    List<Message> results = new ArrayList<>();
-                    while (rs.next()) {
-                        Message m = new Message();
-                        m.setId(rs.getString("message_id"));
-                        m.setPriority(rs.getInt("priority"));
-                        m.setPayload(rs.getString("payload"));
-                        results.add(m);
-                    }
-                    return results;
-                }));
+          .addParameter(count).executeAndFetch(rs -> {
+              List<Message> results = new ArrayList<>();
+              while (rs.next()) {
+                  Message m = new Message();
+                  m.setId(rs.getString("message_id"));
+                  m.setPriority(rs.getInt("priority"));
+                  m.setPayload(rs.getString("payload"));
+                  results.add(m);
+              }
+              return results;
+          }));
 
         return messages;
     }
 
-    private List<Message> popMessages(Connection connection, String queueName, int count, int timeout) {
-        long start = System.currentTimeMillis();
-        List<Message> messages = peekMessages(connection, queueName, count);
-
-        while (messages.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
-            Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
-            messages = peekMessages(connection, queueName, count);
-        }
-
-        if (messages.isEmpty()) {
-            return messages;
-        }
-
-        final String POP_MESSAGES = "UPDATE queue_message SET popped = true WHERE queue_name = ? AND message_id IN (%s) AND popped = false";
-
-        final List<String> Ids = messages.stream().map(Message::getId).collect(Collectors.toList());
-        final String query = String.format(POP_MESSAGES, Query.generateInBindings(messages.size()));
-
-        int result = query(connection, query, q -> q.addParameter(queueName).addParameters(Ids).executeUpdate());
-
-        if (result != messages.size()) {
-            String message = String.format("Could not pop all messages for given ids: %s (%d messages were popped)",
-                    Ids, result);
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, message);
-        }
-        return messages;
-    }
-
-
-    private void createQueueIfNotExists(Connection connection, String queueName) {
+    protected void createQueueIfNotExists(Connection connection, String queueName) {
         logger.trace("Creating new queue '{}'", queueName);
         final String CREATE_QUEUE = "INSERT IGNORE INTO queue (queue_name) VALUES (?)";
         execute(connection, CREATE_QUEUE, q -> q.addParameter(queueName).executeUpdate());

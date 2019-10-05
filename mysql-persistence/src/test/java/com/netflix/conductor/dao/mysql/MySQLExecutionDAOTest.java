@@ -12,64 +12,23 @@
  */
 package com.netflix.conductor.dao.mysql;
 
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.dao.ExecutionDAOTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import com.netflix.conductor.dao.sql.SQLExecutionDAOTest;
+import com.netflix.conductor.dao.sql.SqlDAOTestUtil;
 
 @SuppressWarnings("Duplicates")
-public class MySQLExecutionDAOTest extends ExecutionDAOTest {
+public class MySQLExecutionDAOTest extends SQLExecutionDAOTest {
 
-    private MySQLDAOTestUtil testMySQL;
-    private MySQLExecutionDAO executionDAO;
-
-    @Rule
-    public TestName name = new TestName();
-
-    @Before
-    public void setup() throws Exception {
-        testMySQL = new MySQLDAOTestUtil(name.getMethodName());
-        executionDAO = new MySQLExecutionDAO(
-                testMySQL.getObjectMapper(),
-                testMySQL.getDataSource()
-        );
-        testMySQL.resetAllData();
-    }
-
-    @After
-    public void teardown() {
-        testMySQL.resetAllData();
-        testMySQL.getDataSource().close();
-    }
-
-    @Test
-    public void testPendingByCorrelationId() {
-
-        WorkflowDef def = new WorkflowDef();
-        def.setName("pending_count_correlation_jtest");
-
-        Workflow workflow = createTestWorkflow();
-        workflow.setWorkflowDefinition(def);
-
-        generateWorkflows(workflow, 10);
-
-        List<Workflow> bycorrelationId = getExecutionDAO().getWorkflowsByCorrelationId("corr001", true);
-        assertNotNull(bycorrelationId);
-        assertEquals(10, bycorrelationId.size());
+    @Override
+    protected SqlDAOTestUtil getSqlUtil() throws Exception {
+        return new MySQLDAOTestUtil(name.getMethodName().toLowerCase());
     }
 
     @Override
-    public ExecutionDAO getExecutionDAO() {
-        return executionDAO;
+    protected ExecutionDAO getExecutionDao(SqlDAOTestUtil sqlUtil) {
+        return new MySQLExecutionDAO(
+          sqlUtil.getObjectMapper(),
+          sqlUtil.getDataSource()
+        );
     }
 }

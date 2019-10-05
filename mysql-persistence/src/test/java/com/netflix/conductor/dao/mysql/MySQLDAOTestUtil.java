@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.config.TestConfiguration;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.dao.sql.SqlDAOTestUtil;
 import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
@@ -17,14 +18,15 @@ import java.sql.SQLException;
 
 
 @SuppressWarnings("Duplicates")
-public class MySQLDAOTestUtil {
+public class MySQLDAOTestUtil implements SqlDAOTestUtil {
     private static final Logger logger = LoggerFactory.getLogger(MySQLDAOTestUtil.class);
     private final HikariDataSource dataSource;
     private final TestConfiguration testConfiguration = new TestConfiguration();
     private final ObjectMapper objectMapper = new JsonMapperProvider().get();
+    private static final String JDBC_URL_PREFIX = "jdbc:mysql://localhost:33307/";
 
     MySQLDAOTestUtil(String dbName) throws Exception {
-        testConfiguration.setProperty("jdbc.url", "jdbc:mysql://localhost:33307/" + dbName +"?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
+        testConfiguration.setProperty("jdbc.url", JDBC_URL_PREFIX + dbName +"?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
         testConfiguration.setProperty("jdbc.username", "root");
         testConfiguration.setProperty("jdbc.password", "");
         // Ensure the DB starts
@@ -36,7 +38,7 @@ public class MySQLDAOTestUtil {
     private HikariDataSource getDataSource(Configuration config) {
 
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(config.getProperty("jdbc.url", "jdbc:mysql://localhost:33307/conductor"));
+        dataSource.setJdbcUrl(config.getProperty("jdbc.url", JDBC_URL_PREFIX + "conductor"));
         dataSource.setUsername(config.getProperty("jdbc.username", "conductor"));
         dataSource.setPassword(config.getProperty("jdbc.password", "password"));
         dataSource.setAutoCommit(false);
