@@ -18,7 +18,6 @@ package com.netflix.conductor.tests.integration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
 import com.netflix.conductor.client.grpc.MetadataClient;
 import com.netflix.conductor.client.grpc.TaskClient;
 import com.netflix.conductor.client.grpc.WorkflowClient;
@@ -37,6 +36,11 @@ import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+
+import com.netflix.conductor.grpc.server.GRPCServer;
+import com.netflix.conductor.tests.utils.TestEnvironment;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 /**
@@ -48,6 +52,14 @@ public abstract class AbstractGrpcEndToEndTest extends AbstractEndToEndTest {
     protected static WorkflowClient workflowClient;
     protected static MetadataClient metadataClient;
     protected static EmbeddedElasticSearch search;
+    protected static Optional<GRPCServer> server;
+
+    @AfterClass
+    public static void teardown() throws Exception {
+        TestEnvironment.teardown();
+        search.stop();
+        server.ifPresent(GRPCServer::stop);
+    }
 
     @Override
     protected String startWorkflow(String workflowExecutionName, WorkflowDef workflowDefinition) {
