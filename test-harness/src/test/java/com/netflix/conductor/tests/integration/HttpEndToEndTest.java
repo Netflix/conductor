@@ -19,26 +19,29 @@ import com.netflix.conductor.bootstrap.ModulesProvider;
 import com.netflix.conductor.client.http.MetadataClient;
 import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.http.WorkflowClient;
-import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.jetty.server.JettyServer;
 import com.netflix.conductor.tests.utils.TestEnvironment;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
+import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME;
+import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME;
+
 /**
  * @author Viren
  */
 public class HttpEndToEndTest extends AbstractHttpEndToEndTest {
 
-    private static final int SERVER_PORT = 8080;
+    private static final int SERVER_PORT = 8091;
+    private static final String ES_SERVER_PORT = "9201";
+    private static JettyServer server;
 
     @BeforeClass
     public static void setup() throws Exception {
         TestEnvironment.setup();
-        System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9201");
-        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "localhost:9301");
-        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, "1");
+        System.setProperty(EMBEDDED_PORT_PROPERTY_NAME, ES_SERVER_PORT);
+        System.setProperty(ELASTIC_SEARCH_URL_PROPERTY_NAME, "http://localhost:" + ES_SERVER_PORT);
 
         Injector bootInjector = Guice.createInjector(new BootstrapModule());
         Injector serverInjector = Guice.createInjector(bootInjector.getInstance(ModulesProvider.class).get());
@@ -46,7 +49,7 @@ public class HttpEndToEndTest extends AbstractHttpEndToEndTest {
         search = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get().get();
         search.start();
 
-        JettyServer server = new JettyServer(SERVER_PORT, false);
+        server = new JettyServer(SERVER_PORT, false);
         server.start();
 
         apiRoot = String.format("http://localhost:%d/api/", SERVER_PORT);
@@ -65,5 +68,6 @@ public class HttpEndToEndTest extends AbstractHttpEndToEndTest {
     public static void teardown() throws Exception {
         TestEnvironment.teardown();
         search.stop();
+        server.stop();
     }
 }
