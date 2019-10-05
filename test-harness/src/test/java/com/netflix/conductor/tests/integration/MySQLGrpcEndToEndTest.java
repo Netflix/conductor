@@ -47,11 +47,16 @@ public class MySQLGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
     @BeforeClass
     public static void setup() throws Exception {
         TestEnvironment.setup();
-        System.setProperty(GRPCServerConfiguration.ENABLED_PROPERTY_NAME, "true");
-        System.setProperty(GRPCServerConfiguration.PORT_PROPERTY_NAME, "8094");
-        System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9204");
-        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "localhost:9304");
-        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, "1");
+
+        System.setProperty(WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME, "conductor" + System.getProperty("user.name"));
+        System.setProperty(DB_PROPERTY_NAME, "mysql");
+        System.setProperty(ENABLED_PROPERTY_NAME, "true");
+        System.setProperty(PORT_PROPERTY_NAME, "8094");
+        System.setProperty(EMBEDDED_PORT_PROPERTY_NAME, "9204");
+        System.setProperty(ELASTIC_SEARCH_URL_PROPERTY_NAME, "localhost:9304");
+        System.setProperty(JDBC_URL_PROPERTY_NAME, "jdbc:mysql://localhost:33307/conductor?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
+        System.setProperty(JDBC_USER_NAME_PROPERTY_NAME, "root");
+        System.setProperty(JDBC_PASSWORD_PROPERTY_NAME, "");
 
         Injector bootInjector = Guice.createInjector(new BootstrapModule());
         Injector serverInjector = Guice.createInjector(bootInjector.getInstance(ModulesProvider.class).get());

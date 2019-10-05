@@ -89,6 +89,10 @@ import org.junit.rules.ExpectedException;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static com.netflix.conductor.core.config.Configuration.AVAILABILITY_ZONE_DEFAULT_VALUE;
+import static com.netflix.conductor.core.config.Configuration.AVAILABILITY_ZONE_PROPERTY_NAME;
+import static com.netflix.conductor.core.config.Configuration.REGION_DEFAULT_VALUE;
+import static com.netflix.conductor.core.config.Configuration.REGION_PROPERTY_NAME;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class AbstractWorkflowServiceTest {
@@ -164,8 +168,8 @@ public abstract class AbstractWorkflowServiceTest {
 
     @Before
     public void init() {
-        System.setProperty("EC2_REGION", "us-east-1");
-        System.setProperty("EC2_AVAILABILITY_ZONE", "us-east-1c");
+        System.setProperty(REGION_PROPERTY_NAME, REGION_DEFAULT_VALUE);
+        System.setProperty(AVAILABILITY_ZONE_PROPERTY_NAME, AVAILABILITY_ZONE_DEFAULT_VALUE);
         if (registered) {
             return;
         }

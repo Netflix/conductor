@@ -25,19 +25,23 @@ import com.netflix.conductor.contribs.DynoQueueStatusPublisherModule;
 import com.netflix.conductor.tests.utils.TestModule;
 import org.junit.runners.BlockJUnit4ClassRunner;
 
+import static com.netflix.conductor.core.config.Configuration.AVAILABILITY_ZONE_PROPERTY_NAME;
+import static com.netflix.conductor.core.config.Configuration.REGION_PROPERTY_NAME;
+import static com.netflix.conductor.core.config.Configuration.WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME;
+
 public class StatusPublisherTestRunner extends BlockJUnit4ClassRunner {
 
 	private Injector dependenciesInjector;
 
 	static {
-		System.setProperty("EC2_REGION", "us-east-1");
-		System.setProperty("EC2_AVAILABILITY_ZONE", "us-east-1c");
+		System.setProperty(REGION_PROPERTY_NAME, "us-east-1");
+		System.setProperty(AVAILABILITY_ZONE_PROPERTY_NAME, "us-east-1c");
 	}
 
 
 	public StatusPublisherTestRunner(Class<?> klass) throws Exception {
 		super(klass);
-		System.setProperty("workflow.namespace.prefix", "conductor" + System.getProperty("user.name"));
+		System.setProperty(WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME, "conductor" + System.getProperty("user.name"));
 		dependenciesInjector = Guice.createInjector(Modules.override(new TestModule()).with(new DynoQueueStatusPublisherModule()));
 	}
 

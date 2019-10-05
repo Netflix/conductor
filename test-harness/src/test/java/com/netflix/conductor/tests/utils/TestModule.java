@@ -37,6 +37,10 @@ import com.netflix.dyno.queues.redis.RedisQueues;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.netflix.conductor.core.execution.tasks.SystemTaskWorkerCoordinator.WORKFLOW_SYSTEM_TASK_WORKER_CALLBACK_SECONDS_PROPERTY_NAME;
+import static com.netflix.conductor.core.execution.tasks.SystemTaskWorkerCoordinator.WORKFLOW_SYSTEM_TASK_WORKER_QUEUE_SIZE_PROPERTY_NAME;
+import static com.netflix.conductor.core.execution.tasks.SystemTaskWorkerCoordinator.WORKFLOW_SYSTEM_TASK_WORKER_THREAD_COUNT_PROPERTY_NAME;
+
 /**
  * @author Viren
  */
@@ -48,9 +52,9 @@ public class TestModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        System.setProperty("workflow.system.task.worker.callback.seconds", "0");
-        System.setProperty("workflow.system.task.worker.queue.size", "10000");
-        System.setProperty("workflow.system.task.worker.thread.count", "10");
+        System.setProperty(WORKFLOW_SYSTEM_TASK_WORKER_CALLBACK_SECONDS_PROPERTY_NAME, "0");
+        System.setProperty(WORKFLOW_SYSTEM_TASK_WORKER_QUEUE_SIZE_PROPERTY_NAME, "10000");
+        System.setProperty(WORKFLOW_SYSTEM_TASK_WORKER_THREAD_COUNT_PROPERTY_NAME, "10");
 
         configureExecutorService();
 

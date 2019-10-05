@@ -88,16 +88,22 @@ public class SystemTaskWorkerCoordinator {
 
 	private static final String className = SystemTaskWorkerCoordinator.class.getName();
 
+	public static final String WORKFLOW_SYSTEM_TASK_WORKER_CALLBACK_SECONDS_PROPERTY_NAME = "workflow.system.task.worker.callback.seconds";
+	public static final String WORKFLOW_SYSTEM_TASK_WORKER_THREAD_COUNT_PROPERTY_NAME = "workflow.system.task.worker.thread.count";
+	public static final String WORKFLOW_SYSTEM_TASK_WORKER_POLL_COUNT_PROPERTY_NAME = "workflow.system.task.worker.poll.count";
+	public static final String WORKFLOW_SYSTEM_TASK_WORKER_POLL_INTERVAL_PROPERTY_NAME = "workflow.system.task.worker.poll.interval";
+	public static final String WORKFLOW_SYSTEM_TASK_WORKER_QUEUE_SIZE_PROPERTY_NAME = "workflow.system.task.worker.queue.size";
+
 	@Inject
 	public SystemTaskWorkerCoordinator(QueueDAO queueDAO, WorkflowExecutor workflowExecutor, Configuration config) {
 		this.queueDAO = queueDAO;
 		this.workflowExecutor = workflowExecutor;
 		this.config = config;
-		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
-		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 10);
-		this.pollCount = config.getIntProperty("workflow.system.task.worker.poll.count", 10);
-		this.pollInterval = config.getIntProperty("workflow.system.task.worker.poll.interval", 50);
-		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
+		this.unackTimeout = config.getIntProperty(WORKFLOW_SYSTEM_TASK_WORKER_CALLBACK_SECONDS_PROPERTY_NAME, 30);
+		int threadCount = config.getIntProperty(WORKFLOW_SYSTEM_TASK_WORKER_THREAD_COUNT_PROPERTY_NAME, 10);
+		this.pollCount = config.getIntProperty(WORKFLOW_SYSTEM_TASK_WORKER_POLL_COUNT_PROPERTY_NAME, 10);
+		this.pollInterval = config.getIntProperty(WORKFLOW_SYSTEM_TASK_WORKER_POLL_INTERVAL_PROPERTY_NAME, 50);
+		this.workerQueueSize = config.getIntProperty(WORKFLOW_SYSTEM_TASK_WORKER_QUEUE_SIZE_PROPERTY_NAME, 100);
 		this.workerQueue = new LinkedBlockingQueue<>(workerQueueSize);
 		this.executionNameSpace =config.getProperty("workflow.system.task.worker.executionNameSpace","");
 

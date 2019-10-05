@@ -64,6 +64,32 @@ public interface Configuration {
 
     String ADDITIONAL_MODULES_PROPERTY_NAME = "conductor.additional.modules";
 
+    String WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME = "workflow.namespace.prefix";
+
+    String WORKFLOW_INPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME = "conductor.workflow.input.payload.threshold.kb";
+    long WORKFLOW_INPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE = 5120L;
+
+    String MAX_WORKFLOW_INPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME = "conductor.max.workflow.input.payload.threshold.kb";
+    long MAX_WORKFLOW_INPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE = 10240L;
+
+    String WORKFLOW_OUTPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME = "conductor.workflow.output.payload.threshold.kb";
+    long WORKFLOW_OUTPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE = 5120L;
+
+    String MAX_WORKFLOW_OUTPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME = "conductor.max.workflow.output.payload.threshold.kb";
+    long MAX_WORKFLOW_OUTPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE = 10240L;
+
+    String TASK_INPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME = "conductor.task.input.payload.threshold.kb";
+    long TASK_INPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE = 3072L;
+
+    String MAX_TASK_INPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME =  "conductor.max.task.input.payload.threshold.kb";
+    long MAX_TASK_INPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE = 10240L;
+
+    String TASK_OUTPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME = "conductor.task.output.payload.threshold.kb";
+    long TASK_OUTPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE = 3072L;
+
+    String MAX_TASK_OUTPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME =  "conductor.max.task.output.payload.threshold.kb";
+    long MAX_TASK_OUTPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE = 10240L;
+
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -146,7 +172,7 @@ public interface Configuration {
         return getBooleanProperty(JERSEY_ENABLED_PROPERTY_NAME, JERSEY_ENABLED_DEFAULT_VALUE);
     }
 
-    /**
+  /**
      * @param name         Name of the property
      * @param defaultValue Default value when not specified
      * @return User defined integer property.

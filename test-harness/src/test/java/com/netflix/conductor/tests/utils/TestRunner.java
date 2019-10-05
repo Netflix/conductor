@@ -23,6 +23,12 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import static com.netflix.conductor.core.config.Configuration.AVAILABILITY_ZONE_DEFAULT_VALUE;
+import static com.netflix.conductor.core.config.Configuration.AVAILABILITY_ZONE_PROPERTY_NAME;
+import static com.netflix.conductor.core.config.Configuration.REGION_DEFAULT_VALUE;
+import static com.netflix.conductor.core.config.Configuration.REGION_PROPERTY_NAME;
+import static com.netflix.conductor.core.config.Configuration.WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME;
+
 /**
  * @author Viren
  *
@@ -32,14 +38,13 @@ public class TestRunner extends BlockJUnit4ClassRunner {
 	private Injector injector;
 	
 	static {
-		System.setProperty("EC2_REGION", "us-east-1");
-		System.setProperty("EC2_AVAILABILITY_ZONE", "us-east-1c");
+		System.setProperty(REGION_PROPERTY_NAME, REGION_DEFAULT_VALUE);
+		System.setProperty(AVAILABILITY_ZONE_PROPERTY_NAME, AVAILABILITY_ZONE_DEFAULT_VALUE);
 	}
 
-	
 	public TestRunner(Class<?> klass) throws Exception {
 		super(klass);
-		System.setProperty("workflow.namespace.prefix", "conductor" + System.getProperty("user.name"));
+		System.setProperty(WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME, "conductor" + System.getProperty("user.name"));
 		injector = Guice.createInjector(new TestModule());
 	}
 

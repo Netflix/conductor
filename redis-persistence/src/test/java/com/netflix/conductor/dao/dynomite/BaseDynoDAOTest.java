@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import static com.netflix.conductor.core.config.Configuration.WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -38,7 +39,7 @@ public class BaseDynoDAOTest {
         String[] keys = {"key1", "key2"};
         assertEquals("key1.key2", baseDynoDAO.nsKey(keys));
 
-        Mockito.when(config.getProperty("workflow.namespace.prefix", null)).thenReturn("test");
+        Mockito.when(config.getProperty(WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME, null)).thenReturn("test");
         assertEquals("test", baseDynoDAO.nsKey());
 
         assertEquals("test.key1.key2", baseDynoDAO.nsKey(keys));

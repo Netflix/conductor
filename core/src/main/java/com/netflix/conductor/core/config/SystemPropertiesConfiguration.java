@@ -110,41 +110,41 @@ public class SystemPropertiesConfiguration implements Configuration {
 
     @Override
     public Long getWorkflowInputPayloadSizeThresholdKB() {
-        return getLongProperty("conductor.workflow.input.payload.threshold.kb", 5120L);
+        return getLongProperty(WORKFLOW_INPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME, WORKFLOW_INPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE);
     }
 
     @Override
     public Long getMaxWorkflowInputPayloadSizeThresholdKB() {
-        return getLongProperty("conductor.max.workflow.input.payload.threshold.kb", 10240L);
+        return getLongProperty(MAX_WORKFLOW_INPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME, MAX_WORKFLOW_INPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE);
     }
 
     @Override
     public Long getWorkflowOutputPayloadSizeThresholdKB() {
-        return getLongProperty("conductor.workflow.output.payload.threshold.kb", 5120L);
+        return getLongProperty(WORKFLOW_OUTPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME, WORKFLOW_OUTPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE);
     }
 
     @Override
     public Long getMaxWorkflowOutputPayloadSizeThresholdKB() {
-        return getLongProperty("conductor.max.workflow.output.payload.threshold.kb", 10240L);
+        return getLongProperty(MAX_WORKFLOW_OUTPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME, MAX_WORKFLOW_OUTPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE);
     }
 
     @Override
     public Long getTaskInputPayloadSizeThresholdKB() {
-        return getLongProperty("conductor.task.input.payload.threshold.kb", 3072L);
+        return getLongProperty(TASK_INPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME, TASK_INPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE);
     }
 
     @Override
     public Long getMaxTaskInputPayloadSizeThresholdKB() {
-        return getLongProperty("conductor.max.task.input.payload.threshold.kb", 10240L);
+        return getLongProperty(MAX_TASK_INPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME, MAX_TASK_INPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE);
     }
 
     @Override
     public Long getTaskOutputPayloadSizeThresholdKB() {
-        return getLongProperty("conductor.task.output.payload.threshold.kb", 3072L);
+        return getLongProperty(TASK_OUTPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME, TASK_OUTPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE);
     }
 
     public Long getMaxTaskOutputPayloadSizeThresholdKB() {
-        return getLongProperty("conductor.max.task.output.payload.threshold.kb", 10240L);
+        return getLongProperty(MAX_TASK_OUTPUT_PAYLOAD_THRESHOLD_KB_PROPERTY_NAME, MAX_TASK_OUTPUT_PAYLOAD_THRESHOLD_KB_DEFAULT_VALUE);
     }
 
     @Override

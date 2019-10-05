@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import static com.netflix.conductor.core.config.Configuration.WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME;
+
 public class BaseDynoDAO {
 
     private static final String NAMESPACE_SEP = ".";
@@ -49,7 +51,7 @@ public class BaseDynoDAO {
     }
 
     String nsKey(String... nsValues) {
-        String rootNamespace = config.getProperty("workflow.namespace.prefix", null);
+        String rootNamespace = config.getProperty(WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME, null);
         StringBuilder namespacedKey = new StringBuilder();
         if (StringUtils.isNotBlank(rootNamespace)) {
             namespacedKey.append(rootNamespace).append(NAMESPACE_SEP);
