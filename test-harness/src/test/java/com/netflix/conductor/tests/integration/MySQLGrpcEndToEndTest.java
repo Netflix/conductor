@@ -15,8 +15,6 @@
  */
 package com.netflix.conductor.tests.integration;
 
-import static org.junit.Assert.assertTrue;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.netflix.conductor.bootstrap.BootstrapModule;
@@ -24,25 +22,31 @@ import com.netflix.conductor.bootstrap.ModulesProvider;
 import com.netflix.conductor.client.grpc.MetadataClient;
 import com.netflix.conductor.client.grpc.TaskClient;
 import com.netflix.conductor.client.grpc.WorkflowClient;
-import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
+import com.netflix.conductor.dao.mysql.EmbeddedDatabase;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
-import com.netflix.conductor.grpc.server.GRPCServer;
-import com.netflix.conductor.grpc.server.GRPCServerConfiguration;
 import com.netflix.conductor.grpc.server.GRPCServerProvider;
-import com.netflix.conductor.tests.utils.MySQLTestRunner;
 import com.netflix.conductor.tests.utils.TestEnvironment;
-import java.util.Optional;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+
+import static com.netflix.conductor.core.config.Configuration.DB_PROPERTY_NAME;
+import static com.netflix.conductor.core.config.Configuration.WORKFLOW_NAMESPACE_PREFIX_PROPERTY_NAME;
+import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME;
+import static com.netflix.conductor.elasticsearch.ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME;
+import static com.netflix.conductor.grpc.server.GRPCServerConfiguration.ENABLED_PROPERTY_NAME;
+import static com.netflix.conductor.grpc.server.GRPCServerConfiguration.PORT_PROPERTY_NAME;
+import static com.netflix.conductor.sql.SQLConfiguration.JDBC_PASSWORD_PROPERTY_NAME;
+import static com.netflix.conductor.sql.SQLConfiguration.JDBC_URL_PROPERTY_NAME;
+import static com.netflix.conductor.sql.SQLConfiguration.JDBC_USER_NAME_PROPERTY_NAME;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Viren
  */
-@RunWith(MySQLTestRunner.class)
 public class MySQLGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
 
     private static final int SERVER_PORT = 8094;
+
+    private static final EmbeddedDatabase DB = EmbeddedDatabase.INSTANCE;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -61,10 +65,10 @@ public class MySQLGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
         Injector bootInjector = Guice.createInjector(new BootstrapModule());
         Injector serverInjector = Guice.createInjector(bootInjector.getInstance(ModulesProvider.class).get());
 
-        search = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get().get();
+        search = serverInjector.getInstance(EmbeddedElasticSearchProvider .class).get().get();
         search.start();
 
-        Optional<GRPCServer> server = serverInjector.getInstance(GRPCServerProvider.class).get();
+        server = serverInjector.getInstance(GRPCServerProvider.class).get();
         assertTrue("failed to instantiate GRPCServer", server.isPresent());
         server.get().start();
 
