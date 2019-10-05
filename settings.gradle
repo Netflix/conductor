@@ -5,3 +5,7 @@ include 'cassandra-persistence', 'mysql-persistence', 'redis-persistence','serve
 include 'grpc', 'grpc-server', 'grpc-client'
 
 rootProject.children.each {it.name="conductor-${it.name}"}
+include 'postgres-persistence'
+findProject(':postgres-persistence')?.name = 'conductor-postgres-persistence'
+include 'sql-persistence'
+
