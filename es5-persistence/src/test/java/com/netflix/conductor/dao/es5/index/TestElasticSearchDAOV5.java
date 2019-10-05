@@ -79,12 +79,14 @@ public class TestElasticSearchDAOV5 {
 	private static ElasticSearchDAOV5 indexDAO;
 	private static EmbeddedElasticSearch embeddedElasticSearch;
 
+	private static final int ES_SERVER_PORT = 9208;
+
 	private Workflow workflow;
 
 	@BeforeClass
 	public static void startServer() throws Exception {
-		System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9203");
-		System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "localhost:9303");
+		System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, Integer.toString(ES_SERVER_PORT));
+		System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "http://localhost:" + (ES_SERVER_PORT+100));
 		System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, "1");
 
 		configuration = new SystemPropertiesElasticSearchConfiguration();
