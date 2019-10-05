@@ -1,0 +1,10 @@
+dependencies {
+    compile project(':conductor-core')
+    compile "com.google.inject:guice:${revGuice}"
+
+    compile "commons-io:commons-io:${revCommonsIo}"
+    compile "com.zaxxer:HikariCP:${revHikariCP}"
+    compile "org.flywaydb:flyway-core:${revFlywayCore}"
+
+    testCompile project(':conductor-core').sourceSets.test.output
+}
