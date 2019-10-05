@@ -68,10 +68,4 @@ public class MySQLGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
         metadataClient = new MetadataClient("localhost", SERVER_PORT);
     }
 
-    @AfterClass
-    public static void teardown() throws Exception {
-        TestEnvironment.teardown();
-        search.stop();
-    }
-
 }
