@@ -41,9 +41,9 @@ Below are the various artifacts published:
 |conductor-jersey|Jersey JAX-RS resources for the core services|
 |conductor-ui|node.js based UI for Conductor|
 |conductor-contribs|Optional contrib package that holds extended workflow tasks and support for SQS|
-|conductor-client|Java client for Conductor that includes helpers for running a worker tasks|
-|conductor-server|Self contained Jetty server|
-|conductor-test-harness|Used for building test harness and an in-memory kitchensink demo|
+|conductor-client|Java client for Conductor that includes helpers for running worker tasks|
+|conductor-server| Self-contained Jetty server|
+|conductor-test-harness|Used for building test harness and an in-memory kitchen sink demo|
 
 ## Building
 To build the server, use the following dependencies in your classpath:
@@ -51,8 +51,8 @@ To build the server, use the following dependencies in your classpath:
 * conductor-common
 * conductor-core
 * conductor-jersey
-* conductor-redis-persistence (_unless using your own persistence module_)
-* conductor-es5-persistence (_unless using your own index module_)
+* conductor-Redis-persistence (_unless using your persistence module_)
+* conductor-es5-persistence (_unless using your index module_)
 * conductor-contribs (_optional_)
 
 
@@ -63,8 +63,8 @@ Add the following packages to classpath scan:
 com.netflix.conductor.server.resources
 com.netflix.workflow.contribs.queue
 ```
-Conductor relies on the guice (4.0+) for the dependency injection.
-Persistence has a guice module to wire up appropriate interfaces:
+The conductor relies on the guice (4.0+) for the dependency injection.
+Persistence has a Guice module to wire up appropriate interfaces:
 
 ```java
 com.netflix.conductor.dao.RedisWorkflowModule
@@ -80,12 +80,12 @@ com.netflix.conductor.dao.RedisWorkflowModule
 * Servlet Container
 
 ## Get Support
-Conductor is maintained by Media Workflow Infrastructure team at Netflix.  Use github issue tracking for any support request. 
+Conductor is maintained by the Media Workflow Infrastructure team at Netflix.  Use GitHub issue tracking for any support request. 
 
 ## Contributions
-Whether it is a small doc correction, bug fix or adding new module to support some crazy feature, contributions are highly appreciated. We just ask to follow standard oss guidelines. And to reiterate, please check with us before spending too much time, only to find later that someone else is already working on similar feature. 
+Whether it is a small doc correction, bug fix or adding a new module to support some crazy feature, contributions are highly appreciated. We just ask to follow standard oss guidelines. And to reiterate, please check with us before spending too much time, only to find later that someone else is already working on a similar feature. 
 
-`dev` branch is the current working branch, while `master` branch is current stable branch. Please send your PR's to `dev` branch, making sure that it builds on your local system successfully. Also, please make sure all the conflicts are resolved.
+`dev` branch is the current working branch, while the `master` branch is the current stable branch. Please send your PR's to the `dev` branch, making sure that it builds on your local system successfully. Also, please make sure all the conflicts are resolved.
 
 Feel free to create an issue with a label: question, with any questions or requests for help.
 
