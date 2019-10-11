@@ -19,7 +19,6 @@ public class KafkaModule extends AbstractModule {
         if (configuration.getKafkaIndexEnable()) {
             bind(ProducerDAO.class).to(KafkaProducer.class);
             bind(IndexDAO.class).to(KafkaDAO.class);
-
         }
     }
 }

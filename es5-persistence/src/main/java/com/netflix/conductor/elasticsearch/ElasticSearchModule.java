@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 
 import com.netflix.conductor.elasticsearch.es5.ElasticSearchV5Module;
+import com.netflix.conductor.elasticsearch.es5.EmbeddedElasticSearchV5Provider;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
 
@@ -16,6 +17,7 @@ public class ElasticSearchModule extends AbstractModule {
         bind(ElasticSearchConfiguration.class).to(SystemPropertiesElasticSearchConfiguration.class);
         bind(Client.class).toProvider(ElasticSearchTransportClientProvider.class).in(Singleton.class);
         bind(RestClient.class).toProvider(ElasticSearchRestClientProvider.class).in(Singleton.class);
+        bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);
 
         // Let Kafka layer handle bindings.
         if(!esConfiguration.getKafkaIndexEnable()) {
