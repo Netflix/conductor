@@ -53,7 +53,7 @@ public class Main {
         Injector serverInjector = Guice.createInjector(modulesProvider.get());
 
         //Do not start EmbeddedElasticSearchProvider is kafka indexing is enable
-        if (!Boolean.valueOf(System.getProperty("workflow.kafka.index.enable"))) {
+        if (!Boolean.valueOf(System.getProperty("workflow_kafka_index_enable"))) {
             Optional<EmbeddedElasticSearch> embeddedSearchInstance = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get();
             if (embeddedSearchInstance.isPresent()) {
                 try {
