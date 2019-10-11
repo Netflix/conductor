@@ -662,7 +662,12 @@ public class WorkflowExecutor {
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
 
         //Remove workflow from redis irrespective of status listener.
-        workflowStatusListener.onWorkflowCompleted(workflow);
+        if(config.getForceWorkflowDeletionFromRedis()) {
+            workflowStatusListener.onWorkflowCompleted(workflow);
+        } else if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
+            workflowStatusListener.onWorkflowCompleted(workflow);
+        }
+
     }
 
     public void terminateWorkflow(String workflowId, String reason) {
@@ -758,7 +763,11 @@ public class WorkflowExecutor {
         Monitors.recordWorkflowTermination(workflow.getWorkflowName(), workflow.getStatus(), workflow.getOwnerApp());
 
         //Remove workflow from redis irrespective of status listener.
-        workflowStatusListener.onWorkflowTerminated(workflow);
+        if(config.getForceWorkflowDeletionFromRedis()) {
+            workflowStatusListener.onWorkflowCompleted(workflow);
+        } else if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
+            workflowStatusListener.onWorkflowCompleted(workflow);
+        }
     }
 
     /**

@@ -52,18 +52,21 @@ public class Main {
         ModulesProvider modulesProvider = bootstrapInjector.getInstance(ModulesProvider.class);
         Injector serverInjector = Guice.createInjector(modulesProvider.get());
 
-        Optional<EmbeddedElasticSearch> embeddedSearchInstance = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get();
-        if (embeddedSearchInstance.isPresent()) {
-            try {
-                embeddedSearchInstance.get().start();
-                /*
-                 * Elasticsearch embedded instance does not notify when it is up and ready to accept incoming requests.
-                 * A possible solution for reading and writing into the index is to wait a specific amount of time.
-                 */
-                Thread.sleep(EMBEDDED_ES_INIT_TIME);
-            } catch (Exception ioe) {
-                ioe.printStackTrace(System.err);
-                System.exit(3);
+        //Do not start EmbeddedElasticSearchProvider is kafka indexing is enable
+        if (!Boolean.valueOf(System.getProperty("workflow.kafka.index.enable"))) {
+            Optional<EmbeddedElasticSearch> embeddedSearchInstance = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get();
+            if (embeddedSearchInstance.isPresent()) {
+                try {
+                    embeddedSearchInstance.get().start();
+                    /*
+                     * Elasticsearch embedded instance does not notify when it is up and ready to accept incoming requests.
+                     * A possible solution for reading and writing into the index is to wait a specific amount of time.
+                     */
+                    Thread.sleep(EMBEDDED_ES_INIT_TIME);
+                } catch (Exception ioe) {
+                    ioe.printStackTrace(System.err);
+                    System.exit(3);
+                }
             }
         }
 
