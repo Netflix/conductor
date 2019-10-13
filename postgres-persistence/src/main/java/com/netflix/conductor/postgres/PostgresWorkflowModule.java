@@ -21,7 +21,7 @@ public class PostgresWorkflowModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(SQLConfiguration.class).to(SystemPropertiesSQLConfiguration.class).in(Singleton.class);
-        bind(DataSource.class).toProvider(PostgresDatasourceProvider.class).in(Singleton.class);
+        bind(DataSource.class).toProvider(PostgresDataSourceProvider.class).in(Singleton.class);
         bind(MetadataDAO.class).to(PostgresMetadataDAO.class);
         bind(ExecutionDAO.class).to(PostgresExecutionDAO.class);
         bind(QueueDAO.class).to(PostgresQueueDAO.class);

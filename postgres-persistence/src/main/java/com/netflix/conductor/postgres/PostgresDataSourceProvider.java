@@ -6,10 +6,10 @@ import com.netflix.conductor.sql.SQLDataSourceProvider;
 import javax.inject.Inject;
 import java.nio.file.Paths;
 
-public class PostgresDatasourceProvider extends SQLDataSourceProvider {
+public class PostgresDataSourceProvider extends SQLDataSourceProvider {
 
   @Inject
-  public PostgresDatasourceProvider(SQLConfiguration configuration) {
+  public PostgresDataSourceProvider(SQLConfiguration configuration) {
     super(configuration);
   }
 
