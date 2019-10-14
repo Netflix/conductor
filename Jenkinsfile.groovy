@@ -64,6 +64,7 @@ pipeline {
                     sh "echo \$(jx-release-version) > VERSION"
                     sh "jx step tag --version \$(cat VERSION)"
                     sh "skaffold version"
+                    sh "./gradlew build -x test -x :conductor-client:findbugsMain "
                     sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-server.yaml"
                     sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-ui.yaml"
 
