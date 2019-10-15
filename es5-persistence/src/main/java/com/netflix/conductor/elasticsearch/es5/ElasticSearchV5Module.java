@@ -55,5 +55,6 @@ public class ElasticSearchV5Module extends AbstractModule {
             bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
         }
 
+        bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);
     }
 }

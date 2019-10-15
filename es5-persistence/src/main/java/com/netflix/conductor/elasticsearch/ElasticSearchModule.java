@@ -17,7 +17,6 @@ public class ElasticSearchModule extends AbstractModule {
         bind(ElasticSearchConfiguration.class).to(SystemPropertiesElasticSearchConfiguration.class);
         bind(Client.class).toProvider(ElasticSearchTransportClientProvider.class).in(Singleton.class);
         bind(RestClient.class).toProvider(ElasticSearchRestClientProvider.class).in(Singleton.class);
-        bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);
 
         // Let Kafka layer handle bindings.
         if(!esConfiguration.getKafkaIndexEnable()) {
