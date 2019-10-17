@@ -57,7 +57,7 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
 
     @Override
     public boolean pushIfNotExists(String queueName, String messageId, int priority, long offsetTimeInSecond) {
-        return getWithTransaction(tx -> {
+        return getWithRetriedTransactions(tx -> {
             if (!existsMessage(tx, queueName, messageId)) {
                 pushMessage(tx, queueName, messageId, null, priority, offsetTimeInSecond);
                 return true;
@@ -93,7 +93,7 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
 
     @Override
     public boolean ack(String queueName, String messageId) {
-        return getWithTransaction(tx -> removeMessage(tx, queueName, messageId));
+        return getWithRetriedTransactions(tx -> removeMessage(tx, queueName, messageId));
     }
 
     @Override
@@ -152,7 +152,6 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
 
     /**
      * Un-pop all un-acknowledged messages for all queues.
-
      * @since 1.11.6
      */
     public void processAllUnacks() {
@@ -181,7 +180,7 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
 
     @Override
     public boolean exists(String queueName, String messageId) {
-        return getWithTransaction(tx -> existsMessage(tx, queueName, messageId));
+        return getWithRetriedTransactions(tx -> existsMessage(tx, queueName, messageId));
     }
 
     private boolean existsMessage(Connection connection, String queueName, String messageId) {
