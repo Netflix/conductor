@@ -22,8 +22,11 @@ service WorkflowService {
     // GET /{workflowId}
     rpc GetWorkflowStatus(GetWorkflowStatusRequest) returns (conductor.proto.Workflow);
 
-    // DELETE /{workflodId}/remove
+    // DELETE /{workflowId}/remove
     rpc RemoveWorkflow(RemoveWorkflowRequest) returns (RemoveWorkflowResponse);
+
+    // DELETE /{workflowId}/archive
+    rpc ArchiveWorkflow(ArchiveWorkflowRequest) returns (ArchiveWorkflowResponse);
 
     // GET /running/{name}
     rpc GetRunningWorkflows(GetRunningWorkflowsRequest) returns (GetRunningWorkflowsResponse);
@@ -88,11 +91,18 @@ message GetWorkflowStatusResponse {
 }
 
 message RemoveWorkflowRequest {
-    string workflod_id = 1;
+    string workflow_id = 1;
     bool archive_workflow = 2;
 }
 
 message RemoveWorkflowResponse {}
+
+message ArchiveWorkflowRequest {
+    string workflow_id = 1;
+    bool retain_state = 2;
+}
+
+message ArchiveWorkflowResponse {}
 
 message GetRunningWorkflowsRequest {
     string name = 1;

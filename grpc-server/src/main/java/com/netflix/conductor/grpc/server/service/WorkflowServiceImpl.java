@@ -118,8 +118,19 @@ public class WorkflowServiceImpl extends WorkflowServiceGrpc.WorkflowServiceImpl
     @Override
     public void removeWorkflow(WorkflowServicePb.RemoveWorkflowRequest req, StreamObserver<WorkflowServicePb.RemoveWorkflowResponse> response) {
         try {
-            workflowService.deleteWorkflow(req.getWorkflodId(), req.getArchiveWorkflow());
+            workflowService.deleteWorkflow(req.getWorkflowId(), req.getArchiveWorkflow());
             response.onNext(WorkflowServicePb.RemoveWorkflowResponse.getDefaultInstance());
+            response.onCompleted();
+        } catch (Exception e) {
+            GRPC_HELPER.onError(response, e);
+        }
+    }
+
+    @Override
+    public void archiveWorkflow(WorkflowServicePb.ArchiveWorkflowRequest req, StreamObserver<WorkflowServicePb.ArchiveWorkflowResponse> response) {
+        try {
+            workflowService.archiveWorkflow(req.getWorkflowId(), req.getRetainState());
+            response.onNext(WorkflowServicePb.ArchiveWorkflowResponse.getDefaultInstance());
             response.onCompleted();
         } catch (Exception e) {
             GRPC_HELPER.onError(response, e);
