@@ -120,7 +120,7 @@ public class RetryUtil<T> {
         } catch (RetryException retryException) {
             String errorMessage = String.format("Operation '%s:%s' failed after retrying %d times, retry limit %d", operationName,
                     shortDescription, internalNumberOfRetries.get(), 3);
-            logger.debug(errorMessage, retryException.getLastFailedAttempt().getExceptionCause());
+            logger.error(errorMessage, retryException.getLastFailedAttempt().getExceptionCause());
             throw new RuntimeException(errorMessage, retryException.getLastFailedAttempt().getExceptionCause());
         }
     }
