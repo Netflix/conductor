@@ -110,7 +110,7 @@ job "conductor" {
         }
       }
     } // end ui task
-  } // end ui group  
+  } // end ui group
 
   group "server" {
     count = 5
@@ -211,20 +211,20 @@ job "conductor" {
         log4j_logger_tracer = "OFF"
 
         // DataDog Integration
+        DD_ENV = "${meta.tld}"
         DD_AGENT_HOST = "datadog-apm.service.${meta.tld}"
         DD_SERVICE_NAME = "conductor.server.webapi"
         DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
-        DD_TRACE_GLOBAL_TAGS = "env:${meta.tld}"
       }
 
       service {
-        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/", "metrics=${NOMAD_JOB_NAME}"]
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
         name = "${JOB}-${TASK}"
         port = "http"
 
         check {
           type     = "http"
-          path     = "/v1/health"
+          path     = "/v1/status"
           interval = "10s"
           timeout  = "3s"
           check_restart {
@@ -257,92 +257,5 @@ job "conductor" {
         }
       }
     } // end server task
-  } // end server group  
+  } // end server group
 } // end job
-
-job "conductor-archiver" {
-  type        = "batch"
-  region      = "us-west-2"
-  datacenters = ["us-west-2"]
-
-  periodic {
-    cron             = "@daily"
-    time_zone        = "America/Los_Angeles"
-    prohibit_overlap = true
-  }
-
-  meta {
-    service-class = "platform"
-  }
-
-  constraint {
-    attribute = "${meta.enclave}"
-    value     = "shared"
-  }
-
-  group "archiver" {
-    count = 1
-
-    # vault declaration
-    vault {
-      change_mode = "noop"
-      env         = false
-      policies    = ["read-secrets"]
-    }
-
-    task "archiver" {
-      meta {
-        product-class = "custom"
-        stack-role    = "daemon"
-      }
-
-      driver = "docker"
-
-      config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-archiver"
-
-        volumes = [
-          "local/secrets/conductor-archiver.env:/app/config/secrets.env",
-        ]
-
-        labels {
-          service   = "${NOMAD_JOB_NAME}"
-          component = "${NOMAD_TASK_NAME}"
-        }
-
-        logging {
-          type = "syslog"
-
-          config {
-            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
-          }
-        }
-      }
-
-      env {
-        env_type = "${meta.env}"
-      }
-
-      # Write secrets to the file that can be mounted as volume
-      template {
-        data = <<EOF
-        {{ with printf "secret/conductor" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
-        {{ end }}{{ end }}
-        EOF
-
-        destination   = "local/secrets/conductor-archiver.env"
-        change_mode   = "signal"
-        change_signal = "SIGINT"
-      }
-
-      resources {
-        cpu    = 512  # MHz
-        memory = 2048 # MB
-
-        network {
-          mbits = 4
-        }
-      }
-    } // end archiver task
-  } // end archiver group
-} // end archiver job
