@@ -302,7 +302,7 @@ export default function workflows(state = initialState, action) {
       terminating: false,
       retrying: false,
       pausing: false,
-      resumign: false,
+      resuming: false,
       bulkProcessInFlight:false,
       bulkProcessSuccess:false
     };

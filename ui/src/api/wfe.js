@@ -68,7 +68,11 @@ router.get('/search-by-task/:taskId', async (req, res, next) => {
   try {
     let freeText = [];
     if (req.query.freeText != '') {
-      freeText.push(req.params.taskId);
+      if(req.query.entire === "t"){
+        freeText.push(`"${req.params.taskId}"`)
+      } else {
+        freeText.push(req.params.taskId);
+      }
     } else {
       freeText.push('*');
     }
@@ -86,6 +90,7 @@ router.get('/search-by-task/:taskId', async (req, res, next) => {
     }
 
     let query = req.query.q || '';
+
     const url =
       baseURL2 + 'search-by-tasks?size=100&sort=startTime:DESC&freeText=' + encodeURIComponent(freeText.join(' AND ')) + '&start=' + start;
     const result = await http.get(url, req.token);

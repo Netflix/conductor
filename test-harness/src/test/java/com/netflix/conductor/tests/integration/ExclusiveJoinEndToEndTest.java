@@ -69,6 +69,7 @@ public class ExclusiveJoinEndToEndTest {
 		TestEnvironment.setup();
         System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9205");
         System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "localhost:9305");
+		System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, "1");
 
 		Injector bootInjector = Guice.createInjector(new BootstrapModule());
 		Injector serverInjector = Guice.createInjector(bootInjector.getInstance(ModulesProvider.class).get());
@@ -103,7 +104,7 @@ public class ExclusiveJoinEndToEndTest {
 		String taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task1").getTaskId();
 		taskOutput.put("taskReferenceName", "task1");
 		TaskResult taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		Workflow workflow = workflowClient.getWorkflow(wfInstanceId, true);
 		String taskReferenceName = workflow.getTaskByRefName("exclusiveJoin").getOutputData().get("taskReferenceName")
@@ -125,12 +126,12 @@ public class ExclusiveJoinEndToEndTest {
 		String taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task1").getTaskId();
 		taskOutput.put("taskReferenceName", "task1");
 		TaskResult taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task2").getTaskId();
 		taskOutput.put("taskReferenceName", "task2");
 		taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		Workflow workflow = workflowClient.getWorkflow(wfInstanceId, true);
 		String taskReferenceName = workflow.getTaskByRefName("exclusiveJoin").getOutputData().get("taskReferenceName")
@@ -152,17 +153,17 @@ public class ExclusiveJoinEndToEndTest {
 		String taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task1").getTaskId();
 		taskOutput.put("taskReferenceName", "task1");
 		TaskResult taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task2").getTaskId();
 		taskOutput.put("taskReferenceName", "task2");
 		taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task3").getTaskId();
 		taskOutput.put("taskReferenceName", "task3");
 		taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		Workflow workflow = workflowClient.getWorkflow(wfInstanceId, true);
 		String taskReferenceName = workflow.getTaskByRefName("exclusiveJoin").getOutputData().get("taskReferenceName")
@@ -184,12 +185,12 @@ public class ExclusiveJoinEndToEndTest {
 		String taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task1").getTaskId();
 		taskOutput.put("taskReferenceName", "task1");
 		TaskResult taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task4").getTaskId();
 		taskOutput.put("taskReferenceName", "task4");
 		taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		Workflow workflow = workflowClient.getWorkflow(wfInstanceId, true);
 		String taskReferenceName = workflow.getTaskByRefName("exclusiveJoin").getOutputData().get("taskReferenceName")
@@ -211,17 +212,17 @@ public class ExclusiveJoinEndToEndTest {
 		String taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task1").getTaskId();
 		taskOutput.put("taskReferenceName", "task1");
 		TaskResult taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task4").getTaskId();
 		taskOutput.put("taskReferenceName", "task4");
 		taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		taskId = taskClient.getPendingTaskForWorkflow(wfInstanceId, "task5").getTaskId();
 		taskOutput.put("taskReferenceName", "task5");
 		taskResult = setTaskResult(wfInstanceId, taskId, TaskResult.Status.COMPLETED, taskOutput);
-		taskClient.updateTask(taskResult, "");
+		taskClient.updateTask(taskResult);
 
 		Workflow workflow = workflowClient.getWorkflow(wfInstanceId, true);
 		String taskReferenceName = workflow.getTaskByRefName("exclusiveJoin").getOutputData().get("taskReferenceName")
