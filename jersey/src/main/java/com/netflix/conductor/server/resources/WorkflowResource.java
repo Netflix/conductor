@@ -497,6 +497,98 @@ public class WorkflowResource {
 	}
 
 	@POST
+	@Path("/terminate")
+	@ApiOperation("Terminate multiple workflows execution")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS", response = String.class)})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
+			@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+	public Response terminateWorkflows(@Context HttpHeaders headers,List<String> workflowIds, @QueryParam("reason") String reason) throws Exception {
+		Response.ResponseBuilder builder = Response.noContent();
+		for (int i = 0; i < workflowIds.size(); i++) {
+			executor.validateAuth(workflowIds.get(i), headers);
+			handleCorrelationId(workflowIds.get(i), headers, builder);
+			NDC.push("rest-terminate-" + UUID.randomUUID().toString());
+			try {
+				executor.terminateWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Terminated from api"));
+			} finally {
+				NDC.remove();
+			}
+		}
+		return builder.build();
+	}
+
+
+	@POST
+	@Path("/cancel")
+	@ApiOperation("Cancel multiple workflows execution")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS", response = String.class)})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
+			@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+	public Response cancelWorkflows(@Context HttpHeaders headers,List<String> workflowIds, @QueryParam("reason") String reason) throws Exception {
+		Response.ResponseBuilder builder = Response.noContent();
+		for (int i = 0; i < workflowIds.size(); i++) {
+			executor.validateAuth(workflowIds.get(i), headers);
+			handleCorrelationId(workflowIds.get(i), headers, builder);
+			NDC.push("rest-cancel-" + UUID.randomUUID().toString());
+			try {
+				executor.cancelWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
+			} finally {
+				NDC.remove();
+			}
+		}
+		return builder.build();
+	}
+
+	@POST
+	@Path("/complete")
+	@ApiOperation("Force complete multiple workflows execution")
+	@ApiResponses(value = {
+			@ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+			@ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+			@ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+			@ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+			@ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+			@ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+			@ApiResponse(code = 204, message = "SUCCESS", response = String.class)})
+	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
+			@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+	public Response completeWorkflows(@Context HttpHeaders headers,List<String> workflowIds, @QueryParam("reason") String reason) throws Exception {
+		Response.ResponseBuilder builder = Response.noContent();
+		for (int i = 0; i < workflowIds.size(); i++) {
+			executor.validateAuth(workflowIds.get(i), headers);
+			handleCorrelationId(workflowIds.get(i), headers, builder);
+			NDC.push("rest-complete-" + UUID.randomUUID().toString());
+			try {
+				executor.forceCompleteWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Force completed by API"));
+			} finally {
+				NDC.remove();
+			}
+		}
+		return builder.build();
+	}
+
+
+	@POST
 	@Path("/{workflowId}/cancel")
 	@ApiOperation("Cancel workflow execution")
 	@ApiResponses(value = {
