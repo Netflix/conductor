@@ -161,7 +161,7 @@ class WorkflowDetails extends Component {
       <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}>
         <thead>
           <tr>
-            <th>Workflow ID</th><th>Owner App</th><th>Total Time (sec)</th><th>Start/End Time</th><th>Correlation ID</th>
+            <th>Workflow ID</th><th>Owner App</th><th>Total Time (sec)</th><th>Start/End Time</th><th>Correlation ID</th><th>Context User</th>
           </tr>
           <tr>
             <td>{wf.workflowId}</td>
@@ -169,6 +169,7 @@ class WorkflowDetails extends Component {
             <td>{execTime(wf.endTime, wf.startTime)}</td>
             <td>{formatDate(wf.startTime)} - {formatDate(wf.endTime)}</td>
             <td>{wf.correlationId}</td>
+            <td>{wf.contextUser}</td>
           </tr>
           <tr style={{display:showFailure()}}><td style={{color:'#ff0000'}} colSpan={5}>{getFailureReason()}</td></tr>
         </thead>
