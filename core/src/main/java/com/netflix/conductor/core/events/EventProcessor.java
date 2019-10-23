@@ -418,7 +418,8 @@ public class EventProcessor {
 				long overallTime = System.currentTimeMillis() - ee.getReceived();
 				logger.debug("Executed handler=" + ee.getName() + ", action=" + action + ", success=" + success +
 					", waitTime=" + waitTime + ", prepTime=" + prepTime +
-					", execTime=" + execTime + ", overallTime=" + overallTime);
+					", execTime=" + execTime + ", overallTime=" + overallTime +
+					", output=" + output);
 				return success;
 			} catch (Exception e) {
 				logger.debug("Execute failed handler=" + ee.getName() + ", action=" + action + ", reason=" + e.getMessage(), e);

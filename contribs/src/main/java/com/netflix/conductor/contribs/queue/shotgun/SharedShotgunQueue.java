@@ -129,16 +129,7 @@ public class SharedShotgunQueue implements ObservableQueue {
 
     @Override
     public void unack(List<Message> messages) {
-        if (!manualAck) {
-            return;
-        }
-        messages.forEach(msg -> {
-            try {
-                conn.unack(msg.getReceipt());
-            } catch (Exception e) {
-                logger.debug("unack failed with " + e.getMessage() + " for " + msg.getId(), e);
-            }
-        });
+        messages.forEach(msg -> unack(msg.getReceipt()));
     }
 
     @Override
@@ -181,6 +172,17 @@ public class SharedShotgunQueue implements ObservableQueue {
         logger.debug("Closed for " + queueURI);
     }
 
+    private void unack(String msgId) {
+        if (!manualAck) {
+            return;
+        }
+        try {
+            conn.unack(msgId);
+        } catch (Exception e) {
+            logger.debug("unack failed with " + e.getMessage() + " for " + msgId, e);
+        }
+    }
+
     private void onMessage(Subscription subscription, ShotgunOuterClass.Message message) {
         String uuid = UUID.randomUUID().toString();
         NDC.push("event-" + uuid);
@@ -205,6 +207,7 @@ public class SharedShotgunQueue implements ObservableQueue {
             }
         } catch (Exception ex) {
             logger.debug("onMessage failed " + ex.getMessage(), ex);
+            unack(message.getID());
         } finally {
             NDC.remove();
         }
