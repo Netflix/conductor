@@ -50,12 +50,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import java.util.*;
-
 
 /**
  * @author Viren
@@ -125,11 +121,6 @@ public class WorkflowResource {
 		String workflowId = IDGenerator.generate();
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 
-		String correlationId = handleCorrelationId(workflowId, headers, builder);
-		if (StringUtils.isNotEmpty(correlationId)) {
-			request.setCorrelationId(correlationId);
-		}
-
 		String contextToken = null;
 		String contextUser = null;
 		String traceId = null;
@@ -144,6 +135,10 @@ public class WorkflowResource {
 
 		NDC.push("rest-start-" + UUID.randomUUID().toString());
 		try {
+			String correlationId = handleCorrelationId(workflowId, headers, builder);
+			if (StringUtils.isNotEmpty(correlationId)) {
+				request.setCorrelationId(correlationId);
+			}
 			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
 				request.getInput(), null, request.getTaskToDomain(),
 				auth, contextToken, contextUser, traceId);

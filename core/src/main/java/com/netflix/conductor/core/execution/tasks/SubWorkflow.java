@@ -196,6 +196,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 		logger.debug("Workflow cancellation requested. workflowId=" + subWorkflow.getWorkflowId()
 			+ ", correlationId=" + subWorkflow.getCorrelationId()
+			+ ", traceId=" + workflow.getTraceId()
 			+ ", contextUser=" + subWorkflow.getContextUser()
 			+ ", parentWorkflowId=" + subWorkflow.getParentWorkflowId());
 
@@ -267,6 +268,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 	private boolean handleRerun(Workflow workflow, Workflow subWorkflow, Task task, SubWorkflowParams param, WorkflowExecutor provider) {
 		logger.trace("handleRerun invoked for sub-workflow=" + subWorkflow.getWorkflowId()
 			+ ", correlationId=" + subWorkflow.getCorrelationId()
+			+ ", traceId=" + subWorkflow.getTraceId()
 			+ ", contextUser=" + subWorkflow.getContextUser());
 
 		String rerunWorkflowId = (String) task.getOutputData().get("rerunWorkflowId");
@@ -308,6 +310,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 			if (!allowRerun) {
 				logger.debug("No more rerun allowed for the sub-workflow=" + subWorkflow.getWorkflowId()
 					+ ", correlationId=" + subWorkflow.getCorrelationId()
+					+ ", traceId=" + subWorkflow.getTraceId()
 					+ ", contextUser=" + subWorkflow.getContextUser());
 
 				task.setStatus(Status.FAILED);
@@ -321,6 +324,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 			logger.debug("Time to rerun the sub-workflow=" + subWorkflow.getWorkflowId()
 				+ ", correlationId=" + subWorkflow.getCorrelationId()
+				+ ", traceId=" + subWorkflow.getTraceId()
 				+ ", contextUser=" + subWorkflow.getContextUser());
 
 			String name = param.getRerunWorkflow().getName();
@@ -340,6 +344,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 			logger.error("Start rerun workflow failed " + ex.getMessage() + " for sub-workflow=" + subWorkflow.getWorkflowId()
 				+ ", correlationId=" + subWorkflow.getCorrelationId()
+				+ ", traceId=" + subWorkflow.getTraceId()
 				+ ", contextUser=" + subWorkflow.getContextUser(), ex);
 		}
 

@@ -129,6 +129,7 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 				task.getOutputData().put("conductor.event.messageId", ee.getMessageId());
 				logger.debug("Updating task " + task + ". workflowId=" + workflow.getWorkflowId()
 					+ ",correlationId=" + workflow.getCorrelationId()
+					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser()
 					+ ",messageId=" + ee.getMessageId()
 					+ ",payload=" + payload);

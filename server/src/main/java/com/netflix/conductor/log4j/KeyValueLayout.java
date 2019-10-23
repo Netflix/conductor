@@ -35,6 +35,8 @@ public class KeyValueLayout extends Layout {
         buf.append("logger=").append(event.getLoggerName()).append(" ");
         buf.append("owner=").append(event.getNDC()).append(" ");
         buf.append("allocId=").append(allocId).append(" ");
+        buf.append("dd-trace-id=").append(event.getMDC("dd.trace_id")).append(" ");
+        buf.append("dd-span-Id=").append(event.getMDC("dd.span_id")).append(" ");
         buf.append("text=").append("\"").append(normalizeMessage(event.getMessage())).append("\"");
         if (event.getThrowableInformation() != null
                 && event.getThrowableInformation().getThrowable() != null) {

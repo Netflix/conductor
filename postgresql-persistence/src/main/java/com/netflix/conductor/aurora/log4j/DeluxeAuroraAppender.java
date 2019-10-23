@@ -43,7 +43,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DeluxeAuroraAppender extends AppenderSkeleton {
 	private static final String INSERT_QUERY = "INSERT INTO log4j_logs " +
-		"(log_time, logger, level, owner, hostname, fromhost, message, stack, alloc_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		"(log_time, logger, level, owner, hostname, fromhost, message, stack, alloc_id, trace_id, span_id) " +
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	private LinkedBlockingDeque<LogEntry> buffer = new LinkedBlockingDeque<>();
 	private AtomicBoolean initialized = new AtomicBoolean(false);
@@ -77,6 +78,8 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 			Throwable throwable = event.getThrowableInformation().getThrowable();
 			entry.stack = throwable2String(throwable);
 		}
+		entry.traceId = (String)event.getMDC("dd.trace_id");
+		entry.spanId = (String)event.getMDC("dd.span_id");
 		buffer.add(entry);
 	}
 
@@ -124,6 +127,8 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				st.setString(7, entry.message);
 				st.setString(8, entry.stack);
 				st.setString(9, allocId);
+				st.setString(10, entry.traceId);
+				st.setString(11, entry.spanId);
 				st.execute();
 
 				// Get the next
@@ -221,5 +226,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		String owner;
 		String message;
 		String stack;
+		String traceId;
+		String spanId;
 	}
 }
