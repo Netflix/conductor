@@ -1,4 +1,3 @@
-
 expose:
   Annotations:
     helm.sh/hook: post-install,post-upgrade
@@ -66,7 +65,7 @@ netflix-conductor:
         cpu: 10m
         memory: 100Mi
 
-# Not needed for preview but commented as a reminder to fix preview ingress
+  # Not needed for preview but commented as a reminder to fix preview ingress
 
   # ingress:
   #   server:
@@ -86,7 +85,7 @@ netflix-conductor:
     host: preview-redis-master
 
   mysql:
-    enabled: false
+    enabled: true
     host: preview-mysql
     username: conductor
     password: ConductorMysqlPassword
@@ -143,25 +142,25 @@ elasticsearch:
 # Add the following and change enabled to true if external redis required
 redis:
   enabled: false
-  # fullnameOverride: redis
-  # usePassword: false
-  # cluster:
-  #   enabled: false
-  # master:
-  #   resources:
-  #     limits:
-  #       memory: "2.2Gi"
-  #     requests:
-  #       cpu: "100m"
-  #       memory: "256Mi"
-  # configmap: |-
+    # fullnameOverride: redis
+    # usePassword: false
+    # cluster:
+    #   enabled: false
+    # master:
+    #   resources:
+    #     limits:
+    #       memory: "2.2Gi"
+    #     requests:
+    #       cpu: "100m"
+    #       memory: "256Mi"
+    # configmap: |-
   #   ### Redis Config ###
   #   timeout 0
   #   tcp-keepalive 300
 
   #   loglevel notice
   #   logfile ""
-    
+
   #   databases 16
 
   #   # RDB snapshotting settings
@@ -230,14 +229,17 @@ redis:
 
 # # Add the following and change enabled to true if external mysql required
 mysql:
-  enabled: false
-#   fullnameOverride: mysql
-
-#   mysqlRootPassword: testing
-#   mysqlUser: conductor
-#   mysqlPassword: ConductorMysqlPassword
-#   mysqlDatabase: conductor
-
-#   initializationFiles:
-#     grant-user-access.sql: |-
-#       GRANT ALL PRIVILEGES ON conductor.* TO 'conductor'@'localhost';
+  enabled: true
+  mysqlRootPassword: pass
+  mysqlUser: conductor
+  mysqlPassword: ConductorMysqlPassword
+  username: conductor
+  password: ConductorMysqlPassword
+  mysqlDatabase: conductor
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types
+  service:
+    annotations:
+      fabric8.io/expose: "true"
+      fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+    type: ClusterIP
+    port: 3306
