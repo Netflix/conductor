@@ -42,14 +42,13 @@ clean:
 	rm -rf ${NAME}*.tgz
 
 release: clean
-	@test -z $(HELM_REPO_USER) && printf "${RED}Environment variable ${YELLOW}HELM_REPO_USER ${RED}not found ${NC}\n" && exit 1 || exit 0
-	@test -z $(HELM_REPO_PASS) && printf "${RED}Environment variable ${YELLOW}HELM_REPO_PASS ${RED}not found ${NC}\n" && exit 1 || exit 0
+	@test -z $(CHARTMUSEUM_CREDS) && printf "${RED}Environment variable ${YELLOW}CHARTMUSEUM_CREDS ${RED}not found ${NC}\n" && exit 1 || exit 0
 	helm dependency build
 	helm lint
 	helm init --client-only
 	helm package .
 	@echo Pushing Chart to Helm repo...
-	@curl --fail -u $(HELM_REPO_USER):$(HELM_REPO_PASS) -X PUT $(CHART_REPO)/$(RELEASE_FILENAME) -T $(RELEASE_FILENAME)
+	@curl --fail -u $(CHARTMUSEUM_CREDS) -X PUT $(CHART_REPO)/$(RELEASE_FILENAME) -T $(RELEASE_FILENAME)
 	@rm -rf ${NAME}*.tgz
 
 tag:
