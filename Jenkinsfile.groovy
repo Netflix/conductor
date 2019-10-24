@@ -84,7 +84,6 @@ pipeline {
             }
             steps {
                 container('maven') {
-                    sh "mv charts/helm-release  charts/$APP_NAME"
                     dir("charts/$APP_NAME") {
                         sh "jx step changelog --generate-yaml=false --version v\$(cat ../../VERSION)"
 
