@@ -26,6 +26,10 @@ server:
     # memory: 128Mi
   service:
     type: ClusterIP
+  ingress:
+    annotations:
+      fabric8.io/expose: "true"
+      fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
   jvmStartupOpts: "  -Xms1g -Xmx1g  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
   appStartupOpts: ""
   loadSamples: false
@@ -34,6 +38,7 @@ server:
     licenseKey: ""
     tracing:
       enabled: false
+
 ui:
   repository: kayosportsau/netflixconductor
   tag: ui-2019.0.3
@@ -54,6 +59,10 @@ ui:
     #  memory: 128Mi
   service:
     type: ClusterIP
+  ingress:
+    annotations:
+      fabric8.io/expose: "true"
+      fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
 
 ingress:
   server:
