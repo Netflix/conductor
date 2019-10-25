@@ -1,0 +1,19 @@
+name: CI
+
+on: [pull_request]
+
+jobs:
+  build:
+    name: Build Validation
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@master
+
+    - name: Get mold
+      run: |
+        curl -s https://api.github.com/repos/d3sw/mold/releases/latest | jq -r '.assets[] | select(.name | startswith("mold-linux")) | .browser_download_url' | wget -qi -
+        tar -zxvf mold-linux-*.tgz
+    - name: Run mold
+      run: |
+        ./mold -t build
