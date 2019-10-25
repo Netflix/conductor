@@ -30,7 +30,7 @@ server:
     annotations:
       fabric8.io/expose: "true"
       fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
-  jvmStartupOpts: "  -Xms1g -Xmx1g  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+  jvmStartupOpts: "  -Xms4g -Xmx4g  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
   appStartupOpts: ""
   loadSamples: false
   newrelic:

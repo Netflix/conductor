@@ -19,11 +19,6 @@ dependencies:
   repository: https://kubernetes-charts.storage.googleapis.com/
   condition: mysql.enabled
 
-- name: redis
-  version: 7.0.0
-  repository: https://kubernetes-charts.storage.googleapis.com/
-  condition: redis.enabled
-
 - alias: netflix-conductor
   name: netflix-conductor
   version: 0.4.12
