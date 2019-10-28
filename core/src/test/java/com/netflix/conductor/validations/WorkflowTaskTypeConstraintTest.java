@@ -2,12 +2,14 @@ package com.netflix.conductor.validations;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
+import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.validation.ValidationError;
+import com.netflix.conductor.core.execution.tasks.Terminate;
 import com.netflix.conductor.dao.MetadataDAO;
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.hibernate.validator.cfg.ConstraintMapping;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -432,6 +434,175 @@ public class WorkflowTaskTypeConstraintTest {
 
         assertTrue(validationErrors.contains("SubWorkflowParams name cannot be null"));
         assertTrue(validationErrors.contains("SubWorkflowParams name cannot be empty"));
+    }
+
+    @Test
+    public void testWorkflowTaskTypeTerminateWithoutTerminationStatus() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType(TaskType.TASK_TYPE_TERMINATE);
+        workflowTask.setName("terminate_task");
+
+        workflowTask.setInputParameters(Collections.singletonMap(Terminate.getTerminationWorkflowOutputParameter(), "blah"));
+        List<String> validationErrors = getErrorMessages(workflowTask);
+
+        Assert.assertEquals(1, validationErrors.size());
+        Assert.assertEquals("terminate task must have an terminationStatus parameter and must be set to COMPLETED or FAILED, taskName: terminate_task", validationErrors.get(0));
+    }
+
+    @Test
+    public void testWorkflowTaskTypeTerminateWithInvalidStatus() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType(TaskType.TASK_TYPE_TERMINATE);
+        workflowTask.setName("terminate_task");
+
+        workflowTask.setInputParameters(Collections.singletonMap(Terminate.getTerminationStatusParameter(), "blah"));
+
+        List<String> validationErrors = getErrorMessages(workflowTask);
+
+        Assert.assertEquals(1, validationErrors.size());
+        Assert.assertEquals("terminate task must have an terminationStatus parameter and must be set to COMPLETED or FAILED, taskName: terminate_task", validationErrors.get(0));
+    }
+
+    @Test
+    public void testWorkflowTaskTypeTerminateOptional() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType(TaskType.TASK_TYPE_TERMINATE);
+        workflowTask.setName("terminate_task");
+
+        workflowTask.setInputParameters(Collections.singletonMap(Terminate.getTerminationStatusParameter(), "COMPLETED"));
+        workflowTask.setOptional(true);
+
+        List<String> validationErrors = getErrorMessages(workflowTask);
+
+        Assert.assertEquals(1, validationErrors.size());
+        Assert.assertEquals("terminate task cannot be optional, taskName: terminate_task", validationErrors.get(0));
+    }
+
+    @Test
+    public void testWorkflowTaskTypeTerminateValid() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType(TaskType.TASK_TYPE_TERMINATE);
+        workflowTask.setName("terminate_task");
+
+        workflowTask.setInputParameters(Collections.singletonMap(Terminate.getTerminationStatusParameter(), "COMPLETED"));
+
+        List<String> validationErrors = getErrorMessages(workflowTask);
+
+        Assert.assertEquals(0, validationErrors.size());
+    }
+
+    @Test
+    public void testWorkflowTaskTypeKafkaPublish() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType("KAFKA_PUBLISH");
+        workflowTask.getInputParameters().put("kafka_request", "testInput");
+
+        ConstraintMapping mapping = config.createConstraintMapping();
+
+        mapping.type(WorkflowTask.class)
+                .constraint(new WorkflowTaskTypeConstraintDef());
+
+        Validator validator = config.addMapping(mapping)
+                .buildValidatorFactory()
+                .getValidator();
+
+        when(mockMetadataDao.getTaskDef(anyString())).thenReturn(new TaskDef());
+
+        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testWorkflowTaskTypeKafkaPublishWithRequestParamMissing() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType("KAFKA_PUBLISH");
+
+        ConstraintMapping mapping = config.createConstraintMapping();
+
+        mapping.type(WorkflowTask.class)
+                .constraint(new WorkflowTaskTypeConstraintDef());
+
+        Validator validator = config.addMapping(mapping)
+                .buildValidatorFactory()
+                .getValidator();
+
+        when(mockMetadataDao.getTaskDef(anyString())).thenReturn(new TaskDef());
+
+        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
+        assertEquals(1, result.size());
+
+        List<String> validationErrors = new ArrayList<>();
+
+        result.forEach(e -> validationErrors.add(e.getMessage()));
+
+        assertTrue(validationErrors.contains("inputParameters.kafka_request field is required for taskType: KAFKA_PUBLISH taskName: encode"));
+    }
+
+    @Test
+    public void testWorkflowTaskTypeKafkaPublishWithKafkaParamInTaskDef() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType("KAFKA_PUBLISH");
+
+        ConstraintMapping mapping = config.createConstraintMapping();
+
+        mapping.type(WorkflowTask.class)
+                .constraint(new WorkflowTaskTypeConstraintDef());
+
+        Validator validator = config.addMapping(mapping)
+                .buildValidatorFactory()
+                .getValidator();
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("encode");
+        taskDef.getInputTemplate().put("kafka_request", "test_kafka_request");
+
+        when(mockMetadataDao.getTaskDef(anyString())).thenReturn(taskDef);
+
+        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
+        assertEquals(0, result.size());
+    }
+
+
+    @Test
+    public void testWorkflowTaskTypeKafkaPublioshWithRequestParamInTaskDefAndWorkflowTask() {
+        WorkflowTask workflowTask = createSampleWorkflowTask();
+        workflowTask.setType("KAFKA_PUBLISH");
+        workflowTask.getInputParameters().put("kafka_request", "http://www.netflix.com");
+
+        ConstraintMapping mapping = config.createConstraintMapping();
+
+        mapping.type(WorkflowTask.class)
+                .constraint(new WorkflowTaskTypeConstraintDef());
+
+        Validator validator = config.addMapping(mapping)
+                .buildValidatorFactory()
+                .getValidator();
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("encode");
+        taskDef.getInputTemplate().put("kafka_request", "test Kafka Request");
+
+        when(mockMetadataDao.getTaskDef(anyString())).thenReturn(taskDef);
+
+        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
+        assertEquals(0, result.size());
+    }
+
+    private List<String> getErrorMessages(WorkflowTask workflowTask) {
+        Set<ConstraintViolation<WorkflowTask>> result = buildValidator().validate(workflowTask);
+        List<String> validationErrors = new ArrayList<>();
+        result.forEach(e -> validationErrors.add(e.getMessage()));
+
+        return validationErrors;
+    }
+
+    private Validator buildValidator() {
+        ConstraintMapping mapping = config.createConstraintMapping();
+        mapping.type(WorkflowTask.class)
+                .constraint(new WorkflowTaskTypeConstraintDef());
+        return config.addMapping(mapping)
+                .buildValidatorFactory()
+                .getValidator();
     }
 
     private WorkflowTask createSampleWorkflowTask() {

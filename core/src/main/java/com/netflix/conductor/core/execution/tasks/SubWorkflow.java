@@ -23,6 +23,7 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 		Map<String, Object> input = task.getInputData();
 		String name = input.get("subWorkflowName").toString();
 		int version = (int) input.get("subWorkflowVersion");
+		Map taskToDomain = workflow.getTaskToDomain();
+		if (input.get("subWorkflowTaskToDomain") instanceof Map) {
+			taskToDomain = (Map) input.get("subWorkflowTaskToDomain");
+		}
 		Map<String, Object> wfInput = (Map<String, Object>) input.get("workflowInput");
 		if (wfInput == null || wfInput.isEmpty()) {
 			wfInput = input;
@@ -57,7 +62,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		String correlationId = workflow.getCorrelationId();
 
 		try {
-			String subWorkflowId = provider.startWorkflow(name, version, wfInput, null, correlationId, workflow.getWorkflowId(), task.getTaskId(), null, workflow.getTaskToDomain());
+			String subWorkflowId = provider.startWorkflow(name, version, wfInput, null, correlationId, workflow.getWorkflowId(), task.getTaskId(), null, taskToDomain);
 			task.getOutputData().put(SUB_WORKFLOW_ID, subWorkflowId);
 			task.getInputData().put(SUB_WORKFLOW_ID, subWorkflowId);
 			task.setStatus(Status.IN_PROGRESS);
@@ -70,11 +75,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	@Override
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) {
-		String workflowId = (String) task.getOutputData().get(SUB_WORKFLOW_ID);
-		if (workflowId == null) {
-			workflowId = (String) task.getInputData().get(SUB_WORKFLOW_ID);	//Backward compatibility
-		}
-
+		String workflowId = getSubWorkflowId(task);
 		if(StringUtils.isEmpty(workflowId)) {
 			return false;
 		}
@@ -96,15 +97,11 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor provider) {
-		String workflowId = (String) task.getOutputData().get(SUB_WORKFLOW_ID);
-		if(workflowId == null) {
-			workflowId = (String) task.getInputData().get(SUB_WORKFLOW_ID);	//Backward compatibility
-		}
-
+		String workflowId = getSubWorkflowId(task);
 		if(StringUtils.isEmpty(workflowId)) {
 			return;
 		}
-		Workflow subWorkflow = provider.getWorkflow(workflowId, false);
+		Workflow subWorkflow = provider.getWorkflow(workflowId, true);
 		subWorkflow.setStatus(WorkflowStatus.TERMINATED);
 		provider.terminateWorkflow(subWorkflow, "Parent workflow has been terminated with status " + workflow.getStatus(), null);
 	}
@@ -114,4 +111,13 @@ public class SubWorkflow extends WorkflowSystemTask {
 		return false;
 	}
 
+	private String getSubWorkflowId(Task task) {
+		String subWorkflowId = (String) task.getOutputData().get(SUB_WORKFLOW_ID);
+		if (subWorkflowId == null) {
+			subWorkflowId = Optional.ofNullable(task.getInputData())
+				.map(data -> (String)data.get(SUB_WORKFLOW_ID)) //Backward compatibility
+				.orElse("");
+		}
+		return subWorkflowId;
+	}
 }

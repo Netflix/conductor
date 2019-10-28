@@ -19,9 +19,7 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.events.queue.Message;
 
 import java.util.List;
 
@@ -85,13 +83,6 @@ public interface ExecutionDAO {
 	 * 		false: If the {@link Task} is not rateLimited
 	 */
 	boolean exceedsRateLimitPerFrequency(Task task);
-
-	/**
-	 *
-	 * @param tasks Multiple tasks to be updated
-	 *
-	 */
-	void updateTasks(List<Task> tasks);
 	
 	/**
 	 * 
@@ -180,19 +171,18 @@ public interface ExecutionDAO {
 	Workflow getWorkflow(String workflowId, boolean includeTasks);
 
 	/**
-	 * 
-	 * @param workflowName Name of the workflow
+	 * @param workflowName name of the workflow
+	 * @param version the workflow version
 	 * @return List of workflow ids which are running
 	 */
-	List<String> getRunningWorkflowIds(String workflowName);
+	List<String> getRunningWorkflowIds(String workflowName, int version);
 
 	/**
-	 * 
 	 * @param workflowName Name of the workflow
+	 * @param version the workflow version
 	 * @return List of workflows that are running
-	 *  
 	 */
-	List<Workflow> getPendingWorkflowsByType(String workflowName);
+	List<Workflow> getPendingWorkflowsByType(String workflowName, int version);
 
 	/**
 	 * 

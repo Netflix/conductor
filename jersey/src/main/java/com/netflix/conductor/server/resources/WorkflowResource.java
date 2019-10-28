@@ -77,8 +77,9 @@ public class WorkflowResource {
     public String startWorkflow(@PathParam("name") String name,
                                 @QueryParam("version") Integer version,
                                 @QueryParam("correlationId") String correlationId,
+                                @QueryParam("priority") @DefaultValue("0") Integer priority,
                                 Map<String, Object> input) {
-        return workflowService.startWorkflow(name, version, correlationId, input);
+        return workflowService.startWorkflow(name, version, correlationId, priority, input);
     }
 
     @GET

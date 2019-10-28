@@ -67,10 +67,6 @@ export default class WorkflowTable extends Component {
 
     const found = size(results);
     const max = (found < 100) ? start + found : start + 100;
-    const options = {
-      noDataText: 'Please wait for data',
-        sizePerPage:100
-    };
 
     const selectRow = {
       mode: 'checkbox',
@@ -108,19 +104,24 @@ export default class WorkflowTable extends Component {
           </div>
         </Popover>
       </Overlay>
-        <BootstrapTable data={results} striped={true} hover={true} search={false} exportCSV={false} pagination={false}
-                        selectRow={selectRow} options={options}>
-            <TableHeaderColumn dataField="workflowType" dataAlign="left" dataSort>Workflow</TableHeaderColumn>
-            <TableHeaderColumn dataField="workflowId" isKey dataSort dataFormat={linkMaker}>Workflow ID</TableHeaderColumn>
-            <TableHeaderColumn dataField="status" dataSort>Status</TableHeaderColumn>
-            <TableHeaderColumn dataField="startTime" dataSort dataFormat={formatDate}>Start Time</TableHeaderColumn>
-            <TableHeaderColumn dataField="updateTime" dataSort dataFormat={formatDate}>Last Updated</TableHeaderColumn>
-            <TableHeaderColumn dataField="endTime" dataSort dataFormat={formatDate}>End Time</TableHeaderColumn>
-            <TableHeaderColumn dataField="reasonForIncompletion">Failure Reason</TableHeaderColumn>
-            <TableHeaderColumn dataField="failedReferenceTaskNames">Failed Tasks</TableHeaderColumn>
-            <TableHeaderColumn dataField="input" width="300px">Input</TableHeaderColumn>
-            <TableHeaderColumn dataField="workflowId" width="75px" dataFormat={this.formatDetails}>Details</TableHeaderColumn>
-        </BootstrapTable>
+
+      <BootstrapTable data={results} striped={true} hover={true}
+                           search={false} exportCSV={false}
+                           pagination={false} selectRow={selectRow}
+                           options={{sizePerPage: 100}} tableStyle={{backgroundColor: 'red'}}>
+        <TableHeaderColumn dataField="workflowType" dataAlign="left" dataSort>Workflow</TableHeaderColumn>
+        <TableHeaderColumn dataField="version" dataAlign="left" dataSort>Version</TableHeaderColumn>
+        <TableHeaderColumn dataField="workflowId" isKey dataSort dataFormat={linkMaker}>Workflow ID</TableHeaderColumn>
+        <TableHeaderColumn dataField="status" dataSort>Status</TableHeaderColumn>
+        <TableHeaderColumn dataField="priority" dataSort>Priority</TableHeaderColumn>
+        <TableHeaderColumn dataField="startTime" dataSort dataAlign="right" dataFormat={formatDate}>Start Time</TableHeaderColumn>
+        <TableHeaderColumn dataField="updateTime" dataSort dataAlign="right" dataFormat={formatDate}>Last Updated</TableHeaderColumn>
+        <TableHeaderColumn dataField="endTime" dataSort dataAlign="right" dataFormat={formatDate}>End Time</TableHeaderColumn>
+        <TableHeaderColumn dataField="reasonForIncompletion" width="250">Failure Reason</TableHeaderColumn>
+        <TableHeaderColumn dataField="failedReferenceTaskNames" width="250">Failed Tasks</TableHeaderColumn>
+        <TableHeaderColumn dataField="input" width="250">Input</TableHeaderColumn>
+        <TableHeaderColumn dataField="workflowId" width="75" dataAlign="center" dataFormat={this.formatDetails}>Details</TableHeaderColumn>
+      </BootstrapTable>
     </div>
   }
 }

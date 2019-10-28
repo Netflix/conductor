@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ import java.util.Map;
  */
 public class DecisionTaskMapper implements TaskMapper {
 
-    Logger logger = LoggerFactory.getLogger(DecisionTaskMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(DecisionTaskMapper.class);
 
     /**
      * This method gets the list of tasks that need to scheduled when the the task to scheduled is of type {@link TaskType#DECISION}.
@@ -87,8 +87,10 @@ public class DecisionTaskMapper implements TaskMapper {
         decisionTask.getInputData().put("case", caseValue);
         decisionTask.getOutputData().put("caseOutput", Collections.singletonList(caseValue));
         decisionTask.setTaskId(taskId);
+        decisionTask.setStartTime(System.currentTimeMillis());
         decisionTask.setStatus(Task.Status.IN_PROGRESS);
         decisionTask.setWorkflowTask(taskToSchedule);
+        decisionTask.setWorkflowPriority(workflowInstance.getPriority());
         tasksToBeScheduled.add(decisionTask);
 
         //get the list of tasks based on the decision
