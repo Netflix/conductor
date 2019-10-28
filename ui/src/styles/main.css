@@ -2,19 +2,19 @@
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 300;
-  src: local('Source Sans Pro Light'), local('SourceSansPro-Light'), url('../fonts/sourcesanspro-light.woff') format('woff');
+  src: local('Source Sans Pro Light'), local('SourceSansPro-Light'), url('../fonts/SourceSansProLight.ttf') format('ttf');
 }
 @font-face {
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 400;
-  src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url('../fonts/sourcesanspro.woff') format('woff');
+  src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url('../fonts/SourceSansProRegular.ttf') format('ttf');
 }
 @font-face {
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 700;
-  src: local('Source Sans Pro Bold'), local('SourceSansPro-Bold'), url('../fonts/sourcesanspro-bold.woff') format('woff');
+  src: local('Source Sans Pro Bold'), local('SourceSansPro-Bold'), url('../fonts/SourceSansProBold.ttf') format('ttf');
 }
 
 *, *:before, *:after {
