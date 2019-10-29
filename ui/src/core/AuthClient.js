@@ -146,12 +146,13 @@ const AuthClient = {
   user(token, success, error) {
     var tokenPayload = token.split('.')[1];
     var payload = JSON.parse(KJUR.b64toutf8(tokenPayload));
+    var client_access = payload["resource_access"]["deluxe.conductor-ui"];
     var result = {
       name: payload["name"],
       preferred_username: payload["preferred_username"],
       email: payload["email"],
       expiration: new Date(), //token.ValidTo
-      roles: payload["resource_access"]["deluxe.conductor-ui"].roles
+      roles: client_access ? client_access.roles : null
     };
     success(result);
   }
