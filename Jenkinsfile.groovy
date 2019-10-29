@@ -4,8 +4,7 @@ pipeline {
     }
 
     environment {
-        ORG = 'fsa-streamotion'
-        APP_NAME = 'netflix-conductor'
+        APP_NAME = 'netflixconductor'
         DOCKER_REGISTRY = 'kayosportsau'
     }
 
@@ -74,7 +73,7 @@ pipeline {
                         currentBuild.displayName = "$buildVersion"
                     }
 
-                    sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
+                    sh "jx step post build --image $DOCKER_REGISTRY/$APP_NAME:\$(cat VERSION)"
                 }
             }
         }
