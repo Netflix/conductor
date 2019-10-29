@@ -82,6 +82,8 @@ const App = React.createClass({
           case 'forbidden':
             message = 'Sorry, but you are not authorized to view this content.';
             break;
+          case 'none':
+            break;
           default:
             message = 'Please wait, while you are being authorized ...';
         }
