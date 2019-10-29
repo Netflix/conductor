@@ -165,7 +165,7 @@ export const authLogout = (refreshToken) => (dispatch) => {
 };
 
 export const setupInactivityTimer = (refreshToken) => (dispatch) => {
-  let timeout = 5 * 60 * 1000;  // after 5 mins of inactivity
+  let timeout = 30 * 60 * 1000;  // after 30 mins of inactivity
 
   var inactivityTimer;
   const resetTimer = (name) => () => {
