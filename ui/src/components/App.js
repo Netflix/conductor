@@ -51,7 +51,7 @@ const App = React.createClass({
 
   render() {
     const token = authHelper.getLocalAuthToken();
-    if ((this.isAuthenticated() && this.isAuthorized()) && !!token) {
+    if ((this.isAuthenticated() && this.isAuthorized()) || token != null) {
       const version = packageJSON.version;
       const marginLeft = this.props.minimize ? '52px' : '177px';
 
