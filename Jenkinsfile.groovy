@@ -4,7 +4,7 @@ pipeline {
     }
 
     environment {
-        APP_NAME = 'netflixconductor'
+        APP_NAME = 'netflix-conductor'
         DOCKER_REGISTRY = 'kayosportsau'
     }
 
@@ -73,7 +73,7 @@ pipeline {
                         currentBuild.displayName = "$buildVersion"
                     }
 
-                    sh "jx step post build --image $DOCKER_REGISTRY/$APP_NAME:\$(cat VERSION)"
+                    sh "jx step post build --image kayosportsau/netflixconductor:\$(cat VERSION)"
                 }
             }
         }
