@@ -237,7 +237,7 @@ job "conductor" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ with printf "secret/conductor" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
 
