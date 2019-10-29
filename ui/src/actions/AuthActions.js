@@ -165,10 +165,6 @@ export function authAuthorizationSuccessful() {
   return authAuthorizationStatusChanged('successful');
 }
 
-export function authAuthorizationForbidden() {
-  return authAuthorizationStatusChanged('forbidden');
-}
-
 export function authAuthorizationPending() {
   return authAuthorizationStatusChanged('pending');
 }
@@ -186,7 +182,7 @@ export function authAuthorizationReset() {
       expiresIn: null,
       refreshToken: null,
       refreshExpiresIn: null,
-      authorizationStatus: 'none',
+      authorizationStatus: 'forbidden',
       isAuthenticated: false,
       isAuthorized: false,
       isLoggedIn: false,
@@ -195,7 +191,7 @@ export function authAuthorizationReset() {
         preferredUsername: null,
         email: null,
         roles: null
-      },
+      }
     }
   }
 }
