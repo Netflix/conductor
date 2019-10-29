@@ -74,7 +74,7 @@ const App = React.createClass({
       ) : this.props.children;
     } else {
       let message = 'Please wait, redirecting shortly ...';
-      if (this.props.isLoggedIn) {
+      if (!!this.props.isLoggedIn) {
         switch (this.props.authorizationStatus) {
           case 'successful':
             message = 'You have been successfully authorized. Redirecting shortly ...';

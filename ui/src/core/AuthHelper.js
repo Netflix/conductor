@@ -1,6 +1,5 @@
 import {
   authAuthorizationError,
-  authAuthorizationForbidden,
   authAuthorizationPending,
   authAuthorizationReset,
   authAuthorizationSuccessful,
@@ -112,8 +111,6 @@ const authToken = (code) => (dispatch) => {
       authUserInfo(data.access_token)(dispatch);
       setupAuthCheck(data.refresh_token, data.expires_in)(dispatch);
       dispatch(authLoginSucceeded(data.access_token, data.expires_in, data.refresh_token, data.refresh_expires_in));
-      window.history.replaceState({}, document.title, "/");
-      window.location.href = '/' + decodeURIComponent(redirectPath.substr(0, redirectPath.indexOf('?'))).replace('//', '/');
     } else {
       throw new Error("Unknown data received");
     }
@@ -149,13 +146,10 @@ export const authLogout = (refreshToken) => (dispatch) => {
     })
     .then(data => {
       if (data) {
+        removeTokensLocally();
         dispatch(authLogoutSucceeded());
         dispatch(authAuthorizationReset());
-        window.location.assign('/Logout.html');
-        localStorage.removeItem(authTokenKey);
-        localStorage.removeItem(refreshTokenKey);
-        localStorage.removeItem(authExpirationDateKey);
-        localStorage.removeItem(refreshExpirationDateKey);
+        window.location.href = '/Logout.html';
       }
     })
     .catch(error => {
@@ -232,6 +226,13 @@ const saveTokensLocally = (authToken, authExp, refreshToken, refreshExp) => {
   localStorage.setItem(refreshExpirationDateKey, refreshExpire.toISOString());
 };
 
+const removeTokensLocally = () => {
+  localStorage.removeItem(authTokenKey);
+  localStorage.removeItem(refreshTokenKey);
+  localStorage.removeItem(authExpirationDateKey);
+  localStorage.removeItem(refreshExpirationDateKey);
+};
+
 const authRefresh = (refreshToken) => (dispatch) => {
   let params = {
     refresh_token: refreshToken
@@ -285,38 +286,49 @@ const authUserInfo = (token) => (dispatch) => {
       if (response.ok) {
         return response.json();
       } else {
-        window.location.assign('./Unauthorized.html');
+        removeTokensLocally();
+        dispatch(authAuthorizationReset());
+        window.location.href = '/Unauthorized.html';
       }
     })
     .then(data => {
       if (data) {
-        dispatch(authInfoSucceeded(data.name, data.preferred_username, data.email, data.roles));
-        return data.roles;
-      }
-    })
-    .then(roles => {
-      // perform authorization check against assigned roles
-      let userRolesSet = new Set(roles);
-      let userRolesIntersection = [...USER_AUTHORIZED_ROLES_SET].filter(role => userRolesSet.has(role));
-      let isDev = [...USER_DEV_ROLES_SET].filter(role => userRolesSet.has(role));
-      if (userRolesIntersection.length > 0) {
-        dispatch(authAuthorizationSuccessful());
+        const roles = data.roles;
+        let userRolesSet = new Set(roles);
+        let userRolesIntersection = [...USER_AUTHORIZED_ROLES_SET].filter(role => userRolesSet.has(role));
+        let isDev = [...USER_DEV_ROLES_SET].filter(role => userRolesSet.has(role));
+        if (isDev.length > 0) {
+          dispatch(userIsDev());
+        }
+        if (userRolesIntersection.length > 0) {
+          dispatch(authAuthorizationSuccessful());
+          dispatch(authInfoSucceeded(data.name, data.preferred_username, data.email, data.roles));
+          //window.history.replaceState({}, document.title, "/");
+          //window.location.href = '/';// + decodeURIComponent(redirectPath.substr(0, redirectPath.indexOf('?'))).replace('//', '/');
+        } else {
+          removeTokensLocally();
+          dispatch(authAuthorizationReset());
+          window.location.href = '/Unauthorized.html';
+        }
       } else {
-        dispatch(authAuthorizationForbidden());
+        console.error('User auth failed: No data returned');
+        removeTokensLocally();
+        dispatch(authAuthorizationReset());
+        window.location.href = '/Unauthorized.html';
       }
-      if (isDev.length > 0)
-        dispatch(userIsDev());
     })
     .catch(error => {
+      removeTokensLocally();
+      console.error('User auth failed', error);
       dispatch(authInfoFailed(error));
       dispatch(authAuthorizationError());
+      dispatch(authAuthorizationReset());
+      window.location.href= '/Unauthorized.html';
     });
 };
 
 const setupAuthCheck = (refreshToken, expiresIn) => (dispatch) => {
   let timeout = expiresIn * 1000 * 0.9;  // check before the token expires
-  //let timeout = 30000 // 30 second test
-  //let timeout = 15000 // 15 second test
   setTimeout(() => authRefresh(refreshToken)(dispatch), timeout);
 };
 
