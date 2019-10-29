@@ -79,3 +79,6 @@ delete-wait: delete
 
 inspect-template:
 	helm install --dry-run --debug .|less
+
+print:
+	helm template .
