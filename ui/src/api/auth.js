@@ -1,9 +1,6 @@
 import {Router} from 'express';
 import log4js from 'log4js';
 import authClient from '../core/AuthClient';
-import DnsResolver from '../core/DnsResolver';
-import {serverConfig} from '../core/ServerConfig';
-import axios from "axios";
 
 const logger = log4js.getLogger('server.routes.auth');
 
@@ -52,10 +49,6 @@ router.post('/auth/user', (req, res) => {
     logger.error(`in route /auth/user error: ${error}`);
     res.status(error.response.status).send(error.response.data);
   });
-});
-
-router.get('/auth/testcors', (req, res) => {
-  res.json(authClient.testcors());
 });
 
 module.exports = router;
