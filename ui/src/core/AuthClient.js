@@ -1,10 +1,7 @@
 import axios from 'axios';
-import log4js from 'log4js';
 import KJUR from 'jsrsasign';
 import DnsResolver from './DnsResolver';
 import {serverConfig} from './ServerConfig';
-
-const logger = log4js.getLogger('server.routes.auth-client');
 
 const authServiceName = serverConfig.authServiceName();
 const keycloakServiceUrl = serverConfig.keycloakServiceUrl();
