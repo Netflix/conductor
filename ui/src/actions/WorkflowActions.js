@@ -59,8 +59,8 @@ export function terminateWorkflow(workflowId) {
       workflowId
     });
 
-
-    return http.delete('/api/wfe/terminate/' + workflowId).then((data) => {
+    const token = authHelper.getLocalAuthToken();
+    return http.delete('/api/wfe/terminate/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_TERMINATE_WORKFLOW',
         workflowId
@@ -81,8 +81,8 @@ export function cancelWorkflow(workflowId) {
       workflowId
     });
 
-
-    return http.post('/api/wfe/cancel/' + workflowId).then((data) => {
+    const token = authHelper.getLocalAuthToken();
+    return http.post('/api/wfe/cancel/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_CANCEL_WORKFLOW',
         workflowId
@@ -125,7 +125,8 @@ export function retryWorfklow(workflowId) {
       workflowId
     });
 
-    return http.post('/api/wfe/retry/' + workflowId).then((data) => {
+    const token = authHelper.getLocalAuthToken();
+    return http.post('/api/wfe/retry/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_RETRY_WORKFLOW',
         workflowId
@@ -146,7 +147,8 @@ export function pauseWorfklow(workflowId) {
       workflowId
     });
 
-    return http.post('/api/wfe/pause/' + workflowId).then((data) => {
+    const token = authHelper.getLocalAuthToken();
+    return http.post('/api/wfe/pause/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_PAUSE_WORKFLOW',
         workflowId
@@ -167,7 +169,8 @@ export function resumeWorfklow(workflowId) {
       workflowId
     });
 
-    return http.post('/api/wfe/resume/' + workflowId).then((data) => {
+    const token = authHelper.getLocalAuthToken();
+    return http.post('/api/wfe/resume/' + workflowId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_RESUME_WORKFLOW',
         workflowId

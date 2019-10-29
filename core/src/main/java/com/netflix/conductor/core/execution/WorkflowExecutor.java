@@ -1700,6 +1700,35 @@ public class WorkflowExecutor {
 		return decoded;
 	}
 
+	public String decodeAuthorizationUser(HttpHeaders headers) {
+		List<String> strings = headers.getRequestHeader(HttpHeaders.AUTHORIZATION);
+		if (strings == null || strings.isEmpty())
+			return null;
+		try {
+			String header = strings.get(0);
+			if (StringUtils.isEmpty(header))
+				return null;
+
+			if (header.length() <= BEARER.length())
+				throw new ApplicationException(Code.UNAUTHORIZED, HttpHeaders.AUTHORIZATION + " header too short");
+
+			String type = header.substring(0, BEARER.length());
+			String token = header.substring(BEARER.length() + 1);
+
+			// Checking bearer format
+			if (!BEARER.equalsIgnoreCase(type))
+				throw new ApplicationException(Code.UNAUTHORIZED, "Invalid " + HttpHeaders.AUTHORIZATION + " type(" + type + ")");
+
+			Map<String, Object> decoded = auth.decode(token);
+			String username = (String)decoded.get("preferred_username");
+			String email = (String)decoded.get("email");
+			return String.format("%s(%s)", username, email);
+		} catch (Exception ex) {
+			logger.debug("decodeAuthorizationUser failed with " + ex.getMessage(), ex);
+			return null;
+		}
+	}
+
 	public String validateContextUser(String contextToken) {
 		// Decode auth context if passed and store at workflow level
 		String contextUser = null;

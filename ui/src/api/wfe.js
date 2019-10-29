@@ -152,7 +152,7 @@ router.get('/id/:workflowId', async (req, res, next) => {
 
 router.delete('/terminate/:workflowId', async (req, res, next) => {
   try {
-    const token = getToken(req)();
+    const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
@@ -165,7 +165,7 @@ router.delete('/terminate/:workflowId', async (req, res, next) => {
 
 router.post('/cancel/:workflowId', async (req, res, next) => {
   try {
-    const token = getToken(req)();
+    const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
