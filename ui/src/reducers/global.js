@@ -66,9 +66,9 @@ export default function global(state = initialState, action) {
 
     case AUTH_LOGIN_FAILED:
       return Object.assign({}, state, {
+        isAuthorized: false,
         isAuthenticated: false,
-        // isAuthorized: false,
-        // authorizationStatus: 'none',
+        authorizationStatus: 'none',
         authToken: null,
         expiresIn: '',
         refreshToken: null,
@@ -123,9 +123,9 @@ export default function global(state = initialState, action) {
       return Object.assign({}, state, {
         code: null,
         isLoggedIn: false,
+        isAuthorized: false,
         isAuthenticated: false,
-        // isAuthorized: false,
-        // authorizationStatus: 'none',
+        authorizationStatus: 'none',
         authToken: null,
         expiresIn: '',
         refreshToken: null,
@@ -140,9 +140,9 @@ export default function global(state = initialState, action) {
 
     case AUTH_LOGOUT_FAILED:
       return Object.assign({}, state, {
+        isAuthorized: false,
         isAuthenticated: false,
-        // isAuthorized: false,
-        // authorizationStatus: 'none',
+        authorizationStatus: 'none',
         authToken: null,
         expiresIn: '',
         refreshToken: null,
@@ -166,9 +166,9 @@ export default function global(state = initialState, action) {
 
     case AUTH_REFRESH_FAILED:
       return Object.assign({}, state, {
+        isAuthorized: false,
         isAuthenticated: false,
-        // isAuthorized: false,
-        // authorizationStatus: 'none',
+        authorizationStatus: 'none',
         authToken: null,
         expiresIn: '',
         refreshToken: null,

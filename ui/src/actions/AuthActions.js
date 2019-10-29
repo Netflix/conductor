@@ -92,15 +92,6 @@ export function authInfoFailed(message) {
   }
 }
 
-function authAuthorizationStatusChanged(status) {
-  return {
-    type: AUTH_AUTHORIZATION_STATUS_CHANGED,
-    payload: {
-      authorizationStatus: status
-    }
-  }
-}
-
 export function authLogoutSucceeded() {
   return {
     type: AUTH_LOGOUT_SUCCEEDED
@@ -161,6 +152,15 @@ export function userIsDev() {
   };
 }
 
+function authAuthorizationStatusChanged(status) {
+  return {
+    type: AUTH_AUTHORIZATION_STATUS_CHANGED,
+    payload: {
+      authorizationStatus: status
+    }
+  }
+}
+
 export function authAuthorizationSuccessful() {
   return authAuthorizationStatusChanged('successful');
 }
@@ -187,6 +187,9 @@ export function authAuthorizationReset() {
       refreshToken: null,
       refreshExpiresIn: null,
       authorizationStatus: 'none',
+      isAuthenticated: false,
+      isAuthorized: false,
+      isLoggedIn: false,
       user: {
         name: null,
         preferredUsername: null,

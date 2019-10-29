@@ -15,15 +15,8 @@ const App = React.createClass({
   },
 
   handleResize(e) {
-    this.setState({windowWidth: window.innerWidth, minimize: window.innerWidth < 600});
-  },
-
-  isAuthenticated() {
-    return this.props.isAuthenticated === true;
-  },
-
-  isAuthorized() {
-    return this.props.isAuthorized === true;
+    this.state.minimize = window.innerWidth < 600;
+    this.state.windowWidth = window.innerWidth;
   },
 
   componentDidMount() {
@@ -34,61 +27,69 @@ const App = React.createClass({
     window.removeEventListener('resize', this.handleResize);
   },
 
+  isAuthorized() {
+    return !!this.props.isAuthorized;
+  },
+
+  isAuthenticated() {
+    return !!this.props.isAuthenticated;
+  },
+
   componentWillMount() {
     if (!this.isAuthenticated()) {
-      this.props.dispatch(authHelper.authLogin(this.state.isAuthenticated));
+      this.props.dispatch(authHelper.authLogin(this.props.isAuthenticated));
     }
   },
 
   componentWillReceiveProps(nextProps) {
-    /*let refreshToken = nextProps.refreshToken;
+    let refreshToken = this.props.refreshToken;
     if (this.isAuthenticated() && this.isAuthorized() && !!refreshToken && !this.inactivityTimerSet) {
       this.props.dispatch(authHelper.setupInactivityTimer(refreshToken));
       this.inactivityTimerSet = true;
-    }*/
-  },
-
-  getLoadingText() {
-    if (this.state.isLoggedIn) {
-      switch (this.state.authorizationStatus) {
-        case 'successful':
-          return 'You have been successfully authorized. Redirecting shortly ...';
-        case 'forbidden':
-          return 'Sorry, but you are not authorized to view this content.';
-        default:
-          return 'Please wait, while you are being authorized ...';
-      }
-    } else {
-      return 'Please wait, redirecting shortly ...';
     }
   },
 
   render() {
-    // if (!this.isAuthenticated() || !this.isAuthorized()) {
-    //   return (
-    //     <h4>{this.getLoadingText()}</h4>
-    //   );
-    // }
+    const token = authHelper.getLocalAuthToken();
+    if ((this.isAuthenticated() && this.isAuthorized()) || token != null) {
+      const version = packageJSON.version;
+      const marginLeft = this.props.minimize ? '52px' : '177px';
 
-    const version = packageJSON.version;
-    const marginLeft = this.state.minimize ? '52px' : '177px';
-    return !this.props.error ? (
-      <div style={{height: '100%'}}>
+      return !this.props.error ? (
         <div style={{height: '100%'}}>
-          <LeftMenu version={version} minimize={this.state.minimize}/>
-          <ErrorPage/>
-          <div className="appMainBody" style={{
-            width: document.body.clientWidth - 180,
-            marginLeft: marginLeft,
-            marginTop: '10px',
-            paddingRight: '20px'
-          }}>
-            {this.props.children}
+          <div style={{height: '100%'}}>
+            <LeftMenu version={version} minimize={this.props.minimize}/>
+            <ErrorPage/>
+            <div className="appMainBody" style={{
+              width: document.body.clientWidth - 180,
+              marginLeft: marginLeft,
+              marginTop: '10px',
+              paddingRight: '20px'
+            }}>
+              {this.props.children}
+            </div>
           </div>
+          <Footer username={this.props.user.name}/>
         </div>
-        <Footer username={this.props.user.name}/>
-      </div>
-    ) : this.props.children;
+      ) : this.props.children;
+    } else {
+      let message = 'Please wait, redirecting shortly ...';
+      if (this.props.isLoggedIn) {
+        switch (this.props.authorizationStatus) {
+          case 'successful':
+            message = 'You have been successfully authorized. Redirecting shortly ...';
+            break;
+          case 'forbidden':
+            message = 'Sorry, but you are not authorized to view this content.';
+            break;
+          default:
+            message = 'Please wait, while you are being authorized ...';
+        }
+      }
+      return (
+        <h4>{message}</h4>
+      );
+    }
   }
 
 });
