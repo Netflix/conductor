@@ -66,13 +66,11 @@ job "conductor" {
       }
 
       env {
-        TLD         = "${meta.tld}"
+        TLD = "${meta.tld}"
         APP_VERSION = "[[.app_version]]"
         WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
-
-        // Auth settings. Rest settings are in vault
-        conductor_auth_service  = "auth.service.${meta.tld}"
-        conductor_auth_endpoint = "/v1/tenant/deluxe/auth/token"
+        AUTH_SERVICE_NAME    = "auth.service.${meta.tld}"
+        KEYCLOAK_SERVICE_URL = "http://keycloak.service.${meta.tld}"
       }
 
       service {
@@ -91,7 +89,7 @@ job "conductor" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ with printf "secret/conductor/ui" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
 
@@ -239,7 +237,7 @@ job "conductor" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/%s" (env "NOMAD_JOB_NAME") | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ with printf "secret/conductor" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
 
