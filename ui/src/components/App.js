@@ -51,7 +51,7 @@ const App = React.createClass({
 
   render() {
     const token = authHelper.getLocalAuthToken();
-    if ((this.isAuthenticated() && this.isAuthorized()) || token != null) {
+    if ((this.isAuthenticated() && this.isAuthorized()) && !!token) {
       const version = packageJSON.version;
       const marginLeft = this.props.minimize ? '52px' : '177px';
 
@@ -73,23 +73,8 @@ const App = React.createClass({
         </div>
       ) : this.props.children;
     } else {
-      let message = 'Please wait, redirecting shortly ...';
-      if (!!this.props.isLoggedIn) {
-        switch (this.props.authorizationStatus) {
-          case 'successful':
-            message = 'You have been successfully authorized. Redirecting shortly ...';
-            break;
-          case 'forbidden':
-            message = 'Sorry, but you are not authorized to view this content.';
-            break;
-          case 'none':
-            break;
-          default:
-            message = 'Please wait, while you are being authorized ...';
-        }
-      }
       return (
-        <h4>{message}</h4>
+        <h4>Please wait, redirecting shortly ...</h4>
       );
     }
   }

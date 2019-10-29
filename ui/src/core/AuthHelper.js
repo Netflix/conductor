@@ -111,6 +111,8 @@ const authToken = (code) => (dispatch) => {
       authUserInfo(data.access_token)(dispatch);
       setupAuthCheck(data.refresh_token, data.expires_in)(dispatch);
       dispatch(authLoginSucceeded(data.access_token, data.expires_in, data.refresh_token, data.refresh_expires_in));
+      window.history.replaceState({}, document.title, "/");
+      window.location.href = '/' + decodeURIComponent(redirectPath.substr(0, redirectPath.indexOf('?'))).replace('//', '/');
     } else {
       throw new Error("Unknown data received");
     }
@@ -227,6 +229,7 @@ const saveTokensLocally = (authToken, authExp, refreshToken, refreshExp) => {
 };
 
 const removeTokensLocally = () => {
+  sessionStorage.clear();
   localStorage.removeItem(authTokenKey);
   localStorage.removeItem(refreshTokenKey);
   localStorage.removeItem(authExpirationDateKey);
@@ -303,8 +306,6 @@ const authUserInfo = (token) => (dispatch) => {
         if (userRolesIntersection.length > 0) {
           dispatch(authAuthorizationSuccessful());
           dispatch(authInfoSucceeded(data.name, data.preferred_username, data.email, data.roles));
-          //window.history.replaceState({}, document.title, "/");
-          //window.location.href = '/';// + decodeURIComponent(redirectPath.substr(0, redirectPath.indexOf('?'))).replace('//', '/');
         } else {
           removeTokensLocally();
           dispatch(authAuthorizationReset());
