@@ -139,6 +139,9 @@ public class WorkflowResource {
 			if (StringUtils.isNotEmpty(correlationId)) {
 				request.setCorrelationId(correlationId);
 			}
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to start workflow " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
 				request.getInput(), null, request.getTaskToDomain(),
 				auth, contextToken, contextUser, traceId);
@@ -310,6 +313,9 @@ public class WorkflowResource {
 
 		NDC.push("rest-pause-" + UUID.randomUUID().toString());
 		try {
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to pause workflowId " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.pauseWorkflow(workflowId, correlationId);
 		} finally {
 			NDC.remove();
@@ -339,6 +345,9 @@ public class WorkflowResource {
 
 		NDC.push("rest-resume-" + UUID.randomUUID().toString());
 		try {
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to resume workflowId " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.resumeWorkflow(workflowId, correlationId);
 		} finally {
 			NDC.remove();
@@ -395,6 +404,9 @@ public class WorkflowResource {
 
 		NDC.push("rest-rerun-" + UUID.randomUUID().toString());
 		try {
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to rerun workflowId " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.rerun(request);
 		} finally {
 			NDC.remove();
@@ -425,6 +437,9 @@ public class WorkflowResource {
 
 		NDC.push("rest-restart-" + UUID.randomUUID().toString());
 		try {
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to restart workflowId " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.rewind(workflowId, correlationId);
 		} finally {
 			NDC.remove();
@@ -454,6 +469,9 @@ public class WorkflowResource {
 
 		NDC.push("rest-retry-" + UUID.randomUUID().toString());
 		try {
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to retry workflowId " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.retry(workflowId, correlationId);
 		} finally {
 			NDC.remove();
@@ -483,6 +501,9 @@ public class WorkflowResource {
 
 		NDC.push("rest-terminate-" + UUID.randomUUID().toString());
 		try {
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to terminate workflowId " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.terminateWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Terminated from api"));
 		} finally {
 			NDC.remove();
@@ -513,6 +534,9 @@ public class WorkflowResource {
 
 		NDC.push("rest-cancel-" + UUID.randomUUID().toString());
 		try {
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to cancel workflowId " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.cancelWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
 		} finally {
 			NDC.remove();
@@ -542,6 +566,9 @@ public class WorkflowResource {
 
 		NDC.push("rest-complete-" + UUID.randomUUID().toString());
 		try {
+			String userInvoked = executor.decodeAuthorizationUser(headers);
+			logger.debug("About to complete workflowId " + workflowId + ",userInvoked=" + userInvoked);
+
 			executor.forceCompleteWorkflow(workflowId, "Force completed by API");
 		} finally {
 			NDC.remove();

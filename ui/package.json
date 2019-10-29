@@ -19,6 +19,7 @@
   ],
   "license": "SEE LICENSE IN license.txt",
   "dependencies": {
+    "log4js": "2.3.12",
     "amdefine": "^1.0.0",
     "autoprefixer": "^6.0.0",
     "babel": "^6.5.2",
@@ -86,6 +87,7 @@
     "gulp-uglify": "^1.4.0",
     "imagemin-pngquant": "^4.2.0",
     "json-loader": "^0.5.4",
+    "jsrsasign": "^8.0.12",
     "mocha": "^2.3.0",
     "postcss-nested": "^1.0.0",
     "postcss-simple-extend": "^1.0.0",

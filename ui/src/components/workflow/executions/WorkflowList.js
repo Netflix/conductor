@@ -280,7 +280,7 @@ dateChangeFrom(e){
 
     function miniDetails(cell, row){
       return (<ButtonGroup><OverlayTrigger trigger="click" rootClose placement="left" overlay={
-        <Popover title="Workflow Details" width={400}>
+        <Popover id={row.workflowId} title="Workflow Details" width={400}>
           <span className="red">{row.reasonForIncompletion == null?'':<span>{row.reasonForIncompletion}<hr/></span>}</span>
           <b>Input</b><br/>
           <span className="small" style={{maxWidth:'400px'}}>{row.input}</span>
@@ -319,7 +319,7 @@ dateChangeFrom(e){
               </Col>
               <Col md={2}>
                 <Input className="number-input" type="text" ref="h" groupClassName="inline" labelClassName="" label="" value={this.state.h} onChange={this.hourChange}/>
-                &nbsp;&nbsp;&nbsp;<Button bsSize="medium" bsStyle="success" onClick={this.searchBtnClick} className="fa fa-search search-label">&nbsp;&nbsp;Search</Button>
+                &nbsp;&nbsp;&nbsp;<Button bsSize="small" bsStyle="success" onClick={this.searchBtnClick} className="fa fa-search search-label">&nbsp;&nbsp;Search</Button>
                 <br/>&nbsp;&nbsp;&nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Created (in past hours)</label>
               </Col>
             </Row>

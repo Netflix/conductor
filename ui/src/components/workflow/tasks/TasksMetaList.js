@@ -35,7 +35,7 @@ const TaskMetaList = React.createClass({
 
     function editor(cell, row){
       return (<OverlayTrigger trigger="click" rootClose placement="right" overlay={
-        <Popover title={row.name} style={{ width: '500px'}}><div className="left">
+        <Popover id={row.name} title={row.name} style={{ width: '500px'}}><div className="left">
           <form>
             <Input type="text" ref="retryCount" value={row.retryCount} addonBefore="Retry Count" addonAfter="Times"></Input><br/>
             <Input type="select" ref="retryLogic" value={row.retryLogic} addonBefore="Retry Logic">

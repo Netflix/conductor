@@ -97,7 +97,7 @@ class WorkflowDetails extends Component {
     function popoverLink(cell, row){
       return (<OverlayTrigger trigger="click" rootClose placement="left" overlay={
 
-        <Popover title="Task Details" style={{ width: '800px'}}>
+        <Popover id={row.taskId} key={row.taskId} title="Task Details" style={{ width: '800px'}}>
           <Panel header={<span><span>Task Input</span> <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#input"></i></span>}>
 
             <span className="small"><pre id="input">{JSON.stringify(row.inputData, null, 2)}</pre></span>
@@ -115,13 +115,13 @@ class WorkflowDetails extends Component {
     function tableBody(tasks){
       let trs = [];
       if (tasks.length === 0) {
-          let row = <tr>
+          let row = <tr key='no'>
             <td colSpan='10'><center><span className="red">No data found</span></center></td>
           </tr>;
           trs.push(row);
       }
       tasks.forEach(task => {
-        let row = <tr>
+        let row = <tr key={task.taskId}>
                     <td>{task.seq}</td>
                     <td>{task.taskType}</td>
                     <td>{task.referenceTaskName}</td>
