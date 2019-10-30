@@ -152,8 +152,8 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
     }
 
     private void logException(ValidationException exception) {
-        LOGGER.error(String.format("Error %s url: '%s'", exception.getClass().getSimpleName(),
-                getUriInfo().getPath()), exception);
+        LOGGER.debug(String.format("Error %s url: '%s'", exception.getClass().getSimpleName(),
+                    getUriInfo().getPath()), exception);
     }
 
 }
