@@ -34,8 +34,8 @@ server:
   appStartupOpts: ""
   loadSamples: false
   newrelic:
-    enabled: false
-    licenseKey: ""
+    enabled: true
+    licenseKey: "c3a6b94918f96d44af11c628b52630d59f5ad20c"
     tracing:
       enabled: false
 
@@ -98,11 +98,12 @@ redis:
   port: 6379
 
 mysql:
-  enabled: false
-  host: ""
+  enabled: true
+  host: "auroramysql56-rdscluster-g6n4dlpnqd5e.cluster-c7ladyejgvzv.ap-southeast-2.rds.amazonaws.com"
   port: 3306
-  username: ""
-  password: ""
-  dbName: ""
+  username: "conductor"
+  password: "conductor"
+  dbName: "conductor"
+  # https://docs.amazonaws.cn/en_us/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Managing.Performance.html
   connectionPoolMaxSize: 50
   connectionPoolMinIdle: 20
