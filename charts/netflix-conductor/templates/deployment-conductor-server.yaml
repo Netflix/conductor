@@ -50,7 +50,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: {{ include "netflix-conductor.name" . }}-server
-          image: "kayosportsau/netflixconductor:{{ .Values.server.tag }}"
+          image: "kayosportsau/netflixconductor:server-{{ .Values.server.tag }}"
 #         image: "{{ .Values.ui.repository }}:{{ .Values.ui.tag }}"
           imagePullPolicy: {{ .Values.server.pullPolicy }}
           command:
