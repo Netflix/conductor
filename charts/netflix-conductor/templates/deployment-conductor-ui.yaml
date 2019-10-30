@@ -52,6 +52,7 @@ spec:
       containers:
         - name: {{ include "netflix-conductor.name" . }}-ui
           image: "{{ .Values.ui.repository }}:{{ .Values.ui.tag }}"
+#          image: "{{ .Values.ui.repository }}:{{ .Values.ui.tag }}"
           imagePullPolicy: {{ .Values.ui.pullPolicy }}
           env:
             - name: WF_SERVER
