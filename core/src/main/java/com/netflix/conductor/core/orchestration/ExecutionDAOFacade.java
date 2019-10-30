@@ -203,6 +203,42 @@ public class ExecutionDAOFacade {
         }
     }
 
+    /**
+     * Archives the workflow in ES.
+     *
+     * @param workflowId      the id of the workflow to be removed
+     * @param retainState if true, the workflow will be not deleted from data store{@link ExecutionDAO}
+     */
+    public void archiveWorkflow(String workflowId, boolean retainState) {
+        try {
+            Workflow workflow = getWorkflowById(workflowId, true);
+
+            // remove workflow from ES
+		String rawJson = objectMapper.writeValueAsString(workflow);
+		//If size is greater then MAX then truncate to MAX
+		if (rawJson.length() > MAX_RAW_JSON) {
+			rawJson = rawJson.substring(0, MAX_RAW_JSON);
+		}
+                //Add to elasticsearch
+                indexDAO.updateWorkflow(workflowId,
+                        new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD},
+                        new Object[]{rawJson, true});
+        if(!retainState){
+            // remove workflow from DAO when flag is set to false
+            try {
+                executionDAO.removeWorkflow(workflowId);
+            } catch (Exception ex) {
+                Monitors.recordDaoError("executionDao", "removeWorkflow");
+                throw ex;
+            }
+
+            }
+        }
+        catch (Exception e) {
+            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, "Error removing workflow: " + workflowId, e);
+        }
+        }
+
     public List<Task> createTasks(List<Task> tasks) {
         List<Task> tasksCreated = new LinkedList<>();
         tasksCreated = executionDAO.createTasks(tasks);

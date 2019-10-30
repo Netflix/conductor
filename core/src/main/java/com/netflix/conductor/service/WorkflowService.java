@@ -105,6 +105,13 @@ public interface WorkflowService {
     void deleteWorkflow(@NotEmpty(message = "WorkflowId cannot be null or empty.") String workflowId, boolean archiveWorkflow);
 
     /**
+     * Archives the workflow in ES.
+     * @param workflowId WorkflowID of the workflow you want to archive in ES.
+     * @param retainState delete/not delete workflow from data store.
+     */
+    void archiveWorkflow(@NotEmpty(message = "WorkflowId cannot be null or empty.") String workflowId, boolean retainState);
+
+    /**
      * Retrieves all the running workflows.
      * @param workflowName Name of the workflow.
      * @param version Version of the workflow.

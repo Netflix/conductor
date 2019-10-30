@@ -342,6 +342,10 @@ public class ExecutionService {
 		executionDAOFacade.removeWorkflow(workflowId, archiveWorkflow);
 	}
 
+	public void archiveWorkflow(String workflowId, boolean retainState) {
+		executionDAOFacade.archiveWorkflow(workflowId, retainState);
+	}
+
 	public SearchResult<WorkflowSummary> search(String query, String freeText, int start, int size, List<String> sortOptions) {
 
 		SearchResult<String> result = executionDAOFacade.searchWorkflows(query, freeText, start, size, sortOptions);
