@@ -165,6 +165,9 @@ public class WorkflowTask {
 
 	@ProtoField(id = 25)
 	private List<WorkflowTask> loopOver = new LinkedList<>();
+	
+	@ProtoField(id = 26)
+	private String gotoTask;
 
 	/**
 	 * @return the name
@@ -513,6 +516,24 @@ public class WorkflowTask {
 	public void setDefaultExclusiveJoinTask(List<String> defaultExclusiveJoinTask) {
 		this.defaultExclusiveJoinTask = defaultExclusiveJoinTask;
 	}
+	
+	
+
+	/**
+	 * @return reference name of target Goto task
+	 */
+	public String getGotoTask() {
+		return gotoTask;
+	}
+	
+	/**
+	 * @param gotoTask target Goto Task's reference name
+	 */
+	public void setGotoTask(String gotoTask) {
+		this.gotoTask = gotoTask;
+	}
+
+
 
 	private Collection<List<WorkflowTask>> children() {
 		Collection<List<WorkflowTask>> workflowTaskLists = new LinkedList<>();
@@ -690,7 +711,8 @@ public class WorkflowTask {
                 Objects.equals(getJoinOn(), that.getJoinOn()) &&
                 Objects.equals(getSink(), that.getSink()) &&
 				Objects.equals(isAsyncComplete(), that.isAsyncComplete()) &&
-                Objects.equals(getDefaultExclusiveJoinTask(), that.getDefaultExclusiveJoinTask());
+                Objects.equals(getDefaultExclusiveJoinTask(), that.getDefaultExclusiveJoinTask()) &&
+				Objects.equals(getGotoTask(), that.getGotoTask());
     }
 
     @Override
@@ -717,7 +739,8 @@ public class WorkflowTask {
                 getSink(),
                 isAsyncComplete(),
                 isOptional(),
-                getDefaultExclusiveJoinTask()
+                getDefaultExclusiveJoinTask(),
+				getGotoTask()
         );
     }
 }

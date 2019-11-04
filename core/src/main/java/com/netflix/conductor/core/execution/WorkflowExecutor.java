@@ -1000,11 +1000,11 @@ public class WorkflowExecutor {
     @VisibleForTesting
     List<Task> dedupAndAddTasks(Workflow workflow, List<Task> tasks) {
         List<String> tasksInWorkflow = workflow.getTasks().stream()
-                .map(task -> task.getReferenceTaskName() + "_" + task.getRetryCount())
+                .map(task -> task.getReferenceTaskName() + "_" + task.getRetryCount() + "_" + task.getIterationCount())
                 .collect(Collectors.toList());
 
         List<Task> dedupedTasks = tasks.stream()
-                .filter(task -> !tasksInWorkflow.contains(task.getReferenceTaskName() + "_" + task.getRetryCount()))
+                .filter(task -> !tasksInWorkflow.contains(task.getReferenceTaskName() + "_" + task.getRetryCount() + "_" + task.getIterationCount()))
                 .collect(Collectors.toList());
 
         workflow.getTasks().addAll(dedupedTasks);
@@ -1476,7 +1476,7 @@ public class WorkflowExecutor {
 
     public void scheduleNextIteration(Task loopTask, Workflow workflow) {
         //Schedule only first loop over task. Rest will be taken care in Decider Service when this task will get completed.
-        List<Task> scheduledLoopOverTasks = deciderService.getTasksToBeScheduled(workflow, loopTask.getWorkflowTask().getLoopOver().get(0), loopTask.getRetryCount(), null);
+        List<Task> scheduledLoopOverTasks = deciderService.getTasksToBeScheduled(workflow, loopTask.getWorkflowTask().getLoopOver().get(0), loopTask.getRetryCount(), null, 0);
         scheduledLoopOverTasks.stream().forEach(t -> {
             t.setReferenceTaskName(TaskUtils.appendIteration(t.getReferenceTaskName(), loopTask.getIteration()));
             t.setIteration(loopTask.getIteration());

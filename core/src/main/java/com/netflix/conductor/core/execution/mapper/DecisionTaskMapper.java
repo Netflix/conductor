@@ -70,6 +70,7 @@ public class DecisionTaskMapper implements TaskMapper {
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
         int retryCount = taskMapperContext.getRetryCount();
+        int iterationCount = taskMapperContext.getIterationCount();
         String taskId = taskMapperContext.getTaskId();
 
         //get the expression to be evaluated
@@ -91,6 +92,7 @@ public class DecisionTaskMapper implements TaskMapper {
         decisionTask.setStatus(Task.Status.IN_PROGRESS);
         decisionTask.setWorkflowTask(taskToSchedule);
         decisionTask.setWorkflowPriority(workflowInstance.getPriority());
+		decisionTask.setIterationCount(iterationCount);
         tasksToBeScheduled.add(decisionTask);
 
         //get the list of tasks based on the decision
@@ -102,9 +104,19 @@ public class DecisionTaskMapper implements TaskMapper {
         //once there are selected tasks that need to proceeded as part of the decision, get the next task to be
         // scheduled by using the decider service
         if (selectedTasks != null && !selectedTasks.isEmpty()) {
+        	
+        	    for(WorkflowTask selectedTask : selectedTasks)
+        	    {
+        	    	    if(TaskType.GOTO.name().equals(selectedTask.getType()))
+        	    	    {
+        	                decisionTask.getInputData().put("gotoActivated", "true"); 
+        	                break;
+        	    	    }
+        	    }
+        	    
             WorkflowTask selectedTask = selectedTasks.get(0);        //Schedule the first task to be executed...
             //TODO break out this recursive call using function composition of what needs to be done and then walk back the condition tree
-            List<Task> caseTasks = taskMapperContext.getDeciderService().getTasksToBeScheduled(workflowInstance, selectedTask, retryCount, taskMapperContext.getRetryTaskId());
+            List<Task> caseTasks = taskMapperContext.getDeciderService().getTasksToBeScheduled(workflowInstance, selectedTask, retryCount, taskMapperContext.getRetryTaskId(), iterationCount);
             tasksToBeScheduled.addAll(caseTasks);
             decisionTask.getInputData().put("hasChildren", "true");
         }

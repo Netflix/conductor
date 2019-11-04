@@ -114,7 +114,7 @@ public class DecisionTaskMapperTest {
         theTask.setReferenceTaskName("Foo");
         theTask.setTaskId(IDGenerator.generate());
 
-        when(deciderService.getTasksToBeScheduled(workflowInstance, task2, 0, null))
+        when(deciderService.getTasksToBeScheduled(workflowInstance, task2, 0, null, 0))
                 .thenReturn(Arrays.asList(theTask));
 
         TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()

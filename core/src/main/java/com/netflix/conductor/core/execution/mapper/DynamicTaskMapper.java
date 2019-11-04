@@ -63,6 +63,7 @@ public class DynamicTaskMapper implements TaskMapper {
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
         int retryCount = taskMapperContext.getRetryCount();
+        int iterationCount = taskMapperContext.getIterationCount();
         String retriedTaskId = taskMapperContext.getRetryTaskId();
 
         String taskNameParam = taskToSchedule.getDynamicTaskNameParam();
@@ -86,6 +87,7 @@ public class DynamicTaskMapper implements TaskMapper {
         dynamicTask.setCorrelationId(workflowInstance.getCorrelationId());
         dynamicTask.setScheduledTime(System.currentTimeMillis());
         dynamicTask.setRetryCount(retryCount);
+        dynamicTask.setIterationCount(iterationCount);
         dynamicTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
         dynamicTask.setResponseTimeoutSeconds(taskDefinition.getResponseTimeoutSeconds());
         dynamicTask.setWorkflowTask(taskToSchedule);

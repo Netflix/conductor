@@ -118,8 +118,8 @@ public class ForkJoinDynamicTaskMapperTest {
         Task simpleTask2 = new Task();
         simpleTask2.setReferenceTaskName("xdt2");
 
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0 )).thenReturn(Arrays.asList(simpleTask1));
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt3, 0 )).thenReturn(Arrays.asList(simpleTask2));
+        when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0, 0 )).thenReturn(Arrays.asList(simpleTask1));
+        when(deciderService.getTasksToBeScheduled(workflowInstance, wt3, 0, 0 )).thenReturn(Arrays.asList(simpleTask2));
 
         String taskId = IDGenerator.generate();
 
@@ -197,8 +197,8 @@ public class ForkJoinDynamicTaskMapperTest {
         Task simpleTask2 = new Task();
         simpleTask2.setReferenceTaskName("xdt2");
 
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0 )).thenReturn(Arrays.asList(simpleTask1));
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt3, 0 )).thenReturn(Arrays.asList(simpleTask2));
+        when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0, 0)).thenReturn(Arrays.asList(simpleTask1));
+        when(deciderService.getTasksToBeScheduled(workflowInstance, wt3, 0, 0)).thenReturn(Arrays.asList(simpleTask2));
 
         String taskId = IDGenerator.generate();
         TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()

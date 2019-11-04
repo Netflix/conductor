@@ -198,6 +198,9 @@ public class Task {
     @ProtoField(id = 40)
     private int iteration;
 
+    @ProtoField(id = 41)
+    private int iterationCount;
+	
     public Task() {
     }
 
@@ -725,6 +728,20 @@ public class Task {
     public void setWorkflowPriority(int workflowPriority) {
         this.workflowPriority = workflowPriority;
     }
+	
+	/**
+     * @return the iterationCount
+     */
+    public int getIterationCount() {
+        return iterationCount;
+    }
+
+    /**
+     * @param iterationCount the iterationCount to set
+     */
+    public void setIterationCount(int iterationCount) {
+        this.iterationCount = iterationCount;
+    }
 
     public Task copy() {
         Task copy = new Task();
@@ -756,6 +773,7 @@ public class Task {
         copy.setIteration(iteration);
         copy.setExecutionNameSpace(executionNameSpace);
         copy.setIsolationGroupId(isolationGroupId);
+		copy.setIterationCount(iterationCount);
 
         return copy;
     }
@@ -769,6 +787,7 @@ public class Task {
                 ", inputData=" + inputData +
                 ", referenceTaskName='" + referenceTaskName + '\'' +
                 ", retryCount=" + retryCount +
+                ", iterationCount=" + iterationCount +
                 ", seq=" + seq +
                 ", correlationId='" + correlationId + '\'' +
                 ", pollCount=" + pollCount +
@@ -810,6 +829,7 @@ public class Task {
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
         return getRetryCount() == task.getRetryCount() &&
+                getIterationCount() == task.getIterationCount() &&
                 getSeq() == task.getSeq() &&
                 getPollCount() == task.getPollCount() &&
                 getScheduledTime() == task.getScheduledTime() &&
@@ -851,6 +871,6 @@ public class Task {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTaskType(), getStatus(), getInputData(), getReferenceTaskName(), getWorkflowPriority(), getRetryCount(), getSeq(), getCorrelationId(), getPollCount(), getTaskDefName(), getScheduledTime(), getStartTime(), getEndTime(), getUpdateTime(), getStartDelayInSeconds(), getRetriedTaskId(), isRetried(), isExecuted(), isCallbackFromWorker(), getResponseTimeoutSeconds(), getWorkflowInstanceId(), getWorkflowType(), getTaskId(), getReasonForIncompletion(), getCallbackAfterSeconds(), getWorkerId(), getOutputData(), getWorkflowTask(), getDomain(), getInputMessage(), getOutputMessage(), getRateLimitPerFrequency(), getRateLimitFrequencyInSeconds(), getExternalInputPayloadStoragePath(), getExternalOutputPayloadStoragePath(), getIsolationGroupId(), getExecutionNameSpace());
+        return Objects.hash(getTaskType(), getStatus(), getInputData(), getReferenceTaskName(), getWorkflowPriority(), getRetryCount(), getSeq(), getCorrelationId(), getPollCount(), getTaskDefName(), getScheduledTime(), getStartTime(), getEndTime(), getUpdateTime(), getStartDelayInSeconds(), getRetriedTaskId(), isRetried(), isExecuted(), isCallbackFromWorker(), getResponseTimeoutSeconds(), getWorkflowInstanceId(), getWorkflowType(), getTaskId(), getReasonForIncompletion(), getCallbackAfterSeconds(), getWorkerId(), getOutputData(), getWorkflowTask(), getDomain(), getInputMessage(), getOutputMessage(), getRateLimitPerFrequency(), getRateLimitFrequencyInSeconds(), getExternalInputPayloadStoragePath(), getExternalOutputPayloadStoragePath(), getIsolationGroupId(), getExecutionNameSpace(), getIterationCount());
     }
 }

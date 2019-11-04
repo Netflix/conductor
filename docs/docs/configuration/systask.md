@@ -619,3 +619,33 @@ Do while task does NOT support domain or isolation group execution.
 ```
 If any of loopover task will be failed then do while task will be failed. In such case retry will start iteration from 1. TaskType SUB_WORKFLOW is not supported as a part of loopover task. Since loopover tasks will be executed in loop inside scope of parent do while task, crossing branching outside of DO_WHILE task will not be respected. Branching inside loopover task will be supported.
 In case of exception while evaluating loopCondition, do while task will be failed with FAILED_WITH_TERMINAL_ERROR.
+
+
+# Goto Task
+
+Goto task is used to take the workflow execution to a previously executed task with a new iteration count of such task. Goto task is similar to programming language construct of Goto. It can be used in different BPMN (Business Process Model and Notation) workflows where based on a task's output, workflow could decide whether it should run a new task or run a previously executed task.
+
+### Parameters:
+|name|description|
+|---|---|
+| gotoTask | Task reference name of the previously executed task. It should be it should be in same branch of execution. 
+
+### Example
+
+``` json
+{
+   "name": "t2,
+   "taskReferenceName": "t2",
+   "inputParameters": {
+     "param1": "newValue"
+   },
+   "type": "GOTO",
+   "gotoTask": "t1"
+ } 
+```
+When executed, it will take the execution to t1. If task t1 has input field ``param1``, it's value will be replaced by ``newValue``.
+
+!!!warning
+ Use it only for task executed in the same branch(thread) of execution.
+
+

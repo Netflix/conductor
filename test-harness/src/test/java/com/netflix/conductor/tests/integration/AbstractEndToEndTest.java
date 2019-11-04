@@ -117,6 +117,7 @@ public abstract class AbstractEndToEndTest {
         workflowTask.setDynamicForkTasksParam(DEFAULT_NULL_VALUE);
         workflowTask.setDynamicForkTasksInputParamName(DEFAULT_NULL_VALUE);
         workflowTask.setSink(DEFAULT_NULL_VALUE);
+        workflowTask.setGotoTask(DEFAULT_NULL_VALUE);
         return workflowTask;
     }
 

@@ -67,6 +67,7 @@
          Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
          String taskId = taskMapperContext.getTaskId();
          int retryCount = taskMapperContext.getRetryCount();
+         int iterationCount = taskMapperContext.getIterationCount();
 
          TaskDef taskDefinition = Optional.ofNullable(taskMapperContext.getTaskDefinition())
                  .orElseGet(() -> Optional.ofNullable(metadataDAO.getTaskDef(taskToSchedule.getName()))
@@ -88,6 +89,7 @@
          httpTask.getInputData().put("asyncComplete", asynComplete);
          httpTask.setStatus(Task.Status.SCHEDULED);
          httpTask.setRetryCount(retryCount);
+         httpTask.setIterationCount(iterationCount);
          httpTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
          httpTask.setWorkflowTask(taskToSchedule);
          httpTask.setWorkflowPriority(workflowInstance.getPriority());

@@ -97,7 +97,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     }
 
     private static String taskKey(Task task) {
-        return task.getReferenceTaskName() + "_" + task.getRetryCount();
+        return task.getReferenceTaskName()  + "_" + task.getRetryCount() + "_" + task.getIterationCount();
     }
 
     @Override

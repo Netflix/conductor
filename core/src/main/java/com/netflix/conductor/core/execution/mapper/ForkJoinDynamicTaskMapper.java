@@ -114,6 +114,7 @@ public class ForkJoinDynamicTaskMapper implements TaskMapper {
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
         int retryCount = taskMapperContext.getRetryCount();
+        int iterationCount = taskMapperContext.getIterationCount();
 
         List<Task> mappedTasks = new LinkedList<>();
         //Get the list of dynamic tasks and the input for the tasks
@@ -134,7 +135,7 @@ public class ForkJoinDynamicTaskMapper implements TaskMapper {
         //Add each dynamic task to the mapped tasks and also get the last dynamic task in the list,
         // which indicates that the following task after that needs to be a join task
         for (WorkflowTask wft : dynForkTasks) {//TODO this is a cyclic dependency, break it out using function composition
-            List<Task> forkedTasks = taskMapperContext.getDeciderService().getTasksToBeScheduled(workflowInstance, wft, retryCount);
+            List<Task> forkedTasks = taskMapperContext.getDeciderService().getTasksToBeScheduled(workflowInstance, wft, retryCount, iterationCount);
             for (Task forkedTask : forkedTasks) {
                 Map<String, Object> forkedTaskInput = tasksInput.get(forkedTask.getReferenceTaskName());
                 forkedTask.getInputData().putAll(forkedTaskInput);

@@ -75,7 +75,7 @@ public class DoWhileTaskMapperTest {
     @Test
     public void getMappedTasks() {
 
-        Mockito.doReturn(Arrays.asList(task1)).when(deciderService).getTasksToBeScheduled(workflow, workflowTask1, 0);
+        Mockito.doReturn(Arrays.asList(task1)).when(deciderService).getTasksToBeScheduled(workflow, workflowTask1, 0, 0);
 
         List<Task> mappedTasks = new DoWhileTaskMapper(metadataDAO).getMappedTasks(taskMapperContext);
 

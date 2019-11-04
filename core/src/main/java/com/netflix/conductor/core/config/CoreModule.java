@@ -42,6 +42,7 @@ import com.netflix.conductor.core.execution.mapper.KafkaPublishTaskMapper;
 import com.netflix.conductor.core.execution.mapper.LambdaTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SimpleTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SubWorkflowTaskMapper;
+import com.netflix.conductor.core.execution.mapper.GotoTaskMapper;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.execution.mapper.TerminateTaskMapper;
 import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
@@ -50,6 +51,7 @@ import com.netflix.conductor.core.execution.mapper.DoWhileTaskMapper;
 import com.netflix.conductor.core.execution.tasks.Event;
 import com.netflix.conductor.core.execution.tasks.IsolatedTaskQueueProducer;
 import com.netflix.conductor.core.execution.tasks.Lambda;
+import com.netflix.conductor.core.execution.tasks.Goto;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.SystemTaskWorkerCoordinator;
 import com.netflix.conductor.core.execution.tasks.Terminate;
@@ -74,6 +76,8 @@ import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_USER_DEFINED;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_WAIT;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DO_WHILE;
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_GOTO;
+
 import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDERS_QUALIFIER;
 /**
  * @author Viren
@@ -247,5 +251,14 @@ public class CoreModule extends AbstractModule {
     public TaskMapper getKafkaPublishTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
         return new KafkaPublishTaskMapper(parametersUtils, metadataDAO);
     }
+	
+	@ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_GOTO)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getGotoTaskMapper() {
+        return new GotoTaskMapper();
+    }
+	  
 
 }

@@ -202,9 +202,8 @@ public class DeciderService {
             }
         }
 
-        //All the tasks that need to scheduled are added to the outcome, in case of
+
         List<Task> unScheduledTasks = tasksToBeScheduled.values().stream()
-                .filter(task -> !executedTaskRefNames.contains(task.getReferenceTaskName()))
                 .collect(Collectors.toList());
         if (!unScheduledTasks.isEmpty()) {
             LOGGER.debug("Scheduling Tasks: {} for workflow: {}", unScheduledTasks.stream()
@@ -259,7 +258,7 @@ public class DeciderService {
             }
 
             //In case of a new workflow, the first non-skippable task will be scheduled
-            return getTasksToBeScheduled(workflow, taskToSchedule, 0);
+            return getTasksToBeScheduled(workflow, taskToSchedule, 0, 0);
         }
 
         // Get the first task to schedule
@@ -344,10 +343,15 @@ public class DeciderService {
 
     private List<Task> getNextTask(Workflow workflow, Task task) {
         final WorkflowDef workflowDef = workflow.getWorkflowDefinition();
+        
+        if(TaskType.GOTO.name().equals(task.getTaskType()))
+        	{
+        	    return Collections.emptyList();
+        	}
 
         // Get the following task after the last completed task
         if (SystemTaskType.is(task.getTaskType()) && SystemTaskType.DECISION.name().equals(task.getTaskType())) {
-            if (task.getInputData().get("hasChildren") != null) {
+            if (task.getInputData().get("hasChildren") != null || task.getInputData().get("gotoActivated") != null) {
                 return Collections.emptyList();
             }
         }
@@ -357,8 +361,16 @@ public class DeciderService {
         while (isTaskSkipped(taskToSchedule, workflow)) {
             taskToSchedule = workflowDef.getNextTask(taskToSchedule.getTaskReferenceName());
         }
-        if (taskToSchedule != null) {
-            return getTasksToBeScheduled(workflow, taskToSchedule, 0);
+        
+        if (taskToSchedule != null) { 
+        	
+        	    int iterationCount = 0;
+        	    if( workflow.getTaskByRefName(taskToSchedule.getTaskReferenceName()) != null)
+        	    {
+        	    	    iterationCount = workflow.getTaskByRefName(taskToSchedule.getTaskReferenceName()).getIterationCount();
+        	    	    ++iterationCount;
+        	    }
+            return getTasksToBeScheduled(workflow, taskToSchedule, 0, iterationCount);
         }
 
         return Collections.emptyList();
@@ -558,12 +570,12 @@ public class DeciderService {
     }
 
     public List<Task> getTasksToBeScheduled(Workflow workflow,
-                                            WorkflowTask taskToSchedule, int retryCount) {
-        return getTasksToBeScheduled(workflow, taskToSchedule, retryCount, null);
+                                            WorkflowTask taskToSchedule, int retryCount, int iterationCount) {
+        return getTasksToBeScheduled(workflow, taskToSchedule, retryCount, null, iterationCount);
     }
 
     public List<Task> getTasksToBeScheduled(Workflow workflow,
-                                            WorkflowTask taskToSchedule, int retryCount, String retriedTaskId) {
+                                            WorkflowTask taskToSchedule, int retryCount, String retriedTaskId, int iterationCount) {
         workflow = populateWorkflowAndTaskData(workflow);
         Map<String, Object> input = parametersUtils.getTaskInput(taskToSchedule.getInputParameters(),
                 workflow, null, null);
@@ -588,6 +600,7 @@ public class DeciderService {
                 .withTaskToSchedule(taskToSchedule)
                 .withTaskInput(input)
                 .withRetryCount(retryCount)
+                .withIterationCount(iterationCount)
                 .withRetryTaskId(retriedTaskId)
                 .withTaskId(taskId)
                 .withDeciderService(this)
