@@ -57,9 +57,6 @@ public interface Configuration {
 
     String KAFKA_INDEX_ENABLE = "workflow.kafka.index.enable";
 
-    String KAFKA_CONSUMER_THREAD_POOL_SIZE = "kafka.consumer.pool.size";
-    int DEFAULT_KAFKA_CONSUMER_THREAD_POOL_SIZE = 1;
-
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -161,10 +158,6 @@ public interface Configuration {
 
     default boolean getKafkaIndexEnable() {
         return getBooleanProperty(KAFKA_INDEX_ENABLE, false);
-    }
-
-    default int getKafkaConsumerPoolSize() {
-        return getIntProperty(KAFKA_CONSUMER_THREAD_POOL_SIZE, DEFAULT_KAFKA_CONSUMER_THREAD_POOL_SIZE);
     }
 
     /**

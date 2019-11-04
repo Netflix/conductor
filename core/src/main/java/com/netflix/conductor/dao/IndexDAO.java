@@ -54,13 +54,6 @@ public interface IndexDAO {
     CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow);
 
     /**
-     * This method should return an unique identifier of the indexed doc
-     * @param workflowSummary WorkflowSummary to be indexed
-     * @return CompletableFuture of type void
-     */
-    CompletableFuture<Void> asyncIndexWorkflowSummary(WorkflowSummary workflowSummary);
-
-    /**
      * @param task Task to be indexed
      */
     void indexTask(Task task);
@@ -72,12 +65,6 @@ public interface IndexDAO {
      */
     CompletableFuture<Void> asyncIndexTask(Task task);
 
-    /**
-     *
-     * @param taskSummary TaskSummary to be indexed asynchronously
-     * @return CompletableFuture of type void
-     */
-    CompletableFuture<Void> asyncIndexTaskSummary(TaskSummary taskSummary);
     /**
      *
      * @param query SQL like query for workflow search parameters.
