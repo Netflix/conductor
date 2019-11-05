@@ -6,8 +6,7 @@ build:
     workdir: /conductor
     commands:
       - ./gradlew build -x test
-      - if [ "${SONAR_ENABLED}" -eq "1" ]; then ./gradlew sonarqube -x test -Dsonar.projectKey=conductor -Dsonar.branch.name="${SONAR_BRANCH}" -Dsonar.host.url="${SONAR_HOST}" -Dsonar.login="${SONAR_LOGIN}"; else echo "SONAR_ENABLED ${SONAR_ENABLED}. Analysis skipped."; fi
-
+      - . ./sonar-scan.sh
 # build the runtime artifact images..
 artifacts:
   publish:
