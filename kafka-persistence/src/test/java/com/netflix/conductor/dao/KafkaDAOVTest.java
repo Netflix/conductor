@@ -4,7 +4,6 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.kafka.index.utils.DocumentTypes;

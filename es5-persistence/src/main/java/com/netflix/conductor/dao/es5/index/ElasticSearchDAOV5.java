@@ -320,7 +320,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.upsert(doc, XContentType.JSON);
             indexObject(req, TASK_DOC_TYPE);
             logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
-            Monitors.recordESIndexTime("index_workflow", Instant.now().toEpochMilli() - startTime);
+            Monitors.recordESIndexTime("index_task", Instant.now().toEpochMilli() - startTime);
             Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             logger.error("Failed to index task: {}", task.getTaskId(), e);
