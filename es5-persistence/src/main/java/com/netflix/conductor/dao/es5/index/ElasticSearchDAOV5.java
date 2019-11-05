@@ -295,7 +295,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             indexObject(req, WORKFLOW_DOC_TYPE);
 
             logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
-            Monitors.recordESIndexTime(Instant.now().toEpochMilli() - startTime);
+            Monitors.recordESIndexTime("index_workflow",Instant.now().toEpochMilli() - startTime);
             Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
@@ -320,7 +320,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             req.upsert(doc, XContentType.JSON);
             indexObject(req, TASK_DOC_TYPE);
             logger.debug("Time taken {} for  request {}, index {}", Instant.now().toEpochMilli() - startTime, req, req);
-            Monitors.recordESIndexTime(Instant.now().toEpochMilli() - startTime);
+            Monitors.recordESIndexTime("index_workflow",Instant.now().toEpochMilli() - startTime);
             Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
         } catch (Exception e) {
             logger.error("Failed to index task: {}", task.getTaskId(), e);
@@ -448,6 +448,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
         return CompletableFuture.runAsync(() -> addEventExecution(eventExecution), executorService);
     }
+
     private void indexObject(UpdateRequest req, String docType) {
         if (bulkRequests.get(docType) == null) {
             bulkRequests.put(docType, elasticSearchClient.prepareBulk());
