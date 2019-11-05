@@ -5,9 +5,9 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.KafkaDAO;
 import com.netflix.conductor.kafka.index.configuration.SystemPropertiesKafkaConfiguration;
 
-public class KafkaModuleProvider extends AbstractModule {
+public class KafkaModule extends AbstractModule {
 
-    public KafkaModuleProvider() {
+    public KafkaModule() {
     }
 
     @Override
