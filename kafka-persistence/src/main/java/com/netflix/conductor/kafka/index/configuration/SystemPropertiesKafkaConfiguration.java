@@ -1,4 +1,4 @@
-package com.netflix.conductor.kafka;
+package com.netflix.conductor.kafka.index.configuration;
 
 import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 

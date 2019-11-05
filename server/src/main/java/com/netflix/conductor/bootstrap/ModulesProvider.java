@@ -17,7 +17,7 @@ import com.netflix.conductor.core.utils.S3PayloadStorage;
 import com.netflix.conductor.dao.RedisWorkflowModule;
 import com.netflix.conductor.elasticsearch.ElasticSearchModule;
 import com.netflix.conductor.jetty.server.spectator.PrometheusMetricsModule;
-import com.netflix.conductor.kafka.KafkaModuleProvider;
+import com.netflix.conductor.kafka.index.moduleProvider.KafkaModuleProvider;
 import com.netflix.conductor.mysql.MySQLWorkflowModule;
 import com.netflix.conductor.server.*;
 import org.slf4j.Logger;

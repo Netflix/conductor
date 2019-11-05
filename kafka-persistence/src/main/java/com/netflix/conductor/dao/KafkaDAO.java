@@ -66,7 +66,7 @@ public class KafkaDAO implements IndexDAO {
 
     @Override
     public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> indexWorkflow(workflow));
     }
 
     @Override
@@ -79,7 +79,7 @@ public class KafkaDAO implements IndexDAO {
 
     @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> indexTask(task));
     }
 
     @Override
@@ -161,7 +161,7 @@ public class KafkaDAO implements IndexDAO {
 
     @Override
     public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> addEventExecution(eventExecution));
     }
 
     @Override
@@ -177,7 +177,7 @@ public class KafkaDAO implements IndexDAO {
 
     @Override
     public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> addTaskExecutionLogs(logs));
     }
 
     @Override
