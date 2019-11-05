@@ -16,6 +16,9 @@ public interface ElasticSearchConfiguration extends Configuration {
     String ELASTIC_SEARCH_URL_PROPERTY_NAME = "workflow.elasticsearch.url";
     String ELASTIC_SEARCH_URL_DEFAULT_VALUE = "localhost:9300";
 
+    String AWS_IDENTITY_REQUEST_SIGNING_ENABLED_PROPERTY_NAME = "workflow.elasticsearch.aws.identity.request.signing.enabled";
+    boolean AWS_IDENTITY_REQUEST_SIGNING_ENABLED_DEFAULT_VALUE = false;
+
     String ELASTIC_SEARCH_HEALTH_COLOR_PROPERTY_NAME = "workflow.elasticsearch.cluster.health.color";
     String ELASTIC_SEARCH_HEALTH_COLOR_DEFAULT_VALUE = "green";
 
@@ -60,6 +63,10 @@ public interface ElasticSearchConfiguration extends Configuration {
 
     default String getURL() {
         return getProperty(ELASTIC_SEARCH_URL_PROPERTY_NAME, ELASTIC_SEARCH_URL_DEFAULT_VALUE);
+    }
+
+    default boolean isAwsIdentityRequestSigningEnabled() {
+        return getBooleanProperty(AWS_IDENTITY_REQUEST_SIGNING_ENABLED_PROPERTY_NAME, AWS_IDENTITY_REQUEST_SIGNING_ENABLED_DEFAULT_VALUE);
     }
 
     default List<URI> getURIs(){

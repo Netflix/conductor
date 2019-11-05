@@ -42,6 +42,8 @@ Default is `MEMORY`.
 * `workflow.elasticsearch.url` - A comma separated list of schema/host/port of the ES nodes to communicate with.
 Schema can be ignored when using `tcp` transport; otherwise, you must specify `http` or `https`.
 If using the `http` or `https`, then conductor will use the REST transport protocol.
+* `workflow.elasticsearch.aws.identity.request.signing.enabled` - Indicates the ES instance is an AWS instance using IAM-based authentication that requires HTTP request signing.
+Defaults to `false`. 
 * `workflow.elasticsearch.index.name` - The name of the workflow and task index.
 Defaults to `conductor`
 * `workflow.elasticsearch.tasklog.index.name` - The name of the task log index.

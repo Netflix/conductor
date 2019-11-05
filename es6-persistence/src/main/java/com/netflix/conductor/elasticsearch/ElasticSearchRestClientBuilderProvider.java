@@ -1,5 +1,6 @@
 package com.netflix.conductor.elasticsearch;
 
+import com.netflix.conductor.elasticsearch.aws.AwsRequestSigningHttpClientConfigCallback;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -20,7 +21,12 @@ public class ElasticSearchRestClientBuilderProvider implements Provider<RestClie
 
     @Override
     public RestClientBuilder get() {
-        return RestClient.builder(convertToHttpHosts(configuration.getURIs()));
+        RestClientBuilder builder = RestClient.builder(convertToHttpHosts(configuration.getURIs()));
+        if (configuration.isAwsIdentityRequestSigningEnabled()) {
+            builder.setHttpClientConfigCallback(new AwsRequestSigningHttpClientConfigCallback(configuration));
+        }
+
+        return builder;
     }
 
     private HttpHost[] convertToHttpHosts(List<URI> hosts) {
