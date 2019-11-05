@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.es5.index.query.parser;
+package com.netflix.conductor.dao.es5.index;
 
 import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -11,7 +11,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.dao.es5.index.ElasticSearchRestDAOV5;
+import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.ElasticSearchRestClientProvider;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
