@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao;
+package com.netflix.conductor.dao.es5.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventExecution;
