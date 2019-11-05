@@ -27,6 +27,7 @@ import com.netflix.conductor.kafka.index.utils.DocumentTypes;
 import com.netflix.conductor.kafka.index.utils.OperationTypes;
 import com.netflix.conductor.metrics.Monitors;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ public class KafkaDAO implements IndexDAO {
 
     private ProducerDAO producerDAO;
 
+    @Inject
     public KafkaDAO(KafkaProducer producer) {
         this.producerDAO = producer;
     }
