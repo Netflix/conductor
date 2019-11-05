@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao;
+package com.netflix.conductor.dao.es5.index;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,7 +16,8 @@ import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.dao.query.parser.Expression;
+import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.io.IOUtils;

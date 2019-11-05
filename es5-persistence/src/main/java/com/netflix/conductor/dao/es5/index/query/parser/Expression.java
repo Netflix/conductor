@@ -16,7 +16,7 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.query.parser;
+package com.netflix.conductor.dao.es5.index.query.parser;
 
 import com.netflix.conductor.elasticsearch.query.parser.AbstractNode;
 import com.netflix.conductor.elasticsearch.query.parser.BooleanOp;

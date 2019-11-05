@@ -16,7 +16,7 @@
 /**
  * 
  */
-package com.netflix.conductor.dao.query.parser;
+package com.netflix.conductor.dao.es5.index.query.parser;
 
 import org.elasticsearch.index.query.QueryBuilder;
 

@@ -18,10 +18,9 @@ package com.netflix.conductor.elasticsearch.es5;
 import com.google.inject.AbstractModule;
 
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.ElasticSearchDAOV5;
-import com.netflix.conductor.dao.ElasticSearchRestDAOV5;
+import com.netflix.conductor.dao.es5.index.ElasticSearchDAOV5;
+import com.netflix.conductor.dao.es5.index.ElasticSearchRestDAOV5;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
-import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 
 import java.util.HashSet;
 import java.util.Set;
