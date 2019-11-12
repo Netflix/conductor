@@ -24,7 +24,6 @@ import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.kafka.index.utils.DocumentTypes;
-import com.netflix.conductor.kafka.index.utils.OperationTypes;
 import com.netflix.conductor.metrics.Monitors;
 
 import javax.inject.Inject;
@@ -46,6 +45,8 @@ public class KafkaDAO implements IndexDAO {
 
     private ProducerDAO producerDAO;
 
+    private final String CREATE = "CREATE";
+
     @Inject
     public KafkaDAO(KafkaProducer producer) {
         this.producerDAO = producer;
@@ -60,7 +61,7 @@ public class KafkaDAO implements IndexDAO {
     public void indexWorkflow(Workflow workflow) {
         WorkflowSummary summary = new WorkflowSummary(workflow);
         long start = System.currentTimeMillis();
-        producerDAO.send(OperationTypes.CREATE, DocumentTypes.WORKFLOW_DOC_TYPE, summary);
+        producerDAO.send(CREATE, DocumentTypes.WORKFLOW_DOC_TYPE, summary);
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
@@ -73,7 +74,7 @@ public class KafkaDAO implements IndexDAO {
     public void indexTask(Task task) {
         TaskSummary summary = new TaskSummary(task);
         long start = System.currentTimeMillis();
-        producerDAO.send(OperationTypes.CREATE, DocumentTypes.TASK_DOC_TYPE, summary);
+        producerDAO.send(CREATE, DocumentTypes.TASK_DOC_TYPE, summary);
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
@@ -126,7 +127,7 @@ public class KafkaDAO implements IndexDAO {
         doc.put("created", System.currentTimeMillis());
 
         long start = System.currentTimeMillis();
-        producerDAO.send(OperationTypes.CREATE, DocumentTypes.MSG_DOC_TYPE, doc);
+        producerDAO.send(CREATE, DocumentTypes.MSG_DOC_TYPE, doc);
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 
     }
@@ -150,7 +151,7 @@ public class KafkaDAO implements IndexDAO {
     public void addEventExecution(EventExecution eventExecution) {
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
         long start = System.currentTimeMillis();
-        producerDAO.send(OperationTypes.CREATE, DocumentTypes.EVENT_DOC_TYPE, id);
+        producerDAO.send(CREATE, DocumentTypes.EVENT_DOC_TYPE, id);
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
@@ -170,7 +171,7 @@ public class KafkaDAO implements IndexDAO {
             return;
         }
         long start = System.currentTimeMillis();
-        taskExecLogs.forEach(log -> producerDAO.send(OperationTypes.CREATE, DocumentTypes.LOG_DOC_TYPE , taskExecLogs));
+        taskExecLogs.forEach(log -> producerDAO.send(CREATE, DocumentTypes.LOG_DOC_TYPE , taskExecLogs));
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 
     }
