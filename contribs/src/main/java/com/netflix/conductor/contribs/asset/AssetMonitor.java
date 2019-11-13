@@ -92,14 +92,17 @@ public class AssetMonitor implements JavaEventAction {
 				continue;
 			} else {
 				if ("METADATA".equals(actionCheck.getInputData().get("case"))) {
-					logger.trace("Skipping workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " as it is METADATA");
+					logger.trace("Skipping workflow " + workflow.getWorkflowId() +
+						", correlationId=" + workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + " as it is METADATA");
 					continue;
 				}
 			}
 
 			// Null means that the task not even scheduled. Rare case but might happen. Just logging that information
 			if (joinTask == null) {
-				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + " not in the right state(no deliverable_join) to handle the message " + ee.getMessageId());
+				logger.debug("The workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId()
+					+ ",traceId=" + workflow.getTraceId()
+					+ " not in the right state(no deliverable_join) to handle the message " + ee.getMessageId());
 				continue;
 			}
 
@@ -109,7 +112,9 @@ public class AssetMonitor implements JavaEventAction {
 			} else if (joinTask.getStatus() == Task.Status.IN_PROGRESS) { // 3.4
 				checkForRestart(params, workflow, payload, ee.getMessageId(), sourceAtlasWaitIds);
 			} else {
-				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId() + ", correlationId=" + workflow.getCorrelationId() + ", messageId=" + ee.getMessageId());
+				logger.warn("The deliverable_join task not in COMPLETED/IN_PROGRESS status for the workflow " + workflow.getWorkflowId()
+					+ ", correlationId=" + workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId()
+					+ ", messageId=" + ee.getMessageId());
 			}
 		}
 		return new ArrayList<>(sourceAtlasWaitIds);

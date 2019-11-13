@@ -117,8 +117,9 @@ public class HttpTask extends GenericHttpTask {
 		try {
 			HttpResponse response = new HttpResponse();
 			logger.debug("http task started.workflowId=" + workflow.getWorkflowId() + ",correlationId="
-					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
-					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
+					+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
+					+ ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri()
+					+ ",contextUser=" + workflow.getContextUser());
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
 					String json = new ObjectMapper().writeValueAsString(task.getInputData());
@@ -138,8 +139,9 @@ public class HttpTask extends GenericHttpTask {
 			}
 
 			logger.info("http task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
-					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
-					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
+					+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
+					+ ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri()
+					+ ",response code=" + response.statusCode
 					+ ",contextUser=" + workflow.getContextUser()+ ",body="+ input.getBody());
 
 			// true - means status been handled, otherwise should apply the original logic

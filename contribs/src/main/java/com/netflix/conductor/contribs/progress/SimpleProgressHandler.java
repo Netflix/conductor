@@ -55,7 +55,8 @@ public class SimpleProgressHandler implements JavaEventAction {
 			logger.debug("Skipping. Target workflow is already " + workflow.getStatus().name()
 				+ ", workflowId=" + workflow.getWorkflowId()
 				+ ", contextUser=" + workflow.getContextUser()
-				+ ", correlationId=" + workflow.getCorrelationId());
+				+ ", correlationId=" + workflow.getCorrelationId()
+				+ ", traceId=" + workflow.getTraceId());
 			return Collections.emptyList();
 		}
 
@@ -64,7 +65,8 @@ public class SimpleProgressHandler implements JavaEventAction {
 			logger.debug("Skipping. No task " + params.taskRefName + " found in workflow"
 				+ ", workflowId=" + workflow.getWorkflowId()
 				+ ", contextUser=" + workflow.getContextUser()
-				+ ", correlationId=" + workflow.getCorrelationId());
+				+ ", correlationId=" + workflow.getCorrelationId()
+				+ ", traceId=" + workflow.getTraceId());
 			return Collections.emptyList();
 		}
 
@@ -72,7 +74,8 @@ public class SimpleProgressHandler implements JavaEventAction {
 			logger.debug("Skipping. Target task " + task + " is already finished. "
 				+ ", workflowId=" + workflow.getWorkflowId()
 				+ ", contextUser=" + workflow.getContextUser()
-				+ ", correlationId=" + workflow.getCorrelationId());
+				+ ", correlationId=" + workflow.getCorrelationId()
+				+ ", traceId=" + workflow.getTraceId());
 			return Collections.emptyList();
 		}
 
@@ -90,7 +93,8 @@ public class SimpleProgressHandler implements JavaEventAction {
 		logger.debug("Task " + task + " has been updated"
 			+ ", workflowId=" + workflow.getWorkflowId()
 			+ ", contextUser=" + workflow.getContextUser()
-			+ ", correlationId=" + workflow.getCorrelationId());
+			+ ", correlationId=" + workflow.getCorrelationId()
+			+ ", traceId=" + workflow.getTraceId());
 
 		return Collections.singletonList(workflowId);
 	}

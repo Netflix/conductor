@@ -90,13 +90,13 @@ public class DeciderService {
 		DeciderOutcome outcome = new DeciderOutcome();
 		
 		if (workflow.getStatus().equals(WorkflowStatus.PAUSED)) {
-			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + " is paused");
+			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + " is paused");
 			return outcome;
 		}
 		
 		if (workflow.getStatus().isTerminal()) {
 			//you cannot evaluate a terminal workflow
-			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + " is already finished. status=" + workflow.getStatus() + ",reason=" + workflow.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
+			logger.debug("Workflow " + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + " is already finished. status=" + workflow.getStatus() + ",reason=" + workflow.getReasonForIncompletion() + ",contextUser=" + workflow.getContextUser());
 			return outcome;
 		}
 		
@@ -176,7 +176,10 @@ public class DeciderService {
 	
 	private List<Task> startWorkflow(Workflow workflow, WorkflowDef def) throws TerminateWorkflow {
 
-		logger.debug("Starting workflow " + def.getName() + "/" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+		logger.debug("Starting workflow " + def.getName() + "/" + workflow.getWorkflowId()
+			+ ",correlationId=" + workflow.getCorrelationId()
+			+ ",traceId=" + workflow.getTraceId()
+			+ ",contextUser=" + workflow.getContextUser());
 		
 		List<Task> tasks = workflow.getTasks();
 		// Check if the workflow is a re-run case
@@ -259,7 +262,10 @@ public class DeciderService {
 		}
 
 		if (noPendingTasks && noPendingSchedule) {
-			logger.warn("Workflow might have a stuck state. workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+			logger.warn("Workflow might have a stuck state. workflowId=" + workflow.getWorkflowId()
+				+ ",correlationId=" + workflow.getCorrelationId()
+				+ ",traceId=" + workflow.getTraceId()
+				+ ",contextUser=" + workflow.getContextUser());
 		}
 
 		return false;
@@ -491,6 +497,12 @@ public class DeciderService {
 				}
 				break;
 			case JOIN:
+				Optional<Task> joinExists = workflow.getTasks().stream()
+					.filter(t -> t.getReferenceTaskName().equalsIgnoreCase(taskToSchedule.getTaskReferenceName()))
+					.findFirst();
+				if (joinExists.isPresent()) {
+					break;
+				}
 				Map<String, Object> joinInput = new HashMap<String, Object>();
 				joinInput.put("joinOn", taskToSchedule.getJoinOn());
 				Task joinTask = SystemTask.JoinTask(workflow, taskId, taskToSchedule, joinInput);

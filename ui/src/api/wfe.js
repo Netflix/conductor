@@ -1,11 +1,14 @@
-import { join } from 'path';
-import { Router } from 'express';
+import {Router} from 'express';
 import http from '../core/HttpClient';
 import moment from 'moment';
 import lookup from '../core/ApiLookup';
-import authManager from '../core/AuthManager';
 
 const router = new Router();
+
+function getToken(req) {
+  const authorization = req.get('Authorization');
+  return authorization ? authorization.substr(7) : null; // 'Bearer ...'
+}
 
 router.get('/', async (req, res, next) => {
 
@@ -14,64 +17,60 @@ router.get('/', async (req, res, next) => {
     const baseURL2 = baseURL + 'workflow/';
 
     let freeText = [];
-    if(req.query.freeText != '') {
+    if (req.query.freeText != '') {
       freeText.push(req.query.freeText);
-    }else {
+    } else {
       freeText.push('*');
     }
 
     let h = '-1';
-    if(req.query.h != 'undefined' && req.query.h != ''){
+    if (req.query.h != 'undefined' && req.query.h != '') {
       h = req.query.h;
     }
 
-    var frmdate  = req.query.frmdate;
-    var todate  = req.query.todate;
+    var frmdate = req.query.frmdate;
+    var todate = req.query.todate;
     let range = req.query.range;
     let from = null;
     let end = null;
     if (frmdate != 'undefined' && todate != 'undefined' && frmdate != '' && todate != '') {
 
-     from=moment(frmdate);
-     end=moment(todate);
-    }
-    else
-    {
-    if (h != '-1') {
-      from = moment().subtract(h, 'hours');
-      end = moment();
-    }
-    else if (range === 'All data') {
-      // do nothing
-    }
-     else if (range === 'This year') {
-      from = moment().startOf('year');
-      end = moment().endOf('year');
-    } else if (range === 'Last quarter') {
-      from = moment().subtract(1, 'quarter').startOf('quarter');
-      end = moment().subtract(1, 'quarter').endOf('quarter');
-    } else if (range === 'This quarter') {
-      from = moment().startOf('quarter');
-      end = moment().endOf('quarter');
-    } else if (range === 'Last month') {
-      from = moment().subtract(1, 'month').startOf('month');
-      end = moment().subtract(1, 'month').endOf('month');
-    } else if (range === 'This month') {
-      from = moment().startOf('month');
-      end = moment().endOf('month');
-    } else if (range === 'Yesterday') {
-      from = moment().subtract(1, 'days').startOf('day');
-      end = moment().subtract(1, 'days').endOf('day');
-    } else if (range === 'Last 30 minutes') {
-      from = moment().subtract(30, 'minutes').startOf('minute');
-      end = moment();
-    } else if (range === 'Last 5 minutes') {
-      from = moment().subtract(5, 'minutes').startOf('minute');
-      end = moment();
-    } else { // Today is default
-      from = moment().startOf('day');
-      end = moment().endOf('day');
-    }
+      from = moment(frmdate);
+      end = moment(todate);
+    } else {
+      if (h != '-1') {
+        from = moment().subtract(h, 'hours');
+        end = moment();
+      } else if (range === 'All data') {
+        // do nothing
+      } else if (range === 'This year') {
+        from = moment().startOf('year');
+        end = moment().endOf('year');
+      } else if (range === 'Last quarter') {
+        from = moment().subtract(1, 'quarter').startOf('quarter');
+        end = moment().subtract(1, 'quarter').endOf('quarter');
+      } else if (range === 'This quarter') {
+        from = moment().startOf('quarter');
+        end = moment().endOf('quarter');
+      } else if (range === 'Last month') {
+        from = moment().subtract(1, 'month').startOf('month');
+        end = moment().subtract(1, 'month').endOf('month');
+      } else if (range === 'This month') {
+        from = moment().startOf('month');
+        end = moment().endOf('month');
+      } else if (range === 'Yesterday') {
+        from = moment().subtract(1, 'days').startOf('day');
+        end = moment().subtract(1, 'days').endOf('day');
+      } else if (range === 'Last 30 minutes') {
+        from = moment().subtract(30, 'minutes').startOf('minute');
+        end = moment();
+      } else if (range === 'Last 5 minutes') {
+        from = moment().subtract(5, 'minutes').startOf('minute');
+        end = moment();
+      } else { // Today is default
+        from = moment().startOf('day');
+        end = moment().endOf('day');
+      }
     }
 
     if (from != null && end != null) {
@@ -79,7 +78,7 @@ router.get('/', async (req, res, next) => {
     }
 
     let start = 0;
-    if(!isNaN(req.query.start)){
+    if (!isNaN(req.query.start)) {
       start = req.query.start;
     }
 
@@ -88,7 +87,7 @@ router.get('/', async (req, res, next) => {
     const url = baseURL2 + 'search?size=100&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query;
     const result = await http.get(url);
     const hits = result.results;
-    res.status(200).send({result: {hits:hits, totalHits: result.totalHits}});
+    res.status(200).send({result: {hits: hits, totalHits: result.totalHits}});
   } catch (err) {
     next(err);
   }
@@ -153,12 +152,12 @@ router.get('/id/:workflowId', async (req, res, next) => {
 
 router.delete('/terminate/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
+    const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
     const result = await http.delete(baseURL2 + req.params.workflowId, null, token);
-    res.status(200).send({result: req.params.workflowId });
+    res.status(200).send({result: req.params.workflowId});
   } catch (err) {
     next(err);
   }
@@ -166,12 +165,12 @@ router.delete('/terminate/:workflowId', async (req, res, next) => {
 
 router.post('/cancel/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
+    const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
     const result = await http.postPlain(baseURL2 + req.params.workflowId + '/cancel', null, token);
-    res.status(200).send({result: req.params.workflowId });
+    res.status(200).send({result: req.params.workflowId});
   } catch (err) {
     console.log("err", err);
     next(err);
@@ -180,12 +179,12 @@ router.post('/cancel/:workflowId', async (req, res, next) => {
 
 router.post('/restart/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
+    const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
     const result = await http.post(baseURL2 + req.params.workflowId + '/restart', null, token);
-    res.status(200).send({result: req.params.workflowId });
+    res.status(200).send({result: req.params.workflowId});
   } catch (err) {
     next(err);
   }
@@ -193,12 +192,12 @@ router.post('/restart/:workflowId', async (req, res, next) => {
 
 router.post('/retry/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
+    const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
     const result = await http.post(baseURL2 + req.params.workflowId + '/retry', null, token);
-    res.status(200).send({result: req.params.workflowId });
+    res.status(200).send({result: req.params.workflowId});
   } catch (err) {
     next(err);
   }
@@ -206,12 +205,12 @@ router.post('/retry/:workflowId', async (req, res, next) => {
 
 router.post('/pause/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
+    const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
     const result = await http.put(baseURL2 + req.params.workflowId + '/pause', null, token);
-    res.status(200).send({result: req.params.workflowId });
+    res.status(200).send({result: req.params.workflowId});
   } catch (err) {
     next(err);
   }
@@ -219,12 +218,12 @@ router.post('/pause/:workflowId', async (req, res, next) => {
 
 router.post('/resume/:workflowId', async (req, res, next) => {
   try {
-    const token = await authManager.getAuthToken();
+    const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
 
     const result = await http.put(baseURL2 + req.params.workflowId + '/resume', null, token);
-    res.status(200).send({result: req.params.workflowId });
+    res.status(200).send({result: req.params.workflowId});
   } catch (err) {
     next(err);
   }
@@ -242,6 +241,7 @@ router.get('/metadata/workflow/:name/:version', async (req, res, next) => {
     next(err);
   }
 });
+
 router.get('/metadata/workflow', async (req, res, next) => {
   try {
     const baseURL = await lookup.lookup();
@@ -253,6 +253,7 @@ router.get('/metadata/workflow', async (req, res, next) => {
     next(err);
   }
 });
+
 router.get('/metadata/taskdef', async (req, res, next) => {
   try {
     const baseURL = await lookup.lookup();
@@ -264,6 +265,7 @@ router.get('/metadata/taskdef', async (req, res, next) => {
     next(err);
   }
 });
+
 router.get('/task/log/:taskId', async (req, res, next) => {
   try {
     const baseURL = await lookup.lookup();
@@ -275,6 +277,7 @@ router.get('/task/log/:taskId', async (req, res, next) => {
     next(err);
   }
 });
+
 router.get('/queue/data', async (req, res, next) => {
   try {
     const baseURL = await lookup.lookup();
@@ -282,10 +285,10 @@ router.get('/queue/data', async (req, res, next) => {
 
     const sizes = await http.get(baseURLTask + 'queue/all');
     const polldata = await http.get(baseURLTask + 'queue/polldata/all');
-    polldata.forEach(pd=>{
+    polldata.forEach(pd => {
       var qname = pd.queueName;
 
-      if(pd.domain != null){
+      if (pd.domain != null) {
         qname = pd.domain + ":" + qname;
       }
       pd.qsize = sizes[qname];
@@ -295,4 +298,5 @@ router.get('/queue/data', async (req, res, next) => {
     next(err);
   }
 });
+
 module.exports = router;

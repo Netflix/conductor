@@ -122,7 +122,8 @@ public class HttpWaitTask extends GenericHttpTask {
 		try {
 			HttpResponse response;
 			logger.info("http wait task started.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
-					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
+					+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId()
+					+ ",taskId=" + task.getTaskId() + ",taskreference name="
 					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",contextUser=" + workflow.getContextUser());
 
 			if (input.getContentType() != null) {
@@ -138,8 +139,8 @@ public class HttpWaitTask extends GenericHttpTask {
 			}
 
 			logger.info("http wait task execution completed.workflowId=" + workflow.getWorkflowId() + ",CorrelationId="
-					+ workflow.getCorrelationId() + ",taskId=" + task.getTaskId() + ",taskreference name="
-					+ task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
+					+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
+					+ ",taskreference name=" + task.getReferenceTaskName() + ",url=" + input.getUri() + ",response code=" + response.statusCode
 					+ ",contextUser=" + workflow.getContextUser());
 
 			// true - means status been handled, otherwise should apply the original logic

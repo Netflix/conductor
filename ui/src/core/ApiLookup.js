@@ -1,25 +1,25 @@
-import dns from 'dns';
+import DnsResolver from "./DnsResolver";
 
 const wfService = process.env.WF_SERVICE;
+const wfServer = process.env.WF_SERVER;
 
 const ApiLookup = {
 
   lookup: () => new Promise((resolve, reject) => {
     if (!wfService) {
-      resolve(process.env.WF_SERVER);
+      resolve(wfServer);
       return;
     }
 
-    dns.resolveSrv(wfService, function (err, addresses) {
-      if (err) {
-        reject(err);
-      } else if (addresses && addresses.length > 0) {
-        let instance = addresses[0];
+    new DnsResolver().resolve(wfService, results => {
+      if (results && results.length > 0) {
+        let instance = results[0];
         resolve('http://' + instance.name + ':' + instance.port + '/api/');
       } else {
-        reject('No service found');
+        reject(`Dns lookup failed for host ${wfService}. No matches found.`);
       }
-    });
+    }, err => reject(err));
+
   })
 };
 

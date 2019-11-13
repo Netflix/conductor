@@ -6,8 +6,7 @@ build:
     workdir: /conductor
     commands:
       - ./gradlew build -x test
-      - ./gradlew sonarqube -x test -Dsonar.projectKey=conductor -Dsonar.branch.name="${SONAR_BRANCH}" -Dsonar.host.url="${SONAR_HOST}" -Dsonar.login="${SONAR_LOGIN}"
-
+      - . ./sonar-scan.sh
 # build the runtime artifact images..
 artifacts:
   publish:

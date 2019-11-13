@@ -97,7 +97,7 @@ class WorkflowDetails extends Component {
     function popoverLink(cell, row){
       return (<OverlayTrigger trigger="click" rootClose placement="left" overlay={
 
-        <Popover title="Task Details" style={{ width: '800px'}}>
+        <Popover id={row.taskId} key={row.taskId} title="Task Details" style={{ width: '800px'}}>
           <Panel header={<span><span>Task Input</span> <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#input"></i></span>}>
 
             <span className="small"><pre id="input">{JSON.stringify(row.inputData, null, 2)}</pre></span>
@@ -115,13 +115,13 @@ class WorkflowDetails extends Component {
     function tableBody(tasks){
       let trs = [];
       if (tasks.length === 0) {
-          let row = <tr>
+          let row = <tr key='no'>
             <td colSpan='10'><center><span className="red">No data found</span></center></td>
           </tr>;
           trs.push(row);
       }
       tasks.forEach(task => {
-        let row = <tr>
+        let row = <tr key={task.taskId}>
                     <td>{task.seq}</td>
                     <td>{task.taskType}</td>
                     <td>{task.referenceTaskName}</td>
@@ -161,7 +161,7 @@ class WorkflowDetails extends Component {
       <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}>
         <thead>
           <tr>
-            <th>Workflow ID</th><th>Owner App</th><th>Total Time (sec)</th><th>Start/End Time</th><th>Correlation ID</th>
+            <th>Workflow ID</th><th>Owner App</th><th>Total Time (sec)</th><th>Start/End Time</th><th>Correlation ID</th><th>Context User</th>
           </tr>
           <tr>
             <td>{wf.workflowId}</td>
@@ -169,6 +169,7 @@ class WorkflowDetails extends Component {
             <td>{execTime(wf.endTime, wf.startTime)}</td>
             <td>{formatDate(wf.startTime)} - {formatDate(wf.endTime)}</td>
             <td>{wf.correlationId}</td>
+            <td>{wf.contextUser}</td>
           </tr>
           <tr style={{display:showFailure()}}><td style={{color:'#ff0000'}} colSpan={5}>{getFailureReason()}</td></tr>
         </thead>
