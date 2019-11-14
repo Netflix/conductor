@@ -111,12 +111,12 @@ public abstract class MySQLBaseDAO {
                 return result;
             } catch (Throwable th) {
                 tx.rollback();
-                throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, th.getMessage(), th);
+                throw new ApplicationException(BACKEND_ERROR, th.getMessage(), th);
             } finally {
                 tx.setAutoCommit(previousAutoCommitMode);
             }
         } catch (SQLException ex) {
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
+            throw new ApplicationException(BACKEND_ERROR, ex.getMessage(), ex);
         } finally {
             logger.trace("{} : took {}ms", callingMethod, Duration.between(start, Instant.now()).toMillis());
         }
@@ -237,8 +237,19 @@ public abstract class MySQLBaseDAO {
     }
 
     private boolean isDeadLockError(Throwable throwable){
-        return throwable instanceof SQLException
-                && ER_LOCK_DEADLOCK == ((SQLException)throwable).getErrorCode();
+        SQLException sqlException = findCauseSQLException(throwable);
+        if (sqlException == null){
+            return false;
+        }
+        return ER_LOCK_DEADLOCK == sqlException.getErrorCode();
+    }
+
+    private SQLException findCauseSQLException(Throwable throwable) {
+        Throwable causeException = throwable;
+        while (null != causeException && !(causeException instanceof SQLException)) {
+            causeException = causeException.getCause();
+        }
+        return (SQLException)causeException;
     }
 
     private static int getMaxRetriesOnDeadLock() {

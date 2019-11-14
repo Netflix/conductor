@@ -13,28 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.netflix.conductor.dao;
-
-import com.netflix.conductor.common.run.Workflow;
-
 /**
  * 
- * @author Viren
- * DAO used to archive completed workflows after the retention period.
  */
-public interface WorkflowArchiveDAO {
+package com.netflix.conductor.common.utils;
 
-	/**
-	 * 
-	 * @param workflow Workflow to be archived
-	 */
-	public abstract void archive(Workflow workflow);
-	
-	/**
-	 * 
-	 * @param workflowId Retrieve workflow using ID
-	 * @return Workflow identified by workflowId
-	 */
-	public abstract Workflow get(String workflowId);
+/**
+ * @author Manan
+ *
+ */
+public class TaskUtils {
 
+	private static String LOOP_TASK_DELIMITER = "__";
+
+	public static String appendIteration(String name, int iteration) {
+		return name + LOOP_TASK_DELIMITER + iteration;
+	}
+
+	public static String getLoopOverTaskRefNameSuffix(int iteration) {
+		return LOOP_TASK_DELIMITER + iteration;
+	}
+
+	public static String removeIterationFromTaskRefName(String referenceTaskName) {
+		String[] tokens = referenceTaskName.split(TaskUtils.LOOP_TASK_DELIMITER);
+		return tokens.length > 0 ? tokens[0]: referenceTaskName;
+	}
 }

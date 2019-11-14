@@ -292,7 +292,7 @@ public class TestHttpTask {
         Instant start  = Instant.now();
         input.setConnectionTimeOut(110);
         input.setMethod("GET");
-        input.setUri("http://10.255.255.255");
+        input.setUri("http://10.255.14.15");
         task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
         task.setStatus(Status.SCHEDULED);
         task.setScheduledTime(0);
@@ -355,9 +355,10 @@ public class TestHttpTask {
         MetadataDAO metadataDAO = mock(MetadataDAO.class);
         ExternalPayloadStorageUtils externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
         ParametersUtils parametersUtils = mock(ParametersUtils.class);
+        Configuration configuration = mock(Configuration.class);
 
         Map<String, TaskMapper> taskMappers = new HashMap<>();
-        new DeciderService(parametersUtils, queueDAO, metadataDAO, externalPayloadStorageUtils, taskMappers).decide(workflow);
+        new DeciderService(parametersUtils, queueDAO, metadataDAO, externalPayloadStorageUtils, taskMappers, configuration).decide(workflow);
 
         System.out.println(workflow.getTasks());
         System.out.println(workflow.getStatus());
