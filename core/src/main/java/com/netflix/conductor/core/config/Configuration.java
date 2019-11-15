@@ -57,6 +57,8 @@ public interface Configuration {
 
     String KAFKA_INDEX_ENABLE = "workflow.kafka.index.enable";
 
+    String FORCE_WORKFLOW_DELETION = "force.workflow.deletion";
+
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -158,6 +160,10 @@ public interface Configuration {
 
     default boolean getKafkaIndexEnable() {
         return getBooleanProperty(KAFKA_INDEX_ENABLE, false);
+    }
+
+    default boolean getForceWorkflowDeletionFromRedis() {
+        return getBooleanProperty(FORCE_WORKFLOW_DELETION, false);
     }
 
     /**

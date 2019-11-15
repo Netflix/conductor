@@ -8,9 +8,6 @@ public class Record {
     String documentType;
 
     @JsonProperty
-    String operationType;
-
-    @JsonProperty
     Object payload;
 
     public String getDocumentType() {
@@ -21,12 +18,7 @@ public class Record {
         return payload;
     }
 
-    public String getOperationType() {
-        return operationType;
-    }
-
-    public Record(String operationType, String documentType, Object payload) {
-        this.operationType = operationType;
+    public Record(String documentType, Object payload) {
         this.documentType = documentType;
         this.payload = payload;
     }
