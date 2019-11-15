@@ -50,9 +50,9 @@ public class KafkaProducer implements ProducerDAO {
 	}
 
 	@Override
-	public void send(String operationType, String documentType, Object value) {
+	public void send(String documentType, Object value) {
 		try {
-			Record d = new Record(operationType, documentType, value);
+			Record d = new Record(documentType, value);
 			ProducerRecord rec = new ProducerRecord(this.topic, om.writeValueAsString(d));
 			producer.send(rec);
 		} catch (Exception e) {
