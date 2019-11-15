@@ -21,6 +21,7 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.ElasticSearchDAOV5;
 import com.netflix.conductor.dao.es5.index.ElasticSearchRestDAOV5;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
+import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -54,5 +55,6 @@ public class ElasticSearchV5Module extends AbstractModule {
             bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
         }
 
+        bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);
     }
 }
