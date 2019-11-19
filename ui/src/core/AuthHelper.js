@@ -256,6 +256,7 @@ const authRefresh = (refreshToken) => (dispatch) => {
     }
   }).then(data => {
     if (!!data && !!data.access_token) {
+      saveTokensLocally(data.access_token, data.expires_in, data.refresh_token, data.refresh_expires_in);
       authUserInfo(data.access_token)(dispatch);
       setupAuthCheck(data.refresh_token, data.expires_in)(dispatch);
       dispatch(authRefreshSucceeded(data.access_token, data.expires_in, data.refresh_token, data.refresh_expires_in));
