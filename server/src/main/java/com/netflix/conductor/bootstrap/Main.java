@@ -19,8 +19,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
-import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.grpc.server.GRPCServerProvider;
 import com.netflix.conductor.jetty.server.JettyServerProvider;
 
@@ -29,7 +27,6 @@ import org.apache.log4j.PropertyConfigurator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.Properties;
 
 /**
