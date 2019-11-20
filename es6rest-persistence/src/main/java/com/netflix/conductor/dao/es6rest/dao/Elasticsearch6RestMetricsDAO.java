@@ -299,7 +299,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 	}
 
 	@Override
-	public Map<String, Object> getTaskCounters() {
+	public Map<String, Object> getTaskRefNameCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
 		// Using ExecutorService to process in parallel
@@ -312,6 +312,29 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 			// overall
 			futures.add(pool.submit(() -> taskTypeRefNameCounters(metrics, false)));
+
+			// Wait until completed
+			waitCompleted(futures);
+		} finally {
+			pool.shutdown();
+		}
+
+		return new HashMap<>(metrics);	}
+
+	@Override
+	public Map<String, Object> getTaskCounters() {
+		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
+
+		// Using ExecutorService to process in parallel
+		ExecutorService pool = Executors.newCachedThreadPool();
+		try {
+			List<Future<?>> futures = new LinkedList<>();
+
+			// today
+			futures.add(pool.submit(() -> taskTypeCounters(metrics, true)));
+
+			// overall
+			futures.add(pool.submit(() -> taskTypeCounters(metrics, false)));
 
 			// Wait until completed
 			waitCompleted(futures);
@@ -671,6 +694,58 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 					metricName = String.format("%s.task_%s_%s_%s%s", PREFIX, typeName, refName, statusName, toLabel(today));
 					map.get(metricName).addAndGet(docCount);
 				}
+			}
+		}
+	}
+
+	private void taskTypeCounters(Map<String, AtomicLong> map, boolean today) {
+		QueryBuilder typeQuery = QueryBuilders.termsQuery("taskType", TASK_TYPES);
+		QueryBuilder statusQuery = QueryBuilders.termsQuery("status", TASK_STATUSES);
+		BoolQueryBuilder mainQuery = QueryBuilders.boolQuery().must(typeQuery).must(statusQuery);
+		if (today) {
+			mainQuery = mainQuery.must(getStartTimeQuery());
+		}
+
+		TermsAggregationBuilder aggregation = AggregationBuilders
+				.terms("aggTaskType")
+				.field("taskType")
+				.size(Integer.MAX_VALUE)
+				.subAggregation(AggregationBuilders
+						.terms("aggStatus")
+						.field("status")
+						.size(Integer.MAX_VALUE)
+				);
+
+		SearchRequest searchRequest = new SearchRequest(taskIndex);
+		searchRequest.source(searchSourceBuilder(mainQuery, aggregation));
+
+		SearchResponse response = search(searchRequest);
+		ParsedStringTerms aggTaskType = response.getAggregations().get("aggTaskType");
+		for (Object itemType : aggTaskType.getBuckets()) {
+			ParsedStringTerms.ParsedBucket typeBucket = (ParsedStringTerms.ParsedBucket) itemType;
+			String typeName = typeBucket.getKeyAsString().toLowerCase();
+
+			// Init counters. Per typeName/status + today/non-today
+			for (String status : TASK_STATUSES) {
+				String statusName = status.toLowerCase();
+				initMetric(map, String.format("%s.task_%s_%s", PREFIX, typeName, statusName));
+				initMetric(map, String.format("%s.task_%s_%s_today", PREFIX, typeName, statusName));
+			}
+
+			// Per each refName/status
+			ParsedStringTerms aggStatus = typeBucket.getAggregations().get("aggStatus");
+			for (Object itemStatus : aggStatus.getBuckets()) {
+				ParsedStringTerms.ParsedBucket statusBucket = (ParsedStringTerms.ParsedBucket) itemStatus;
+				String statusName = statusBucket.getKeyAsString().toLowerCase();
+				long docCount = statusBucket.getDocCount();
+
+				// Parent typeName + refName
+				String metricName = String.format("%s.task_%s_%s", PREFIX, typeName, toLabel(today));
+				map.get(metricName).addAndGet(docCount);
+
+				// typeName + refName + status
+				metricName = String.format("%s.task_%s_%s_%s", PREFIX, typeName, statusName, toLabel(today));
+				map.get(metricName).addAndGet(docCount);
 			}
 		}
 	}
