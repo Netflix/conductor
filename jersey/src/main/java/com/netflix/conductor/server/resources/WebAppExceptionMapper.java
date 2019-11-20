@@ -60,7 +60,7 @@ public class WebAppExceptionMapper implements ExceptionMapper<WebApplicationExce
 
 	@Override
 	public Response toResponse(WebApplicationException exception) {
-        logger.error(String.format("Error %s url: '%s'", exception.getClass().getSimpleName(),
+        logger.debug(String.format("Error %s url: '%s'", exception.getClass().getSimpleName(),
                 uriInfo.getPath()), exception);
 
         Response response = exception.getResponse();

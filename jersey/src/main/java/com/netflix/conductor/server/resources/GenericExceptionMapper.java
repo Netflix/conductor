@@ -59,7 +59,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 	
 	@Override
 	public Response toResponse(Throwable exception) {
-		LOGGER.error(String.format("Error %s url: '%s'", exception.getClass().getSimpleName(), uriInfo.getPath()), exception);
+		LOGGER.debug(String.format("Error %s url: '%s'", exception.getClass().getSimpleName(), uriInfo.getPath()), exception);
 
 		Monitors.error("error", "error");
 

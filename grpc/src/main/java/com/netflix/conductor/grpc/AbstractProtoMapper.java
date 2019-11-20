@@ -618,6 +618,7 @@ public abstract class AbstractProtoMapper {
             case TIMED_OUT: to = TaskPb.Task.Status.TIMED_OUT; break;
             case READY_FOR_RERUN: to = TaskPb.Task.Status.READY_FOR_RERUN; break;
             case SKIPPED: to = TaskPb.Task.Status.SKIPPED; break;
+            case NO_OP: to = TaskPb.Task.Status.NO_OP; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -636,6 +637,7 @@ public abstract class AbstractProtoMapper {
             case TIMED_OUT: to = Task.Status.TIMED_OUT; break;
             case READY_FOR_RERUN: to = Task.Status.READY_FOR_RERUN; break;
             case SKIPPED: to = Task.Status.SKIPPED; break;
+            case NO_OP: to = Task.Status.NO_OP; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -815,6 +817,7 @@ public abstract class AbstractProtoMapper {
             case FAILED_WITH_TERMINAL_ERROR: to = TaskResultPb.TaskResult.Status.FAILED_WITH_TERMINAL_ERROR; break;
             case COMPLETED: to = TaskResultPb.TaskResult.Status.COMPLETED; break;
             case SCHEDULED: to = TaskResultPb.TaskResult.Status.SCHEDULED; break;
+            case NO_OP: to = TaskResultPb.TaskResult.Status.NO_OP; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -828,6 +831,7 @@ public abstract class AbstractProtoMapper {
             case FAILED_WITH_TERMINAL_ERROR: to = TaskResult.Status.FAILED_WITH_TERMINAL_ERROR; break;
             case COMPLETED: to = TaskResult.Status.COMPLETED; break;
             case SCHEDULED: to = TaskResult.Status.SCHEDULED; break;
+            case NO_OP: to = TaskResult.Status.NO_OP; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;

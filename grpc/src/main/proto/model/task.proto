@@ -21,6 +21,7 @@ message Task {
         TIMED_OUT = 7;
         READY_FOR_RERUN = 8;
         SKIPPED = 9;
+        NO_OP = 10;
     }
     string task_type = 1;
     Task.Status status = 2;
