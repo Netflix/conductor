@@ -70,7 +70,11 @@ public class ParametersUtils {
             inputParams = new HashMap<>();
         }
         if (taskDefinition != null && taskDefinition.getInputTemplate() != null) {
-            inputParams.putAll(clone(taskDefinition.getInputTemplate()));
+            taskDefinition.getInputTemplate().forEach((k, v) -> {
+                if (!workflow.getInput().containsKey(k)) {
+                    inputParams.put(k, v);
+                }
+            });
         }
 
         Map<String, Map<String, Object>> inputMap = new HashMap<>();
