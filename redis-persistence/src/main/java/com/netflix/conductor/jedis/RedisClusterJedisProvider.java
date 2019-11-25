@@ -15,10 +15,12 @@ package com.netflix.conductor.jedis;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.commands.JedisCommands;
 
 public class RedisClusterJedisProvider implements Provider<JedisCommands> {
@@ -33,12 +35,22 @@ public class RedisClusterJedisProvider implements Provider<JedisCommands> {
     @Override
     public JedisCommands get() {
         // FIXME This doesn't seem very safe, but is how it was in the code this was moved from.
-        Host host = new ArrayList<>(hostSupplier.getHosts()).get(0);
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMinIdle(5);
-        poolConfig.setMaxTotal(1000);
+//        Host host = new ArrayList<>(hostSupplier.getHosts()).get(0);
+//        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+//        poolConfig.setMinIdle(5);
+//        poolConfig.setMaxTotal(1000);
+//
+//        JedisPool jedisPool = new JedisPool(poolConfig, host.getHostName(), host.getPort());
+//        return new JedisCluster(jedisPool);
 
-        JedisPool jedisPool = new JedisPool(poolConfig, host.getHostName(), host.getPort());
-        return new JedisCluster(jedisPool);
+        Host host = new ArrayList<>(hostSupplier.getHosts()).get(0);
+
+        Set<HostAndPort> jedisClusterNodes = new HashSet<>();
+        //Jedis Cluster will attempt to discover cluster nodes automatically
+        jedisClusterNodes.add(new HostAndPort(host.getHostName(), host.getPort()));
+
+        redis.clients.jedis.JedisCluster clusterClient = new redis.clients.jedis.JedisCluster(jedisClusterNodes);
+
+        return new JedisClusterMod(clusterClient);
     }
 }
