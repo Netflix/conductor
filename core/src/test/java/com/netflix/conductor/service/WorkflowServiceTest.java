@@ -22,9 +22,9 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.anyListOf;
+import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.anyMapOf;
+import static org.mockito.Mockito.anyMap;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -136,11 +136,11 @@ public class WorkflowServiceTest {
 
         when(mockMetadata.getWorkflowDef(anyString(), anyInt())).thenReturn(workflowDef);
         when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(),
-                anyMapOf(String.class, Object.class), any(String.class), any(String.class),
-                anyMapOf(String.class, String.class))).thenReturn(workflowID);
+                anyMap(), any(String.class), any(String.class),
+                anyMap())).thenReturn(workflowID);
         when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(), anyInt(),
-                anyMapOf(String.class, Object.class), any(String.class), any(String.class),
-                anyMapOf(String.class, String.class))).thenReturn(workflowID);
+                anyMap(), any(String.class), any(String.class),
+                anyMap())).thenReturn(workflowID);
         assertEquals("w112", workflowService.startWorkflow(startWorkflowRequest));
     }
 
@@ -156,9 +156,9 @@ public class WorkflowServiceTest {
 
         when(mockMetadata.getWorkflowDef(anyString(), anyInt())).thenReturn(workflowDef);
         when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(),
-                anyMapOf(String.class, Object.class), any(String.class))).thenReturn(workflowID);
+                anyMap(), any(String.class))).thenReturn(workflowID);
         when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(), anyInt(),
-                anyMapOf(String.class, Object.class), any(String.class))).thenReturn(workflowID);
+                anyMap(), any(String.class))).thenReturn(workflowID);
         assertEquals("w112", workflowService.startWorkflow("test", 1, "c123", input));
     }
 
@@ -479,7 +479,7 @@ public class WorkflowServiceTest {
         }};
         SearchResult<WorkflowSummary> searchResult = new SearchResult<WorkflowSummary>(100, listOfWorkflowSummary);
 
-        when(mockExecutionService.search(anyString(), anyString(), anyInt(), anyInt(), anyListOf(String.class))).thenReturn(searchResult);
+        when(mockExecutionService.search(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflows(0,100,"asc", "*", "*"));
     }
 
@@ -498,7 +498,7 @@ public class WorkflowServiceTest {
     @Test
     public void searchWorkflowsByTasks() {
         workflowService.searchWorkflowsByTasks(0,100,"asc", "*", "*");
-        verify(mockExecutionService, times(1)).searchWorkflowByTasks(anyString(), anyString(), anyInt(), anyInt(), anyListOf(String.class));
+        verify(mockExecutionService, times(1)).searchWorkflowByTasks(anyString(), anyString(), anyInt(), anyInt(), anyList());
     }
 
 
