@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -240,8 +241,8 @@ public class TestWorkflowExecutor {
             queuedTaskCount.incrementAndGet();
             return null;
         };
-        doAnswer(answer).when(queueDAO).push(any(), any(), anyInt());
-        doAnswer(answer).when(queueDAO).push(any(), any(), anyInt(), anyInt());
+        doAnswer(answer).when(queueDAO).push(any(), any(), anyLong());
+        doAnswer(answer).when(queueDAO).push(any(), any(), anyInt(), anyLong());
 
         boolean stateChanged = workflowExecutor.scheduleTask(workflow, tasks);
         assertEquals(2, startedTaskCount.get());
@@ -269,7 +270,7 @@ public class TestWorkflowExecutor {
 
         tasks.add(task1);
 
-        when(executionDAOFacade.createTasks(tasks)).thenThrow(Exception.class);
+        when(executionDAOFacade.createTasks(tasks)).thenThrow(new RuntimeException());
         workflowExecutor.scheduleTask(workflow, tasks);
     }
 
