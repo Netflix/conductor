@@ -16,7 +16,6 @@
 package com.netflix.conductor.server.resources;
 
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
-import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.service.WorkflowService;
@@ -38,6 +37,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -154,8 +154,7 @@ public class WorkflowResourceTest {
     @Test
     public void testSkipTaskFromWorkflow() {
         workflowResource.skipTaskFromWorkflow("test", "testTask", null);
-        verify(mockWorkflowService, times(1)).skipTaskFromWorkflow(anyString(), anyString(),
-                any(SkipTaskRequest.class));
+        verify(mockWorkflowService, times(1)).skipTaskFromWorkflow(anyString(), anyString(), isNull());
     }
 
     @Test
