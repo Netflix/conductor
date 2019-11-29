@@ -32,6 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.isNull;
@@ -133,10 +134,12 @@ public class WorkflowTaskCoordinatorTests {
 				.build();
 		Task testTask = new Task();
 		testTask.setStatus(Task.Status.IN_PROGRESS);
-		when(client.batchPollTasksInDomain(anyString(), anyString(), anyString(), anyInt(), anyInt())).thenReturn(ImmutableList.of(testTask));
-		when(client.ack(anyString(), anyString())).thenReturn(false);
+		when(client.batchPollTasksInDomain(any(), any(), any(), anyInt(), anyInt())).thenReturn(ImmutableList.of(testTask));
+		when(client.ack(any(), any())).thenReturn(false);
 
 		coordinator.init();
+		Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
+		verify(client, atLeastOnce()).ack(any(), any());
 
 		// then worker.execute must not be called and task must be updated with IN_PROGRESS status
 		verify(worker, never()).execute(any());
@@ -167,6 +170,8 @@ public class WorkflowTaskCoordinatorTests {
 		when(client.ack(any(), any())).thenThrow(new RuntimeException("Ack failed"));
 
 		coordinator.init();
+		Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
+		verify(client).ack(any(), any());
 
 		// then worker.execute must not be called and task must be updated with IN_PROGRESS status
 		verify(worker, never()).execute(any());
