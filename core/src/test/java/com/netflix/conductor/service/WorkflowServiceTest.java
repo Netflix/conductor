@@ -26,6 +26,7 @@ import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyMap;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -127,7 +128,8 @@ public class WorkflowServiceTest {
         workflowDef.setVersion(1);
 
         StartWorkflowRequest startWorkflowRequest = new StartWorkflowRequest();
-        startWorkflowRequest.setName("w123");
+        startWorkflowRequest.setName("test");
+        startWorkflowRequest.setVersion(1);
 
         Map<String, Object> input = new HashMap<>();
         input.put("1", "abc");
@@ -135,11 +137,8 @@ public class WorkflowServiceTest {
         String workflowID = "w112";
 
         when(mockMetadata.getWorkflowDef(anyString(), anyInt())).thenReturn(workflowDef);
-        when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(),
-                anyMap(), any(String.class), any(String.class),
-                anyMap())).thenReturn(workflowID);
-        when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(), anyInt(),
-                anyMap(), any(String.class), any(String.class),
+        when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), isNull(), anyInt(),
+                anyMap(), isNull(), isNull(),
                 anyMap())).thenReturn(workflowID);
         assertEquals("w112", workflowService.startWorkflow(startWorkflowRequest));
     }
@@ -155,10 +154,8 @@ public class WorkflowServiceTest {
         String workflowID = "w112";
 
         when(mockMetadata.getWorkflowDef(anyString(), anyInt())).thenReturn(workflowDef);
-        when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(),
-                anyMap(), any(String.class))).thenReturn(workflowID);
         when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(), anyInt(),
-                anyMap(), any(String.class))).thenReturn(workflowID);
+                anyMap(), isNull())).thenReturn(workflowID);
         assertEquals("w112", workflowService.startWorkflow("test", 1, "c123", input));
     }
 
@@ -363,8 +360,7 @@ public class WorkflowServiceTest {
     @Test
     public void testSkipTaskFromWorkflow() {
         workflowService.skipTaskFromWorkflow("test", "testTask", null);
-        verify(mockWorkflowExecutor, times(1)).skipTaskFromWorkflow(anyString(), anyString(),
-                any(SkipTaskRequest.class));
+        verify(mockWorkflowExecutor, times(1)).skipTaskFromWorkflow(anyString(), anyString(), isNull());
     }
 
     @Test
