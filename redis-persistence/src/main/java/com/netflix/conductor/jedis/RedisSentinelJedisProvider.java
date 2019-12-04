@@ -32,8 +32,8 @@ public class RedisSentinelJedisProvider implements Provider<JedisCommands> {
     @Inject
     public RedisSentinelJedisProvider(HostSupplier hostSupplier, DynomiteConfiguration configuration) {
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMinIdle(5);
-        poolConfig.setMaxTotal(1000);
+        poolConfig.setMinIdle(configuration.getMinIdleConnectionsPerHost());
+        poolConfig.setMaxTotal(configuration.getMaxConnectionsPerHost());
 
         logger.info("Starting conductor server using redis_sentinel and cluster " + configuration.getClusterName());
 
@@ -48,6 +48,6 @@ public class RedisSentinelJedisProvider implements Provider<JedisCommands> {
 
     @Override
     public JedisCommands get() {
-        return new JedisCluster(jedisSentinelPool);
+        return new RedisJedisPool(jedisSentinelPool);
     }
 }

@@ -181,13 +181,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                 Monitors.recordDiscardedIndexingCount("logQueue");
             });
 
-        try {
-            setup();
-        }
-        catch (Exception e) {
-            logger.error("Error in setting up elasticsearch ", e);
-        }
-
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::flushBulkRequests, 60, 30, TimeUnit.SECONDS);
     }
 

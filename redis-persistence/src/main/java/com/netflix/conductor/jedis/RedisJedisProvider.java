@@ -42,11 +42,11 @@ public class RedisJedisProvider implements Provider<JedisCommands> {
         Host host = Lists.newArrayList(hostSupplier.getHosts()).get(0);
 
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMinIdle(5);
-        poolConfig.setMaxTotal(1000);
+        poolConfig.setMinIdle(configuration.getMinIdleConnectionsPerHost());
+        poolConfig.setMaxTotal(configuration.getMaxConnectionsPerHost());
         logger.info("Starting conductor server using redis_cluster " + configuration.getClusterName());
 
         JedisPool jedisPool = new JedisPool(poolConfig, host.getHostName(), host.getPort());
-        return new JedisCluster(jedisPool);
+        return new RedisJedisPool(jedisPool);
     }
 }

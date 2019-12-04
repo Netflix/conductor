@@ -22,6 +22,10 @@ public interface DynomiteConfiguration extends Configuration {
     String NON_QUORUM_PORT_PROPERTY_NAME = "queues.dynomite.nonQuorum.port";
     int NON_QUORUM_PORT_DEFAULT_VALUE = 22122;
 
+    String JEDIS_CONNECTION_POOL_MIN_IDLE_PROPERTY_NAME = "workflow.jedis.connectionPool.minIdle";
+    int JEDIS_CONNECTION_POOL_MIN_IDLE_DEFAULT_VALUE  = 5;
+
+
     default String getCluster() {
         return getProperty(CLUSTER_PROPERTY_NAME, CLUSTER_DEFAULT_VALUE);
     }
@@ -61,5 +65,12 @@ public interface DynomiteConfiguration extends Configuration {
         }
 
         return prefix;
+    }
+
+    default int getMinIdleConnectionsPerHost() {
+        return getIntProperty(
+                JEDIS_CONNECTION_POOL_MIN_IDLE_PROPERTY_NAME,
+                JEDIS_CONNECTION_POOL_MIN_IDLE_DEFAULT_VALUE
+        );
     }
 }
