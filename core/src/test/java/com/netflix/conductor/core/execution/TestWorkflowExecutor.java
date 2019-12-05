@@ -288,12 +288,13 @@ public class TestWorkflowExecutor {
         assertEquals(1, updateWorkflowCalledCounter.get());
         assertEquals(1, updateTasksCalledCounter.get());
         assertEquals(1, removeQueueEntryCalledCounter.get());
+        verify(workflowStatusListener, times(0)).onWorkflowCompleted(any(Workflow.class));
 
 
         def.setWorkflowStatusListenerEnabled(true);
         workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
         workflowExecutor.completeWorkflow(workflow);
-        verify(workflowStatusListener, times(2)).onWorkflowCompleted(any(Workflow.class));
+        verify(workflowStatusListener, times(1)).onWorkflowCompleted(any(Workflow.class));
     }
 
     @Test
@@ -335,7 +336,7 @@ public class TestWorkflowExecutor {
         assertEquals(Workflow.WorkflowStatus.TERMINATED, workflow.getStatus());
         assertEquals(1, updateWorkflowCalledCounter.get());
         assertEquals(1, removeQueueEntryCalledCounter.get());
-
+        verify(workflowStatusListener, times(0)).onWorkflowTerminated(any(Workflow.class));
 
         def.setWorkflowStatusListenerEnabled(true);
         workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
