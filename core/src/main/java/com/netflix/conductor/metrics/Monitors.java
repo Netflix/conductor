@@ -263,8 +263,4 @@ public class Monitors {
 	public static void recordESIndexTime(String docType, long val) {
 		getTimer(Monitors.classQualifier, docType, docType).record(val, TimeUnit.MILLISECONDS);
 	}
-
-	public static void recordKafkaPublishError() {
-		getCounter(classQualifier, "kafka_publishing_error", "").increment();
-	}
 }
