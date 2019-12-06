@@ -71,6 +71,7 @@ public class SimpleEventProcessor implements EventProcessor {
     private final Map<String, ObservableQueue> eventToQueueMap = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final JsonUtils jsonUtils;
+    private final Configuration config;
 
     @Inject
     public SimpleEventProcessor(ExecutionService executionService, MetadataService metadataService,
@@ -80,6 +81,7 @@ public class SimpleEventProcessor implements EventProcessor {
         this.actionProcessor = actionProcessor;
         this.eventQueues = eventQueues;
         this.jsonUtils = jsonUtils;
+        this.config = config;
 
         int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
         if (executorThreadCount > 0) {
@@ -142,7 +144,9 @@ public class SimpleEventProcessor implements EventProcessor {
 
     private void handle(ObservableQueue queue, Message msg) {
         try {
-            executionService.addMessage(queue.getName(), msg);
+            if (config.enableEventMessageIndexing()) {
+                executionService.addMessage(queue.getName(), msg);
+            }
 
             String event = queue.getType() + ":" + queue.getName();
             logger.debug("Evaluating message: {} for event: {}", msg.getId(), event);

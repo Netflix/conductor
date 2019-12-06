@@ -541,6 +541,12 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     }
 
     @Override
+    public CompletableFuture<Void> asyncAddMessage(String queue, Message msg)
+    {
+        return CompletableFuture.runAsync(() -> addMessage(queue, msg), executorService);
+    }
+
+    @Override
     public void addEventExecution(EventExecution eventExecution) {
         try {
             long startTime = Instant.now().toEpochMilli();

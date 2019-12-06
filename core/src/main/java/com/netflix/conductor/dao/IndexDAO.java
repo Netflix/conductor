@@ -164,6 +164,15 @@ public interface IndexDAO {
      */
     void addMessage(String queue, Message msg);
 
+    /**
+     * Adds an incoming external message into the index
+     *
+     * @param queue Name of the registered queue
+     * @param msg Message
+     * @return CompletableFuture of type void
+     */
+    CompletableFuture<Void> asyncAddMessage(String queue, Message msg);
+
     List<Message> getMessages(String queue);
 
     /**
