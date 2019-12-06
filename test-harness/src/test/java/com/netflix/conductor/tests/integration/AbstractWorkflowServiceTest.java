@@ -715,6 +715,66 @@ public abstract class AbstractWorkflowServiceTest {
     }
 
     @Test
+    public void testLoopSubWorkflow() {
+
+        createLoopSubWorkflow();
+        metadataService.getWorkflowDef(DO_WHILE_WF + "_4", 1);
+        Map<String, Object> input = new HashMap<>();
+        input.put("param1", "param 1 value");
+        input.put("param3", "param 2 value");
+        input.put("wfName", LINEAR_WORKFLOW_T1_T2);
+        String wfId = startOrLoadWorkflowExecution(DO_WHILE_WF + "_4", 1, "test", input, null, null);
+        assertNotNull(wfId);
+
+        Workflow es = workflowExecutionService.getExecutionStatus(wfId, true);
+        assertNotNull(es);
+
+        Task task = workflowExecutionService.poll("HTTP", "test");
+        assertNotNull(task);
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+
+        es = workflowExecutionService.getExecutionStatus(wfId, true);
+        assertNotNull(es);
+        assertNotNull(es.getTasks());
+
+        task = es.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
+        assertNotNull(task);
+        assertNotNull(task.getOutputData());
+        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getOutputData().get("subWorkflowId"));
+        assertNotNull(task.getInputData());
+        assertTrue(task.getInputData().containsKey("workflowInput"));
+        assertEquals(42, ((Map<String, Object>) task.getInputData().get("workflowInput")).get("param2"));
+        String subWorkflowId = task.getOutputData().get("subWorkflowId").toString();
+
+
+        task = workflowExecutionService.poll("junit_task_1", "test");
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        task = workflowExecutionService.poll("junit_task_2", "test");
+        assertEquals(subWorkflowId, task.getWorkflowInstanceId());
+        String uuid = UUID.randomUUID().toString();
+        task.getOutputData().put("uuid", uuid);
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(es);
+        assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
+        assertNotNull(es.getOutput());
+        assertTrue(es.getOutput().containsKey("o1"));
+        assertTrue(es.getOutput().containsKey("o2"));
+        assertEquals("sub workflow input param1", es.getOutput().get("o1"));
+        assertEquals(uuid, es.getOutput().get("o2"));
+
+        es = workflowExecutionService.getExecutionStatus(wfId, true);
+        assertNotNull(es);
+        assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
+    }
+
+    @Test
     public void testDoWhileTwoIteration() throws Exception {
         try {
             createDoWhileWorkflowWithIteration(2, false);
@@ -1572,6 +1632,63 @@ public abstract class AbstractWorkflowServiceTest {
         metadataService.registerWorkflowDef(workflowDef);
     }
 
+    private void createLoopSubWorkflow() {
+
+        Map<String, Object> inputParams1 = new HashMap<>();
+        inputParams1.put("p1", "workflow.input.param1");
+        inputParams1.put("p2", "workflow.input.param2");
+        WorkflowTask http0 = new WorkflowTask();
+        http0.setName("http0");
+        http0.setInputParameters(inputParams1);
+        http0.setTaskReferenceName("http0");
+        http0.setWorkflowTaskType(TaskType.HTTP);
+
+        WorkflowTask wft2 = new WorkflowTask();
+        wft2.setName("subWorkflowTask");
+        wft2.setType(SUB_WORKFLOW.name());
+        SubWorkflowParams swp = new SubWorkflowParams();
+        swp.setName(LINEAR_WORKFLOW_T1_T2);
+        swp.setTaskToDomain(null);
+        wft2.setSubWorkflowParam(swp);
+        Map<String, Object> ip2 = new HashMap<>();
+        ip2.put("test", "test value");
+        ip2.put("param1", "sub workflow input param1");
+        ip2.put("param2", 42);
+        wft2.setInputParameters(ip2);
+        wft2.setTaskReferenceName("a2");
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("loopTask");
+        taskDef.setTimeoutSeconds(2);
+        taskDef.setRetryCount(1);
+        taskDef.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef.setRetryDelaySeconds(10);
+
+        metadataService.registerTaskDef(Arrays.asList(taskDef));
+
+        WorkflowTask loopTask = new WorkflowTask();
+        loopTask.setType(TaskType.DO_WHILE.name());
+        loopTask.setTaskReferenceName("loopTask");
+        loopTask.setName("loopTask");
+        loopTask.setWorkflowTaskType(TaskType.DO_WHILE);
+        Map<String, Object> input = new HashMap<>();
+        input.put("value", "${workflow.input.loop}");
+        loopTask.setInputParameters(input);
+
+        loopTask.getLoopOver().add(http0);
+        loopTask.getLoopOver().add(wft2);
+
+        loopTask.setLoopCondition("if ($.loopTask['iteration'] < $.value) { true; } else { false; }");
+
+        WorkflowDef main = new WorkflowDef();
+        main.setSchemaVersion(2);
+        main.setInputParameters(Arrays.asList("param1", "param2"));
+        main.setName(DO_WHILE_WF + "_4");
+        main.getTasks().addAll(Arrays.asList(loopTask));
+
+        metadataService.updateWorkflowDef(Collections.singletonList(main));
+
+    }
 
     private void createForkJoinWorkflowWithZeroRetry() {
         WorkflowDef def = new WorkflowDef();
