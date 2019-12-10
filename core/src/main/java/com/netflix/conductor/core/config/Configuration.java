@@ -156,7 +156,7 @@ public interface Configuration {
         return null;
     }
 
-    default boolean getForceWorkflowDeletionFromRedis() {
+    default boolean isForceWorkflowDeletionEnabled() {
         return getBooleanProperty(FORCE_WORKFLOW_DELETION, false);
     }
 
