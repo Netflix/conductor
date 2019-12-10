@@ -9,6 +9,7 @@ public interface DynomiteConfiguration extends Configuration {
 
     String CLUSTER_NAME_PROPERTY_NAME = "workflow.dynomite.cluster.name";
     String HOSTS_PROPERTY_NAME = "workflow.dynomite.cluster.hosts";
+    String SHOULD_USE_SSL_PROPERTY_NAME = "workflow.dynomite.cluster.hosts.useSSL";
 
     String MAX_CONNECTIONS_PER_HOST_PROPERTY_NAME = "workflow.dynomite.connection.maxConnsPerHost";
     int MAX_CONNECTIONS_PER_HOST_DEFAULT_VALUE = 10;
@@ -32,6 +33,10 @@ public interface DynomiteConfiguration extends Configuration {
 
     default String getHosts() {
         return getProperty(HOSTS_PROPERTY_NAME, null);
+    }
+
+    default Boolean shouldUseSSL() {
+        return Boolean.parseBoolean(getProperty(SHOULD_USE_SSL_PROPERTY_NAME, null));
     }
 
     default String getRootNamespace() {

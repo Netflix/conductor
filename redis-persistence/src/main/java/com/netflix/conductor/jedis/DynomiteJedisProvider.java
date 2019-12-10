@@ -19,13 +19,22 @@ import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.net.ssl.SSLContext;
+import java.security.NoSuchAlgorithmException;
+import java.security.KeyManagementException;
 import redis.clients.jedis.commands.JedisCommands;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class DynomiteJedisProvider implements Provider<JedisCommands> {
 
     private final HostSupplier hostSupplier;
     private final TokenMapSupplier tokenMapSupplier;
     private final DynomiteConfiguration configuration;
+
+    private static Logger logger = LoggerFactory.getLogger(DynomiteJedisProvider.class);
 
     @Inject
     public DynomiteJedisProvider(
@@ -36,6 +45,13 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
         this.configuration = configuration;
         this.hostSupplier = hostSupplier;
         this.tokenMapSupplier = tokenMapSupplier;
+    }
+
+    private SSLContext createAndInitSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
+        final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+        sslContext.init(null, null, null);
+
+        return sslContext;
     }
 
     @Override
@@ -51,11 +67,23 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
                         configuration.getMaxConnectionsPerHost()
                 );
 
-        return new DynoJedisClient.Builder()
+        final DynoJedisClient.Builder builder = new DynoJedisClient.Builder()
                 .withHostSupplier(hostSupplier)
                 .withApplicationName(configuration.getAppId())
                 .withDynomiteClusterName(configuration.getClusterName())
-                .withCPConfig(connectionPoolConfiguration)
-                .build();
+                .withCPConfig(connectionPoolConfiguration);
+
+        if (this.configuration.shouldUseSSL()) {
+                try {
+                        final SSLContext sslContext = createAndInitSSLContext();
+                        builder.withSSLSocketFactory(sslContext.getSocketFactory());
+
+                        logger.info("Functioning in SSL mode.");
+                } catch (NoSuchAlgorithmException | KeyManagementException exc) {
+                        logger.warn("Could not initialise SSLContext, falling back to non-ssl connection.");
+                }
+        }
+
+        return builder.build();
     }
 }
