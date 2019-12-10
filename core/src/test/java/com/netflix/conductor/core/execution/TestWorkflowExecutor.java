@@ -336,6 +336,7 @@ public class TestWorkflowExecutor {
         assertEquals(1, updateWorkflowCalledCounter.get());
         assertEquals(1, removeQueueEntryCalledCounter.get());
 
+
         def.setWorkflowStatusListenerEnabled(true);
         workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
         workflowExecutor.completeWorkflow(workflow);

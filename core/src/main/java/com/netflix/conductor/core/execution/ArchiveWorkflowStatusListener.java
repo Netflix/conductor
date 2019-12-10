@@ -35,7 +35,7 @@ public class ArchiveWorkflowStatusListener implements WorkflowStatusListener {
         }
     }
 
-    public void removeWorkflow(String workflowId, boolean shouldArchive) {
+    private void removeWorkflow(String workflowId, boolean shouldArchive) {
         executionDAOFacade.removeWorkflow(workflowId, shouldArchive);
     }
 
