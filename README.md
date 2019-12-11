@@ -1,6 +1,8 @@
 ![Conductor](docs/docs/img/conductor-vector-x.png)
 
 ## Conductor
+Forked from [netflix-conductor](https://github.com/Netflix/conductor)
+
 Conductor is an _orchestration_ engine that runs in the cloud.
 
 
