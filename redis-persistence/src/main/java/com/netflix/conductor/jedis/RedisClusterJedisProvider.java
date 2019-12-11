@@ -15,43 +15,28 @@ package com.netflix.conductor.jedis;
 import com.netflix.conductor.dyno.DynomiteConfiguration;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.HostSupplier;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.commands.JedisCommands;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 public class RedisClusterJedisProvider implements Provider<JedisCommands> {
 
-    private final HostSupplier hostSupplier;
-    private final DynomiteConfiguration configuration;
+    private final JedisCluster jedisCluster;
 
     @Inject
-    public RedisClusterJedisProvider(HostSupplier hostSupplier, DynomiteConfiguration configuration){
-        this.hostSupplier = hostSupplier;
-        this.configuration = configuration;
+    public RedisClusterJedisProvider(HostSupplier hostSupplier, DynomiteConfiguration configuration) {
+        GenericObjectPoolConfig genericObjectPoolConfig = new GenericObjectPoolConfig();
+        genericObjectPoolConfig.setMaxTotal(configuration.getMaxConnectionsPerHost());
+        Host host = hostSupplier.getHosts().get(0);
+        this.jedisCluster = new JedisCluster(new redis.clients.jedis.JedisCluster(new HostAndPort(host.getHostName(), host.getPort()),
+                                                                                  genericObjectPoolConfig));
     }
 
     @Override
     public JedisCommands get() {
-
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMinIdle(configuration.getMinIdleConnectionsPerHost());
-        poolConfig.setMaxTotal(configuration.getMaxConnectionsPerHost());
-
-        Host host = new ArrayList<>(hostSupplier.getHosts()).get(0);
-
-        //Jedis Cluster will attempt to discover cluster nodes automatically
-        Set<HostAndPort> jedisClusterNodes = new HashSet<>();
-        jedisClusterNodes.add(new HostAndPort(host.getHostName(), host.getPort()));
-
-        redis.clients.jedis.JedisCluster clusterClient = new redis.clients.jedis.JedisCluster(jedisClusterNodes, poolConfig);
-
-        return new JedisCluster(clusterClient);
+        return jedisCluster;
     }
 }

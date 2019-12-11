@@ -26,28 +26,24 @@ import redis.clients.jedis.JedisSentinelPool;
 import redis.clients.jedis.commands.JedisCommands;
 
 public class RedisSentinelJedisProvider implements Provider<JedisCommands> {
+
     private static Logger logger = LoggerFactory.getLogger(RedisSentinelJedisProvider.class);
-    private final JedisSentinelPool jedisSentinelPool;
+    private final JedisSentinel jedisSentinel;
 
     @Inject
     public RedisSentinelJedisProvider(HostSupplier hostSupplier, DynomiteConfiguration configuration) {
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMinIdle(configuration.getMinIdleConnectionsPerHost());
-        poolConfig.setMaxTotal(configuration.getMaxConnectionsPerHost());
-
+        GenericObjectPoolConfig genericObjectPoolConfig = new GenericObjectPoolConfig();
+        genericObjectPoolConfig.setMaxTotal(configuration.getMaxConnectionsPerHost());
         logger.info("Starting conductor server using redis_sentinel and cluster " + configuration.getClusterName());
-
         Set<String> sentinels = new HashSet<>();
-
         for (Host host : hostSupplier.getHosts()) {
             sentinels.add(host.getHostName() + ":" + host.getPort());
         }
-
-        jedisSentinelPool = new JedisSentinelPool(configuration.getClusterName(), sentinels, poolConfig);
+        this.jedisSentinel = new JedisSentinel(new JedisSentinelPool(configuration.getClusterName(), sentinels, genericObjectPoolConfig));
     }
 
     @Override
     public JedisCommands get() {
-        return new RedisJedisPool(jedisSentinelPool);
+        return jedisSentinel;
     }
 }

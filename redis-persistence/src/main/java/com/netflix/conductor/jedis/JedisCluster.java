@@ -1,3 +1,15 @@
+/*
+ * Copyright 2019 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.netflix.conductor.jedis;
 
 import redis.clients.jedis.BitPosParams;
@@ -14,926 +26,770 @@ import redis.clients.jedis.params.GeoRadiusParam;
 import redis.clients.jedis.params.SetParams;
 import redis.clients.jedis.params.ZAddParams;
 import redis.clients.jedis.params.ZIncrByParams;
-import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public class JedisCluster implements JedisCommands
-{
-    private final redis.clients.jedis.JedisCluster jedis;
+public class JedisCluster implements JedisCommands {
 
-    public JedisCluster(redis.clients.jedis.JedisCluster jedisCluster)
-    {
-        this.jedis = jedisCluster;
+    private final redis.clients.jedis.JedisCluster jedisCluster;
+
+    public JedisCluster(redis.clients.jedis.JedisCluster jedisCluster) {
+        this.jedisCluster = jedisCluster;
     }
 
     @Override
-    public String set(String key, String value)
-    {
-        return jedis.set(key, value);
+    public String set(String key, String value) {
+        return jedisCluster.set(key, value);
     }
 
     @Override
-    public String set(String key, String value, SetParams params)
-    {
-        return jedis.set(key, value, params);
+    public String set(String key, String value, SetParams params) {
+        return jedisCluster.set(key, value, params);
     }
 
     @Override
-    public String get(String key)
-    {
-        return jedis.get(key);
+    public String get(String key) {
+        return jedisCluster.get(key);
     }
 
     @Override
-    public Boolean exists(String key)
-    {
-        return jedis.exists(key);
+    public Boolean exists(String key) {
+        return jedisCluster.exists(key);
     }
 
     @Override
-    public Long persist(String key)
-    {
-        return jedis.persist(key);
+    public Long persist(String key) {
+        return jedisCluster.persist(key);
     }
 
     @Override
-    public String type(String key)
-    {
-        return jedis.type(key);
+    public String type(String key) {
+        return jedisCluster.type(key);
     }
 
     @Override
-    public byte[] dump(String key)
-    {
-        return jedis.dump(key);
+    public byte[] dump(String key) {
+        return jedisCluster.dump(key);
     }
 
     @Override
-    public String restore(String key, int ttl, byte[] serializedValue)
-    {
-        return jedis.restore(key, ttl, serializedValue);
+    public String restore(String key, int ttl, byte[] serializedValue) {
+        return jedisCluster.restore(key, ttl, serializedValue);
     }
 
     @Override
-    public String restoreReplace(String key, int ttl, byte[] serializedValue)
-    {
+    public String restoreReplace(String key, int ttl, byte[] serializedValue) {
         throw new RuntimeException("Unsupported operation");
     }
 
     @Override
-    public Long expire(String key, int seconds)
-    {
-        return jedis.expire(key, seconds);
+    public Long expire(String key, int seconds) {
+        return jedisCluster.expire(key, seconds);
     }
 
     @Override
-    public Long pexpire(String key, long milliseconds)
-    {
-        return jedis.pexpire(key, milliseconds);
+    public Long pexpire(String key, long milliseconds) {
+        return jedisCluster.pexpire(key, milliseconds);
     }
 
     @Override
-    public Long expireAt(String key, long unixTime)
-    {
-        return jedis.expireAt(key, unixTime);
+    public Long expireAt(String key, long unixTime) {
+        return jedisCluster.expireAt(key, unixTime);
     }
 
     @Override
-    public Long pexpireAt(String key, long millisecondsTimestamp)
-    {
-        return jedis.pexpireAt(key, millisecondsTimestamp);
+    public Long pexpireAt(String key, long millisecondsTimestamp) {
+        return jedisCluster.pexpireAt(key, millisecondsTimestamp);
     }
 
     @Override
-    public Long ttl(String key)
-    {
-        return jedis.ttl(key);
+    public Long ttl(String key) {
+        return jedisCluster.ttl(key);
     }
 
     @Override
-    public Long pttl(String key)
-    {
-        return jedis.pttl(key);
+    public Long pttl(String key) {
+        return jedisCluster.pttl(key);
     }
 
     @Override
-    public Long touch(String key)
-    {
-        return jedis.touch(key);
+    public Long touch(String key) {
+        return jedisCluster.touch(key);
     }
 
     @Override
-    public Boolean setbit(String key, long offset, boolean value)
-    {
-        return jedis.setbit(key, offset, value);
+    public Boolean setbit(String key, long offset, boolean value) {
+        return jedisCluster.setbit(key, offset, value);
     }
 
     @Override
-    public Boolean setbit(String key, long offset, String value)
-    {
-        return jedis.setbit(key, offset, value);
+    public Boolean setbit(String key, long offset, String value) {
+        return jedisCluster.setbit(key, offset, value);
     }
 
     @Override
-    public Boolean getbit(String key, long offset)
-    {
-        return jedis.getbit(key, offset);
+    public Boolean getbit(String key, long offset) {
+        return jedisCluster.getbit(key, offset);
     }
 
     @Override
-    public Long setrange(String key, long offset, String value)
-    {
-        return jedis.setrange(key, offset, value);
+    public Long setrange(String key, long offset, String value) {
+        return jedisCluster.setrange(key, offset, value);
     }
 
     @Override
-    public String getrange(String key, long startOffset, long endOffset)
-    {
-        return jedis.getrange(key, startOffset, endOffset);
+    public String getrange(String key, long startOffset, long endOffset) {
+        return jedisCluster.getrange(key, startOffset, endOffset);
     }
 
     @Override
-    public String getSet(String key, String value)
-    {
-        return jedis.getSet(key, value);
+    public String getSet(String key, String value) {
+        return jedisCluster.getSet(key, value);
     }
 
     @Override
-    public Long setnx(String key, String value)
-    {
-        return jedis.setnx(key, value);
+    public Long setnx(String key, String value) {
+        return jedisCluster.setnx(key, value);
     }
 
     @Override
-    public String setex(String key, int seconds, String value)
-    {
-        return jedis.setex(key, seconds, value);
+    public String setex(String key, int seconds, String value) {
+        return jedisCluster.setex(key, seconds, value);
     }
 
     @Override
-    public String psetex(String key, long milliseconds, String value)
-    {
-        return jedis.psetex(key, milliseconds, value);
+    public String psetex(String key, long milliseconds, String value) {
+        return jedisCluster.psetex(key, milliseconds, value);
     }
 
     @Override
-    public Long decrBy(String key, long integer)
-    {
-        return jedis.decrBy(key, integer);
+    public Long decrBy(String key, long integer) {
+        return jedisCluster.decrBy(key, integer);
     }
 
     @Override
-    public Long decr(String key)
-    {
-        return jedis.decr(key);
+    public Long decr(String key) {
+        return jedisCluster.decr(key);
     }
 
     @Override
-    public Long incrBy(String key, long integer)
-    {
-        return jedis.incrBy(key, integer);
+    public Long incrBy(String key, long integer) {
+        return jedisCluster.incrBy(key, integer);
     }
 
     @Override
-    public Double incrByFloat(String key, double value)
-    {
-        return jedis.incrByFloat(key, value);
+    public Double incrByFloat(String key, double value) {
+        return jedisCluster.incrByFloat(key, value);
     }
 
     @Override
-    public Long incr(String key)
-    {
-        return jedis.incr(key);
+    public Long incr(String key) {
+        return jedisCluster.incr(key);
     }
 
     @Override
-    public Long append(String key, String value)
-    {
-        return jedis.append(key, value);
+    public Long append(String key, String value) {
+        return jedisCluster.append(key, value);
     }
 
     @Override
-    public String substr(String key, int start, int end)
-    {
-        return jedis.substr(key, start, end);
+    public String substr(String key, int start, int end) {
+        return jedisCluster.substr(key, start, end);
     }
 
     @Override
-    public Long hset(String key, String field, String value)
-    {
-        return jedis.hset(key, field, value);
+    public Long hset(String key, String field, String value) {
+        return jedisCluster.hset(key, field, value);
     }
 
     @Override
-    public Long hset(String key, Map<String, String> hash)
-    {
-        return jedis.hset(key, hash);
+    public Long hset(String key, Map<String, String> hash) {
+        return jedisCluster.hset(key, hash);
     }
 
     @Override
-    public String hget(String key, String field)
-    {
-        return jedis.hget(key, field);
+    public String hget(String key, String field) {
+        return jedisCluster.hget(key, field);
     }
 
     @Override
-    public Long hsetnx(String key, String field, String value)
-    {
-        return jedis.hsetnx(key, field, value);
+    public Long hsetnx(String key, String field, String value) {
+        return jedisCluster.hsetnx(key, field, value);
     }
 
     @Override
-    public String hmset(String key, Map<String, String> hash)
-    {
-        return jedis.hmset(key, hash);
+    public String hmset(String key, Map<String, String> hash) {
+        return jedisCluster.hmset(key, hash);
     }
 
     @Override
-    public List<String> hmget(String key, String... fields)
-    {
-        return jedis.hmget(key, fields);
+    public List<String> hmget(String key, String... fields) {
+        return jedisCluster.hmget(key, fields);
     }
 
     @Override
-    public Long hincrBy(String key, String field, long value)
-    {
-        return jedis.hincrBy(key, field, value);
+    public Long hincrBy(String key, String field, long value) {
+        return jedisCluster.hincrBy(key, field, value);
     }
 
     @Override
-    public Double hincrByFloat(String key, String field, double value)
-    {
-        return jedis.hincrByFloat(key.getBytes(), field.getBytes(), value);
+    public Double hincrByFloat(String key, String field, double value) {
+        return jedisCluster.hincrByFloat(key.getBytes(), field.getBytes(), value);
     }
 
     @Override
-    public Boolean hexists(String key, String field)
-    {
-        return jedis.hexists(key, field);
+    public Boolean hexists(String key, String field) {
+        return jedisCluster.hexists(key, field);
     }
 
     @Override
-    public Long hdel(String key, String... field)
-    {
-        return jedis.hdel(key, field);
+    public Long hdel(String key, String... field) {
+        return jedisCluster.hdel(key, field);
     }
 
     @Override
-    public Long hlen(String key)
-    {
-        return jedis.hlen(key);
+    public Long hlen(String key) {
+        return jedisCluster.hlen(key);
     }
 
     @Override
-    public Set<String> hkeys(String key)
-    {
-        return jedis.hkeys(key);
+    public Set<String> hkeys(String key) {
+        return jedisCluster.hkeys(key);
     }
 
     @Override
-    public List<String> hvals(String key)
-    {
-        return jedis.hvals(key);
+    public List<String> hvals(String key) {
+        return jedisCluster.hvals(key);
     }
 
     @Override
-    public Map<String, String> hgetAll(String key)
-    {
-        return jedis.hgetAll(key);
+    public Map<String, String> hgetAll(String key) {
+        return jedisCluster.hgetAll(key);
     }
 
     @Override
-    public Long rpush(String key, String... string)
-    {
-        return jedis.rpush(key, string);
+    public Long rpush(String key, String... string) {
+        return jedisCluster.rpush(key, string);
     }
 
     @Override
-    public Long lpush(String key, String... string)
-    {
-        return jedis.lpush(key, string);
+    public Long lpush(String key, String... string) {
+        return jedisCluster.lpush(key, string);
     }
 
     @Override
-    public Long llen(String key)
-    {
-        return jedis.llen(key);
+    public Long llen(String key) {
+        return jedisCluster.llen(key);
     }
 
     @Override
-    public List<String> lrange(String key, long start, long end)
-    {
-        return jedis.lrange(key, start, end);
+    public List<String> lrange(String key, long start, long end) {
+        return jedisCluster.lrange(key, start, end);
     }
 
     @Override
-    public String ltrim(String key, long start, long end)
-    {
-        return jedis.ltrim(key, start, end);
+    public String ltrim(String key, long start, long end) {
+        return jedisCluster.ltrim(key, start, end);
     }
 
     @Override
-    public String lindex(String key, long index)
-    {
-        return jedis.lindex(key, index);
+    public String lindex(String key, long index) {
+        return jedisCluster.lindex(key, index);
     }
 
     @Override
-    public String lset(String key, long index, String value)
-    {
-        return jedis.lset(key, index, value);
+    public String lset(String key, long index, String value) {
+        return jedisCluster.lset(key, index, value);
     }
 
     @Override
-    public Long lrem(String key, long count, String value)
-    {
-        return jedis.lrem(key, count, value);
+    public Long lrem(String key, long count, String value) {
+        return jedisCluster.lrem(key, count, value);
     }
 
     @Override
-    public String lpop(String key)
-    {
-        return jedis.lpop(key);
+    public String lpop(String key) {
+        return jedisCluster.lpop(key);
     }
 
     @Override
-    public String rpop(String key)
-    {
-        return jedis.rpop(key);
+    public String rpop(String key) {
+        return jedisCluster.rpop(key);
     }
 
     @Override
-    public Long sadd(String key, String... member)
-    {
-        return jedis.sadd(key, member);
+    public Long sadd(String key, String... member) {
+        return jedisCluster.sadd(key, member);
     }
 
     @Override
-    public Set<String> smembers(String key)
-    {
-        return jedis.smembers(key);
+    public Set<String> smembers(String key) {
+        return jedisCluster.smembers(key);
     }
 
     @Override
-    public Long srem(String key, String... member)
-    {
-        return jedis.srem(key, member);
+    public Long srem(String key, String... member) {
+        return jedisCluster.srem(key, member);
     }
 
     @Override
-    public String spop(String key)
-    {
-        return jedis.spop(key);
+    public String spop(String key) {
+        return jedisCluster.spop(key);
     }
 
     @Override
-    public Set<String> spop(String key, long count)
-    {
-        return jedis.spop(key, count);
+    public Set<String> spop(String key, long count) {
+        return jedisCluster.spop(key, count);
     }
 
     @Override
-    public Long scard(String key)
-    {
-        return jedis.scard(key);
+    public Long scard(String key) {
+        return jedisCluster.scard(key);
     }
 
     @Override
-    public Boolean sismember(String key, String member)
-    {
-        return jedis.sismember(key, member);
+    public Boolean sismember(String key, String member) {
+        return jedisCluster.sismember(key, member);
     }
 
     @Override
-    public String srandmember(String key)
-    {
-        return jedis.srandmember(key);
+    public String srandmember(String key) {
+        return jedisCluster.srandmember(key);
     }
 
     @Override
-    public List<String> srandmember(String key, int count)
-    {
-        return jedis.srandmember(key, count);
+    public List<String> srandmember(String key, int count) {
+        return jedisCluster.srandmember(key, count);
     }
 
     @Override
-    public Long strlen(String key)
-    {
-        return jedis.strlen(key);
+    public Long strlen(String key) {
+        return jedisCluster.strlen(key);
     }
 
     @Override
-    public Long zadd(String key, double score, String member)
-    {
-        return jedis.zadd(key, score, member);
+    public Long zadd(String key, double score, String member) {
+        return jedisCluster.zadd(key, score, member);
     }
 
     @Override
-    public Long zadd(String key, double score, String member, ZAddParams params)
-    {
-        return jedis.zadd(key, score, member, params);
+    public Long zadd(String key, double score, String member, ZAddParams params) {
+        return jedisCluster.zadd(key, score, member, params);
     }
 
     @Override
-    public Long zadd(String key, Map<String, Double> scoreMembers)
-    {
-        return jedis.zadd(key, scoreMembers);
+    public Long zadd(String key, Map<String, Double> scoreMembers) {
+        return jedisCluster.zadd(key, scoreMembers);
     }
 
     @Override
-    public Long zadd(String key, Map<String, Double> scoreMembers, ZAddParams params)
-    {
-        return jedis.zadd(key, scoreMembers, params);
+    public Long zadd(String key, Map<String, Double> scoreMembers, ZAddParams params) {
+        return jedisCluster.zadd(key, scoreMembers, params);
     }
 
     @Override
-    public Set<String> zrange(String key, long start, long end)
-    {
-        return jedis.zrange(key, start, end);
+    public Set<String> zrange(String key, long start, long end) {
+        return jedisCluster.zrange(key, start, end);
     }
 
     @Override
-    public Long zrem(String key, String... member)
-    {
-        return jedis.zrem(key, member);
+    public Long zrem(String key, String... member) {
+        return jedisCluster.zrem(key, member);
     }
 
     @Override
-    public Double zincrby(String key, double score, String member)
-    {
-        return jedis.zincrby(key, score, member);
+    public Double zincrby(String key, double score, String member) {
+        return jedisCluster.zincrby(key, score, member);
     }
 
     @Override
-    public Double zincrby(String key, double score, String member, ZIncrByParams params)
-    {
-        return jedis.zincrby(key, score, member, params);
+    public Double zincrby(String key, double score, String member, ZIncrByParams params) {
+        return jedisCluster.zincrby(key, score, member, params);
     }
 
     @Override
-    public Long zrank(String key, String member)
-    {
-        return jedis.zrank(key, member);
+    public Long zrank(String key, String member) {
+        return jedisCluster.zrank(key, member);
     }
 
     @Override
-    public Long zrevrank(String key, String member)
-    {
-        return jedis.zrevrank(key, member);
+    public Long zrevrank(String key, String member) {
+        return jedisCluster.zrevrank(key, member);
     }
 
     @Override
-    public Set<String> zrevrange(String key, long start, long end)
-    {
-        return jedis.zrevrange(key, start, end);
+    public Set<String> zrevrange(String key, long start, long end) {
+        return jedisCluster.zrevrange(key, start, end);
     }
 
     @Override
-    public Set<Tuple> zrangeWithScores(String key, long start, long end)
-    {
-        return jedis.zrangeWithScores(key, start, end);
+    public Set<Tuple> zrangeWithScores(String key, long start, long end) {
+        return jedisCluster.zrangeWithScores(key, start, end);
     }
 
     @Override
-    public Set<Tuple> zrevrangeWithScores(String key, long start, long end)
-    {
-        return jedis.zrevrangeWithScores(key, start, end);
+    public Set<Tuple> zrevrangeWithScores(String key, long start, long end) {
+        return jedisCluster.zrevrangeWithScores(key, start, end);
     }
 
     @Override
-    public Long zcard(String key)
-    {
-        return jedis.zcard(key);
+    public Long zcard(String key) {
+        return jedisCluster.zcard(key);
     }
 
     @Override
-    public Double zscore(String key, String member)
-    {
-        return jedis.zscore(key, member);
+    public Double zscore(String key, String member) {
+        return jedisCluster.zscore(key, member);
     }
 
     @Override
-    public List<String> sort(String key)
-    {
-        return jedis.sort(key);
+    public List<String> sort(String key) {
+        return jedisCluster.sort(key);
     }
 
     @Override
-    public List<String> sort(String key, SortingParams sortingParameters)
-    {
-        return jedis.sort(key, sortingParameters);
+    public List<String> sort(String key, SortingParams sortingParameters) {
+        return jedisCluster.sort(key, sortingParameters);
     }
 
     @Override
-    public Long zcount(String key, double min, double max)
-    {
-        return jedis.zcount(key, min, max);
+    public Long zcount(String key, double min, double max) {
+        return jedisCluster.zcount(key, min, max);
     }
 
     @Override
-    public Long zcount(String key, String min, String max)
-    {
-        return jedis.zcount(key, min, max);
+    public Long zcount(String key, String min, String max) {
+        return jedisCluster.zcount(key, min, max);
     }
 
     @Override
-    public Set<String> zrangeByScore(String key, double min, double max)
-    {
-        return jedis.zrangeByScore(key, min, max);
+    public Set<String> zrangeByScore(String key, double min, double max) {
+        return jedisCluster.zrangeByScore(key, min, max);
     }
 
     @Override
-    public Set<String> zrangeByScore(String key, String min, String max)
-    {
-        return jedis.zrangeByScore(key, min, max);
+    public Set<String> zrangeByScore(String key, String min, String max) {
+        return jedisCluster.zrangeByScore(key, min, max);
     }
 
     @Override
-    public Set<String> zrevrangeByScore(String key, double max, double min)
-    {
-        return jedis.zrevrangeByScore(key, max, min);
+    public Set<String> zrevrangeByScore(String key, double max, double min) {
+        return jedisCluster.zrevrangeByScore(key, max, min);
     }
 
     @Override
-    public Set<String> zrangeByScore(String key, double min, double max, int offset, int count)
-    {
-        return jedis.zrangeByScore(key, min, max, offset, count);
+    public Set<String> zrangeByScore(String key, double min, double max, int offset, int count) {
+        return jedisCluster.zrangeByScore(key, min, max, offset, count);
     }
 
     @Override
-    public Set<String> zrevrangeByScore(String key, String max, String min)
-    {
-        return jedis.zrevrangeByScore(key, max, min);
+    public Set<String> zrevrangeByScore(String key, String max, String min) {
+        return jedisCluster.zrevrangeByScore(key, max, min);
     }
 
     @Override
-    public Set<String> zrangeByScore(String key, String min, String max, int offset, int count)
-    {
-        return jedis.zrangeByScore(key, min, max, offset, count);
+    public Set<String> zrangeByScore(String key, String min, String max, int offset, int count) {
+        return jedisCluster.zrangeByScore(key, min, max, offset, count);
     }
 
     @Override
-    public Set<String> zrevrangeByScore(String key, double max, double min, int offset, int count)
-    {
-        return jedis.zrevrangeByScore(key, max, min, offset, count);
+    public Set<String> zrevrangeByScore(String key, double max, double min, int offset, int count) {
+        return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
     }
 
     @Override
-    public Set<Tuple> zrangeByScoreWithScores(String key, double min, double max)
-    {
-        return jedis.zrangeByScoreWithScores(key, min, max);
+    public Set<Tuple> zrangeByScoreWithScores(String key, double min, double max) {
+        return jedisCluster.zrangeByScoreWithScores(key, min, max);
     }
 
     @Override
-    public Set<Tuple> zrevrangeByScoreWithScores(String key, double max, double min)
-    {
-        return jedis.zrevrangeByScoreWithScores(key, max, min);
+    public Set<Tuple> zrevrangeByScoreWithScores(String key, double max, double min) {
+        return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
     }
 
     @Override
-    public Set<Tuple> zrangeByScoreWithScores(String key, double min, double max, int offset, int count)
-    {
-        return jedis.zrangeByScoreWithScores(key, min, max, offset, count);
+    public Set<Tuple> zrangeByScoreWithScores(String key, double min, double max, int offset, int count) {
+        return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
     }
 
     @Override
-    public Set<String> zrevrangeByScore(String key, String max, String min, int offset, int count)
-    {
-        return jedis.zrevrangeByScore(key, max, min, offset, count);
+    public Set<String> zrevrangeByScore(String key, String max, String min, int offset, int count) {
+        return jedisCluster.zrevrangeByScore(key, max, min, offset, count);
     }
 
     @Override
-    public Set<Tuple> zrangeByScoreWithScores(String key, String min, String max)
-    {
-        return jedis.zrangeByScoreWithScores(key, min, max);
+    public Set<Tuple> zrangeByScoreWithScores(String key, String min, String max) {
+        return jedisCluster.zrangeByScoreWithScores(key, min, max);
     }
 
     @Override
-    public Set<Tuple> zrevrangeByScoreWithScores(String key, String max, String min)
-    {
-        return jedis.zrevrangeByScoreWithScores(key, max, min);
+    public Set<Tuple> zrevrangeByScoreWithScores(String key, String max, String min) {
+        return jedisCluster.zrevrangeByScoreWithScores(key, max, min);
     }
 
     @Override
-    public Set<Tuple> zrangeByScoreWithScores(String key, String min, String max, int offset, int count)
-    {
-        return jedis.zrangeByScoreWithScores(key, min, max, offset, count);
+    public Set<Tuple> zrangeByScoreWithScores(String key, String min, String max, int offset, int count) {
+        return jedisCluster.zrangeByScoreWithScores(key, min, max, offset, count);
     }
 
     @Override
-    public Set<Tuple> zrevrangeByScoreWithScores(String key, double max, double min, int offset, int count)
-    {
-        return jedis.zrevrangeByScoreWithScores(key, max, min, offset, count);
+    public Set<Tuple> zrevrangeByScoreWithScores(String key, double max, double min, int offset, int count) {
+        return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
     }
 
     @Override
-    public Set<Tuple> zrevrangeByScoreWithScores(String key, String max, String min, int offset, int count)
-    {
-        return jedis.zrevrangeByScoreWithScores(key, max, min, offset, count);
+    public Set<Tuple> zrevrangeByScoreWithScores(String key, String max, String min, int offset, int count) {
+        return jedisCluster.zrevrangeByScoreWithScores(key, max, min, offset, count);
     }
 
     @Override
-    public Long zremrangeByRank(String key, long start, long end)
-    {
-        return jedis.zremrangeByRank(key, start, end);
+    public Long zremrangeByRank(String key, long start, long end) {
+        return jedisCluster.zremrangeByRank(key, start, end);
     }
 
     @Override
-    public Long zremrangeByScore(String key, double start, double end)
-    {
-        return jedis.zremrangeByScore(key, start, end);
+    public Long zremrangeByScore(String key, double start, double end) {
+        return jedisCluster.zremrangeByScore(key, start, end);
     }
 
     @Override
-    public Long zremrangeByScore(String key, String start, String end)
-    {
-        return jedis.zremrangeByScore(key, start, end);
+    public Long zremrangeByScore(String key, String start, String end) {
+        return jedisCluster.zremrangeByScore(key, start, end);
     }
 
     @Override
-    public Long zlexcount(String key, String min, String max)
-    {
-        return jedis.zlexcount(key, min, max);
+    public Long zlexcount(String key, String min, String max) {
+        return jedisCluster.zlexcount(key, min, max);
     }
 
     @Override
-    public Set<String> zrangeByLex(String key, String min, String max)
-    {
-        return jedis.zrangeByLex(key, min, max);
+    public Set<String> zrangeByLex(String key, String min, String max) {
+        return jedisCluster.zrangeByLex(key, min, max);
     }
 
     @Override
-    public Set<String> zrangeByLex(String key, String min, String max, int offset, int count)
-    {
-        return jedis.zrangeByLex(key, min, max, offset, count);
+    public Set<String> zrangeByLex(String key, String min, String max, int offset, int count) {
+        return jedisCluster.zrangeByLex(key, min, max, offset, count);
     }
 
     @Override
-    public Set<String> zrevrangeByLex(String key, String max, String min)
-    {
-        return jedis.zrevrangeByLex(key, max, min);
+    public Set<String> zrevrangeByLex(String key, String max, String min) {
+        return jedisCluster.zrevrangeByLex(key, max, min);
     }
 
     @Override
-    public Set<String> zrevrangeByLex(String key, String max, String min, int offset, int count)
-    {
-        return jedis.zrevrangeByLex(key, max, min, offset, count);
+    public Set<String> zrevrangeByLex(String key, String max, String min, int offset, int count) {
+        return jedisCluster.zrevrangeByLex(key, max, min, offset, count);
     }
 
     @Override
-    public Long zremrangeByLex(String key, String min, String max)
-    {
-        return jedis.zremrangeByLex(key, min, max);
+    public Long zremrangeByLex(String key, String min, String max) {
+        return jedisCluster.zremrangeByLex(key, min, max);
     }
 
     @Override
-    public Long linsert(String key, ListPosition where, String pivot, String value)
-    {
-        return jedis.linsert(key, where, pivot, value);
+    public Long linsert(String key, ListPosition where, String pivot, String value) {
+        return jedisCluster.linsert(key, where, pivot, value);
     }
 
     @Override
-    public Long lpushx(String key, String... string)
-    {
-        return jedis.lpushx(key, string);
+    public Long lpushx(String key, String... string) {
+        return jedisCluster.lpushx(key, string);
     }
 
     @Override
-    public Long rpushx(String key, String... string)
-    {
-        return jedis.rpushx(key, string);
+    public Long rpushx(String key, String... string) {
+        return jedisCluster.rpushx(key, string);
     }
 
     @Override
-    public List<String> blpop(int timeout, String key)
-    {
-        return jedis.blpop(timeout, key);
+    public List<String> blpop(int timeout, String key) {
+        return jedisCluster.blpop(timeout, key);
     }
 
     @Override
-    public List<String> brpop(int timeout, String key)
-    {
-        return jedis.brpop(timeout, key);
+    public List<String> brpop(int timeout, String key) {
+        return jedisCluster.brpop(timeout, key);
     }
 
     @Override
-    public Long del(String key)
-    {
-        return jedis.del(key);
+    public Long del(String key) {
+        return jedisCluster.del(key);
     }
 
     @Override
-    public Long unlink(String key)
-    {
-        return jedis.unlink(key);
+    public Long unlink(String key) {
+        return jedisCluster.unlink(key);
     }
 
     @Override
-    public String echo(String string)
-    {
-        return jedis.echo(string);
+    public String echo(String string) {
+        return jedisCluster.echo(string);
     }
 
     @Override
-    public Long move(String key, int dbIndex)
-    {
+    public Long move(String key, int dbIndex) {
         throw new RuntimeException("Unsupported operation");
     }
 
     @Override
-    public Long bitcount(String key)
-    {
-        return jedis.bitcount(key);
+    public Long bitcount(String key) {
+        return jedisCluster.bitcount(key);
     }
 
     @Override
-    public Long bitcount(String key, long start, long end)
-    {
-        return jedis.bitcount(key, start, end);
+    public Long bitcount(String key, long start, long end) {
+        return jedisCluster.bitcount(key, start, end);
     }
 
     @Override
-    public Long bitpos(String key, boolean value)
-    {
+    public Long bitpos(String key, boolean value) {
         throw new RuntimeException("Unsupported operation");
     }
 
     @Override
-    public Long bitpos(String key, boolean value, BitPosParams params)
-    {
+    public Long bitpos(String key, boolean value, BitPosParams params) {
         throw new RuntimeException("Unsupported operation");
     }
 
     @Override
-    public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor)
-    {
-        return jedis.hscan(key, cursor);
+    public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor) {
+        return jedisCluster.hscan(key, cursor);
     }
 
     @Override
-    public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor, ScanParams params)
-    {
-        ScanResult<Map.Entry<byte[], byte[]>> scanResult = jedis.hscan(key.getBytes(), cursor.getBytes(), params);
+    public ScanResult<Map.Entry<String, String>> hscan(String key, String cursor, ScanParams params) {
+        ScanResult<Map.Entry<byte[], byte[]>> scanResult = jedisCluster.hscan(key.getBytes(), cursor.getBytes(), params);
+        List<Map.Entry<String, String>> results = scanResult.getResult()
+                                                            .stream()
+                                                            .map(entry -> new AbstractMap.SimpleEntry<>(new String(entry.getKey()),
+                                                                                                        new String(entry.getValue())))
+                                                            .collect(Collectors.toList());
 
-        List<Map.Entry<String, String>>  results = new ArrayList<>();
-
-        for(Map.Entry<byte[], byte[]> result : scanResult.getResult())
-        {
-            results.add(new AbstractMap.SimpleEntry<>(SafeEncoder.encode(result.getKey()), SafeEncoder.encode(result.getValue())));
-        }
-
-        new ScanResult<>(scanResult.getCursor(), results);
-        return jedis.hscan(key, cursor);
+        return new ScanResult<>(scanResult.getCursorAsBytes(), results);
     }
 
     @Override
-    public ScanResult<String> sscan(String key, String cursor)
-    {
-        return jedis.sscan(key, cursor);
+    public ScanResult<String> sscan(String key, String cursor) {
+        return jedisCluster.sscan(key, cursor);
     }
 
     @Override
     public ScanResult<String> sscan(String key, String cursor, ScanParams params)
     {
-        ScanResult<byte[]> result = jedis.sscan(key.getBytes(), cursor.getBytes(), params);
-
-        List<String> results = new ArrayList<>();
-        List<byte[]> rawResults = result.getResult();
-
-        for (byte[] bs : rawResults) {
-            results.add(SafeEncoder.encode(bs));
-        }
-
-        return new ScanResult<>(result.getCursor(), results);
+        ScanResult<byte[]> scanResult = jedisCluster.sscan(key.getBytes(), cursor.getBytes(), params);
+        List<String> results = scanResult.getResult().stream().map(String::new).collect(Collectors.toList());
+        return new ScanResult<>(scanResult.getCursorAsBytes(), results);
     }
 
     @Override
-    public ScanResult<Tuple> zscan(String key, String cursor)
-    {
-        return jedis.zscan(key, cursor);
+    public ScanResult<Tuple> zscan(String key, String cursor) {
+        return jedisCluster.zscan(key, cursor);
     }
 
     @Override
-    public ScanResult<Tuple> zscan(String key, String cursor, ScanParams params)
-    {
-        return jedis.zscan(key, cursor);
+    public ScanResult<Tuple> zscan(String key, String cursor, ScanParams params) {
+        return jedisCluster.zscan(key.getBytes(), cursor.getBytes(), params);
     }
 
     @Override
-    public Long pfadd(String key, String... elements)
-    {
-        return jedis.pfadd(key, elements);
+    public Long pfadd(String key, String... elements) {
+        return jedisCluster.pfadd(key, elements);
     }
 
     @Override
-    public long pfcount(String key)
-    {
-        return jedis.pfcount(key);
+    public long pfcount(String key) {
+        return jedisCluster.pfcount(key);
     }
 
     @Override
-    public Long geoadd(String key, double longitude, double latitude, String member)
-    {
-        return jedis.geoadd(key, longitude, latitude, member);
+    public Long geoadd(String key, double longitude, double latitude, String member) {
+        return jedisCluster.geoadd(key, longitude, latitude, member);
     }
 
     @Override
-    public Long geoadd(String key, Map<String, GeoCoordinate> memberCoordinateMap)
-    {
-        return jedis.geoadd(key, memberCoordinateMap);
+    public Long geoadd(String key, Map<String, GeoCoordinate> memberCoordinateMap) {
+        return jedisCluster.geoadd(key, memberCoordinateMap);
     }
 
     @Override
-    public Double geodist(String key, String member1, String member2)
-    {
-        return jedis.geodist(key, member1, member2);
+    public Double geodist(String key, String member1, String member2) {
+        return jedisCluster.geodist(key, member1, member2);
     }
 
     @Override
-    public Double geodist(String key, String member1, String member2, GeoUnit unit)
-    {
-        return jedis.geodist(key, member1, member2, unit);
+    public Double geodist(String key, String member1, String member2, GeoUnit unit) {
+        return jedisCluster.geodist(key, member1, member2, unit);
     }
 
     @Override
-    public List<String> geohash(String key, String... members)
-    {
-        return jedis.geohash(key, members);
+    public List<String> geohash(String key, String... members) {
+        return jedisCluster.geohash(key, members);
     }
 
     @Override
-    public List<GeoCoordinate> geopos(String key, String... members)
-    {
-        return jedis.geopos(key, members);
+    public List<GeoCoordinate> geopos(String key, String... members) {
+        return jedisCluster.geopos(key, members);
     }
 
     @Override
-    public List<GeoRadiusResponse> georadius(String key, double longitude, double latitude, double radius, GeoUnit unit)
-    {
-        return jedis.georadius(key, longitude, latitude, radius, unit);
+    public List<GeoRadiusResponse> georadius(String key, double longitude, double latitude, double radius,
+                                             GeoUnit unit) {
+        return jedisCluster.georadius(key, longitude, latitude, radius, unit);
     }
 
     @Override
     public List<GeoRadiusResponse> georadiusReadonly(String key, double longitude, double latitude, double radius,
-                                                     GeoUnit unit)
-    {
-        return jedis.georadiusReadonly(key, longitude, latitude, radius, unit);
+                                                     GeoUnit unit) {
+        return jedisCluster.georadiusReadonly(key, longitude, latitude, radius, unit);
     }
 
     @Override
     public List<GeoRadiusResponse> georadius(String key, double longitude, double latitude, double radius, GeoUnit unit,
-                                             GeoRadiusParam param)
-    {
-        return jedis.georadius(key, longitude, latitude, radius, unit, param);
+                                             GeoRadiusParam param) {
+        return jedisCluster.georadius(key, longitude, latitude, radius, unit, param);
     }
 
     @Override
     public List<GeoRadiusResponse> georadiusReadonly(String key, double longitude, double latitude, double radius,
-                                                     GeoUnit unit, GeoRadiusParam param)
-    {
-        return jedis.georadiusReadonly(key, longitude, latitude, radius, unit, param);
+                                                     GeoUnit unit, GeoRadiusParam param) {
+        return jedisCluster.georadiusReadonly(key, longitude, latitude, radius, unit, param);
     }
 
     @Override
-    public List<GeoRadiusResponse> georadiusByMember(String key, String member, double radius, GeoUnit unit)
-    {
-        return jedis.georadiusByMember(key, member, radius, unit);
+    public List<GeoRadiusResponse> georadiusByMember(String key, String member, double radius, GeoUnit unit) {
+        return jedisCluster.georadiusByMember(key, member, radius, unit);
     }
 
     @Override
-    public List<GeoRadiusResponse> georadiusByMemberReadonly(String key, String member, double radius, GeoUnit unit)
-    {
-        return jedis.georadiusByMemberReadonly(key, member, radius, unit);
+    public List<GeoRadiusResponse> georadiusByMemberReadonly(String key, String member, double radius, GeoUnit unit) {
+        return jedisCluster.georadiusByMemberReadonly(key, member, radius, unit);
     }
 
     @Override
     public List<GeoRadiusResponse> georadiusByMember(String key, String member, double radius, GeoUnit unit,
-                                                     GeoRadiusParam param)
-    {
-        return jedis.georadiusByMember(key, member, radius, unit, param);
+                                                     GeoRadiusParam param) {
+        return jedisCluster.georadiusByMember(key, member, radius, unit, param);
     }
 
     @Override
     public List<GeoRadiusResponse> georadiusByMemberReadonly(String key, String member, double radius, GeoUnit unit,
                                                              GeoRadiusParam param)
     {
-        return jedis.georadiusByMemberReadonly(key, member, radius, unit, param);
+        return jedisCluster.georadiusByMemberReadonly(key, member, radius, unit, param);
     }
 
     @Override
-    public List<Long> bitfield(String key, String... arguments)
-    {
-        return jedis.bitfield(key, arguments);
+    public List<Long> bitfield(String key, String... arguments) {
+        return jedisCluster.bitfield(key, arguments);
     }
 
     @Override
-    public Long hstrlen(String key, String field)
-    {
-        return jedis.hstrlen(key, field);
+    public Long hstrlen(String key, String field) {
+        return jedisCluster.hstrlen(key, field);
     }
 }
