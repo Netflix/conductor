@@ -60,6 +60,10 @@ spec:
                cd /app/libs/ &&
                java  -javaagent:/newrelic/newrelic.jar {{ .Values.server.jvmStartupOpts }} -jar conductor-server-*-all.jar /app/config/conductor-config.properties /app/config/log4j.properties {{ .Values.server.appStartupOpts }}
           env:
+{{- range $pkey, $pval := .Values.env }}
+            - name: {{ $pkey }}
+              value: "{{ $pval }}"
+{{- end }}
             - name: NEW_RELIC_APP_NAME
               value: {{ include "netflix-conductor.name" . }}-server
             - name: NEW_RELIC_LICENSE_KEY
