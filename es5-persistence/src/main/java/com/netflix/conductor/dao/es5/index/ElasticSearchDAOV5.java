@@ -269,7 +269,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
                                    .create(createIndexRequest)
                                    .actionGet();
             } catch (ResourceAlreadyExistsException done) {
-                // no-op
+                // no-opxz
             }
         }
     }
