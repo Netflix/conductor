@@ -39,14 +39,13 @@ netflix-conductor:
       enabled: false
       tracing:
         enabled: false
-    # extraVolumeMounts: []
-    # extraVolumes: []
     resources:
       limits:
-        memory: 1.5Gi
+        # We'r setting Xms = Xmx anyway, whichever the amount we know conductor will be comfortable with.
+        memory: 4.5Gi
       requests:
-        cpu: 400m
-        memory: 1.5Gi
+        cpu: 1
+        memory: 4.5Gi
   ui:
     ingress:
       annotations:
@@ -76,13 +75,12 @@ netflix-conductor:
   #     host: "ui.conductor.dev.cluster.foxsports-gitops-prod.com.au"
 
   elasticsearch:
-    enabled: false
+    enabled: true
     host: preview-elasticsearch-client
     indexName: conductor
 
   redis:
     enabled: false
-    host: preview-redis-master
 
   mysql:
     enabled: true
@@ -95,137 +93,53 @@ netflix-conductor:
 
 # Add the following and change enabled to true if external es required
 elasticsearch:
-  enabled: false
-  # appVersion: "5.6"
-  # image:
-  #   repository: elasticsearch
-  #   tag: "5.6"
-  # cluster:
-  #   name: foxsports_conductor_elasticsearch_cluster
-  #   additionalJavaOpts: -XX:MaxMetaspaceSize=256m
-  #   plugins:
-  #   - x-pack # Needs to be installed for x-pack options to work even though they are all false by default...
-  #   config:
-  #     thread_pool.search.queue_size: 2000
-  # master:
-  #   replicas: 2
-  #   persistence:
-  #     enabled: false
-  #   resources:
-  #     limits:
-  #       memory: "1Gi"
-  #     requests:
-  #       cpu: "200m"
-  #       memory: "1Gi"       
-  # data: 
-  #   persistence: 
-  #     enabled: false      
-  # client:
-  #   exposeTransportPort: true
-  #   resources:
-  #     limits:
-  #       memory: "1Gi"
-  #     requests:
-  #       cpu: "100m"
-  #       memory: "1Gi"
-  #   ingress:
-  #     enabled: false
-  # ing_service: #responsible to expose the ing
-  #   name: es-ing-service
-  #   type: ClusterIP
-  #   externalPort: 80
-  #   internalPort: 9200
-  #   annotations:
-  #     fabric8.io/expose: "true"
-  #     fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+  enabled: true
+  appVersion: "5.6"
+  image:
+    repository: elasticsearch
+    tag: "5.6"
+  cluster:
+    name: foxsports_conductor_elasticsearch_cluster
+    additionalJavaOpts: -XX:MaxMetaspaceSize=256m
+    plugins:
+      - x-pack # Needs to be installed for x-pack options to work even though they are all false by default...
+    config:
+      thread_pool.search.queue_size: 2000
+    master:
+      replicas: 2
+      persistence:
+        enabled: false
+      resources:
+        limits:
+          memory: "4Gi"
+        requests:
+          cpu: "1"
+          memory: "4Gi"
+    data:
+      persistence:
+        enabled: false
+    client:
+      exposeTransportPort: true
+      resources:
+        limits:
+          memory: "1Gi"
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
+      ingress:
+        enabled: false
+    ing_service: #responsible to expose the ing
+      name: es-ing-service
+      type: ClusterIP
+      externalPort: 80
+      internalPort: 9200
+      annotations:
+        fabric8.io/expose: "true"
+        fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
 
 # Add the following and change enabled to true if external redis required
 redis:
   enabled: false
-    # fullnameOverride: redis
-    # usePassword: false
-    # cluster:
-    #   enabled: false
-    # master:
-    #   resources:
-    #     limits:
-    #       memory: "2.2Gi"
-    #     requests:
-    #       cpu: "100m"
-    #       memory: "256Mi"
-    # configmap: |-
-  #   ### Redis Config ###
-  #   timeout 0
-  #   tcp-keepalive 300
-
-  #   loglevel notice
-  #   logfile ""
-
-  #   databases 16
-
-  #   # RDB snapshotting settings
-  #   save 900 1
-  #   save 300 10
-  #   save 60 10000
-
-  #   stop-writes-on-bgsave-error yes
-
-  #   rdbcompression yes
-  #   rdbchecksum yes
-  #   dbfilename dump.rdb
-
-  #   # AOF settings
-  #   appendonly yes
-  #   appendfilename "appendonly.aof"
-  #   appendfsync everysec
-  #   no-appendfsync-on-rewrite no
-  #   auto-aof-rewrite-percentage 100
-  #   auto-aof-rewrite-min-size 64mb
-  #   aof-load-truncated yes
-  #   aof-use-rdb-preamble yes
-  #   aof-rewrite-incremental-fsync yes
-
-  #   # Memory Management
-  #   maxmemory 2g
-  #   maxmemory-policy volatile-lru
-  #   maxmemory-samples 5
-
-  #   # Lua scripting
-  #   lua-time-limit 5000
-
-  #   # Slow log
-  #   slowlog-log-slower-than 10000
-  #   slowlog-max-len 128
-
-  #   # Latency Monitor
-  #   latency-monitor-threshold 0
-
-  #   # Event Notification
-  #   notify-keyspace-events ""
-
-  #   # Advanced config settings
-  #   hash-max-ziplist-entries 512
-  #   hash-max-ziplist-value 64
-
-  #   list-max-ziplist-size -2
-
-  #   list-compress-depth 0
-
-  #   set-max-intset-entries 512
-
-  #   zset-max-ziplist-entries 128
-  #   zset-max-ziplist-value 64
-
-  #   hll-sparse-max-bytes 3000
-
-  #   activerehashing yes
-
-  #   client-output-buffer-limit normal 0 0 0
-  #   client-output-buffer-limit slave 256mb 64mb 60
-  #   client-output-buffer-limit pubsub 32mb 8mb 60
-
-  #   hz 10
-
 
 # # Add the following and change enabled to true if external mysql required
 mysql:
