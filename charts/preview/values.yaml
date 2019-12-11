@@ -160,3 +160,8 @@ mysql:
 
 env:
   ThisIsAKey: ThisIsAVal
+  workflow.elasticsearch.instanceType: external
+  workflow.elasticsearch.url: "preview-elasticsearch-client:9200"
+  a:
+    b:
+      c: xyz
