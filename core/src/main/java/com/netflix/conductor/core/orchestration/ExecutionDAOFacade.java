@@ -411,8 +411,7 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public void addMessage(String queue, Message message)
-    {
+    public void addMessage(String queue, Message message) {
         if (config.enableAsyncIndexing()) {
             indexDAO.asyncAddMessage(queue, message);
         }
