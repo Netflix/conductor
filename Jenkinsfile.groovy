@@ -6,6 +6,7 @@ pipeline {
     environment {
         APP_NAME = 'netflix-conductor'
         DOCKER_REGISTRY = 'kayosportsau'
+        ORG = 'fsa-streamotion'
     }
 
     stages {
