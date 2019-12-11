@@ -157,3 +157,6 @@ mysql:
       fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
     type: ClusterIP
     port: 3306
+
+env:
+  ThisIsAKey: ThisIsAVal
