@@ -75,6 +75,9 @@ public interface Configuration {
 
     //TODO add constants for input/output external payload related properties.
 
+    String TASKLOG_INDEXING_ENABLED_PROPERTY_NAME = "workflow.tasklog.indexing.enabled";
+    boolean TASKLOG_INDEXING_ENABLED_DEFAULT_VALUE = false;
+
     default DB getDB() {
         return DB.valueOf(getDBString());
     }
@@ -100,6 +103,11 @@ public interface Configuration {
      */
     default boolean enableWorkflowExecutionLock() {
         return getBooleanProperty(EXECUTION_LOCK_ENABLED_PROPERTY_NAME, EXECUTION_LOCK_ENABLED_DEFAULT_VALUE);
+    }
+
+    default boolean isTaskLogIndexingEnabled()
+    {
+        return getBooleanProperty(TASKLOG_INDEXING_ENABLED_PROPERTY_NAME, TASKLOG_INDEXING_ENABLED_DEFAULT_VALUE);
     }
 
     /**
