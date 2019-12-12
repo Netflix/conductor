@@ -64,14 +64,6 @@ public class Main {
             }
         }
 
-        try {
-            serverInjector.getInstance(IndexDAO.class).setup();
-        } catch (Exception e){
-            e.printStackTrace(System.err);
-            System.exit(3);
-        }
-
-
         System.out.println("\n\n\n");
         System.out.println("                     _            _             ");
         System.out.println("  ___ ___  _ __   __| |_   _  ___| |_ ___  _ __ ");
