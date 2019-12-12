@@ -224,8 +224,10 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
         try {
             initIndex();
-            updateIndexName();
-            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexName, 0, 1, TimeUnit.HOURS);
+            if (config.isTaskLogIndexingEnabled()) {
+                updateIndexName();
+                Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexName, 0, 1, TimeUnit.HOURS);
+            }
         } catch (Exception e) {
             logger.error("Error creating index templates", e);
         }
@@ -321,8 +323,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
                 setting.set("index", indexSetting);
 
-                elasticSearchAdminClient.performRequest(HttpMethod.PUT, resourcePath, Collections.EMPTY_MAP,
-                                                        new NStringEntity( setting.toString(), ContentType.APPLICATION_JSON));
+                elasticSearchAdminClient.performRequest(HttpMethod.PUT, resourcePath, Collections.emptyMap(),
+                                                        new NStringEntity(setting.toString(), ContentType.APPLICATION_JSON));
 
                 logger.info("Added '{}' index", index);
             } catch (ResponseException e) {

@@ -92,7 +92,6 @@ public class WorkflowExecutor {
     public static final String DECIDER_QUEUE = "_deciderQueue";
     private static final String className = WorkflowExecutor.class.getSimpleName();
     private final ExecutionLockService executionLockService;
-    private final boolean taskLogIndexingEnabled;
 
     @Inject
     public WorkflowExecutor(
@@ -112,27 +111,26 @@ public class WorkflowExecutor {
         this.metadataMapperService = metadataMapperService;
         this.executionDAOFacade = executionDAOFacade;
         this.activeWorkerLastPollInSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
-        this.taskLogIndexingEnabled = config.isTaskLogIndexingEnabled();
         this.workflowStatusListener = workflowStatusListener;
         this.executionLockService = executionLockService;
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> input, String externalInputPayloadStoragePath) {
         return startWorkflow(name, version, correlationId, input, externalInputPayloadStoragePath, null);
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(String name, Integer version, String correlationId, Integer priority, Map<String, Object> input, String externalInputPayloadStoragePath) {
         return startWorkflow(name, version, correlationId, priority, input, externalInputPayloadStoragePath, null);
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> input, String externalInputPayloadStoragePath, String event) {
         return startWorkflow(
@@ -148,7 +146,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(String name, Integer version, String correlationId, Integer priority, Map<String, Object> input, String externalInputPayloadStoragePath, String event) {
         return startWorkflow(
@@ -166,7 +164,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(
             String name,
@@ -182,7 +180,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(
             String name,
@@ -209,7 +207,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(
             String name,
@@ -235,7 +233,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(
             WorkflowDef workflowDefinition,
@@ -257,7 +255,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(
             WorkflowDef workflowDefinition,
@@ -282,7 +280,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(
             String name,
@@ -310,7 +308,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to start workflow
      */
     public String startWorkflow(
             String name,
@@ -773,7 +771,7 @@ public class WorkflowExecutor {
 
     /**
      * @param taskResult the task result to be updated
-     * @throws ApplicationException
+     * @throws ApplicationException if unable to update the task
      */
     public void updateTask(TaskResult taskResult) {
         if (taskResult == null) {
@@ -868,7 +866,7 @@ public class WorkflowExecutor {
                         break;
                     default:
                         break;
-                };
+                }
                 return null;
             }, null, null, 2, updateTaskQueueDesc, taskQueueOperation);
 
@@ -890,15 +888,9 @@ public class WorkflowExecutor {
             Monitors.recordTaskUpdateError(task.getTaskType(), workflowInstance.getWorkflowName());
             throw new ApplicationException(Code.BACKEND_ERROR, e);
         }
-
         taskResult.getLogs().forEach(taskExecLog -> taskExecLog.setTaskId(task.getTaskId()));
-
-        if(taskLogIndexingEnabled){
-            executionDAOFacade.addTaskExecLog(taskResult.getLogs());
-        }
-
+        executionDAOFacade.addTaskExecLog(taskResult.getLogs());
         decide(workflowId);
-
         if (task.getStatus().isTerminal()) {
             long duration = getTaskDuration(0, task);
             long lastDuration = task.getEndTime() - task.getStartTime();
@@ -1068,8 +1060,8 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @param workflowId
-     * @throws IllegalStateException
+     * @param workflowId id of the workflow to be resumed
+     * @throws IllegalStateException if the workflow is in a state from which it cannot be resumed
      */
     public void resumeWorkflow(String workflowId) {
         Workflow workflow = executionDAOFacade.getWorkflowById(workflowId, false);
@@ -1083,13 +1075,12 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @param workflowId
-     * @param taskReferenceName
-     * @param skipTaskRequest
-     * @throws IllegalStateException
+     * @param workflowId workflow id from which the task is being skipped
+     * @param taskReferenceName reference name of the task to be skipped
+     * @param skipTaskRequest request object that has the parameters to be set for the skipped task
+     * @throws IllegalStateException if the workflow or the task is in a state that makes it impossible to skip the task
      */
     public void skipTaskFromWorkflow(String workflowId, String taskReferenceName, SkipTaskRequest skipTaskRequest) {
-
         Workflow wf = executionDAOFacade.getWorkflowById(workflowId, true);
 
         // FIXME Backwards compatibility for legacy workflows already running.
@@ -1517,7 +1508,7 @@ public class WorkflowExecutor {
     public void scheduleNextIteration(Task loopTask, Workflow workflow) {
         //Schedule only first loop over task. Rest will be taken care in Decider Service when this task will get completed.
         List<Task> scheduledLoopOverTasks = deciderService.getTasksToBeScheduled(workflow, loopTask.getWorkflowTask().getLoopOver().get(0), loopTask.getRetryCount(), null);
-        scheduledLoopOverTasks.stream().forEach(t -> {
+        scheduledLoopOverTasks.forEach(t -> {
             t.setReferenceTaskName(TaskUtils.appendIteration(t.getReferenceTaskName(), loopTask.getIteration()));
             t.setIteration(loopTask.getIteration());
         });
