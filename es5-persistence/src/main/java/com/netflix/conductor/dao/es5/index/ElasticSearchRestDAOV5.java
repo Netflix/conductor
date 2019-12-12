@@ -268,12 +268,15 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
      * Roll the tasklog index daily.
      */
     private void updateIndexName() {
-        this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
+        if (config.isTaskLogIndexingEnabled()) {
+            this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
 
-        try {
-            addIndex(logIndexName);
-        } catch (IOException e) {
-            logger.error("Failed to update log index name: {}", logIndexName, e);
+            try {
+                addIndex(logIndexName);
+            }
+            catch (IOException e) {
+                logger.error("Failed to update log index name: {}", logIndexName, e);
+            }
         }
     }
 
