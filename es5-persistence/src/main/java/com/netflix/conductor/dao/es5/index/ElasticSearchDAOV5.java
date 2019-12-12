@@ -251,26 +251,26 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     private void addIndex(String indexName) {
         try {
             elasticSearchClient.admin()
-                .indices()
-                .prepareGetIndex()
-                .addIndices(indexName)
-                .execute()
-                .actionGet();
-        } catch (IndexNotFoundException infe) {
+                               .indices()
+                               .prepareGetIndex()
+                               .addIndices(indexName)
+                               .execute()
+                               .actionGet();
+        }
+        catch (IndexNotFoundException infe) {
             try {
-
                 CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
                 createIndexRequest.settings(Settings.builder()
                                                     .put("index.number_of_shards", config.getElasticSearchIndexShardCount())
-                                                    .put("index.number_of_replicas", config.getElasticSearchIndexReplicationCount())
-                );
+                                                    .put("index.number_of_replicas", config.getElasticSearchIndexReplicationCount()));
 
                 elasticSearchClient.admin()
                                    .indices()
                                    .create(createIndexRequest)
                                    .actionGet();
-            } catch (ResourceAlreadyExistsException done) {
-                // no-opxz
+            }
+            catch (ResourceAlreadyExistsException done) {
+                // no-op
             }
         }
     }
@@ -304,30 +304,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 
     private void updateLogIndexName() {
-        if(config.isTaskLogIndexingEnabled()) {
-            this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
-
-            try {
-                elasticSearchClient.admin()
-                                   .indices()
-                                   .prepareGetIndex()
-                                   .addIndices(logIndexName)
-                                   .execute()
-                                   .actionGet();
-            } catch (IndexNotFoundException infe) {
-                try {
-                    elasticSearchClient.admin()
-                                       .indices()
-                                       .prepareCreate(logIndexName)
-                                       .execute()
-                                       .actionGet();
-                } catch (ResourceAlreadyExistsException ilee) {
-                    // no-op
-                } catch (Exception e) {
-                    logger.error("Failed to update log index name: {}", logIndexName, e);
-                }
-            }
-
+        this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
+        try {
+            addIndex(logIndexName);
+        } catch (Exception e) {
+            logger.error("Failed to update log index name: {}", logIndexName, e);
         }
     }
 
