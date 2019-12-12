@@ -270,7 +270,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
                                    .create(createIndexRequest)
                                    .actionGet();
             } catch (ResourceAlreadyExistsException done) {
-                // no-op
+                // no-opxz
             }
         }
     }
@@ -304,27 +304,30 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 
     private void updateLogIndexName() {
-        this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
+        if(config.isTaskLogIndexingEnabled()) {
+            this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
 
-        try {
-            elasticSearchClient.admin()
-                .indices()
-                .prepareGetIndex()
-                .addIndices(logIndexName)
-                .execute()
-                .actionGet();
-        } catch (IndexNotFoundException infe) {
             try {
                 elasticSearchClient.admin()
-                    .indices()
-                    .prepareCreate(logIndexName)
-                    .execute()
-                    .actionGet();
-            } catch (ResourceAlreadyExistsException ilee) {
-                // no-op
-            } catch (Exception e) {
-                logger.error("Failed to update log index name: {}", logIndexName, e);
+                                   .indices()
+                                   .prepareGetIndex()
+                                   .addIndices(logIndexName)
+                                   .execute()
+                                   .actionGet();
+            } catch (IndexNotFoundException infe) {
+                try {
+                    elasticSearchClient.admin()
+                                       .indices()
+                                       .prepareCreate(logIndexName)
+                                       .execute()
+                                       .actionGet();
+                } catch (ResourceAlreadyExistsException ilee) {
+                    // no-op
+                } catch (Exception e) {
+                    logger.error("Failed to update log index name: {}", logIndexName, e);
+                }
             }
+
         }
     }
 
