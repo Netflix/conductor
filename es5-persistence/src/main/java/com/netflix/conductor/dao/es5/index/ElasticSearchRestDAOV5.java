@@ -134,6 +134,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private final ConcurrentHashMap<String, BulkRequests> bulkRequests;
     private final int indexBatchSize;
     private final int asyncBufferFlushTimeout;
+    private final ElasticSearchConfiguration config;
 
     static {
         SIMPLE_DATE_FORMAT.setTimeZone(GMT);
@@ -151,6 +152,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         this.bulkRequests = new ConcurrentHashMap<>();
         this.indexBatchSize = config.getIndexBatchSize();
         this.asyncBufferFlushTimeout = config.getAsyncBufferFlushTimeout();
+        this.config = config;
 
         // Set up a workerpool for performing async operations for workflow and task
         int corePoolSize = 6;
@@ -257,12 +259,15 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
      * Roll the tasklog index daily.
      */
     private void updateIndexName() {
-        this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
+        if (config.isTaskLogIndexingEnabled()) {
+            this.logIndexName = this.logIndexPrefix + "_" + SIMPLE_DATE_FORMAT.format(new Date());
 
-        try {
-            addIndex(logIndexName);
-        } catch (IOException e) {
-            logger.error("Failed to update log index name: {}", logIndexName, e);
+            try {
+                addIndex(logIndexName);
+            }
+            catch (IOException e) {
+                logger.error("Failed to update log index name: {}", logIndexName, e);
+            }
         }
     }
 
