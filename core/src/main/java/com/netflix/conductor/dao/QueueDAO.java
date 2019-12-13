@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +35,16 @@ public interface QueueDAO {
 	 * @param offsetTimeInSecond time in seconds, after which the message should be marked visible.  (for timed queues)
 	 */
 	void push(String queueName, String id, long offsetTimeInSecond);
-	
+
+	/**
+	 *
+	 * @param queueName name of the queue
+	 * @param id message id
+	 * @param priority message priority (between 0 and 99)
+	 * @param offsetTimeInSecond time in seconds, after which the message should be marked visible.  (for timed queues)
+	 */
+	void push(String queueName, String id, int priority, long offsetTimeInSecond);
+
 	/**
 	 * @param queueName Name of the queue
 	 * @param messages messages to be pushed.
@@ -50,6 +59,16 @@ public interface QueueDAO {
 	 * @return true if the element was added to the queue.  false otherwise indicating the element already exists in the queue.
 	 */
 	boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond);
+
+	/**
+	 *
+	 * @param queueName Name of the queue
+	 * @param id message id
+	 * @param priority message priority (between 0 and 99)
+	 * @param offsetTimeInSecond time in seconds, after which the message should be marked visible.  (for timed queues)
+	 * @return true if the element was added to the queue.  false otherwise indicating the element already exists in the queue.
+	 */
+	boolean pushIfNotExists(String queueName, String id, int priority, long offsetTimeInSecond);
 
 	/**
 	 * 
@@ -131,13 +150,4 @@ public interface QueueDAO {
 	 * @return true if the message is in queue and the change was successful else returns false  
 	 */
 	boolean setOffsetTime(String queueName, String id, long offsetTimeInSecond);
-
-	/**
-	 * Checks if a message with the given id exists on the queue
-	 * @param queueName name of the queue
-	 * @param id message id
-	 * @return true if the message with the specified id is present in the queue
-	 * false if the message with the given id is not present in the queue
-	 */
-	boolean exists(String queueName, String id);
 }

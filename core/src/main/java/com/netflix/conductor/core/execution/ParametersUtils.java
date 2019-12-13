@@ -34,12 +34,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 
+import com.netflix.conductor.common.utils.TaskUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Used to parse and resolve the JSONPath bindings in the workflow and task definitions.
  */
 public class ParametersUtils {
+    private static Logger logger = LoggerFactory.getLogger(ParametersUtils.class);
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -67,7 +70,7 @@ public class ParametersUtils {
             inputParams = new HashMap<>();
         }
         if (taskDefinition != null && taskDefinition.getInputTemplate() != null) {
-            inputParams.putAll(clone(taskDefinition.getInputTemplate()));
+            clone(taskDefinition.getInputTemplate()).forEach(inputParams::putIfAbsent);
         }
 
         Map<String, Map<String, Object>> inputMap = new HashMap<>();
@@ -112,7 +115,7 @@ public class ParametersUtils {
                     taskParams.put("reasonForIncompletion", task.getReasonForIncompletion());
                     taskParams.put("callbackAfterSeconds", task.getCallbackAfterSeconds());
                     taskParams.put("workerId", task.getWorkerId());
-                    inputMap.put(task.getReferenceTaskName(), taskParams);
+                    inputMap.put(task.isLoopOverTask() ? TaskUtils.removeIterationFromTaskRefName(task.getReferenceTaskName()) :  task.getReferenceTaskName(), taskParams);
                 });
 
         Configuration option = Configuration.defaultConfiguration()
@@ -196,7 +199,7 @@ public class ParametersUtils {
         Object[] convertedValues = new Object[values.length];
         for (int i = 0; i < values.length; i++) {
             convertedValues[i] = values[i];
-            if (values[i].startsWith("${") && values[i].endsWith("}")) {
+            if (values !=null && values[i].startsWith("${") && values[i].endsWith("}")) {
                 String paramPath = values[i].substring(2, values[i].length() - 1);
                 if (EnvUtils.isEnvironmentVariable(paramPath)) {
                     String sysValue = EnvUtils.getSystemParametersValue(paramPath, taskId);
@@ -205,7 +208,12 @@ public class ParametersUtils {
                     }
 
                 } else {
-                    convertedValues[i] = documentContext.read(paramPath);
+                    try {
+                        convertedValues[i] = documentContext.read(paramPath);
+                    }catch (Exception e) {
+                        logger.warn("Error reading documentContext for paramPath: {}. Exception: {}", paramPath, e);
+                        convertedValues[i] = null;
+                    }
                 }
 
             }

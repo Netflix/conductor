@@ -19,14 +19,17 @@ import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.utils.NoopLockModule;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
 import com.netflix.conductor.core.execution.WorkflowStatusListenerStub;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.dao.RateLimitingDao;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
+import com.netflix.conductor.dao.dynomite.RedisRateLimitingDao;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
 import com.netflix.conductor.dyno.RedisQueuesProvider;
 import com.netflix.conductor.server.LocalRedisModule;
@@ -61,6 +64,7 @@ public class TestModule extends AbstractModule {
 
         bind(MetadataDAO.class).to(RedisMetadataDAO.class);
         bind(ExecutionDAO.class).to(RedisExecutionDAO.class);
+        bind(RateLimitingDao.class).to(RedisRateLimitingDao.class);
         bind(QueueDAO.class).to(DynoQueueDAO.class);
         bind(IndexDAO.class).to(MockIndexDAO.class);
 
@@ -72,6 +76,7 @@ public class TestModule extends AbstractModule {
         bind(UserTask.class).asEagerSingleton();
         bind(ObjectMapper.class).toProvider(JsonMapperProvider.class);
         bind(ExternalPayloadStorage.class).to(MockExternalPayloadStorage.class);
+        install(new NoopLockModule());
     }
 
     @Provides

@@ -70,7 +70,7 @@ public class Lambda extends WorkflowSystemTask {
                         scriptExpression +
                         "} scriptFun();";
 
-                logger.info("scriptExpressionBuilder: {}" , scriptExpressionBuilder);
+                logger.debug("scriptExpressionBuilder: {}, task: {}" , scriptExpressionBuilder, task.getTaskId());
                 Object returnValue = ScriptEvaluator.eval(scriptExpressionBuilder, taskInput);
                 taskOutput.put("result", returnValue);
                 task.setStatus(Task.Status.COMPLETED);
@@ -81,14 +81,12 @@ public class Lambda extends WorkflowSystemTask {
                 task.setStatus(Task.Status.FAILED);
             }
         } catch (Exception e) {
-            logger.error("Failed to execute Lambda Task: {}", e);
+            logger.error("Failed to execute Lambda Task: {} in workflow: {}", task.getTaskId(), workflow.getWorkflowId(), e);
             task.setStatus(Task.Status.FAILED);
             task.setReasonForIncompletion(e.getMessage());
             taskOutput.put("error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
         }
 
         return true;
-
     }
-
 }

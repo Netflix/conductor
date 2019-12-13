@@ -32,24 +32,32 @@ import com.netflix.conductor.core.config.ValidationModule;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validator;
-import java.util.*;
 
 import static com.netflix.conductor.utility.TestUtils.getConstraintViolationMessages;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyMapOf;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyListOf;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.anyMapOf;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class WorkflowServiceTest {
 
@@ -131,6 +139,9 @@ public class WorkflowServiceTest {
         when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(),
                 anyMapOf(String.class, Object.class), any(String.class), any(String.class),
                 anyMapOf(String.class, String.class))).thenReturn(workflowID);
+        when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(), anyInt(),
+                anyMapOf(String.class, Object.class), any(String.class), any(String.class),
+                anyMapOf(String.class, String.class))).thenReturn(workflowID);
         assertEquals("w112", workflowService.startWorkflow(startWorkflowRequest));
     }
 
@@ -146,6 +157,8 @@ public class WorkflowServiceTest {
 
         when(mockMetadata.getWorkflowDef(anyString(), anyInt())).thenReturn(workflowDef);
         when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(),
+                anyMapOf(String.class, Object.class), any(String.class))).thenReturn(workflowID);
+        when(mockWorkflowExecutor.startWorkflow(anyString(), anyInt(), anyString(), anyInt(),
                 anyMapOf(String.class, Object.class), any(String.class))).thenReturn(workflowID);
         assertEquals("w112", workflowService.startWorkflow("test", 1, "c123", input));
     }
@@ -327,7 +340,7 @@ public class WorkflowServiceTest {
     @Test
     public void testGetRunningWorkflows() {
         workflowService.getRunningWorkflows("test", 1, null, null);
-        verify(mockWorkflowExecutor, times(1)).getRunningWorkflowIds(anyString());
+        verify(mockWorkflowExecutor, times(1)).getRunningWorkflowIds(anyString(), anyInt());
     }
 
     @Test

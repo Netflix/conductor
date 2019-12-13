@@ -71,7 +71,7 @@ public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO {
 
     @Override
     public List<TaskDef> getAllTaskDefs() {
-        return getWithTransaction(this::findAllTaskDefs);
+        return getWithRetriedTransactions(this::findAllTaskDefs);
     }
 
     @Override
@@ -316,7 +316,7 @@ public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO {
      *
      * @param tx  The {@link Connection} to use for queries.
      * @param def The {@code WorkflowDef} to check for.
-     * @return {@code Optional.empty()} if no versions exist, otherwise the max {@link WorkflowDef#version} found.
+     * @return {@code Optional.empty()} if no versions exist, otherwise the max {@link WorkflowDef#getVersion} found.
      */
     private Optional<Integer> getLatestVersion(Connection tx, WorkflowDef def) {
         final String GET_LATEST_WORKFLOW_DEF_VERSION = "SELECT max(version) AS version FROM meta_workflow_def WHERE " +
@@ -431,7 +431,7 @@ public class MySQLMetadataDAO extends MySQLBaseDAO implements MetadataDAO {
 
         final String INSERT_TASKDEF_QUERY = "INSERT INTO meta_task_def (name, json_data) VALUES (?, ?)";
 
-        return getWithTransaction(tx -> {
+        return getWithRetriedTransactions(tx -> {
             execute(tx, UPDATE_TASKDEF_QUERY, update -> {
                 int result = update.addJsonParameter(taskDef).addParameter(taskDef.getName()).executeUpdate();
                 if (result == 0) {

@@ -23,6 +23,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.ExecutionDAO;
+import com.netflix.conductor.dao.RateLimitingDao;
 import com.netflix.conductor.metrics.Monitors;
 
 import javax.inject.Inject;
@@ -39,7 +40,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
-public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
+public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO, RateLimitingDao {
 
     private static final String ARCHIVED_FIELD = "archived";
     private static final String RAW_JSON_FIELD = "rawJSON";
@@ -145,7 +146,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
      * @return
      */
     @Override
-    public boolean exceedsRateLimitPerFrequency(Task task) {
+    public boolean exceedsRateLimitPerFrequency(Task task, TaskDef taskDef) {
         return false;
     }
 
@@ -190,11 +191,6 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     }
 
     @Override
-    public void updateTasks(List<Task> tasks) {
-        withTransaction(connection -> tasks.forEach(task -> updateTask(connection, task)));
-    }
-
-    @Override
     public boolean removeTask(String taskId) {
         Task task = getTask(taskId);
 
@@ -225,7 +221,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         if (taskIds.isEmpty()) {
             return Lists.newArrayList();
         }
-        return getWithTransaction(c -> getTasks(c, taskIds));
+        return getWithRetriedTransactions(c -> getTasks(c, taskIds));
     }
 
     @Override
@@ -243,7 +239,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     @Override
     public List<Task> getTasksForWorkflow(String workflowId) {
         String GET_TASKS_FOR_WORKFLOW = "SELECT task_id FROM workflow_to_task WHERE workflow_id = ?";
-        return getWithTransaction(tx -> query(tx, GET_TASKS_FOR_WORKFLOW, q -> {
+        return getWithRetriedTransactions(tx -> query(tx, GET_TASKS_FOR_WORKFLOW, q -> {
             List<String> taskIds = q.addParameter(workflowId).executeScalarList(String.class);
             return getTasks(tx, taskIds);
         }));
@@ -251,13 +247,11 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
 
     @Override
     public String createWorkflow(Workflow workflow) {
-        workflow.setCreateTime(System.currentTimeMillis());
         return insertOrUpdateWorkflow(workflow, false);
     }
 
     @Override
     public String updateWorkflow(Workflow workflow) {
-        workflow.setUpdateTime(System.currentTimeMillis());
         return insertOrUpdateWorkflow(workflow, true);
     }
 
@@ -294,7 +288,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
 
     @Override
     public Workflow getWorkflow(String workflowId, boolean includeTasks) {
-        Workflow workflow = getWithTransaction(tx -> readWorkflow(tx, workflowId));
+        Workflow workflow = getWithRetriedTransactions(tx -> readWorkflow(tx, workflowId));
 
         if (workflow != null) {
             if (includeTasks) {
@@ -306,8 +300,14 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
         return workflow;
     }
 
+    /**
+     * @param workflowName name of the workflow
+     * @param version the workflow version
+     * @return list of workflow ids that are in RUNNING state
+     * <em>returns workflows of all versions for the given workflow name</em>
+     */
     @Override
-    public List<String> getRunningWorkflowIds(String workflowName) {
+    public List<String> getRunningWorkflowIds(String workflowName, int version) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         String GET_PENDING_WORKFLOW_IDS = "SELECT workflow_id FROM workflow_pending WHERE workflow_type = ?";
 
@@ -315,10 +315,18 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
                 q -> q.addParameter(workflowName).executeScalarList(String.class));
     }
 
+    /**
+     * @param workflowName Name of the workflow
+     * @param version the workflow version
+     * @return list of workflows that are in RUNNING state
+     */
     @Override
-    public List<Workflow> getPendingWorkflowsByType(String workflowName) {
+    public List<Workflow> getPendingWorkflowsByType(String workflowName, int version) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-        return getRunningWorkflowIds(workflowName).stream().map(this::getWorkflow).collect(Collectors.toList());
+        return getRunningWorkflowIds(workflowName, version).stream()
+                .map(this::getWorkflow)
+                .filter(workflow -> workflow.getWorkflowVersion() == version)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -385,7 +393,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     @Override
     public boolean addEventExecution(EventExecution eventExecution) {
         try {
-            return getWithTransaction(tx -> insertEventExecution(tx, eventExecution));
+            return getWithRetriedTransactions(tx -> insertEventExecution(tx, eventExecution));
         } catch (Exception e) {
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR,
                     "Unable to add event execution " + eventExecution.getId(), e);
@@ -419,7 +427,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
             List<EventExecution> executions = Lists.newLinkedList();
             withTransaction(tx -> {
                 for (int i = 0; i < max; i++) {
-                    String executionId = messageId + "_" + i; // see EventProcessorImpl.handle to understand how the
+                    String executionId = messageId + "_" + i; // see SimpleEventProcessor.handle to understand how the
                     // execution id is set
                     EventExecution ee = readEventExecution(tx, eventHandlerName, eventName, messageId, executionId);
                     if (ee == null) {
@@ -449,7 +457,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     public PollData getPollData(String taskDefName, String domain) {
         Preconditions.checkNotNull(taskDefName, "taskDefName name cannot be null");
         String effectiveDomain = (domain == null) ? "DEFAULT" : domain;
-        return getWithTransaction(tx -> readPollData(tx, taskDefName, effectiveDomain));
+        return getWithRetriedTransactions(tx -> readPollData(tx, taskDefName, effectiveDomain));
     }
 
     @Override
@@ -477,10 +485,6 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
 
         boolean terminal = workflow.getStatus().isTerminal();
 
-        if (terminal) {
-            workflow.setEndTime(System.currentTimeMillis());
-        }
-
         List<Task> tasks = workflow.getTasks();
         workflow.setTasks(Lists.newLinkedList());
 
@@ -504,11 +508,6 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO {
     }
 
     private void updateTask(Connection connection, Task task) {
-        task.setUpdateTime(System.currentTimeMillis());
-        if (task.getStatus() != null && task.getStatus().isTerminal() && task.getEndTime() == 0) {
-            task.setEndTime(System.currentTimeMillis());
-        }
-
         Optional<TaskDef> taskDefinition = task.getTaskDefinition();
 
         if (taskDefinition.isPresent() && taskDefinition.get().concurrencyLimit() > 0) {

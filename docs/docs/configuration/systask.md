@@ -78,7 +78,7 @@ Event task provides ability to publish an event (message) to either Conductor or
 
 ``` json
 {
-	"sink": "sqs:example_sqs_queue_name"
+	"sink": "sqs:example_sqs_queue_name",
 	"asyncComplete": false
 }
 ```
@@ -99,7 +99,6 @@ For SQS, use the **name** of the queue and NOT the URI.  Conductor looks up the 
 
 **Event Task Input**
 The input given to the event task is made available to the published message as payload.  e.g. if a message is put into SQS queue (sink is sqs) then the message payload will be the input to the task.
-
 
 **Event Task Output**
 
@@ -188,17 +187,22 @@ Sub Workflow task allows for nesting a workflow within another workflow.
   "type": "SUB_WORKFLOW",
   "subWorkflowParam": {
     "name": "deployment_workflow",
-    "version": 1
+    "version": 1,
+    "taskToDomain": {
+      "*": "mydomain"
+     }
   }
 }
 ```
+
 When executed, a ```deployment_workflow``` is executed with two input parameters requestId and _file_.  The task is marked as completed upon the completion of the spawned workflow.  If the sub-workflow is terminated or fails the task is marked as failure and retried if configured. 
 
+`subWorkflowParam` can optionally accept `taskToDomain` map, which would schedule the sub workflow's tasks per given mappings. See [Task Domains](configuration/taskdomains/) for instructions to configure taskDomains.
 
 
 ## Fork
 
-Fork is used to schedule parallel set of tasks.
+Fork is used to schedule parallel set of tasks, specified by ```"type":"FORK_JOIN"```.
 
 **Parameters:**
 
@@ -208,33 +212,58 @@ Fork is used to schedule parallel set of tasks.
 
 **Example**
 
-``` json
-{
-  "forkTasks": [
-    [
-      {
-        "name": "task11",
-        "taskReferenceName": "t11"
-      },
-      {
-        "name": "task12",
-        "taskReferenceName": "t12"
-      }
-    ],
-    [
-      {
-        "name": "task21",
-        "taskReferenceName": "t21"
-      },
-      {
-        "name": "task22",
-        "taskReferenceName": "t22"
-      }
-    ]
-  ]
-}
+```json
+[
+    {
+        "name": "fork_join",
+        "taskReferenceName": "forkx",
+        "type": "FORK_JOIN",
+        "forkTasks": [
+          [
+            {
+              "name": "task_10",
+              "taskReferenceName": "task_A",
+              "type": "SIMPLE"
+            },
+            {
+              "name": "task_11",
+              "taskReferenceName": "task_B",
+              "type": "SIMPLE"
+            }
+          ],
+          [
+            {
+              "name": "task_21",
+              "taskReferenceName": "task_Y",
+              "type": "SIMPLE"
+            },
+            {
+              "name": "task_22",
+              "taskReferenceName": "task_Z",
+              "type": "SIMPLE"
+            }
+          ]
+        ]
+    },
+    {
+        "name": "join",
+        "taskReferenceName": "join2",
+        "type": "JOIN",
+        "joinOn": [
+          "task_B",
+          "task_Z"
+        ]
+    }
+]
+
 ```
-When executed, _task11_ and _task21_ are scheduled to be executed at the same time.
+
+When executed, _task_A_ and _task_Y_ are scheduled to be executed at the same time.
+
+!!! Note "Fork and Join"
+	**A Join task MUST follow FORK_JOIN**
+	
+	Workflow definition MUST include a Join task definition followed by FORK_JOIN task. Forked task can be a Sub Workflow, allowing for more complex execution flows.
 
 
 
@@ -295,7 +324,7 @@ Consider **taskA**'s output as:
 ```
 When executed, the dynamic fork task will schedule two parallel task of type "encode_task" with reference names "forkedTask1" and "forkedTask2" and inputs as specified by _ dynamicTasksInputJSON_
 
-!!!warning "Dynamic Fork and Join"
+!!! Note "Dynamic Fork and Join"
 	**A Join task MUST follow FORK_JOIN_DYNAMIC**
 	
 	Workflow definition MUST include a Join task definition followed by FORK_JOIN_DYNAMIC task.  However, given the dynamic nature of the task, no joinOn parameters are required for this Join.  The join will wait for ALL the forked branches to complete before completing.
@@ -481,3 +510,112 @@ For example, if you have a decision where the first condition is met, you want t
   "optional": false
 }
 ```
+## Kafka Publish Task
+
+A kafka Publish task is used to push messages to another microservice via kafka
+
+**Parameters:**
+
+The task expects an input parameter named ```kafka_request``` as part of the task's input with the following details:
+
+|name|description|
+|---|---|
+| bootStrapServers |bootStrapServers for connecting to given kafka.|
+|key|Key to be published|
+|keySerializer | Serializer used for serializing the key published to kafka.  One of the following can be set : <br/> 1. org.apache.kafka.common.serialization.IntegerSerializer<br/>2. org.apache.kafka.common.serialization.LongSerializer<br/>3. org.apache.kafka.common.serialization.StringSerializer. <br/>Default is String serializer  |
+|value| Value published to kafka|
+|requestTimeoutMs| Request timeout while publishing to kafka. If this value is not given the value is read from the property `kafka.publish.request.timeout.ms`. If the property is not set the value defaults to 100 ms |
+|maxBlockMs| maxBlockMs while publishing to kafka. If this value is not given the value is read from the property `kafka.publish.max.block.ms`. If the property is not set the value defaults to 500 ms |
+|headers|A map of additional kafka headers to be sent along with the request.|
+|topic|Topic to publish|
+
+The producer created in the kafka task is cached. By default the cache size is 10 and expiry time is 120000 ms. To change the defaults following can be modified kafka.publish.producer.cache.size,kafka.publish.producer.cache.time.ms respectively.  
+
+**Kafka Task Output**
+
+Task status transitions to COMPLETED
+
+**Example**
+
+Task sample
+
+```json
+{
+  "name": "call_kafka",
+  "taskReferenceName": "call_kafka",
+  "inputParameters": {
+    "kafka_request": {
+      "topic": "userTopic",
+      "value": "Message to publish",
+      "bootStrapServers": "localhost:9092",
+      "headers": {
+  	"x-Auth":"Auth-key"    
+      },
+      "key": "123",
+      "keySerializer": "org.apache.kafka.common.serialization.IntegerSerializer"
+    }
+  },
+  "type": "KAFKA_PUBLISH"
+}
+```
+
+The task is marked as ```FAILED``` if the message could not be published to the Kafka queue. 
+
+
+## Do While Task
+
+Do While Task allows tasks to be executed in loop until given condition become false. Condition is evaluated using nashorn javascript engine.
+Each iteration of loop over task will be scheduled as taskRefname__iteration. Iteration, any of loopover task's output or input parameters can be used to form a condition.
+Do while task output number of iterations with iteration as key and value as number of iterations. Each iteration's output will be stored as, iteration as key and loopover task's output as value
+Taskname which contains arithmetic operator must not be used in loopCondition. Any of loopOver task can be reference outside do while task same way other tasks are referenced.
+To reference specific iteration's output, ```$.LoopTask['iteration]['first_task']```
+Do while task does NOT support domain or isolation group execution.
+
+
+**Parameters:**
+
+|name|description|
+|---|---|
+|loopCondition|condition to be evaluated after every iteration|
+|loopOver|List of tasks that needs to be executed in loop.|
+
+**Example**
+
+```json
+{
+            "name": "Loop Task",
+            "taskReferenceName": "LoopTask",
+            "type": "DO_WHILE",
+            "inputParameters": {
+              "value": "${workflow.input.value}"
+            },
+            "loopCondition": "if ( ($.LoopTask['iteration'] < $.value ) || ( $.first_task['response']['body'] > 10)) { false; } else { true; }",
+            "loopOver": [
+                {
+                    "name": "first_task",
+                    "taskReferenceName": "first_task",
+                    "inputParameters": {
+                        "http_request": {
+                            "uri": "http://localhost:8082",
+                            "method": "POST"
+                        }
+                    },
+                    "type": "HTTP"
+                },{
+                    "name": "second_task",
+                    "taskReferenceName": "second_task",
+                    "inputParameters": {
+                        "http_request": {
+                            "uri": "http://localhost:8082",
+                            "method": "POST"
+                        }
+                    },
+                    "type": "HTTP"
+                }
+            ],
+            "startDelay": 0,
+            "optional": false
+        }
+```
+If any of loopover task will be failed then do while task will be failed. In such case retry will start iteration from 1. TaskType SUB_WORKFLOW is not supported as a part of loopover task. Since loopover tasks will be executed in loop inside scope of parent do while task, crossing branching outside of DO_WHILE task will not be respected. Branching inside loopover task will be supported.
+In case of exception while evaluating loopCondition, do while task will be failed with FAILED_WITH_TERMINAL_ERROR.
