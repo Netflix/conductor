@@ -34,8 +34,8 @@ RUN chmod +x /app/startup.sh
 
 # Get and install conductor UI
 RUN cd /app/ui \
-  && npm install \
-  && npm run build --server
+  && npm install -s \
+  && npm run build -s --server
 
 EXPOSE 5000
 
