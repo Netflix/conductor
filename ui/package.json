@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha --reporter nyan --compilers js:babel-core/register --recursive --check-leaks",
     "watch": "gulp watch",
-    "build": "gulp build --release",
+    "build": "gulp build -L --release",
     "deploy": "gulp deploy --release",
     "eslint": "eslint  [src]*"
   },

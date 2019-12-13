@@ -23,11 +23,8 @@ pipeline {
                 container('maven') {
                     sh "echo **************** PREVIEW_VERSION: $PREVIEW_VERSION , PREVIEW_NAMESPACE: $PREVIEW_NAMESPACE, HELM_RELEASE: $HELM_RELEASE"
                     sh "echo $PREVIEW_VERSION > PREVIEW_VERSION"
-                    sh "skaffold version"
-                    sh "./gradlew build -x test -x :conductor-client:findbugsMain "
-
-                    sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml"
-                    sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-ui.yaml"
+                    sh "skaffold version && ./gradlew build -w -x test -x :conductor-client:findbugsMain "
+                    sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml && export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-ui.yaml"
 
                     script {
                         def buildVersion = readFile "${env.WORKSPACE}/PREVIEW_VERSION"
@@ -36,12 +33,10 @@ pipeline {
                     }
 
                     dir('charts/preview') {
-                      sh "make preview"
-                      sh "jx preview --app $APP_NAME --namespace=$PREVIEW_NAMESPACE --dir ../.."
-                      sh "make print"
-                      sh "sleep 60"
-                      sh "kubectl describe pods -n=$PREVIEW_NAMESPACE"
-                      sh "kubectl logs -n $PREVIEW_NAMESPACE  deployment/conductor-server --all-containers=true"
+                      sh "make preview && jx preview --app $APP_NAME --namespace=$PREVIEW_NAMESPACE --dir ../.."
+                      sh "make print && sleep 60"
+                      sh "kubectl describe pods -n $PREVIEW_NAMESPACE"
+                      sh "echo '************************************************\n' && cat values.yaml"
                     }
 
                 }
@@ -90,10 +85,9 @@ pipeline {
                         // release the helm chart
                         // sh "jx step helm release"
                         // sh "ls -la"
-                        sh "echo ************************** HELM ************************** "
+                        sh "echo **************************   HELM   ************************** "
                         sh "make print"
                         sh "echo ************************** END HELM ************************** "
-
                         sh "make release"
                         // promote through all 'Auto' promotion Environments
                         sh "jx promote -b --no-poll=true  --helm-repo-url=$CHART_REPOSITORY --no-poll=true --no-merge=true --no-wait=true --env=staging --version \$(cat ../../VERSION)"
