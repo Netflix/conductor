@@ -44,6 +44,10 @@ clean:
 release: clean
 	@test -z $(CHARTMUSEUM_CREDS) && printf "${RED}Environment variable ${YELLOW}CHARTMUSEUM_CREDS ${RED}not found ${NC}\n" && exit 1 || exit 0
 	helm dependency build
+	# patch the repo and version by jx command for now
+	sed -i -e "s/fsa-streamotion\/netflix-conductor/netflixconductor/" values.yaml
+	sed -i -e "s/tag: $(RELEASE_VERSION)/tag: server-$(RELEASE_VERSION)/" values.yaml
+	# end patch
 	helm lint
 	helm init --client-only
 	helm package .
