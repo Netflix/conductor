@@ -58,7 +58,8 @@ ifeq ($(OS),Darwin)
 else ifeq ($(OS),Linux)
 	sed -i -e "s/version:.*/version: $(RELEASE_VERSION)/" Chart.yaml
 	sed -i -e "s|repository: .*|repository: $(DOCKER_REGISTRY)\/dat\/$(NAME)|" values.yaml
-	sed -i -e "s/tag: .*/tag: $(RELEASE_VERSION)/" values.yaml
+	sed -i -e "s/tag: server-.*/tag: server-$(RELEASE_VERSION)/" values.yaml
+	sed -i -e "s/tag: ui-.*/tag: ui-$(RELEASE_VERSION)/" values.yaml
 else
 	echo "platfrom $(OS) not supported to release from"
 	exit -1
