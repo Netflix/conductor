@@ -90,7 +90,8 @@ pipeline {
                         // sh "jx step helm release"
                         // sh "ls -la"
                         sh "echo **************************   HELM   ************************** "
-                        sh "export && make print"
+                        sh "env"
+                        sh "make print"
                         sh "echo ************************** END HELM ************************** "
                         sh "make release"
                         // promote through all 'Auto' promotion Environments
