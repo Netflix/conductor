@@ -32,6 +32,10 @@ pipeline {
                         currentBuild.displayName = "${DOCKER_REGISTRY}/netflixconductor:server-${PREVIEW_VERSION}" + "\n ${DOCKER_REGISTRY}/netflixconductor:ui-${PREVIEW_VERSION}"
                     }
 
+                    dir('charts') {
+                        sh "./preview.sh"
+                    }
+
                     dir('charts/preview') {
                       sh "make preview && jx preview --app $APP_NAME --namespace=$PREVIEW_NAMESPACE --dir ../.."
                       sh "make print && sleep 60"
