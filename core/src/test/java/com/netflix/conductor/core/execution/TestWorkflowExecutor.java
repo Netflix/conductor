@@ -293,7 +293,7 @@ public class TestWorkflowExecutor {
         def.setWorkflowStatusListenerEnabled(true);
         workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
         workflowExecutor.completeWorkflow(workflow);
-        verify(workflowStatusListener, times(1)).onWorkflowCompleted(any(Workflow.class));
+        verify(workflowStatusListener, times(2)).onWorkflowCompleted(any(Workflow.class));
     }
 
     @Test
