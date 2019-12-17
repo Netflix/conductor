@@ -11,7 +11,7 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.kafka.index.KafkaConfiguration;
 import com.netflix.conductor.dao.kafka.index.KafkaDAO;
 import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
-import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
+import com.netflix.conductor.dao.kafka.index.constants.RecordTypeConstants;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
