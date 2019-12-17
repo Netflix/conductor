@@ -31,6 +31,13 @@ env workflow.elasticsearch.instanceType=memory;
 env conductor.jetty.server.port=8080; 
 java -jar  ./server/build/libs/conductor-server-2019.1.0-SNAPSHOT-all.jar
 ```
+Since we package and publish conductor as container, you can also quick star using docker.
+Below start a ready to use conductor server with in memory mode for DB and ElasticSearch:
+```bash
+docker run  -p 8080:8080 -edb=memory -eworkflow.elasticsearch.instanceType=memory kayosportsau/netflixconductor:latest
+```
+Then you can access the [swagger API](http://localhost:8080/index.html) and schedule/execute tasks and workflows.
+
 
 ## License
 Copyright 2018 Netflix, Inc.
