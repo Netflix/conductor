@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.tasks.TaskResult.Status;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.JsonUtils;
@@ -49,12 +50,14 @@ import static org.mockito.Mockito.when;
 public class TestSimpleActionProcessor {
     private WorkflowExecutor workflowExecutor;
     private SimpleActionProcessor actionProcessor;
+    private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
         workflowExecutor = mock(WorkflowExecutor.class);
 
         actionProcessor = new SimpleActionProcessor(workflowExecutor, new ParametersUtils(), new JsonUtils());
+        objectMapper = new JsonMapperProvider().get();
     }
 
     @SuppressWarnings("unchecked")
@@ -73,7 +76,7 @@ public class TestSimpleActionProcessor {
         action.setAction(Type.start_workflow);
         action.setStart_workflow(startWorkflow);
 
-        Object payload = new ObjectMapper().readValue("{\"correlationId\":\"test-id\", \"testId\":\"test_1\"}", Object.class);
+        Object payload = objectMapper.readValue("{\"correlationId\":\"test-id\", \"testId\":\"test_1\"}", Object.class);
 
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("testWorkflow");
@@ -113,7 +116,7 @@ public class TestSimpleActionProcessor {
         action.setAction(Type.start_workflow);
         action.setStart_workflow(startWorkflow);
 
-        Object payload = new ObjectMapper().readValue("{\"testId\":\"test_1\"}", Object.class);
+        Object payload = objectMapper.readValue("{\"testId\":\"test_1\"}", Object.class);
 
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("testWorkflow");
@@ -148,7 +151,7 @@ public class TestSimpleActionProcessor {
         action.setAction(Type.complete_task);
         action.setComplete_task(taskDetails);
 
-        Object payload = new ObjectMapper().readValue("{\"workflowId\":\"workflow_1\"}", Object.class);
+        Object payload = objectMapper.readValue("{\"workflowId\":\"workflow_1\"}", Object.class);
 
         Task task = new Task();
         task.setReferenceTaskName("testTask");
@@ -178,7 +181,7 @@ public class TestSimpleActionProcessor {
         action.setAction(Type.complete_task);
         action.setComplete_task(taskDetails);
 
-        Object payload = new ObjectMapper().readValue("{\"workflowId\":\"workflow_1\", \"taskId\":\"task_1\"}", Object.class);
+        Object payload = objectMapper.readValue("{\"workflowId\":\"workflow_1\", \"taskId\":\"task_1\"}", Object.class);
 
         Task task = new Task();
         task.setTaskId("task_1");

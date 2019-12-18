@@ -53,6 +53,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.execution.ApplicationException;
@@ -144,6 +145,8 @@ public abstract class AbstractWorkflowServiceTest {
 
     @Inject
     protected MetadataMapperService metadataMapperService;
+
+    private ObjectMapper objectMapper = new JsonMapperProvider().get();
 
     private static boolean registered;
 
@@ -360,12 +363,10 @@ public abstract class AbstractWorkflowServiceTest {
         assertTrue(taskInput.containsKey("http_request"));
         assertTrue(taskInput.get("http_request") instanceof Map);
 
-        ObjectMapper om = new ObjectMapper();
-
         //Use the commented sysout to get the string value
         //System.out.println(om.writeValueAsString(om.writeValueAsString(taskInput)));
         String expected = "{\"http_request\":{\"method\":\"GET\",\"vipStack\":\"test_stack\",\"body\":{\"requestDetails\":{\"key1\":\"value1\",\"key2\":42},\"outputPath\":\"s3://bucket/outputPath\",\"inputPaths\":[\"file://path1\",\"file://path2\"]},\"uri\":\"/get/something\"}}";
-        assertEquals(expected, om.writeValueAsString(taskInput));
+        assertEquals(expected, objectMapper.writeValueAsString(taskInput));
     }
 
     @Test
@@ -395,10 +396,9 @@ public abstract class AbstractWorkflowServiceTest {
         assertTrue(taskInput.containsKey("kafka_request"));
         assertTrue(taskInput.get("kafka_request") instanceof Map);
 
-        ObjectMapper om = new ObjectMapper();
         String expected = "{\"kafka_request\":{\"topic\":\"test_kafka_topic\",\"bootStrapServers\":\"localhost:9092\",\"value\":{\"requestDetails\":{\"key1\":\"value1\",\"key2\":42},\"outputPath\":\"s3://bucket/outputPath\",\"inputPaths\":[\"file://path1\",\"file://path2\"]}}}";
 
-        assertEquals(expected, om.writeValueAsString(taskInput));
+        assertEquals(expected, objectMapper.writeValueAsString(taskInput));
 
         TaskResult taskResult = new TaskResult(task);
 
@@ -447,10 +447,9 @@ public abstract class AbstractWorkflowServiceTest {
         assertTrue(taskInput.containsKey("kafka_request"));
         assertTrue(taskInput.get("kafka_request") instanceof Map);
 
-        ObjectMapper om = new ObjectMapper();
         String expected = "{\"kafka_request\":{\"topic\":\"test_kafka_topic\",\"bootStrapServers\":\"localhost:9092\",\"value\":{\"requestDetails\":{\"key1\":\"value1\",\"key2\":42},\"outputPath\":\"s3://bucket/outputPath\",\"inputPaths\":[\"file://path1\",\"file://path2\"]}}}";
 
-        assertEquals(expected, om.writeValueAsString(taskInput));
+        assertEquals(expected, objectMapper.writeValueAsString(taskInput));
 
         TaskResult taskResult = new TaskResult(task);
         taskResult.setReasonForIncompletion("NON TRANSIENT ERROR OCCURRED: An integration point required to complete the task is down");
