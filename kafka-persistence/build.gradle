@@ -1,6 +1,5 @@
 dependencies {
     compile project(':conductor-core')
-    compile project(':conductor-es5-persistence')
 
     compile "commons-io:commons-io:${revCommonsIo}"
 

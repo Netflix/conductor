@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.kafka.index.constants;
+package com.netflix.conductor.dao.kafka.index.utils;
 
 public class RecordTypeConstants {
 

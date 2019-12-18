@@ -157,7 +157,7 @@ public interface Configuration {
     }
 
     default boolean getKafkaIndexEnable() {
-        return getBooleanProperty(KAFKA_INDEX_ENABLE, true);
+        return getBooleanProperty(KAFKA_INDEX_ENABLE, false);
     }
 
     /**
