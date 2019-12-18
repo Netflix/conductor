@@ -1,12 +1,9 @@
-package com.netflix.conductor.kafka;
+package com.netflix.conductor.kafka.index.moduleProvider;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.KafkaDAO;
-import com.netflix.conductor.dao.ProducerDAO;
-import com.netflix.conductor.kafka.index.producer.KafkaProducer;
-
+import com.netflix.conductor.kafka.index.configuration.SystemPropertiesKafkaConfiguration;
 
 public class KafkaModule extends AbstractModule {
 
@@ -15,9 +12,8 @@ public class KafkaModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        SystemPropertiesConfiguration configuration = new SystemPropertiesConfiguration();
+        SystemPropertiesKafkaConfiguration configuration = new SystemPropertiesKafkaConfiguration();
         if (configuration.getKafkaIndexEnable()) {
-            bind(ProducerDAO.class).to(KafkaProducer.class);
             bind(IndexDAO.class).to(KafkaDAO.class);
         }
     }

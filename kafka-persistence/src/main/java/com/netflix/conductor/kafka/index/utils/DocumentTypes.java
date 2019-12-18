@@ -1,6 +1,6 @@
-package com.netflix.conductor.dao.kafka.index.utils;
+package com.netflix.conductor.kafka.index.utils;
 
-public class RecordTypeConstants {
+public class DocumentTypes {
 
     public static final String WORKFLOW_DOC_TYPE = "workflow";
     public static final String TASK_DOC_TYPE = "task";

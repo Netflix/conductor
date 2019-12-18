@@ -1,13 +1,13 @@
-package com.netflix.conductor.dao.kafka.index.producer;
+package com.netflix.conductor.kafka.index.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.ProducerDAO;
-import com.netflix.conductor.dao.kafka.index.constants.ProducerConstants;
-import com.netflix.conductor.dao.kafka.index.mapper.MapperFactory;
-import com.netflix.conductor.dao.kafka.index.data.Record;
+import com.netflix.conductor.kafka.index.constants.ProducerConstants;
+import com.netflix.conductor.kafka.index.mapper.MapperFactory;
+import com.netflix.conductor.kafka.index.data.Record;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 @Trace
 @Singleton
@@ -51,9 +50,9 @@ public class KafkaProducer implements ProducerDAO {
 	}
 
 	@Override
-	public void send(String type, Object value) {
+	public void send(String documentType, Object value) {
 		try {
-			Record d = new Record(type, value);
+			Record d = new Record(documentType, value);
 			ProducerRecord rec = new ProducerRecord(this.topic, om.writeValueAsString(d));
 			producer.send(rec);
 		} catch (Exception e) {

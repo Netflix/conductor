@@ -28,6 +28,7 @@ import com.netflix.conductor.grpc.server.GRPCModule;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
 import com.netflix.conductor.jetty.server.JettyModule;
 import com.netflix.conductor.jetty.server.spectator.PrometheusMetricsModule;
+import com.netflix.conductor.service.WorkflowMonitor;
 import com.netflix.runtime.health.guice.HealthModule;
 
 import javax.validation.Validator;
@@ -53,5 +54,6 @@ public class ServerModule extends AbstractModule {
         bind(Configuration.class).to(SystemPropertiesDynomiteConfiguration.class);
         bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Scopes.SINGLETON);
         bind(WorkflowSweeper.class).asEagerSingleton();
+        bind(WorkflowMonitor.class).asEagerSingleton();
     }
 }

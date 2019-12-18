@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.netflix.conductor.dao.kafka.index;
+package com.netflix.conductor.dao;
 
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
@@ -22,12 +22,11 @@ import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.ProducerDAO;
-import com.netflix.conductor.dao.kafka.index.producer.KafkaProducer;
-import com.netflix.conductor.dao.kafka.index.utils.RecordTypeConstants;
+import com.netflix.conductor.kafka.index.producer.KafkaProducer;
+import com.netflix.conductor.kafka.index.utils.DocumentTypes;
 import com.netflix.conductor.metrics.Monitors;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,6 +45,7 @@ public class KafkaDAO implements IndexDAO {
 
     private ProducerDAO producerDAO;
 
+    @Inject
     public KafkaDAO(KafkaProducer producer) {
         this.producerDAO = producer;
     }
@@ -59,26 +59,26 @@ public class KafkaDAO implements IndexDAO {
     public void indexWorkflow(Workflow workflow) {
         WorkflowSummary summary = new WorkflowSummary(workflow);
         long start = System.currentTimeMillis();
-        producerDAO.send(RecordTypeConstants.WORKFLOW_DOC_TYPE, summary);
+        producerDAO.send(DocumentTypes.WORKFLOW_DOC_TYPE, summary);
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> indexWorkflow(workflow));
     }
 
     @Override
     public void indexTask(Task task) {
         TaskSummary summary = new TaskSummary(task);
         long start = System.currentTimeMillis();
-        producerDAO.send(RecordTypeConstants.TASK_DOC_TYPE, summary);
+        producerDAO.send(DocumentTypes.TASK_DOC_TYPE, summary);
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> indexTask(task));
     }
 
     @Override
@@ -125,7 +125,7 @@ public class KafkaDAO implements IndexDAO {
         doc.put("created", System.currentTimeMillis());
 
         long start = System.currentTimeMillis();
-        producerDAO.send(RecordTypeConstants.MSG_DOC_TYPE, doc);
+        producerDAO.send(DocumentTypes.MSG_DOC_TYPE, doc);
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 
     }
@@ -149,7 +149,7 @@ public class KafkaDAO implements IndexDAO {
     public void addEventExecution(EventExecution eventExecution) {
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
         long start = System.currentTimeMillis();
-        producerDAO.send( RecordTypeConstants.EVENT_DOC_TYPE, id);
+        producerDAO.send(DocumentTypes.EVENT_DOC_TYPE, id);
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
@@ -160,7 +160,7 @@ public class KafkaDAO implements IndexDAO {
 
     @Override
     public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> addEventExecution(eventExecution));
     }
 
     @Override
@@ -169,14 +169,14 @@ public class KafkaDAO implements IndexDAO {
             return;
         }
         long start = System.currentTimeMillis();
-        taskExecLogs.forEach(log -> producerDAO.send(RecordTypeConstants.LOG_DOC_TYPE , taskExecLogs));
+        taskExecLogs.forEach(log -> producerDAO.send(DocumentTypes.LOG_DOC_TYPE , taskExecLogs));
         Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 
     }
 
     @Override
     public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.runAsync(() -> addTaskExecutionLogs(logs));
     }
 
     @Override

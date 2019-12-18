@@ -1,4 +1,4 @@
-package com.netflix.conductor.dao.kafka.index.mapper;
+package com.netflix.conductor.kafka.index.mapper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
