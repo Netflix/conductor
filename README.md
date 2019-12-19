@@ -38,6 +38,20 @@ docker run  -p 8080:8080 -edb=memory -eworkflow.elasticsearch.instanceType=memor
 ```
 Then you can access the [swagger API](http://localhost:8080/index.html) and schedule/execute tasks and workflows.
 
+If you need both conductor-api and conductor-ui, create a network and start both containers on it:
+```bash
+docker network create --driver bridge my-conductor
+docker run --name conductor --rm  -p 8080:8080 --network my-conductor -edb=memory -eworkflow.elasticsearch.instanceType=memory kayosportsau/netflixconductor:latest
+docker run --network my-conductor -eWF_SERVER='http://conductor:8080/api/' -p 5000:5000 kayosportsau/netflixconductor:ui-v2019.0.60```
+```
+Above
+ 
+(1) create a bridge network named `my-conductor`
+
+(2) start conductor server in that network `--network my-conductor` with container name `--name conductor`. Other container in the same network can refer to this one via this name as hostname.
+
+(3) start conductor ui on the bridge network, with en var WF_SERVER referring to api container
+Now you should be able to access UI via localhost:5000
 
 ## License
 Copyright 2018 Netflix, Inc.
