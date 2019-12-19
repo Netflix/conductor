@@ -17,9 +17,6 @@ public class ElasticSearchModule extends AbstractModule {
         bind(Client.class).toProvider(ElasticSearchTransportClientProvider.class).in(Singleton.class);
         bind(RestClient.class).toProvider(ElasticSearchRestClientProvider.class).in(Singleton.class);
 
-        // Let Kafka layer handle bindings.
-        if(!esConfiguration.getKafkaIndexEnable()) {
-            install(new ElasticSearchV5Module(esConfiguration));
-        }
+        install(new ElasticSearchV5Module(esConfiguration));
     }
 }
