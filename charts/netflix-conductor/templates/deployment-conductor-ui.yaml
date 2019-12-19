@@ -53,6 +53,13 @@ spec:
         - name: {{ include "netflix-conductor.name" . }}-ui
           image: "{{ .Values.ui.repository }}:{{ .Values.ui.tag }}"
           imagePullPolicy: {{ .Values.ui.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - >
+              apk add tzdata &&
+              ln -sf /usr/share/zoneinfo/Australia/Sydney /etc/localtime &&
+              /app/startup.sh
           env:
             - name: WF_SERVER
               value: "{{ .Values.ui.serverUrl }}"
