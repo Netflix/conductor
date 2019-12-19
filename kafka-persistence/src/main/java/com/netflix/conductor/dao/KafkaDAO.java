@@ -60,7 +60,7 @@ public class KafkaDAO implements IndexDAO {
         WorkflowSummary summary = new WorkflowSummary(workflow);
         long start = System.currentTimeMillis();
         producerDAO.send(DocumentTypes.WORKFLOW_DOC_TYPE, summary);
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.WORKFLOW_DOC_TYPE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class KafkaDAO implements IndexDAO {
         TaskSummary summary = new TaskSummary(task);
         long start = System.currentTimeMillis();
         producerDAO.send(DocumentTypes.TASK_DOC_TYPE, summary);
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.TASK_DOC_TYPE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -150,7 +150,7 @@ public class KafkaDAO implements IndexDAO {
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
         long start = System.currentTimeMillis();
         producerDAO.send(DocumentTypes.EVENT_DOC_TYPE, id);
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.EVENT_DOC_TYPE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -170,7 +170,7 @@ public class KafkaDAO implements IndexDAO {
         }
         long start = System.currentTimeMillis();
         taskExecLogs.forEach(log -> producerDAO.send(DocumentTypes.LOG_DOC_TYPE , taskExecLogs));
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", "").record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.LOG_DOC_TYPE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
 
     }
 
