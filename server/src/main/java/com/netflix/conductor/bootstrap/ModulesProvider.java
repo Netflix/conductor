@@ -97,6 +97,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         }
 
         modules.add(new KafkaModule());
+        modules.add(new ElasticSearchModule());
 
         modules.add(new WorkflowExecutorModule());
 

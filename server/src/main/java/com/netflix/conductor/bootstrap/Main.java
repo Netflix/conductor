@@ -52,7 +52,6 @@ public class Main {
         try {
             serverInjector.getInstance(IndexDAO.class).setup();
         } catch (Exception e){
-            System.out.println("Unable to start ES error " + e.getMessage());
             e.printStackTrace(System.err);
             System.exit(3);
         }

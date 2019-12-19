@@ -162,7 +162,7 @@ public interface Configuration {
         return getBooleanProperty(KAFKA_INDEX_ENABLE, false);
     }
 
-    default boolean getForceWorkflowDeletionFromRedis() {
+    default boolean isForceWorkflowDeletionEnabled() {
         return getBooleanProperty(FORCE_WORKFLOW_DELETION, false);
     }
 
