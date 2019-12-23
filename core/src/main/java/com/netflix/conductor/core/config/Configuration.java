@@ -73,10 +73,10 @@ public interface Configuration {
     String IGNORE_LOCKING_EXCEPTIONS_PROPERTY_NAME = "workflow.decider.locking.exceptions.ignore";
     boolean IGNORE_LOCKING_EXCEPTIONS_DEFAULT_VALUE = false;
 
-    //TODO add constants for input/output external payload related properties.
+    String TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME = "workflow.taskExecLog.indexing.enabled";
+    boolean TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE = true;
 
-    String TASKLOG_INDEXING_ENABLED_PROPERTY_NAME = "workflow.tasklog.indexing.enabled";
-    boolean TASKLOG_INDEXING_ENABLED_DEFAULT_VALUE = false;
+    //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
         return DB.valueOf(getDBString());
@@ -105,9 +105,11 @@ public interface Configuration {
         return getBooleanProperty(EXECUTION_LOCK_ENABLED_PROPERTY_NAME, EXECUTION_LOCK_ENABLED_DEFAULT_VALUE);
     }
 
-    default boolean isTaskLogIndexingEnabled()
-    {
-        return getBooleanProperty(TASKLOG_INDEXING_ENABLED_PROPERTY_NAME, TASKLOG_INDEXING_ENABLED_DEFAULT_VALUE);
+    /**
+     * @return if true(default), enables task execution log indexing
+     */
+    default boolean isTaskExecLogIndexingEnabled() {
+        return getBooleanProperty(TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME, TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE);
     }
 
     /**

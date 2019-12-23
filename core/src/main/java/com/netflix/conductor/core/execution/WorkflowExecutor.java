@@ -92,7 +92,6 @@ public class WorkflowExecutor {
     public static final String DECIDER_QUEUE = "_deciderQueue";
     private static final String className = WorkflowExecutor.class.getSimpleName();
     private final ExecutionLockService executionLockService;
-    private final boolean taskLogIndexingEnabled;
 
     @Inject
     public WorkflowExecutor(
@@ -112,7 +111,6 @@ public class WorkflowExecutor {
         this.metadataMapperService = metadataMapperService;
         this.executionDAOFacade = executionDAOFacade;
         this.activeWorkerLastPollInSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
-        this.taskLogIndexingEnabled = config.isTaskLogIndexingEnabled();
         this.workflowStatusListener = workflowStatusListener;
         this.executionLockService = executionLockService;
     }
@@ -892,10 +890,7 @@ public class WorkflowExecutor {
         }
 
         taskResult.getLogs().forEach(taskExecLog -> taskExecLog.setTaskId(task.getTaskId()));
-
-        if(taskLogIndexingEnabled){
-            executionDAOFacade.addTaskExecLog(taskResult.getLogs());
-        }
+        executionDAOFacade.addTaskExecLog(taskResult.getLogs());
 
         decide(workflowId);
 
