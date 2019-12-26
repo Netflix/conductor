@@ -33,6 +33,7 @@ public class RedisSentinelJedisProvider implements Provider<JedisCommands> {
     @Inject
     public RedisSentinelJedisProvider(HostSupplier hostSupplier, DynomiteConfiguration configuration) {
         GenericObjectPoolConfig genericObjectPoolConfig = new GenericObjectPoolConfig();
+        genericObjectPoolConfig.setMinIdle(5);
         genericObjectPoolConfig.setMaxTotal(configuration.getMaxConnectionsPerHost());
         logger.info("Starting conductor server using redis_sentinel and cluster " + configuration.getClusterName());
         Set<String> sentinels = new HashSet<>();
