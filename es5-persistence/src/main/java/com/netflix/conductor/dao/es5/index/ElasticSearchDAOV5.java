@@ -242,26 +242,26 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     private void addIndex(String indexName) {
         try {
             elasticSearchClient.admin()
-                .indices()
-                .prepareGetIndex()
-                .addIndices(indexName)
-                .execute()
-                .actionGet();
+                    .indices()
+                    .prepareGetIndex()
+                    .addIndices(indexName)
+                    .execute()
+                    .actionGet();
         } catch (IndexNotFoundException infe) {
             try {
 
                 CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
                 createIndexRequest.settings(Settings.builder()
-                                                    .put("index.number_of_shards", config.getElasticSearchIndexShardCount())
-                                                    .put("index.number_of_replicas", config.getElasticSearchIndexReplicationCount())
+                        .put("index.number_of_shards", config.getElasticSearchIndexShardCount())
+                        .put("index.number_of_replicas", config.getElasticSearchIndexReplicationCount())
                 );
 
                 elasticSearchClient.admin()
-                                   .indices()
-                                   .create(createIndexRequest)
-                                   .actionGet();
+                        .indices()
+                        .create(createIndexRequest)
+                        .actionGet();
             } catch (ResourceAlreadyExistsException done) {
-                // no-opxz
+                // no-op
             }
         }
     }

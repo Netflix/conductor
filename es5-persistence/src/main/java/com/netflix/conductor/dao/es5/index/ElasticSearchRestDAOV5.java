@@ -305,7 +305,6 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         if (doesResourceNotExist(resourcePath)) {
 
             try {
-
                 ObjectNode setting = objectMapper.createObjectNode();
                 ObjectNode indexSetting = objectMapper.createObjectNode();
 
@@ -314,8 +313,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
                 setting.set("index", indexSetting);
 
-                elasticSearchAdminClient.performRequest(HttpMethod.PUT, resourcePath, Collections.EMPTY_MAP,
-                                                        new NStringEntity( setting.toString(), ContentType.APPLICATION_JSON));
+                elasticSearchAdminClient.performRequest(HttpMethod.PUT, resourcePath, Collections.emptyMap(),
+                        new NStringEntity(setting.toString(), ContentType.APPLICATION_JSON));
 
                 logger.info("Added '{}' index", index);
             } catch (ResponseException e) {
