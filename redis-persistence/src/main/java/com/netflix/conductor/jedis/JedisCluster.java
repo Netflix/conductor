@@ -83,7 +83,7 @@ public class JedisCluster implements JedisCommands {
 
     @Override
     public String restoreReplace(String key, int ttl, byte[] serializedValue) {
-        throw new RuntimeException("Unsupported operation");
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -633,7 +633,7 @@ public class JedisCluster implements JedisCommands {
 
     @Override
     public Long move(String key, int dbIndex) {
-        throw new RuntimeException("Unsupported operation");
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -648,12 +648,12 @@ public class JedisCluster implements JedisCommands {
 
     @Override
     public Long bitpos(String key, boolean value) {
-        throw new RuntimeException("Unsupported operation");
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Long bitpos(String key, boolean value, BitPosParams params) {
-        throw new RuntimeException("Unsupported operation");
+        throw new UnsupportedOperationException();
     }
 
     @Override
