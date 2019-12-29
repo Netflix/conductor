@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -99,9 +100,9 @@ public class TaskResourceTest {
 
     @Test
     public void testAck() throws Exception {
-        String acked = "true";
+        boolean acked = true;
         when(mockTaskService.ackTaskReceived(anyString(), anyString())).thenReturn(acked);
-        assertEquals("true", taskResource.ack("123", "456"));
+        assertTrue(taskResource.ack("123", "456"));
     }
 
     @Test

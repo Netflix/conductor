@@ -87,7 +87,7 @@ public interface TaskService {
      * @param workerId Id of the worker
      * @return `true|false` if task if received or not
      */
-    String ackTaskReceived(@NotEmpty(message = "TaskId cannot be null or empty.") String taskId, String workerId);
+    boolean ackTaskReceived(@NotEmpty(message = "TaskId cannot be null or empty.") String taskId, String workerId);
 
     /**
      * Ack Task is received.

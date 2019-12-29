@@ -147,9 +147,9 @@ public class TaskServiceImpl implements TaskService {
      * @return `true|false` if task if received or not
      */
     @Service
-    public String ackTaskReceived(String taskId, String workerId) {
+    public boolean ackTaskReceived(String taskId, String workerId) {
         LOGGER.debug("Ack received for task: {} from worker: {}", taskId, workerId);
-        return String.valueOf(ackTaskReceived(taskId));
+        return ackTaskReceived(taskId);
     }
 
     /**

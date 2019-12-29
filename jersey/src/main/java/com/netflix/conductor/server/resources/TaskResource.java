@@ -111,7 +111,7 @@ public class TaskResource {
 	@Path("/{taskId}/ack")
 	@ApiOperation("Ack Task is received")
 	@Consumes({MediaType.WILDCARD})
-	public String ack(@PathParam("taskId") String taskId,
+	public boolean ack(@PathParam("taskId") String taskId,
 					  @QueryParam("workerid") String workerId) {
 		return taskService.ackTaskReceived(taskId, workerId);
 	}
