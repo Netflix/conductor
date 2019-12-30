@@ -98,7 +98,7 @@ redis:
 
 # # Add the following and change enabled to true if external mysql required
 mysql:
-  enabled: true
+  enabled: false
   mysqlRootPassword: pass
   mysqlUser: conductor
   mysqlPassword: ConductorMysqlPassword
