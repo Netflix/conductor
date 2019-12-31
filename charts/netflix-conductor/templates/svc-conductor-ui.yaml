@@ -17,8 +17,8 @@ spec:
   ports:
     - name: ui
       protocol: TCP
-      port: 5000
-      targetPort: ui
+      port: 80
+      targetPort: 5000
   selector:
     app: {{ include "netflix-conductor.name" . }}
     release: {{ .Release.Name }}

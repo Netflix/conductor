@@ -17,8 +17,8 @@ spec:
   ports:
     - name: server
       protocol: TCP
-      port: 8080
-      targetPort: server
+      port: 80
+      targetPort: 8080
   selector:
     app: {{ include "netflix-conductor.name" . }}
     release: {{ .Release.Name }}
