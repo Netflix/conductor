@@ -488,7 +488,7 @@ public class WorkflowExecutor {
             throw new ApplicationException(CONFLICT, String.format("Workflow: %s is non-restartable", workflow));
         }
 
-        // Reset the workflow in the primary datastore and archive in indexer; then re-create it
+        // Reset the workflow in the primary datastore and remove from indexer; then re-create it
         executionDAOFacade.resetWorkflow(workflowId);
 
         workflow.getTasks().clear();
@@ -527,12 +527,13 @@ public class WorkflowExecutor {
         for (Task task : workflow.getTasks()) {
             switch (task.getStatus()) {
                 case FAILED:
+                case FAILED_WITH_TERMINAL_ERROR:
                     retriableMap.put(task.getReferenceTaskName(), task);
                     break;
                 case CANCELED:
                     if (task.getTaskType().equalsIgnoreCase(TaskType.JOIN.toString())) {
                         task.setStatus(IN_PROGRESS);
-                        // Task doesn't have to updated yet. Will be updated along with other Workflow tasks downstream.
+                        // Task doesn't have to be updated yet. Will be updated along with other Workflow tasks downstream.
                     } else {
                         retriableMap.put(task.getReferenceTaskName(), task);
                     }
@@ -663,9 +664,8 @@ public class WorkflowExecutor {
 
     public void terminateWorkflow(String workflowId, String reason) {
         Workflow workflow = executionDAOFacade.getWorkflowById(workflowId, true);
-        if (workflow.getStatus().isTerminal()) {
-            throw new ApplicationException(CONFLICT,
-                "Workflow is already in terminal state. Status =" + workflow.getStatus());
+        if (WorkflowStatus.COMPLETED.equals(workflow.getStatus())) {
+            throw new ApplicationException(CONFLICT, "Cannot terminate a COMPLETED workflow.");
         }
         workflow.setStatus(WorkflowStatus.TERMINATED);
         terminateWorkflow(workflow, reason, null);
@@ -1199,15 +1199,19 @@ public class WorkflowExecutor {
 
             deciderService.populateTaskData(task);
 
+            // Stop polling for asyncComplete system tasks that are not in SCHEDULED state
+            if (systemTask.isAsyncComplete(task) && task.getStatus() != SCHEDULED) {
+                queueDAO.ack(QueueUtils.getQueueName(task), task.getTaskId());
+                return;
+            }
+
             switch (task.getStatus()) {
                 case SCHEDULED:
                     systemTask.start(workflow, task, this);
                     break;
 
                 case IN_PROGRESS:
-                    if (!systemTask.isAsyncComplete(task)) {
-                        systemTask.execute(workflow, task, this);
-                    }
+                    systemTask.execute(workflow, task, this);
                     break;
                 default:
                     break;
