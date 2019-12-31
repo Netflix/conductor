@@ -1,9 +1,5 @@
 /*
-<<<<<<< HEAD
  * Copyright 2019 Netflix, Inc.
-=======
- * Copyright 2016 Netflix, Inc.
->>>>>>> 45397da6... remove usage of exists method in queuedao
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -23,9 +19,9 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -326,12 +322,14 @@ public class TestDeciderService {
         Map<String, Object> inputTemplate = new HashMap<>();
         inputTemplate.put("url", "https://some_url:7004");
         inputTemplate.put("default_url", "https://default_url:7004");
+        inputTemplate.put("someKey", "someValue");
 
         def.getInputTemplate().putAll(inputTemplate);
 
         Map<String, Object> workflowInput = new HashMap<>();
         workflowInput.put("some_new_url", "https://some_new_url:7004");
         workflowInput.put("workflow_input_url", "https://workflow_input_url:7004");
+        workflowInput.put("some_other_key", "some_other_value");
 
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("testGetTaskInputV2WithInputTemplate");
@@ -344,6 +342,9 @@ public class TestDeciderService {
         WorkflowTask workflowTask = new WorkflowTask();
         workflowTask.getInputParameters().put("url", "${workflow.input.some_new_url}");
         workflowTask.getInputParameters().put("workflow_input_url", "${workflow.input.workflow_input_url}");
+        workflowTask.getInputParameters().put("someKey", "${workflow.input.someKey}");
+        workflowTask.getInputParameters().put("someOtherKey", "${workflow.input.some_other_key}");
+        workflowTask.getInputParameters().put("someNowhereToBeFoundKey", "${workflow.input.some_ne_key}");
 
         Map<String, Object> taskInput = parametersUtils.getTaskInputV2(workflowTask.getInputParameters(), workflow, null, def);
         assertTrue(taskInput.containsKey("url"));
@@ -351,6 +352,9 @@ public class TestDeciderService {
         assertEquals(taskInput.get("url"), "https://some_new_url:7004");
         assertEquals(taskInput.get("default_url"), "https://default_url:7004");
         assertEquals(taskInput.get("workflow_input_url"), "https://workflow_input_url:7004");
+        assertEquals("some_other_value", taskInput.get("someOtherKey"));
+        assertEquals("someValue", taskInput.get("someKey"));
+        assertNull(taskInput.get("someNowhereToBeFoundKey"));
     }
 
     @Test
@@ -407,7 +411,7 @@ public class TestDeciderService {
 
         WorkflowTask taskAfterT9 = def.getNextTask("t9");
         assertNotNull(taskAfterT9);
-        assertEquals("join1", taskAfterT9.getTaskReferenceName());
+        assertEquals("join2", taskAfterT9.getTaskReferenceName());
     }
 
     @Test
@@ -1098,6 +1102,7 @@ public class TestDeciderService {
         WorkflowDef subWorkflowDef = createLinearWorkflow();
         WorkflowTask subWorkflow = new WorkflowTask();
         subWorkflow.setType(TaskType.SUB_WORKFLOW.name());
+        subWorkflow.setName("sw1");
         SubWorkflowParams subWorkflowParams = new SubWorkflowParams();
         subWorkflowParams.setName(subWorkflowDef.getName());
         subWorkflow.setSubWorkflowParam(subWorkflowParams);
@@ -1111,12 +1116,14 @@ public class TestDeciderService {
         forkTask2.getForkTasks().add(Arrays.asList(tasks.get(3), decisionTask));
 
         WorkflowTask joinTask2 = new WorkflowTask();
+        joinTask2.setName("join2");
         joinTask2.setType(TaskType.JOIN.name());
         joinTask2.setTaskReferenceName("join2");
         joinTask2.setJoinOn(Arrays.asList("t4", "d1"));
 
         WorkflowTask forkTask1 = new WorkflowTask();
         forkTask1.setType(TaskType.FORK_JOIN.name());
+        forkTask1.setName("fork1");
         forkTask1.setTaskReferenceName("fork1");
         forkTask1.getForkTasks().add(Collections.singletonList(tasks.get(1)));
         forkTask1.getForkTasks().add(Arrays.asList(forkTask2, joinTask2));
@@ -1124,6 +1131,7 @@ public class TestDeciderService {
 
 
         WorkflowTask joinTask1 = new WorkflowTask();
+        joinTask1.setName("join1");
         joinTask1.setType(TaskType.JOIN.name());
         joinTask1.setTaskReferenceName("join1");
         joinTask1.setJoinOn(Arrays.asList("t1", "fork2"));
