@@ -95,7 +95,7 @@ redis:
   port: 6379
 
 mysql:
-  enabled: true
+  enabled: false
   host: "auroramysql56-rdscluster-g6n4dlpnqd5e.cluster-c7ladyejgvzv.ap-southeast-2.rds.amazonaws.com"
   port: 3306
   username: "conductor"
