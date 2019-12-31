@@ -7,6 +7,7 @@ pipeline {
         APP_NAME = 'netflix-conductor'
         DOCKER_REGISTRY = 'kayosportsau'
         ORG = 'fsa-streamotion'
+
     }
 
     stages {
@@ -43,6 +44,14 @@ pipeline {
                       sh "echo '************************************************\n' && cat values.yaml"
                     }
 
+
+
+                    // ///DO some loadtest: 
+                    // 1. make sure conductor preview up & running
+                    // 2. upload some workflow & tasks in conductor server
+                    // 3. simulate some producers to generate X amount of workflow
+                    // 4. simulate some workers to consume all the tasks (do concurrency)
+                    // 5. assert we dont have any hanging tasks and all workflows completed 
                 }
             }
         }
