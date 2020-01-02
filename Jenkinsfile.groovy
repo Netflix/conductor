@@ -44,7 +44,9 @@ pipeline {
                       sh "echo '************************************************\n' && cat values.yaml"
                     }
 
-
+                    dir('client/python') {
+                        sh "./load_test.sh"
+                    }
 
                     // ///DO some loadtest: 
                     // 1. make sure conductor preview up & running

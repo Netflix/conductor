@@ -1,5 +1,8 @@
-from __future__ import print_function
 from conductor.ConductorWorker import ConductorWorker
+import os
+
+default_conductor_api = 'locahost:8080/api'
+conductor_api = os.getenv('CONDUCTOR_API', default_conductor_api)
 
 def execute(task):
     return {'status': 'COMPLETED', 'output': {'mod': 5, 'taskToExecute': 'task_1', 'oddEven': 0}, 'logs': ['one','two']}

@@ -60,10 +60,10 @@ netflix-conductor:
 
     resources:
       limits:
-        memory: 100Mi
+        memory: 200Mi
       requests:
-        cpu: 10m
-        memory: 100Mi
+        cpu: 100m
+        memory: 200Mi
 
   # Not needed for preview but commented as a reminder to fix preview ingress
 
@@ -99,7 +99,7 @@ redis:
 
 # # Add the following and change enabled to true if external mysql required
 mysql:
-  enabled: false
+  enabled: true
   mysqlRootPassword: pass
   mysqlUser: conductor
   mysqlPassword: ConductorMysqlPassword
