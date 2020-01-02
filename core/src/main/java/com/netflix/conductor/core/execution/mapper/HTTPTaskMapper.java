@@ -91,12 +91,9 @@
          httpTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
          httpTask.setWorkflowTask(taskToSchedule);
          httpTask.setWorkflowPriority(workflowInstance.getPriority());
-         if (Objects.nonNull(taskDefinition)) {
-             httpTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
-             httpTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
-             httpTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
-             httpTask.setDomain(taskDefinition.getExecutionNameSpace());
-         }
+         httpTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
+         httpTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+         httpTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
          return Collections.singletonList(httpTask);
      }
  }

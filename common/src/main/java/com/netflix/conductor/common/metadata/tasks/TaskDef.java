@@ -391,6 +391,6 @@ public class TaskDef extends Auditable {
 
 		return Objects.hash(getName(), getDescription(), getRetryCount(), getTimeoutSeconds(), getInputKeys(),
 				getOutputKeys(), getTimeoutPolicy(), getRetryLogic(), getRetryDelaySeconds(),
-				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate(), getIsolationGroupId(), getExecutionNameSpace());
+				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate(), getIsolationGroupId());
 	}
 }

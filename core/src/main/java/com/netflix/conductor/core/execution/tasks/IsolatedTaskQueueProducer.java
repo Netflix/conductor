@@ -37,7 +37,7 @@ public class IsolatedTaskQueueProducer {
 			this.pollingTimeOut = config.getIntProperty("workflow.isolated.system.task.poll.time.secs", 10);
 			logger.info("Listening for isolation groups");
 
-			Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> addTaskQueues(), 1000, pollingTimeOut, TimeUnit.SECONDS);
+			Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> addTaskQueues(), 10, pollingTimeOut, TimeUnit.SECONDS);
 		} else {
 			logger.info("Isolated System Task Worker DISABLED");
 		}
@@ -72,7 +72,7 @@ public class IsolatedTaskQueueProducer {
 
 		for (TaskDef isolatedTaskDef : isolationDefs) {
 			for (String taskType : taskTypes) {
-				String taskQueue = QueueUtils.getQueueName(taskType,null, isolatedTaskDef.getExecutionNameSpace(), isolatedTaskDef.getIsolationGroupId());
+				String taskQueue = QueueUtils.getQueueName(taskType,null,isolatedTaskDef.getIsolationGroupId(), isolatedTaskDef.getExecutionNameSpace());
 				logger.debug("Adding task={} to coordinator queue", taskQueue);
 				SystemTaskWorkerCoordinator.queue.add(taskQueue);
 
@@ -82,3 +82,4 @@ public class IsolatedTaskQueueProducer {
 	}
 
 }
+

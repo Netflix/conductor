@@ -73,6 +73,8 @@ public interface Configuration {
     String IGNORE_LOCKING_EXCEPTIONS_PROPERTY_NAME = "workflow.decider.locking.exceptions.ignore";
     boolean IGNORE_LOCKING_EXCEPTIONS_DEFAULT_VALUE = false;
 
+    String FORCE_WORKFLOW_DELETION = "force.workflow.deletion";
+
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -213,6 +215,9 @@ public interface Configuration {
         return null;
     }
 
+    default boolean isForceWorkflowDeletionEnabled() {
+        return getBooleanProperty(FORCE_WORKFLOW_DELETION, false);
+    }
 
     /**
      * @param name         Name of the property

@@ -48,6 +48,9 @@ dependencies {
 
     //Swagger
     compile "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
+
+    compile "io.prometheus:simpleclient:0.6.0"
+    compile "io.prometheus:simpleclient_servlet:0.6.0"
 }
 
 shadowJar {

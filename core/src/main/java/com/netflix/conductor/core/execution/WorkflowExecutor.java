@@ -596,6 +596,14 @@ public class WorkflowExecutor {
                 .orElse(null);
     }
 
+    public List<Task> filterTaskByTypeAndStatusForWorkflow(String workflowId, TaskType taskType, Task.Status taskStatus) {
+        return executionDAOFacade.getTasksForWorkflow(workflowId)
+                .stream()
+                .filter(task -> task.getTaskType().equals(taskType.name()))
+                .filter(task -> task.getStatus() == taskStatus)
+                .collect(Collectors.toList());
+    }
+
     /**
      * @param wf the workflow to be completed
      * @throws ApplicationException if workflow is not in terminal state
@@ -654,9 +662,7 @@ public class WorkflowExecutor {
         Monitors.recordWorkflowCompletion(workflow.getWorkflowName(), workflow.getEndTime() - workflow.getStartTime(), workflow.getOwnerApp());
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
 
-        if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
-            workflowStatusListener.onWorkflowCompleted(workflow);
-        }
+        workflowStatusListener.onWorkflowCompleted(workflow);
 
         executionLockService.releaseLock(workflow.getWorkflowId());
         executionLockService.deleteLock(workflow.getWorkflowId());
@@ -760,9 +766,8 @@ public class WorkflowExecutor {
             // Send to atlas
             Monitors.recordWorkflowTermination(workflow.getWorkflowName(), workflow.getStatus(), workflow.getOwnerApp());
 
-            if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
-                workflowStatusListener.onWorkflowTerminated(workflow);
-            }
+            workflowStatusListener.onWorkflowTerminated(workflow);
+
         } finally {
             executionLockService.releaseLock(workflow.getWorkflowId());
             executionLockService.deleteLock(workflow.getWorkflowId());

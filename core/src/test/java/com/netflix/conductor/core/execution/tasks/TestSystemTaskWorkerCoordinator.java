@@ -118,9 +118,8 @@ public class TestSystemTaskWorkerCoordinator {
 		Assert.assertEquals(systemTaskWorkerCoordinator.getExecutionConfig("test-iso").workerQueue.remainingCapacity(), 100);
 
 	}
-
-
-	@Test
+         
+        @Test
 	public void testIsFromCoordinatorDomain() {
 		System.setProperty("workflow.system.task.worker.domain","domain");
 		Configuration configuration = new SystemPropertiesConfiguration();

@@ -22,6 +22,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.ExternalStorageLocation;
 import com.netflix.conductor.common.run.SearchResult;
@@ -216,6 +217,10 @@ public class ExecutionService {
 		return workflowExecutor.getPendingTaskByWorkflow(taskReferenceName, workflowId);
 	}
 
+	public List<Task> filterTaskByTypeAndStatusForWorkflow(String workflowId, TaskType taskType, Task.Status taskStatus) {
+		return workflowExecutor.filterTaskByTypeAndStatusForWorkflow(workflowId, taskType, taskStatus);
+	}
+
 	/**
 	 * This method removes the task from the un-acked Queue
 	 *
@@ -353,7 +358,7 @@ public class ExecutionService {
 		SearchResult<String> result = executionDAOFacade.searchWorkflows(query, freeText, start, size, sortOptions);
 		List<WorkflowSummary> workflows = result.getResults().stream().parallel().map(workflowId -> {
 			try {
-				return new WorkflowSummary(executionDAOFacade.getWorkflowById(workflowId,false));
+				return new WorkflowSummary(executionDAOFacade.fetchWorkFlow(workflowId));
 			} catch(Exception e) {
 				logger.error("Error fetching workflow by id: {}", workflowId, e);
 				return null;
@@ -371,7 +376,7 @@ public class ExecutionService {
 				.map(taskSummary -> {
 					try {
 						String workflowId = taskSummary.getWorkflowId();
-						return new WorkflowSummary(executionDAOFacade.getWorkflowById(workflowId, false));
+						return new WorkflowSummary(executionDAOFacade.fetchWorkFlow(workflowId));
 					} catch (Exception e) {
 						logger.error("Error fetching workflow by id: {}", taskSummary.getWorkflowId(), e);
 						return null;

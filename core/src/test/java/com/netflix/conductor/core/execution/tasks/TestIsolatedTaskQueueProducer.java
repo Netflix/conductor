@@ -23,8 +23,9 @@ public class TestIsolatedTaskQueueProducer {
 		isolatedTaskQueueProducer.addTaskQueues();
 
 		Assert.assertFalse(SystemTaskWorkerCoordinator.queue.isEmpty());
-
+        Assert.assertEquals("HTTP-isolated", SystemTaskWorkerCoordinator.queue.take());
 	}
 
 
 }
+

@@ -19,6 +19,16 @@ import com.netflix.conductor.bootstrap.Main;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.service.Lifecycle;
 import com.sun.jersey.api.client.Client;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.DispatcherType;
+import javax.ws.rs.core.MediaType;
 import java.io.InputStream;
 import java.util.EnumSet;
 import java.util.LinkedList;
@@ -63,7 +73,11 @@ public class JettyServer implements Lifecycle {
             throw new IllegalStateException("Server is already running");
         }
 
-        this.server = new Server(port);
+        this.server = new Server(new QueuedThreadPool(50, 50));
+        ServerConnector connector = new ServerConnector(this.server, new HttpConnectionFactory());
+        connector.setPort(port);
+
+        this.server.addConnector(connector);
 
         ServletContextHandler context = new ServletContextHandler();
         context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));

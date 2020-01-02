@@ -27,6 +27,7 @@ import com.netflix.conductor.dyno.SystemPropertiesDynomiteConfiguration;
 import com.netflix.conductor.grpc.server.GRPCModule;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
 import com.netflix.conductor.jetty.server.JettyModule;
+import com.netflix.conductor.jetty.server.spectator.PrometheusMetricsModule;
 import com.netflix.runtime.health.guice.HealthModule;
 
 import javax.validation.Validator;
@@ -45,6 +46,7 @@ public class ServerModule extends AbstractModule {
         install(new HealthModule());
         install(new JettyModule());
         install(new GRPCModule());
+
 
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Service.class), new ServiceInterceptor(getProvider(Validator.class)));
         bind(ObjectMapper.class).toProvider(JsonMapperProvider.class);

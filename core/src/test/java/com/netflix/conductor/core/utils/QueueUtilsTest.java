@@ -6,8 +6,6 @@ import org.junit.Test;
 public class QueueUtilsTest {
 
 
-
-
 	@Test
 	public void queueNameWithTypeAndIsolationGroup() {
 
