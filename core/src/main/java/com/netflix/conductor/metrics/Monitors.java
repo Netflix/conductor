@@ -172,6 +172,8 @@ public class Monitors {
 		EnumSet.allOf(Task.Status.class)
 				.forEach(status -> {
 					if (status.isTerminal()) {
+						// Calculate task p99 and p90 latency for all task terminal state and represent it using gauge.
+						// For more information why we are doing this Please check :- https://github.com/Netflix/spectator/issues/782
 						PercentileTimer percentileTimer = (PercentileTimer) getTimer(classQualifier, "task_execution", "taskType", taskType, "includeRetries", "" + false, "status", status.name());
 						if (percentileTimer != null) {
 							gauge(classQualifier, "p99_latency", (long) (percentileTimer.percentile(0.99) * 1000), "taskType", taskType, "status", status.name());
