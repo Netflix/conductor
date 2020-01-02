@@ -41,7 +41,7 @@ ui:
   tag: ui-2019.0.3
   pullPolicy: IfNotPresent
   serverUrl: "http://conductor-server:8080/api/"
-  replicaCount: 2
+  replicaCount: 1
   # nodeSelector: {}
   # tolerations: []
   # affinity: {}
