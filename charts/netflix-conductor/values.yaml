@@ -9,7 +9,7 @@ server:
   repository: kayosportsau/netflixconductor
   tag: server-2019.0.3
   pullPolicy: IfNotPresent
-  replicaCount: 1
+  replicaCount: 2
   # nodeSelector: {}
   # tolerations: []
   # affinity: {}
@@ -41,7 +41,7 @@ ui:
   tag: ui-2019.0.3
   pullPolicy: IfNotPresent
   serverUrl: "http://conductor-server:8080/api/"
-  replicaCount: 1
+  replicaCount: 2
   # nodeSelector: {}
   # tolerations: []
   # affinity: {}

@@ -26,6 +26,7 @@ netflix-conductor:
   fullnameOverride: "netflix-conductor"
 
   server:
+    replicaCount: 2
     ingress:
       annotations:
         fabric8.io/expose: "true"
