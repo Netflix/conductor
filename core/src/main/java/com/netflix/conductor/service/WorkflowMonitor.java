@@ -89,6 +89,7 @@ public class WorkflowMonitor {
 					long inProgressCount = executionDAOFacade.getInProgressTaskCount(taskDef.getName());
 					Monitors.recordQueueDepth(taskIsolatedQueue, queueDAO.getSize(taskIsolatedQueue), taskDef.getOwnerApp());
 					Monitors.recordQueueDepth(taskDef.getName(), size, taskDef.getOwnerApp());
+					Monitors.recordTaskLatency(taskDef.getName());
 					if(taskDef.concurrencyLimit() > 0) {
 						Monitors.recordTaskInProgress(taskDef.getName(), inProgressCount, taskDef.getOwnerApp());
 					}

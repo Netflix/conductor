@@ -30,6 +30,7 @@ import com.netflix.spectator.api.Spectator;
 import com.netflix.spectator.api.Timer;
 import com.netflix.spectator.api.histogram.PercentileTimer;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -165,6 +166,19 @@ public class Monitors {
 
 	public static void recordTaskExecutionTime(String taskType, long duration, boolean includesRetries, Task.Status status) {
 		getTimer(classQualifier, "task_execution", "taskType", taskType, "includeRetries", "" + includesRetries, "status", status.name()).record(duration, TimeUnit.MILLISECONDS);
+	}
+
+	public static void recordTaskLatency(String taskType) {
+		EnumSet.allOf(Task.Status.class)
+				.forEach(status -> {
+					if (status.isTerminal()) {
+						PercentileTimer percentileTimer = (PercentileTimer) getTimer(classQualifier, "task_execution", "taskType", taskType, "includeRetries", "" + false, "status", status.name());
+						if (percentileTimer != null) {
+							gauge(classQualifier, "p99_latency", (long) (percentileTimer.percentile(0.99) * 1000), "taskType", taskType, "status", status.name());
+							gauge(classQualifier, "p90_latency", (long) (percentileTimer.percentile(0.90) * 1000), "taskType", taskType, "status", status.name());
+						}
+					}
+				});
 	}
 
 	public static void recordTaskPoll(String taskType) {
