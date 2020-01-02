@@ -5,14 +5,15 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 public class DbLogJob extends AbstractJob {
 	private static final Logger logger = LogManager.getLogger(DbLogJob.class);
-	private static final String CLEANUP = "DELETE FROM log4j_logs WHERE log_time < ?";
+	private static final String QUERY = "SELECT id FROM log4j_logs WHERE log_time < ? LIMIT ?";
 
 	public DbLogJob(HikariDataSource dataSource) {
 		super(dataSource);
@@ -23,18 +24,21 @@ public class DbLogJob extends AbstractJob {
 		logger.info("Starting db log job");
 		try {
 			AppConfig config = AppConfig.getInstance();
-			try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(CLEANUP)) {
+			int batchSize = config.batchSize();
+			Timestamp endTime = new Timestamp(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.keepDays()));
+			logger.info("Deleting records earlier than " + endTime + ", batch size = " + batchSize);
 
-				long endTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.keepDays());
-				logger.info("Deleting records earlier than " + new Timestamp(endTime));
+			int deleted = 0;
+			List<Integer> ids = fetchIds(QUERY, endTime, batchSize);
+			while (isNotEmpty(ids)) {
+				deleted += deleteByIds("log4j_logs", ids);
+				logger.info("Db log job deleted " + deleted);
 
-				st.setTimestamp(1, new Timestamp(endTime));
-
-				int records = st.executeUpdate();
-				logger.info("Db log job deleted " + records);
+				ids = fetchIds(QUERY, endTime, batchSize);
 			}
+			logger.info("Finished db log job");
 		} catch (Exception ex) {
-			logger.error("Db log job failed " + ex.getMessage(), ex);
+			logger.error("DbLog job failed " + ex.getMessage(), ex);
 		}
 	}
 }

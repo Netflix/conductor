@@ -29,6 +29,10 @@ public class AppConfig {
 		return INSTANCE;
 	}
 
+	public int batchSize() {
+		return config.getInt("batch_size", 100);
+	}
+
 	public int queueWorkers() {
 		return config.getInt("queue_workers", 50);
 	}
