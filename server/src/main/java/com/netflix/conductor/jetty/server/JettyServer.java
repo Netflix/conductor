@@ -73,7 +73,7 @@ public class JettyServer implements Lifecycle {
             throw new IllegalStateException("Server is already running");
         }
 
-        this.server = new Server(new QueuedThreadPool(50, 50));
+        this.server = new Server(new QueuedThreadPool(500, 50));
         ServerConnector connector = new ServerConnector(this.server, new HttpConnectionFactory());
         connector.setPort(port);
 

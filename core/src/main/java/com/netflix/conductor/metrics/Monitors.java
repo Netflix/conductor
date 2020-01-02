@@ -290,7 +290,4 @@ public class Monitors {
 		counter(classQualifier, "acquire_lock_failure", "exceptionType", exceptionClassName);
 	}
 
-	public static void recordESIndexTime(String docType, long val) {
-		getTimer(Monitors.classQualifier, docType, docType).record(val, TimeUnit.MILLISECONDS);
-	}
 }
