@@ -67,13 +67,13 @@ public class IsolatedTaskQueueProducer {
 	void addTaskQueues() {
 
 		Set<TaskDef> isolationDefs = getIsolationExecutionNameSpaces();
-		logger.debug("Retrieved queues {}", isolationDefs);
+		logger.info("Retrieved queues {}", isolationDefs);
 		Set<String> taskTypes = SystemTaskWorkerCoordinator.taskNameWorkFlowTaskMapping.keySet();
 
 		for (TaskDef isolatedTaskDef : isolationDefs) {
 			for (String taskType : taskTypes) {
 				String taskQueue = QueueUtils.getQueueName(taskType,null,isolatedTaskDef.getIsolationGroupId(), isolatedTaskDef.getExecutionNameSpace());
-				logger.debug("Adding task={} to coordinator queue", taskQueue);
+				logger.info("Adding task={} to coordinator queue", taskQueue);
 				SystemTaskWorkerCoordinator.queue.add(taskQueue);
 
 			}
