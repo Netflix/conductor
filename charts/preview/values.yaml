@@ -40,13 +40,13 @@ netflix-conductor:
       enabled: true
       tracing:
         enabled: false
-      licenseKey: "c3a6b94918f96d44af11c628b52630d59f5ad20c"
+      licenseKey: "70e37aaa633e349320a9c1107d5daca497fc4791"
     resources:
       limits:
         # We'r setting Xms = Xmx anyway, whichever the amount we know conductor will be comfortable with.
         memory: 4.5Gi
       requests:
-        cpu: 1
+        cpu: 4
         memory: 4.5Gi
   ui:
     ingress:
@@ -76,12 +76,6 @@ netflix-conductor:
   #     enabled: false
   #     host: "ui.conductor.dev.cluster.foxsports-gitops-prod.com.au"
 
-  elasticsearch:
-    enabled: true
-    host: preview-es
-    port: 9300
-    indexName: "conductor"
-
   redis:
     enabled: false
 
@@ -92,11 +86,18 @@ netflix-conductor:
     password: ConductorMysqlPassword
     dbName: conductor
 
-
-
 # Add the following and change enabled to true if external es required
 elasticsearch:
-  enabled: false
+  appVersion: 5.6.16
+  #https://github.com/elastic/helm-charts/tree/master/elasticsearch
+  image:
+    rep: x
+    t: y
+  enabled: true
+  host: http://preview-elasticsearch-client
+  port: 9200
+  indexName: "conductor"
+
 # Add the following and change enabled to true if external redis required
 redis:
   enabled: false
