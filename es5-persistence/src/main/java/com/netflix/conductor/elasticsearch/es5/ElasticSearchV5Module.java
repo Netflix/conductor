@@ -34,6 +34,7 @@ import java.util.Set;
 public class ElasticSearchV5Module extends AbstractModule {
 
     private boolean restTransport;
+    private boolean kafkaIndexingEnable;
 
     public ElasticSearchV5Module(ElasticSearchConfiguration elasticSearchConfiguration) {
 
@@ -44,15 +45,18 @@ public class ElasticSearchV5Module extends AbstractModule {
         String esTransport = elasticSearchConfiguration.getURIs().get(0).getScheme();
 
         this.restTransport = REST_SCHEMAS.contains(esTransport);
+        this.kafkaIndexingEnable = elasticSearchConfiguration.getKafkaIndexEnable();
     }
 
     @Override
     protected void configure() {
 
-        if (restTransport) {
-            bind(IndexDAO.class).to(ElasticSearchRestDAOV5.class);
-        } else {
-            bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
+        if (!kafkaIndexingEnable) {
+            if (restTransport) {
+                bind(IndexDAO.class).to(ElasticSearchRestDAOV5.class);
+            } else {
+                bind(IndexDAO.class).to(ElasticSearchDAOV5.class);
+            }
         }
 
         bind(EmbeddedElasticSearchProvider.class).to(EmbeddedElasticSearchV5Provider.class);
