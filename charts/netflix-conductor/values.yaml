@@ -85,7 +85,7 @@ elasticsearch:
   enabled: false
   host: ""
   port: 9300
-  indexName: ""
+  indexName: "conductor"
 
 maxConnsPerHost: 31
 

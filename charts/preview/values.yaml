@@ -77,7 +77,10 @@ netflix-conductor:
   #     host: "ui.conductor.dev.cluster.foxsports-gitops-prod.com.au"
 
   elasticsearch:
-    enabled: false
+    enabled: true
+    host: preview-es
+    port: 9300
+    indexName: "conductor"
 
   redis:
     enabled: false
