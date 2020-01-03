@@ -67,10 +67,10 @@ public class ExecutionDAOFacade {
         this.objectMapper = objectMapper;
         this.config = config;
         this.scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(4,
-            (runnable, executor) -> {
-            LOGGER.warn("Request {} to delay updating index dropped in executor {}", runnable, executor);
-            Monitors.recordDiscardedIndexingCount("delayQueue");
-        });
+                (runnable, executor) -> {
+                    LOGGER.warn("Request {} to delay updating index dropped in executor {}", runnable, executor);
+                    Monitors.recordDiscardedIndexingCount("delayQueue");
+                });
         this.scheduledThreadPoolExecutor.setRemoveOnCancelPolicy(true);
     }
 
@@ -108,9 +108,24 @@ public class ExecutionDAOFacade {
     public Workflow getWorkflowById(String workflowId, boolean includeTasks) {
         Workflow workflow = executionDAO.getWorkflow(workflowId, includeTasks);
         if (workflow == null) {
-            String errorMsg = String.format("No such workflow found by id: %s", workflowId);
-            LOGGER.error(errorMsg);
-            throw new ApplicationException(ApplicationException.Code.NOT_FOUND, errorMsg);
+            LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO", workflowId);
+            String json = indexDAO.get(workflowId, RAW_JSON_FIELD);
+            if (json == null) {
+                String errorMsg = String.format("No such workflow found by id: %s", workflowId);
+                LOGGER.error(errorMsg);
+                throw new ApplicationException(ApplicationException.Code.NOT_FOUND, errorMsg);
+            }
+
+            try {
+                workflow = objectMapper.readValue(json, Workflow.class);
+                if (!includeTasks) {
+                    workflow.getTasks().clear();
+                }
+            } catch (IOException e) {
+                String errorMsg = String.format("Error reading workflow: %s", workflowId);
+                LOGGER.error(errorMsg);
+                throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, errorMsg, e);
+            }
         }
         return workflow;
     }
@@ -165,18 +180,18 @@ public class ExecutionDAOFacade {
         if (!executionDAO.canSearchAcrossWorkflows()) {
             SearchResult<String> result = indexDAO.searchWorkflows("correlationId='" + correlationId + "'", "*", 0, 1000, null);
             return result.getResults().stream()
-                .parallel()
-                .map(workflowId -> {
-                    try {
-                        return getWorkflowById(workflowId, includeTasks);
-                    } catch (ApplicationException e) {
-                        // This might happen when the workflow archival failed and the workflow was removed from primary datastore
-                        LOGGER.error("Error getting the workflow: {}  for correlationId: {} from datastore/index", workflowId, correlationId, e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                    .parallel()
+                    .map(workflowId -> {
+                        try {
+                            return getWorkflowById(workflowId, includeTasks);
+                        } catch (ApplicationException e) {
+                            // This might happen when the workflow archival failed and the workflow was removed from primary datastore
+                            LOGGER.error("Error getting the workflow: {}  for correlationId: {} from datastore/index", workflowId, correlationId, e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
         }
         return executionDAO.getWorkflowsByCorrelationId(correlationId, includeTasks);
     }
@@ -206,7 +221,11 @@ public class ExecutionDAOFacade {
     public String createWorkflow(Workflow workflow) {
         workflow.setCreateTime(System.currentTimeMillis());
         executionDAO.createWorkflow(workflow);
-        indexDAO.asyncIndexWorkflow(workflow);
+        if (config.enableAsyncIndexing()) {
+            indexDAO.asyncIndexWorkflow(workflow);
+        } else {
+            indexDAO.indexWorkflow(workflow);
+        }
         return workflow.getWorkflowId();
     }
 
@@ -222,7 +241,23 @@ public class ExecutionDAOFacade {
             workflow.setEndTime(System.currentTimeMillis());
         }
         executionDAO.updateWorkflow(workflow);
-        indexDAO.asyncIndexWorkflow(workflow);
+        if (workflow.getStatus().isTerminal()) {
+            if (config.enableAsyncIndexing()) {
+                if (workflow.getEndTime() - workflow.getStartTime() < config.getAsyncUpdateShortRunningWorkflowDuration() * 1000) {
+                    final String workflowId = workflow.getWorkflowId();
+                    DelayWorkflowUpdate delayWorkflowUpdate = new DelayWorkflowUpdate(workflowId);
+                    LOGGER.debug("Delayed updating workflow: {} in the index by {} seconds", workflowId, config.getAsyncUpdateDelay());
+                    scheduledThreadPoolExecutor.schedule(delayWorkflowUpdate, config.getAsyncUpdateDelay(), TimeUnit.SECONDS);
+                    Monitors.recordWorkerQueueSize("delayQueue", scheduledThreadPoolExecutor.getQueue().size());
+                } else {
+                    indexDAO.asyncIndexWorkflow(workflow);
+                }
+                workflow.getTasks().forEach(indexDAO::asyncIndexTask);
+            } else {
+                indexDAO.indexWorkflow(workflow);
+                workflow.getTasks().forEach(indexDAO::indexTask);
+            }
+        }
         return workflow.getWorkflowId();
     }
 
@@ -240,14 +275,24 @@ public class ExecutionDAOFacade {
         try {
             Workflow workflow = getWorkflowById(workflowId, true);
 
-            // remove workflow from ES
             if (archiveWorkflow) {
-                //Add to elasticsearch
-                indexDAO.asyncUpdateWorkflow(workflowId,
-                        new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD},
-                        new Object[]{objectMapper.writeValueAsString(workflow), true});
+                if (workflow.getStatus().isTerminal()) {
+                    // Only allow archival if workflow is in terminal state
+                    // DO NOT archive async, since if archival errors out, workflow data will be lost
+                    if (config.enableAsyncIndexing()) {
+                        indexDAO.asyncUpdateWorkflow(workflowId,
+                                new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD},
+                                new Object[]{objectMapper.writeValueAsString(workflow), true});
+                    } else {
+                        indexDAO.updateWorkflow(workflowId,
+                                new String[]{RAW_JSON_FIELD, ARCHIVED_FIELD},
+                                new Object[]{objectMapper.writeValueAsString(workflow), true});
+                    }
+                } else {
+                    throw new ApplicationException(Code.INVALID_INPUT, String.format("Cannot archive workflow: %s with status: %s", workflowId, workflow.getStatus()));
+                }
             } else {
-                // Not archiving, also remove workflowId from index
+                // Not archiving, also remove workflow from index
                 indexDAO.asyncRemoveWorkflow(workflowId);
             }
 
@@ -329,7 +374,11 @@ public class ExecutionDAOFacade {
                 }
             }
             executionDAO.updateTask(task);
-            indexDAO.asyncIndexTask(task);
+            if (config.enableAsyncIndexing()) {
+                indexDAO.asyncIndexTask(task);
+            } else {
+                indexDAO.indexTask(task);
+            }
         } catch (Exception e) {
             String errorMsg = String.format("Error updating task: %s in workflow: %s", task.getTaskId(), task.getWorkflowInstanceId());
             LOGGER.error(errorMsg, e);
@@ -367,14 +416,22 @@ public class ExecutionDAOFacade {
     public boolean addEventExecution(EventExecution eventExecution) {
         boolean added = executionDAO.addEventExecution(eventExecution);
         if (added) {
-            indexDAO.asyncAddEventExecution(eventExecution);
+            if (config.enableAsyncIndexing()) {
+                indexDAO.asyncAddEventExecution(eventExecution);
+            } else {
+                indexDAO.addEventExecution(eventExecution);
+            }
         }
         return added;
     }
 
     public void updateEventExecution(EventExecution eventExecution) {
         executionDAO.updateEventExecution(eventExecution);
-        indexDAO.asyncAddEventExecution(eventExecution);
+        if (config.enableAsyncIndexing()) {
+            indexDAO.asyncAddEventExecution(eventExecution);
+        } else {
+            indexDAO.addEventExecution(eventExecution);
+        }
     }
 
     public void removeEventExecution(EventExecution eventExecution) {
@@ -390,7 +447,11 @@ public class ExecutionDAOFacade {
     }
 
     public void addTaskExecLog(List<TaskExecLog> logs) {
-        indexDAO.asyncAddTaskExecutionLogs(logs);
+        if (config.enableAsyncIndexing()) {
+            indexDAO.asyncAddTaskExecutionLogs(logs);
+        } else {
+            indexDAO.addTaskExecutionLogs(logs);
+        }
     }
 
     public void addMessage(String queue, Message message) {
@@ -409,4 +470,21 @@ public class ExecutionDAOFacade {
         return indexDAO.getTaskExecutionLogs(taskId);
     }
 
+    class DelayWorkflowUpdate implements Runnable {
+        private String workflowId;
+
+        DelayWorkflowUpdate(String workflowId) {
+            this.workflowId = workflowId;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Workflow workflow = executionDAO.getWorkflow(workflowId, false);
+                indexDAO.asyncIndexWorkflow(workflow);
+            } catch (Exception e) {
+                LOGGER.error("Unable to update workflow: {}", workflowId, e);
+            }
+        }
+    }
 }
