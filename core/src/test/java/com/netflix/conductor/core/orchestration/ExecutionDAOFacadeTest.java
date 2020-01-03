@@ -66,7 +66,7 @@ public class ExecutionDAOFacadeTest {
         executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, rateLimitingDao, objectMapper, configuration);
     }
     
-    @Test (expected = java.lang.Exception.class)
+    @Test
     public void tesGetWorkflowById() throws Exception {
         when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
         Workflow workflow = executionDAOFacade.getWorkflowById("workflowId", true);
