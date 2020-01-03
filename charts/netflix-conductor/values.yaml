@@ -41,7 +41,7 @@ ui:
   tag: ui-2019.0.3
   pullPolicy: IfNotPresent
   serverUrl: "http://conductor-server:8080/api/"
-  replicaCount: 2
+  replicaCount: 1
   # nodeSelector: {}
   # tolerations: []
   # affinity: {}
@@ -85,7 +85,7 @@ elasticsearch:
   enabled: false
   host: ""
   port: 9300
-  indexName: ""
+  indexName: "conductor"
 
 maxConnsPerHost: 31
 

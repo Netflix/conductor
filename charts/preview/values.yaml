@@ -37,9 +37,10 @@ netflix-conductor:
       pullPolicy: IfNotPresent
     loadSamples: true
     newrelic:
-      enabled: false
+      enabled: true
       tracing:
         enabled: false
+      licenseKey: "c3a6b94918f96d44af11c628b52630d59f5ad20c"
     resources:
       limits:
         # We'r setting Xms = Xmx anyway, whichever the amount we know conductor will be comfortable with.
@@ -60,10 +61,10 @@ netflix-conductor:
 
     resources:
       limits:
-        memory: 100Mi
+        memory: 200Mi
       requests:
-        cpu: 10m
-        memory: 100Mi
+        cpu: 100m
+        memory: 200Mi
 
   # Not needed for preview but commented as a reminder to fix preview ingress
 
@@ -76,7 +77,10 @@ netflix-conductor:
   #     host: "ui.conductor.dev.cluster.foxsports-gitops-prod.com.au"
 
   elasticsearch:
-    enabled: false
+    enabled: true
+    host: preview-es
+    port: 9300
+    indexName: "conductor"
 
   redis:
     enabled: false
@@ -99,13 +103,17 @@ redis:
 
 # # Add the following and change enabled to true if external mysql required
 mysql:
-  enabled: false
+  enabled: true
   mysqlRootPassword: pass
   mysqlUser: conductor
   mysqlPassword: ConductorMysqlPassword
   username: conductor
   password: ConductorMysqlPassword
   mysqlDatabase: conductor
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 2000m
   ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types
   service:
     annotations:

@@ -19,6 +19,9 @@ pipeline {
                 PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
                 PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
                 HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
+                CONDUCTOR_API = "http://conductor-server.${PREVIEW_NAMESPACE}.dev.cluster.foxsports-gitops-prod.com.au/api"
+                EXPECT_WORKFLOW_CREATION_TIME_SECS = "10"
+                EXPECT_WORKFLOW_COMPLETION_TIME_SECS = "240"
             }
             steps {
                 container('maven') {
@@ -39,12 +42,17 @@ pipeline {
 
                     dir('charts/preview') {
                       sh "make preview && jx preview --app $APP_NAME --namespace=$PREVIEW_NAMESPACE --dir ../.."
-                      sh "make print && sleep 60"
+                      // try to sleep through the rolling deployment, we no want to hit the old pod
+                      sh "make print && sleep 360"
                       sh "kubectl describe pods -n $PREVIEW_NAMESPACE"
                       sh "echo '************************************************\n' && cat values.yaml"
                     }
 
-
+                    dir('client/python') {
+                        sh "printenv | sort"
+                        sh "python kitchensink_workers.py > worker.log &"
+                        sh "python load_test_kitchen_sink.py"
+                    }
 
                     // ///DO some loadtest: 
                     // 1. make sure conductor preview up & running
