@@ -152,6 +152,7 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
 
     /**
      * Un-pop all un-acknowledged messages for all queues.
+
      * @since 1.11.6
      */
     public void processAllUnacks() {
@@ -176,11 +177,6 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
 
         return queryWithTransaction(SET_OFFSET_TIME, q -> q.addParameter(offsetTimeInSecond)
                 .addParameter(offsetTimeInSecond).addParameter(queueName).addParameter(messageId).executeUpdate() == 1);
-    }
-
-    @Override
-    public boolean exists(String queueName, String messageId) {
-        return getWithRetriedTransactions(tx -> existsMessage(tx, queueName, messageId));
     }
 
     private boolean existsMessage(Connection connection, String queueName, String messageId) {

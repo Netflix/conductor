@@ -1,5 +1,5 @@
-/**
- * Copyright 2016 Netflix, Inc.
+/*
+ * Copyright 2019 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -10,10 +10,20 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-/**
- *
- */
 package com.netflix.conductor.core.execution;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -27,6 +37,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
+import com.netflix.conductor.common.utils.TaskUtils;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
@@ -42,17 +54,10 @@ import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
 import com.netflix.conductor.core.execution.mapper.WaitTaskMapper;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.spectator.api.Counter;
 import com.netflix.spectator.api.DefaultRegistry;
 import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.Spectator;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -67,20 +72,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /**
  * @author Viren
@@ -112,8 +108,8 @@ public class TestDeciderService {
     public void setup() {
         metadataDAO = mock(MetadataDAO.class);
         externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
-        QueueDAO queueDAO = mock(QueueDAO.class);
         MetadataDAO metadataDAO = mock(MetadataDAO.class);
+        Configuration config = mock(Configuration.class);
 
         TaskDef taskDef = new TaskDef();
 
@@ -137,7 +133,7 @@ public class TestDeciderService {
         taskMappers.put("WAIT", new WaitTaskMapper(parametersUtils));
         taskMappers.put("HTTP", new HTTPTaskMapper(parametersUtils, metadataDAO));
 
-        deciderService = new DeciderService(parametersUtils, queueDAO, metadataDAO, externalPayloadStorageUtils, taskMappers);
+        deciderService = new DeciderService(parametersUtils, metadataDAO, externalPayloadStorageUtils, taskMappers, config);
     }
 
     @Test
@@ -321,6 +317,47 @@ public class TestDeciderService {
     }
 
     @Test
+    public void testGetTaskInputV2WithInputTemplate() {
+        TaskDef def = new TaskDef();
+        Map<String, Object> inputTemplate = new HashMap<>();
+        inputTemplate.put("url", "https://some_url:7004");
+        inputTemplate.put("default_url", "https://default_url:7004");
+        inputTemplate.put("someKey", "someValue");
+
+        def.getInputTemplate().putAll(inputTemplate);
+
+        Map<String, Object> workflowInput = new HashMap<>();
+        workflowInput.put("some_new_url", "https://some_new_url:7004");
+        workflowInput.put("workflow_input_url", "https://workflow_input_url:7004");
+        workflowInput.put("some_other_key", "some_other_value");
+
+        WorkflowDef workflowDef = new WorkflowDef();
+        workflowDef.setName("testGetTaskInputV2WithInputTemplate");
+        workflowDef.setVersion(1);
+
+        Workflow workflow = new Workflow();
+        workflow.setWorkflowDefinition(workflowDef);
+        workflow.setInput(workflowInput);
+
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.getInputParameters().put("url", "${workflow.input.some_new_url}");
+        workflowTask.getInputParameters().put("workflow_input_url", "${workflow.input.workflow_input_url}");
+        workflowTask.getInputParameters().put("someKey", "${workflow.input.someKey}");
+        workflowTask.getInputParameters().put("someOtherKey", "${workflow.input.some_other_key}");
+        workflowTask.getInputParameters().put("someNowhereToBeFoundKey", "${workflow.input.some_ne_key}");
+
+        Map<String, Object> taskInput = parametersUtils.getTaskInputV2(workflowTask.getInputParameters(), workflow, null, def);
+        assertTrue(taskInput.containsKey("url"));
+        assertTrue(taskInput.containsKey("default_url"));
+        assertEquals(taskInput.get("url"), "https://some_new_url:7004");
+        assertEquals(taskInput.get("default_url"), "https://default_url:7004");
+        assertEquals(taskInput.get("workflow_input_url"), "https://workflow_input_url:7004");
+        assertEquals("some_other_value", taskInput.get("someOtherKey"));
+        assertEquals("someValue", taskInput.get("someKey"));
+        assertNull(taskInput.get("someNowhereToBeFoundKey"));
+    }
+
+    @Test
     public void testGetNextTask() {
 
         WorkflowDef def = createNestedWorkflow();
@@ -374,7 +411,7 @@ public class TestDeciderService {
 
         WorkflowTask taskAfterT9 = def.getNextTask("t9");
         assertNotNull(taskAfterT9);
-        assertEquals("join1", taskAfterT9.getTaskReferenceName());
+        assertEquals("join2", taskAfterT9.getTaskReferenceName());
     }
 
     @Test
@@ -674,6 +711,37 @@ public class TestDeciderService {
     }
 
     @Test
+    public void testDecideWithLoopTask() {
+        WorkflowDef workflowDef = createLinearWorkflow();
+
+        Workflow workflow = new Workflow();
+        workflow.setWorkflowDefinition(workflowDef);
+        workflow.setStatus(WorkflowStatus.RUNNING);
+
+        Task task1 = new Task();
+        task1.setTaskType("junit_task_l1");
+        task1.setReferenceTaskName("s1");
+        task1.setSeq(1);
+        task1.setIteration(1);
+        task1.setRetried(false);
+        task1.setExecuted(false);
+        task1.setStatus(Status.COMPLETED);
+
+        workflow.getTasks().add(task1);
+
+        DeciderOutcome deciderOutcome = deciderService.decide(workflow);
+        assertNotNull(deciderOutcome);
+
+        assertFalse(workflow.getTaskByRefName("s1").isRetried());
+        assertEquals(1, deciderOutcome.tasksToBeUpdated.size());
+        assertEquals("s1", deciderOutcome.tasksToBeUpdated.get(0).getReferenceTaskName());
+        assertEquals(1, deciderOutcome.tasksToBeScheduled.size());
+        assertEquals("s2__1", deciderOutcome.tasksToBeScheduled.get(0).getReferenceTaskName());
+        assertEquals(0, deciderOutcome.tasksToBeRequeued.size());
+        assertFalse(deciderOutcome.isComplete);
+    }
+
+    @Test
     public void testDecideFailedTask() {
         WorkflowDef workflowDef = createLinearWorkflow();
 
@@ -751,9 +819,48 @@ public class TestDeciderService {
         task.setTaskId("aa");
         task.setUpdateTime(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(11));
 
-        boolean flag = deciderService.isResponseTimedOut(taskDef, task);
-        assertNotNull(task);
-        assertTrue(flag);
+        assertTrue(deciderService.isResponseTimedOut(taskDef, task));
+    }
+
+    @Test
+    public void testFilterNextLoopOverTasks() {
+
+        Workflow workflow = new Workflow();
+
+        Task task1 = new Task();
+        task1.setReferenceTaskName("task1");
+        task1.setStatus(Status.COMPLETED);
+        task1.setTaskId("task1");
+        task1.setIteration(1);
+
+        Task task2 = new Task();
+        task2.setReferenceTaskName("task2");
+        task2.setStatus(Status.SCHEDULED);
+        task2.setTaskId("task2");
+
+        Task task3 = new Task();
+        task3.setReferenceTaskName("task3__1");
+        task3.setStatus(Status.IN_PROGRESS);
+        task3.setTaskId("task3__1");
+
+        Task task4 = new Task();
+        task4.setReferenceTaskName("task4");
+        task4.setStatus(Status.SCHEDULED);
+        task4.setTaskId("task4");
+
+        Task task5 = new Task();
+        task5.setReferenceTaskName("task5");
+        task5.setStatus(Status.COMPLETED);
+        task5.setTaskId("task5");
+
+        workflow.getTasks().addAll(Arrays.asList(task1, task2, task3, task4, task5));
+        List<Task> tasks = deciderService.filterNextLoopOverTasks(Arrays.asList(task2, task3, task4), task1, workflow);
+        assertEquals(2, tasks.size());
+        tasks.forEach(task -> {
+            assertTrue(task.getReferenceTaskName().endsWith(TaskUtils.getLoopOverTaskRefNameSuffix(1)));
+            assertEquals(1, task.getIteration());
+        });
+
     }
 
     @Test
@@ -995,6 +1102,7 @@ public class TestDeciderService {
         WorkflowDef subWorkflowDef = createLinearWorkflow();
         WorkflowTask subWorkflow = new WorkflowTask();
         subWorkflow.setType(TaskType.SUB_WORKFLOW.name());
+        subWorkflow.setName("sw1");
         SubWorkflowParams subWorkflowParams = new SubWorkflowParams();
         subWorkflowParams.setName(subWorkflowDef.getName());
         subWorkflow.setSubWorkflowParam(subWorkflowParams);
@@ -1008,12 +1116,14 @@ public class TestDeciderService {
         forkTask2.getForkTasks().add(Arrays.asList(tasks.get(3), decisionTask));
 
         WorkflowTask joinTask2 = new WorkflowTask();
+        joinTask2.setName("join2");
         joinTask2.setType(TaskType.JOIN.name());
         joinTask2.setTaskReferenceName("join2");
         joinTask2.setJoinOn(Arrays.asList("t4", "d1"));
 
         WorkflowTask forkTask1 = new WorkflowTask();
         forkTask1.setType(TaskType.FORK_JOIN.name());
+        forkTask1.setName("fork1");
         forkTask1.setTaskReferenceName("fork1");
         forkTask1.getForkTasks().add(Collections.singletonList(tasks.get(1)));
         forkTask1.getForkTasks().add(Arrays.asList(forkTask2, joinTask2));
@@ -1021,6 +1131,7 @@ public class TestDeciderService {
 
 
         WorkflowTask joinTask1 = new WorkflowTask();
+        joinTask1.setName("join1");
         joinTask1.setType(TaskType.JOIN.name());
         joinTask1.setTaskReferenceName("join1");
         joinTask1.setJoinOn(Arrays.asList("t1", "fork2"));

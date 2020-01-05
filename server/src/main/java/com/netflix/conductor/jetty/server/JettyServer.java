@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -9,9 +9,6 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
- */
-/**
- *
  */
 package com.netflix.conductor.jetty.server;
 
@@ -24,6 +21,7 @@ import com.netflix.conductor.service.Lifecycle;
 import com.sun.jersey.api.client.Client;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.jmx.MBeanContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +32,10 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
+
+import static java.lang.Boolean.getBoolean;
+import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
+import static org.eclipse.jetty.util.log.Log.getLog;
 
 /**
  * @author Viren
@@ -68,11 +70,14 @@ public class JettyServer implements Lifecycle {
         context.setWelcomeFiles(new String[]{"index.html"});
 
         server.setHandler(context);
-
+        if (getBoolean("enableJMX")) {
+            System.out.println("configure MBean container...");
+            configureMBeanContainer(server);
+        }
         server.start();
         System.out.println("Started server on http://localhost:" + port + "/");
         try {
-            boolean create = Boolean.getBoolean("loadSample");
+            boolean create = getBoolean("loadSample");
             if (create) {
                 if (!kitchenSinkExists(port)) {
                     System.out.println("Creating kitchensink workflow");
@@ -133,5 +138,17 @@ public class JettyServer implements Lifecycle {
                 wf -> wf.getName().equalsIgnoreCase("kitchensink")
         );
 
+    }
+
+    /**
+     * Enabled JMX reporting:
+     * https://docs.newrelic.com/docs/agents/java-agent/troubleshooting/application-server-jmx-setup
+     * https://www.eclipse.org/jetty/documentation/current/jmx-chapter
+     */
+    private void configureMBeanContainer(final Server server){
+        final MBeanContainer mbContainer = new MBeanContainer(getPlatformMBeanServer());
+        server.addEventListener(mbContainer);
+        server.addBean(mbContainer);
+        server.addBean(getLog());
     }
 }

@@ -7,7 +7,6 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ParametersUtils;
-import com.netflix.conductor.core.execution.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
 import org.junit.Before;
@@ -84,10 +83,15 @@ public class KafkaPublishTaskMapperTest {
 		WorkflowDef workflowDef = new WorkflowDef();
 		workflow.setWorkflowDefinition(workflowDef);
 
+		TaskDef taskdefinition = new TaskDef();
+		String testExecutionNameSpace = "testExecutionNameSpace";
+		taskdefinition.setExecutionNameSpace(testExecutionNameSpace);
+		String testIsolationGroupId = "testIsolationGroupId";
+		taskdefinition.setIsolationGroupId(testIsolationGroupId);
 		TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
 				.withWorkflowDefinition(workflowDef)
 				.withWorkflowInstance(workflow)
-				.withTaskDefinition(null)
+				.withTaskDefinition(taskdefinition)
 				.withTaskToSchedule(taskToSchedule)
 				.withTaskInput(new HashMap<>())
 				.withRetryCount(0)
@@ -101,5 +105,7 @@ public class KafkaPublishTaskMapperTest {
 		//Then
 		assertEquals(1, mappedTasks.size());
 		assertEquals(TaskType.KAFKA_PUBLISH.name(), mappedTasks.get(0).getTaskType());
+		assertEquals(testExecutionNameSpace, mappedTasks.get(0).getExecutionNameSpace());
+		assertEquals(testIsolationGroupId, mappedTasks.get(0).getIsolationGroupId());
 	}
 }

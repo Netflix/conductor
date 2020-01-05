@@ -15,10 +15,7 @@
  */
 package com.netflix.conductor.contribs.http;
 
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -54,38 +51,44 @@ import java.util.Map;
 public class HttpTask extends WorkflowSystemTask {
 
 	public static final String REQUEST_PARAMETER_NAME = "http_request";
-	
+
 	static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key with HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 
 	private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
-	
-	public static final String NAME = "HTTP";
-	
-	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>(){};
-	
-	private TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>(){};
-	
-	protected ObjectMapper om = objectMapper();
 
-	protected RestClientManager rcm;
-	
+	public static final String NAME = "HTTP";
+
+	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>(){};
+
+	private TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>(){};
+
+	protected ObjectMapper objectMapper;
+
+	protected RestClientManager restClientManager;
+
 	protected Configuration config;
-	
+
 	private String requestParameter;
-	
+
 	@Inject
-	public HttpTask(RestClientManager rcm, Configuration config) {
-		this(NAME, rcm, config);
+	public HttpTask(RestClientManager restClientManager,
+					Configuration config,
+					ObjectMapper objectMapper) {
+		this(NAME, restClientManager, config, objectMapper);
 	}
-	
-	public HttpTask(String name, RestClientManager rcm, Configuration config) {
+
+	public HttpTask(String name,
+					RestClientManager restClientManager,
+					Configuration config,
+					ObjectMapper objectMapper) {
 		super(name);
-		this.rcm = rcm;
+		this.restClientManager = restClientManager;
 		this.config = config;
+		this.objectMapper = objectMapper;
 		this.requestParameter = REQUEST_PARAMETER_NAME;
 		logger.info("HttpTask initialized...");
 	}
-	
+
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) {
 		Object request = task.getInputData().get(requestParameter);
@@ -95,25 +98,25 @@ public class HttpTask extends WorkflowSystemTask {
 			task.setStatus(Status.FAILED);
 			return;
 		}
-		
-		Input input = om.convertValue(request, Input.class);
+
+		Input input = objectMapper.convertValue(request, Input.class);
 		if(input.getUri() == null) {
 			String reason = "Missing HTTP URI.  See documentation for HttpTask for required input parameters";
 			task.setReasonForIncompletion(reason);
 			task.setStatus(Status.FAILED);
 			return;
 		}
-		
+
 		if(input.getMethod() == null) {
 			String reason = "No HTTP method specified";
 			task.setReasonForIncompletion(reason);
 			task.setStatus(Status.FAILED);
 			return;
 		}
-		
+
 		try {
 			HttpResponse response = httpCall(input);
-			logger.info("response {}, {}", response.statusCode, response.body);
+			logger.debug("Response: {}, {}, task:{}", response.statusCode, response.body, task.getTaskId());
 			if(response.statusCode > 199 && response.statusCode < 300) {
 				if (isAsyncComplete(task)) {
 					task.setStatus(Status.IN_PROGRESS);
@@ -132,7 +135,7 @@ public class HttpTask extends WorkflowSystemTask {
 			if(response != null) {
 				task.getOutputData().put("response", response.asMap());
 			}
-			
+
 		}catch(Exception e) {
 			logger.error("Failed to invoke http task: {} - uri: {}, vipAddress: {} in workflow: {}", task.getTaskId(), input.getUri(), input.getVipAddress(), task.getWorkflowInstanceId(), e);
 			task.setStatus(Status.FAILED);
@@ -148,7 +151,7 @@ public class HttpTask extends WorkflowSystemTask {
 	 * Note: protected access is so that tasks extended from this task can re-use this to make http calls
 	 */
 	protected HttpResponse httpCall(Input input) throws Exception {
-		Client client = rcm.getClient(input);
+		Client client = restClientManager.getClient(input);
 
 		if(input.connectionTimeOut != null ) {
 			client.setConnectTimeout(input.connectionTimeOut);
@@ -158,7 +161,7 @@ public class HttpTask extends WorkflowSystemTask {
 			client.setReadTimeout(input.readTimeOut);
 		}
 		if(input.oauthConsumerKey != null) {
-			logger.info("Configuring OAuth filter");
+			logger.debug("Configuring OAuth filter");
 			OAuthParameters params = new OAuthParameters().consumerKey(input.oauthConsumerKey).signatureMethod("HMAC-SHA1").version("1.0");
 			OAuthSecrets secrets = new OAuthSecrets().consumerSecret(input.oauthConsumerSecret);
 			client.addFilter(new OAuthClientFilter(client.getProviders(), params, secrets));
@@ -170,7 +173,7 @@ public class HttpTask extends WorkflowSystemTask {
 			builder.entity(input.body);
 		}
 		input.headers.forEach(builder::header);
-		
+
 		HttpResponse response = new HttpResponse();
 		try {
 
@@ -205,21 +208,17 @@ public class HttpTask extends WorkflowSystemTask {
 	private Object extractBody(ClientResponse cr) {
 
 		String json = cr.getEntity(String.class);
-		logger.info(json);
-		
 		try {
-			
-			JsonNode node = om.readTree(json);
+			JsonNode node = objectMapper.readTree(json);
 			if (node.isArray()) {
-				return om.convertValue(node, listOfObj);
+				return objectMapper.convertValue(node, listOfObj);
 			} else if (node.isObject()) {
-				return om.convertValue(node, mapOfObj);
+				return objectMapper.convertValue(node, mapOfObj);
 			} else if (node.isNumber()) {
-				return om.convertValue(node, Double.class);
+				return objectMapper.convertValue(node, Double.class);
 			} else {
 				return node.asText();
 			}
-
 		} catch (IOException jpe) {
 			logger.error("Error extracting response body", jpe);
 			return json;
@@ -230,38 +229,28 @@ public class HttpTask extends WorkflowSystemTask {
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) {
 		return false;
 	}
-	
+
 	@Override
 	public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) {
 		task.setStatus(Status.CANCELED);
 	}
-	
+
 	@Override
 	public boolean isAsync() {
 		return true;
 	}
-	
+
 	@Override
 	public int getRetryTimeInSecond() {
 		return 60;
 	}
-	
-	private static ObjectMapper objectMapper() {
-	    final ObjectMapper om = new ObjectMapper();
-        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        om.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-        om.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-        om.setSerializationInclusion(Include.NON_NULL);
-        om.setSerializationInclusion(Include.NON_EMPTY);
-	    return om;
-	}
-	
+
 	public static class HttpResponse {
-		
+
 		public Object body;
-		
+
 		public MultivaluedMap<String, String> headers;
-		
+
 		public int statusCode;
 
 		public String reasonPhrase;
@@ -270,37 +259,37 @@ public class HttpTask extends WorkflowSystemTask {
 		public String toString() {
 			return "HttpResponse [body=" + body + ", headers=" + headers + ", statusCode=" + statusCode + ", reasonPhrase=" + reasonPhrase + "]";
 		}
-		
+
 		public Map<String, Object> asMap() {
-			
+
 			Map<String, Object> map = new HashMap<>();
 			map.put("body", body);
 			map.put("headers", headers);
 			map.put("statusCode", statusCode);
 			map.put("reasonPhrase", reasonPhrase);
-			
+
 			return map;
 		}
 	}
-	
+
 	public static class Input {
-		
+
 		private String method;	//PUT, POST, GET, DELETE, OPTIONS, HEAD
-		
+
 		private String vipAddress;
 
 		private String appName;
-		
+
 		private Map<String, Object> headers = new HashMap<>();
-		
+
 		private String uri;
-		
+
 		private Object body;
-		
+
 		private String accept = MediaType.APPLICATION_JSON;
 
 		private String contentType = MediaType.APPLICATION_JSON;
-		
+
 		private String oauthConsumerKey;
 
 		private String oauthConsumerSecret;
@@ -376,7 +365,7 @@ public class HttpTask extends WorkflowSystemTask {
 
 		/**
 		 * @param vipAddress the vipAddress to set
-		 * 
+		 *
 		 */
 		public void setVipAddress(String vipAddress) {
 			this.vipAddress = vipAddress;
@@ -391,7 +380,7 @@ public class HttpTask extends WorkflowSystemTask {
 
 		/**
 		 * @param accept the accept to set
-		 * 
+		 *
 		 */
 		public void setAccept(String accept) {
 			this.accept = accept;
