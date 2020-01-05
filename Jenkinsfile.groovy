@@ -21,7 +21,7 @@ pipeline {
                 HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
                 CONDUCTOR_API = "http://conductor-server.${PREVIEW_NAMESPACE}.dev.cluster.foxsports-gitops-prod.com.au/api"
                 EXPECT_WORKFLOW_CREATION_TIME_SECS = "10"
-                EXPECT_WORKFLOW_COMPLETION_TIME_SECS = "240"
+                EXPECT_WORKFLOW_COMPLETION_TIME_SECS = "300"
             }
             steps {
                 container('maven') {
@@ -49,7 +49,7 @@ pipeline {
                     }
 
                     dir('client/python') {
-                        sh "printenv | sort"
+                        sh "printenv | sort && kubectl get pods -n $PREVIEW_NAMESPACE"
                         sh "python kitchensink_workers.py > worker.log &"
                         sh "python load_test_kitchen_sink.py"
                     }
