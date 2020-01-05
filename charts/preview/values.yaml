@@ -53,6 +53,7 @@ netflix-conductor:
       annotations:
         fabric8.io/expose: "true"
         fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+    serverUrl: "http://conductor-server/api/"
 
     image:
       preview_repository_ui:
