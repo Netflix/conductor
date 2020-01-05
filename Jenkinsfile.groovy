@@ -20,7 +20,8 @@ pipeline {
                 PREVIEW_NAMESPACE = "$APP_NAME-$BRANCH_NAME".toLowerCase()
                 HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
                 CONDUCTOR_API = "http://conductor-server.${PREVIEW_NAMESPACE}.dev.cluster.foxsports-gitops-prod.com.au/api"
-                EXPECT_WORKFLOW_CREATION_TIME_SECS = "10"
+                EXPECT_WORKFLOW_COUNT                = "100"
+                EXPECT_WORKFLOW_CREATION_TIME_SECS   = "20"
                 EXPECT_WORKFLOW_COMPLETION_TIME_SECS = "300"
             }
             steps {

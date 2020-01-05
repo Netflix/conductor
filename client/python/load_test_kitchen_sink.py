@@ -6,7 +6,7 @@ import requests
 payload = {"task2Name": "task_5"}
 
 default_conductor_api = 'http://localhost:8080/api'
-default_workflow_count = 20
+default_workflow_count = 50
 default_expect_spawning_time_secs = 5
 default_expect_completion_time_secs = 60
 
@@ -48,7 +48,7 @@ assert expect_spawning_time_secs > time_to_spawn, 'TIME TO CREATE WORK FLOWS MUS
 current_elapsed = time.time() - start_time
 
 while ( count_running_worklow() > 0 ):
-    time.sleep(0.3)
+    time.sleep(1)
     current_elapsed = time.time() - start_time
     print("waiting until all workflow completed...")
     print("total time so far [{}]".format(current_elapsed))
