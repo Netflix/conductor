@@ -19,7 +19,7 @@ server:
   # extraVolumes: []
   resources:
     requests:
-      memory: "4500Mi"
+      memory: "2500Mi"
       cpu: "250m"
   service:
     type: ClusterIP
@@ -27,7 +27,7 @@ server:
     annotations:
       fabric8.io/expose: "true"
       fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
-  jvmStartupOpts: "  -Xms4g -Xmx4g  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+  jvmStartupOpts: "  -Xms2g -Xmx2g  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
   appStartupOpts: ""
   loadSamples: false
   newrelic:
@@ -40,7 +40,7 @@ ui:
   repository: kayosportsau/netflixconductor
   tag: ui-2019.0.3
   pullPolicy: IfNotPresent
-  serverUrl: "http://conductor-server:8080/api/"
+  serverUrl: "http://conductor-server/api/"
   replicaCount: 1
   # nodeSelector: {}
   # tolerations: []
