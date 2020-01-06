@@ -68,7 +68,25 @@ spec:
               value: {{ .Values.server.newrelic.enabled | quote }}
             - name: NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
               value: {{ .Values.server.newrelic.tracing.enabled | quote }}
-
+            - name: conductor_mysql_connection_pool_idle_min
+              value: "7"
+            - name: conductor_mysql_connection_pool_size_max
+              value: "10"
+            - name: jdbc_username
+              valueFrom:
+                secretKeyRef:
+                  name: conductor
+                  key: DBUSER
+            - name: jdbc_password
+              valueFrom:
+               secretKeyRef:
+                name: conductor
+                key: DBPASS
+            - name: jdbc_url
+              valueFrom:
+                secretKeyRef:
+                  name: conductor
+                  key: DBURL
           ports:
             - name: server
               containerPort: 8080
