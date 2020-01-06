@@ -5,19 +5,30 @@ import com.google.inject.ProvisionException;
 import com.google.inject.util.Modules;
 import com.netflix.conductor.cassandra.CassandraModule;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.contribs.http.HttpTask;
 import com.netflix.conductor.contribs.http.RestClientManager;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.contribs.kafka.KafkaProducerManager;
 import com.netflix.conductor.contribs.kafka.KafkaPublishTask;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.utils.NoopLockModule;
 import com.netflix.conductor.core.execution.WorkflowExecutorModule;
 import com.netflix.conductor.core.utils.DummyPayloadStorage;
 import com.netflix.conductor.core.utils.S3PayloadStorage;
 import com.netflix.conductor.dao.RedisWorkflowModule;
 import com.netflix.conductor.elasticsearch.ElasticSearchModule;
+import com.netflix.conductor.locking.redis.config.RedisLockModule;
 import com.netflix.conductor.mysql.MySQLWorkflowModule;
-import com.netflix.conductor.server.*;
+import com.netflix.conductor.server.DynomiteClusterModule;
+import com.netflix.conductor.server.JerseyModule;
+import com.netflix.conductor.server.LocalRedisModule;
+import com.netflix.conductor.server.RedisClusterModule;
+import com.netflix.conductor.server.RedisSentinelModule;
+import com.netflix.conductor.server.ServerModule;
+import com.netflix.conductor.server.SwaggerModule;
+import com.netflix.conductor.zookeeper.config.ZookeeperModule;
+import com.netflix.conductor.postgres.PostgresWorkflowModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,10 +81,13 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 modules.add(new RedisWorkflowModule());
                 logger.info("Starting conductor server using dynomite/redis cluster.");
                 break;
-
             case MYSQL:
                 modules.add(new MySQLWorkflowModule());
                 logger.info("Starting conductor server using MySQL data store.");
+                break;
+            case POSTGRES:
+                modules.add(new PostgresWorkflowModule());
+                logger.info("Starting conductor server using Postgres data store.");
                 break;
             case MEMORY:
                 modules.add(new LocalRedisModule());
@@ -104,6 +118,34 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
             modules.add(new SwaggerModule());
         }
 
+        if (configuration.enableWorkflowExecutionLock()) {
+            Configuration.LOCKING_SERVER lockingServer;
+            try {
+                lockingServer = configuration.getLockingServer();
+            } catch (IllegalArgumentException ie) {
+                final String message = "Invalid locking server name: " + configuration.getLockingServerString()
+                        + ", supported values are: " + Arrays.toString(Configuration.LOCKING_SERVER.values());
+                logger.error(message);
+                throw new ProvisionException(message, ie);
+            }
+
+            switch (lockingServer) {
+                case REDIS:
+                    modules.add(new RedisLockModule());
+                    logger.info("Starting locking module using Redis cluster.");
+                    break;
+                case ZOOKEEPER:
+                    modules.add(new ZookeeperModule());
+                    logger.info("Starting locking module using Zookeeper cluster.");
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            modules.add(new NoopLockModule());
+            logger.warn("Starting locking module using Noop Lock.");
+        }
+
         ExternalPayloadStorageType externalPayloadStorageType = null;
         String externalPayloadStorageString = configuration.getProperty("workflow.external.payload.storage", "");
         try {
@@ -128,7 +170,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
             });
         }
 
-        new HttpTask(new RestClientManager(configuration), configuration);
+        new HttpTask(new RestClientManager(configuration), configuration, new JsonMapperProvider().get());
         new KafkaPublishTask(configuration, new KafkaProducerManager(configuration));
         new JsonJqTransform();
         modules.add(new ServerModule());
