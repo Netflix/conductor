@@ -22,6 +22,7 @@ import com.netflix.conductor.bootstrap.BootstrapUtil;
 import com.netflix.conductor.bootstrap.ModulesProvider;
 import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 
 import javax.servlet.ServletContextEvent;
@@ -50,7 +51,9 @@ public class ServletContextListner extends GuiceServletContextListener {
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         super.contextInitialized(servletContextEvent);
 
-        BootstrapUtil.startEmbeddedElasticServer(serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get());
+        Optional<EmbeddedElasticSearch> embeddedElasticSearch = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get();
+        embeddedElasticSearch.ifPresent(BootstrapUtil::startEmbeddedElasticsearchServer);
+
         BootstrapUtil.setupIndex(serverInjector.getInstance(IndexDAO.class));
     }
 
