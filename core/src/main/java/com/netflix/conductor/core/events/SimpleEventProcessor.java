@@ -68,18 +68,25 @@ public class SimpleEventProcessor implements EventProcessor {
 
     private ExecutorService executorService;
     private final Map<String, ObservableQueue> eventToQueueMap = new ConcurrentHashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final JsonUtils jsonUtils;
     private final boolean isEventMessageIndexingEnabled;
 
     @Inject
-    public SimpleEventProcessor(ExecutionService executionService, MetadataService metadataService, ActionProcessor actionProcessor,
-                                EventQueues eventQueues, JsonUtils jsonUtils, Configuration configuration) {
+    public SimpleEventProcessor(ExecutionService executionService,
+                                MetadataService metadataService,
+                                ActionProcessor actionProcessor,
+                                EventQueues eventQueues,
+                                JsonUtils jsonUtils,
+                                Configuration configuration,
+                                ObjectMapper objectMapper) {
         this.executionService = executionService;
         this.metadataService = metadataService;
         this.actionProcessor = actionProcessor;
         this.eventQueues = eventQueues;
+        this.objectMapper = objectMapper;
         this.jsonUtils = jsonUtils;
+
         this.isEventMessageIndexingEnabled = configuration.isEventMessageIndexingEnabled();
         int executorThreadCount = configuration.getIntProperty("workflow.event.processor.thread.count", 2);
         if (executorThreadCount > 0) {

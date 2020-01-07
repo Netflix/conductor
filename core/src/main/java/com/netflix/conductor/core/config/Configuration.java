@@ -76,6 +76,9 @@ public interface Configuration {
     String EVENT_MESSAGE_INDEXING_ENABLED_PROPERTY_NAME = "worklfow.event.message.indexing.enabled";
     boolean EVENT_MESSAGE_INDEXING_ENABLED_DEFAULT_VALUE = true;
 
+    String TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME = "workflow.taskExecLog.indexing.enabled";
+    boolean TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE = true;
+
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -103,6 +106,13 @@ public interface Configuration {
      */
     default boolean enableWorkflowExecutionLock() {
         return getBooleanProperty(EXECUTION_LOCK_ENABLED_PROPERTY_NAME, EXECUTION_LOCK_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return if true(default), enables task execution log indexing
+     */
+    default boolean isTaskExecLogIndexingEnabled() {
+        return getBooleanProperty(TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME, TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE);
     }
 
     /**
