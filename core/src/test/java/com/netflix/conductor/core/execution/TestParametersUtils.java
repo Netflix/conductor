@@ -1,6 +1,7 @@
 package com.netflix.conductor.core.execution;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.utils.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,8 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 
 public class TestParametersUtils {
@@ -23,7 +24,7 @@ public class TestParametersUtils {
     public void setup() {
         parametersUtils = new ParametersUtils();
         jsonUtils = new JsonUtils();
-        objectMapper = new ObjectMapper();
+        objectMapper = new JsonMapperProvider().get();
     }
 
     @Test

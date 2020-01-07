@@ -24,11 +24,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -47,6 +48,7 @@ import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
@@ -109,7 +111,7 @@ public class TestWorkflowExecutor {
         workflowStatusListener = mock(WorkflowStatusListener.class);
         ExternalPayloadStorageUtils externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
         executionLockService = mock(ExecutionLockService.class);
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new JsonMapperProvider().get();
         ParametersUtils parametersUtils = new ParametersUtils();
         Map<String, TaskMapper> taskMappers = new HashMap<>();
         taskMappers.put("DECISION", new DecisionTaskMapper());
@@ -235,13 +237,13 @@ public class TestWorkflowExecutor {
 
         AtomicInteger queuedTaskCount = new AtomicInteger(0);
         final Answer answer = invocation -> {
-            String queueName = invocation.getArgumentAt(0, String.class);
+            String queueName = invocation.getArgument(0, String.class);
             System.out.println(queueName);
             queuedTaskCount.incrementAndGet();
             return null;
         };
-        doAnswer(answer).when(queueDAO).push(any(), any(), anyInt());
-        doAnswer(answer).when(queueDAO).push(any(), any(), anyInt(), anyInt());
+        doAnswer(answer).when(queueDAO).push(any(), any(), anyLong());
+        doAnswer(answer).when(queueDAO).push(any(), any(), anyInt(), anyLong());
 
         boolean stateChanged = workflowExecutor.scheduleTask(workflow, tasks);
         assertEquals(2, startedTaskCount.get());
@@ -269,7 +271,7 @@ public class TestWorkflowExecutor {
 
         tasks.add(task1);
 
-        when(executionDAOFacade.createTasks(tasks)).thenThrow(Exception.class);
+        when(executionDAOFacade.createTasks(tasks)).thenThrow(new RuntimeException());
         workflowExecutor.scheduleTask(workflow, tasks);
     }
 
