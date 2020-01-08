@@ -30,6 +30,7 @@ import com.netflix.spectator.api.Spectator;
 import com.netflix.spectator.api.Timer;
 import com.netflix.spectator.api.histogram.PercentileTimer;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -174,10 +175,24 @@ public class Monitors {
 					if (status.isTerminal()) {
 						// Calculate task p99 and p90 latency for all task terminal state and represent it using gauge.
 						// For more information why we are doing this Please check :- https://github.com/Netflix/spectator/issues/782
-						PercentileTimer percentileTimer = (PercentileTimer) getTimer(classQualifier, "task_execution", "taskType", taskType, "includeRetries", "" + false, "status", status.name());
-						if (percentileTimer != null) {
-							gauge(classQualifier, "p99_latency", (long) (percentileTimer.percentile(0.99) * 1000), "taskType", taskType, "status", status.name());
-							gauge(classQualifier, "p90_latency", (long) (percentileTimer.percentile(0.90) * 1000), "taskType", taskType, "status", status.name());
+						Map<Map<String, String>, PercentileTimer> taskExecutionTimers = timers.get("task_execution");
+						if (taskExecutionTimers != null) {
+							Map<String, String> taskKeys = new HashMap<>();
+							taskKeys.put("class", classQualifier);
+							taskKeys.put("taskType", taskType);
+							taskKeys.put("unit", "SECONDS");
+							taskKeys.put("status", status.name());
+							Arrays.stream(new String[]{"true", "false"}).forEach(value -> {
+								taskKeys.put("includeRetries", value);
+								Timer timer = taskExecutionTimers.get(taskKeys);
+								// Default getTimer api creates timer if it does not exist. This can create lot of unnecessary metrics.
+								// Fetch timer values only if it exists.
+								if (timer != null) {
+									PercentileTimer percentileTimer = (PercentileTimer) timer;
+									gauge(classQualifier, "p99_latency", (long) (percentileTimer.percentile(0.99) * 1000), "taskType", taskType, "status", status.name());
+									gauge(classQualifier, "p90_latency", (long) (percentileTimer.percentile(0.90) * 1000), "taskType", taskType, "status", status.name());
+								}
+							});
 						}
 					}
 				});
