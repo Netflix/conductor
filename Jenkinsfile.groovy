@@ -108,11 +108,7 @@ pipeline {
                         // release the helm chart
                         // sh "jx step helm release"
                         // sh "ls -la"
-                        sh "echo **************************   HELM   ************************** "
-                        sh "env"
-                        sh "make print"
-                        sh "echo ************************** END HELM ************************** "
-                        sh "make release"
+                        sh "make release && make print"
                         // promote through all 'Auto' promotion Environments
                         //sh "jx promote -b --no-poll=true  --helm-repo-url=$CHART_REPOSITORY --no-poll=true --no-merge=true --no-wait=true --env=staging --version \$(cat ../../VERSION)"
                         //sh "jx promote -b --no-poll=true --helm-repo-url=$CHART_REPOSITORY --no-poll=true --no-merge=true --no-wait=true --env=production --version \$(cat ../../VERSION)"
