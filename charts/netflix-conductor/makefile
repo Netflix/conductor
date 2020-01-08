@@ -47,8 +47,7 @@ release: clean
 	# patch the repo and version by jx command for now
 	sed -i -e "s/fsa-streamotion\/netflix-conductor/netflixconductor/" values.yaml
 	sed -i -e "s/tag: $(RELEASE_VERSION)/tag: server-$(RELEASE_VERSION)/" values.yaml
-	sed -i -e "s/tag: server-ui-/tag: ui-/" values.yaml
-	sed -i -e "s/tag: ui-2019.0.3/tag: ui-$(RELEASE_VERSION)/" values.yaml
+	sed -i -e "s/tag: server-ui-/tag: ui-$(RELEASE_VERSION)/" values.yaml
 	# end patch
 	helm lint
 	helm init --client-only
