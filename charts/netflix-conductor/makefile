@@ -48,7 +48,7 @@ release: clean
 	sed -i -e "s/fsa-streamotion\/netflix-conductor/netflixconductor/" values.yaml
 	sed -i -e "s/tag: $(RELEASE_VERSION)/tag: server-$(RELEASE_VERSION)/" values.yaml
 	sed -i -e "s/tag: server-ui-/tag: ui-$(RELEASE_VERSION)/" values.yaml
-	sed -i -e "s/2019.0.3/$(RELEASE_VERSION)/" values.yaml
+	sed -i -e "s/-2019.0.3/-$(RELEASE_VERSION)/" values.yaml
 	# end patch
 	helm lint
 	helm init --client-only
