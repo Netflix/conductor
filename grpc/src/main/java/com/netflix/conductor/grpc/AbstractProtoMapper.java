@@ -604,6 +604,7 @@ public abstract class AbstractProtoMapper {
         if (from.getIsolationGroupId() != null) {
             to.setIsolationGroupId( from.getIsolationGroupId() );
         }
+        to.setIteration( from.getIteration() );
         return to.build();
     }
 
@@ -660,6 +661,7 @@ public abstract class AbstractProtoMapper {
         to.setWorkflowPriority( from.getWorkflowPriority() );
         to.setExecutionNameSpace( from.getExecutionNameSpace() );
         to.setIsolationGroupId( from.getIsolationGroupId() );
+        to.setIteration( from.getIteration() );
         return to;
     }
 
@@ -1250,6 +1252,12 @@ public abstract class AbstractProtoMapper {
         if (from.isAsyncComplete() != null) {
             to.setAsyncComplete( from.isAsyncComplete() );
         }
+        if (from.getLoopCondition() != null) {
+            to.setLoopCondition( from.getLoopCondition() );
+        }
+        for (WorkflowTask elem : from.getLoopOver()) {
+            to.addLoopOver( toProto(elem) );
+        }
         return to.build();
     }
 
@@ -1290,6 +1298,8 @@ public abstract class AbstractProtoMapper {
         to.setRateLimited( from.getRateLimited() );
         to.setDefaultExclusiveJoinTask( from.getDefaultExclusiveJoinTaskList().stream().collect(Collectors.toCollection(ArrayList::new)) );
         to.setAsyncComplete( from.getAsyncComplete() );
+        to.setLoopCondition( from.getLoopCondition() );
+        to.setLoopOver( from.getLoopOverList().stream().map(this::fromProto).collect(Collectors.toCollection(ArrayList::new)) );
         return to;
     }
 

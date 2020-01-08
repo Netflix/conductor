@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Netflix, Inc.
+ * Copyright 2019 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -26,8 +26,8 @@ import com.netflix.conductor.dyno.DynoProxy;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
-import redis.clients.jedis.JedisCommands;
+import org.mockito.junit.MockitoJUnitRunner;
+import redis.clients.jedis.commands.JedisCommands;
 
 import java.util.Collections;
 import java.util.List;
@@ -47,7 +47,6 @@ public class RedisExecutionDAOTest extends ExecutionDAOTest {
     private RedisExecutionDAO executionDAO;
 	private static ObjectMapper objectMapper = new JsonMapperProvider().get();
 
-    @SuppressWarnings("unchecked")
     @Before
     public void init() {
         Configuration config = new TestConfiguration();
@@ -58,7 +57,6 @@ public class RedisExecutionDAOTest extends ExecutionDAOTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testCorrelateTaskToWorkflowInDS() {
         String workflowId = "workflowId";
         String taskId = "taskId1";
@@ -85,27 +83,6 @@ public class RedisExecutionDAOTest extends ExecutionDAOTest {
         assertEquals(workflowId, tasks.get(0).getWorkflowInstanceId());
         assertEquals(taskId, tasks.get(0).getTaskId());
     }
-
-	@Test
-	public void testExceedsRateLimitWhenNoRateLimitSet() {
-		Task task =new Task();
-		assertFalse(executionDAO.exceedsRateLimitPerFrequency(task));
-	}
-	@Test
-	public void testExceedsRateLimitWithinLimit() {
-		Task task =new Task();
-		task.setRateLimitFrequencyInSeconds(60);
-		task.setRateLimitPerFrequency(20);
-		assertFalse(executionDAO.exceedsRateLimitPerFrequency(task));
-	}
-	@Test
-	public void testExceedsRateLimitOutOfLimit() {
-		Task task =new Task();
-		task.setRateLimitFrequencyInSeconds(60);
-		task.setRateLimitPerFrequency(1);
-		assertFalse(executionDAO.exceedsRateLimitPerFrequency(task));
-		assertTrue(executionDAO.exceedsRateLimitPerFrequency(task));
-	}
 
     @Override
     protected ExecutionDAO getExecutionDAO() {

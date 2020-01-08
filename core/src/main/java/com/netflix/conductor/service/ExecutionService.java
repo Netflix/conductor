@@ -130,7 +130,10 @@ public class ExecutionService {
 			List<String> taskIds = queueDAO.pop(queueName, count, timeoutInMilliSecond);
 			for (String taskId : taskIds) {
 				Task task = getTask(taskId);
-				if (task == null) {
+				if (task == null || task.getStatus().isTerminal()) {
+					// Remove taskId(s) without a valid Task/terminal state task from the queue
+					queueDAO.remove(queueName, taskId);
+					logger.debug("Removed taskId from the queue: {}, {}", queueName, taskId);
 					continue;
 				}
 
@@ -187,6 +190,10 @@ public class ExecutionService {
 		});
 		return allPollData;
 
+	}
+
+	public void terminateWorkflow(String workflowId, String reason) {
+		workflowExecutor.terminateWorkflow(workflowId, reason);
 	}
 
 	//For backward compatibility - to be removed in the later versions
@@ -269,8 +276,7 @@ public class ExecutionService {
 				continue;
 			}
 			if (pending.getUpdateTime() < threshold) {
-				logger.info("Requeuing Task: workflowId=" + workflow.getWorkflowId() + ", taskType=" + pending.getTaskType() + ", taskId="
-						+ pending.getTaskId());
+				logger.debug("Requeuing Task: {} of taskType: {} in Workflow: {}", pending.getTaskId(), pending.getTaskType(), workflow.getWorkflowId());
 				long callback = pending.getCallbackAfterSeconds();
 				if (callback < 0) {
 					callback = 0;
@@ -298,7 +304,7 @@ public class ExecutionService {
 				continue;
 			}
 
-			logger.info("Requeuing Task: workflowId=" + pending.getWorkflowInstanceId() + ", taskType=" + pending.getTaskType() + ", taskId=" + pending.getTaskId());
+			logger.debug("Requeuing Task: {} of taskType: {} in Workflow: {}", pending.getTaskId(), pending.getTaskType(), pending.getWorkflowInstanceId());
 			boolean pushed = requeue(pending);
 			if (pushed) {
 				count++;
@@ -377,6 +383,7 @@ public class ExecutionService {
 					}
 				})
 				.filter(Objects::nonNull)
+				.distinct()
 				.collect(Collectors.toList());
 		int missing = taskSummarySearchResult.getResults().size() - workflowSummaries.size();
 		long totalHits = taskSummarySearchResult.getTotalHits() - missing;

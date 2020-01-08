@@ -34,7 +34,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
+
+import com.netflix.conductor.common.utils.JsonMapperProvider;
+import com.netflix.conductor.common.utils.TaskUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -43,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class ParametersUtils {
     private static Logger logger = LoggerFactory.getLogger(ParametersUtils.class);
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new JsonMapperProvider().get();
 
     private TypeReference<Map<String, Object>> map = new TypeReference<Map<String, Object>>() {
     };
@@ -69,7 +71,7 @@ public class ParametersUtils {
             inputParams = new HashMap<>();
         }
         if (taskDefinition != null && taskDefinition.getInputTemplate() != null) {
-            inputParams.putAll(clone(taskDefinition.getInputTemplate()));
+            clone(taskDefinition.getInputTemplate()).forEach(inputParams::putIfAbsent);
         }
 
         Map<String, Map<String, Object>> inputMap = new HashMap<>();
@@ -114,13 +116,18 @@ public class ParametersUtils {
                     taskParams.put("reasonForIncompletion", task.getReasonForIncompletion());
                     taskParams.put("callbackAfterSeconds", task.getCallbackAfterSeconds());
                     taskParams.put("workerId", task.getWorkerId());
-                    inputMap.put(task.getReferenceTaskName(), taskParams);
+                    inputMap.put(task.isLoopOverTask() ? TaskUtils.removeIterationFromTaskRefName(task.getReferenceTaskName()) :  task.getReferenceTaskName(), taskParams);
                 });
 
         Configuration option = Configuration.defaultConfiguration()
                 .addOptions(Option.SUPPRESS_EXCEPTIONS);
         DocumentContext documentContext = JsonPath.parse(inputMap, option);
-        return replace(inputParams, documentContext, taskId);
+        Map<String, Object> replacedTaskInput = replace(inputParams, documentContext, taskId);
+        if (taskDefinition != null && taskDefinition.getInputTemplate() != null) {
+            // If input for a given key resolves to null, try replacing it with one from inputTemplate, if it exists.
+            replacedTaskInput.replaceAll((key, value) -> (value == null) ? taskDefinition.getInputTemplate().get(key) : value);
+        }
+        return replacedTaskInput;
     }
 
     //deep clone using json - POJO

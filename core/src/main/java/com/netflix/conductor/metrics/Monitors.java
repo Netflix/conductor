@@ -29,7 +29,6 @@ import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.Spectator;
 import com.netflix.spectator.api.Timer;
 import com.netflix.spectator.api.histogram.PercentileTimer;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,7 +99,6 @@ public class Monitors {
 
 	public static Timer getTimer(String className, String name, String... additionalTags) {
 		Map<String, String> tags = toMap(className, additionalTags);
-		tags.put("unit", TimeUnit.SECONDS.name());
 		return timers.computeIfAbsent(name, s -> new ConcurrentHashMap<>()).computeIfAbsent(tags, t -> {
 			Id id = registry.createId(name, tags);
 			return PercentileTimer.get(registry, id);
@@ -196,6 +194,10 @@ public class Monitors {
 		counter(classQualifier, "task_response_timeout", "taskType", taskType);
 	}
 
+	public static void recordTaskPendingTime(String taskType, String workflowType, long duration) {
+		gauge(classQualifier, "task_pending_time", duration, "workflowName", workflowType, "taskType", taskType);
+	}
+
 	public static void recordWorkflowTermination(String workflowType, WorkflowStatus status, String ownerApp) {
 		counter(classQualifier, "workflow_failure", "workflowName", workflowType, "status", status.name(), "ownerApp", ""+ownerApp);
 	}
@@ -210,6 +212,10 @@ public class Monitors {
 
 	public static void recordUpdateConflict(String taskType, String workflowType, Status status) {
 		counter(classQualifier, "task_update_conflict", "workflowName", workflowType, "taskType", taskType, "taskStatus", status.name());
+	}
+
+	public static void recordTaskUpdateError(String taskType, String workflowType) {
+		counter(classQualifier, "task_update_error", "workflowName", workflowType, "taskType", taskType);
 	}
 
 	public static void recordWorkflowCompletion(String workflowType, long duration, String ownerApp) {
@@ -260,7 +266,28 @@ public class Monitors {
 		counter(classQualifier, "dao_errors", "dao", dao, "action", action);
 	}
 
-	public static void recordESIndexTime(String docType, long val) {
-		getTimer(Monitors.classQualifier, docType, docType).record(val, TimeUnit.MILLISECONDS);
+	public static void recordAckTaskError(String taskType) {
+		counter(classQualifier, "task_ack_error", "taskType", taskType);
 	}
+
+	public static void recordESIndexTime(String action, String docType, long val) {
+		getTimer(Monitors.classQualifier, action, "docType", docType).record(val, TimeUnit.MILLISECONDS);
+	}
+
+	public static void recordWorkerQueueSize(String queueType, int val) {
+		getGauge(Monitors.classQualifier, "indexing_worker_queue", "queueType", queueType).set(val);
+	}
+
+	public static void recordDiscardedIndexingCount(String queueType) {
+		getCounter(Monitors.classQualifier, "discarded_index_count", "queueType", queueType).increment();
+	}
+
+	public static void recordAcquireLockUnsuccessful() {
+		counter(classQualifier, "acquire_lock_unsuccessful");
+	}
+
+	public static void recordAcquireLockFailure(String exceptionClassName) {
+		counter(classQualifier, "acquire_lock_failure", "exceptionType", exceptionClassName);
+	}
+
 }

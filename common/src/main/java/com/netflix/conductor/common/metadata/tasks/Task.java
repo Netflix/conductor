@@ -195,6 +195,9 @@ public class Task {
     @ProtoField(id = 38)
     private String isolationGroupId;
 
+    @ProtoField(id = 40)
+    private int iteration;
+
     public Task() {
     }
 
@@ -390,7 +393,12 @@ public class Task {
      */
     public long getQueueWaitTime() {
         if (this.startTime > 0 && this.scheduledTime > 0) {
-            return this.startTime - scheduledTime - (getCallbackAfterSeconds() * 1000);
+            if (this.updateTime > 0 && getCallbackAfterSeconds() > 0) {
+                long waitTime = System.currentTimeMillis() - (this.updateTime + (getCallbackAfterSeconds() * 1000));
+                return waitTime > 0 ? waitTime : 0;
+            } else {
+                return this.startTime - this.scheduledTime;
+            }
         }
         return 0L;
     }
@@ -692,7 +700,25 @@ public class Task {
     }
 
     /**
-     * @return the priority defined on workflow
+     * @return the iteration
+     */
+    public int getIteration() {
+        return iteration;
+    }
+
+    /**
+     * @param iteration iteration
+     */
+    public void setIteration(int iteration) {
+        this.iteration = iteration;
+    }
+
+    public boolean isLoopOverTask() {
+        return iteration > 0;
+    }
+
+    /**
+     * * @return the priority defined on workflow
      */
     public int getWorkflowPriority() {
         return workflowPriority;
@@ -732,6 +758,7 @@ public class Task {
         copy.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
         copy.setExternalOutputPayloadStoragePath(externalOutputPayloadStoragePath);
         copy.setWorkflowPriority(workflowPriority);
+        copy.setIteration(iteration);
         copy.setExecutionNameSpace(executionNameSpace);
         copy.setIsolationGroupId(isolationGroupId);
 
@@ -804,6 +831,7 @@ public class Task {
                 getRateLimitFrequencyInSeconds() == task.getRateLimitFrequencyInSeconds() &&
                 Objects.equals(getTaskType(), task.getTaskType()) &&
                 getStatus() == task.getStatus() &&
+                getIteration() == task.getIteration() &&
                 getWorkflowPriority() == task.getWorkflowPriority() &&
                 Objects.equals(getInputData(), task.getInputData()) &&
                 Objects.equals(getReferenceTaskName(), task.getReferenceTaskName()) &&
