@@ -3,9 +3,7 @@ package com.netflix.conductor.validations;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.execution.mapper.KafkaPublishTaskMapper;
-import com.netflix.conductor.core.execution.tasks.Terminate;
+import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -17,8 +15,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Optional;
 
-import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.COMPLETED;
-import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.FAILED;
+
 import static com.netflix.conductor.core.execution.tasks.Terminate.getTerminationStatusParameter;
 import static com.netflix.conductor.core.execution.tasks.Terminate.validateInputStatus;
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
@@ -79,6 +76,9 @@ public @interface WorkflowTaskTypeConstraint {
                 case TaskType.TASK_TYPE_KAFKA_PUBLISH:
                     valid = isKafkaPublishTaskValid(workflowTask, context);
                     break;
+                case TaskType.TASK_TYPE_DO_WHILE:
+                    valid = isDoWhileTaskValid(workflowTask, context);
+                    break;
             }
 
             return valid;
@@ -110,6 +110,27 @@ public @interface WorkflowTaskTypeConstraint {
             else if ((workflowTask.getDecisionCases() != null || workflowTask.getCaseExpression() != null) &&
                 (workflowTask.getDecisionCases().size() == 0)){
                 String message = String.format("decisionCases should have atleast one task for taskType: %s taskName: %s", TaskType.DECISION, workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+            return valid;
+        }
+
+        private boolean isDoWhileTaskValid(WorkflowTask workflowTask, ConstraintValidatorContext context) {
+            boolean valid = true;
+            if (workflowTask.getLoopCondition() == null){
+                String message = String.format(PARAM_REQUIRED_STRING_FORMAT, "loopExpression", TaskType.DO_WHILE,
+                        workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+            if (workflowTask.getLoopOver() == null || workflowTask.getLoopOver().size() == 0) {
+                String message = String.format(PARAM_REQUIRED_STRING_FORMAT, "loopover", TaskType.DO_WHILE, workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+            if (workflowTask.collectTasks().stream().anyMatch(t -> t.getType().equals(SubWorkflow.NAME))) {
+                String message = String.format("SUB_WORKFLOW task inside loopover task is not supported.");
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 valid = false;
             }

@@ -15,11 +15,13 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.MockQueueProvider;
@@ -43,7 +45,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
@@ -57,6 +59,7 @@ public class TestEvent {
 
     private EventQueues eventQueues;
     private ParametersUtils parametersUtils;
+    private ObjectMapper objectMapper = new JsonMapperProvider().get();
 
     @Before
     public void setup() {
@@ -112,7 +115,7 @@ public class TestEvent {
         task.setTaskType(TaskType.EVENT.name());
         workflow.getTasks().add(task);
 
-        Event event = new Event(eventQueues, parametersUtils);
+        Event event = new Event(eventQueues, parametersUtils, objectMapper);
         ObservableQueue queue = event.getQueue(workflow, task);
         assertNotNull(task.getReasonForIncompletion(), queue);
         assertEquals("queue_name", queue.getName());
@@ -174,16 +177,16 @@ public class TestEvent {
         List<Message> publishedMessages = new LinkedList<>();
 
         doAnswer((Answer<Void>) invocation -> {
-            String queueName = invocation.getArgumentAt(0, String.class);
+            String queueName = invocation.getArgument(0, String.class);
             System.out.println(queueName);
             publishedQueue[0] = queueName;
-            List<Message> messages = invocation.getArgumentAt(1, List.class);
+            List<Message> messages = invocation.getArgument(1, List.class);
             publishedMessages.addAll(messages);
             return null;
         }).when(dao).push(any(), any());
 
         doAnswer((Answer<List<String>>) invocation -> {
-            String messageId = invocation.getArgumentAt(1, String.class);
+            String messageId = invocation.getArgument(1, String.class);
             if(publishedMessages.get(0).getId().equals(messageId)) {
                 publishedMessages.remove(0);
                 return Collections.singletonList(messageId);
@@ -194,7 +197,7 @@ public class TestEvent {
         Map<String, EventQueueProvider> providers = new HashMap<>();
         providers.put("conductor", new DynoEventQueueProvider(dao, new TestConfiguration()));
         eventQueues = new EventQueues(providers, parametersUtils);
-        Event event = new Event(eventQueues, parametersUtils);
+        Event event = new Event(eventQueues, parametersUtils, objectMapper);
         event.start(workflow, task, null);
 
         assertEquals(Task.Status.COMPLETED, task.getStatus());
@@ -212,7 +215,7 @@ public class TestEvent {
 
     @Test
     public void testFailures() {
-        Event event = new Event(eventQueues, parametersUtils);
+        Event event = new Event(eventQueues, parametersUtils, objectMapper);
         Workflow workflow = new Workflow();
         workflow.setWorkflowDefinition(testWorkflowDefinition);
 
@@ -245,7 +248,7 @@ public class TestEvent {
 
     @Test
     public void testDynamicSinks() {
-        Event event = new Event(eventQueues, parametersUtils);
+        Event event = new Event(eventQueues, parametersUtils, objectMapper);
         Workflow workflow = new Workflow();
         workflow.setWorkflowDefinition(testWorkflowDefinition);
 
@@ -299,16 +302,16 @@ public class TestEvent {
         List<Message> publishedMessages = new LinkedList<>();
 
         doAnswer((Answer<Void>) invocation -> {
-            String queueName = invocation.getArgumentAt(0, String.class);
+            String queueName = invocation.getArgument(0, String.class);
             System.out.println(queueName);
             publishedQueue[0] = queueName;
-            List<Message> messages = invocation.getArgumentAt(1, List.class);
+            List<Message> messages = invocation.getArgument(1, List.class);
             publishedMessages.addAll(messages);
             return null;
         }).when(dao).push(any(), any());
 
         doAnswer((Answer<List<String>>) invocation -> {
-            String messageId = invocation.getArgumentAt(1, String.class);
+            String messageId = invocation.getArgument(1, String.class);
             if(publishedMessages.get(0).getId().equals(messageId)) {
                 publishedMessages.remove(0);
                 return Collections.singletonList(messageId);
@@ -319,7 +322,7 @@ public class TestEvent {
         Map<String, EventQueueProvider> providers = new HashMap<>();
         providers.put("conductor", new DynoEventQueueProvider(dao, new TestConfiguration()));
         eventQueues = new EventQueues(providers, parametersUtils);
-        Event event = new Event(eventQueues, parametersUtils);
+        Event event = new Event(eventQueues, parametersUtils, objectMapper);
         event.start(workflow, task, null);
 
         assertEquals(Status.IN_PROGRESS, task.getStatus());

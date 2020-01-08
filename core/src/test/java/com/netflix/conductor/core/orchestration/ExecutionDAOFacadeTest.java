@@ -17,10 +17,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
+import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.TestConfiguration;
 import com.netflix.conductor.core.execution.TestDeciderService;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.dao.RateLimitingDao;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -34,10 +38,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -50,16 +54,19 @@ public class ExecutionDAOFacadeTest {
     private IndexDAO indexDAO;
     private ObjectMapper objectMapper;
     private ExecutionDAOFacade executionDAOFacade;
+    private RateLimitingDao rateLimitingDao;
 
     @Before
     public void setUp() {
         executionDAO = mock(ExecutionDAO.class);
         indexDAO = mock(IndexDAO.class);
+        rateLimitingDao = mock(RateLimitingDao.class);
         objectMapper = new JsonMapperProvider().get();
-        executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, objectMapper);
+        Configuration configuration = new TestConfiguration();
+        executionDAOFacade = new ExecutionDAOFacade(executionDAO, indexDAO, rateLimitingDao, objectMapper, configuration);
     }
     
-    @Test (expected = java.lang.Exception.class)
+    @Test
     public void tesGetWorkflowById() throws Exception {
         when(executionDAO.getWorkflow(any(), anyBoolean())).thenReturn(new Workflow());
         Workflow workflow = executionDAOFacade.getWorkflowById("workflowId", true);
@@ -125,16 +132,18 @@ public class ExecutionDAOFacadeTest {
     @Test
     @Ignore
     public void testRemoveWorkflow() {
-        when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(new Workflow());
+        Workflow workflow = new Workflow();
+        workflow.setStatus(WorkflowStatus.COMPLETED);
+        when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
         executionDAOFacade.removeWorkflow("workflowId", false);
         verify(indexDAO, never()).updateWorkflow(any(), any(), any());
-        verify(indexDAO, times(1)).removeWorkflow(anyString());
+        verify(indexDAO, times(1)).asyncRemoveWorkflow(anyString());
     }
 
     @Test
     @Ignore
     public void testArchiveWorkflow() throws Exception {
-        InputStream stream = TestDeciderService.class.getResourceAsStream("/test.json");
+        InputStream stream = TestDeciderService.class.getResourceAsStream("/completed.json");
         Workflow workflow = objectMapper.readValue(stream, Workflow.class);
 
         when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
@@ -154,6 +163,6 @@ public class ExecutionDAOFacadeTest {
         when(executionDAO.addEventExecution(any())).thenReturn(true);
         added = executionDAOFacade.addEventExecution(new EventExecution());
         assertTrue(added);
-        verify(indexDAO, times(1)).addEventExecution(any());
+        verify(indexDAO, times(1)).asyncAddEventExecution(any());
     }
 }
