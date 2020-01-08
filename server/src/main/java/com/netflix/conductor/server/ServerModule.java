@@ -95,6 +95,7 @@ public class ServerModule extends AbstractModule {
 			bind(QueueDAO.class).to(Elasticsearch6RestQueueDAO.class);
 			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
 			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
+			bind(ErrorLookupDAO.class).to(Elasticsearch6ErrorLookupDAO.class);
 		} else if (ConductorServer.DB.aurora.equals(db)) {
 			install(new AuroraModule());
 
@@ -103,6 +104,7 @@ public class ServerModule extends AbstractModule {
 			bind(QueueDAO.class).to(AuroraQueueDAO.class);
 			bind(MetricsDAO.class).to(AuroraMetricsDAO.class);
 			bind(IndexDAO.class).to(AuroraIndexDAO.class);
+			bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class);
 		} else {
 			String localDC = localRack.replaceAll(region, "");
 			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);

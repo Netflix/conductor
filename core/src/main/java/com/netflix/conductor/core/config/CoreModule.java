@@ -57,6 +57,7 @@ public class CoreModule extends AbstractModule {
 		bind(GetTaskStatus.class).asEagerSingleton();
 		bind(GetWorkflowStatus.class).asEagerSingleton();
 		bind(GetConfig.class).asEagerSingleton();
+		bind(ErrorLookupTask.class).asEagerSingleton();
 	}
 	
 }
