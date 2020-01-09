@@ -68,6 +68,10 @@ spec:
               value: {{ .Values.server.newrelic.enabled | quote }}
             - name: NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
               value: {{ .Values.server.newrelic.tracing.enabled | quote }}
+            - name: workflow_elasticsearch_instanceType
+              value: "external"
+            - name: workflow_elasticsearch_url
+              value: "https://vpc-conductor-elasticsearch-stg-d2ivhx73ka55yzcbdbcrvk4vea.ap-southeast-2.es.amazonaws.com:443"
             - name: db
               value: "mysql"
             - name: conductor_mysql_connection_pool_idle_min
