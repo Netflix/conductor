@@ -168,35 +168,6 @@ public class Monitors {
 		getTimer(classQualifier, "task_execution", "taskType", taskType, "includeRetries", "" + includesRetries, "status", status.name()).record(duration, TimeUnit.MILLISECONDS);
 	}
 
-	public static void recordTaskLatency(String taskType) {
-		EnumSet.allOf(Task.Status.class)
-				.forEach(status -> {
-					if (status.isTerminal()) {
-						// Calculate task p99 and p90 latency for all task terminal state and represent it using gauge.
-						// For more information why we are doing this Please check :- https://github.com/Netflix/spectator/issues/782
-						Map<Map<String, String>, PercentileTimer> taskExecutionTimers = timers.get("task_execution");
-						if (taskExecutionTimers != null) {
-							Map<String, String> taskKeys = new HashMap<>();
-							taskKeys.put("class", classQualifier);
-							taskKeys.put("taskType", taskType);
-							taskKeys.put("unit", "SECONDS");
-							taskKeys.put("status", status.name());
-							Arrays.stream(new String[]{"true", "false"}).forEach(value -> {
-								taskKeys.put("includeRetries", value);
-								Timer timer = taskExecutionTimers.get(taskKeys);
-								// Default getTimer api creates timer if it does not exist. This can create lot of unnecessary metrics.
-								// Fetch timer values only if it exists.
-								if (timer != null) {
-									PercentileTimer percentileTimer = (PercentileTimer) timer;
-									gauge(classQualifier, "p99_latency", (long) (percentileTimer.percentile(0.99) * 1000), "taskType", taskType, "status", status.name());
-									gauge(classQualifier, "p90_latency", (long) (percentileTimer.percentile(0.90) * 1000), "taskType", taskType, "status", status.name());
-								}
-							});
-						}
-					}
-				});
-	}
-
 	public static void recordTaskPoll(String taskType) {
 		counter(classQualifier, "task_poll", "taskType", taskType);
 	}
