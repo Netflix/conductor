@@ -19,6 +19,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
+import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.grpc.server.GRPCServerProvider;
 import com.netflix.conductor.jetty.server.JettyServerProvider;
 
@@ -27,6 +29,7 @@ import org.apache.log4j.PropertyConfigurator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -48,6 +51,21 @@ public class Main {
         Injector bootstrapInjector = Guice.createInjector(new BootstrapModule());
         ModulesProvider modulesProvider = bootstrapInjector.getInstance(ModulesProvider.class);
         Injector serverInjector = Guice.createInjector(modulesProvider.get());
+
+        Optional<EmbeddedElasticSearch> embeddedSearchInstance = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get();
+        if (embeddedSearchInstance.isPresent()) {
+            try {
+                embeddedSearchInstance.get().start();
+                /*
+                 * Elasticsearch embedded instance does not notify when it is up and ready to accept incoming requests.
+                 * A possible solution for reading and writing into the index is to wait a specific amount of time.
+                 */
+                Thread.sleep(EMBEDDED_ES_INIT_TIME);
+            } catch (Exception ioe) {
+                ioe.printStackTrace(System.err);
+                System.exit(3);
+            }
+        }
 
         try {
             serverInjector.getInstance(IndexDAO.class).setup();

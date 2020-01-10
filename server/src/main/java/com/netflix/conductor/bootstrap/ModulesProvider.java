@@ -15,6 +15,7 @@ import com.netflix.conductor.core.execution.WorkflowExecutorModule;
 import com.netflix.conductor.core.utils.DummyPayloadStorage;
 import com.netflix.conductor.core.utils.S3PayloadStorage;
 import com.netflix.conductor.dao.RedisWorkflowModule;
+import com.netflix.conductor.elasticsearch.ElasticSearchModule;
 import com.netflix.conductor.jetty.server.spectator.PrometheusMetricsModule;
 import com.netflix.conductor.kafka.index.moduleProvider.KafkaModule;
 import com.netflix.conductor.mysql.MySQLWorkflowModule;
@@ -95,6 +96,8 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 logger.info("Starting conductor server using redis_sentinel.");
                 break;
         }
+
+        modules.add(new ElasticSearchModule());
 
         modules.add(new KafkaModule());
 
