@@ -43,6 +43,9 @@ public class Main {
         if (args.length == 2) {
             System.out.println("Using log4j config " + args[1]);
             PropertyConfigurator.configure(new FileInputStream(new File(args[1])));
+        } else {
+            System.out.println("Using default config log4j.properties");
+            PropertyConfigurator.configure(ClassLoader.getSystemResourceAsStream("log4j.properties"));
         }
 
         Injector bootstrapInjector = Guice.createInjector(new BootstrapModule());
