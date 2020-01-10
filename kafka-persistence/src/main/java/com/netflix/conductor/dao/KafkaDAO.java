@@ -29,6 +29,8 @@ import com.netflix.conductor.kafka.index.utils.DocumentTypes;
 import com.netflix.conductor.kafka.index.utils.OperationTypes;
 import com.netflix.conductor.metrics.Monitors;
 import org.elasticsearch.client.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -36,6 +38,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 
@@ -46,12 +50,28 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
+    private final ThreadPoolExecutor executorService;
     private ProducerDAO producerDAO;
+    private static Logger logger = LoggerFactory.getLogger(KafkaDAO.class);
 
     @Inject
     public KafkaDAO(KafkaProducer producer, RestClient lowLevelRestClient, ElasticSearchConfiguration config, ObjectMapper objectMapper) {
         super(lowLevelRestClient, config, objectMapper);
         this.producerDAO = producer;
+
+        // Set up a workerpool for performing async operations.
+        int corePoolSize = 1;
+        int maximumPoolSize = config.getAsyncMaxPoolSize();
+        long keepAliveTime = 1L;
+        int workerQueueSize = config.getAsyncWorkerQueueSize();
+        this.executorService = new ThreadPoolExecutor(corePoolSize,
+                maximumPoolSize,
+                keepAliveTime,
+                TimeUnit.MINUTES,
+                new LinkedBlockingQueue<>(workerQueueSize),
+                (runnable, executor) -> {
+                    logger.warn("Request  {} to async dao discarded in executor {}", runnable, executor);
+                });
     }
 
     @Override
@@ -69,7 +89,7 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
-        return CompletableFuture.runAsync(() -> indexWorkflow(workflow));
+        return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
     }
 
     @Override
@@ -82,7 +102,7 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public CompletableFuture<Void> asyncIndexTask(Task task) {
-        return CompletableFuture.runAsync(() -> indexTask(task));
+        return CompletableFuture.runAsync(() -> indexTask(task), executorService);
     }
 
     @Override
@@ -94,7 +114,7 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId) {
-        return CompletableFuture.runAsync(() -> removeWorkflow(workflowId));
+        return CompletableFuture.runAsync(() -> removeWorkflow(workflowId), executorService);
     }
 
     @Override
@@ -106,7 +126,7 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public CompletableFuture<Void> asyncUpdateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
-        return CompletableFuture.runAsync(() -> updateWorkflow(workflowInstanceId, keys, values));
+        return CompletableFuture.runAsync(() -> updateWorkflow(workflowInstanceId, keys, values), executorService);
     }
 
     @Override
@@ -138,7 +158,7 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
-        return CompletableFuture.runAsync(() -> addEventExecution(eventExecution));
+        return CompletableFuture.runAsync(() -> addEventExecution(eventExecution), executorService);
     }
 
     @Override
@@ -154,6 +174,6 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {
-        return CompletableFuture.runAsync(() -> addTaskExecutionLogs(logs));
+        return CompletableFuture.runAsync(() -> addTaskExecutionLogs(logs), executorService);
     }
 }
