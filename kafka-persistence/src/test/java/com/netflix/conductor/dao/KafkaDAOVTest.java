@@ -34,7 +34,7 @@ public class KafkaDAOVTest {
         lowLevelRestClient = Mockito.mock(RestClient.class);
         config = Mockito.mock(ElasticSearchConfiguration.class);
         objectMapper = Mockito.mock(ObjectMapper.class);
-        Mockito.doReturn(1).when(config).getAsyncMaxPoolSize();
+        Mockito.doReturn(10).when(config).getAsyncMaxPoolSize();
         Mockito.doReturn(1).when(config).getAsyncWorkerQueueSize();
         indexDAO = new KafkaDAO(producerDAO, lowLevelRestClient, config, objectMapper);
         Mockito.doNothing().when(producerDAO).send(any(String.class), any(String.class), any(Object.class));
