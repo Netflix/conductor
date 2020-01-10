@@ -60,7 +60,7 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
         this.producerDAO = producer;
 
         // Set up a workerpool for performing async operations.
-        int corePoolSize = 1;
+        int corePoolSize = 10;
         int maximumPoolSize = config.getAsyncMaxPoolSize();
         long keepAliveTime = 1L;
         int workerQueueSize = config.getAsyncWorkerQueueSize();
