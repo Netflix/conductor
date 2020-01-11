@@ -1,3 +1,16 @@
+/*
+ * Copyright 2019 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
 package com.netflix.conductor.dao.es5.index;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,6 +33,31 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.metrics.Monitors;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
@@ -35,6 +73,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -53,24 +92,12 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 
 @Trace
 @Singleton
 public class ElasticSearchRestDAOV5 implements IndexDAO {
 
-    private static Logger logger = LoggerFactory.getLogger(ElasticSearchRestDAOV5.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchRestDAOV5.class);
 
     private static final int RETRY_COUNT = 3;
 
@@ -81,7 +108,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private static final String MSG_DOC_TYPE = "message";
 
     private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
-    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyyMMww");
+    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyyMMWW");
 
     private @interface HttpMethod {
         String GET = "GET";
@@ -100,9 +127,10 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     private final RestHighLevelClient elasticSearchClient;
     private final RestClient elasticSearchAdminClient;
     private final ExecutorService executorService;
-    private final ConcurrentHashMap<String, List<IndexRequest>> bulkRequests;
+    private final ExecutorService logExecutorService;
+    private final ConcurrentHashMap<String, BulkRequests> bulkRequests;
     private final int indexBatchSize;
-
+    private final int asyncBufferFlushTimeout;
 
     static {
         SIMPLE_DATE_FORMAT.setTimeZone(GMT);
@@ -119,9 +147,10 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         this.clusterHealthColor = config.getClusterHealthColor();
         this.bulkRequests = new ConcurrentHashMap<>();
         this.indexBatchSize = config.getIndexBatchSize();
+        this.asyncBufferFlushTimeout = config.getAsyncBufferFlushTimeout();
 
-        // Set up a workerpool for performing async operations.
-        int corePoolSize = 1;
+        // Set up a workerpool for performing async operations for workflow and task
+        int corePoolSize = 6;
         int maximumPoolSize = config.getAsyncMaxPoolSize();
         long keepAliveTime = 1L;
         int workerQueueSize = config.getAsyncWorkerQueueSize();
@@ -132,8 +161,47 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                 new LinkedBlockingQueue<>(workerQueueSize),
                 (runnable, executor) -> {
                     logger.warn("Request  {} to async dao discarded in executor {}", runnable, executor);
+                    Monitors.recordDiscardedIndexingCount("indexQueue");
                 });
 
+        // Set up a workerpool for performing async operations for task_logs, event_executions, message
+        corePoolSize = 1;
+        maximumPoolSize = 2;
+        keepAliveTime = 30L;
+        this.logExecutorService = new ThreadPoolExecutor(corePoolSize,
+            maximumPoolSize,
+            keepAliveTime,
+            TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(workerQueueSize),
+            (runnable, executor) -> {
+                logger.warn("Request {} to async log dao discarded in executor {}", runnable, executor);
+                Monitors.recordDiscardedIndexingCount("logQueue");
+            });
+
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::flushBulkRequests, 60, 30, TimeUnit.SECONDS);
+    }
+
+    @PreDestroy
+    private void shutdown() {
+        logger.info("Gracefully shutdown executor service");
+        shutdownExecutorService(logExecutorService);
+        shutdownExecutorService(executorService);
+    }
+
+    private void shutdownExecutorService(ExecutorService execService) {
+        try {
+            execService.shutdown();
+            if (execService.awaitTermination(30, TimeUnit.SECONDS)) {
+                logger.debug("tasks completed, shutting down");
+            } else {
+                logger.warn("Forcing shutdown after waiting for 30 seconds");
+                execService.shutdownNow();
+            }
+        } catch (InterruptedException ie) {
+            logger.warn("Shutdown interrupted, invoking shutdownNow on scheduledThreadPoolExecutor for delay queue");
+            execService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -307,11 +375,30 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     @Override
     public void indexWorkflow(Workflow workflow) {
+        try {
+            long startTime = Instant.now().toEpochMilli();
+            String workflowId = workflow.getWorkflowId();
+            WorkflowSummary summary = new WorkflowSummary(workflow);
+            byte[] docBytes = objectMapper.writeValueAsBytes(summary);
 
-        String workflowId = workflow.getWorkflowId();
-        WorkflowSummary summary = new WorkflowSummary(workflow);
+            IndexRequest request = new IndexRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
+            request.source(docBytes, XContentType.JSON);
+            new RetryUtil<IndexResponse>().retryOnException(() -> {
+                try {
+                    return elasticSearchClient.index(request);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }, null, null, RETRY_COUNT, "Indexing workflow document: " + workflow.getWorkflowId(), "indexWorkflow");
 
-        indexObject(indexName, WORKFLOW_DOC_TYPE, workflowId, summary);
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for indexing workflow: {}", endTime - startTime, workflowId);
+            Monitors.recordESIndexTime("index_workflow", WORKFLOW_DOC_TYPE, endTime - startTime);
+            Monitors.recordWorkerQueueSize("indexQueue", ((ThreadPoolExecutor) executorService).getQueue().size());
+        } catch (Exception e) {
+            Monitors.error(className, "indexWorkflow");
+            logger.error("Failed to index workflow: {}", workflow.getWorkflowId(), e);
+        }
     }
 
     @Override
@@ -321,11 +408,19 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     @Override
     public void indexTask(Task task) {
+        try {
+            long startTime = Instant.now().toEpochMilli();
+            String taskId = task.getTaskId();
+            TaskSummary summary = new TaskSummary(task);
 
-        String taskId = task.getTaskId();
-        TaskSummary summary = new TaskSummary(task);
-
-        indexObject(indexName, TASK_DOC_TYPE, taskId, summary);
+            indexObject(indexName, TASK_DOC_TYPE, taskId, summary);
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for  indexing task:{} in workflow: {}", endTime - startTime, taskId, task.getWorkflowInstanceId());
+            Monitors.recordESIndexTime("index_task", TASK_DOC_TYPE, endTime - startTime);
+            Monitors.recordWorkerQueueSize("indexQueue", ((ThreadPoolExecutor) executorService).getQueue().size());
+        } catch (Exception e) {
+            logger.error("Failed to index task: {}", task.getTaskId(), e);
+        }
     }
 
     @Override
@@ -339,8 +434,8 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             return;
         }
 
+        long startTime = Instant.now().toEpochMilli();
         BulkRequest bulkRequest = new BulkRequest();
-
         for (TaskExecLog log : taskExecLogs) {
 
             byte[] docBytes;
@@ -363,16 +458,22 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-            }, null, BulkResponse::hasFailures, RETRY_COUNT, "Indexing all execution logs into doc_type task", "addTaskExecutionLogs");
+            }, null, BulkResponse::hasFailures, RETRY_COUNT, "Indexing task execution logs", "addTaskExecutionLogs");
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for indexing taskExecutionLogs", endTime - startTime);
+            Monitors.recordESIndexTime("index_task_execution_logs", LOG_DOC_TYPE, endTime - startTime);
+            Monitors.recordWorkerQueueSize("logQueue", ((ThreadPoolExecutor) logExecutorService).getQueue().size());
         } catch (Exception e) {
-            List<String> taskIds = taskExecLogs.stream().map(TaskExecLog::getTaskId).collect(Collectors.toList());
+            List<String> taskIds = taskExecLogs.stream()
+                .map(TaskExecLog::getTaskId)
+                .collect(Collectors.toList());
             logger.error("Failed to index task execution logs for tasks: {}", taskIds, e);
         }
     }
 
     @Override
     public CompletableFuture<Void> asyncAddTaskExecutionLogs(List<TaskExecLog> logs) {
-        return CompletableFuture.runAsync(() -> addTaskExecutionLogs(logs), executorService);
+        return CompletableFuture.runAsync(() -> addTaskExecutionLogs(logs), logExecutorService);
     }
 
     @Override
@@ -419,25 +520,44 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     @Override
     public void addMessage(String queue, Message message) {
-        Map<String, Object> doc = new HashMap<>();
-        doc.put("messageId", message.getId());
-        doc.put("payload", message.getPayload());
-        doc.put("queue", queue);
-        doc.put("created", System.currentTimeMillis());
+        try {
+            long startTime = Instant.now().toEpochMilli();
+            Map<String, Object> doc = new HashMap<>();
+            doc.put("messageId", message.getId());
+            doc.put("payload", message.getPayload());
+            doc.put("queue", queue);
+            doc.put("created", System.currentTimeMillis());
 
-        indexObject(logIndexName, MSG_DOC_TYPE, doc);
+            indexObject(logIndexName, MSG_DOC_TYPE, doc);
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for  indexing message: {}", endTime - startTime, message.getId());
+            Monitors.recordESIndexTime("add_message", MSG_DOC_TYPE, endTime - startTime);
+        } catch (Exception e) {
+            logger.error("Failed to index message: {}", message.getId(), e);
+        }
     }
 
     @Override
     public void addEventExecution(EventExecution eventExecution) {
-        String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
+        try {
+            long startTime = Instant.now().toEpochMilli();
+            String id =
+                eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "."
+                    + eventExecution.getId();
 
-        indexObject(logIndexName, EVENT_DOC_TYPE, id, eventExecution);
+            indexObject(logIndexName, EVENT_DOC_TYPE, id, eventExecution);
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for indexing event execution: {}", endTime - startTime, eventExecution.getId());
+            Monitors.recordESIndexTime("add_event_execution", EVENT_DOC_TYPE, endTime - startTime);
+            Monitors.recordWorkerQueueSize("logQueue", ((ThreadPoolExecutor) logExecutorService).getQueue().size());
+        } catch (Exception e) {
+            logger.error("Failed to index event execution: {}", eventExecution.getId(), e);
+        }
     }
 
     @Override
     public CompletableFuture<Void> asyncAddEventExecution(EventExecution eventExecution) {
-        return CompletableFuture.runAsync(() -> addEventExecution(eventExecution), executorService);
+        return CompletableFuture.runAsync(() -> addEventExecution(eventExecution), logExecutorService);
     }
 
     @Override
@@ -452,7 +572,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     @Override
     public void removeWorkflow(String workflowId) {
-
+        long startTime = Instant.now().toEpochMilli();
         DeleteRequest request = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, workflowId);
 
         try {
@@ -461,8 +581,11 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             if (response.getResult() == DocWriteResponse.Result.NOT_FOUND) {
                 logger.error("Index removal failed - document not found by id: {}", workflowId);
             }
-
-        } catch (IOException e) {
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for removing workflow: {}", endTime - startTime, workflowId);
+            Monitors.recordESIndexTime("remove_workflow", WORKFLOW_DOC_TYPE, endTime - startTime);
+            Monitors.recordWorkerQueueSize("indexQueue", ((ThreadPoolExecutor) executorService).getQueue().size());
+        } catch (Exception e) {
             logger.error("Failed to remove workflow {} from index", workflowId, e);
             Monitors.error(className, "remove");
         }
@@ -475,11 +598,11 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     @Override
     public void updateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
-
         if (keys.length != values.length) {
             throw new ApplicationException(ApplicationException.Code.INVALID_INPUT, "Number of keys and values do not match");
         }
 
+        long startTime = Instant.now().toEpochMilli();
         UpdateRequest request = new UpdateRequest(indexName, WORKFLOW_DOC_TYPE, workflowInstanceId);
         Map<String, Object> source = IntStream.range(0, keys.length).boxed()
                 .collect(Collectors.toMap(i -> keys[i], i -> values[i]));
@@ -493,7 +616,11 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }, null, null, RETRY_COUNT, "Updating index for doc_type workflow", "updateWorkflow");
+        }, null, null, RETRY_COUNT, "Updating workflow document: " + workflowInstanceId, "updateWorkflow");
+        long endTime = Instant.now().toEpochMilli();
+        logger.debug("Time taken {} for updating workflow: {}", endTime - startTime, workflowInstanceId);
+        Monitors.recordESIndexTime("update_workflow", WORKFLOW_DOC_TYPE, endTime - startTime);
+        Monitors.recordWorkerQueueSize("indexQueue", ((ThreadPoolExecutor) executorService).getQueue().size());
     }
 
     @Override
@@ -598,7 +725,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     @Override
     public List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays) {
         QueryBuilder q = QueryBuilders.boolQuery()
-                .must(QueryBuilders.rangeQuery("endTime").lt(LocalDate.now().minusDays(archiveTtlDays).toString()))
+                .must(QueryBuilders.rangeQuery("endTime").lt(LocalDate.now().minusDays(archiveTtlDays).toString()).gte(LocalDate.now().minusDays(archiveTtlDays).minusDays(1).toString()))
                 .should(QueryBuilders.termQuery("status", "COMPLETED"))
                 .should(QueryBuilders.termQuery("status", "FAILED"))
                 .should(QueryBuilders.termQuery("status", "TIMED_OUT"))
@@ -655,13 +782,19 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         request.source(docBytes, XContentType.JSON);
 
         if(bulkRequests.get(docType) == null) {
-            bulkRequests.put(docType, new ArrayList<>(this.indexBatchSize));
+            bulkRequests.put(docType, new BulkRequests(System.currentTimeMillis(), new BulkRequest()));
         }
 
-        bulkRequests.get(docType).add(request);
-        if (bulkRequests.get(docType).size() >= this.indexBatchSize) {
-            indexWithRetry(bulkRequests.get(docType), "Indexing " + docType + ": " + docId);
-            bulkRequests.put(docType, new ArrayList<>(this.indexBatchSize));
+        bulkRequests.get(docType).getBulkRequest().add(request);
+        if (bulkRequests.get(docType).getBulkRequest().numberOfActions() >= this.indexBatchSize) {
+            indexBulkRequest(docType);
+        }
+    }
+
+    private synchronized void indexBulkRequest(String docType) {
+        if (bulkRequests.get(docType).getBulkRequest() != null && bulkRequests.get(docType).getBulkRequest().numberOfActions() > 0) {
+            indexWithRetry(bulkRequests.get(docType).getBulkRequest(), "Bulk Indexing " + docType, docType);
+            bulkRequests.put(docType, new BulkRequests(System.currentTimeMillis(), new BulkRequest()));
         }
     }
 
@@ -670,27 +803,24 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
      * @param request The index request that we want to perform.
      * @param operationDescription The type of operation that we are performing.
      */
-    private void indexWithRetry(final List<IndexRequest> request, final String operationDescription) {
-
+    private void indexWithRetry(final BulkRequest request, final String operationDescription, String docType) {
         try {
-            BulkRequest bulkRequest = new BulkRequest();
-            request.stream().forEach(req -> bulkRequest.add(req));
             long startTime = Instant.now().toEpochMilli();
             new RetryUtil<BulkResponse>().retryOnException(() -> {
                 try {
-                    return elasticSearchClient.bulk(bulkRequest);
+                    return elasticSearchClient.bulk(request);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }, null, null, RETRY_COUNT, operationDescription, "indexWithRetry");
-            request.clear();
-            logger.info("Time taken {} ", Instant.now().toEpochMilli() - startTime);
-            logger.info("Current executor state queue {} ,executor {}", ((ThreadPoolExecutor) executorService).getQueue().size(), executorService);
-            Monitors.recordESIndexTime("index_time", Instant.now().toEpochMilli() - startTime);
-            Monitors.getGauge(Monitors.classQualifier, "worker_queue", "worker_queue").set(((ThreadPoolExecutor) executorService).getQueue().size());
+            long endTime = Instant.now().toEpochMilli();
+            logger.debug("Time taken {} for indexing object of type: {}", endTime - startTime, docType);
+            Monitors.recordESIndexTime("index_object", docType,endTime - startTime);
+            Monitors.recordWorkerQueueSize("indexQueue", ((ThreadPoolExecutor) executorService).getQueue().size());
+            Monitors.recordWorkerQueueSize("logQueue", ((ThreadPoolExecutor) logExecutorService).getQueue().size());
         } catch (Exception e) {
             Monitors.error(className, "index");
-            logger.error("Failed to index {} for request type: {}", request.toString(), e);
+            logger.error("Failed to index {} for request type: {}", request.toString(), docType, e);
         }
     }
 
@@ -774,5 +904,45 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             executions.add(tel);
         }
         return executions;
+    }
+
+    /**
+     * Flush the buffers if bulk requests have not been indexed for the past {@link ElasticSearchConfiguration#getAsyncBufferFlushTimeout()} seconds
+     * This is to prevent data loss in case the instance is terminated, while the buffer still holds documents to be indexed.
+     */
+    private void flushBulkRequests() {
+        bulkRequests.entrySet().stream()
+            .filter(entry -> (System.currentTimeMillis() - entry.getValue().getLastFlushTime()) >= asyncBufferFlushTimeout * 1000)
+            .filter(entry -> entry.getValue().getBulkRequest() != null && entry.getValue().getBulkRequest().numberOfActions() > 0)
+            .forEach(entry -> {
+                logger.debug("Flushing bulk request buffer for type {}, size: {}", entry.getKey(), entry.getValue().getBulkRequest().numberOfActions());
+                indexBulkRequest(entry.getKey());
+            });
+    }
+
+    private static class BulkRequests {
+        private long lastFlushTime;
+        private BulkRequest bulkRequest;
+
+        public long getLastFlushTime() {
+            return lastFlushTime;
+        }
+
+        public void setLastFlushTime(long lastFlushTime) {
+            this.lastFlushTime = lastFlushTime;
+        }
+
+        public BulkRequest getBulkRequest() {
+            return bulkRequest;
+        }
+
+        public void setBulkRequest(BulkRequest bulkRequestBuilder) {
+            this.bulkRequest = bulkRequestBuilder;
+        }
+
+        BulkRequests(long lastFlushTime, BulkRequest bulkRequest) {
+            this.lastFlushTime = lastFlushTime;
+            this.bulkRequest = bulkRequest;
+        }
     }
 }

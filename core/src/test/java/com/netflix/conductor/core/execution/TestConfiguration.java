@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ public class TestConfiguration implements Configuration {
 	public boolean disableSweep() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean disableAsyncWorkers() {
 		return false;
@@ -61,6 +61,11 @@ public class TestConfiguration implements Configuration {
 	}
 
 	@Override
+	public boolean enableAsyncIndexing() {
+		return true;
+	}
+
+	@Override
 	public String getProperty(String string, String def) {
 		return "dummy";
 	}
@@ -74,12 +79,12 @@ public class TestConfiguration implements Configuration {
 	public String getAvailabilityZone() {
 		return "us-east-1a";
 	}
-	
+
 	@Override
 	public int getIntProperty(String string, int def) {
 		return 100;
 	}
-	
+
 	@Override
 	public String getRegion() {
 		return "us-east-1";
@@ -124,7 +129,7 @@ public class TestConfiguration implements Configuration {
 	public Long getMaxTaskOutputPayloadSizeThresholdKB() {
 		return 10240L;
 	}
-	
+
 	@Override
 	public Map<String, Object> getAll() {
 		return null;

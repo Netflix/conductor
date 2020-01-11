@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2017 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
@@ -10,9 +10,6 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-/**
- *
- */
 package com.netflix.conductor.jetty.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +17,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.bootstrap.Main;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.service.Lifecycle;
 import com.sun.jersey.api.client.Client;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -37,6 +35,18 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.DispatcherType;
+import javax.ws.rs.core.MediaType;
+import org.eclipse.jetty.jmx.MBeanContainer;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+import static java.lang.Boolean.getBoolean;
+import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
+import static org.eclipse.jetty.util.log.Log.getLog;
 
 /**
  * @author Viren
@@ -64,7 +74,7 @@ public class JettyServer implements Lifecycle {
             throw new IllegalStateException("Server is already running");
         }
 
-        this.server = new Server(new QueuedThreadPool(50, 500));
+        this.server = new Server(new QueuedThreadPool(500, 50));
         ServerConnector connector = new ServerConnector(this.server, new HttpConnectionFactory());
         connector.setPort(port);
 
@@ -75,12 +85,14 @@ public class JettyServer implements Lifecycle {
         context.setWelcomeFiles(new String[]{"index.html"});
 
         server.setHandler(context);
-
+        if (getBoolean("enableJMX")) {
+            System.out.println("configure MBean container...");
+            configureMBeanContainer(server);
+        }
         server.start();
         System.out.println("Started server on http://localhost:" + port + "/");
         try {
-            boolean create = Boolean.getBoolean("loadSample");
-            if (create) {
+            if (getBoolean("loadSample")) {
                 System.out.println("Creating kitchensink workflow");
                 createKitchenSink(port);
             }
@@ -105,8 +117,7 @@ public class JettyServer implements Lifecycle {
 
     private static void createKitchenSink(int port) throws Exception {
         Client client = Client.create();
-        ObjectMapper objectMapper = new ObjectMapper();
-
+        ObjectMapper objectMapper = new JsonMapperProvider().get();
 
         List<TaskDef> taskDefs = new LinkedList<>();
         for (int i = 0; i < 40; i++) {
@@ -145,5 +156,17 @@ public class JettyServer implements Lifecycle {
         client.resource("http://localhost:" + port + "/api/workflow/").type(MediaType.APPLICATION_JSON).post(ephemeralInputStream);
         logger.info("Ephemeral Kitchen sink workflow with ephemeral tasks is created!");
 
+    }
+
+    /**
+     * Enabled JMX reporting:
+     * https://docs.newrelic.com/docs/agents/java-agent/troubleshooting/application-server-jmx-setup
+     * https://www.eclipse.org/jetty/documentation/current/jmx-chapter
+     */
+    private void configureMBeanContainer(final Server server){
+        final MBeanContainer mbContainer = new MBeanContainer(getPlatformMBeanServer());
+        server.addEventListener(mbContainer);
+        server.addBean(mbContainer);
+        server.addBean(getLog());
     }
 }
