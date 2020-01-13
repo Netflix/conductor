@@ -19,6 +19,7 @@ import com.netflix.conductor.dao.dynomite.RedisRateLimitingDao;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
 import com.netflix.conductor.dyno.DynoProxy;
 import com.netflix.conductor.dyno.RedisQueuesProvider;
+import com.netflix.conductor.service.WorkflowMonitor;
 import com.netflix.dyno.queues.redis.RedisQueues;
 /**
  * @author Viren
@@ -34,5 +35,6 @@ public class RedisWorkflowModule extends AbstractModule {
 
         bind(RedisQueues.class).toProvider(RedisQueuesProvider.class).asEagerSingleton();
         bind(DynoProxy.class).asEagerSingleton();
+        bind(WorkflowMonitor.class).asEagerSingleton();
     }
 }

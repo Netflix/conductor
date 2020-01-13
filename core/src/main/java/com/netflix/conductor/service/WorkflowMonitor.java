@@ -19,6 +19,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.orchestration.ExecutionDAOFacade;
+import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
@@ -83,8 +84,10 @@ public class WorkflowMonitor {
 				});
 
 				taskDefs.forEach(taskDef -> {
+					String taskIsolatedQueue = QueueUtils.getQueueName(taskDef.getName(),null,taskDef.getIsolationGroupId(), taskDef.getExecutionNameSpace());
 					long size = queueDAO.getSize(taskDef.getName());
 					long inProgressCount = executionDAOFacade.getInProgressTaskCount(taskDef.getName());
+					Monitors.recordQueueDepth(taskIsolatedQueue, queueDAO.getSize(taskIsolatedQueue), taskDef.getOwnerApp());
 					Monitors.recordQueueDepth(taskDef.getName(), size, taskDef.getOwnerApp());
 					if(taskDef.concurrencyLimit() > 0) {
 						Monitors.recordTaskInProgress(taskDef.getName(), inProgressCount, taskDef.getOwnerApp());
