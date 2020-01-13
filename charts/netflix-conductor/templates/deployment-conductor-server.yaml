@@ -60,6 +60,10 @@ spec:
                cd /app/libs/ &&
                java  -javaagent:/newrelic/newrelic.jar {{ .Values.server.jvmStartupOpts }} -jar conductor-server-*-all.jar /app/config/conductor-config.properties /app/config/log4j.properties {{ .Values.server.appStartupOpts }}
           env:
+{{- range $pkey, $pval := .Values.server.env }}
+            - name: {{ $pkey }}
+              value: "{{ $pval }}"
+{{- end }}
             - name: NEW_RELIC_APP_NAME
               value: {{ include "netflix-conductor.name" . }}-server
             - name: NEW_RELIC_LICENSE_KEY
@@ -68,16 +72,6 @@ spec:
               value: {{ .Values.server.newrelic.enabled | quote }}
             - name: NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
               value: {{ .Values.server.newrelic.tracing.enabled | quote }}
-            - name: workflow_elasticsearch_instanceType
-              value: "external"
-            - name: workflow_elasticsearch_url
-              value: "https://vpc-conductor-elasticsearch-stg-d2ivhx73ka55yzcbdbcrvk4vea.ap-southeast-2.es.amazonaws.com:443"
-            - name: db
-              value: "mysql"
-            - name: conductor_mysql_connection_pool_idle_min
-              value: "7"
-            - name: conductor_mysql_connection_pool_size_max
-              value: "10"
             - name: jdbc_username
               valueFrom:
                 secretKeyRef:
