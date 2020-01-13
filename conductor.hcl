@@ -29,7 +29,7 @@ job "conductor" {
     vault {
       change_mode = "restart"
       env         = false
-      policies    = ["read-secrets"]
+      policies    = ["read-secrets","dynamic-read"]
     }
 
     task "ui" {
@@ -98,6 +98,20 @@ job "conductor" {
         change_signal = "SIGINT"
       }
 
+      template {
+        data = <<CREDS
+{{ with printf "aws_storage/creds/conductor" | secret }}
+aws_processing_bucket_name=dlx-one-processing-us-west-2-{{ env "meta.env" }}
+access_key={{.Data.access_key}}
+secret_key={{.Data.secret_key}}
+security_token="{{.Data.security_token}}"
+{{end}}
+CREDS
+        change_mode = "restart"
+        env         = true
+        destination = "local/secrets/aws.env"
+      }
+
       resources {
         cpu    = 256 # MHz
         memory = 512 # MB
@@ -117,7 +131,7 @@ job "conductor" {
     vault {
       change_mode = "restart"
       env         = false
-      policies    = ["read-secrets"]
+      policies    = ["read-secrets","dynamic-read"]
     }
 
     task "server" {
@@ -245,6 +259,21 @@ job "conductor" {
         change_mode   = "signal"
         change_signal = "SIGINT"
       }
+
+      template {
+        data = <<CREDS
+{{ with printf "aws_storage/creds/conductor" | secret }}
+aws_processing_bucket_name=dlx-one-processing-us-west-2-{{ env "meta.env" }}
+access_key={{.Data.access_key}}
+secret_key={{.Data.secret_key}}
+security_token="{{.Data.security_token}}"
+{{end}}
+CREDS
+        change_mode = "restart"
+        env         = true
+        destination = "local/secrets/aws.env"
+      }
+
 
       resources {
         cpu    = 512  # MHz
