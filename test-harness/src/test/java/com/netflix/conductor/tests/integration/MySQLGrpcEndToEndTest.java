@@ -28,11 +28,9 @@ import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.grpc.server.GRPCServer;
 import com.netflix.conductor.grpc.server.GRPCServerConfiguration;
 import com.netflix.conductor.grpc.server.GRPCServerProvider;
-import com.netflix.conductor.tests.utils.MySQLTestRunner;
 import com.netflix.conductor.tests.utils.TestEnvironment;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
 
 import java.util.Optional;
 
@@ -41,7 +39,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Viren
  */
-@RunWith(MySQLTestRunner.class)
 public class MySQLGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
 
     private static final int SERVER_PORT = 8094;

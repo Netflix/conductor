@@ -20,12 +20,14 @@ package com.netflix.conductor.tests.utils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import org.junit.Ignore;
 import org.junit.runners.BlockJUnit4ClassRunner;
 
 /**
  * @author Viren
  *
  */
+@Ignore
 public class MySQLTestRunner extends BlockJUnit4ClassRunner {
 
     private Injector injector;

@@ -14,6 +14,7 @@ import com.netflix.conductor.grpc.server.GRPCServerProvider;
 import com.netflix.conductor.tests.utils.TestEnvironment;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 
 import java.util.Optional;
 
@@ -25,6 +26,7 @@ import static com.netflix.conductor.grpc.server.GRPCServerConfiguration.PORT_PRO
 import static com.netflix.conductor.postgres.PostgresConfiguration.*;
 import static org.junit.Assert.assertTrue;
 
+@Ignore
 public class PostgresGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
 
     private static final int SERVER_PORT = 8098;
