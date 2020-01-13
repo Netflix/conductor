@@ -2,7 +2,11 @@ package com.netflix.conductor.dao.mysql;
 
 import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.core.events.queue.Message;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
