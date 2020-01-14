@@ -81,6 +81,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -285,7 +286,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
                     .indices()
                     .preparePutMapping(indexName)
                     .setType(mappingType)
-                    .setSource(source)
+                    .setSource(source, XContentFactory.xContentType(source))
                     .execute()
                     .actionGet();
             } catch (Exception e) {
@@ -511,6 +512,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         } catch (Exception e) {
             logger.error("Failed to index message: {}", message.getId(), e);
         }
+    }
+
+    @Override
+    public CompletableFuture<Void> asyncAddMessage(String queue, Message message) {
+        return CompletableFuture.runAsync(() -> addMessage(queue, message), executorService);
     }
 
     @Override
@@ -849,23 +855,15 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     }
 
     private static class BulkRequests {
-        private long lastFlushTime;
-        private BulkRequestBuilder bulkRequestBuilder;
+        private final long lastFlushTime;
+        private final BulkRequestBuilder bulkRequestBuilder;
 
         public long getLastFlushTime() {
             return lastFlushTime;
         }
 
-        public void setLastFlushTime(long lastFlushTime) {
-            this.lastFlushTime = lastFlushTime;
-        }
-
         public BulkRequestBuilder getBulkRequestBuilder() {
             return bulkRequestBuilder;
-        }
-
-        public void setBulkRequestBuilder(BulkRequestBuilder bulkRequestBuilder) {
-            this.bulkRequestBuilder = bulkRequestBuilder;
         }
 
         BulkRequests(long lastFlushTime, BulkRequestBuilder bulkRequestBuilder) {
