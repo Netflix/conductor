@@ -73,6 +73,12 @@ public interface Configuration {
     String IGNORE_LOCKING_EXCEPTIONS_PROPERTY_NAME = "workflow.decider.locking.exceptions.ignore";
     boolean IGNORE_LOCKING_EXCEPTIONS_DEFAULT_VALUE = false;
 
+    String EVENT_MESSAGE_INDEXING_ENABLED_PROPERTY_NAME = "worklfow.event.message.indexing.enabled";
+    boolean EVENT_MESSAGE_INDEXING_ENABLED_DEFAULT_VALUE = true;
+
+    String TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME = "workflow.taskExecLog.indexing.enabled";
+    boolean TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE = true;
+
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -103,6 +109,13 @@ public interface Configuration {
     }
 
     /**
+     * @return if true(default), enables task execution log indexing
+     */
+    default boolean isTaskExecLogIndexingEnabled() {
+        return getBooleanProperty(TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME, TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
      * @return time frequency in seconds, at which the workflow sweeper should run to evaluate running workflows.
      */
     int getSweepFrequency();
@@ -117,6 +130,12 @@ public interface Configuration {
      * @return when set to true, the background task workers executing async system tasks (eg HTTP) are disabled
      */
     boolean disableAsyncWorkers();
+
+    /**
+     *
+     * @return when set to true, message from the event processing are indexed
+     */
+    boolean isEventMessageIndexingEnabled();
 
     /**
      * @return ID of the server.  Can be host name, IP address or any other meaningful identifier.  Used for logging
@@ -195,7 +214,7 @@ public interface Configuration {
         if (null == value || value.trim().length() == 0) {
             return defaultValue;
         }
-        return Boolean.valueOf(value.trim());
+        return Boolean.parseBoolean(value.trim());
     }
 
     /**

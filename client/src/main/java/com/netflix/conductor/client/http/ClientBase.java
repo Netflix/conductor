@@ -22,10 +22,10 @@ import com.google.common.base.Preconditions;
 import com.netflix.conductor.client.config.ConductorClientConfiguration;
 import com.netflix.conductor.client.config.DefaultConductorClientConfiguration;
 import com.netflix.conductor.client.exceptions.ConductorClientException;
-import com.netflix.conductor.client.exceptions.ErrorResponse;
 import com.netflix.conductor.common.run.ExternalStorageLocation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
+import com.netflix.conductor.common.validation.ErrorResponse;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -179,7 +179,6 @@ public abstract class ClientBase {
                     .get(ClientResponse.class);
             if (clientResponse.getStatus() < 300) {
                 return entityProvider.apply(clientResponse);
-
             } else {
                 throw new UniformInterfaceException(clientResponse);
             }
