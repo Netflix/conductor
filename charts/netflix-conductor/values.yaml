@@ -41,6 +41,12 @@ server:
     db: "mysql"
     conductor_mysql_connection_pool_idle_min: "7"
     conductor_mysql_connection_pool_size_max: "10"
+    workflow_elasticsearch_index_name: "conductor"
+    conductor_jetty_server_enabled: "true"
+    conductor_grpc_server_enabled: "false"
+    EC2_AVAILABILITY_ZONE: "ap-southeast-2"
+    workflow_namespace_prefix: "conductor"
+    flyway_enabled: "true"
 
 ui:
   repository: kayosportsau/netflixconductor
@@ -89,8 +95,6 @@ ingress:
 
 elasticsearch:
   enabled: false
-  host: ""
-  port: 9300
   indexName: "conductor"
 
 maxConnsPerHost: 31
@@ -102,11 +106,6 @@ redis:
 
 mysql:
   enabled: false
-  host: "auroramysql56-rdscluster-g6n4dlpnqd5e.cluster-c7ladyejgvzv.ap-southeast-2.rds.amazonaws.com"
-  port: 3306
-  username: "conductor"
-  password: "conductor"
-  dbName: "conductor"
   # https://docs.amazonaws.cn/en_us/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Managing.Performance.html
   connectionPoolMaxSize: 50
   connectionPoolMinIdle: 20
