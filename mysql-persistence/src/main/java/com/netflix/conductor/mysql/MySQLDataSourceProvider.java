@@ -68,8 +68,6 @@ public class MySQLDataSourceProvider implements Provider<DataSource> {
             logger.debug("Flyway migrations are disabled");
             return;
         }
-
-
         Flyway flyway = new Flyway();
         configuration.getFlywayTable().ifPresent(tableName -> {
             logger.debug("Using Flyway migration table '{}'", tableName);

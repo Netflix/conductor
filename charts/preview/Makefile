@@ -13,7 +13,8 @@ else ifeq ($(OS),Linux)
 
 	sed -i -e "s/preview_tag_server:.*/tag: $(PREVIEW_VERSION)/" values.yaml
 	sed -i -e "s/preview_tag_ui:.*/tag: ui-$(PREVIEW_VERSION)/" values.yaml
-	echo "install preview secret" && cp -v secret.yaml ../netflix-conductor/templates
+	sed -i -e "s/name: conductor/name: $(PREVIEW_NAMESPACE)/" ns-iam.yaml
+	echo "install preview secret and IAM" && cp -v secret.yaml ../netflix-conductor/templates && cp -v ns-iam.yaml ../netflix-conductor/templates
 else
 	echo "platfrom $(OS) not supported to release from"
 	exit -1

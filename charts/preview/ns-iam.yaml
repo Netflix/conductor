@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    cattle.io/status: '{"Conditions":[{"Type":"ResourceQuotaInit","Status":"True","Message":"","LastUpdateTime":"2019-12-31T00:45:27Z"},{"Type":"InitialRolesPopulated","Status":"True","Message":"","LastUpdateTime":"2019-12-31T00:45:27Z"}]}'
+    lifecycle.cattle.io/create.namespace-auth: "true"
+    iam.amazonaws.com/permitted: .*
+  finalizers:
+    - controller.cattle.io/namespace-auth
+  name: conductor
+spec:
+  finalizers:
+    - kubernetes

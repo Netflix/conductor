@@ -26,6 +26,9 @@ netflix-conductor:
   fullnameOverride: "netflix-conductor"
 
   server:
+    loadSamples: true
+#    podAnnotations:
+#     iam.amazonaws.com/role: conductor-role
     replicaCount: 2
     ingress:
       annotations:
@@ -35,7 +38,6 @@ netflix-conductor:
       preview_repository_server:
       preview_tag_server:
       pullPolicy: IfNotPresent
-    loadSamples: true
     newrelic:
       enabled: true
       tracing:
