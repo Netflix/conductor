@@ -26,6 +26,9 @@ netflix-conductor:
   fullnameOverride: "netflix-conductor"
 
   server:
+    podAnnotations:
+      iam.amazonaws.com/role: offers-api-staging-role
+#      iam.amazonaws.com/role: arn:aws:iam::053457794187:role/offers-api-staging-role
     replicaCount: 2
     ingress:
       annotations:
@@ -54,6 +57,7 @@ netflix-conductor:
       db: "mysql"
       conductor_mysql_connection_pool_idle_min: "7"
       conductor_mysql_connection_pool_size_max: "10"
+      loadSample: true
 
   ui:
     ingress:

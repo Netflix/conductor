@@ -6,6 +6,8 @@ dependencies {
     compile "mysql:mysql-connector-java:${revMySqlConnector}"
     compile "com.zaxxer:HikariCP:${revHikariCP}"
     compile "org.flywaydb:flyway-core:${revFlywayCore}"
+    compile "com.amazonaws:aws-java-sdk-secretsmanager:1.11.707"
+    compile "com.amazonaws:aws-java-sdk-sts:1.11.707"
 
     testCompile project(':conductor-core').sourceSets.test.output
     testCompile "ch.vorburger.mariaDB4j:mariaDB4j:${revMariaDB4j}"
