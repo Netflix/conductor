@@ -108,7 +108,7 @@ pipeline {
                         // release the helm chart
                         // sh "jx step helm release"
                         // sh "ls -la"
-                        sh "export VERSION=`cat ../../VERSION` && sed -i -e \"s/2019.0.3/\$(RELEASE_VERSION)/\" values.yaml"
+                        sh "export VERSION=`cat ../../VERSION` && sed -i -e \"s/2019.0.3/\$(VERSION)/\" values.yaml"
                         sh "make release && make print"
                         // promote through all 'Auto' promotion Environments
                         //sh "jx promote -b --no-poll=true  --helm-repo-url=$CHART_REPOSITORY --no-poll=true --no-merge=true --no-wait=true --env=staging --version \$(cat ../../VERSION)"
