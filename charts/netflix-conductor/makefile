@@ -48,6 +48,7 @@ release: clean
 	sed -i -e "s/fsa-streamotion\/netflix-conductor/netflixconductor/" values.yaml
 	sed -i -e "s/tag: $(RELEASE_VERSION)/tag: server-$(RELEASE_VERSION)/" values.yaml
 	sed -i -e "s/tag: server-ui-/tag: ui-/" values.yaml
+	sed -i -e "s/ui-2019.0.3/ui-$(RELEASE_VERSION)/" values.yaml
 	# end patch
 	helm lint
 	helm init --client-only
@@ -61,13 +62,11 @@ ifeq ($(OS),Darwin)
 	sed -i "" -e "s/version:.*/version: $(RELEASE_VERSION)/" Chart.yaml
 	sed -i "" -e "s/tag: server-.*/tag: server-$(RELEASE_VERSION)/" values.yaml
 	sed -i "" -e "s/tag: ui-.*/tag: ui-$(RELEASE_VERSION)/" values.yaml
-	echo "Darwin* RELEASE_VERSION: $(RELEASE_VERSION)"
 else ifeq ($(OS),Linux)
 	sed -i -e "s/version:.*/version: $(RELEASE_VERSION)/" Chart.yaml
 	sed -i -e "s|repository: .*|repository: $(DOCKER_REGISTRY)\/dat\/$(NAME)|" values.yaml
 	sed -i -e "s/tag: server-.*/tag: server-$(RELEASE_VERSION)/" values.yaml
 	sed -i -e "s/tag: ui-.*/tag: ui-$(RELEASE_VERSION)/" values.yaml
-	echo "Linux* RELEASE_VERSION: $(RELEASE_VERSION)"
 else
 	echo "platfrom $(OS) not supported to release from"
 	exit -1
