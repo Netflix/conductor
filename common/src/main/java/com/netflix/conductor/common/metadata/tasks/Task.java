@@ -762,7 +762,16 @@ public class Task {
         copy.setIteration(iteration);
         copy.setExecutionNameSpace(executionNameSpace);
         copy.setIsolationGroupId(isolationGroupId);
-
+        copy.setStartTime(startTime);
+        copy.setEndTime(endTime);
+        copy.setScheduledTime(scheduledTime);
+        copy.setRetriedTaskId(retriedTaskId);
+        copy.setRetried(retried);
+        copy.setSeq(seq);
+        copy.setUpdateTime(updateTime);
+        copy.setWorkerId(workerId);
+        copy.setRetriedTaskId(retriedTaskId);
+        copy.setReasonForIncompletion(reasonForIncompletion);
         return copy;
     }
 
