@@ -22,14 +22,13 @@ const authExpirationDateKey = "AUTH_EXPIRATION_DATE";
 const refreshExpirationDateKey = "REFRESH_EXPIRATION_DATE";
 
 const ROOT_REDIRECT_URL = '#/';
-export const USER_ROLE_ADMIN = 'deluxe.conductor-ui.admin';
 
 export const USER_AUTHORIZED_ROLES = [
-  USER_ROLE_ADMIN
+  'deluxe.conductor-ui.admin',
+  'deluxe.conductor-ui.developer'
 ];
 
 export const USER_AUTHORIZED_ROLES_SET = new Set(USER_AUTHORIZED_ROLES);
-export const USER_DEV_ROLES_SET = new Set(['deluxe.conductor-ui.developer']);
 
 const getURLParams = (param) => {
   var results = new RegExp('[?&]' + param + '=([^&#]*)').exec(window.location.href);
@@ -319,10 +318,6 @@ const authUserInfo = (token) => (dispatch) => {
         const roles = data.roles;
         let userRolesSet = new Set(roles);
         let userRolesIntersection = [...USER_AUTHORIZED_ROLES_SET].filter(role => userRolesSet.has(role));
-        let isDev = [...USER_DEV_ROLES_SET].filter(role => userRolesSet.has(role));
-        if (isDev.length > 0) {
-          dispatch(userIsDev());
-        }
         if (userRolesIntersection.length > 0) {
           dispatch(authAuthorizationSuccessful());
           dispatch(authInfoSucceeded(data.name, data.preferred_username, data.email, data.roles));
