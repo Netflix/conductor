@@ -767,11 +767,11 @@ public class Task {
         copy.setScheduledTime(scheduledTime);
         copy.setRetriedTaskId(retriedTaskId);
         copy.setRetried(retried);
-        copy.setSeq(seq);
         copy.setUpdateTime(updateTime);
         copy.setWorkerId(workerId);
         copy.setRetriedTaskId(retriedTaskId);
         copy.setReasonForIncompletion(reasonForIncompletion);
+        copy.setSeq(0);
         return copy;
     }
 
