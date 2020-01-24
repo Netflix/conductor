@@ -552,6 +552,8 @@ public class WorkflowExecutor {
         // Update Workflow with new status.
         // This should load Workflow from archive, if archived.
         workflow.setStatus(WorkflowStatus.RUNNING);
+        // Add to decider queue
+        queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), workflow.getPriority(), config.getSweepFrequency());
         executionDAOFacade.updateWorkflow(workflow);
 
         // taskToBeRescheduled would set task `retried` to true, and hence it's important to updateTasks after obtaining task copy from taskToBeRescheduled.
@@ -1472,6 +1474,8 @@ public class WorkflowExecutor {
             if (workflowInput != null) {
                 workflow.setInput(workflowInput);
             }
+            // Add to decider queue
+            queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), workflow.getPriority(), config.getSweepFrequency());
             executionDAOFacade.updateWorkflow(workflow);
             //update tasks in datastore to update workflow-tasks relationship for archived workflows
             executionDAOFacade.updateTasks(workflow.getTasks());
