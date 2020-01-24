@@ -131,7 +131,7 @@ public class TaskTest {
         task.setIteration(1);
         task.setExecutionNameSpace("name_space");
         task.setIsolationGroupId("groupId");
-        task.setStartTime(12L);
+        task.setStartTime(0);
         task.setEndTime(20L);
         task.setScheduledTime(7L);
         task.setRetriedTaskId("");

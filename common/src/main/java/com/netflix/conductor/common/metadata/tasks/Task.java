@@ -762,7 +762,7 @@ public class Task {
         copy.setIteration(iteration);
         copy.setExecutionNameSpace(executionNameSpace);
         copy.setIsolationGroupId(isolationGroupId);
-        copy.setStartTime(startTime);
+        copy.setStartTime(0);
         copy.setEndTime(endTime);
         copy.setScheduledTime(scheduledTime);
         copy.setRetriedTaskId(retriedTaskId);
