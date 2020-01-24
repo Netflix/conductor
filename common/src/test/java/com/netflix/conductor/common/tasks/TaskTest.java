@@ -137,7 +137,7 @@ public class TaskTest {
         task.setRetriedTaskId("");
         task.setRetried(false);
         task.setSeq(0);
-        task.setUpdateTime(12L);
+        task.setUpdateTime(4L);
         task.setReasonForIncompletion("");
         task.setWorkerId("");
 
