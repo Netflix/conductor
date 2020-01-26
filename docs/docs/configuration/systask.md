@@ -336,7 +336,7 @@ When executed, the dynamic fork task will schedule two parallel task of type "en
 	
 	Workflow definition MUST include a Join task definition followed by FORK_JOIN_DYNAMIC task.  However, given the dynamic nature of the task, no joinOn parameters are required for this Join.  The join will wait for ALL the forked branches to complete before completing.
 	
-	Unlike FORK, which can execute parallel flows with each fork executing a series of tasks in  sequence, FORK_JOIN_DYNAMIC is limited to only one task per fork.  However, forked task can be a Sub Workflow, allowing for more complex execution flows. We can use LAMBDA task to form a JSON based on previous task's output. That LAMBDA task output can be input to subsequent SUB_WORKFLOW tasks.
+	Unlike FORK, which can execute parallel flows with each fork executing a series of tasks in  sequence, FORK_JOIN_DYNAMIC is limited to only one task per fork.  However, forked task can be a Sub Workflow, allowing for more complex execution flows. We can use LAMBDA task to form a JSON, based on previous task's output. That LAMBDA task output can be input to subsequent SUB_WORKFLOW tasks.
 
 
 
