@@ -19,6 +19,7 @@ dependencies {
     compile "javax.el:javax.el-api:${revJavaElApi}"
     // https://mvnrepository.com/artifact/org.glassfish/javax.el
     compile group: 'org.glassfish', name: 'javax.el', version: "${revJavaElApi}"
-    
+    compileOnly group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '5.4.0'
+
     testCompile "org.slf4j:slf4j-log4j12:${revSlf4jlog4j}"
 }

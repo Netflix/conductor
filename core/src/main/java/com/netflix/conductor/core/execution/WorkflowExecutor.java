@@ -118,6 +118,7 @@ public class WorkflowExecutor {
     /**
      * @throws ApplicationException
      */
+    @com.newrelic.api.agent.Trace(dispatcher=true)
     public String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> input, String externalInputPayloadStoragePath) {
         return startWorkflow(name, version, correlationId, input, externalInputPayloadStoragePath, null);
     }

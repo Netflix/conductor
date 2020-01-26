@@ -11,4 +11,5 @@ dependencies {
     compile "org.hibernate:hibernate-validator:${revHiberante}"
 
     compileOnly "javax.servlet:javax.servlet-api:${revServletApi}"
+    compileOnly group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '5.4.0'
 }

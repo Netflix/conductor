@@ -170,6 +170,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      * @return the id of the workflow instance that can be use for tracking.
      */
     @Service
+    @com.newrelic.api.agent.Trace(dispatcher=true)
     public String startWorkflow(String name, Integer version, String correlationId, Integer priority,
                                 Map<String, Object> input) {
         WorkflowDef workflowDef = metadataService.getWorkflowDef( name, version );

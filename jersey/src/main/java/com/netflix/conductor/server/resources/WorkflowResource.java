@@ -137,6 +137,7 @@ public class WorkflowResource {
     @Path("/decide/{workflowId}")
     @ApiOperation("Starts the decision task for a workflow")
     @Consumes(MediaType.WILDCARD)
+    @com.newrelic.api.agent.Trace(dispatcher=true)
     public void decide(@PathParam("workflowId") String workflowId) {
         workflowService.decideWorkflow(workflowId);
     }
@@ -217,6 +218,7 @@ public class WorkflowResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/search")
+    @com.newrelic.api.agent.Trace(dispatcher=true)
     public SearchResult<WorkflowSummary> search(@QueryParam("start") @DefaultValue("0") int start,
                                                 @QueryParam("size") @DefaultValue("100") int size,
                                                 @QueryParam("sort") String sort,
@@ -232,6 +234,7 @@ public class WorkflowResource {
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/search-by-tasks")
+    @com.newrelic.api.agent.Trace(dispatcher=true)
     public SearchResult<WorkflowSummary> searchWorkflowsByTasks(@QueryParam("start") @DefaultValue("0") int start,
                                                                 @QueryParam("size") @DefaultValue("100") int size,
                                                                 @QueryParam("sort") String sort,
