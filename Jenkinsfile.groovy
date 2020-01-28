@@ -21,9 +21,9 @@ pipeline {
                 HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
                 CONDUCTOR_API = "http://conductor-server.${PREVIEW_NAMESPACE}.dev.cluster.foxsports-gitops-prod.com.au/api"
                 // When adjust these, mind the resources given to preview. A eco and slow setup might just red the build.
-                EXPECT_WORKFLOW_COUNT                = "20"
-                EXPECT_WORKFLOW_CREATION_TIME_SECS   = "20"
-                EXPECT_WORKFLOW_COMPLETION_TIME_SECS = "300"
+                EXPECT_WORKFLOW_COUNT                = "200"
+                EXPECT_WORKFLOW_CREATION_TIME_SECS   = "200"
+                EXPECT_WORKFLOW_COMPLETION_TIME_SECS = "1000"
             }
             steps {
                 container('maven') {
@@ -52,16 +52,15 @@ pipeline {
 
                     dir('client/python') {
                         sh "printenv | sort && kubectl get pods -n $PREVIEW_NAMESPACE"
+                        // ///DO some loadtest:
+                        // 1. make sure conductor preview up & running
+                        // 2. upload some workflow & tasks in conductor server
+                        // 3. simulate some producers to generate X amount of workflow
+                        // 4. simulate some workers to consume all the tasks (do concurrency)
+                        // 5. assert we dont have any hanging tasks and all workflows completed
                         sh "python kitchensink_workers.py > worker.log &"
                         sh "python load_test_kitchen_sink.py"
                     }
-
-                    // ///DO some loadtest: 
-                    // 1. make sure conductor preview up & running
-                    // 2. upload some workflow & tasks in conductor server
-                    // 3. simulate some producers to generate X amount of workflow
-                    // 4. simulate some workers to consume all the tasks (do concurrency)
-                    // 5. assert we dont have any hanging tasks and all workflows completed 
                 }
             }
         }
