@@ -26,6 +26,23 @@ import static com.netflix.conductor.core.execution.ApplicationException.Code.INV
 import static com.netflix.conductor.core.execution.ApplicationException.Code.NOT_FOUND;
 import static com.netflix.conductor.core.execution.tasks.SubWorkflow.SUB_WORKFLOW_ID;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
@@ -52,24 +69,11 @@ import com.netflix.conductor.core.metadata.MetadataMapperService;
 import com.netflix.conductor.core.orchestration.ExecutionDAOFacade;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.QueueUtils;
+import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionLockService;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import javax.inject.Inject;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Viren Workflow services provider interface
@@ -81,6 +85,7 @@ public class WorkflowExecutor {
 
     private final MetadataDAO metadataDAO;
     private final QueueDAO queueDAO;
+    private final IndexDAO indexDAO;
     private final DeciderService deciderService;
     private final Configuration config;
     private final MetadataMapperService metadataMapperService;
@@ -98,6 +103,7 @@ public class WorkflowExecutor {
             DeciderService deciderService,
             MetadataDAO metadataDAO,
             QueueDAO queueDAO,
+            IndexDAO indexDAO,
             MetadataMapperService metadataMapperService,
             WorkflowStatusListener workflowStatusListener,
             ExecutionDAOFacade executionDAOFacade,
@@ -107,6 +113,7 @@ public class WorkflowExecutor {
         this.deciderService = deciderService;
         this.metadataDAO = metadataDAO;
         this.queueDAO = queueDAO;
+        this.indexDAO = indexDAO;
         this.config = config;
         this.metadataMapperService = metadataMapperService;
         this.executionDAOFacade = executionDAOFacade;
@@ -715,6 +722,13 @@ public class WorkflowExecutor {
                         }
                     }
                     executionDAOFacade.updateTask(task);
+                    /*
+                     * executionDAOFacade.updateTask() does not call indexDAO.indexTask() so we have to do it here. We could
+                     * change that method to do the indexing but that method is called many times from executionDAOFacade.updateWorkflow()
+                     * and the updateWorkflow method also invokes indexTask() for each task so indexing would be called twice a 
+                     * lot if we changed executionDAOFacade.updateTask() to do the indexing there.
+                     */
+                    indexDAO.indexTask(task);
                 }
                 // And remove from the task queue if they were there
                 queueDAO.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -1173,6 +1187,13 @@ public class WorkflowExecutor {
                     task.setStatus(CANCELED);
                 }
                 executionDAOFacade.updateTask(task);
+                /*
+                 * executionDAOFacade.updateTask() does not call indexDAO.indexTask() so we have to do it here. We could
+                 * change that method to do the indexing but that method is called many times from executionDAOFacade.updateWorkflow()
+                 * and the updateWorkflow method also invokes indexTask() for each task so indexing would be called twice a 
+                 * lot if we changed executionDAOFacade.updateTask() to do the indexing there.
+                 */
+                indexDAO.indexTask(task);
                 queueDAO.remove(QueueUtils.getQueueName(task), task.getTaskId());
                 return;
             }

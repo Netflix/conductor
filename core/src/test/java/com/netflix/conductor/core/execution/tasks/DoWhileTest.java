@@ -16,6 +16,15 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
@@ -28,16 +37,10 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
 import com.netflix.conductor.core.metadata.MetadataMapperService;
 import com.netflix.conductor.core.orchestration.ExecutionDAOFacade;
+import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import com.netflix.conductor.service.ExecutionLockService;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
 
 /**
  * @author Manan
@@ -58,6 +61,7 @@ public class DoWhileTest {
     DeciderService deciderService;
     MetadataDAO metadataDAO;
     QueueDAO queueDAO ;
+    IndexDAO indexDAO;
     MetadataMapperService metadataMapperService;
     WorkflowStatusListener workflowStatusListener ;
     ExecutionDAOFacade executionDAOFacade;
@@ -72,13 +76,14 @@ public class DoWhileTest {
         deciderService = Mockito.mock(DeciderService.class);
         metadataDAO = Mockito.mock(MetadataDAO.class);
         queueDAO = Mockito.mock(QueueDAO.class);
+        indexDAO = Mockito.mock(IndexDAO.class);
         parametersUtils = Mockito.mock(ParametersUtils.class);
         metadataMapperService = Mockito.mock(MetadataMapperService.class);
         workflowStatusListener = Mockito.mock(WorkflowStatusListener.class);
         executionDAOFacade = Mockito.mock(ExecutionDAOFacade.class);
         executionLockService = Mockito.mock(ExecutionLockService.class);
         config = Mockito.mock(Configuration.class);
-        provider = spy(new WorkflowExecutor(deciderService, metadataDAO, queueDAO, metadataMapperService,
+        provider = spy(new WorkflowExecutor(deciderService, metadataDAO, queueDAO, indexDAO, metadataMapperService,
                 workflowStatusListener, executionDAOFacade, config, executionLockService));
         loopWorkflowTask1 = new WorkflowTask();
         loopWorkflowTask1.setTaskReferenceName("task1__1");
