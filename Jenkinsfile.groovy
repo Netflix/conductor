@@ -85,7 +85,7 @@ pipeline {
                     sh "./gradlew build -x test -x :conductor-client:findbugsMain "
                     sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-server.yaml"
                     sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-ui.yaml"
-
+                    sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-all.yaml"
                     script {
                         def buildVersion = readFile "${env.WORKSPACE}/VERSION"
                         currentBuild.description = "$buildVersion"

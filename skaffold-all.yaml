@@ -1,0 +1,18 @@
+apiVersion: skaffold/v1beta11
+kind: Config
+build:
+  # tagPolicy:
+  #   dateTime:
+  #     format: "2006-01-02_15-04-05.999_MST"
+  #     timezone: "Local"
+  # tagPolicy:
+  #   sha256: {}  
+  artifacts:
+  - image: netflixconductor
+    context: .
+    docker:
+      network: host
+      dockerfile: docker/serverAndUI/Dockerfile
+  tagPolicy:
+    envTemplate:
+      template: '{{.DOCKER_REGISTRY}}/netflixconductor:all-{{.VERSION}}'
