@@ -29,6 +29,7 @@ pipeline {
                 container('maven') {
                     sh "echo **************** PREVIEW_VERSION: $PREVIEW_VERSION , PREVIEW_NAMESPACE: $PREVIEW_NAMESPACE, HELM_RELEASE: $HELM_RELEASE"
                     sh "echo $PREVIEW_VERSION > PREVIEW_VERSION"
+                    sh "cp -v server/src/main/resources/kitchensinkpreview.json server/src/main/resources/kitchensink.json"
                     sh "skaffold version && ./gradlew build -w -x test -x :conductor-client:findbugsMain "
                     sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml && export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-ui.yaml"
 
