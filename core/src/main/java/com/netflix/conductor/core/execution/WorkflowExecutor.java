@@ -42,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -85,6 +84,7 @@ public class WorkflowExecutor {
     private final ExecutionDAOFacade executionDAOFacade;
 
     private WorkflowStatusListener workflowStatusListener;
+    private TaskStatusListenerX taskStatusListenerX;
 
     private int activeWorkerLastPollInSecs;
     public static final String DECIDER_QUEUE = "_deciderQueue";
@@ -96,6 +96,7 @@ public class WorkflowExecutor {
             QueueDAO queueDAO,
             MetadataMapperService metadataMapperService,
             WorkflowStatusListener workflowStatusListener,
+            TaskStatusListenerX taskStatusListenerX,
             ExecutionDAOFacade executionDAOFacade,
             Configuration config
     ) {
@@ -107,6 +108,7 @@ public class WorkflowExecutor {
         this.executionDAOFacade = executionDAOFacade;
         this.activeWorkerLastPollInSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
         this.workflowStatusListener = workflowStatusListener;
+        this.taskStatusListenerX = taskStatusListenerX;
     }
 
     /**
@@ -544,6 +546,7 @@ public class WorkflowExecutor {
         }
         Monitors.recordWorkflowCompletion(workflow.getWorkflowName(), workflow.getEndTime() - workflow.getStartTime(), wf.getOwnerApp());
         // notify workflow completion
+        workflowStatusListener.onWorkflowCompleted(workflow);
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
 
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
@@ -1179,6 +1182,7 @@ public class WorkflowExecutor {
                 executionDAOFacade.updateTask(task);
             } else {
                 tasksToBeQueued.add(task);
+
             }
         }
 
@@ -1189,6 +1193,8 @@ public class WorkflowExecutor {
     private void addTaskToQueue(final List<Task> tasks) {
         for (Task task : tasks) {
             addTaskToQueue(task);
+            // notify task
+            taskStatusListenerX.onTaskScheduled(task);
         }
     }
 

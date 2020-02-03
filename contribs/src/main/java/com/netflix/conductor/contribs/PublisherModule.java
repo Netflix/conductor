@@ -19,19 +19,17 @@
 package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.contribs.publisher.WorkflowStatusListenerPublisher;
+import com.netflix.conductor.contribs.publisher.TaskStatusPublisherX;
+import com.netflix.conductor.contribs.publisher.WorkflowStatusPublisher;
+import com.netflix.conductor.core.execution.TaskStatusListenerX;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
 
-
-/**
- * @author Viren
- *
- */
 public class PublisherModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		bind(WorkflowStatusListener.class).to(WorkflowStatusListenerPublisher.class);
+		bind(WorkflowStatusListener.class).to(WorkflowStatusPublisher.class);
+		bind(TaskStatusListenerX.class).to(TaskStatusPublisherX.class);
 	}
 
 }

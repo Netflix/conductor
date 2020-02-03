@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.ProvisionException;
 import com.netflix.conductor.cassandra.CassandraModule;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.contribs.PublisherModule;
 import com.netflix.conductor.contribs.http.HttpTask;
 import com.netflix.conductor.contribs.http.RestClientManager;
 import com.netflix.conductor.contribs.json.JsonJqTransform;
@@ -103,6 +104,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         modules.add(new ElasticSearchModule());
 
         modules.add(new WorkflowExecutorModule());
+        modules.add(new PublisherModule());
 
         if (configuration.getJerseyEnabled()) {
             modules.add(new JerseyModule());

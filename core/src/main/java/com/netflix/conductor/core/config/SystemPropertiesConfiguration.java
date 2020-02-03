@@ -205,7 +205,6 @@ public class SystemPropertiesConfiguration implements Configuration {
                 logger.warn(e.getMessage(), e);
             }
         }
-
         return modules;
     }
 }
