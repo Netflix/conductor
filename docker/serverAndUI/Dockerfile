@@ -4,51 +4,26 @@
 FROM openjdk:8-jdk
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
+RUN apt-get update -y && apt-get -y install git curl
+RUN curl -sL https://deb.nodesource.com/setup_9.x |  bash
+RUN apt-get install -y nodejs
+RUN apt-get install -y npm
 
 # Make app folders
-RUN mkdir -p /app/config /app/logs /app/libs
+RUN mkdir -p /app/config /app/logs /app/libs /app/ui
+COPY ./ui /app/ui
+COPY docker/serverAndUI/bin /app
+COPY docker/serverAndUI/config /app/config
+COPY server/build/libs/conductor-server-*-all.jar /app/libs
+COPY docker/server/newrelic-agent-5.4.0 /newrelic
 
-# Startup script(s)
-COPY ./bin /app
 
-# Configs
-COPY ./config /app/config
-
-# Get all the dependencies
-RUN apt-get update -y \
-  && apt-get -y install git curl \
-
-  # Chmod scripts
-  && chmod +x /app/startup.sh \
-
-  # Get node
-  && curl -sL https://deb.nodesource.com/setup_6.x |  bash - \
-  && apt-get install -y nodejs build-essential
-
-# Get and install conductor
-RUN git clone https://github.com/Netflix/conductor.git \
-  && cd conductor \
-  && ./gradlew build -x test \
-
-  # Get Server Jar
-  && mv ./server/build/libs/conductor-server-*-all.jar /app/libs/ \
-
-  # Get UI project
-  && mv ./ui /app \
-
-  # Install UI packages
-  && cd /app/ui \
-  && npm install \
-  && npm run build --server \
-
-  # Go back to root
-  && cd / \
-
-  # Clean up
-  && rm -rf conductor
-
+RUN cd /app/ui \
+  && npm install -s \
+  && npm run build -s --server
 
 EXPOSE 5000 8080
 
+RUN chmod +x /app/startup.sh
 CMD ["/app/startup.sh"]
 ENTRYPOINT ["/bin/bash"]
