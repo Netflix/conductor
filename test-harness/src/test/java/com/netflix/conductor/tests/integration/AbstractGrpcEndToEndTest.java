@@ -138,10 +138,6 @@ public abstract class AbstractGrpcEndToEndTest extends AbstractEndToEndTest {
         assertEquals(t0.getName(), polled.get(0).getTaskDefName());
         Task task = polled.get(0);
 
-        Boolean acked = taskClient.ack(task.getTaskId(), "test");
-        assertNotNull(acked);
-        assertTrue(acked);
-
         task.getOutputData().put("key1", "value1");
         task.setStatus(Status.COMPLETED);
         taskClient.updateTask(new TaskResult(task));

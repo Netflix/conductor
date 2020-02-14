@@ -108,15 +108,6 @@ public class TaskResource {
 	}
 
 	@POST
-	@Path("/{taskId}/ack")
-	@ApiOperation("Ack Task is received")
-	@Consumes({MediaType.WILDCARD})
-	public String ack(@PathParam("taskId") String taskId,
-					  @QueryParam("workerid") String workerId) {
-		return taskService.ackTaskReceived(taskId, workerId);
-	}
-
-	@POST
 	@Path("/{taskId}/log")
 	@ApiOperation("Log Task Execution Details")
 	public void log(@PathParam("taskId") String taskId, String log) {

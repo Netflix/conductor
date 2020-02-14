@@ -98,13 +98,6 @@ public class TaskResourceTest {
     }
 
     @Test
-    public void testAck() throws Exception {
-        String acked = "true";
-        when(mockTaskService.ackTaskReceived(anyString(), anyString())).thenReturn(acked);
-        assertEquals("true", taskResource.ack("123", "456"));
-    }
-
-    @Test
     public void testLog() {
         taskResource.log("123", "test log");
         verify(mockTaskService, times(1)).log(anyString(), anyString());
