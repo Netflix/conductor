@@ -436,7 +436,7 @@ public class WorkflowExecutor {
         // Get tasks that have callbackAfterSeconds > 0 and set the callbackAfterSeconds to 0
         for (Task task : workflow.getTasks()) {
             if (task.getCallbackAfterSeconds() > 0) {
-                if (queueDAO.postpone(QueueUtils.getQueueName(task), task.getTaskId(), 0, 0)) {
+                if (queueDAO.resetOffsetTime(QueueUtils.getQueueName(task), task.getTaskId())) {
                     task.setCallbackAfterSeconds(0);
                     executionDAOFacade.updateTask(task);
                 }
