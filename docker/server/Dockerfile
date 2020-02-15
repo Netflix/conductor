@@ -2,6 +2,11 @@ FROM amazoncorretto:8
 
 MAINTAINER Streamotion Pty Ltd <devops@kayosports.com.au>
 
+RUN yum update -y \
+  && yum install -y \
+  telnet \
+  && yum clean all
+
 # Make app folders
 RUN mkdir -p /app/config /app/logs /app/libs
 
