@@ -131,6 +131,7 @@ public class ServerModule extends AbstractModule {
 		install(new AuthModule());
 		install(new AssetModule());
 		install(new ProgressModule());
+		install(new TaskUpdateModule());
 		new JsonJqTransform();
 		new ValidationTask();
 		bind(TaskStatusListener.class).to(StatusEventPublisher.class);
