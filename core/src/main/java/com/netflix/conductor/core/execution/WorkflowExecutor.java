@@ -745,6 +745,7 @@ public class WorkflowExecutor {
 			input.put("clientId", workflow.getClientId());
 			input.put("cancelledBy", workflow.getCancelledBy());
 			input.put("correlationId", workflow.getCorrelationId());
+			input.put("reason", reason);
 
 
 			try {
@@ -913,6 +914,7 @@ public class WorkflowExecutor {
 				input.put("workflowId", workflow.getWorkflowId());
 				input.put("workflowType", workflow.getWorkflowType());
 				input.put("correlationId", workflow.getCorrelationId());
+				input.put("reason", reason);
 				input.put("workflowInput", workflow.getInput());
 				input.put("workflowVersion", workflow.getVersion());
 				input.put("contextUser", workflow.getContextUser());
