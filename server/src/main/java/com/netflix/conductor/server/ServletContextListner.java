@@ -46,26 +46,7 @@ public class ServletContextListner extends GuiceServletContextListener {
 		ConductorConfig config = new ConductorConfig();
 		ConductorServer server = new ConductorServer(config);
 		
-		return Guice.createInjector(server.getGuiceModule(), getSwagger());
-	}
-	
-	private ServletModule getSwagger() {
-		
-		String resourceBasePath = ServletContextListner.class.getResource("/swagger-ui").toExternalForm();
-		DefaultServlet ds = new DefaultServlet();
-		
-		ServletModule sm = new ServletModule() {
-			@Override
-			protected void configureServlets() {
-				Map<String, String> params = new HashMap<>();
-				params.put("resourceBase", resourceBasePath);
-				params.put("redirectWelcome", "true");
-				serve("/*").with(ds, params);
-			}
-		};
-		
-		return sm;
-		
+		return Guice.createInjector(server.getGuiceModule());
 	}
 	
 	private void loadProperties() {

@@ -35,6 +35,9 @@ import com.sun.jersey.api.client.Client;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -206,17 +209,34 @@ public class ConductorServer {
 			System.exit(-1);
 		}
 
-		//Swagger
-		String resourceBasePath = Main.class.getResource("/swagger-ui").toExternalForm();
-		this.server = new Server(port);
+		// Holds handlers
+		final HandlerList handlers = new HandlerList();
 
-		ServletContextHandler context = new ServletContextHandler();
-		context.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-		context.setResourceBase(resourceBasePath);
-		context.setWelcomeFiles(new String[]{"index.html"});
+		// Welcome UI
+		ResourceHandler staticHandler = new ResourceHandler();
+		staticHandler.setResourceBase(Main.class.getResource("/static").toExternalForm());
+		ContextHandler staticContext = new ContextHandler();
+		staticContext.setContextPath("/");
+		staticContext.setHandler(staticHandler);
+		handlers.addHandler(staticContext);
 
-		server.setHandler(context);
+		// Swagger UI
+		ResourceHandler swaggerHandler = new ResourceHandler();
+		swaggerHandler.setResourceBase(Main.class.getResource("/swagger-ui").toExternalForm());
+		ContextHandler swaggerContext = new ContextHandler();
+		swaggerContext.setContextPath("/docs");
+		swaggerContext.setHandler(swaggerHandler);
+		handlers.addHandler(swaggerContext);
 
+		// Main servlet
+		ServletContextHandler mainHandler = new ServletContextHandler();
+		mainHandler.addFilter(GuiceFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+		mainHandler.addServlet(new ServletHolder(new DefaultServlet()), "/*");
+		handlers.addHandler(mainHandler);
+
+		// Time to start
+		server = new Server(port);
+		server.setHandler(handlers);
 
 		// ONECOND-758: Increase default request and response header size from 8kb to 64kb
 		final int max = 64 * 1024;
@@ -225,12 +245,8 @@ public class ConductorServer {
 			conn.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().setResponseHeaderSize(max);
 		}
 
-
-		DefaultServlet staticServlet = new DefaultServlet();
-		context.addServlet(new ServletHolder(staticServlet), "/*");
-
 		server.start();
-		System.out.println("Started server on http://localhost:" + port + "/");
+		logger.info("Started server on http://localhost:" + port + "/");
 		try {
 			boolean create = Boolean.parseBoolean(cc.getProperty("loadSample", "false"));
 			if (create) {
