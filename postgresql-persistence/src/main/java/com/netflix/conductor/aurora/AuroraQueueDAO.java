@@ -116,6 +116,8 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				for (QueueMessage m : messages) {
 
 					// Shall we stop pooling?
+					// We recheck this condition on each message to ensure
+					// foundIds not greater than requested count and within timeout window
 					if (!keepPooling.get()) {
 						return Lists.newArrayList(foundIds);
 					}
