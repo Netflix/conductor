@@ -79,6 +79,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		// Pick up X times more ids than requested as we have X servers in the cluster
 		// So each of them might get as much as possible
+		// But result will be not greater than requested count
 		final int limit = count * cluster_size;
 
 		try (Connection tx = dataSource.getConnection()) {
