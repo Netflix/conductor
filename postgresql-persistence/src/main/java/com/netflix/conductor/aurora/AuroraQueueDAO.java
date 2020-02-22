@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
 import org.apache.commons.collections.CollectionUtils;
@@ -17,16 +18,19 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final Long UNACK_SCHEDULE_MS = 5_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
+	private final int cluster_size;
 
 	@Inject
-	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper) {
+	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
 		super(dataSource, mapper);
+		cluster_size = config.getIntProperty("conductor_cluster_size", 5);
 
 		Executors.newSingleThreadScheduledExecutor()
 			.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
@@ -65,7 +69,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
 		createQueueIfNotExists(queueName);
-		final String QUERY = "SELECT * FROM queue_message " +
+		final String QUERY = "SELECT id, version, message_id FROM queue_message " +
 			"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
 			"ORDER BY deliver_on, version, id LIMIT ?";
 
@@ -73,20 +77,29 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			"SET popped = true, unack_on = ?, version = version + 1 " +
 			"WHERE id = ? AND version = ?";
 
+		// Pick up X times more ids than requested as we have X servers in the cluster
+		// So each of them might get as much as possible
+		final int limit = count * cluster_size;
+
 		try (Connection tx = dataSource.getConnection()) {
 			tx.setAutoCommit(false);
 
 			long start = System.currentTimeMillis();
 			Set<String> foundIds = new HashSet<>();
 
-			while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
+			// Returns true until foundIds = count or time spent = timeout
+			Supplier<Boolean> keepPooling = () -> foundIds.size() < count
+				&& ((System.currentTimeMillis() - start) < timeout);
+
+			// Repeat until foundIds = count or time spent = timeout
+			while (keepPooling.get()) {
 
 				// Get the list of popped message ids
 				List<QueueMessage> messages = query(tx, QUERY, q -> q
 					.addParameter(queueName.toLowerCase())
-					.addParameter(count)
+					.addParameter(limit)
 					.executeAndFetch(rs -> {
-						List<QueueMessage> popped = new LinkedList<>();
+						List<QueueMessage> popped = new ArrayList<>(limit);
 						while (rs.next()) {
 							QueueMessage m = new QueueMessage();
 							m.id = rs.getLong("id");
@@ -99,9 +112,15 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					}));
 
 				// Mark them as popped issuing commit after each of them
-				messages.forEach(m -> {
-					long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+				for (QueueMessage m : messages) {
 
+					// Shall we stop pooling?
+					if (!keepPooling.get()) {
+						return Lists.newArrayList(foundIds);
+					}
+
+					// Continue to lock an record
+					long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 					try {
 						int updated = query(tx, UPDATE, u -> u
 							.addTimestampParameter(unack_on)
@@ -123,7 +142,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 							logger.error("pop: rollback failed for {} with {}", queueName, ex.getMessage(), ex);
 						}
 					}
-				});
+				}
 
 				Thread.sleep(10);
 			}
