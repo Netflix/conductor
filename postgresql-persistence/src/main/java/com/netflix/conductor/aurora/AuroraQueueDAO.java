@@ -110,7 +110,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					// Mark them as popped issuing commit at the end of the batch as this batch already hidden by PG
 					for (QueueMessage m : messages) {
 
-						// Continue to lock an record
+						// Continue to lock the record
 						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 						int updated = query(tx, UPDATE, u -> u
 							.addTimestampParameter(unack_on)
