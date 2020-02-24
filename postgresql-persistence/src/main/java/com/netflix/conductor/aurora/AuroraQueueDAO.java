@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
 import org.apache.commons.collections.CollectionUtils;
@@ -12,7 +11,6 @@ import org.apache.commons.collections.CollectionUtils;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,12 +23,10 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
 	private static final Long UNACK_SCHEDULE_MS = 5_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
-	private final int cluster_size;
 
 	@Inject
-	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
+	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper) {
 		super(dataSource, mapper);
-		cluster_size = config.getIntProperty("conductor_cluster_size", 5);
 
 		Executors.newSingleThreadScheduledExecutor()
 			.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
@@ -69,55 +65,53 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
 		createQueueIfNotExists(queueName);
-		final String QUERY = "SELECT id, version, message_id FROM queue_message " +
+		final String QUERY_LOCK = "SELECT id, version, message_id FROM queue_message " +
 			"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
-			"ORDER BY deliver_on, version, id LIMIT ?";
+			"ORDER BY deliver_on, version, id LIMIT ? FOR UPDATE SKIP LOCKED";
 
 		final String UPDATE = "UPDATE queue_message " +
 			"SET popped = true, unack_on = ?, version = version + 1 " +
 			"WHERE id = ? AND version = ?";
 
-		// Pick up X times more ids than requested as we have X servers in the cluster
-		// So each of them might get as much as possible
-		// But result will be not greater than requested count
-		final int limit = count * cluster_size;
-
 		try (Connection tx = dataSource.getConnection()) {
 			tx.setAutoCommit(false);
-
 			long start = System.currentTimeMillis();
+
 			Set<String> foundIds = new HashSet<>();
+			try {
 
-			// Returns true until foundIds = count or time spent = timeout
-			Supplier<Boolean> keepPooling = () -> foundIds.size() < count
-				&& ((System.currentTimeMillis() - start) < timeout);
+				// Returns true until foundIds = count or time spent = timeout
+				Supplier<Boolean> keepPooling = () -> foundIds.size() < count
+					&& ((System.currentTimeMillis() - start) < timeout);
 
-			// Repeat until foundIds = count or time spent = timeout
-			while (keepPooling.get()) {
+				// Repeat until foundIds = count or time spent = timeout
+				while (keepPooling.get()) {
 
-				// Get the list of popped message ids
-				List<QueueMessage> messages = query(tx, QUERY, q -> q
-					.addParameter(queueName.toLowerCase())
-					.addParameter(limit)
-					.executeAndFetch(rs -> {
-						List<QueueMessage> popped = new ArrayList<>(limit);
-						while (rs.next()) {
-							QueueMessage m = new QueueMessage();
-							m.id = rs.getLong("id");
-							m.version = rs.getLong("version");
-							m.message_id = rs.getString("message_id");
+					// Limit how many left to pick up
+					int limit = count - foundIds.size();
 
-							popped.add(m);
-						}
-						return popped;
-					}));
+					// Get the list of popped message ids
+					List<QueueMessage> messages = query(tx, QUERY_LOCK, q -> q
+						.addParameter(queueName.toLowerCase())
+						.addParameter(limit)
+						.executeAndFetch(rs -> {
+							List<QueueMessage> popped = new ArrayList<>(limit);
+							while (rs.next()) {
+								QueueMessage m = new QueueMessage();
+								m.id = rs.getLong("id");
+								m.version = rs.getLong("version");
+								m.message_id = rs.getString("message_id");
 
-				// Mark them as popped issuing commit after each of them
-				for (QueueMessage m : messages) {
+								popped.add(m);
+							}
+							return popped;
+						}));
 
-					// Continue to lock an record
-					long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
-					try {
+					// Mark them as popped issuing commit at the end of the batch as this batch already hidden by PG
+					for (QueueMessage m : messages) {
+
+						// Continue to lock an record
+						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 						int updated = query(tx, UPDATE, u -> u
 							.addTimestampParameter(unack_on)
 							.addParameter(m.id)
@@ -129,28 +123,25 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 							foundIds.add(m.message_id);
 						}
 
-						tx.commit();
-					} catch (Throwable th) {
-						logger.error("pop: lock failed for {} with {}", queueName, th.getMessage(), th);
-						try {
-							tx.rollback();
-						} catch (SQLException ex) {
-							logger.error("pop: rollback failed for {} with {}", queueName, ex.getMessage(), ex);
+						// Shall we stop pooling?
+						// We recheck this condition after each message to ensure
+						// foundIds not greater than requested count and within timeout window
+						if (!keepPooling.get()) {
+							tx.commit();
+							return Lists.newArrayList(foundIds);
 						}
 					}
 
-					// Shall we stop pooling?
-					// We recheck this condition after each message to ensure
-					// foundIds not greater than requested count and within timeout window
-					if (!keepPooling.get()) {
-						return Lists.newArrayList(foundIds);
-					}
+					// Commit and wait a little bit
+					tx.commit();
+					Thread.sleep(10);
 				}
 
-				Thread.sleep(10);
+				tx.commit();
+			} catch (Exception e) {
+				tx.rollback();
 			}
 
-			tx.commit();
 			return Lists.newArrayList(foundIds);
 		} catch (Exception ex) {
 			logger.error("pop: failed for {} with {}", queueName, ex.getMessage(), ex);
