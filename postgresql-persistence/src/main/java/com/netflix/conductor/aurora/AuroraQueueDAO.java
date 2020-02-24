@@ -115,13 +115,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				// Mark them as popped issuing commit after each of them
 				for (QueueMessage m : messages) {
 
-					// Shall we stop pooling?
-					// We recheck this condition on each message to ensure
-					// foundIds not greater than requested count and within timeout window
-					if (!keepPooling.get()) {
-						return Lists.newArrayList(foundIds);
-					}
-
 					// Continue to lock an record
 					long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 					try {
@@ -144,6 +137,13 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 						} catch (SQLException ex) {
 							logger.error("pop: rollback failed for {} with {}", queueName, ex.getMessage(), ex);
 						}
+					}
+
+					// Shall we stop pooling?
+					// We recheck this condition after each message to ensure
+					// foundIds not greater than requested count and within timeout window
+					if (!keepPooling.get()) {
+						return Lists.newArrayList(foundIds);
 					}
 				}
 
