@@ -36,6 +36,7 @@ server:
     tracing:
       enabled: false
   env:
+    workflow_task_pending_time_threshold_minutes: 480
     workflow_elasticsearch_instanceType: "external"
     workflow_elasticsearch_url: "https://vpc-conductor-elasticsearch-stg-d2ivhx73ka55yzcbdbcrvk4vea.ap-southeast-2.es.amazonaws.com:443"
     db: "mysql"
