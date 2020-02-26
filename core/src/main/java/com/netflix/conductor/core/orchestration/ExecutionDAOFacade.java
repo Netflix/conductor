@@ -229,11 +229,6 @@ public class ExecutionDAOFacade {
                 workflow.getTasks().forEach(indexDAO::asyncIndexTask);
             } else {
                 indexDAO.indexWorkflow(workflow);
-                /*
-                 * Note that tasks will not get indexed here as each call to updateTask will index the task if
-                 * async indexing is not enabled.
-                 */
-                //workflow.getTasks().forEach(indexDAO::indexTask);
             }
         }
         return workflow.getWorkflowId();
