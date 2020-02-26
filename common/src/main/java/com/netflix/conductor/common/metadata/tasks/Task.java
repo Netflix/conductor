@@ -15,18 +15,19 @@
  */
 package com.netflix.conductor.common.metadata.tasks;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.google.protobuf.Any;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import org.apache.commons.lang3.StringUtils;
 
 @ProtoMessage
 public class Task {
@@ -189,7 +190,7 @@ public class Task {
 
     @ProtoField(id = 36)
     private int workflowPriority;
-    
+
     @ProtoField(id = 37)
     private String  executionNameSpace;
 
@@ -198,6 +199,9 @@ public class Task {
 
     @ProtoField(id = 40)
     private int iteration;
+
+    @ProtoField(id = 41)
+    private String subWorkflowId;
 
     public Task() {
     }
@@ -732,6 +736,15 @@ public class Task {
         this.workflowPriority = workflowPriority;
     }
 
+    public String getSubWorkflowId() {
+        return subWorkflowId;
+    }
+
+    public void setSubWorkflowId(String subWorkflowId) {
+        this.subWorkflowId = subWorkflowId;
+    }
+
+
     public Task copy() {
         Task copy = new Task();
         copy.setCallbackAfterSeconds(callbackAfterSeconds);
@@ -762,9 +775,33 @@ public class Task {
         copy.setIteration(iteration);
         copy.setExecutionNameSpace(executionNameSpace);
         copy.setIsolationGroupId(isolationGroupId);
+        copy.setSubWorkflowId(subWorkflowId);
 
         return copy;
     }
+
+  /**
+   * @return a deep copy of the task instance
+   * To be used inside copy Workflow method to provide
+   * a valid deep copied object.
+   * Note: This does not copy the following fields:
+   * <ul>
+   * <li>retried</li>
+   * <li>seq</li>
+   * <li>updateTime</li>
+   * <li>retriedTaskId</li>
+   * </ul>
+   */
+  public Task deepCopy() {
+    Task deepCopy = copy();
+    deepCopy.setStartTime(startTime);
+    deepCopy.setScheduledTime(scheduledTime);
+    deepCopy.setEndTime(endTime);
+    deepCopy.setWorkerId(workerId);
+    deepCopy.setReasonForIncompletion(reasonForIncompletion);
+
+    return deepCopy;
+  }
 
 
     @Override
