@@ -45,6 +45,7 @@ dependencies {
     compile "com.sun.jersey.contribs:jersey-guice:${revJerseyGuice}"
     compile "com.google.inject:guice:${revGuice}"
     compile "com.google.inject.extensions:guice-servlet:${revGuiceServlet}"
+    compile "net.logstash.log4j:jsonevent-layout:1.7"
 
     //Swagger
     compile "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
