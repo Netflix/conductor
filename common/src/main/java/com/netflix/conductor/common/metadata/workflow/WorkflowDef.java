@@ -345,7 +345,12 @@ public class WorkflowDef extends Auditable {
 			Objects.equals(getOutputParameters(), that.getOutputParameters()) &&
 			Objects.equals(getFailureWorkflow(), that.getFailureWorkflow()) &&
 			Objects.equals(getOwnerEmail(), that.getOwnerEmail()) &&
-			Objects.equals(getTimeoutSeconds(), that.getTimeoutSeconds());
+			Objects.equals(getTimeoutSeconds(), that.getTimeoutSeconds()) &&
+			Objects.equals(getTimeoutPolicy(), that.getTimeoutPolicy()) &&
+			Objects.equals(getUpdatedBy(), that.getUpdatedBy()) &&
+			Objects.equals(getUpdateTime(), that.getUpdateTime()) &&
+			isRestartable() == that.isRestartable() &&
+			isWorkflowStatusListenerEnabled() == that.isWorkflowStatusListenerEnabled();
 	}
 
 	@Override

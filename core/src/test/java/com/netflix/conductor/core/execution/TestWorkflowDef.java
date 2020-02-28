@@ -16,8 +16,10 @@
 package com.netflix.conductor.core.execution;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -134,6 +136,53 @@ public class TestWorkflowDef {
 		nextTask = workflowDef.getNextTask("case2");
 		assertNotNull(nextTask);
 		assertEquals("junit_task_1", nextTask.getTaskReferenceName());
+	}
+
+	@Test
+	public void testWorkflowDefEquals() {
+		// In order to avoid forgetting putting inside the equals method the newly added fields check the number of declared fields.
+		final int expectedWorkflowFieldsNumber = 13;
+		final int declaredFieldsNumber = WorkflowDef.class.getDeclaredFields().length;
+		assertEquals(expectedWorkflowFieldsNumber, declaredFieldsNumber);
+
+		WorkflowDef workflowDef1 = createWorkflowDef();
+		WorkflowDef workflowDef2 = createWorkflowDef();
+
+		assertTrue(workflowDef1.equals(workflowDef2));
+
+		Map<String, Object> outputParameters = new HashMap<>();
+		outputParameters.put("o1", "${workflow.input.param1}");
+		outputParameters.put("o2", "${t2.output.uuid}");
+		// Use t2 output for o3 to differ from workflowDef1
+		outputParameters.put("o3", "${t2.output.op}");
+		workflowDef2.setOutputParameters(outputParameters);
+		assertFalse(workflowDef1.equals(workflowDef2));
+
+	}
+
+	private WorkflowDef createWorkflowDef() {
+		WorkflowDef def = new WorkflowDef();
+		def.setName("test_workflow");
+		def.setVersion(1);
+		def.setSchemaVersion(2);
+		def.setOwnerEmail("test@test.com");
+		def.setDescription("Test description.");
+		def.setFailureWorkflow("SomeWorkflow");
+		def.setInputParameters(Arrays.asList("abc", "def"));
+		Map<String, Object> outputParameters = new HashMap<>();
+		outputParameters.put("o1", "${workflow.input.param1}");
+		outputParameters.put("o2", "${t2.output.uuid}");
+		outputParameters.put("o3", "${t1.output.op}");
+		def.setOutputParameters(outputParameters);
+		def.setTimeoutPolicy(WorkflowDef.TimeoutPolicy.ALERT_ONLY);
+		def.setTimeoutSeconds(300);
+		def.setUpdateTime(123456L);
+		def.setUpdatedBy("someX");
+		def.setRestartable(false);
+
+		def.getTasks().add(createWorkflowTask("simple_task_1"));
+		def.getTasks().add(createWorkflowTask("simple_task_2"));
+		return def;
 	}
 
 	private WorkflowTask createWorkflowTask(String name) {
