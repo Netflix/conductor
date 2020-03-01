@@ -13,7 +13,7 @@ public class ExternalServiceConfiguration {
     private Configuration configuration;
 
     @Inject
-    private final OkHttpClientBuilder okHttpClientBuilder;
+    private OkHttpClientBuilder okHttpClientBuilder;
 
     @Inject
     public ExternalServiceConfiguration(Configuration configuration, OkHttpClientBuilder okHttpClientBuilder) {
@@ -22,14 +22,14 @@ public class ExternalServiceConfiguration {
     }
 
     @Singleton
-    public ApiProperties getFloEndpoint() {
-        return new ApiProperties(configuration.getProperty("flo.host", null),
-                Integer.parseInt(configuration.getProperty("flo.connect.timeout", null)),
-                Integer.parseInt(configuration.getProperty("flo.read.timeout", null)));
+    public ApiProperties getReminderEndpoint() {
+        return new ApiProperties(configuration.getProperty("reminder.host", "http://localhost:8080"),
+                Integer.parseInt(configuration.getProperty("reminder.connect.timeout", "300")),
+                Integer.parseInt(configuration.getProperty("reminder.read.timeout", "300")));
     }
 
     @Singleton
-    public Retrofit getFloRetrofitBean(ApiProperties apiProperties) {
+    public Retrofit getReminderRetrofitBean(ApiProperties apiProperties) {
         OkHttpClient httpClient = okHttpClientBuilder.buildClient(apiProperties);
         return ReminderRetrofitUtil.getDefaultRetrofitObject(httpClient, apiProperties.getHost());
     }

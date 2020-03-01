@@ -2,26 +2,25 @@ package com.netflix.conductor.core.execution.tasks;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
-import retrofit2.Retrofit;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class SetReminderRequest {
 
-    private final Retrofit retrofit;
+    private final ExternalServiceConfiguration externalServiceConfiguration;
     private ReminderApi reminderApi;
 
     @Inject
-    public SetReminderRequest(Retrofit retrofit) {
-        this.retrofit = retrofit;
+    public SetReminderRequest(ExternalServiceConfiguration externalServiceConfiguration) {
+        this.externalServiceConfiguration = externalServiceConfiguration;
+        initialize();
     }
 
-    @PostConstruct
     private void initialize() {
-        this.reminderApi = retrofit.create(ReminderApi.class);
+        ApiProperties apiProperties = externalServiceConfiguration.getReminderEndpoint();
+        this.reminderApi = externalServiceConfiguration.getReminderRetrofitBean(apiProperties).create(ReminderApi.class);
     }
 
     public RetrofitResponse<ResponseBody> setReminder(ReminderPayload request) {

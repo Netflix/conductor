@@ -39,16 +39,16 @@ public class ReminderRetrofitUtil {
 
             if (execute.isSuccessful()) {
                 requestTotal.labels(methodName,
-                        ApiInstrumentationUtil.ApiResponse.SUCCESS.name(), "", String.valueOf(execute.code())).inc();
+                        ApiInstrumentationUtil.ApiResponse.SUCCESS.name(), execute.message(), String.valueOf(execute.code())).inc();
 
                 return new RetrofitResponse(execute.code(), execute.body());
             }
 
             error = execute.errorBody().string();
-            requestTotal.labels(methodName, ApiInstrumentationUtil.ApiResponse.FAILURE.name(), "UNKNOWN", String.valueOf(execute.code())).inc();
+            requestTotal.labels(methodName, ApiInstrumentationUtil.ApiResponse.FAILURE.name(), execute.message(), String.valueOf(execute.code())).inc();
         } catch (Exception exception) {
 
-            requestTotal.labels(methodName, ApiInstrumentationUtil.ApiResponse.FAILURE.name(), "UNKNOWN", "").inc();
+            requestTotal.labels(methodName, ApiInstrumentationUtil.ApiResponse.FAILURE.name(), exception.getMessage(), "").inc();
             requestInProgress.labels(methodName).dec();
             timer.observeDuration();
             throw new ServiceException(exception);
