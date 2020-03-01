@@ -1,6 +1,6 @@
 package com.netflix.conductor.core.execution.tasks;
 
-import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 
@@ -10,20 +10,19 @@ import javax.inject.Singleton;
 @Singleton
 public class ExternalServiceConfiguration {
 
-    private Configuration configuration;
+    private SystemPropertiesConfiguration configuration;
 
-    @Inject
     private OkHttpClientBuilder okHttpClientBuilder;
 
     @Inject
-    public ExternalServiceConfiguration(Configuration configuration, OkHttpClientBuilder okHttpClientBuilder) {
-        this.configuration = configuration;
+    public ExternalServiceConfiguration(SystemPropertiesConfiguration systemPropertiesConfiguration, OkHttpClientBuilder okHttpClientBuilder) {
+        this.configuration = systemPropertiesConfiguration;
         this.okHttpClientBuilder = okHttpClientBuilder;
     }
 
     @Singleton
     public ApiProperties getReminderEndpoint() {
-        return new ApiProperties(configuration.getProperty("reminder.host", "http://localhost:8080"),
+        return new ApiProperties(configuration.getProperty("reminder.host", "http://reminder-service.u4.swiggyops.de"),
                 Integer.parseInt(configuration.getProperty("reminder.connect.timeout", "300")),
                 Integer.parseInt(configuration.getProperty("reminder.read.timeout", "300")));
     }
