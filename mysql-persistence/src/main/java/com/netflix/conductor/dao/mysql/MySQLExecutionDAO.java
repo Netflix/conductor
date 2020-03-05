@@ -402,6 +402,11 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO, Rat
     }
 
     @Override
+    public boolean addEventExecutionWithExpiry(EventExecution ee) {
+        throw new UnsupportedOperationException("MySQLExecutionDAO does support for expiry for EventExecution.");
+    }
+
+    @Override
     public void removeEventExecution(EventExecution eventExecution) {
         try {
             withTransaction(tx -> removeEventExecution(tx, eventExecution));

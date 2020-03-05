@@ -386,19 +386,22 @@ public class ExecutionDAOFacade {
      * @return true if save succeeds, false otherwise.
      */
     public boolean addEventExecution(EventExecution eventExecution) {
-        boolean added = executionDAO.addEventExecution(eventExecution);
+        boolean added = config.getEventExecutionPersistenceTTL() > 0 ? executionDAO.addEventExecutionWithExpiry(eventExecution) : executionDAO.addEventExecution(eventExecution);
+
         if (added) {
-            if (config.enableAsyncIndexing()) {
-                indexDAO.asyncAddEventExecution(eventExecution);
-            } else {
-                indexDAO.addEventExecution(eventExecution);
-            }
+            addEventExecutionIndex(eventExecution);
         }
+
         return added;
     }
 
     public void updateEventExecution(EventExecution eventExecution) {
         executionDAO.updateEventExecution(eventExecution);
+        addEventExecutionIndex(eventExecution);
+    }
+
+    private void addEventExecutionIndex(EventExecution eventExecution)
+    {
         if (config.enableAsyncIndexing()) {
             indexDAO.asyncAddEventExecution(eventExecution);
         } else {

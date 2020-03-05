@@ -85,6 +85,9 @@ public interface Configuration {
     String EVENT_HANDLER_REFRESH_TIME_SECS_PROPERTY_NAME = "conductor.eventhandler.cache.refresh.time.seconds";
     int EVENT_HANDLER_REFRESH_TIME_SECS_DEFAULT_VALUE = 60;
 
+    String EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME = "workflow.event.execution.peristence.ttl.seconds";
+    int EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE = 0;
+
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -212,6 +215,15 @@ public interface Configuration {
     default int getEventHandlerRefreshTimeSecsDefaultValue() {
         return getIntProperty(EVENT_HANDLER_REFRESH_TIME_SECS_PROPERTY_NAME,
             EVENT_HANDLER_REFRESH_TIME_SECS_DEFAULT_VALUE);
+    }
+
+    /**
+     *
+     * @return The time to live in seconds of the event execution persisted. Currently, only RedisExecutionDAO supports it.
+     */
+
+    default int getEventExecutionPersistenceTTL() {
+        return getIntProperty(EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME, EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE);
     }
 
     /**

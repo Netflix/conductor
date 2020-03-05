@@ -16,7 +16,6 @@
 package com.netflix.conductor.dao;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
-import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.run.Workflow;
@@ -222,6 +221,16 @@ public interface ExecutionDAO {
 	 * @return true if the event was added.  false otherwise when the event by id is already already stored.
 	 */
 	boolean addEventExecution(EventExecution ee);
+
+
+	/**
+	 * Stores the event execution and adds expiry to the event execution.
+	 * if the DAO implementation cannot perform searches across workflows (and needs to use indexDAO)
+	 *
+	 * @param ee Event Execution to be stored
+	 * @return true if the event was added.  false otherwise when the event by id is already already stored.
+	 */
+	boolean addEventExecutionWithExpiry(EventExecution ee);
 	
 	/**
 	 * 

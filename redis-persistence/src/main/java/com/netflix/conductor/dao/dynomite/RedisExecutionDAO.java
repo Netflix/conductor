@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
-import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -32,7 +31,6 @@ import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dyno.DynoProxy;
 import com.netflix.conductor.metrics.Monitors;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +43,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -528,6 +525,15 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		} catch (Exception e) {
 			throw new ApplicationException(Code.BACKEND_ERROR, "Unable to add event execution for " + eventExecution.getId(), e);
 		}
+	}
+
+	@Override
+	public boolean addEventExecutionWithExpiry(EventExecution eventExecution) {
+		boolean added =  addEventExecution(eventExecution);
+		String key = nsKey(EVENT_EXECUTION, eventExecution.getName(), eventExecution.getEvent(), eventExecution.getMessageId());
+		dynoClient.expire(key, this.config.getEventExecutionPersistenceTTL());
+
+		return added;
 	}
 
 	@Override

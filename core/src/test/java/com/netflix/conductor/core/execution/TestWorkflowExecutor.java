@@ -103,7 +103,7 @@ public class TestWorkflowExecutor {
 
     @Before
     public void init() {
-        TestConfiguration config = new TestConfiguration();
+        TestConfiguration config = new TestConfiguration(){};
         executionDAOFacade = mock(ExecutionDAOFacade.class);
         metadataDAO = mock(MetadataDAO.class);
         queueDAO = mock(QueueDAO.class);

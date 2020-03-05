@@ -12,20 +12,6 @@
  */
 package com.netflix.conductor.core.orchestration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventExecution;
@@ -36,17 +22,18 @@ import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.TestConfiguration;
 import com.netflix.conductor.core.execution.TestDeciderService;
-import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.PollDataDAO;
-import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.dao.RateLimitingDAO;
+import com.netflix.conductor.dao.*;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 public class ExecutionDAOFacadeTest {
 
@@ -66,7 +53,9 @@ public class ExecutionDAOFacadeTest {
         rateLimitingDao = mock(RateLimitingDAO.class);
         pollDataDAO = mock(PollDataDAO.class);
         objectMapper = new JsonMapperProvider().get();
-        Configuration configuration = new TestConfiguration();
+        Configuration configuration = new TestConfiguration(){
+
+        };
         executionDAOFacade = new ExecutionDAOFacade(executionDAO, queueDAO, indexDAO, rateLimitingDao, pollDataDAO,
             objectMapper, configuration);
     }
@@ -138,6 +127,29 @@ public class ExecutionDAOFacadeTest {
         verify(indexDAO, never()).addEventExecution(any());
 
         when(executionDAO.addEventExecution(any())).thenReturn(true);
+        added = executionDAOFacade.addEventExecution(new EventExecution());
+        assertTrue(added);
+        verify(indexDAO, times(1)).asyncAddEventExecution(any());
+    }
+
+    @Test
+    public void testAddEventExecutionWithExpiry() {
+        Configuration config = new TestConfiguration() {
+            public int getEventExecutionPersistenceTTL() {
+                return 300;
+            }
+        };
+
+        executionDAOFacade = new ExecutionDAOFacade(executionDAO, queueDAO, indexDAO, rateLimitingDao, pollDataDAO,
+                objectMapper, config);
+
+        when(executionDAO.addEventExecutionWithExpiry(any())).thenReturn(false);
+        boolean added = executionDAOFacade.addEventExecution(new EventExecution());
+        assertFalse(added);
+        verify(executionDAO, times(1)).addEventExecutionWithExpiry(any());
+        verify(indexDAO, never()).addEventExecution(any());
+
+        when(executionDAO.addEventExecutionWithExpiry(any())).thenReturn(true);
         added = executionDAOFacade.addEventExecution(new EventExecution());
         assertTrue(added);
         verify(indexDAO, times(1)).asyncAddEventExecution(any());

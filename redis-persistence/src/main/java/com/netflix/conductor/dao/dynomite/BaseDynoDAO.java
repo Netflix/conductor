@@ -37,7 +37,7 @@ public class BaseDynoDAO {
 
     private String domain;
 
-    private Configuration config;
+    protected Configuration config;
 
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
