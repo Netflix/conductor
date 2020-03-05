@@ -221,7 +221,6 @@ public interface Configuration {
      *
      * @return The time to live in seconds of the event execution persisted. Currently, only RedisExecutionDAO supports it.
      */
-
     default int getEventExecutionPersistenceTTL() {
         return getIntProperty(EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME, EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE);
     }

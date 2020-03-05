@@ -36,16 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -529,9 +520,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	@Override
 	public boolean addEventExecutionWithExpiry(EventExecution eventExecution) {
-		boolean added =  addEventExecution(eventExecution);
-		String key = nsKey(EVENT_EXECUTION, eventExecution.getName(), eventExecution.getEvent(), eventExecution.getMessageId());
-		dynoClient.expire(key, this.config.getEventExecutionPersistenceTTL());
+		boolean added = addEventExecution(eventExecution);
+		if (added) {
+			String key = nsKey(EVENT_EXECUTION, eventExecution.getName(), eventExecution.getEvent(), eventExecution.getMessageId());
+			dynoClient.expire(key, this.config.getEventExecutionPersistenceTTL());
+		}
 
 		return added;
 	}
