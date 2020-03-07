@@ -1,6 +1,9 @@
 package com.netflix.conductor.core.execution.tasks;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.HashMap;
+
 public class Endpoint {
 
     public String getHost() {
@@ -34,9 +37,21 @@ public class Endpoint {
     @JsonProperty("resource_id")
     private String resourceId;
 
+    private Object params;
+
+    public Object getParams() {
+        return params;
+    }
+
+    public void setParams(Object params) {
+        this.params = params;
+    }
+
+
     public Endpoint(String host, String uri, String resourceId) {
         this.host = host;
         this.uri = uri;
         this.resourceId = resourceId;
+        this.params = new HashMap<>();
     }
 }

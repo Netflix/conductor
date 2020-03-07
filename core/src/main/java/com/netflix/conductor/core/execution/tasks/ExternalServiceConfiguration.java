@@ -22,7 +22,7 @@ public class ExternalServiceConfiguration {
 
     @Singleton
     public ApiProperties getReminderEndpoint() {
-        return new ApiProperties(configuration.getProperty("reminder.host", "http://reminder-service.u4.swiggyops.de"),
+        return new ApiProperties(configuration.getProperty("reminder.host", "http://reminder-service.swiggy.prod"),
                 Integer.parseInt(configuration.getProperty("reminder.connect.timeout", "300")),
                 Integer.parseInt(configuration.getProperty("reminder.read.timeout", "300")));
     }

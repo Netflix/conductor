@@ -2,6 +2,7 @@ package com.netflix.conductor.core.execution.tasks;
 
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 public class ReminderPayload implements Serializable {
 
@@ -13,7 +14,9 @@ public class ReminderPayload implements Serializable {
 
     private String group;
 
-    private HttpNotification httpNotification;
+    private HttpNotification notification;
+
+    private Object msg;
 
     public int getSendAfter() {
         return sendAfter;
@@ -47,20 +50,29 @@ public class ReminderPayload implements Serializable {
         this.group = group;
     }
 
-    public HttpNotification getHttpNotification() {
-        return httpNotification;
+    public HttpNotification getNotification() {
+        return notification;
     }
 
-    public void setHttpNotification(HttpNotification httpNotification) {
-        this.httpNotification = httpNotification;
+    public void setNotification(HttpNotification notification) {
+        this.notification = notification;
     }
 
-    public ReminderPayload(int sendAfter, String to, String from, String group, HttpNotification httpNotification) {
+    public Object getMsg() {
+        return msg;
+    }
+
+    public void setMsg(Object msg) {
+        this.msg = msg;
+    }
+
+    public ReminderPayload(int sendAfter, String to, String from, String group, HttpNotification notification) {
         this.sendAfter = sendAfter;
         this.to = to;
         this.from = from;
         this.group = group;
-        this.httpNotification = httpNotification;
+        this.notification = notification;
+        this.msg = new HashMap<>();
     }
 
 }
