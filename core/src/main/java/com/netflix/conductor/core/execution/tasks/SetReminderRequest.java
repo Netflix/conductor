@@ -35,7 +35,7 @@ public class SetReminderRequest {
         Endpoint endpoint = new Endpoint(
                 configuration.getProperty("flo.host","http://flo-server.swiggy.prod"),
                 configuration.getProperty("flo.uri", "/api"),
-                configuration.getProperty("flo.resource_id", "/workflow/" + workflowid));
+                configuration.getProperty("flo.resource_id", "/workflow/" + workflowid + "/remove"));
         HttpNotification httpNotification = new HttpNotification("HTTP_DELETE", endpoint);
         ReminderPayload reminderPayload = new ReminderPayload(Integer.valueOf(configuration.getProperty("flo.ttl","10")),
                 "FLO_ARCHIVAL", "FLO_ARCHIVAL", workflowid, httpNotification);
