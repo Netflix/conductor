@@ -1,4 +1,4 @@
-package com.netflix.conductor.core.execution.tasks;
+package com.netflix.conductor.core.execution.archival;
 
 import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import okhttp3.OkHttpClient;
@@ -22,7 +22,7 @@ public class ExternalServiceConfiguration {
 
     @Singleton
     public ApiProperties getReminderEndpoint() {
-        return new ApiProperties(configuration.getProperty("reminder.host", "http://reminder-service.swiggy.prod"),
+        return new ApiProperties(configuration.getProperty("reminder.host", "reminder-service.swiggy.prod"),
                 Integer.parseInt(configuration.getProperty("reminder.connect.timeout", "300")),
                 Integer.parseInt(configuration.getProperty("reminder.read.timeout", "300")));
     }

@@ -1,7 +1,7 @@
 package com.netflix.conductor.core.execution;
 
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.execution.tasks.SetReminderRequest;
+import com.netflix.conductor.core.execution.archival.WorkflowArchival;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,18 +13,18 @@ public class ArchiveWorkflowViaReminderStatusListener implements WorkflowStatusL
     private static final Logger LOG = LoggerFactory.getLogger(ArchiveWorkflowViaReminderStatusListener.class);
 
     @Inject
-    private SetReminderRequest setReminderRequest;
+    private WorkflowArchival workflowArchival;
 
     @Override
     public void onWorkflowCompleted(Workflow workflow) {
         LOG.debug("Workflow {} is completed", workflow.getWorkflowId());
-        setReminderRequest.setReminder(workflow.getWorkflowId());
+        workflowArchival.archiveWorkflow(workflow.getWorkflowId());
     }
 
     @Override
     public void onWorkflowTerminated(Workflow workflow) {
         LOG.debug("Workflow {} is terminated", workflow.getWorkflowId());
-        setReminderRequest.setReminder(workflow.getWorkflowId());
+        workflowArchival.archiveWorkflow(workflow.getWorkflowId());
     }
 
 }

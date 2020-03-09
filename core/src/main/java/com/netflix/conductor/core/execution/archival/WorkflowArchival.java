@@ -1,4 +1,4 @@
-package com.netflix.conductor.core.execution.tasks;
+package com.netflix.conductor.core.execution.archival;
 
 import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import okhttp3.ResponseBody;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class SetReminderRequest {
+public class WorkflowArchival {
 
     private final ExternalServiceConfiguration externalServiceConfiguration;
     private ReminderApi reminderApi;
@@ -21,7 +21,7 @@ public class SetReminderRequest {
     private SystemPropertiesConfiguration configuration;
 
     @Inject
-    public SetReminderRequest(ExternalServiceConfiguration externalServiceConfiguration) {
+    public WorkflowArchival(ExternalServiceConfiguration externalServiceConfiguration) {
         this.externalServiceConfiguration = externalServiceConfiguration;
         initialize();
     }
@@ -31,9 +31,9 @@ public class SetReminderRequest {
         this.reminderApi = externalServiceConfiguration.getReminderRetrofitBean(apiProperties).create(ReminderApi.class);
     }
 
-    public RetrofitResponse<ResponseBody> setReminder(String workflowid) {
+    public RetrofitResponse<ResponseBody> archiveWorkflow(String workflowid) {
         Endpoint endpoint = new Endpoint(
-                configuration.getProperty("flo.host","http://flo-server.swiggy.prod"),
+                configuration.getProperty("flo.host","flo-server.swiggy.prod"),
                 configuration.getProperty("flo.uri", "/api"),
                 configuration.getProperty("flo.resource_id", "/workflow/" + workflowid + "/remove"));
         HttpNotification httpNotification = new HttpNotification("HTTP_DELETE", endpoint);

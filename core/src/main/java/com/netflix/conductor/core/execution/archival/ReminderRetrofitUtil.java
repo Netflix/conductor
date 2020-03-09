@@ -1,10 +1,13 @@
-package com.netflix.conductor.core.execution.tasks;
+package com.netflix.conductor.core.execution.archival;
 
 import com.netflix.conductor.core.execution.exceptions.BadRequestException;
 import com.netflix.conductor.core.execution.exceptions.ResourceNotFoundException;
 import com.netflix.conductor.core.execution.exceptions.ServiceException;
+import com.netflix.conductor.core.execution.tasks.ApiInstrumentationUtil;
 import io.prometheus.client.Histogram;
 import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
+import org.apache.http.HttpResponse;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -28,7 +31,7 @@ public class ReminderRetrofitUtil {
 
     public static <T> RetrofitResponse executeCall(Call<T> retrofitCall, String methodName) {
 
-        Response<T> execute;
+        Response<T> execute = null;
         String error;
         Histogram.Timer timer = ApiInstrumentationUtil.requestLatency.labels(methodName).startTimer();
         requestInProgress.labels(methodName).inc();
@@ -48,7 +51,7 @@ public class ReminderRetrofitUtil {
             requestTotal.labels(methodName, ApiInstrumentationUtil.ApiResponse.FAILURE.name(), execute.message(), String.valueOf(execute.code())).inc();
         } catch (Exception exception) {
 
-            requestTotal.labels(methodName, ApiInstrumentationUtil.ApiResponse.FAILURE.name(), exception.getMessage(), "").inc();
+            requestTotal.labels(methodName, ApiInstrumentationUtil.ApiResponse.FAILURE.name(), "", execute != null ? String.valueOf(execute.code()) : "500").inc();
             requestInProgress.labels(methodName).dec();
             timer.observeDuration();
             throw new ServiceException(exception);

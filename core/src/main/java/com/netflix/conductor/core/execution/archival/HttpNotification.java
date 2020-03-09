@@ -1,4 +1,4 @@
-package com.netflix.conductor.core.execution.tasks;
+package com.netflix.conductor.core.execution.archival;
 
 public class HttpNotification {
 
