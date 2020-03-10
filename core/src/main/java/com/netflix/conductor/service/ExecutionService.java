@@ -77,13 +77,10 @@ public class ExecutionService {
 
     private final int taskRequeueTimeout;
 	private int queueTaskMessagePostponeSeconds;
-	private final int eventExecutionPersistanceTTL;
-
 
 	private static final int MAX_POLL_TIMEOUT_MS = 5000;
     private static final int POLL_COUNT_ONE = 1;
     private static final int POLLING_TIMEOUT_IN_MS = 100;
-
     private static final int MAX_SEARCH_SIZE = 5_000;
 
 	@Inject
@@ -101,7 +98,6 @@ public class ExecutionService {
 
 		this.taskRequeueTimeout = config.getIntProperty("task.requeue.timeout", 60_000);
 		this.queueTaskMessagePostponeSeconds = config.getIntProperty("task.queue.message.postponeSeconds", 60);
-		this.eventExecutionPersistanceTTL = config.getEventExecutionPersistenceTTL();
 	}
 
 	public Task poll(String taskType, String workerId) {
