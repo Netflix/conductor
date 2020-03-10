@@ -21,7 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 @Target({FIELD, PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface NoSemiColonConstraint {
-    String message() default "String: cannot contain the following set of characters: ':'";
+    String message() default "String: cannot contain the following set of characters: ';'";
 
     Class<?>[] groups() default {};
 
