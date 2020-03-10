@@ -1,7 +1,7 @@
 import http from '../core/HttpClient';
 import * as authHelper from '../core/AuthHelper';
 
-export function searchWorkflows(query, search, hours, fullstr, start, range, frmdate, todate) {
+export function searchWorkflows(query, search, hours, fullstr, start, range,frmdate,todate,csv) {
 
   return function (dispatch) {
     dispatch({
@@ -16,8 +16,7 @@ export function searchWorkflows(query, search, hours, fullstr, start, range, frm
         search = search.replace(new RegExp(':', 'g'), '\\:');
       }
     }
-
-    return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search + '&start=' + start + "&range=" + range + "&frmdate=" + frmdate + "&todate=" + todate).then((data) => {
+    return http.get('/api/wfe/' + status + '?q=' + query + '&h=' + hours + '&freeText=' + search + '&start=' + start + "&range=" + range+"&frmdate="+frmdate+"&todate="+todate+"&csv="+csv).then((data) => {
       dispatch({
         type: 'RECEIVED_WORKFLOWS',
         data
