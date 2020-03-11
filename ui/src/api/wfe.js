@@ -11,6 +11,7 @@ function getToken(req) {
 }
 
 router.get('/', async (req, res, next) => {
+
   try {
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
@@ -27,10 +28,8 @@ router.get('/', async (req, res, next) => {
       h = req.query.h;
     }
 
-
-    var frmdate  = req.query.frmdate;
-    var todate  = req.query.todate;
-    var csv  = req.query.csv;
+    var frmdate = req.query.frmdate;
+    var todate = req.query.todate;
     let range = req.query.range;
     let from = null;
     let end = null;
@@ -82,13 +81,10 @@ router.get('/', async (req, res, next) => {
     if (!isNaN(req.query.start)) {
       start = req.query.start;
     }
-    let size=100;
-    if(csv=='true')
-    {
-    size=10000
-    }
+
     let query = req.query.q;
-    const url = baseURL2 + 'search?size='+ size +'&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query;
+
+    const url = baseURL2 + 'search?size=100&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query;
     const result = await http.get(url);
     const hits = result.results;
     res.status(200).send({result: {hits: hits, totalHits: result.totalHits}});
