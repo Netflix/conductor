@@ -18,11 +18,14 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.set;
 import static com.netflix.conductor.util.Constants.ENTITY_KEY;
 import static com.netflix.conductor.util.Constants.ENTITY_TYPE_TASK;
 import static com.netflix.conductor.util.Constants.ENTITY_TYPE_WORKFLOW;
+import static com.netflix.conductor.util.Constants.EVENT_EXECUTION_ID_KEY;
 import static com.netflix.conductor.util.Constants.EVENT_HANDLER_KEY;
 import static com.netflix.conductor.util.Constants.EVENT_HANDLER_NAME_KEY;
 import static com.netflix.conductor.util.Constants.HANDLERS_KEY;
+import static com.netflix.conductor.util.Constants.MESSAGE_ID_KEY;
 import static com.netflix.conductor.util.Constants.PAYLOAD_KEY;
 import static com.netflix.conductor.util.Constants.SHARD_ID_KEY;
+import static com.netflix.conductor.util.Constants.TABLE_EVENT_EXECUTIONS;
 import static com.netflix.conductor.util.Constants.TABLE_EVENT_HANDLERS;
 import static com.netflix.conductor.util.Constants.TABLE_TASK_DEFS;
 import static com.netflix.conductor.util.Constants.TABLE_TASK_DEF_LIMIT;
@@ -45,6 +48,7 @@ import static com.netflix.conductor.util.Constants.WORKFLOW_ID_KEY;
 import static com.netflix.conductor.util.Constants.WORKFLOW_VERSION_KEY;
 
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Using;
 import com.netflix.conductor.cassandra.CassandraConfiguration;
 import javax.inject.Inject;
 
@@ -53,7 +57,7 @@ import javax.inject.Inject;
  *
  * <em>MetadataDAO</em>
  * <ul>
- * <li>INSERT INTO conductor.workflow_definitions (workflow_def_name,version,workflow_definition) VALUES (?,?,?); </li>
+ * <li>INSERT INTO conductor.workflow_definitions (workflow_def_name,version,workflow_definition) VALUES (?,?,?) IF NOT EXISTS; </li>
  * <li>INSERT INTO conductor.workflow_defs_index (workflow_def_version_index,workflow_def_name_version, workflow_def_index_value) VALUES ('workflow_def_version_index',?,?); </li>
  * <li>INSERT INTO conductor.task_definitions (task_defs,task_def_name,task_definition) VALUES ('task_defs',?,?); </li>
  *
@@ -62,6 +66,8 @@ import javax.inject.Inject;
  * <li>SELECT * FROM conductor.workflow_defs_index WHERE workflow_def_version_index=?; </li>
  * <li>SELECT task_definition FROM conductor.task_definitions WHERE task_defs='task_defs' AND task_def_name=?; </li>
  * <li>SELECT * FROM conductor.task_definitions WHERE task_defs=?; </li>
+ *
+ * <li>UPDATE conductor.workflow_definitions SET workflow_definition=? WHERE workflow_def_name=? AND version=?;</li>
  *
  * <li>DELETE FROM conductor.workflow_definitions WHERE workflow_def_name=? AND version=?; </li>
  * <li>DELETE FROM conductor.workflow_defs_index WHERE workflow_def_version_index=? AND workflow_def_name_version=?; </li>
@@ -72,6 +78,7 @@ import javax.inject.Inject;
  * <ul>
  * <li> INSERT INTO conductor.workflows (workflow_id,shard_id,task_id,entity,payload,total_tasks,total_partitions) VALUES (?,?,?,'workflow',?,?,?); </li>
  * <li> INSERT INTO conductor.workflows (workflow_id,shard_id,task_id,entity,payload) VALUES (?,?,?,'task',?); </li>
+ * <li> INSERT INTO conductor.event_executions (message_id,event_handler_name,event_execution_id,payload) VALUES (?,?,?,?) IF NOT EXISTS; </li>
  *
  * <li> SELECT total_tasks,total_partitions FROM conductor.workflows WHERE workflow_id=? AND shard_id=1; </li>
  * <li> SELECT payload FROM conductor.workflows WHERE workflow_id=? AND shard_id=? AND entity='task' AND task_id=?; </li>
@@ -79,16 +86,20 @@ import javax.inject.Inject;
  * <li> SELECT * FROM conductor.workflows WHERE workflow_id=? AND shard_id=?; </li>
  * <li> SELECT workflow_id FROM conductor.task_lookup WHERE task_id=?; </li>
  * <li> SELECT * FROM conductor.task_def_limit WHERE task_def_name=?; </li>
+ * <li> SELECT * FROM conductor.event_executions WHERE message_id=? AND event_handler_name=?;</li>
  *
  * <li> UPDATE conductor.workflows SET payload=? WHERE workflow_id=? AND shard_id=1 AND entity='workflow' AND task_id=''; </li>
  * <li> UPDATE conductor.workflows SET total_tasks=? WHERE workflow_id=? AND shard_id=?; </li>
  * <li> UPDATE conductor.workflows SET * total_partitions=?,total_tasks=? WHERE workflow_id=? AND shard_id=1; </li>
- * <li> UPDATE conductor.task_lookup SET workflow_id=? WHERE task_id=?; UPDATE conductor.task_def_limit SET workflow_id=? WHERE task_def_name=? AND task_id=?; </li>
+ * <li> UPDATE conductor.task_lookup SET workflow_id=? WHERE task_id=?; </li>
+ * <li> UPDATE conductor.task_def_limit SET workflow_id=? WHERE task_def_name=? AND task_id=?; </li>
+ * <li> UPDATE conductor.event_executions USING TTL ? SET payload=? WHERE message_id=? AND event_handler_name=? AND event_execution_id=?; </li>
  *
  * <li> DELETE FROM conductor.workflows WHERE workflow_id=? AND shard_id=?; </li>
  * <li> DELETE FROM conductor.workflows WHERE workflow_id=? AND shard_id=? AND entity='task' AND task_id=?; </li>
  * <li> DELETE FROM conductor.task_lookup WHERE task_id=?; </li>
  * <li> DELETE FROM conductor.task_def_limit WHERE task_def_name=? AND task_id=?; </li>
+ * <li> DELETE FROM conductor.event_executions WHERE message_id=? AND event_handler_name=? AND event_execution_id=?; </li>
  * </ul>
  *
  * <em>EventHandlerDAO</em>
@@ -118,6 +129,7 @@ public class Statements {
             .value(WORKFLOW_DEF_NAME_KEY, bindMarker())
             .value(WORKFLOW_VERSION_KEY, bindMarker())
             .value(WORKFLOW_DEFINITION_KEY, bindMarker())
+            .ifNotExists()
             .getQueryString();
     }
 
@@ -202,6 +214,19 @@ public class Statements {
             .getQueryString();
     }
 
+    // Update Statement
+
+    /**
+     * @return cql query statement to update a workflow definitinos in the "workflow_definitions" table
+     */
+    public String getUpdateWorkflowDefStatement() {
+        return QueryBuilder.update(keyspace, TABLE_WORKFLOW_DEFS)
+            .with(set(WORKFLOW_DEFINITION_KEY, bindMarker()))
+            .where(eq(WORKFLOW_DEF_NAME_KEY, bindMarker()))
+            .and(eq(WORKFLOW_VERSION_KEY, bindMarker()))
+            .getQueryString();
+    }
+
     // Delete Statements
 
     /**
@@ -269,6 +294,19 @@ public class Statements {
             .getQueryString();
     }
 
+    /**
+     * @return cql query statement to insert a new event execution into the "event_executions" table
+     */
+    public String getInsertEventExecutionStatement() {
+        return QueryBuilder.insertInto(keyspace, TABLE_EVENT_EXECUTIONS)
+            .value(MESSAGE_ID_KEY, bindMarker())
+            .value(EVENT_HANDLER_NAME_KEY, bindMarker())
+            .value(EVENT_EXECUTION_ID_KEY, bindMarker())
+            .value(PAYLOAD_KEY, bindMarker())
+            .ifNotExists()
+            .getQueryString();
+    }
+    
     // Select Statements
 
     /**
@@ -342,6 +380,19 @@ public class Statements {
             .getQueryString();
     }
 
+    /**
+     * @return cql query statement to retrieve all event executions for a given message and event handler from the
+     * "event_executions" table
+     */
+    public String getSelectAllEventExecutionsForMessageFromEventExecutionsStatement() {
+        return QueryBuilder.select()
+            .all()
+            .from(keyspace, TABLE_EVENT_EXECUTIONS)
+            .where(eq(MESSAGE_ID_KEY, bindMarker()))
+            .and(eq(EVENT_HANDLER_NAME_KEY, bindMarker()))
+            .getQueryString();
+    }
+
     // Update Statements
 
     /**
@@ -401,6 +452,19 @@ public class Statements {
             .getQueryString();
     }
 
+    /**
+     * @return cql query statement to update an event execution in the "event_executions" table
+     */
+    public String getUpdateEventExecutionStatement() {
+        return QueryBuilder.update(keyspace, TABLE_EVENT_EXECUTIONS)
+            .using(QueryBuilder.ttl(bindMarker()))
+            .with(set(PAYLOAD_KEY, bindMarker()))
+            .where(eq(MESSAGE_ID_KEY, bindMarker()))
+            .and(eq(EVENT_HANDLER_NAME_KEY, bindMarker()))
+            .and(eq(EVENT_EXECUTION_ID_KEY, bindMarker()))
+            .getQueryString();
+    }
+
     // Delete statements
 
     /**
@@ -445,6 +509,18 @@ public class Statements {
             .from(keyspace, TABLE_TASK_DEF_LIMIT)
             .where(eq(TASK_DEF_NAME_KEY, bindMarker()))
             .and(eq(TASK_ID_KEY, bindMarker()))
+            .getQueryString();
+    }
+
+    /**
+     * @return cql query statement to delete an event execution from the "event_execution" table
+     */
+    public String getDeleteEventExecutionsStatement() {
+        return QueryBuilder.delete()
+            .from(keyspace, TABLE_EVENT_EXECUTIONS)
+            .where(eq(MESSAGE_ID_KEY, bindMarker()))
+            .and(eq(EVENT_HANDLER_NAME_KEY, bindMarker()))
+            .and(eq(EVENT_EXECUTION_ID_KEY, bindMarker()))
             .getQueryString();
     }
 

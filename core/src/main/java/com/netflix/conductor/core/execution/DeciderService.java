@@ -192,7 +192,7 @@ public class DeciderService {
             if (!pendingTask.isExecuted() && !pendingTask.isRetried() && pendingTask.getStatus().isTerminal()) {
                 pendingTask.setExecuted(true);
                 List<Task> nextTasks = getNextTask(workflow, pendingTask);
-                if (pendingTask.isLoopOverTask() && !nextTasks.isEmpty()) {
+                if (pendingTask.isLoopOverTask() && !TaskType.DO_WHILE.name().equals(pendingTask.getTaskType()) && !nextTasks.isEmpty()) {
                     nextTasks = filterNextLoopOverTasks(nextTasks, pendingTask, workflow);
                 }
                 nextTasks.forEach(nextTask -> tasksToBeScheduled.putIfAbsent(nextTask.getReferenceTaskName(), nextTask));
@@ -403,7 +403,9 @@ public class DeciderService {
                 startDelay = taskDefinition.getRetryDelaySeconds();
                 break;
             case EXPONENTIAL_BACKOFF:
-                startDelay = taskDefinition.getRetryDelaySeconds() * (1 + task.getRetryCount());
+                int retryDelaySeconds = taskDefinition.getRetryDelaySeconds() * (int) Math.pow(2, task.getRetryCount());
+                // Reset integer overflow to max value
+                startDelay = retryDelaySeconds < 0 ? Integer.MAX_VALUE : retryDelaySeconds;
                 break;
         }
 
