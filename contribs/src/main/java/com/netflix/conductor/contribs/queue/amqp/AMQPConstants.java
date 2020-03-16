@@ -20,4 +20,3 @@ public class AMQPConstants {
 		public static int DEFAULT_POLL_TIME_MS = 100;
 	}
 
-}

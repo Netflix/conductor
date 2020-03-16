@@ -22,9 +22,9 @@ import static com.netflix.conductor.contribs.queue.amqp.AMQPObservableQueue.Buil
  * This code is based on the PR https://github.com/Netflix/conductor/pull/1063 which did not get merged to the master
  */
 @Singleton
-public class AMQEventQueueProvider implements EventQueueProvider {
+public class AMQPEventQueueProvider implements EventQueueProvider {
 
-    private static Logger logger = LoggerFactory.getLogger(AMQEventQueueProvider.class);
+    private static Logger logger = LoggerFactory.getLogger(AMQPEventQueueProvider.class);
 
     protected Map<String, AMQPObservableQueue> queues = new ConcurrentHashMap<>();
 
@@ -33,7 +33,7 @@ public class AMQEventQueueProvider implements EventQueueProvider {
     private final Configuration config;
 
     @Inject
-    public AMQEventQueueProvider(Configuration config, boolean useExchange) {
+    public AMQPEventQueueProvider(Configuration config, boolean useExchange) {
         this.config = config;
         this.useExchange = useExchange;
     }
