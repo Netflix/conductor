@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Netflix, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -243,14 +243,4 @@ public interface ExecutionDAO {
 	 * @param ee Event execution to be removed
 	 */
 	void removeEventExecution(EventExecution ee);
-
-	/**
-	 * 
-	 * @param eventHandlerName Name of the event handler
-	 * @param eventName Event Name
-	 * @param messageId ID of the message received
-	 * @param max max number of executions to return
-	 * @return list of matching events
-	 */
-	List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max);
 }
