@@ -23,125 +23,125 @@ import java.util.Map;
  * @author Viren
  *
  */
-public interface TestConfiguration extends Configuration {
+public class TestConfiguration implements Configuration {
 
 	@Override
-	default int getSweepFrequency() {
+	public int getSweepFrequency() {
 		return 1;
 	}
 
 	@Override
-	default boolean disableSweep() {
+	public boolean disableSweep() {
 		return false;
 	}
 
 	@Override
-	default boolean disableAsyncWorkers() {
+	public boolean disableAsyncWorkers() {
 		return false;
 	}
 
 	@Override
-	default boolean isEventMessageIndexingEnabled() {
+	public boolean isEventMessageIndexingEnabled() {
 		return true;
 	}
 
 	@Override
-	default String getServerId() {
+	public String getServerId() {
 		return "server_id";
 	}
 
 	@Override
-	default String getEnvironment() {
+	public String getEnvironment() {
 		return "test";
 	}
 
 	@Override
-	default String getStack() {
+	public String getStack() {
 		return "junit";
 	}
 
 	@Override
-	default String getAppId() {
+	public String getAppId() {
 		return "workflow";
 	}
 
 	@Override
-	default boolean enableAsyncIndexing() {
+	public boolean enableAsyncIndexing() {
 		return true;
 	}
 
 	@Override
-	default String getProperty(String string, String def) {
+	public String getProperty(String string, String def) {
 		return "dummy";
 	}
 
     @Override
-    default boolean getBooleanProperty(String name, boolean defaultValue) {
+    public boolean getBooleanProperty(String name, boolean defaultValue) {
         return false;
     }
 
     @Override
-	default String getAvailabilityZone() {
+	public String getAvailabilityZone() {
 		return "us-east-1a";
 	}
 
 	@Override
-	default int getIntProperty(String string, int def) {
+	public int getIntProperty(String string, int def) {
 		return 100;
 	}
 
 	@Override
-	default String getRegion() {
+	public String getRegion() {
 		return "us-east-1";
 	}
 
 	@Override
-	default Long getWorkflowInputPayloadSizeThresholdKB() {
+	public Long getWorkflowInputPayloadSizeThresholdKB() {
 		return 10L;
 	}
 
 	@Override
-	default Long getMaxWorkflowInputPayloadSizeThresholdKB() {
+	public Long getMaxWorkflowInputPayloadSizeThresholdKB() {
 		return 10240L;
 	}
 
 	@Override
-	default Long getWorkflowOutputPayloadSizeThresholdKB() {
+	public Long getWorkflowOutputPayloadSizeThresholdKB() {
 		return 10L;
 	}
 
 	@Override
-	default Long getMaxWorkflowOutputPayloadSizeThresholdKB() {
+	public Long getMaxWorkflowOutputPayloadSizeThresholdKB() {
 		return 10240L;
 	}
 
 	@Override
-	default Long getTaskInputPayloadSizeThresholdKB() {
+	public Long getTaskInputPayloadSizeThresholdKB() {
 		return 10L;
 	}
 
 	@Override
-	default Long getMaxTaskInputPayloadSizeThresholdKB() {
+	public Long getMaxTaskInputPayloadSizeThresholdKB() {
 		return 10240L;
 	}
 
 	@Override
-	default Long getTaskOutputPayloadSizeThresholdKB() {
+	public Long getTaskOutputPayloadSizeThresholdKB() {
 		return 10L;
 	}
 
 	@Override
-	default Long getMaxTaskOutputPayloadSizeThresholdKB() {
+	public Long getMaxTaskOutputPayloadSizeThresholdKB() {
 		return 10240L;
 	}
 
 	@Override
-	default Map<String, Object> getAll() {
+	public Map<String, Object> getAll() {
 		return null;
 	}
 
 	@Override
-	default long getLongProperty(String name, long defaultValue) {
+	public long getLongProperty(String name, long defaultValue) {
 		return 1000000L;
 	}
 }

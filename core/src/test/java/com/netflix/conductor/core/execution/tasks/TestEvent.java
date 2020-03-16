@@ -195,7 +195,7 @@ public class TestEvent {
         }).when(dao).remove(any(), any());
 
         Map<String, EventQueueProvider> providers = new HashMap<>();
-        providers.put("conductor", new DynoEventQueueProvider(dao, new TestConfiguration(){}));
+        providers.put("conductor", new DynoEventQueueProvider(dao, new TestConfiguration()));
         eventQueues = new EventQueues(providers, parametersUtils);
         Event event = new Event(eventQueues, parametersUtils, objectMapper);
         event.start(workflow, task, null);
@@ -320,7 +320,7 @@ public class TestEvent {
         }).when(dao).remove(any(), any());
 
         Map<String, EventQueueProvider> providers = new HashMap<>();
-        providers.put("conductor", new DynoEventQueueProvider(dao, new TestConfiguration(){}));
+        providers.put("conductor", new DynoEventQueueProvider(dao, new TestConfiguration()));
         eventQueues = new EventQueues(providers, parametersUtils);
         Event event = new Event(eventQueues, parametersUtils, objectMapper);
         event.start(workflow, task, null);

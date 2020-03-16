@@ -66,9 +66,7 @@ public class ExecutionDAOFacadeTest {
         rateLimitingDao = mock(RateLimitingDAO.class);
         pollDataDAO = mock(PollDataDAO.class);
         objectMapper = new JsonMapperProvider().get();
-        Configuration configuration = new TestConfiguration(){
-
-        };
+        Configuration configuration = new TestConfiguration();
         executionDAOFacade = new ExecutionDAOFacade(executionDAO, queueDAO, indexDAO, rateLimitingDao, pollDataDAO,
             objectMapper, configuration);
     }
@@ -134,44 +132,12 @@ public class ExecutionDAOFacadeTest {
 
     @Test
     public void testAddEventExecution() {
-        Configuration config = new TestConfiguration() {
-            public int getEventExecutionPersistenceTTL() {
-                return 0; // Don't use ttl for redis event execution keys
-            }
-        };
-
-        executionDAOFacade = new ExecutionDAOFacade(executionDAO, queueDAO, indexDAO, rateLimitingDao, pollDataDAO,
-                objectMapper, config);
-
         when(executionDAO.addEventExecution(any())).thenReturn(false);
         boolean added = executionDAOFacade.addEventExecution(new EventExecution());
         assertFalse(added);
         verify(indexDAO, never()).addEventExecution(any());
 
         when(executionDAO.addEventExecution(any())).thenReturn(true);
-        added = executionDAOFacade.addEventExecution(new EventExecution());
-        assertTrue(added);
-        verify(indexDAO, times(1)).asyncAddEventExecution(any());
-    }
-
-    @Test
-    public void testAddEventExecutionWithExpiry() {
-        Configuration config = new TestConfiguration() {
-            public int getEventExecutionPersistenceTTL() {
-                return 300; // Use ttl for redis event execution keys
-            }
-        };
-
-        executionDAOFacade = new ExecutionDAOFacade(executionDAO, queueDAO, indexDAO, rateLimitingDao, pollDataDAO,
-                objectMapper, config);
-
-        when(executionDAO.addEventExecutionWithExpiry(any())).thenReturn(false);
-        boolean added = executionDAOFacade.addEventExecution(new EventExecution());
-        assertFalse(added);
-        verify(executionDAO, times(1)).addEventExecutionWithExpiry(any());
-        verify(indexDAO, never()).addEventExecution(any());
-
-        when(executionDAO.addEventExecutionWithExpiry(any())).thenReturn(true);
         added = executionDAOFacade.addEventExecution(new EventExecution());
         assertTrue(added);
         verify(indexDAO, times(1)).asyncAddEventExecution(any());

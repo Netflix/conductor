@@ -222,16 +222,6 @@ public interface ExecutionDAO {
 	 */
 	boolean addEventExecution(EventExecution ee);
 
-
-	/**
-	 * Stores the event execution and adds expiry to the event execution.
-	 * if the DAO implementation does not support expiration, UnsupportedOperationException is thrown
-	 *
-	 * @param ee Event Execution to be stored
-	 * @return true if the event was added.  false otherwise when the event by id is already already stored.
-	 */
-	boolean addEventExecutionWithExpiry(EventExecution ee);
-	
 	/**
 	 * 
 	 * @param ee Event execution to be updated

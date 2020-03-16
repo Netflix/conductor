@@ -66,11 +66,15 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	private final static String WORKFLOW_DEF_TO_WORKFLOWS = "WORKFLOW_DEF_TO_WORKFLOWS";
 	private final static String CORR_ID_TO_WORKFLOWS = "CORR_ID_TO_WORKFLOWS";
 
+	private final int ttlEventExecutionSeconds;
+
 	private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
 
 	@Inject
 	public RedisExecutionDAO(DynoProxy dynoClient, ObjectMapper objectMapper, Configuration config) {
 		super(dynoClient, objectMapper, config);
+
+		ttlEventExecutionSeconds = config.getEventExecutionPersistenceTTL();
 	}
 
 	@Override
@@ -521,21 +525,16 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			String json = objectMapper.writeValueAsString(eventExecution);
 			recordRedisDaoEventRequests("addEventExecution", eventExecution.getEvent());
 			recordRedisDaoPayloadSize("addEventExecution", json.length(), eventExecution.getEvent(), "n/a");
-            return dynoClient.hsetnx(key, eventExecution.getId(), json) == 1L;
+            boolean added =  dynoClient.hsetnx(key, eventExecution.getId(), json) == 1L;
+
+			if (ttlEventExecutionSeconds > 0) {
+				dynoClient.expire(key, ttlEventExecutionSeconds);
+			}
+
+            return added;
 		} catch (Exception e) {
 			throw new ApplicationException(Code.BACKEND_ERROR, "Unable to add event execution for " + eventExecution.getId(), e);
 		}
-	}
-
-	@Override
-	public boolean addEventExecutionWithExpiry(EventExecution eventExecution) {
-		boolean added = addEventExecution(eventExecution);
-		if (added) {
-			String key = nsKey(EVENT_EXECUTION, eventExecution.getName(), eventExecution.getEvent(), eventExecution.getMessageId());
-			dynoClient.expire(key, this.config.getEventExecutionPersistenceTTL());
-		}
-
-		return added;
 	}
 
 	@Override

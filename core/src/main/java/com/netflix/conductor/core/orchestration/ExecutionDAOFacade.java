@@ -386,7 +386,7 @@ public class ExecutionDAOFacade {
      * @return true if save succeeds, false otherwise.
      */
     public boolean addEventExecution(EventExecution eventExecution) {
-        boolean added = config.getEventExecutionPersistenceTTL() > 0 ? executionDAO.addEventExecutionWithExpiry(eventExecution) : executionDAO.addEventExecution(eventExecution);
+        boolean added = executionDAO.addEventExecution(eventExecution);
 
         if (added) {
             addEventExecutionIndex(eventExecution);

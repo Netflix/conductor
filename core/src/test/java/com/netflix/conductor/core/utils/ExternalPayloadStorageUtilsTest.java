@@ -47,7 +47,7 @@ public class ExternalPayloadStorageUtilsTest {
     @Before
     public void setup() {
         externalPayloadStorage = mock(ExternalPayloadStorage.class);
-        Configuration configuration = new TestConfiguration(){};
+        Configuration configuration = new TestConfiguration();
         objectMapper = new JsonMapperProvider().get();
         location = new ExternalStorageLocation();
         location.setPath("some/test/path");

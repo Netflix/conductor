@@ -401,11 +401,6 @@ public class PostgresExecutionDAO extends PostgresBaseDAO implements ExecutionDA
     }
 
     @Override
-    public boolean addEventExecutionWithExpiry(EventExecution ee) {
-        throw new UnsupportedOperationException("PostgresExecutionDAO does support for expiry for EventExecution.");
-    }
-
-    @Override
     public void removeEventExecution(EventExecution eventExecution) {
         try {
             withTransaction(tx -> removeEventExecution(tx, eventExecution));

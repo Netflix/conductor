@@ -520,15 +520,6 @@ public class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
     }
 
     @Override
-    public boolean addEventExecutionWithExpiry(EventExecution ee) {
-        throw new UnsupportedOperationException("This method is not implemented in CassandraExecutionDAO. Please use ExecutionDAOFacade instead.");
-    }
-
-    /**
-     * This is a dummy implementation and this feature is not implemented
-     * for Cassandra backed Conductor
-     */
-    @Override
     public void updateEventExecution(EventExecution eventExecution) {
         try {
             String jsonPayload = toJson(eventExecution);
