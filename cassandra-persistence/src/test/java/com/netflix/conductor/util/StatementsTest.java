@@ -12,11 +12,11 @@
  */
 package com.netflix.conductor.util;
 
+import static org.junit.Assert.assertEquals;
+
 import com.netflix.conductor.config.TestConfiguration;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class StatementsTest {
 
@@ -30,7 +30,7 @@ public class StatementsTest {
 
     @Test
     public void testGetInsertWorkflowDefStatement() {
-        String statement = "INSERT INTO junit.workflow_definitions (workflow_def_name,version,workflow_definition) VALUES (?,?,?);";
+        String statement = "INSERT INTO junit.workflow_definitions (workflow_def_name,version,workflow_definition) VALUES (?,?,?) IF NOT EXISTS;";
         assertEquals(statement, statements.getInsertWorkflowDefStatement());
     }
 
@@ -78,6 +78,12 @@ public class StatementsTest {
     }
 
     @Test
+    public void testGetUpdateWorkflowDefStatement() {
+        String statement = "UPDATE junit.workflow_definitions SET workflow_definition=? WHERE workflow_def_name=? AND version=?;";
+        assertEquals(statement, statements.getUpdateWorkflowDefStatement());
+    }
+
+    @Test
     public void testGetDeleteWorkflowDefStatement() {
         String statement = "DELETE FROM junit.workflow_definitions WHERE workflow_def_name=? AND version=?;";
         assertEquals(statement, statements.getDeleteWorkflowDefStatement());
@@ -105,6 +111,12 @@ public class StatementsTest {
     public void testGetInsertTaskStatement() {
         String statement = "INSERT INTO junit.workflows (workflow_id,shard_id,task_id,entity,payload) VALUES (?,?,?,'task',?);";
         assertEquals(statement, statements.getInsertTaskStatement());
+    }
+
+    @Test
+    public void testGetInsertEventExecutionStatement() {
+        String statement = "INSERT INTO junit.event_executions (message_id,event_handler_name,event_execution_id,payload) VALUES (?,?,?,?) IF NOT EXISTS;";
+        assertEquals(statement, statements.getInsertEventExecutionStatement());
     }
 
     @Test
@@ -144,6 +156,12 @@ public class StatementsTest {
     }
 
     @Test
+    public void testGetSelectAllEventExecutionsForMessageFromEventExecutionsStatement() {
+        String statement = "SELECT * FROM junit.event_executions WHERE message_id=? AND event_handler_name=?;";
+        assertEquals(statement, statements.getSelectAllEventExecutionsForMessageFromEventExecutionsStatement());
+    }
+
+    @Test
     public void testGetUpdateWorkflowStatement() {
         String statement = "UPDATE junit.workflows SET payload=? WHERE workflow_id=? AND shard_id=1 AND entity='workflow' AND task_id='';";
         assertEquals(statement, statements.getUpdateWorkflowStatement());
@@ -174,6 +192,12 @@ public class StatementsTest {
     }
 
     @Test
+    public void testGetUpdateEventExecutionStatement() {
+        String statement = "UPDATE junit.event_executions USING TTL ? SET payload=? WHERE message_id=? AND event_handler_name=? AND event_execution_id=?;";
+        assertEquals(statement, statements.getUpdateEventExecutionStatement());
+    }
+
+    @Test
     public void testGetDeleteWorkflowStatement() {
         String statement = "DELETE FROM junit.workflows WHERE workflow_id=? AND shard_id=?;";
         assertEquals(statement, statements.getDeleteWorkflowStatement());
@@ -195,6 +219,12 @@ public class StatementsTest {
     public void testGetDeleteTaskDefLimitStatement() {
         String statement = "DELETE FROM junit.task_def_limit WHERE task_def_name=? AND task_id=?;";
         assertEquals(statement, statements.getDeleteTaskDefLimitStatement());
+    }
+
+    @Test
+    public void testGetDeleteEventExecutionStatement() {
+        String statement = "DELETE FROM junit.event_executions WHERE message_id=? AND event_handler_name=? AND event_execution_id=?;";
+        assertEquals(statement, statements.getDeleteEventExecutionsStatement());
     }
 
     @Test

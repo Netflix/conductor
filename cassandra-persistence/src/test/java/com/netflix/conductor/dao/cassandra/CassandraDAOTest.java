@@ -12,7 +12,10 @@
  */
 package com.netflix.conductor.dao.cassandra;
 
+import static com.netflix.conductor.common.metadata.events.EventExecution.Status.COMPLETED;
 import static com.netflix.conductor.core.execution.ApplicationException.Code.INVALID_INPUT;
+import static com.netflix.conductor.util.Constants.TABLE_EVENT_EXECUTIONS;
+import static com.netflix.conductor.util.Constants.TABLE_WORKFLOW_DEFS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -21,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
@@ -53,6 +57,7 @@ public class CassandraDAOTest {
     private final ObjectMapper objectMapper = new JsonMapperProvider().get();
 
     private static EmbeddedCassandra embeddedCassandra;
+    private Session session;
 
     private CassandraMetadataDAO metadataDAO;
     private CassandraExecutionDAO executionDAO;
@@ -68,7 +73,7 @@ public class CassandraDAOTest {
 
     @Before
     public void setUp() {
-        Session session = embeddedCassandra.getSession();
+        session = embeddedCassandra.getSession();
         Statements statements = new Statements(testConfiguration);
         metadataDAO = new CassandraMetadataDAO(session, objectMapper, testConfiguration, statements);
         executionDAO = new CassandraExecutionDAO(session, objectMapper, testConfiguration, statements);
@@ -81,7 +86,7 @@ public class CassandraDAOTest {
     }
 
     @Test
-    public void testWorkflowDefCRUD() {
+    public void testWorkflowDefCRUD() throws Exception {
         String name = "workflow_def_1";
         int version = 1;
 
@@ -90,22 +95,14 @@ public class CassandraDAOTest {
         workflowDef.setVersion(version);
         workflowDef.setOwnerEmail("test@junit.com");
 
-        // register the workflow definition
-        metadataDAO.createWorkflowDef(workflowDef);
-
-        // check if workflow definition exists
-        assertTrue(metadataDAO.workflowDefExists(workflowDef));
+        // create workflow definition explicitly in test
+        // since, embedded Cassandra server does not support LWT required for this API.
+        addWorkflowDefinition(workflowDef);
 
         // fetch the workflow definition
         Optional<WorkflowDef> defOptional = metadataDAO.getWorkflowDef(name, version);
         assertTrue(defOptional.isPresent());
         assertEquals(workflowDef, defOptional.get());
-
-        // get all workflow definitions
-        List<WorkflowDef> workflowDefs = metadataDAO.getAllWorkflowDefs();
-        assertNotNull(workflowDefs);
-        assertEquals(1, workflowDefs.size());
-        assertEquals(workflowDef, workflowDefs.get(0));
 
         // register a higher version
         int higherVersion = 2;
@@ -113,10 +110,7 @@ public class CassandraDAOTest {
         workflowDef.setDescription("higher version");
 
         // register the higher version definition
-        metadataDAO.createWorkflowDef(workflowDef);
-
-        // check if workflow definition exists
-        assertTrue(metadataDAO.workflowDefExists(workflowDef));
+        addWorkflowDefinition(workflowDef);
 
         // fetch the higher version
         defOptional = metadataDAO.getWorkflowDef(name, higherVersion);
@@ -128,11 +122,6 @@ public class CassandraDAOTest {
         assertTrue(defOptional.isPresent());
         assertEquals(workflowDef, defOptional.get());
 
-        // get all workflow definitions
-        workflowDefs = metadataDAO.getAllWorkflowDefs();
-        assertNotNull(workflowDefs);
-        assertEquals(2, workflowDefs.size());
-
         // modify the definition
         workflowDef.setOwnerEmail("junit@test.com");
         metadataDAO.updateWorkflowDef(workflowDef);
@@ -142,23 +131,10 @@ public class CassandraDAOTest {
         assertTrue(defOptional.isPresent());
         assertEquals(workflowDef, defOptional.get());
 
-        // register same definition again
-        expectedException.expect(ApplicationException.class);
-        expectedException.expectMessage("Workflow: workflow_def_1, version: 2 already exists!");
-        metadataDAO.createWorkflowDef(workflowDef);
-
         // delete workflow def
         metadataDAO.removeWorkflowDef(name, higherVersion);
         defOptional = metadataDAO.getWorkflowDef(name, higherVersion);
         assertFalse(defOptional.isPresent());
-
-        // get all workflow definitions
-        workflowDefs = metadataDAO.getAllWorkflowDefs();
-        assertNotNull(workflowDefs);
-        assertEquals(1, workflowDefs.size());
-
-        // check if workflow definition exists
-        assertFalse(metadataDAO.workflowDefExists(workflowDef));
     }
 
     @Test
@@ -553,5 +529,90 @@ public class CassandraDAOTest {
         handlers = eventHandlerDAO.getAllEventHandlers();
         assertNotNull(handlers);
         assertEquals(1, handlers.size());
+    }
+
+    @Test
+    public void testEventExecutionCRUD() throws Exception {
+        String event = "test-event";
+        String executionId1 = "id_1";
+        String messageId1 = "message1";
+        String eventHandler1 = "test_eh_1";
+        EventExecution eventExecution1 = getEventExecution(executionId1, messageId1, eventHandler1, event);
+
+        // create event execution explicitly in test
+        // since, embedded Cassandra server does not support LWT required for this API.
+        addEventExecution(eventExecution1);
+
+        // fetch executions
+        List<EventExecution> eventExecutionList = executionDAO.getEventExecutions(eventHandler1, event, messageId1);
+        assertNotNull(eventExecutionList);
+        assertEquals(1, eventExecutionList.size());
+        assertEquals(eventExecution1, eventExecutionList.get(0));
+
+        // add a different execution for same message
+        String executionId2 = "id_2";
+        EventExecution eventExecution2 = getEventExecution(executionId2, messageId1, eventHandler1, event);
+        addEventExecution(eventExecution2);
+
+        // fetch executions
+        eventExecutionList = executionDAO.getEventExecutions(eventHandler1, event, messageId1);
+        assertNotNull(eventExecutionList);
+        assertEquals(2, eventExecutionList.size());
+        assertEquals(eventExecution1, eventExecutionList.get(0));
+        assertEquals(eventExecution2, eventExecutionList.get(1));
+
+        // update the second execution
+        eventExecution2.setStatus(COMPLETED);
+        executionDAO.updateEventExecution(eventExecution2);
+
+        // fetch executions
+        eventExecutionList = executionDAO.getEventExecutions(eventHandler1, event, messageId1);
+        assertNotNull(eventExecutionList);
+        assertEquals(2, eventExecutionList.size());
+        assertEquals(COMPLETED, eventExecutionList.get(1).getStatus());
+
+        // sleep for 5 seconds (TTL)
+        Thread.sleep(5000L);
+        eventExecutionList = executionDAO.getEventExecutions(eventHandler1, event, messageId1);
+        assertNotNull(eventExecutionList);
+        assertEquals(1, eventExecutionList.size());
+
+        // delete event execution
+        executionDAO.removeEventExecution(eventExecution1);
+        eventExecutionList = executionDAO.getEventExecutions(eventHandler1, event, messageId1);
+        assertNotNull(eventExecutionList);
+        assertEquals(0, eventExecutionList.size());
+    }
+
+    private void addWorkflowDefinition(WorkflowDef workflowDef) throws Exception {
+        //INSERT INTO conductor.workflow_definitions (workflow_def_name,version,workflow_definition) VALUES (?,?,?);
+        String table = testConfiguration.getCassandraKeyspace() + "." + TABLE_WORKFLOW_DEFS;
+        String queryString = "UPDATE " + table
+            + " SET workflow_definition='" + objectMapper.writeValueAsString(workflowDef)
+            + "' WHERE workflow_def_name='" + workflowDef.getName()
+            + "' AND version=" + workflowDef.getVersion()
+            + ";";
+        session.execute(queryString);
+    }
+
+    private void addEventExecution(EventExecution eventExecution) throws Exception {
+        //INSERT INTO junit.event_executions (message_id,event_handler_name,event_execution_id,payload) VALUES (?,?,?,?)
+        String table = testConfiguration.getCassandraKeyspace() + "." + TABLE_EVENT_EXECUTIONS;
+        String queryString = "INSERT INTO " + table
+            + " (message_id, event_handler_name, event_execution_id, payload) "
+            + "VALUES ('" + eventExecution.getMessageId()
+            + "', '" + eventExecution.getName()
+            + "', '" + eventExecution.getId()
+            + "', '" + objectMapper.writeValueAsString(eventExecution)
+            + "');";
+        session.execute(queryString);
+    }
+
+    private EventExecution getEventExecution(String id, String msgId, String name, String event) {
+        EventExecution eventExecution = new EventExecution(id, msgId);
+        eventExecution.setName(name);
+        eventExecution.setEvent(event);
+        eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
+        return eventExecution;
     }
 }
