@@ -15,8 +15,8 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
 
     @Override
     public void onWorkflowCompleted(Workflow workflow) {
-        LOGGER.info("Publishing workflow {} on completion callback", workflow.getWorkflowId());
-        publishWorkflow(workflow);
+        LOGGER.info("#### Publishing workflow {} on completion callback", workflow.getWorkflowId());
+        //publishWorkflow(workflow);
     }
 
     @Override
@@ -30,7 +30,7 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
         try {
             jsonWf = objectMapper.writeValueAsString(workflow);
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to convert Workflow: {} to String. Exception: {}", workflow, e);
+            LOGGER.error("#### Failed to convert Workflow: {} to String. Exception: {}", workflow, e);
             throw new RuntimeException(e);
         }
         return jsonWf;
@@ -41,7 +41,7 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
 
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
-        rc.post(url, jsonWf);
+        rc.post(url, jsonWf, "domainGroupMoId", "AccountMoId");
     }
 
     public void publish(Workflow workflow) {

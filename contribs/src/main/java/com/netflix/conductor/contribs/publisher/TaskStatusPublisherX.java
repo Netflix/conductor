@@ -1,6 +1,5 @@
 package com.netflix.conductor.contribs.publisher;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.core.execution.TaskStatusListenerX;
 import org.slf4j.Logger;
@@ -14,12 +13,14 @@ public class TaskStatusPublisherX implements TaskStatusListenerX {
     @Override
     public void onTaskScheduled(Task task) {
         LOGGER.info("#### Publishing Task {} on schedule callback", task.getTaskId());
-        try {
-            TaskNotification taskNotification = new TaskNotification(task);
-            publishTaskNotification(taskNotification);
-        } catch (Exception e){
-            LOGGER.info(e.getMessage());
-        }
+        new Thread(() -> {
+            try {
+                TaskNotification taskNotification = new TaskNotification(task);
+                publishTaskNotification(taskNotification);
+            } catch (Exception e){
+                LOGGER.info(e.getMessage());
+            }
+        }).start();
     }
 
     private void publishTaskNotification(TaskNotification taskNotification) {
@@ -28,7 +29,7 @@ public class TaskStatusPublisherX implements TaskStatusListenerX {
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
         // rc.get(url);
-        rc.post(url, jsonTask);
+        rc.post(url, jsonTask, taskNotification.getDomainGroupMoId(), taskNotification.getAccountMoId());
     }
 
 }

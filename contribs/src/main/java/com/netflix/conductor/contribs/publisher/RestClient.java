@@ -10,7 +10,9 @@ public class RestClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestClient.class);
     //private static final String URL = "http://bullwinkle.default:7979/v1/workflow";
-    private static final String URL = "http://172.17.2.30:7979/v1";
+    private static final String URL = "http://bullwinkle.default.svc.cluster.local:7979/v1";
+    private static final String DOMAIN_GROUP = "X-Starship-DomainGroup";
+    private static final String ACCOUNT_COOKIE = "x-barracuda-account";
     private Client client = Client.create();
 
     public Client getClient(String notificationType) {
@@ -21,18 +23,22 @@ public class RestClient {
         return URL + "/" + notificationType;
     }
 
-    public void post(String uri, String input) {
+    public void post(String uri, String input, String domainGroupMoId, String accountMoId) {
         LOGGER.info("URL: " + uri);
         LOGGER.info("Input: " + input);
+        LOGGER.info("domainGroupId: " + domainGroupMoId);
         try {
             WebResource webResource = client.resource(uri);
             ClientResponse response = webResource.type("application/json")
+                    .header(DOMAIN_GROUP, domainGroupMoId)
+                    .header(ACCOUNT_COOKIE, accountMoId)
                     .post(ClientResponse.class, input);
             if (response.getStatus() != 200) {
                 throw new RuntimeException("Failed : HTTP error code : "
                         + response.getStatus());
             }
-            LOGGER.info("Record sent with Status " + response.getEntity(String.class));
+            response.bufferEntity();
+            LOGGER.info("Response" + response.getEntity(String.class));
         }
         catch (Exception e) {
             LOGGER.info("#####3" + e.toString());

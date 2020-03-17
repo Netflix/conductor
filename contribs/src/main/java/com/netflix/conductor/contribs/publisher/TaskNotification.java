@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.TimeZone;
 
 @JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy.class)
@@ -37,6 +37,17 @@ class TaskNotification {
     public String workflowId;
     public String workflowType;
     public String correlationId;
+    public String workflowTaskType;
+    private String domainGroupMoId;
+    private String accountMoId;
+
+    public String getDomainGroupMoId() {
+        return domainGroupMoId;
+    }
+
+    public String getAccountMoId() {
+        return accountMoId;
+    }
 
     TaskNotification(Task task) throws JsonProcessingException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -61,6 +72,9 @@ class TaskNotification {
         workflowId = task.getWorkflowInstanceId();
         workflowType = task.getWorkflowType();
         correlationId = task.getCorrelationId();
+        workflowTaskType = task.getWorkflowTask().getType();
+        domainGroupMoId = ((LinkedHashMap) task.getInputData().get("FusionMeta")).get("DomainGroupMoId").toString();
+        accountMoId = ((LinkedHashMap) task.getInputData().get("FusionMeta")).get("AccountMoId").toString();
     }
 
     String toJsonString() {
