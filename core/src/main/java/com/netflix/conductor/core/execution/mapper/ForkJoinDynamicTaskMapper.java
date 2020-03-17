@@ -252,7 +252,7 @@ public class ForkJoinDynamicTaskMapper implements TaskMapper {
             }
         }
         Object dynamicForkTasksInput = input.get(taskToSchedule.getDynamicForkTasksInputParamName());
-        if (dynamicForkTasksInput != null && !(dynamicForkTasksInput instanceof Map)) {
+        if (!(dynamicForkTasksInput instanceof Map)) {
             throw new TerminateWorkflowException("Input to the dynamically forked tasks is not a map -> expecting a map of K,V  but found " + dynamicForkTasksInput);
         }
         return new ImmutablePair<>(dynamicForkWorkflowTasks, (Map<String, Map<String, Object>>) dynamicForkTasksInput);
