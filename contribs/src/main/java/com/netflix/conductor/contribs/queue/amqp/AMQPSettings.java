@@ -23,7 +23,7 @@ import static com.netflix.conductor.contribs.queue.amqp.AMQPConfigurations.*;
  */
 public class AMQPSettings {
 
-    private static final Pattern URI_PATTERN = Pattern.compile("^(?:amqp\\-(queue|exchange))?\\:?(?<name>[^\\?]+)\\??(?<params>.*)$",
+    private static final Pattern URI_PATTERN = Pattern.compile("^(?:amqp\\_(queue|exchange))?\\:?(?<name>[^\\?]+)\\??(?<params>.*)$",
             Pattern.CASE_INSENSITIVE);
 
     private String queueOrExchangeName;
