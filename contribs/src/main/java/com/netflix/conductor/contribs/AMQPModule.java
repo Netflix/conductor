@@ -30,8 +30,9 @@ import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDER
  * 
  *
  * @author Ritu Parathody
- * @version $Id$
- * This code is based on the PR https://github.com/Netflix/conductor/pull/1063 which did not get merged to the master
+ * @version $Id$ This code is based on the PR
+ *          https://github.com/Netflix/conductor/pull/1063 which did not get
+ *          merged to the master
  */
 public class AMQPModule extends AbstractModule {
 	private static final boolean USE_EXCHANGE_BY_DEFAULT = true;

@@ -27,12 +27,14 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
 
 import rx.Observable;
+
 /**
  * Created at 19/03/2019 16:29
  *
  * @author Ritu Parathody
- * @version $Id$
- * This code is based on the PR https://github.com/Netflix/conductor/pull/1063 which did not get merged to the master
+ * @version $Id$ This code is based on the PR
+ *          https://github.com/Netflix/conductor/pull/1063 which did not get
+ *          merged to the master
  */
 public class AMQPObservableQueue extends AbstractObservableQueue {
 	private static Logger logger = LoggerFactory.getLogger(AMQPObservableQueue.class);
@@ -448,52 +450,50 @@ public class AMQPObservableQueue extends AbstractObservableQueue {
 		message.setReceipt(String.valueOf(response.getEnvelope().getDeliveryTag()));
 		return message;
 	}
+
 	private List<Message> receiveMessagesFromQueue(String queueName) throws Exception {
-        final List<Message> messages = new LinkedList<>();
-        Message message;
-        int nb = 0;
-        do {
-            message = asMessage(settings, getOrCreateChannel().basicGet(queueName, false));
-            if (message != null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Got message with ID {} and receipt {}", message.getId(), message.getReceipt());
-                }
-                messages.add(message);
-            }
-        }
-        while (++nb < batchSize && message != null);
-        Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
-        return messages;
-    }
+		final List<Message> messages = new LinkedList<>();
+		Message message;
+		int nb = 0;
+		do {
+			message = asMessage(settings, getOrCreateChannel().basicGet(queueName, false));
+			if (message != null) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Got message with ID {} and receipt {}", message.getId(), message.getReceipt());
+				}
+				messages.add(message);
+			}
+		} while (++nb < batchSize && message != null);
+		Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
+		return messages;
+	}
 
 	@Override
 	protected List<Message> receiveMessages() {
-		 try {
-	            getOrCreateChannel().basicQos(batchSize);
-	            String queueName;
-	            if (useExchange) {
-	                // Consume messages from an exchange
-	                getOrCreateExchange();
-	                // Declare an exclusive not durable with auto-delete queue
-	                final AMQP.Queue.DeclareOk declareOk = getOrCreateQueue(
-	                        String.format("bound_to_%s", settings.getQueueOrExchangeName()),
-	                        false, true, true, Maps.newHashMap());
-	                // Bind the declared queue to exchange
-	                queueName = declareOk.getQueue();
-	                getOrCreateChannel().queueBind(queueName, settings.getQueueOrExchangeName(), settings.getRoutingKey());
-	            }
-	            else {
-	                // Consume messages from a queue
-	                queueName = getOrCreateQueue().getQueue();
-	            }
-	            // Consume messages
-	            return receiveMessagesFromQueue(queueName);
-	        }
-	        catch (Exception exception) {
-	            logger.error("Exception while getting messages from RabbitMQ", exception);
-	            Monitors.recordObservableQMessageReceivedErrors(getType());
-	        }
-	        return new ArrayList<>();
-	    }
-	
+		try {
+			getOrCreateChannel().basicQos(batchSize);
+			String queueName;
+			if (useExchange) {
+				// Consume messages from an exchange
+				getOrCreateExchange();
+				// Declare an exclusive not durable with auto-delete queue
+				final AMQP.Queue.DeclareOk declareOk = getOrCreateQueue(
+						String.format("bound_to_%s", settings.getQueueOrExchangeName()), false, true, true,
+						Maps.newHashMap());
+				// Bind the declared queue to exchange
+				queueName = declareOk.getQueue();
+				getOrCreateChannel().queueBind(queueName, settings.getQueueOrExchangeName(), settings.getRoutingKey());
+			} else {
+				// Consume messages from a queue
+				queueName = getOrCreateQueue().getQueue();
+			}
+			// Consume messages
+			return receiveMessagesFromQueue(queueName);
+		} catch (Exception exception) {
+			logger.error("Exception while getting messages from RabbitMQ", exception);
+			Monitors.recordObservableQMessageReceivedErrors(getType());
+		}
+		return new ArrayList<>();
+	}
+
 }
