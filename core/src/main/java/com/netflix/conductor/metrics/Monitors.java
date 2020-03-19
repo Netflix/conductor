@@ -290,4 +290,8 @@ public class Monitors {
 		counter(classQualifier, "acquire_lock_failure", "exceptionType", exceptionClassName);
 	}
 
+	public static void recordKafkaPublishError() {
+		getCounter(classQualifier, "kafka_publishing_error", "").increment();
+	}
 }
+

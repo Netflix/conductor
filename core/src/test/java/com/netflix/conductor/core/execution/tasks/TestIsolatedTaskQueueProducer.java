@@ -13,6 +13,7 @@ public class TestIsolatedTaskQueueProducer {
 
 	@Test
 	public void addTaskQueuesAddsElementToQueue() throws InterruptedException {
+
 		SystemTaskWorkerCoordinator.queue.clear();
 		SystemTaskWorkerCoordinator.taskNameWorkFlowTaskMapping.put("HTTP", Mockito.mock(WorkflowSystemTask.class));
 		MetadataService metadataService = Mockito.mock(MetadataService.class);

@@ -64,6 +64,8 @@ public interface Configuration {
 
     String ADDITIONAL_MODULES_PROPERTY_NAME = "conductor.additional.modules";
 
+    String KAFKA_INDEX_ENABLE = "workflow.kafka.index.enable";
+    
     String EXECUTION_LOCK_ENABLED_PROPERTY_NAME = "workflow.decider.locking.enabled";
     boolean EXECUTION_LOCK_ENABLED_DEFAULT_VALUE = false;
 
@@ -222,6 +224,10 @@ public interface Configuration {
      */
     default List<AbstractModule> getAdditionalModules() {
         return null;
+    }
+
+    default boolean getKafkaIndexEnable() {
+        return getBooleanProperty(KAFKA_INDEX_ENABLE, false);
     }
 
     default boolean isForceWorkflowDeletionEnabled() {
