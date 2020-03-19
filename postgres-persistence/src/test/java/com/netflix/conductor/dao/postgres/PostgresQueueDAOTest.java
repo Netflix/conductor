@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.core.events.queue.Message;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -37,6 +38,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("Duplicates")
+@Ignore
 public class PostgresQueueDAOTest {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PostgresQueueDAOTest.class);

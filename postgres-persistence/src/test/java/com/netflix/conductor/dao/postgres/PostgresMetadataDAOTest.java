@@ -19,6 +19,7 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -38,6 +39,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("Duplicates")
+@Ignore
 @RunWith(JUnit4.class)
 public class PostgresMetadataDAOTest {
 
