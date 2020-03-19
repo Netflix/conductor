@@ -37,7 +37,11 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.impl.AMQImpl;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import rx.Observable;
 import rx.observers.Subscribers;
@@ -53,11 +57,11 @@ public class AMQPObservableQueueTest {
 
 	@Before
 	public void setUp() {
-		configuration = mock(Configuration.class);
+		configuration = Mockito.mock(Configuration.class);
 		Answer answer = new ReturnsArgumentAt(1);
-		when(configuration.getProperty(anyString(), anyString())).thenAnswer(answer);
-		when(configuration.getBooleanProperty(anyString(), anyBoolean())).thenAnswer(answer);
-		when(configuration.getIntProperty(anyString(), anyInt())).thenAnswer(answer);
+		when(configuration.getProperty(Mockito.anyString(), Mockito.anyString())).thenAnswer(answer);
+		when(configuration.getBooleanProperty(Mockito.anyString(), Mockito.anyBoolean())).thenAnswer(answer);
+		when(configuration.getIntProperty(Mockito.anyString(), anyInt())).thenAnswer(answer);
 		addresses = new Address[] { new Address("localhost", AMQP.PROTOCOL.PORT) };
 	}
 
@@ -115,7 +119,7 @@ public class AMQPObservableQueueTest {
 		}
 		// basicPublish
 		if (isWorking) {
-			doNothing().when(channel).basicPublish(eq(StringUtils.EMPTY), eq(name),
+			Mockito.doNothing().when(channel).basicPublish(eq(StringUtils.EMPTY), eq(name),
 					Mockito.any(AMQP.BasicProperties.class), Mockito.any(byte[].class));
 		} else {
 			Mockito.doThrow(new IOException("Not working")).when(channel).basicPublish(eq(StringUtils.EMPTY), eq(name),
@@ -321,7 +325,7 @@ public class AMQPObservableQueueTest {
 			} else {
 				verify(channel, atLeastOnce()).exchangeDeclare(eq(name), eq(type), eq(settings.isDurable()),
 						eq(settings.autoDelete()), eq(Collections.emptyMap()));
-				verify(channel, atLeastOnce()).queueDeclare(eq(queueName), anyBoolean(), anyBoolean(), anyBoolean(),
+				verify(channel, atLeastOnce()).queueDeclare(eq(queueName), Mockito.anyBoolean(), Mockito.anyBoolean(), Mockito.anyBoolean(),
 						anyMap());
 			}
 			verify(channel, atLeastOnce()).queueBind(eq(queueName), eq(name), eq(routingKey));
