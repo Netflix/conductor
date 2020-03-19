@@ -7,6 +7,4 @@ dependencies {
     compile "org.apache.kafka:kafka-clients:2.2.0"
 
     testCompile "org.slf4j:slf4j-log4j12:${revSlf4jlog4j}"
-    testCompile group: 'org.testcontainers', name: 'kafka', version: '1.11.3'
-    testCompile "org.awaitility:awaitility:${revAwaitility}"
 }
