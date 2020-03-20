@@ -31,7 +31,7 @@ public class AMQPEventQueueProviderTest {
 		AMQPEventQueueProvider eventqProvider = new AMQPEventQueueProvider(config, true);
 		ObservableQueue queue = eventqProvider.getQueue(exchangestring);
 		Assert.assertNotNull(queue);
-		Assert.assertEquals("myExchangeName", queue.getName());
+		Assert.assertEquals(exchangestring, queue.getName());
 		Assert.assertEquals(AMQPConstants.AMQP_EXCHANGE_TYPE, queue.getType());
 	}
 
@@ -47,7 +47,7 @@ public class AMQPEventQueueProviderTest {
 		AMQPEventQueueProvider eventqProvider = new AMQPEventQueueProvider(config, false);
 		ObservableQueue queue = eventqProvider.getQueue(exchangestring);
 		Assert.assertNotNull(queue);
-		Assert.assertEquals("myQueueName", queue.getName());
+		Assert.assertEquals(exchangestring, queue.getName());
 		Assert.assertEquals(AMQPConstants.AMQP_QUEUE_TYPE, queue.getType());
 	}
 
