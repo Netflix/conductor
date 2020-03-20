@@ -43,8 +43,8 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageBatchResult;
 import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
 import com.google.common.annotations.VisibleForTesting;
-import com.netflix.conductor.contribs.queue.AbstractObservableQueue;
 import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,13 +57,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * @author Viren
  *
  */
-public class SQSObservableQueue extends AbstractObservableQueue {
+public class SQSObservableQueue implements ObservableQueue {
 
 	private static Logger logger = LoggerFactory.getLogger(SQSObservableQueue.class);
 
@@ -75,9 +76,9 @@ public class SQSObservableQueue extends AbstractObservableQueue {
 
 	private int batchSize;
 
-
 	private AmazonSQSClient client;
 
+	private int pollTimeInMS;
 
 	private String queueURL;
 
@@ -138,6 +139,10 @@ public class SQSObservableQueue extends AbstractObservableQueue {
 	@Override
 	public String getURI() {
 		return queueURL;
+	}
+
+	public int getPollTimeInMS() {
+		return pollTimeInMS;
 	}
 
 	public int getBatchSize() {
@@ -274,7 +279,7 @@ public class SQSObservableQueue extends AbstractObservableQueue {
 	}
 
 	@VisibleForTesting
-	protected List<Message> receiveMessages() {
+	List<Message> receiveMessages() {
 		try {
 			ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest()
 					.withQueueUrl(queueURL)
@@ -295,6 +300,16 @@ public class SQSObservableQueue extends AbstractObservableQueue {
 		return new ArrayList<>();
 	}
 
+	@VisibleForTesting
+	OnSubscribe<Message> getOnSubscribe() {
+		return subscriber -> {
+			Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
+			interval.flatMap((Long x)->{
+				List<Message> msgs = receiveMessages();
+		        return Observable.from(msgs);
+			}).subscribe(subscriber::onNext, subscriber::onError);
+		};
+	}
 
 	private List<String> delete(List<Message> messages) {
 		if (messages == null || messages.isEmpty()) {

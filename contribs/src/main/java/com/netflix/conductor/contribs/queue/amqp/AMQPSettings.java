@@ -2,6 +2,8 @@ package com.netflix.conductor.contribs.queue.amqp;
 
 import com.netflix.conductor.core.config.Configuration;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ public class AMQPSettings {
 			.compile("^(?:amqp\\_(queue|exchange))?\\:?(?<name>[^\\?]+)\\??(?<params>.*)$", Pattern.CASE_INSENSITIVE);
 
 	private String queueOrExchangeName;
+	private String eventName;
 	private String exchangeType;
 	private String routingKey;
 	private String contentEncoding;
@@ -39,7 +42,7 @@ public class AMQPSettings {
 	private int deliveryMode;
 
 	private final Map<String, Object> arguments = new HashMap<>();
-
+	private static Logger logger = LoggerFactory.getLogger(AMQPSettings.class);
 	public AMQPSettings(final Configuration config) {
 		// Initialize with a default values
 		durable = config.getBooleanProperty(String.format(AMQPConstants.PROPERTY_KEY_TEMPLATE, PROPERTY_IS_DURABLE),
@@ -148,8 +151,9 @@ public class AMQPSettings {
 		}
 
 		// Set name of queue or exchange from group "name"
+		logger.info("Queue URI:{}",queueURI);
 		queueOrExchangeName = matcher.group("name");
-
+		eventName=queueURI;
 		if (matcher.groupCount() > 1) {
 			final String queryParams = matcher.group("params");
 			if (StringUtils.isNotEmpty(queryParams)) {
@@ -223,5 +227,9 @@ public class AMQPSettings {
 				+ durable + ", exclusive=" + exclusive + ", autoDelete=" + autoDelete + ", deliveryMode=" + deliveryMode
 				+ ", contentEncoding='" + contentEncoding + '\'' + ", arguments=" + arguments + ", durable="
 				+ isDurable() + ", exclusive=" + isExclusive() + '}';
+	}
+
+	public String getEventName() {
+		return eventName;
 	}
 }

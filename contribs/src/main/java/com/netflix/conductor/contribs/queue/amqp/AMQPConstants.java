@@ -2,7 +2,7 @@ package com.netflix.conductor.contribs.queue.amqp;
 
 public class AMQPConstants {
 
-	public static String AMQP_QUEUE_TYPE = "amqp";
+	public static String AMQP_QUEUE_TYPE = "amqp_queue";
 	public static String AMQP_EXCHANGE_TYPE = "amqp_exchange";
 
 	public static String PROPERTY_KEY_TEMPLATE = "workflow.event.queues.amqp.%s";

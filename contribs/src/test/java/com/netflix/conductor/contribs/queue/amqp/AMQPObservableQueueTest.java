@@ -33,6 +33,7 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.impl.AMQImpl;
@@ -112,8 +113,8 @@ public class AMQPObservableQueueTest {
 		// messageCount
 		Mockito.when(channel.messageCount(eq(name))).thenReturn(1l * queue.size());
 		// basicGet
-		OngoingStubbing<GetResponse> getResponseOngoingStubbing = Mockito
-				.when(channel.basicGet(eq(name), Mockito.anyBoolean())).thenAnswer(new ReturnsElementsOf(queue));
+		OngoingStubbing<String> getResponseOngoingStubbing = Mockito
+				.when(channel.basicConsume(eq(name), Mockito.anyBoolean(), (Consumer) Mockito.any(Consumer.class))).thenAnswer(new ReturnsElementsOf(queue));
 		if (!isWorking) {
 			getResponseOngoingStubbing.thenThrow(new IOException("Not working"), new RuntimeException("Not working"));
 		}
@@ -162,8 +163,11 @@ public class AMQPObservableQueueTest {
 		// messageCount
 		Mockito.when(channel.messageCount(eq(name))).thenReturn(1l * queue.size());
 		// basicGet
-		OngoingStubbing<GetResponse> getResponseOngoingStubbing = Mockito
-				.when(channel.basicGet(eq(queueName), Mockito.anyBoolean())).thenAnswer(new ReturnsElementsOf(queue));
+		
+		OngoingStubbing<String> getResponseOngoingStubbing = Mockito
+				.when(channel.basicConsume(eq(queueName), Mockito.anyBoolean(), (Consumer) Mockito.any(Consumer.class))).thenAnswer(new ReturnsElementsOf(queue));
+		/*OngoingStubbing<GetResponse> getResponseOngoingStubbing = Mockito
+				.when(channel.basicGet(eq(queueName), Mockito.anyBoolean())).thenAnswer(new ReturnsElementsOf(queue));*/
 		if (!isWorking) {
 			getResponseOngoingStubbing.thenThrow(new IOException("Not working"), new RuntimeException("Not working"));
 		}
@@ -215,7 +219,7 @@ public class AMQPObservableQueueTest {
 		subscriber.assertNoErrors();
 		subscriber.assertCompleted();
 		if (useWorkingChannel) {
-			verify(channel, atLeast(batchSize)).basicGet(eq(queueName), Mockito.anyBoolean());
+			verify(channel, atLeast(1)).basicConsume(eq(queueName), Mockito.anyBoolean(),(Consumer)Mockito.any(Consumer.class));
 			Mockito.doNothing().when(channel).basicAck(Mockito.anyLong(), eq(false));
 			Mockito.doAnswer(DoesNothing.doesNothing()).when(channel).basicAck(Mockito.anyLong(), eq(false));
 			observableQueue.ack(Collections.synchronizedList(found));
@@ -311,7 +315,8 @@ public class AMQPObservableQueueTest {
 
 		assertArrayEquals(addresses, observableQueue.getAddresses());
 		assertEquals(AMQPConstants.AMQP_EXCHANGE_TYPE, observableQueue.getType());
-		assertEquals(name, observableQueue.getName());
+		assertEquals(AMQPConstants.AMQP_EXCHANGE_TYPE+":"+name+"?exchangeType="
+				+ type + "&routingKey=" + routingKey + "&deliveryMode=2&durable=true&exclusive=false&autoDelete=true", observableQueue.getName());
 		assertEquals(name, observableQueue.getURI());
 		assertEquals(batchSize, observableQueue.getBatchSize());
 		assertEquals(pollTimeMs, observableQueue.getPollTimeInMS());
@@ -357,7 +362,7 @@ public class AMQPObservableQueueTest {
 
 		assertArrayEquals(addresses, observableQueue.getAddresses());
 		assertEquals(AMQPConstants.AMQP_EXCHANGE_TYPE, observableQueue.getType());
-		assertEquals(name, observableQueue.getName());
+		assertEquals(AMQPConstants.AMQP_EXCHANGE_TYPE+":"+name+"?exchangeType="+ type + "&routingKey=" + routingKey + "&deliveryMode=2&durable=true&exclusive=false&autoDelete=true", observableQueue.getName());
 		assertEquals(name, observableQueue.getURI());
 		assertEquals(batchSize, observableQueue.getBatchSize());
 		assertEquals(pollTimeMs, observableQueue.getPollTimeInMS());
@@ -453,7 +458,7 @@ public class AMQPObservableQueueTest {
 
 	        assertArrayEquals(addresses, observableQueue.getAddresses());
 	        assertEquals(AMQPConstants.AMQP_QUEUE_TYPE, observableQueue.getType());
-	        assertEquals(queueName, observableQueue.getName());
+	        assertEquals(AMQPConstants.AMQP_QUEUE_TYPE+":"+queueName, observableQueue.getName());
 	        assertEquals(queueName, observableQueue.getURI());
 	        assertEquals(batchSize, observableQueue.getBatchSize());
 	        assertEquals(pollTimeMs, observableQueue.getPollTimeInMS());
@@ -484,7 +489,7 @@ public class AMQPObservableQueueTest {
 
 	        assertArrayEquals(addresses, observableQueue.getAddresses());
 	        assertEquals(AMQPConstants.AMQP_QUEUE_TYPE, observableQueue.getType());
-	        assertEquals(queueName, observableQueue.getName());
+	        assertEquals(AMQPConstants.AMQP_QUEUE_TYPE+":"+queueName+"?deliveryMode=2&durable=true&exclusive=false&autoDelete=true", observableQueue.getName());
 	        assertEquals(queueName, observableQueue.getURI());
 	        assertEquals(batchSize, observableQueue.getBatchSize());
 	        assertEquals(pollTimeMs, observableQueue.getPollTimeInMS());
