@@ -51,5 +51,20 @@ public class AMQPSettingsTest {
 		Assert.assertEquals(2, settings.getDeliveryMode());
 		Assert.assertEquals("myQueueName", settings.getQueueOrExchangeName());
 	}
+	@Test(expected=IllegalArgumentException.class)
+	public void testAMQPSettings_exchange_fromuri_wrongdeliverymode() {
+		String exchangestring = "amqp_exchange:myExchangeName?exchangeType=topic&routingKey=test&deliveryMode=3";
+		Mockito.when(config.getProperty(Mockito.anyString(), Mockito.anyString()))
+				.thenAnswer(invocation -> invocation.getArgument(1));
+		Mockito.when(config.getBooleanProperty(Mockito.anyString(), Mockito.anyBoolean()))
+				.thenAnswer(invocation -> invocation.getArgument(1));
+		Mockito.when(config.getIntProperty(Mockito.anyString(), Mockito.anyInt()))
+				.thenAnswer(invocation -> invocation.getArgument(1));
+		AMQPSettings settings = new AMQPSettings(config);
+		settings = settings.fromURI(exchangestring);
+		//Assert.assertEquals("topic", settings.getExchangeType());
+		//Assert.assertEquals("test", settings.getRoutingKey());
+		//Assert.assertEquals("myExchangeName", settings.getQueueOrExchangeName());
+	}
 
 }

@@ -1,3 +1,15 @@
+/**
+ * Copyright 2020 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.netflix.conductor.contribs.queue.amqp;
 
 import java.io.IOException;
@@ -61,6 +73,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 	private Channel channel;
 	private Address[] addresses;
 	protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
+
 	AMQPObservableQueue(final ConnectionFactory factory, final Address[] addresses, final boolean useExchange,
 			final AMQPSettings settings, final int batchSize, final int pollTimeInMS) {
 		if (factory == null) {
@@ -122,30 +135,31 @@ public class AMQPObservableQueue implements ObservableQueue {
 	@Override
 	public Observable<Message> observe() {
 		receiveMessages();
-		 Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
-	            Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
-	            interval.flatMap((Long x) -> {
-	                List<Message> available = new LinkedList<>();
-	                messages.drainTo(available);
-	                
-	                if (!available.isEmpty()) {
-	                    AtomicInteger count = new AtomicInteger(0);
-	                    StringBuilder buffer = new StringBuilder();
-	                    available.forEach(msg -> {
-	                        buffer.append(msg.getId()).append("=").append(msg.getPayload());
-	                        count.incrementAndGet();
-	                        
-	                        if (count.get() < available.size()) {
-	                            buffer.append(",");
-	                        }
-	                    });
-	                    
-	                    logger.info(String.format("Batch from %s to conductor is %s", settings.getQueueOrExchangeName(), buffer.toString()));
-	                }
-	                
-	                return Observable.from(available);
-	            }).subscribe(subscriber::onNext, subscriber::onError);
-	        };
+		Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
+			Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
+			interval.flatMap((Long x) -> {
+				List<Message> available = new LinkedList<>();
+				messages.drainTo(available);
+
+				if (!available.isEmpty()) {
+					AtomicInteger count = new AtomicInteger(0);
+					StringBuilder buffer = new StringBuilder();
+					available.forEach(msg -> {
+						buffer.append(msg.getId()).append("=").append(msg.getPayload());
+						count.incrementAndGet();
+
+						if (count.get() < available.size()) {
+							buffer.append(",");
+						}
+					});
+
+					logger.info(String.format("Batch from %s to conductor is %s", settings.getQueueOrExchangeName(),
+							buffer.toString()));
+				}
+
+				return Observable.from(available);
+			}).subscribe(subscriber::onNext, subscriber::onError);
+		};
 		return Observable.create(onSubscribe);
 	}
 
@@ -484,7 +498,6 @@ public class AMQPObservableQueue implements ObservableQueue {
 		return message;
 	}
 
-	
 	private void receiveMessagesFromQueue(String queueName) throws Exception {
 		int nb = 0;
 		Consumer consumer = new DefaultConsumer(channel) {
@@ -494,14 +507,14 @@ public class AMQPObservableQueue implements ObservableQueue {
 					final AMQP.BasicProperties properties, final byte[] body) throws IOException {
 				try {
 					Message message = asMessage(settings,
-							new GetResponse(envelope, properties, body, Integer.MAX_VALUE)); 
+							new GetResponse(envelope, properties, body, Integer.MAX_VALUE));
 					if (message != null) {
 						if (logger.isDebugEnabled()) {
 							logger.debug("Got message with ID {} and receipt {}", message.getId(),
 									message.getReceipt());
 						}
 						messages.add(message);
-						logger.info("receiveMessagesFromQueue- End method {}",messages);
+						logger.info("receiveMessagesFromQueue- End method {}", messages);
 					}
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
@@ -513,26 +526,20 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 		getOrCreateChannel().basicConsume(queueName, false, consumer);
 		Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
-		return ;
+		return;
 	}
 
-/*	private List<Message> receiveMessagesFromQueue(String queueName) throws Exception {
-		final List<Message> messages = new LinkedList<>();
-		Message message;
-		int nb = 0;
-		do {
-			message = asMessage(settings, getOrCreateChannel().basicGet(queueName, false));
-			if (message != null) {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Got message with ID {} and receipt {}", message.getId(), message.getReceipt());
-				}
-				messages.add(message);
-			}
-		} while (++nb < batchSize && message != null);
-		Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
-		return messages;
-	}*/
-
+	/*
+	 * private List<Message> receiveMessagesFromQueue(String queueName) throws
+	 * Exception { final List<Message> messages = new LinkedList<>(); Message
+	 * message; int nb = 0; do { message = asMessage(settings,
+	 * getOrCreateChannel().basicGet(queueName, false)); if (message != null) { if
+	 * (logger.isDebugEnabled()) {
+	 * logger.debug("Got message with ID {} and receipt {}", message.getId(),
+	 * message.getReceipt()); } messages.add(message); } } while (++nb < batchSize
+	 * && message != null); Monitors.recordEventQueueMessagesProcessed(getType(),
+	 * queueName, messages.size()); return messages; }
+	 */
 
 	protected void receiveMessages() {
 		try {
@@ -559,7 +566,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 			logger.error("Exception while getting messages from RabbitMQ", exception);
 			Monitors.recordObservableQMessageReceivedErrors(getType());
 		}
-		return ;
+		return;
 	}
 
 	public int getPollTimeInMS() {
