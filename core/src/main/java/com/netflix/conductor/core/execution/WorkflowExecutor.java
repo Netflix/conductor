@@ -549,9 +549,9 @@ public class WorkflowExecutor {
         workflowStatusListener.onWorkflowCompleted(workflow);
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
 
-        if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
-            workflowStatusListener.onWorkflowCompleted(workflow);
-        }
+        //if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
+        //    workflowStatusListener.onWorkflowCompleted(workflow);
+        //}
     }
 
     public void terminateWorkflow(String workflowId, String reason) {
@@ -645,10 +645,11 @@ public class WorkflowExecutor {
 
         // Send to atlas
         Monitors.recordWorkflowTermination(workflow.getWorkflowName(), workflow.getStatus(), workflow.getOwnerApp());
+        workflowStatusListener.onWorkflowTerminated(workflow);
 
-        if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
-            workflowStatusListener.onWorkflowTerminated(workflow);
-        }
+        //if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
+        //    workflowStatusListener.onWorkflowTerminated(workflow);
+        //}
     }
 
     /**

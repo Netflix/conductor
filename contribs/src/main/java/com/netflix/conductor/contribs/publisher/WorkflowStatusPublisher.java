@@ -10,19 +10,33 @@ import org.slf4j.LoggerFactory;
 public class WorkflowStatusPublisher implements WorkflowStatusListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowStatusPublisher.class);
-    public static final String NOTIFICATION_TYPE = "WorkflowNotification";
+    public static final String NOTIFICATION_TYPE = "workflow/WorkflowNotifications";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void onWorkflowCompleted(Workflow workflow) {
         LOGGER.info("#### Publishing workflow {} on completion callback", workflow.getWorkflowId());
-        //publishWorkflow(workflow);
+        new Thread(() -> {
+            try {
+                WorkflowNotification workNotification = new WorkflowNotification(workflow);
+                publishWorkflowNotification(workNotification);
+            } catch (Exception e){
+                LOGGER.info(e.getMessage());
+            }
+        }).start();
     }
 
     @Override
     public void onWorkflowTerminated(Workflow workflow) {
         LOGGER.info("#### Publishing workflow {} on termination callback", workflow.getWorkflowId());
-        //publishWorkflow(workflow);
+        new Thread(() -> {
+            try {
+                WorkflowNotification workNotification = new WorkflowNotification(workflow);
+                publishWorkflowNotification(workNotification);
+            } catch (Exception e){
+                LOGGER.info(e.getMessage());
+            }
+        }).start();
     }
 
     private String workflowToMessage(Workflow workflow) {
@@ -36,15 +50,12 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
         return jsonWf;
     }
 
-    private void publishWorkflow(Workflow workflow) {
-        String jsonWf = workflowToMessage(workflow);
-
+    private void publishWorkflowNotification(WorkflowNotification workflowNotification) {
+        String jsonWorkflow = workflowNotification.toJsonString();
+        LOGGER.info("##### Task Message {} .", jsonWorkflow);
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
-        rc.post(url, jsonWf, "domainGroupMoId", "AccountMoId");
-    }
-
-    public void publish(Workflow workflow) {
-        publishWorkflow(workflow);
+        // rc.get(url);
+        rc.post(url, jsonWorkflow, workflowNotification.getDomainGroupMoId(), workflowNotification.getAccountMoId());
     }
 }
