@@ -66,5 +66,7 @@ public class AMQPSettingsTest {
 		//Assert.assertEquals("test", settings.getRoutingKey());
 		//Assert.assertEquals("myExchangeName", settings.getQueueOrExchangeName());
 	}
+	
+
 
 }

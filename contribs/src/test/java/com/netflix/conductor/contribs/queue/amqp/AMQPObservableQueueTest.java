@@ -440,7 +440,52 @@ public class AMQPObservableQueueTest {
 	        Connection connection = mockGoodConnection(channel);
 	        testPublishMessagesToQueueAndDefaultConfiguration(channel, connection, true, false);
 	    }
-
+	    
+	    @Test(expected = IllegalArgumentException.class)
+	    public void testAMQPObservalbleQueue_empty()
+	            throws IOException, TimeoutException {
+	        AMQPSettings settings = new AMQPSettings(configuration).fromURI("amqp_queue:test");
+	        AMQPObservableQueue observableQueue = new AMQPObservableQueue(null,
+	                addresses, false, settings, batchSize, pollTimeMs);
+	    }
+	    @Test(expected = IllegalArgumentException.class)
+	    public void testAMQPObservalbleQueue_addressEmpty()
+	            throws IOException, TimeoutException {
+	        AMQPSettings settings = new AMQPSettings(configuration).fromURI("amqp_queue:test");
+	        AMQPObservableQueue observableQueue = new AMQPObservableQueue(mockConnectionFactory(mockGoodConnection(mockBaseChannel())),
+	                null, false, settings, batchSize, pollTimeMs);
+	    }
+	    @Test(expected = IllegalArgumentException.class)
+	    public void testAMQPObservalbleQueue_settingsEmpty()
+	            throws IOException, TimeoutException {
+	        AMQPSettings settings = new AMQPSettings(configuration).fromURI("amqp_queue:test");
+	        AMQPObservableQueue observableQueue = new AMQPObservableQueue(mockConnectionFactory(mockGoodConnection(mockBaseChannel())),
+	                addresses, false, null, batchSize, pollTimeMs);
+	    }
+	    
+	    @Test(expected = IllegalArgumentException.class)
+	    public void testAMQPObservalbleQueue_batchsizezero()
+	            throws IOException, TimeoutException {
+	        AMQPSettings settings = new AMQPSettings(configuration).fromURI("amqp_queue:test");
+	        AMQPObservableQueue observableQueue = new AMQPObservableQueue(mockConnectionFactory(mockGoodConnection(mockBaseChannel())),
+	                addresses, false, settings, 0, pollTimeMs);
+	    }
+	    @Test(expected = IllegalArgumentException.class)
+	    public void testAMQPObservalbleQueue_polltimezero()
+	            throws IOException, TimeoutException {
+	        AMQPSettings settings = new AMQPSettings(configuration).fromURI("amqp_queue:test");
+	        AMQPObservableQueue observableQueue = new AMQPObservableQueue(mockConnectionFactory(mockGoodConnection(mockBaseChannel())),
+	                addresses, false, settings, batchSize, 0);
+	    }
+	    
+	    @Test
+	    public void testclosetExistingQueueAndDefaultConfiguration()
+	            throws IOException, TimeoutException {
+	        // Mock channel and connection
+	        Channel channel = mockBaseChannel();
+	        Connection connection = mockGoodConnection(channel);
+	        testGetMessagesFromQueueAndDefaultConfiguration_close(channel, connection,false, true);
+	    }
 	    private void testGetMessagesFromQueueAndDefaultConfiguration(Channel channel, Connection connection,
 	                                                                 boolean queueExists, boolean useWorkingChannel)
 	            throws IOException, TimeoutException {
@@ -466,6 +511,32 @@ public class AMQPObservableQueueTest {
 
 	        runObserve(channel, observableQueue, queueName, useWorkingChannel, batchSize);
 	    }
+	    
+	    private void testGetMessagesFromQueueAndDefaultConfiguration_close(Channel channel, Connection connection,
+                boolean queueExists, boolean useWorkingChannel)
+throws IOException, TimeoutException {
+final Random random = new Random();
+
+final String queueName = RandomStringUtils.randomAlphabetic(30);
+AMQPSettings settings = new AMQPSettings(configuration).fromURI("amqp_queue:" + queueName);
+
+List<GetResponse> queue = buildQueue(random, batchSize);
+channel = mockChannelForQueue(channel, useWorkingChannel, queueExists, queueName, queue);
+
+AMQPObservableQueue observableQueue = new AMQPObservableQueue(
+mockConnectionFactory(connection),
+addresses, false, settings, batchSize, pollTimeMs);
+observableQueue.close();
+assertArrayEquals(addresses, observableQueue.getAddresses());
+assertEquals(AMQPConstants.AMQP_QUEUE_TYPE, observableQueue.getType());
+assertEquals(AMQPConstants.AMQP_QUEUE_TYPE+":"+queueName, observableQueue.getName());
+assertEquals(queueName, observableQueue.getURI());
+assertEquals(batchSize, observableQueue.getBatchSize());
+assertEquals(pollTimeMs, observableQueue.getPollTimeInMS());
+assertEquals(queue.size(), observableQueue.size());
+
+//runObserve(channel, observableQueue, queueName, useWorkingChannel, batchSize);
+}
 
 	    private void testPublishMessagesToQueueAndDefaultConfiguration(Channel channel, Connection connection,
 	                                                                 boolean queueExists, boolean useWorkingChannel)

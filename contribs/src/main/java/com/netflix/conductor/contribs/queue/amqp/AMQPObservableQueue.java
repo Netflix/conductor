@@ -195,9 +195,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 		final List<String> processedDeliveryTags = new ArrayList<>();
 		for (final Message message : messages) {
 			try {
-				if (logger.isInfoEnabled()) {
-					logger.info("ACK message with delivery tag {}", message.getReceipt());
-				}
+				logger.info("ACK message with delivery tag {}", message.getReceipt());
 				getOrCreateChannel().basicAck(Long.valueOf(message.getReceipt()), false);
 				// Message ACKed
 				processedDeliveryTags.add(message.getReceipt());
@@ -270,6 +268,11 @@ public class AMQPObservableQueue implements ObservableQueue {
 			throw new RuntimeException(e);
 		}
 	}
+	@Override
+    public void close() {
+        closeChannel();
+        closeConnection();
+    }
 
 	public static class Builder {
 
