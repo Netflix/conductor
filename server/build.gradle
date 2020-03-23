@@ -61,6 +61,7 @@ shadowJar {
         attributes 'Description': 'Self contained Conductor server jar'
         attributes 'Main-Class': 'com.netflix.conductor.bootstrap.Main'
     }
+    zip64 = true
 }
 publishing {
     publications {

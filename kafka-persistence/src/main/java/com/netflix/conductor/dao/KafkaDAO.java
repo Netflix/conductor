@@ -28,6 +28,8 @@ import com.netflix.conductor.kafka.index.producer.KafkaProducer;
 import com.netflix.conductor.kafka.index.utils.DocumentTypes;
 import com.netflix.conductor.kafka.index.utils.OperationTypes;
 import com.netflix.conductor.metrics.Monitors;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Histogram;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +55,8 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
     private final ThreadPoolExecutor executorService;
     private ProducerDAO producerDAO;
     private static Logger logger = LoggerFactory.getLogger(KafkaDAO.class);
+    private Histogram.Timer latencyTimer;
+    private Histogram kafkaPublishLatency;
 
     @Inject
     public KafkaDAO(KafkaProducer producer, RestClient lowLevelRestClient, ElasticSearchConfiguration config, ObjectMapper objectMapper) {
@@ -60,7 +64,7 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
         this.producerDAO = producer;
 
         // Set up a workerpool for performing async operations.
-        int corePoolSize = 10;
+        int corePoolSize = 6;
         int maximumPoolSize = config.getAsyncMaxPoolSize();
         long keepAliveTime = 1L;
         int workerQueueSize = config.getAsyncWorkerQueueSize();
@@ -72,6 +76,10 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
                 (runnable, executor) -> {
                     logger.warn("Request  {} to async dao discarded in executor {}", runnable, executor);
                 });
+        kafkaPublishLatency = Histogram.build()
+                .name("kafka_publish_latency_seconds")
+                .labelNames("operationType", "documentType")
+                .help("Kafka Publish Latency").register(CollectorRegistry.defaultRegistry);
     }
 
     @Override
@@ -81,10 +89,10 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public void indexWorkflow(Workflow workflow) {
+        latencyTimer = kafkaPublishLatency.labels(OperationTypes.CREATE, DocumentTypes.WORKFLOW_DOC_TYPE).startTimer();
         WorkflowSummary summary = new WorkflowSummary(workflow);
-        long start = System.currentTimeMillis();
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.WORKFLOW_DOC_TYPE, summary);
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.WORKFLOW_DOC_TYPE, OperationTypes.CREATE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        latencyTimer.observeDuration();
     }
 
     @Override
@@ -94,10 +102,10 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public void indexTask(Task task) {
+        latencyTimer = kafkaPublishLatency.labels(OperationTypes.CREATE, DocumentTypes.TASK_DOC_TYPE).startTimer();
         TaskSummary summary = new TaskSummary(task);
-        long start = System.currentTimeMillis();
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.TASK_DOC_TYPE, summary);
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.TASK_DOC_TYPE, OperationTypes.CREATE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        latencyTimer.observeDuration();
     }
 
     @Override
@@ -107,9 +115,9 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public void removeWorkflow(String workflowId) {
-        long start = System.currentTimeMillis();
+        latencyTimer = kafkaPublishLatency.labels(OperationTypes.DELETE, DocumentTypes.WORKFLOW_DOC_TYPE).startTimer();
         producerDAO.send(OperationTypes.DELETE, DocumentTypes.WORKFLOW_DOC_TYPE, workflowId);
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.WORKFLOW_DOC_TYPE, OperationTypes.DELETE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        latencyTimer.observeDuration();
     }
 
     @Override
@@ -119,9 +127,9 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public void updateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
-        long start = System.currentTimeMillis();
+        latencyTimer = kafkaPublishLatency.labels(OperationTypes.UPDATE, DocumentTypes.WORKFLOW_DOC_TYPE).startTimer();
         producerDAO.send(OperationTypes.UPDATE, DocumentTypes.WORKFLOW_DOC_TYPE, values);
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.WORKFLOW_DOC_TYPE, OperationTypes.UPDATE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        latencyTimer.observeDuration();
     }
 
     @Override
@@ -150,10 +158,10 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
 
     @Override
     public void addEventExecution(EventExecution eventExecution) {
+        latencyTimer = kafkaPublishLatency.labels(OperationTypes.CREATE, DocumentTypes.EVENT_DOC_TYPE).startTimer();
         String id = eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "." + eventExecution.getId();
-        long start = System.currentTimeMillis();
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.EVENT_DOC_TYPE, id);
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.EVENT_DOC_TYPE, OperationTypes.CREATE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
+        latencyTimer.observeDuration();
     }
 
     @Override
@@ -166,10 +174,9 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
         if (taskExecLogs.isEmpty()) {
             return;
         }
-        long start = System.currentTimeMillis();
+        latencyTimer = kafkaPublishLatency.labels(OperationTypes.CREATE, DocumentTypes.LOG_DOC_TYPE).startTimer();
         taskExecLogs.forEach(log -> producerDAO.send(OperationTypes.CREATE, DocumentTypes.LOG_DOC_TYPE , taskExecLogs));
-        Monitors.getTimer(Monitors.classQualifier, "kafka_produce_time", DocumentTypes.LOG_DOC_TYPE, OperationTypes.CREATE).record(System.currentTimeMillis() - start, TimeUnit.MILLISECONDS);
-
+        latencyTimer.observeDuration();
     }
 
     @Override

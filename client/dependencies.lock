@@ -298,22 +298,26 @@
     },
     "findbugs": {
         "com.google.code.findbugs:findbugs": {
-            "locked": "3.0.1"
+            "locked": "3.0.1",
+            "requested": "3.0.1"
         }
     },
     "jacocoAgent": {
         "org.jacoco:org.jacoco.agent": {
-            "locked": "0.8.1"
+            "locked": "0.8.1",
+            "requested": "0.8.1"
         }
     },
     "jacocoAnt": {
         "org.jacoco:org.jacoco.ant": {
-            "locked": "0.8.1"
+            "locked": "0.8.1",
+            "requested": "0.8.1"
         }
     },
     "pmd": {
         "net.sourceforge.pmd:pmd-java": {
-            "locked": "5.6.1"
+            "locked": "5.6.1",
+            "requested": "5.6.1"
         }
     },
     "runtime": {

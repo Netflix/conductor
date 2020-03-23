@@ -89,12 +89,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -121,10 +151,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -273,12 +299,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -305,10 +361,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -457,12 +509,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -489,10 +571,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -653,12 +731,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -685,10 +793,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -837,12 +941,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -869,10 +1003,6 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.0"
-        },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -1021,12 +1151,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -1058,10 +1218,6 @@
             ],
             "locked": "3.0"
         },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
-        },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
@@ -1073,10 +1229,6 @@
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.9.1"
-        },
-        "org.awaitility:awaitility": {
-            "locked": "3.1.2",
-            "requested": "3.1.2"
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "firstLevelTransitive": [
@@ -1118,7 +1270,7 @@
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
-            "requested": "1.10.19"
+            "requested": "3.1.0"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -1129,10 +1281,6 @@
         "org.slf4j:slf4j-log4j12": {
             "locked": "1.8.0-alpha1",
             "requested": "1.8.0-alpha1"
-        },
-        "org.testcontainers:kafka": {
-            "locked": "1.11.3",
-            "requested": "1.11.3"
         }
     },
     "testCompileClasspath": {
@@ -1225,12 +1373,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -1262,10 +1440,6 @@
             ],
             "locked": "3.0"
         },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
-        },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
@@ -1277,10 +1451,6 @@
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.9.1"
-        },
-        "org.awaitility:awaitility": {
-            "locked": "3.1.2",
-            "requested": "3.1.2"
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "firstLevelTransitive": [
@@ -1322,7 +1492,7 @@
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
-            "requested": "1.10.19"
+            "requested": "3.1.0"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -1333,10 +1503,6 @@
         "org.slf4j:slf4j-log4j12": {
             "locked": "1.8.0-alpha1",
             "requested": "1.8.0-alpha1"
-        },
-        "org.testcontainers:kafka": {
-            "locked": "1.11.3",
-            "requested": "1.11.3"
         }
     },
     "testRuntime": {
@@ -1429,12 +1595,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -1466,10 +1662,6 @@
             ],
             "locked": "3.0"
         },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
-        },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
@@ -1481,10 +1673,6 @@
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.9.1"
-        },
-        "org.awaitility:awaitility": {
-            "locked": "3.1.2",
-            "requested": "3.1.2"
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "firstLevelTransitive": [
@@ -1526,7 +1714,7 @@
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
-            "requested": "1.10.19"
+            "requested": "3.1.0"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -1537,10 +1725,6 @@
         "org.slf4j:slf4j-log4j12": {
             "locked": "1.8.0-alpha1",
             "requested": "1.8.0-alpha1"
-        },
-        "org.testcontainers:kafka": {
-            "locked": "1.11.3",
-            "requested": "1.11.3"
         }
     },
     "testRuntimeClasspath": {
@@ -1633,12 +1817,42 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
         "commons-io:commons-io": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.4",
             "requested": "2.4"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -1670,10 +1884,6 @@
             ],
             "locked": "3.0"
         },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.2.0",
-            "requested": "2.2.0"
-        },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
@@ -1685,10 +1895,6 @@
                 "com.netflix.conductor:conductor-es5-persistence"
             ],
             "locked": "2.9.1"
-        },
-        "org.awaitility:awaitility": {
-            "locked": "3.1.2",
-            "requested": "3.1.2"
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "firstLevelTransitive": [
@@ -1730,7 +1936,7 @@
         },
         "org.mockito:mockito-core": {
             "locked": "1.10.19",
-            "requested": "1.10.19"
+            "requested": "3.1.0"
         },
         "org.slf4j:slf4j-api": {
             "firstLevelTransitive": [
@@ -1741,10 +1947,6 @@
         "org.slf4j:slf4j-log4j12": {
             "locked": "1.8.0-alpha1",
             "requested": "1.8.0-alpha1"
-        },
-        "org.testcontainers:kafka": {
-            "locked": "1.11.3",
-            "requested": "1.11.3"
         }
     }
 }
