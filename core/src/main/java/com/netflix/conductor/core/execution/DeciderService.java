@@ -139,13 +139,14 @@ public class DeciderService {
 					executedTaskRefNames.remove(rt.getReferenceTaskName());
 					outcome.tasksToBeUpdated.add(task);
 					if (tasksAutoCleanup) {
-						outcome.tasksToBeDeleted = workflow.getTasks().stream()
+						List<Task> tasksToBeDeleted = workflow.getTasks().stream()
 							.filter(t -> t.getReferenceTaskName().equalsIgnoreCase(task.getReferenceTaskName())
 								&& t.getRetryCount() != 0 // Keep original
 								&& t.getRetryCount() < task.getRetryCount()) // Keep last failed
 							.collect(Collectors.toList());
-						if (!outcome.tasksToBeDeleted.isEmpty()) {
-							logger.debug("Tasks to be deleted " + outcome.tasksToBeDeleted);
+						if (!tasksToBeDeleted.isEmpty()) {
+							outcome.tasksToBeDeleted.addAll(tasksToBeDeleted);
+							logger.debug("Tasks to be deleted " + tasksToBeDeleted);
 						}
 					}
 				}
