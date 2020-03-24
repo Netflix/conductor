@@ -27,13 +27,8 @@ import java.util.regex.Pattern;
 import static com.netflix.conductor.contribs.queue.amqp.AMQPConfigurations.*;
 
 /**
- * Settings for publishing messages to AMQP queue or exchange \w routing key
- * Created at 22/03/2019 11:35
- *
  * @author Ritu Parathody
- * @version $Id$ This code is based on the PR
- *          https://github.com/Netflix/conductor/pull/1063 which did not get
- *          merged to the master
+ * 
  */
 public class AMQPSettings {
 
@@ -55,6 +50,7 @@ public class AMQPSettings {
 
 	private final Map<String, Object> arguments = new HashMap<>();
 	private static Logger logger = LoggerFactory.getLogger(AMQPSettings.class);
+
 	public AMQPSettings(final Configuration config) {
 		// Initialize with a default values
 		durable = config.getBooleanProperty(String.format(AMQPConstants.PROPERTY_KEY_TEMPLATE, PROPERTY_IS_DURABLE),
@@ -163,9 +159,9 @@ public class AMQPSettings {
 		}
 
 		// Set name of queue or exchange from group "name"
-		logger.info("Queue URI:{}",queueURI);
+		logger.info("Queue URI:{}", queueURI);
 		queueOrExchangeName = matcher.group("name");
-		eventName=queueURI;
+		eventName = queueURI;
 		if (matcher.groupCount() > 1) {
 			final String queryParams = matcher.group("params");
 			if (StringUtils.isNotEmpty(queryParams)) {

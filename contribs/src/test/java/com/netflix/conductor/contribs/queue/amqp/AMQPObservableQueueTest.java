@@ -166,8 +166,7 @@ public class AMQPObservableQueueTest {
 		
 		OngoingStubbing<String> getResponseOngoingStubbing = Mockito
 				.when(channel.basicConsume(eq(queueName), Mockito.anyBoolean(), (Consumer) Mockito.any(Consumer.class))).thenAnswer(new ReturnsElementsOf(queue));
-		/*OngoingStubbing<GetResponse> getResponseOngoingStubbing = Mockito
-				.when(channel.basicGet(eq(queueName), Mockito.anyBoolean())).thenAnswer(new ReturnsElementsOf(queue));*/
+	
 		if (!isWorking) {
 			getResponseOngoingStubbing.thenThrow(new IOException("Not working"), new RuntimeException("Not working"));
 		}
@@ -535,7 +534,6 @@ assertEquals(batchSize, observableQueue.getBatchSize());
 assertEquals(pollTimeMs, observableQueue.getPollTimeInMS());
 assertEquals(queue.size(), observableQueue.size());
 
-//runObserve(channel, observableQueue, queueName, useWorkingChannel, batchSize);
 }
 
 	    private void testPublishMessagesToQueueAndDefaultConfiguration(Channel channel, Connection connection,

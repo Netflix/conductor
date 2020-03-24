@@ -50,12 +50,8 @@ import com.rabbitmq.client.GetResponse;
 import rx.Observable;
 
 /**
- * Created at 19/03/2019 16:29
- *
  * @author Ritu Parathody
- * @version $Id$ This code is based on the PR
- *          https://github.com/Netflix/conductor/pull/1063 which did not get
- *          merged to the master
+ * 
  */
 public class AMQPObservableQueue implements ObservableQueue {
 	private static Logger logger = LoggerFactory.getLogger(AMQPObservableQueue.class);
@@ -268,11 +264,12 @@ public class AMQPObservableQueue implements ObservableQueue {
 			throw new RuntimeException(e);
 		}
 	}
+
 	@Override
-    public void close() {
-        closeChannel();
-        closeConnection();
-    }
+	public void close() {
+		closeChannel();
+		closeConnection();
+	}
 
 	public static class Builder {
 
@@ -531,7 +528,6 @@ public class AMQPObservableQueue implements ObservableQueue {
 		Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
 		return;
 	}
-
 
 	protected void receiveMessages() {
 		try {

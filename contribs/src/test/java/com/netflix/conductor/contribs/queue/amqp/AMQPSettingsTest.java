@@ -62,9 +62,7 @@ public class AMQPSettingsTest {
 				.thenAnswer(invocation -> invocation.getArgument(1));
 		AMQPSettings settings = new AMQPSettings(config);
 		settings = settings.fromURI(exchangestring);
-		//Assert.assertEquals("topic", settings.getExchangeType());
-		//Assert.assertEquals("test", settings.getRoutingKey());
-		//Assert.assertEquals("myExchangeName", settings.getQueueOrExchangeName());
+
 	}
 	
 

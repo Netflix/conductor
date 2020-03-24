@@ -27,12 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.netflix.conductor.contribs.queue.amqp.AMQPObservableQueue.Builder;
 
 /**
- * Created at 19/03/2019 16:29
- *
  * @author Ritu Parathody
- * @version $Id$ This code is based on the PR
- *          https://github.com/Netflix/conductor/pull/1063 which did not get
- *          merged to the master
+ * 
  */
 @Singleton
 public class AMQPEventQueueProvider implements EventQueueProvider {
