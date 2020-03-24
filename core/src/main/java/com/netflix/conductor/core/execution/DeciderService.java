@@ -34,6 +34,7 @@ import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -505,6 +506,12 @@ public class DeciderService {
 				}
 				Map<String, Object> joinInput = new HashMap<String, Object>();
 				joinInput.put("joinOn", taskToSchedule.getJoinOn());
+				if (MapUtils.isNotEmpty(taskToSchedule.getInputParameters())) {
+					joinInput.put("inputParameters", taskToSchedule.getInputParameters());
+				}
+				if (CollectionUtils.isNotEmpty(taskToSchedule.getJoinOnConditions())) {
+					joinInput.put("joinOnConditions", taskToSchedule.getJoinOnConditions());
+				}
 				Task joinTask = SystemTask.JoinTask(workflow, taskId, taskToSchedule, joinInput);
 				tasks.add(joinTask);
 				break;
