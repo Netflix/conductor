@@ -136,7 +136,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 	public Observable<Message> observe() {
 		receiveMessages();
 		Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
-			Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS);
+			Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
 			interval.flatMap((Long x) -> {
 				List<Message> available = new LinkedList<>();
 				messages.drainTo(available);
@@ -532,17 +532,6 @@ public class AMQPObservableQueue implements ObservableQueue {
 		return;
 	}
 
-	/*
-	 * private List<Message> receiveMessagesFromQueue(String queueName) throws
-	 * Exception { final List<Message> messages = new LinkedList<>(); Message
-	 * message; int nb = 0; do { message = asMessage(settings,
-	 * getOrCreateChannel().basicGet(queueName, false)); if (message != null) { if
-	 * (logger.isDebugEnabled()) {
-	 * logger.debug("Got message with ID {} and receipt {}", message.getId(),
-	 * message.getReceipt()); } messages.add(message); } } while (++nb < batchSize
-	 * && message != null); Monitors.recordEventQueueMessagesProcessed(getType(),
-	 * queueName, messages.size()); return messages; }
-	 */
 
 	protected void receiveMessages() {
 		try {
