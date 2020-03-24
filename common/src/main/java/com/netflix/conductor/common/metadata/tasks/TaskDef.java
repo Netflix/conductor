@@ -19,6 +19,7 @@ package com.netflix.conductor.common.metadata.tasks;
 import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
+import com.netflix.conductor.common.constraints.OwnerEmailMandatoryConstraint;
 import com.netflix.conductor.common.constraints.TaskTimeoutConstraint;
 import com.netflix.conductor.common.metadata.Auditable;
 import java.util.ArrayList;
@@ -109,9 +110,13 @@ public class TaskDef extends Auditable {
 	private String executionNameSpace;
 
 	@ProtoField(id = 18)
-	@NotEmpty(message = "ownerEmail cannot be empty")
+	@OwnerEmailMandatoryConstraint
 	@Email(message = "ownerEmail should be valid email address")
 	private String ownerEmail;
+
+	@ProtoField(id = 19)
+	@Min(value = 0, message = "TaskDef pollTimeoutSeconds: {value} must be >= 0")
+	private Integer pollTimeoutSeconds;
 
 	public TaskDef() {
 	}
@@ -386,6 +391,20 @@ public class TaskDef extends Auditable {
 	 */
 	public void setOwnerEmail(String ownerEmail) {
 		this.ownerEmail = ownerEmail;
+	}
+
+	/**
+	 * @param pollTimeoutSeconds the poll timeout to set
+	 */
+	public void setPollTimeoutSeconds(Integer pollTimeoutSeconds) {
+		this.pollTimeoutSeconds = pollTimeoutSeconds;
+	}
+
+	/**
+	 * @return the poll timeout of this task definition
+	 */
+	public Integer getPollTimeoutSeconds() {
+		return pollTimeoutSeconds;
 	}
 
 	@Override
