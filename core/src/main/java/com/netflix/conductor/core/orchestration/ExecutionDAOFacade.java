@@ -389,7 +389,7 @@ public class ExecutionDAOFacade {
         boolean added = executionDAO.addEventExecution(eventExecution);
 
         if (added) {
-            addEventExecutionIndex(eventExecution);
+            indexEventExecution(eventExecution);
         }
 
         return added;
@@ -397,10 +397,10 @@ public class ExecutionDAOFacade {
 
     public void updateEventExecution(EventExecution eventExecution) {
         executionDAO.updateEventExecution(eventExecution);
-        addEventExecutionIndex(eventExecution);
+        indexEventExecution(eventExecution);
     }
 
-    private void addEventExecutionIndex(EventExecution eventExecution)
+    private void indexEventExecution(EventExecution eventExecution)
     {
         if (config.enableAsyncIndexing()) {
             indexDAO.asyncAddEventExecution(eventExecution);
