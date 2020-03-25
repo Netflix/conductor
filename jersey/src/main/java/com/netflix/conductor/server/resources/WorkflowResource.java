@@ -49,6 +49,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 /**
  * @author Viren
  */
@@ -108,7 +111,9 @@ public class WorkflowResource {
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header"),
+		@ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
+		@ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
 	public Response startWorkflow(StartWorkflowRequest request, @Context HttpHeaders headers) throws Exception {
 		WorkflowDef def = metadata.getWorkflowDef(request.getName(), request.getVersion());
 		if (def == null) {
@@ -116,8 +121,14 @@ public class WorkflowResource {
 		}
 		Map<String, Object> auth = bypassAuth(headers) ? Collections.emptyMap() : executor.validateAuth(def, headers);
 
+		String workflowId = null;
+		if (headers.getRequestHeader(CommonParams.WORKFLOW_ID) != null) {
+			workflowId = headers.getRequestHeader(CommonParams.WORKFLOW_ID).get(0);
+		}
 		// Generate id on this layer as we need to have it before starting workflow
-		String workflowId = IDGenerator.generate();
+		if (isEmpty(workflowId)) {
+			workflowId = IDGenerator.generate();
+		}
 		Response.ResponseBuilder builder = Response.ok(workflowId);
 
 		String contextToken = null;
@@ -132,10 +143,15 @@ public class WorkflowResource {
 			traceId = headers.getRequestHeader(CommonParams.PLATFORM_TRACE_ID).get(0);
 		}
 
+		boolean asyncStart = false;
+		if (headers.getRequestHeader(CommonParams.ASYNC_START) != null) {
+			asyncStart = Boolean.parseBoolean(headers.getRequestHeader(CommonParams.ASYNC_START).get(0));
+		}
+
 		NDC.push("rest-start-" + UUID.randomUUID().toString());
 		try {
 			String correlationId = handleCorrelationId(workflowId, headers, builder);
-			if (StringUtils.isNotEmpty(correlationId)) {
+			if (isNotEmpty(correlationId)) {
 				request.setCorrelationId(correlationId);
 			}
 			String userInvoked = executor.decodeAuthorizationUser(headers);
@@ -143,7 +159,7 @@ public class WorkflowResource {
 
 			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
 				request.getInput(), null, request.getTaskToDomain(),
-				auth, contextToken, contextUser, traceId);
+				auth, contextToken, contextUser, traceId, asyncStart);
 		} finally {
 			NDC.remove();
 		}
@@ -165,7 +181,9 @@ public class WorkflowResource {
 	@ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header"),
-		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+		@ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header"),
+		@ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
+		@ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
 	public Response startWorkflow(@Context HttpHeaders headers,
 								  @PathParam("name") String name, @QueryParam("version") Integer version,
 								  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
