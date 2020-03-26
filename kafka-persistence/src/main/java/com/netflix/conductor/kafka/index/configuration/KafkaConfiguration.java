@@ -22,10 +22,10 @@ public class KafkaConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(KafkaProducer.class);
 
     public ProducerConfig producerConfig() {
-        String primaryProducerBootStrapServer = configuration.getProperty("tier1.producer.primary.bootstrapServers", "localhost:9092");
-        String primaryProducerUsername = configuration.getProperty("tier1.producer.primary.password", "");
-        String primaryProducerPassword = configuration.getProperty("tier1.producer.primary.username", "");
-        String primaryProducerAuthMechanism = configuration.getProperty("tier1.producer.primary.authMechanism", "NONE");
+        String primaryProducerBootStrapServer = configuration.getProperty("producer.primary.bootstrapServers", "localhost:9092");
+        String primaryProducerUsername = configuration.getProperty("producer.primary.password", "");
+        String primaryProducerPassword = configuration.getProperty("producer.primary.username", "");
+        String primaryProducerAuthMechanism = configuration.getProperty("producer.primary.authMechanism", "NONE");
 
         CommonConfig.Cluster primaryCluster =  new CommonConfig.Cluster();
         primaryCluster.setBootstrapServers(primaryProducerBootStrapServer);
@@ -33,10 +33,10 @@ public class KafkaConfiguration {
         primaryCluster.setUsername(primaryProducerUsername);
         primaryCluster.setPassword(primaryProducerPassword);
 
-        String secondaryProducerBootStrapServer = configuration.getProperty("tier1.producer.secondary.bootstrapServers", "localhost:9093");
-        String secondaryProducerUsername = configuration.getProperty("tier1.producer.secondary.password", "");
-        String secondaryProducerPassword = configuration.getProperty("tier1.producer.secondary.username", "");
-        String secondaryProducerAuthMechanism = configuration.getProperty("tier1.producer.secondary.authMechanism", "NONE");
+        String secondaryProducerBootStrapServer = configuration.getProperty("producer.secondary.bootstrapServers", "localhost:9093");
+        String secondaryProducerUsername = configuration.getProperty("producer.secondary.password", "");
+        String secondaryProducerPassword = configuration.getProperty("producer.secondary.username", "");
+        String secondaryProducerAuthMechanism = configuration.getProperty("producer.secondary.authMechanism", "NONE");
         CommonConfig.Cluster secondaryCluster =  new CommonConfig.Cluster();
         secondaryCluster.setBootstrapServers(secondaryProducerBootStrapServer);
         secondaryCluster.setAuthMechanism(AuthMechanism.valueOf(secondaryProducerAuthMechanism));
