@@ -21,7 +21,7 @@ public class KafkaConfiguration {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaProducer.class);
 
-    public ProducerConfig tier1ProducerConfig() {
+    public ProducerConfig producerConfig() {
         String primaryProducerBootStrapServer = configuration.getProperty("tier1.producer.primary.bootstrapServers", "localhost:9092");
         String primaryProducerUsername = configuration.getProperty("tier1.producer.primary.password", "");
         String primaryProducerPassword = configuration.getProperty("tier1.producer.primary.username", "");
@@ -59,7 +59,7 @@ public class KafkaConfiguration {
         Map<String, Topic> topics = new HashMap<>();
         Topic topic = floEventLogsTopic();
         topics.put(topic.getName(), topic);
-        return new Producer(tier1ProducerConfig().toBuilder().topics(topics).build());
+        return new Producer(producerConfig().toBuilder().topics(topics).build());
     }
 
 }
