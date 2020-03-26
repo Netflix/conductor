@@ -5,22 +5,58 @@ import com.netflix.conductor.core.execution.TaskStatusListenerX;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+
 public class TaskStatusPublisherX implements TaskStatusListenerX {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisherX.class);
-    public static final String NOTIFICATION_TYPE = "workflow/TaskNotifications";
+    private static final String NOTIFICATION_TYPE = "workflow/TaskNotifications";
+    private static final Integer QDEPTH = 10;
+    private BlockingQueue<Task> blockingQueue = new LinkedBlockingDeque<>(QDEPTH);
+    private boolean isConsumerRunning = false;
+
+    private Thread consumerThread = new Thread(() -> {
+        try {
+            while (true) {
+                Task task = blockingQueue.take();
+                LOGGER.info("Consume " + task);
+                TaskNotification taskNotification = new TaskNotification(task);
+                publishTaskNotification(taskNotification);
+                Thread.sleep(10);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        catch (Exception e){
+            LOGGER.info(e.getMessage());
+        }
+    });
 
     @Override
     public void onTaskScheduled(Task task) {
-        LOGGER.info("#### Publishing Task {} on schedule callback", task.getTaskId());
-        new Thread(() -> {
+        try {
+            LOGGER.info("#### Publishing Task {} on schedule callback", task.getTaskId());
+            blockingQueue.put(task);
+
+            // start if consumer thread not running
+            if (isConsumerRunning) {
+                return;
+            }
+            consumerThread.start();
+            //consumerThread.join();
+            isConsumerRunning = true;
+        } catch (Exception e){
+            LOGGER.info(e.getMessage());
+        }
+        /*new Thread(() -> {
             try {
                 TaskNotification taskNotification = new TaskNotification(task);
                 publishTaskNotification(taskNotification);
             } catch (Exception e){
                 LOGGER.info(e.getMessage());
             }
-        }).start();
+        }).start();*/
     }
 
     private void publishTaskNotification(TaskNotification taskNotification) {
