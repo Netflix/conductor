@@ -88,11 +88,20 @@ public interface Configuration {
     String WORKFLOW_CLEANER_BATCH_SIZE_PROPERTY_NAME = "workflow.cleaner.batch.size";
     long WORKFLOW_CLEANER_BATCH_SIZE_DEFAULT_VALUE = 200;
 
+    String INDEXING_ENABLED_PROPERTY_NAME = "workflow.indexing.enabled";
+    boolean INDEXING_ENABLED_DEFAULT_VALUE = true;
+
     String TASK_DEF_REFRESH_TIME_SECS_PROPERTY_NAME = "conductor.taskdef.cache.refresh.time.seconds";
     int TASK_DEF_REFRESH_TIME_SECS_DEFAULT_VALUE = 60;
 
     String EVENT_HANDLER_REFRESH_TIME_SECS_PROPERTY_NAME = "conductor.eventhandler.cache.refresh.time.seconds";
     int EVENT_HANDLER_REFRESH_TIME_SECS_DEFAULT_VALUE = 60;
+
+    String EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME = "workflow.event.execution.peristence.ttl.seconds";
+    int EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE = 0;
+
+    String OWNER_EMAIL_MANDATORY_NAME = "workflow.owner.email.mandatory";
+    boolean OWNER_EMAIL_MANDATORY_DEFAULT_VALUE = true;
 
     //TODO add constants for input/output external payload related properties.
 
@@ -128,6 +137,13 @@ public interface Configuration {
      */
     default boolean isTaskExecLogIndexingEnabled() {
         return getBooleanProperty(TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME, TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return if true(default), enables indexing persistence
+     */
+    default boolean isIndexingPersistenceEnabled() {
+            return getBooleanProperty(INDEXING_ENABLED_PROPERTY_NAME, INDEXING_ENABLED_DEFAULT_VALUE);
     }
 
     /**
@@ -230,6 +246,12 @@ public interface Configuration {
     default long getWorkflowCleanerBatchSize() {
         return getLongProperty(WORKFLOW_CLEANER_BATCH_SIZE_PROPERTY_NAME,
                 WORKFLOW_CLEANER_BATCH_SIZE_DEFAULT_VALUE);
+    
+   /**
+     * @return true if owner email is mandatory for task definitions and workflow definitions
+     */
+    default boolean isOwnerEmailMandatory() {
+            return getBooleanProperty(OWNER_EMAIL_MANDATORY_NAME, OWNER_EMAIL_MANDATORY_DEFAULT_VALUE);
     }
 
     /**
@@ -245,6 +267,14 @@ public interface Configuration {
     default int getEventHandlerRefreshTimeSecsDefaultValue() {
         return getIntProperty(EVENT_HANDLER_REFRESH_TIME_SECS_PROPERTY_NAME,
             EVENT_HANDLER_REFRESH_TIME_SECS_DEFAULT_VALUE);
+    }
+
+    /**
+     *
+     * @return The time to live in seconds of the event execution persisted. Currently, only RedisExecutionDAO supports it.
+     */
+    default int getEventExecutionPersistenceTTL() {
+        return getIntProperty(EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME, EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE);
     }
 
     /**
