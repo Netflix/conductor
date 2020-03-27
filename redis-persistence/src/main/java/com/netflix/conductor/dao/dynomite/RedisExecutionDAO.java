@@ -15,9 +15,11 @@
  */
 package com.netflix.conductor.dao.dynomite;
 
+import com.amazonaws.util.CollectionUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Singleton;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
@@ -46,6 +48,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -64,7 +69,8 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	private final static String WORKFLOW = "WORKFLOW";
 	private final static String PENDING_WORKFLOWS = "PENDING_WORKFLOWS";
 	private final static String WORKFLOW_DEF_TO_WORKFLOWS = "WORKFLOW_DEF_TO_WORKFLOWS";
-	private final static String CORR_ID_TO_WORKFLOWS = "CORR_ID_TO_WORKFLOWS";
+    private final static String WORKFLOW_CREATE_TS = "WORKFLOW_CREATE_TS";
+    private final static String CORR_ID_TO_WORKFLOWS = "CORR_ID_TO_WORKFLOWS";
 
 	private final int ttlEventExecutionSeconds;
 
@@ -75,7 +81,8 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		super(dynoClient, objectMapper, config);
 
 		ttlEventExecutionSeconds = config.getEventExecutionPersistenceTTL();
-	}
+        initializeWorkflowCleaner(config);
+    }
 
 	@Override
 	public List<Task> getPendingTasksByWorkflow(String taskName, String workflowId) {
@@ -455,6 +462,8 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 				// Add to list of workflows for a correlationId
 				dynoClient.sadd(nsKey(CORR_ID_TO_WORKFLOWS, workflow.getCorrelationId()), workflow.getWorkflowId());
 			}
+            dynoClient.zadd(nsKey(WORKFLOW_CREATE_TS), TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()),
+                    workflow.getWorkflowId());
 		}
 		// Add or remove from the pending workflows
 		if (workflow.getStatus().isTerminal()) {
@@ -601,5 +610,55 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
         } catch (NullPointerException npe){
 	        throw new ApplicationException(Code.INVALID_INPUT, npe.getMessage(), npe);
         }
+    }
+
+    /**
+     * initialize the workflow cleaner with config
+     *
+     * @param config
+     */
+    private void initializeWorkflowCleaner(Configuration config) {
+        long expire = config.getWorkflowCleanerExpireSeconds();
+        if (expire == Configuration.WORKFLOW_CLEANER_EXPIRE_SECONDS_DEFAULT_VALUE) {
+            return;
+        }
+
+        long period = config.getWorkflowCleanerPeriodSeconds();
+        long batch = config.getWorkflowCleanerBatchSize();
+
+        logger.info("initialize workflow cleaner,expire:{}s,period:{}s,batch size:{}", expire, period, batch);
+
+        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("workflow-cleaner-%d").build();
+        Executors.newScheduledThreadPool(1, threadFactory).scheduleWithFixedDelay(() -> {
+            logger.info("workflow cleaner start to work");
+
+            long current = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
+
+            int total = 0;
+            int success = 0;
+            int failure = 0;
+
+            while (true) {
+                Set<String> workflowIds = dynoClient.zrangeByScore(nsKey(WORKFLOW_CREATE_TS),
+                        0, current - expire, (int) batch);
+                if (CollectionUtils.isNullOrEmpty(workflowIds)) {
+                    logger.info("workflow cleaner finished,success:{},failure:{},total:{}", success, failure, total);
+                    return;
+                }
+
+                for (String id : workflowIds) {
+                    try {
+                        removeWorkflow(id);
+                        dynoClient.zrem(nsKey(WORKFLOW_CREATE_TS), id);
+                        success++;
+                    } catch (Exception e) {
+                        logger.error("error remove workflow with id:" + id, e);
+                        failure++;
+                    }
+                    total++;
+                }
+            }
+
+        }, 120, period, TimeUnit.SECONDS);
     }
 }
