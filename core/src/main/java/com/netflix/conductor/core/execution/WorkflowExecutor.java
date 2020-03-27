@@ -985,6 +985,15 @@ public class WorkflowExecutor {
                                 workflow.setStatus(workflowInstance.getStatus());
                                 workflow.setOutput(workflowInstance.getOutput());
                                 deciderService.externalizeWorkflowData(workflow);
+                                /*
+                                 * The TERMINATE task completes the workflow but does not do anything with SCHEDULED or IN_PROGRESS tasks to complete them
+                                 */
+                                for(Task workflowTask : workflow.getTasks()) {
+                                	if(workflowTask != task && !workflowTask.getStatus().isTerminal()) {
+                                		workflowTask.setStatus(SKIPPED);
+                                		tasksToBeUpdated.add(workflowTask);
+                                	}
+                                }
                             }
                             deciderService.externalizeTaskData(task);
                             tasksToBeUpdated.add(task);
