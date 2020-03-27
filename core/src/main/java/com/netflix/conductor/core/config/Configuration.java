@@ -79,6 +79,15 @@ public interface Configuration {
     String TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME = "workflow.taskExecLog.indexing.enabled";
     boolean TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE = true;
 
+    String WORKFLOW_CLEANER_EXPIRE_SECONDS_PROPERTY_NAME = "workflow.cleaner.expire.seconds";
+    long WORKFLOW_CLEANER_EXPIRE_SECONDS_DEFAULT_VALUE = -1;
+
+    String WORKFLOW_CLEANER_PERIOD_SECONDS_PROPERTY_NAME = "workflow.cleaner.period.seconds";
+    long WORKFLOW_CLEANER_PERIOD_SECONDS_DEFAULT_VALUE = 1800;
+
+    String WORKFLOW_CLEANER_BATCH_SIZE_PROPERTY_NAME = "workflow.cleaner.batch.size";
+    long WORKFLOW_CLEANER_BATCH_SIZE_DEFAULT_VALUE = 200;
+
     String TASK_DEF_REFRESH_TIME_SECS_PROPERTY_NAME = "conductor.taskdef.cache.refresh.time.seconds";
     int TASK_DEF_REFRESH_TIME_SECS_DEFAULT_VALUE = 60;
 
@@ -197,6 +206,30 @@ public interface Configuration {
 
     default boolean getJerseyEnabled() {
         return getBooleanProperty(JERSEY_ENABLED_PROPERTY_NAME, JERSEY_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the expire seconds of workflow used by workflow cleaner
+     */
+    default long getWorkflowCleanerExpireSeconds() {
+        return getLongProperty(WORKFLOW_CLEANER_EXPIRE_SECONDS_PROPERTY_NAME,
+                WORKFLOW_CLEANER_EXPIRE_SECONDS_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the period seconds of workflow used by workflow cleaner
+     */
+    default long getWorkflowCleanerPeriodSeconds() {
+        return getLongProperty(WORKFLOW_CLEANER_PERIOD_SECONDS_PROPERTY_NAME,
+                WORKFLOW_CLEANER_PERIOD_SECONDS_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return batch size used by workflow cleaner
+     */
+    default long getWorkflowCleanerBatchSize() {
+        return getLongProperty(WORKFLOW_CLEANER_BATCH_SIZE_PROPERTY_NAME,
+                WORKFLOW_CLEANER_BATCH_SIZE_DEFAULT_VALUE);
     }
 
     /**
