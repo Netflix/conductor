@@ -246,6 +246,7 @@ public interface Configuration {
     default long getWorkflowCleanerBatchSize() {
         return getLongProperty(WORKFLOW_CLEANER_BATCH_SIZE_PROPERTY_NAME,
                 WORKFLOW_CLEANER_BATCH_SIZE_DEFAULT_VALUE);
+    }
     
    /**
      * @return true if owner email is mandatory for task definitions and workflow definitions
