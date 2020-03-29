@@ -40,13 +40,4 @@ public enum EmbeddedDatabase {
 		logger.info("Starting embedded database");
 		db = startEmbeddedDatabase();
 	}
-
-	public static boolean hasBeenMigrated() {
-		return hasBeenMigrated.get();
-	}
-
-	public static void setHasBeenMigrated() {
-		hasBeenMigrated.getAndSet(true);
-	}
-
 }

@@ -12,10 +12,13 @@
  */
 package com.netflix.conductor.postgres;
 
-import com.netflix.conductor.core.config.Configuration;
-
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import com.netflix.conductor.core.config.Configuration;
+import org.apache.commons.lang3.StringUtils;
 
 public interface PostgresConfiguration extends Configuration {
 
@@ -28,11 +31,16 @@ public interface PostgresConfiguration extends Configuration {
     String JDBC_PASSWORD_PROPERTY_NAME = "jdbc.password";
     String JDBC_PASSWORD_DEFAULT_VALUE = "password";
 
+	String FLYWAY_BASELINE_PROPERTY_NAME = "flyway.baseline-on-migrate";
+	boolean FLYWAY_BASELINE_DEFAULT_VALUE = false;
+
     String FLYWAY_ENABLED_PROPERTY_NAME = "flyway.enabled";
     boolean FLYWAY_ENABLED_DEFAULT_VALUE = true;
 
     String FLYWAY_TABLE_PROPERTY_NAME = "flyway.table";
-    Optional<String> FLYWAY_TABLE_DEFAULT_VALUE = Optional.empty();
+
+	String FLYWAY_LOCATIONS_PROPERTY_NAME = "flyway.locations";
+	String FLYWAY_DEFAULT_LOCATION = "db/migration_conductor";
 
     // The defaults are currently in line with the HikariConfig defaults, which are unfortunately private.
     String CONNECTION_POOL_MAX_SIZE_PROPERTY_NAME = "conductor.postgres.connection.pool.size.max";
@@ -73,9 +81,31 @@ public interface PostgresConfiguration extends Configuration {
         return getBoolProperty(FLYWAY_ENABLED_PROPERTY_NAME, FLYWAY_ENABLED_DEFAULT_VALUE);
     }
 
+	default boolean isFlywayBaselineOnMigrate() {
+		return getBoolProperty(FLYWAY_BASELINE_PROPERTY_NAME, FLYWAY_BASELINE_DEFAULT_VALUE);
+	}
+
     default Optional<String> getFlywayTable() {
         return Optional.ofNullable(getProperty(FLYWAY_TABLE_PROPERTY_NAME, null));
     }
+
+	default String[] getFlywayLocations() {
+		String locationProp = StringUtils.trimToNull(getProperty(FLYWAY_LOCATIONS_PROPERTY_NAME, FLYWAY_DEFAULT_LOCATION));
+		if (null == locationProp) {
+			return new String[] {};
+		}
+
+		if (locationProp.contains(",")) {
+			return Arrays.stream(StringUtils.split(locationProp, ","))
+						 .map(StringUtils::trimToNull)
+						 .filter(Objects::nonNull)
+						 .collect(Collectors.toList())
+						 .toArray(new String[] {});
+
+		}
+
+		return new String[] {locationProp};
+	}
 
     default int getConnectionPoolMaxSize() {
         return getIntProperty(CONNECTION_POOL_MAX_SIZE_PROPERTY_NAME, CONNECTION_POOL_MAX_SIZE_DEFAULT_VALUE);

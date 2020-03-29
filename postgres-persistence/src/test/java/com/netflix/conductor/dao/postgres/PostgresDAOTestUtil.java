@@ -12,6 +12,10 @@
  */
 package com.netflix.conductor.dao.postgres;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import javax.sql.DataSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.config.TestConfiguration;
@@ -20,12 +24,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 
 @SuppressWarnings("Duplicates")
@@ -67,7 +65,7 @@ public class PostgresDAOTestUtil {
     private void flywayMigrate(DataSource dataSource) {
 
         Flyway flyway = new Flyway();
-        flyway.setLocations(Paths.get("db","migration_postgres").toString());
+        flyway.setLocations(testConfiguration.getFlywayLocations());
         flyway.setDataSource(dataSource);
         flyway.setPlaceholderReplacement(false);
         flyway.migrate();
