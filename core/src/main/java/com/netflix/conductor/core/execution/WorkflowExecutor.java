@@ -55,6 +55,8 @@ import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionLockService;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -994,6 +996,17 @@ public class WorkflowExecutor {
                                 		tasksToBeUpdated.add(workflowTask);
                                 	}
                                 }
+                                /*
+                                 * Now find nested subworkflows that also need to have their tasks skipped
+                                 */
+                                for(Task workflowTask : workflow.getTasks()) {
+                                	if(TaskType.SUB_WORKFLOW.name().equals(workflowTask.getTaskType()) && StringUtils.isNotBlank(workflowTask.getSubWorkflowId())) {
+                                   		Workflow subWorkflow = executionDAOFacade.getWorkflowById(workflowTask.getSubWorkflowId(), true);
+                                		if(subWorkflow != null) {
+                                			skipTasksAffectedByTerminateTask(subWorkflow);                                		
+                                		}
+                                	}
+                                }
                             }
                             deciderService.externalizeTaskData(task);
                             tasksToBeUpdated.add(task);
@@ -1036,6 +1049,36 @@ public class WorkflowExecutor {
             executionLockService.releaseLock(workflowId);
         }
         return false;
+    }
+
+    /**
+     * When a TERMINATE task runs, it only affects the workflow in which it runs; it does not do anything with 
+     * in-progress tasks and subworkflows that are still running. This recursive method will ensure that all tasks within
+     * all subworkflows are set to SKIPPED status so they can complete.
+     * @param workflow a subworkflow within the hierarchy of the original workflow containing the TERMINATE task
+     */
+    private void skipTasksAffectedByTerminateTask(Workflow workflow) {
+    	if(!workflow.getStatus().isTerminal()) {
+	        List<Task> tasksToBeUpdated = new ArrayList<Task>();
+	        for(Task workflowTask : workflow.getTasks()) {
+            	if(!workflowTask.getStatus().isTerminal()) {
+            		workflowTask.setStatus(SKIPPED);
+            		tasksToBeUpdated.add(workflowTask);
+            	}
+	        	if(TaskType.SUB_WORKFLOW.name().equals(workflowTask.getTaskType()) && StringUtils.isNotBlank(workflowTask.getSubWorkflowId())) {
+	           		Workflow subWorkflow = executionDAOFacade.getWorkflowById(workflowTask.getSubWorkflowId(), true);
+	           		if(subWorkflow != null) {
+	           			skipTasksAffectedByTerminateTask(subWorkflow);
+	           		}
+	        	}
+	        }
+	        if (!tasksToBeUpdated.isEmpty()) {
+	            executionDAOFacade.updateTasks(tasksToBeUpdated);
+	            workflow.setStatus(Workflow.WorkflowStatus.TERMINATED);
+	            workflow.setReasonForIncompletion("Parent workflow was terminated with a TERMINATE task");
+	            executionDAOFacade.updateWorkflow(workflow);
+	        }
+    	}
     }
 
     @VisibleForTesting
