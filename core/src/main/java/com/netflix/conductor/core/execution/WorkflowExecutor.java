@@ -1752,12 +1752,8 @@ public class WorkflowExecutor {
 	}
 
 	public void resetStartTime(String workflowId, String taskRefName) {
-		Workflow workflow = edao.getWorkflow(workflowId, true);
-		Task task = workflow.getTasks().stream()
-				.filter(t -> t.getReferenceTaskName().equalsIgnoreCase(taskRefName))
-				.filter(t -> t.getStatus().equals(Status.IN_PROGRESS))
-				.findFirst().orElse(null);
-		if (task != null) {
+		Task task = edao.getTask(workflowId, taskRefName);
+		if (task != null && task.getStatus() == Status.IN_PROGRESS) {
 			task.setStartTime(System.currentTimeMillis());
 			// We must reset endtime only when it is set
 			if (task.getEndTime() > 0) {
