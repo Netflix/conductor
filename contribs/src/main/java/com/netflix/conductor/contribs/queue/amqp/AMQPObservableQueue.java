@@ -252,7 +252,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 	@Override
 	public void setUnackTimeout(Message message, long unackTimeout) {
-		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
 
 	}
 
