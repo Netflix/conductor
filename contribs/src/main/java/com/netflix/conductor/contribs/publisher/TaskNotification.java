@@ -1,10 +1,9 @@
 package com.netflix.conductor.contribs.publisher;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.run.TaskSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,11 +12,25 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.TimeZone;
 
-@JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy.class)
-class TaskNotification {
+//@JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy.class)
+public class TaskNotification extends TaskSummary {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisherX.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisher.class);
     private static final TimeZone gmt = TimeZone.getTimeZone("GMT");
+    public String queueWaitTime;
+    public String workflowTaskType;
+    private String domainGroupMoId;
+    private String accountMoId;
+
+    public String getDomainGroupMoId() {
+        return domainGroupMoId;
+    }
+    public String getAccountMoId() {
+        return accountMoId;
+    }
+
+
+    /*private static final TimeZone gmt = TimeZone.getTimeZone("GMT");
     public String taskId;
     public Task.Status taskStatus;
     public String taskDescription;
@@ -47,12 +60,15 @@ class TaskNotification {
 
     public String getAccountMoId() {
         return accountMoId;
-    }
+    }*/
 
-    TaskNotification(Task task) throws JsonProcessingException {
+    TaskNotification(Task task) {
+        super(task);
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         sdf.setTimeZone(gmt);
 
+        /*
         taskId = task.getTaskId();
         taskStatus = task.getStatus();
         taskDescription = task.getTaskDescription();
@@ -72,6 +88,10 @@ class TaskNotification {
         workflowId = task.getWorkflowInstanceId();
         workflowType = task.getWorkflowType();
         correlationId = task.getCorrelationId();
+        workflowTaskType = task.getWorkflowTask().getType();
+         */
+
+        queueWaitTime = sdf.format(new Date(task.getQueueWaitTime()));
         workflowTaskType = task.getWorkflowTask().getType();
         domainGroupMoId = ((LinkedHashMap) task.getInputData().get("FusionMeta")).get("DomainGroupMoId").toString();
         accountMoId = ((LinkedHashMap) task.getInputData().get("FusionMeta")).get("AccountMoId").toString();

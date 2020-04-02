@@ -1,16 +1,16 @@
 package com.netflix.conductor.contribs.publisher;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.core.execution.TaskStatusListenerX;
+import com.netflix.conductor.core.execution.TaskStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class TaskStatusPublisherX implements TaskStatusListenerX {
+public class TaskStatusPublisher implements TaskStatusListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisherX.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisher.class);
     private static final String NOTIFICATION_TYPE = "workflow/TaskNotifications";
     private static final Integer QDEPTH = 10;
     private BlockingQueue<Task> blockingQueue = new LinkedBlockingDeque<>(QDEPTH);

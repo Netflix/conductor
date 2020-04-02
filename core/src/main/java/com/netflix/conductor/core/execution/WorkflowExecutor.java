@@ -84,7 +84,7 @@ public class WorkflowExecutor {
     private final ExecutionDAOFacade executionDAOFacade;
 
     private WorkflowStatusListener workflowStatusListener;
-    private TaskStatusListenerX taskStatusListenerX;
+    private TaskStatusListener taskStatusListener;
 
     private int activeWorkerLastPollInSecs;
     public static final String DECIDER_QUEUE = "_deciderQueue";
@@ -96,7 +96,7 @@ public class WorkflowExecutor {
             QueueDAO queueDAO,
             MetadataMapperService metadataMapperService,
             WorkflowStatusListener workflowStatusListener,
-            TaskStatusListenerX taskStatusListenerX,
+            TaskStatusListener taskStatusListener,
             ExecutionDAOFacade executionDAOFacade,
             Configuration config
     ) {
@@ -108,7 +108,7 @@ public class WorkflowExecutor {
         this.executionDAOFacade = executionDAOFacade;
         this.activeWorkerLastPollInSecs = config.getIntProperty("tasks.active.worker.lastpoll", 10);
         this.workflowStatusListener = workflowStatusListener;
-        this.taskStatusListenerX = taskStatusListenerX;
+        this.taskStatusListener = taskStatusListener;
     }
 
     /**
@@ -1195,7 +1195,7 @@ public class WorkflowExecutor {
         for (Task task : tasks) {
             addTaskToQueue(task);
             // notify task
-            taskStatusListenerX.onTaskScheduled(task);
+            taskStatusListener.onTaskScheduled(task);
         }
     }
 

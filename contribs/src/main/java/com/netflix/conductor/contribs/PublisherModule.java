@@ -19,9 +19,9 @@
 package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.contribs.publisher.TaskStatusPublisherX;
+import com.netflix.conductor.contribs.publisher.TaskStatusPublisher;
 import com.netflix.conductor.contribs.publisher.WorkflowStatusPublisher;
-import com.netflix.conductor.core.execution.TaskStatusListenerX;
+import com.netflix.conductor.core.execution.TaskStatusListener;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
 
 public class PublisherModule extends AbstractModule {
@@ -29,7 +29,7 @@ public class PublisherModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(WorkflowStatusListener.class).to(WorkflowStatusPublisher.class);
-		bind(TaskStatusListenerX.class).to(TaskStatusPublisherX.class);
+		bind(TaskStatusListener.class).to(TaskStatusPublisher.class);
 	}
 
 }

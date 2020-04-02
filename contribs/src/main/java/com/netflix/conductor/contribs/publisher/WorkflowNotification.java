@@ -11,10 +11,8 @@ import java.util.LinkedHashMap;
 
 public class WorkflowNotification extends WorkflowSummary {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowStatusPublisher.class);
-
     private String domainGroupMoId;
     private String accountMoId;
-
 
     public String getDomainGroupMoId() {
         return domainGroupMoId;
