@@ -29,7 +29,7 @@ public interface ElasticSearchConfiguration extends Configuration {
     String ELASTIC_SEARCH_URL_DEFAULT_VALUE = "localhost:9300";
 
     String ELASTIC_SEARCH_HEALTH_COLOR_PROPERTY_NAME = "workflow.elasticsearch.cluster.health.color";
-    String ELASTIC_SEARCH_HEALTH_COLOR_DEFAULT_VALUE = "yellow";
+    String ELASTIC_SEARCH_HEALTH_COLOR_DEFAULT_VALUE = "green";
 
     String ELASTIC_SEARCH_INDEX_NAME_PROPERTY_NAME = "workflow.elasticsearch.index.name";
     String ELASTIC_SEARCH_INDEX_NAME_DEFAULT_VALUE = "conductor";
