@@ -34,6 +34,7 @@ import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -138,13 +139,14 @@ public class DeciderService {
 					executedTaskRefNames.remove(rt.getReferenceTaskName());
 					outcome.tasksToBeUpdated.add(task);
 					if (tasksAutoCleanup) {
-						outcome.tasksToBeDeleted = workflow.getTasks().stream()
+						List<Task> tasksToBeDeleted = workflow.getTasks().stream()
 							.filter(t -> t.getReferenceTaskName().equalsIgnoreCase(task.getReferenceTaskName())
 								&& t.getRetryCount() != 0 // Keep original
 								&& t.getRetryCount() < task.getRetryCount()) // Keep last failed
 							.collect(Collectors.toList());
-						if (!outcome.tasksToBeDeleted.isEmpty()) {
-							logger.debug("Tasks to be deleted " + outcome.tasksToBeDeleted);
+						if (!tasksToBeDeleted.isEmpty()) {
+							outcome.tasksToBeDeleted.addAll(tasksToBeDeleted);
+							logger.debug("Tasks to be deleted " + tasksToBeDeleted);
 						}
 					}
 				}
@@ -505,6 +507,12 @@ public class DeciderService {
 				}
 				Map<String, Object> joinInput = new HashMap<String, Object>();
 				joinInput.put("joinOn", taskToSchedule.getJoinOn());
+				if (MapUtils.isNotEmpty(taskToSchedule.getInputParameters())) {
+					joinInput.put("inputParameters", taskToSchedule.getInputParameters());
+				}
+				if (CollectionUtils.isNotEmpty(taskToSchedule.getJoinOnConditions())) {
+					joinInput.put("joinOnConditions", taskToSchedule.getJoinOnConditions());
+				}
 				Task joinTask = SystemTask.JoinTask(workflow, taskId, taskToSchedule, joinInput);
 				tasks.add(joinTask);
 				break;
