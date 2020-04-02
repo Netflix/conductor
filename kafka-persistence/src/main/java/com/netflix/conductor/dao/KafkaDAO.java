@@ -138,11 +138,6 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
     }
 
     @Override
-    public String get(String workflowInstanceId, String key) {
-        return "";
-    }
-
-    @Override
     public void addMessage(String queue, Message message) {
         Map<String, Object> doc = new HashMap<>();
         doc.put("messageId", message.getId());
