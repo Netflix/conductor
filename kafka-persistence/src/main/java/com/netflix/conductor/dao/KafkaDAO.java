@@ -128,6 +128,7 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
     @Override
     public void updateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
         latencyTimer = kafkaPublishLatency.labels(OperationTypes.UPDATE, DocumentTypes.WORKFLOW_DOC_TYPE).startTimer();
+        values[1] = workflowInstanceId;
         producerDAO.send(OperationTypes.UPDATE, DocumentTypes.WORKFLOW_DOC_TYPE, values);
         latencyTimer.observeDuration();
     }
@@ -135,11 +136,6 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
     @Override
     public CompletableFuture<Void> asyncUpdateWorkflow(String workflowInstanceId, String[] keys, Object[] values) {
         return CompletableFuture.runAsync(() -> updateWorkflow(workflowInstanceId, keys, values), executorService);
-    }
-
-    @Override
-    public String get(String workflowInstanceId, String key) {
-        return "";
     }
 
     @Override
