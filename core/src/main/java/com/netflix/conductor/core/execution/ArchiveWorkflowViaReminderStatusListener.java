@@ -10,6 +10,7 @@ import retrofit2.Call;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -40,27 +41,34 @@ public class ArchiveWorkflowViaReminderStatusListener implements WorkflowStatusL
     @Override
     public void onWorkflowCompleted(Workflow workflow) {
         LOG.debug("Workflow {} is completed", workflow.getWorkflowId());
-        archiveWorkflow(workflow.getWorkflowId());
+        archiveWorkflow(workflow);
     }
 
     @Override
     public void onWorkflowTerminated(Workflow workflow) {
         LOG.debug("Workflow {} is terminated", workflow.getWorkflowId());
-        archiveWorkflow(workflow.getWorkflowId());
+        archiveWorkflow(workflow);
     }
 
-    public RetrofitResponse<ResponseBody> archiveWorkflow(String workflowid) {
+    public void archiveWorkflow(Workflow workflow) {
         Endpoint endpoint = new Endpoint(
                 configuration.getProperty("flo.host","flo-server.swiggy.prod"),
                 configuration.getProperty("flo.uri", "/api"),
-                configuration.getProperty("flo.resource_id", "/workflow/" + workflowid + "/remove"));
+                configuration.getProperty("flo.resource_id", "/workflow/" + workflow.getWorkflowId() + "/remove"));
         HttpNotification httpNotification = new HttpNotification("HTTP_DELETE", endpoint);
         ReminderPayload reminderPayload = new ReminderPayload(Integer.valueOf(configuration.getProperty("flo.ttl","7200")),
-                "FLO_ARCHIVAL", "FLO_ARCHIVAL", workflowid, httpNotification);
+                "FLO_ARCHIVAL", "FLO_ARCHIVAL", workflow.getWorkflowId(), httpNotification);
         Map<String, List<ReminderPayload>> payload = new HashMap<>();
         payload.put("reminders", Arrays.asList(reminderPayload));
         Call<ResponseBody> retrofitCall = reminderApi.setReminder(payload);
-        return ReminderRetrofitUtil.executeCall(retrofitCall, "setReminder");
+        RetrofitResponse<ResponseBody> response = ReminderRetrofitUtil.executeCall(retrofitCall, "setReminder");
+        if (response != null && response.getData()!= null) {
+            try {
+                workflow.getOutput().put("archival_reminder_id", response.getData().string());
+            } catch (IOException e) {
+                LOG.error("Unable to set reminder for workflow " + workflow.getWorkflowId());
+            }
+        }
     }
 
 }

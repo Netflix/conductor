@@ -31,6 +31,16 @@ allprojects {
         maven {
             url "https://dl.bintray.com/netflixoss/oss-candidate"
         }
+        maven {
+            credentials {
+                username System.getenv()['nexusUsername']
+                password System.getenv()['nexusPassword']
+            }
+            url System.getenv()['nexusUrl']
+        }
+        maven {
+            url "https://packages.confluent.io/maven/"
+        }
     }
 }
 

@@ -13,4 +13,12 @@ public final class RetrofitResponse<T> {
         this.httpStatus = httpStatus;
     }
 
+    public int getHttpStatus() {
+        return httpStatus;
+    }
+
+    public T getData() {
+        return data;
+    }
+
 }

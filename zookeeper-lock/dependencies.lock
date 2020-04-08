@@ -83,6 +83,36 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
+        },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -217,6 +247,36 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "0.3.1"
+        },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -353,6 +413,36 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
+        },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -406,12 +496,14 @@
     },
     "jacocoAgent": {
         "org.jacoco:org.jacoco.agent": {
-            "locked": "0.8.1"
+            "locked": "0.8.1",
+            "requested": "0.8.1"
         }
     },
     "jacocoAnt": {
         "org.jacoco:org.jacoco.ant": {
-            "locked": "0.8.1"
+            "locked": "0.8.1",
+            "requested": "0.8.1"
         }
     },
     "runtime": {
@@ -497,6 +589,36 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "0.3.1"
+        },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -633,6 +755,36 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
+        },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -767,6 +919,36 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "0.3.1"
+        },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -919,6 +1101,36 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
+        },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -1070,6 +1282,36 @@
             ],
             "locked": "0.3.1"
         },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
+        },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
@@ -1220,6 +1462,36 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "0.3.1"
+        },
+        "com.squareup.retrofit2:converter-jackson": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.1"
+        },
+        "com.squareup.retrofit2:retrofit": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.3.0"
+        },
+        "com.swiggy.commons:kafka-client-java": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "1.3.1-274"
+        },
+        "io.prometheus:simpleclient": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.8.0"
+        },
+        "io.prometheus:simpleclient_servlet": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "0.6.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [

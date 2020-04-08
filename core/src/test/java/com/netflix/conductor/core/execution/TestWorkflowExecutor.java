@@ -312,7 +312,7 @@ public class TestWorkflowExecutor {
 
         workflowExecutor.completeWorkflow(workflow);
         assertEquals(Workflow.WorkflowStatus.COMPLETED, workflow.getStatus());
-        assertEquals(1, updateWorkflowCalledCounter.get());
+        assertEquals(2, updateWorkflowCalledCounter.get());
         assertEquals(1, updateTasksCalledCounter.get());
         assertEquals(1, removeQueueEntryCalledCounter.get());
 
@@ -360,7 +360,7 @@ public class TestWorkflowExecutor {
 
         workflowExecutor.terminateWorkflow("workflowId", "reason");
         assertEquals(Workflow.WorkflowStatus.TERMINATED, workflow.getStatus());
-        assertEquals(1, updateWorkflowCalledCounter.get());
+        assertEquals(2, updateWorkflowCalledCounter.get());
         assertEquals(1, removeQueueEntryCalledCounter.get());
 
 
