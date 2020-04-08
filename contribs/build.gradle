@@ -19,4 +19,5 @@ dependencies {
 	compile "org.apache.kafka:kafka-clients:2.2.0"
 	testCompile "org.eclipse.jetty:jetty-server:${revJetteyServer}"
 	testCompile "org.eclipse.jetty:jetty-servlet:${revJettyServlet}"
+	compile "com.netflix.spectator:spectator-reg-metrics3:${revSpectator}"
 }
