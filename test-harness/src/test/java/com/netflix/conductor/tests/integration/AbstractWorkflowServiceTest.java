@@ -21,6 +21,7 @@ import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.SCHEDULED;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.TIMED_OUT;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.SKIPPED;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.DECISION;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.SUB_WORKFLOW;
 import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.RUNNING;
@@ -73,6 +74,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -5272,10 +5274,13 @@ public abstract class AbstractWorkflowServiceTest {
 
     @Test
     public void testTerminateTaskWithCompletedStatus() {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setName("test_terminate_task_wf");
-        workflowDef.setSchemaVersion(2);
+        WorkflowDef subworkflowDef = this.createSubworkflowDefWithWaitTask();
+        
+        WorkflowTask fanoutTask = new WorkflowTask();
+        fanoutTask.setType(TaskType.FORK_JOIN.name());
+        fanoutTask.setTaskReferenceName("fanouttask");
 
+        // left fork
         Map<String, Object> lambdaTaskInputParams = new HashMap<>();
         lambdaTaskInputParams.put("input", "${workflow.input}");
         lambdaTaskInputParams.put("scriptExpression", "if ($.input.a==1){return {testvalue: true}} else{return {testvalue: false}}");
@@ -5285,6 +5290,12 @@ public abstract class AbstractWorkflowServiceTest {
         lambdaWorkflowTask.setName("lambda");
         lambdaWorkflowTask.setInputParameters(lambdaTaskInputParams);
         lambdaWorkflowTask.setTaskReferenceName("lambda0");
+
+        WorkflowTask waitWorkflowTask = new WorkflowTask();
+        waitWorkflowTask.setWorkflowTaskType(TaskType.WAIT);
+        waitWorkflowTask.setName("leftfork-wait");
+        waitWorkflowTask.setInputParameters(new HashMap<String, Object>());
+        waitWorkflowTask.setTaskReferenceName("leftfork-wait0");
 
         Map<String, Object> terminateTaskInputParams = new HashMap<>();
         terminateTaskInputParams.put(Terminate.getTerminationStatusParameter(), "COMPLETED");
@@ -5296,40 +5307,70 @@ public abstract class AbstractWorkflowServiceTest {
         terminateWorkflowTask.setInputParameters(terminateTaskInputParams);
         terminateWorkflowTask.setTaskReferenceName("terminate0");
 
-        WorkflowTask workflowTask2 = new WorkflowTask();
-        workflowTask2.setName("junit_task_2");
-        workflowTask2.setTaskReferenceName("t2");
+        // right fork
+        WorkflowTask subWorkflow = new WorkflowTask();
+        subWorkflow.setType(SUB_WORKFLOW.name());
+        SubWorkflowParams sw = new SubWorkflowParams();
+        sw.setName(subworkflowDef.getName());
+        subWorkflow.setSubWorkflowParam(sw);
+        subWorkflow.setTaskReferenceName("sw1");
 
-        workflowDef.getTasks().addAll(Arrays.asList(lambdaWorkflowTask, terminateWorkflowTask, workflowTask2));
+        fanoutTask.getForkTasks().add(Arrays.asList(subWorkflow));
+        fanoutTask.getForkTasks().add(Arrays.asList(lambdaWorkflowTask, waitWorkflowTask, terminateWorkflowTask));
+
+        // join task
+        WorkflowTask joinTask = new WorkflowTask();
+        joinTask.setType(TaskType.JOIN.name());
+        joinTask.setTaskReferenceName("fanouttask_join");
+        joinTask.setJoinOn(Arrays.asList("sw1", "leftfork-wait0"));
+        
+        WorkflowDef workflowDef = new WorkflowDef();
+        workflowDef.setName("test_terminate_task_wf");
+        workflowDef.setSchemaVersion(2);
+
+        workflowDef.getTasks().addAll(Arrays.asList(fanoutTask, joinTask));
 
         assertNotNull(workflowDef);
         metadataService.registerWorkflowDef(workflowDef);
 
         Map wfInput = Collections.singletonMap("a", 1);
+        //noinspection unchecked
         String workflowId = startOrLoadWorkflowExecution(workflowDef.getName(), workflowDef.getVersion(), "", wfInput, null, null);
         Workflow workflow = workflowExecutor.getWorkflow(workflowId, true);
-
-        assertNotNull(workflow);
-        assertEquals(2, workflow.getTasks().size());
 
         workflowExecutor.decide(workflowId);
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
 
         assertNotNull(workflow);
+        Optional<Task> optionalTask = workflow.getTasks().stream().filter(t -> "leftfork-wait0".equals(t.getReferenceTaskName())).findFirst();
+        assertTrue(optionalTask.isPresent());
+
+        TaskResult taskResult = new TaskResult(optionalTask.get());
+        taskResult.setStatus(TaskResult.Status.COMPLETED);
+        workflowExecutionService.updateTask(taskResult);
+        workflowExecutor.decide(workflowId);
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        assertNotNull(workflow);
         assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
-        assertEquals(TaskType.TASK_TYPE_LAMBDA, workflow.getTasks().get(0).getTaskType());
-        assertEquals(TaskType.TASK_TYPE_TERMINATE, workflow.getTasks().get(1).getTaskType());
-        assertEquals(workflow.getTasks().get(1).getOutputData(), workflow.getOutput());
+
+        optionalTask = workflow.getTasks().stream().filter(t -> SUB_WORKFLOW.name().equals(t.getTaskType())).findFirst();
+        assertTrue(optionalTask.isPresent());
+        assertTrue(SKIPPED == optionalTask.get().getStatus());
 
         metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
+        metadataService.unregisterWorkflowDef(subworkflowDef.getName(), 1);
     }
 
     @Test
     public void testTerminateTaskWithFailedStatus() {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setName("test_terminate_task_wf");
-        workflowDef.setSchemaVersion(2);
+        WorkflowDef subworkflowDef = this.createSubworkflowDefWithWaitTask();
+        
+        WorkflowTask fanoutTask = new WorkflowTask();
+        fanoutTask.setType(TaskType.FORK_JOIN.name());
+        fanoutTask.setTaskReferenceName("fanouttask");
 
+        // left fork
         Map<String, Object> lambdaTaskInputParams = new HashMap<>();
         lambdaTaskInputParams.put("input", "${workflow.input}");
         lambdaTaskInputParams.put("scriptExpression", "if ($.input.a==1){return {testvalue: true}} else{return {testvalue: false}}");
@@ -5339,6 +5380,12 @@ public abstract class AbstractWorkflowServiceTest {
         lambdaWorkflowTask.setName("lambda");
         lambdaWorkflowTask.setInputParameters(lambdaTaskInputParams);
         lambdaWorkflowTask.setTaskReferenceName("lambda0");
+
+        WorkflowTask waitWorkflowTask = new WorkflowTask();
+        waitWorkflowTask.setWorkflowTaskType(TaskType.WAIT);
+        waitWorkflowTask.setName("leftfork-wait");
+        waitWorkflowTask.setInputParameters(new HashMap<String, Object>());
+        waitWorkflowTask.setTaskReferenceName("leftfork-wait0");
 
         Map<String, Object> terminateTaskInputParams = new HashMap<>();
         terminateTaskInputParams.put(Terminate.getTerminationStatusParameter(), "FAILED");
@@ -5350,11 +5397,28 @@ public abstract class AbstractWorkflowServiceTest {
         terminateWorkflowTask.setInputParameters(terminateTaskInputParams);
         terminateWorkflowTask.setTaskReferenceName("terminate0");
 
-        WorkflowTask workflowTask2 = new WorkflowTask();
-        workflowTask2.setName("junit_task_2");
-        workflowTask2.setTaskReferenceName("t2");
+        // right fork
+        WorkflowTask subWorkflow = new WorkflowTask();
+        subWorkflow.setType(SUB_WORKFLOW.name());
+        SubWorkflowParams sw = new SubWorkflowParams();
+        sw.setName(subworkflowDef.getName());
+        subWorkflow.setSubWorkflowParam(sw);
+        subWorkflow.setTaskReferenceName("sw1");
 
-        workflowDef.getTasks().addAll(Arrays.asList(lambdaWorkflowTask, terminateWorkflowTask, workflowTask2));
+        fanoutTask.getForkTasks().add(Arrays.asList(subWorkflow));
+        fanoutTask.getForkTasks().add(Arrays.asList(lambdaWorkflowTask, waitWorkflowTask, terminateWorkflowTask));
+
+        // join task
+        WorkflowTask joinTask = new WorkflowTask();
+        joinTask.setType(TaskType.JOIN.name());
+        joinTask.setTaskReferenceName("fanouttask_join");
+        joinTask.setJoinOn(Arrays.asList("sw1", "leftfork-wait0"));
+        
+        WorkflowDef workflowDef = new WorkflowDef();
+        workflowDef.setName("test_terminate_task_wf");
+        workflowDef.setSchemaVersion(2);
+
+        workflowDef.getTasks().addAll(Arrays.asList(fanoutTask, joinTask));
 
         assertNotNull(workflowDef);
         metadataService.registerWorkflowDef(workflowDef);
@@ -5364,19 +5428,49 @@ public abstract class AbstractWorkflowServiceTest {
         String workflowId = startOrLoadWorkflowExecution(workflowDef.getName(), workflowDef.getVersion(), "", wfInput, null, null);
         Workflow workflow = workflowExecutor.getWorkflow(workflowId, true);
 
-        assertNotNull(workflow);
-        assertEquals(2, workflow.getTasks().size());
+        workflowExecutor.decide(workflowId);
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
 
+        assertNotNull(workflow);
+        Optional<Task> optionalTask = workflow.getTasks().stream().filter(t -> "leftfork-wait0".equals(t.getReferenceTaskName())).findFirst();
+        assertTrue(optionalTask.isPresent());
+
+        TaskResult taskResult = new TaskResult(optionalTask.get());
+        taskResult.setStatus(TaskResult.Status.COMPLETED);
+        workflowExecutionService.updateTask(taskResult);
         workflowExecutor.decide(workflowId);
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
 
         assertNotNull(workflow);
         assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.FAILED, workflow.getStatus());
-        assertEquals(TaskType.TASK_TYPE_LAMBDA, workflow.getTasks().get(0).getTaskType());
-        assertEquals(TaskType.TASK_TYPE_TERMINATE, workflow.getTasks().get(1).getTaskType());
-        assertEquals(workflow.getTasks().get(1).getOutputData(), workflow.getOutput());
+
+        optionalTask = workflow.getTasks().stream().filter(t -> SUB_WORKFLOW.name().equals(t.getTaskType())).findFirst();
+        assertTrue(optionalTask.isPresent());
+        assertTrue(SKIPPED == optionalTask.get().getStatus());
 
         metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
+        metadataService.unregisterWorkflowDef(subworkflowDef.getName(), 1);
+    }
+
+    private WorkflowDef createSubworkflowDefWithWaitTask() {
+        WorkflowDef workflowDef = new WorkflowDef();
+        workflowDef.setName("test_subworkflow_task_wf");
+        workflowDef.setSchemaVersion(2);
+
+        Map<String, Object> waitTaskInputParams = new HashMap<>();
+        waitTaskInputParams.put("input", "${workflow.input}");
+
+        WorkflowTask waitWorkflowTask = new WorkflowTask();
+        waitWorkflowTask.setWorkflowTaskType(TaskType.WAIT);
+        waitWorkflowTask.setName("wait");
+        waitWorkflowTask.setInputParameters(waitTaskInputParams);
+        waitWorkflowTask.setTaskReferenceName("subworkflow-wait0");
+
+        workflowDef.getTasks().add(waitWorkflowTask);
+
+        assertNotNull(workflowDef);
+        metadataService.registerWorkflowDef(workflowDef);
+        return workflowDef;
     }
 
     @Test
