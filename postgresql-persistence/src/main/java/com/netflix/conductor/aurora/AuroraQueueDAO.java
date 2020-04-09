@@ -27,6 +27,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Inject
 	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper) {
 		super(dataSource, mapper);
+		loadQueues();
 
 		Executors.newSingleThreadScheduledExecutor()
 			.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
@@ -336,13 +337,19 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeDelete());
 	}
 
+	private void loadQueues() {
+		final String SQL = "SELECT queue_name FROM queue"; // In the db, they always lower case
+		List<String> names = queryWithTransaction(SQL, q -> q.executeScalarList(String.class));
+		queues.addAll(names);
+	}
+
 	private void createQueueIfNotExists(String queueName) {
-		if (queues.contains(queueName)) {
+		if (queues.contains(queueName.toLowerCase())) {
 			return;
 		}
 		final String SQL = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT ON CONSTRAINT queue_name DO NOTHING";
 		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).executeUpdate());
-		queues.add(queueName);
+		queues.add(queueName.toLowerCase());
 	}
 
 	private void processAllUnacks() {
