@@ -27,6 +27,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Inject
 	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper) {
 		super(dataSource, mapper);
+		loadQueues();
 
 		Executors.newSingleThreadScheduledExecutor()
 			.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
@@ -334,6 +335,12 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		final String SQL = "DELETE FROM queue_message WHERE queue_name = ? AND message_id = ?";
 		return query(connection, SQL,
 			q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeDelete());
+	}
+
+	private void loadQueues() {
+		final String SQL = "SELECT queue_name FROM queue";
+		List<String> names = queryWithTransaction(SQL, q -> q.executeScalarList(String.class));
+		queues.addAll(names);
 	}
 
 	private void createQueueIfNotExists(String queueName) {
