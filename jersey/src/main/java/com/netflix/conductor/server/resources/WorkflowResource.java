@@ -155,7 +155,7 @@ public class WorkflowResource {
 				request.setCorrelationId(correlationId);
 			}
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked+",path=/{name}");
 
 			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
 				request.getInput(), null, request.getTaskToDomain(),
@@ -333,7 +333,7 @@ public class WorkflowResource {
 		NDC.push("rest-pause-" + UUID.randomUUID().toString());
 		try {
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to pause workflowId " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to pause workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/pause");
 
 			executor.pauseWorkflow(workflowId, correlationId);
 		} finally {
@@ -367,7 +367,7 @@ public class WorkflowResource {
 		NDC.push("rest-resume-" + UUID.randomUUID().toString());
 		try {
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to resume workflowId " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to resume workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/resume");
 
 			executor.resumeWorkflow(workflowId, correlationId);
 		} finally {
@@ -428,7 +428,7 @@ public class WorkflowResource {
 		NDC.push("rest-rerun-" + UUID.randomUUID().toString());
 		try {
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to rerun workflowId " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to rerun workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/rerun");
 
 			executor.rerun(request);
 		} finally {
@@ -463,7 +463,7 @@ public class WorkflowResource {
 		NDC.push("rest-restart-" + UUID.randomUUID().toString());
 		try {
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to restart workflowId " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to restart workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/restart");
 
 			executor.rewind(workflowId, correlationId);
 		} finally {
@@ -497,7 +497,7 @@ public class WorkflowResource {
 		NDC.push("rest-retry-" + UUID.randomUUID().toString());
 		try {
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to retry workflowId " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to retry workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/retry");
 
 			executor.retry(workflowId, correlationId);
 		} finally {
@@ -531,7 +531,7 @@ public class WorkflowResource {
 		NDC.push("rest-terminate-" + UUID.randomUUID().toString());
 		try {
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to terminate workflowId " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to terminate workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}");
 
 			executor.terminateWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Terminated from api"));
 		} finally {
@@ -566,7 +566,7 @@ public class WorkflowResource {
 		NDC.push("rest-cancel-" + UUID.randomUUID().toString());
 		try {
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to cancel workflowId " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to cancel workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/cancel");
 
 			executor.cancelWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
 		} finally {
@@ -600,7 +600,7 @@ public class WorkflowResource {
 		NDC.push("rest-complete-" + UUID.randomUUID().toString());
 		try {
 			String userInvoked = executor.decodeAuthorizationUser(headers);
-			logger.info("About to complete workflowId " + workflowId + ",userInvoked=" + userInvoked);
+			logger.info("About to complete workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/complete");
 
 			executor.forceCompleteWorkflow(workflowId, "Force completed by API");
 		} finally {
