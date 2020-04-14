@@ -40,7 +40,7 @@ const JS_LOADER_DEBUG = {
 
 const config = {
     plugins: [
-        new webpack.optimize.OccurenceOrderPlugin(),
+        new webpack.optimize.OccurrenceOrderPlugin(),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
         })
@@ -91,18 +91,18 @@ const appConfig = merge({}, config, {
     plugins: [
         ...config.plugins,
         ...(!DEBUG ? [
-                new webpack.optimize.DedupePlugin(),
-                new webpack.optimize.UglifyJsPlugin({
-                    compress: {
-                        warnings: VERBOSE,
-                    },
-                }),
-                new webpack.optimize.AggressiveMergingPlugin(),
-            ] : []),
+            new webpack.optimize.DedupePlugin(),
+            new webpack.optimize.UglifyJsPlugin({
+                compress: {
+                    warnings: VERBOSE,
+                },
+            }),
+            new webpack.optimize.AggressiveMergingPlugin(),
+        ] : []),
         ...(WATCH ? [
-                new webpack.HotModuleReplacementPlugin(),
-                new webpack.NoErrorsPlugin(),
-            ] : []),
+            new webpack.HotModuleReplacementPlugin(),
+            new webpack.NoEmitOnErrorsPlugin(),
+        ] : []),
     ],
     module: {
         loaders: [
@@ -133,8 +133,7 @@ const serverConfig = merge({}, config, {
     externals: nodeModules,
     plugins: [
         ...config.plugins,
-        new webpack.BannerPlugin('require("source-map-support").install();',
-            {raw: true, entryOnly: false})
+        new webpack.BannerPlugin({ banner: 'require("source-map-support").install();', raw: true, entryOnly: false })
     ]
 });
 
