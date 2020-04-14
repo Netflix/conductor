@@ -27,7 +27,7 @@
     "clipboard": "^1.6.1",
     "create-react-class": "^15.5.3",
     "d3": "^3.5.16",
-    "dagre-d3": "^0.4.17",
+    "dagre-d3": "^0.6.4",
     "express": "^4.13.3",
     "fbjs": "^0.7.2",
     "graceful-fs": "^4.0.0",
@@ -57,7 +57,7 @@
     "reselect": "^3.0.1",
     "superagent": "^3.8.3",
     "underscore": "^1.8.3",
-    "webpack": "^1.12.10"
+    "webpack": "^1.13.3"
   },
   "devDependencies": {
     "babel": "^6.5.2",
@@ -74,13 +74,13 @@
     "browser-sync": "^2.9.1",
     "browserify": "^12.0.1",
     "chai": "^3.2.0",
-    "cssnano": "^3.0.0",
+    "cssnano": "^4.1.10",
     "eslint": "^4.16.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.5.1",
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "gulp-babel": "^6.1.1",
     "gulp-eslint": "^5.0.0",
     "gulp-gh-pages": "^0.5.4",
@@ -90,7 +90,7 @@
     "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "^1.4.0",
     "json-loader": "^0.5.4",
-    "mocha": "^2.5.3",
+    "mocha": "^7.1.1",
     "postcss-nested": "^1.0.0",
     "postcss-simple-extend": "^1.0.0",
     "postcss-simple-vars": "^1.0.0",
@@ -103,6 +103,6 @@
     "watchify": "^3.4.0",
     "webpack-dev-middleware": "^1.4.0",
     "webpack-hot-middleware": "^2.6.0",
-    "webpack-stream": "^3.1.0"
+    "webpack-stream": "^5.2.1"
   }
 }
