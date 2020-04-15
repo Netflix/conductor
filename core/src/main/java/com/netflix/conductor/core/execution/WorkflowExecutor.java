@@ -1566,16 +1566,19 @@ public class WorkflowExecutor {
 		List<Task> created = edao.createTasks(tasks);
 		List<Task> createdSystemTasks = created.stream().filter(task -> SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
 		List<Task> toBeQueued = created.stream().filter(task -> !SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
+
 		// Tasks had to be started at previous scheduleTask call
 		List<Task> stuckSystemTasks = tasks.stream().filter(task -> {
 			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
 			return stt != null && !stt.isAsync() && !created.contains(task) && !task.isStarted();
 		}).collect(Collectors.toList());
 		boolean startedSystemTasks = false;
+
 		// We need start those stuck tasks first
 		for (Task task : stuckSystemTasks) {
 			String lockQueue  = QueueUtils.getQueueName(task) + ".lock";
 			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600); // 10 minutes
+
 			// If this instance added the message - it means it is responsible for starting the task
 			if (locked) {
 				logger.debug("starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
@@ -1590,6 +1593,7 @@ public class WorkflowExecutor {
 				}
 			}
 		}
+
 		// Start the rest of the tasks
 		for (Task task : createdSystemTasks) {
 			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
