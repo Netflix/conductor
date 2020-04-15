@@ -1198,7 +1198,7 @@ public class WorkflowExecutor {
     }
 
     //Executes the async system task
-    public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int unackTimeout) {
+    public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackTime) {
         try {
             Task task = executionDAOFacade.getTaskById(taskId);
             if (task == null) {
@@ -1275,7 +1275,7 @@ public class WorkflowExecutor {
             }
 
             if (!task.getStatus().isTerminal()) {
-                task.setCallbackAfterSeconds(unackTimeout);
+                task.setCallbackAfterSeconds(callbackTime);
             }
 
             updateTask(new TaskResult(task));
@@ -1283,6 +1283,7 @@ public class WorkflowExecutor {
                 task.getOutputData().toString());
 
         } catch (Exception e) {
+            Monitors.error(className, "executeSystemTask");
             LOGGER.error("Error executing system task - {}, with id: {}", systemTask, taskId, e);
         }
     }
