@@ -124,6 +124,8 @@ public class Task {
 	private WorkflowTask workflowTask;
 	
 	private String domain;
+
+	private boolean started;
 	
 	public Task(){
 		
@@ -527,6 +529,20 @@ public class Task {
 	 */
 	public void setDomain(String domain) {
 		this.domain = domain;
+	}
+
+	/**
+	 * @return Whether task been started or not
+	 */
+	public boolean isStarted() {
+		return started;
+	}
+
+	/**
+	 * @param started Whether task been started or not
+	 */
+	public void setStarted(boolean started) {
+		this.started = started;
 	}
 
 	public Task copy() {
