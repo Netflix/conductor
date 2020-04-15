@@ -1401,7 +1401,7 @@ public class WorkflowExecutor {
 				return;
 			}
 
-			if(task.getStatus().isTerminal()) {
+			if (task.getStatus().isTerminal()) {
 				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
 				logger.debug("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -1411,14 +1411,9 @@ public class WorkflowExecutor {
 			String workflowId = task.getWorkflowInstanceId();
 			Workflow workflow = edao.getWorkflow(workflowId, true);
 
-			if (task.getStartTime() == 0) {
-				task.setStartTime(System.currentTimeMillis());
-				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
-			}
-
-			if(workflow.getStatus().isTerminal()) {
+			if (workflow.getStatus().isTerminal()) {
 				logger.debug("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
-				if(!task.getStatus().isTerminal()) {
+				if (!task.getStatus().isTerminal()) {
 					task.setStatus(Status.CANCELED);
 				}
 				edao.updateTask(task);
@@ -1427,9 +1422,9 @@ public class WorkflowExecutor {
 				return;
 			}
 
-			if(task.getStatus().equals(Status.SCHEDULED)) {
+			if (task.getStatus().equals(Status.SCHEDULED)) {
 
-				if(edao.exceedsInProgressLimit(task)) {
+				if (edao.exceedsInProgressLimit(task)) {
 					logger.debug("Concurrent Execution limited for {}:{}", taskId, task.getTaskDefName());
 					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 					return;
@@ -1444,7 +1439,7 @@ public class WorkflowExecutor {
 
 			// Workaround when workflow id disappears from the queue
 			boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
-			if (!exists)  {
+			if (!exists) {
 				// If not exists then need place back
 				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
 			}
@@ -1454,6 +1449,11 @@ public class WorkflowExecutor {
 				workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+			task.setStarted(true);
+			if (task.getStartTime() == 0) {
+				task.setStartTime(System.currentTimeMillis());
+				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
+			}
 			task.setPollCount(task.getPollCount() + 1);
 			edao.updateTask(task);
 
@@ -1466,7 +1466,7 @@ public class WorkflowExecutor {
 					} catch (Exception ex) {
 						task.setStatus(Status.FAILED);
 						task.setReasonForIncompletion(ex.getMessage());
-						logger.debug("Task {}/{} failed with Exception {}.", task.getTaskType(), task.getTaskId(),ex.getMessage());
+						logger.debug("Task {}/{} failed with Exception {}.", task.getTaskType(), task.getTaskId(), ex.getMessage());
 					}
 					break;
 
@@ -1477,14 +1477,14 @@ public class WorkflowExecutor {
 					break;
 			}
 
-			if(!task.getStatus().isTerminal()) {
+			if (!task.getStatus().isTerminal()) {
 				task.setCallbackAfterSeconds(callbackSeconds);
 			}
 
 			updateTask(new TaskResult(task));
 			logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
 				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(), workflow.getCorrelationId(),
-				workflow.getTraceId(), workflow.getContextUser(),workflow.getClientId());
+				workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 		} catch (Exception e) {
 			logger.debug("ExecuteSystemTask failed with " + e.getMessage() + " for task id=" + taskId + ", system task=" + systemTask, e);
