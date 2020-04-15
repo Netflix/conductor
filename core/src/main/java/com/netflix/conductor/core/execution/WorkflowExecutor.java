@@ -1566,28 +1566,58 @@ public class WorkflowExecutor {
 		List<Task> created = edao.createTasks(tasks);
 		List<Task> createdSystemTasks = created.stream().filter(task -> SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
 		List<Task> toBeQueued = created.stream().filter(task -> !SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
-		boolean startedSystemTasks = false;
-		for(Task task : createdSystemTasks) {
-
+		// Tasks had to be started at previous scheduleTask call
+		List<Task> stuckSystemTasks = tasks.stream().filter(task -> {
 			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-			if(stt == null) {
+			return stt != null && !stt.isAsync() && !created.contains(task) && !task.isStarted();
+		}).collect(Collectors.toList());
+		boolean startedSystemTasks = false;
+		// We need start those stuck tasks first
+		for (Task task : stuckSystemTasks) {
+			String lockQueue  = QueueUtils.getQueueName(task) + ".lock";
+			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600); // 10 minutes
+			// If this instance added the message - it means it is responsible for starting the task
+			if (locked) {
+				logger.debug("starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
+					+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
+					+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
+				try {
+					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
+					startTask(stt, workflow, task);
+					startedSystemTasks = true;
+				} finally {
+					queue.remove(lockQueue, task.getTaskId());
+				}
+			}
+		}
+		// Start the rest of the tasks
+		for (Task task : createdSystemTasks) {
+			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
+			if (stt == null) {
 				throw new RuntimeException("No system task found by name " + task.getTaskType());
 			}
-			task.setStartTime(System.currentTimeMillis());
-			if(!stt.isAsync()) {
-				taskStatusListener.onTaskStarted(task);
-				stt.start(workflow, task, this);
+			if (!stt.isAsync()) {
+				startTask(stt, workflow, task);
 				startedSystemTasks = true;
-				edao.updateTask(task);
-				if (task.getStatus().isTerminal()) {
-					taskStatusListener.onTaskFinished(task);
-				}
 			} else {
 				toBeQueued.add(task);
 			}
 		}
 		addTaskToQueue(toBeQueued);
 		return startedSystemTasks;
+	}
+
+	private void startTask(WorkflowSystemTask stt, Workflow workflow, Task task) throws Exception {
+		if (task.getStartTime() == 0) {
+			task.setStartTime(System.currentTimeMillis());
+		}
+		taskStatusListener.onTaskStarted(task);
+		stt.start(workflow, task, this);
+		task.setStarted(true);
+		edao.updateTask(task);
+		if (task.getStatus().isTerminal()) {
+			taskStatusListener.onTaskFinished(task);
+		}
 	}
 
 	private void addTaskToQueue(final List<Task> tasks) throws Exception {
