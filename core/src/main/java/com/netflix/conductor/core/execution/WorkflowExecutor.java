@@ -1577,20 +1577,28 @@ public class WorkflowExecutor {
 		// We need start those stuck tasks first
 		for (Task task : stuckSystemTasks) {
 			String lockQueue  = QueueUtils.getQueueName(task) + ".lock";
+
+			// this basically prevents other containers to do the same action
+			// true means this session added the record to lock queue and can start the task
 			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600); // 10 minutes
 
-			// If this instance added the message - it means it is responsible for starting the task
-			if (locked) {
-				logger.debug("starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
+			// This session couldn't lock the task (cluster pooling)
+			if (!locked) {
+				logger.debug("skipping starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
 					+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
 					+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
-				try {
-					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-					startTask(stt, workflow, task);
-					startedSystemTasks = true;
-				} finally {
-					queue.remove(lockQueue, task.getTaskId());
-				}
+				continue;
+			}
+
+			logger.debug("starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
+				+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
+				+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
+			try {
+				WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
+				startTask(stt, workflow, task);
+				startedSystemTasks = true;
+			} finally {
+				queue.remove(lockQueue, task.getTaskId());
 			}
 		}
 
