@@ -5282,7 +5282,7 @@ public abstract class AbstractWorkflowServiceTest {
     	testTerminateTask(WorkflowStatus.FAILED);
     }
 
-    private WorkflowDef createSubworkflowDefWithWaitTask() {
+    private WorkflowDef createWorkflowWithWaitTask() {
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("test_subworkflow_task_wf");
         workflowDef.setSchemaVersion(2);
@@ -5296,7 +5296,19 @@ public abstract class AbstractWorkflowServiceTest {
         waitWorkflowTask.setInputParameters(waitTaskInputParams);
         waitWorkflowTask.setTaskReferenceName("subworkflow-wait0");
 
+        String taskName = "junit_task_1";
+        TaskDef taskDef = notFoundSafeGetTaskDef(taskName);
+        taskDef.setRetryCount(0);
+        taskDef.setTimeoutSeconds(0);
+        metadataService.updateTaskDef(taskDef);
+
+        WorkflowTask simpleWorkflowTask = new WorkflowTask();
+        simpleWorkflowTask.setWorkflowTaskType(TaskType.SIMPLE);
+        simpleWorkflowTask.setName(taskName);
+        simpleWorkflowTask.setTaskReferenceName(taskName);
+
         workflowDef.getTasks().add(waitWorkflowTask);
+        workflowDef.getTasks().add(simpleWorkflowTask);
 
         assertNotNull(workflowDef);
         metadataService.registerWorkflowDef(workflowDef);
@@ -5304,7 +5316,7 @@ public abstract class AbstractWorkflowServiceTest {
     }
 
     private void testTerminateTask(WorkflowStatus terminationStatus) {
-        WorkflowDef subworkflowDef = this.createSubworkflowDefWithWaitTask();
+        WorkflowDef subworkflowDef = this.createWorkflowWithWaitTask();
         
         WorkflowTask fanoutTask = new WorkflowTask();
         fanoutTask.setType(TaskType.FORK_JOIN.name());
@@ -5352,7 +5364,7 @@ public abstract class AbstractWorkflowServiceTest {
         WorkflowTask joinTask = new WorkflowTask();
         joinTask.setType(TaskType.JOIN.name());
         joinTask.setTaskReferenceName("fanouttask_join");
-        joinTask.setJoinOn(Arrays.asList("sw1", "leftfork-wait0"));
+        joinTask.setJoinOn(Arrays.asList("sw1", "terminate0"));
         
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("test_terminate_task_wf");
@@ -5403,6 +5415,9 @@ public abstract class AbstractWorkflowServiceTest {
         assertTrue(optionalTask.isPresent());
         Task waitTask = optionalTask.get();
         assertTrue(SKIPPED == waitTask.getStatus());
+
+        optionalTask = workflow.getTasks().stream().filter(t -> "junit_task_1".equals(t.getReferenceTaskName())).findFirst();
+        assertFalse(optionalTask.isPresent());
 
         metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
         metadataService.unregisterWorkflowDef(subworkflowDef.getName(), 1);
