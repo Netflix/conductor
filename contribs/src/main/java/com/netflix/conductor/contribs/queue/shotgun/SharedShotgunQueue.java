@@ -19,6 +19,7 @@
 package com.netflix.conductor.contribs.queue.shotgun;
 
 import com.bydeluxe.onemq.OneMQClient;
+import com.bydeluxe.onemq.PublishOptions;
 import com.bydeluxe.onemq.Subscription;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
@@ -149,10 +150,18 @@ public class SharedShotgunQueue implements ObservableQueue {
     @Override
     public void publish(List<Message> messages) {
         messages.forEach(message -> {
+
             String payload = message.getPayload();
             try {
+                PublishOptions options = PublishOptions.newBuilder()
+                    .withHeaders(message.getHeaders())
+                    .withTraceId(message.getTraceId())
+                    .withDelays(publishRetryIn)
+                    .withClientId(service)
+                    .build();
+
                 logger.debug(String.format("Publishing to %s: %s", subject, payload));
-                conn.publish(subject, payload.getBytes(), service, message.getTraceId(), publishRetryIn);
+                conn.publishWithOptions(subject, payload.getBytes(), options);
                 logger.info(String.format("Published to %s: %s", subject, payload));
             } catch (Exception eo) {
                 logger.debug(String.format("Publish failed for %s: %s", subject, payload), eo);

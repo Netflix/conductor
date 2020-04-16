@@ -18,6 +18,8 @@
  */
 package com.netflix.conductor.core.events.queue;
 
+import java.util.Map;
+
 /**
  * @author Viren
  *
@@ -35,6 +37,8 @@ public class Message {
 	private long accepted;
 
 	private String traceId;
+
+	private Map<String, String> headers;
 
 	public Message() {
 		
@@ -132,6 +136,20 @@ public class Message {
 	 */
 	public void setTraceId(String traceId) {
 		this.traceId = traceId;
+	}
+
+	/**
+	 * @return Additional message headers to be published with
+	 */
+	public Map<String, String> getHeaders() {
+		return headers;
+	}
+
+	/**
+	 * @param headers Additional message headers to be published with
+	 */
+	public void setHeaders(Map<String, String> headers) {
+		this.headers = headers;
 	}
 
 	@Override
