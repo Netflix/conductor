@@ -1562,7 +1562,11 @@ public class WorkflowExecutor {
 		// Tasks had to be started at previous scheduleTask call
 		List<Task> stuckSystemTasks = tasks.stream().filter(task -> {
 			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-			return stt != null && !stt.isAsync() && !created.contains(task) && !task.isStarted();
+			return stt != null
+				&& !stt.isAsync()
+				&& !created.contains(task)
+				&& task.isStarted() != null // to handle the legacy tasks which did not have that attribute
+				&& !task.isStarted();
 		}).collect(Collectors.toList());
 		boolean startedSystemTasks = false;
 

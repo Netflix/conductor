@@ -125,7 +125,7 @@ public class Task {
 	
 	private String domain;
 
-	private boolean started;
+	private Boolean started;
 	
 	public Task(){
 		
@@ -534,14 +534,14 @@ public class Task {
 	/**
 	 * @return Whether task been started or not
 	 */
-	public boolean isStarted() {
+	public Boolean isStarted() {
 		return started;
 	}
 
 	/**
 	 * @param started Whether task been started or not
 	 */
-	public void setStarted(boolean started) {
+	public void setStarted(Boolean started) {
 		this.started = started;
 	}
 
@@ -573,6 +573,7 @@ public class Task {
 
 	@Override
 	public String toString() {
-		return "type="+ taskType + ", name=" + taskDefName + ", refName=" + referenceTaskName + ", taskId=" + getTaskId() + ", retry=" + retryCount + ", status=" + status;
+		return "type="+ taskType + ", name=" + taskDefName + ", refName=" + referenceTaskName +
+			", taskId=" + getTaskId() + ", retry=" + retryCount + ", status=" + status + ", started=" + started;
 	}
 }
