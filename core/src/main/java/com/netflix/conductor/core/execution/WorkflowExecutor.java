@@ -1578,9 +1578,9 @@ public class WorkflowExecutor {
 
 			// This session couldn't lock the task (cluster pooling)
 			if (!locked) {
-				logger.debug("skipping starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
-					+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
-					+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
+				logger.debug("skipping stuck task " + task +
+					".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
+					",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
 				continue;
 			}
 
@@ -1591,16 +1591,16 @@ public class WorkflowExecutor {
 				}
 
 				if (!stt.isAsync()) {
-					logger.debug("starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
-						+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
-						+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
+					logger.debug("starting stuck task " + task +
+						".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
+						",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
 
 					startTask(stt, workflow, task);
 					startedSystemTasks = true;
 				} else {
-					logger.debug("queueing stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
-						+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
-						+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
+					logger.debug("queueing stuck task " + task +
+						".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
+						",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
 
 					addTaskToQueue(task);
 				}
