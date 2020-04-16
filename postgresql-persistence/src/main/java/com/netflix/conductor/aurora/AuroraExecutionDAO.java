@@ -106,7 +106,9 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 						", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
 					continue;
 				}
+				// Set schedule time here, after task was added to schedule table (it does not contain schedule time)
 				task.setScheduledTime(System.currentTimeMillis());
+				//The flag is boolean object, setting it to false so workflow executor can properly determine the state
 				task.setStarted(false);
 				addTaskInProgress(tx, task);
 				updateTask(tx, task);
