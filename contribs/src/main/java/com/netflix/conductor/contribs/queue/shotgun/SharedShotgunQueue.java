@@ -150,7 +150,6 @@ public class SharedShotgunQueue implements ObservableQueue {
     @Override
     public void publish(List<Message> messages) {
         messages.forEach(message -> {
-
             String payload = message.getPayload();
             try {
                 PublishOptions options = PublishOptions.newBuilder()
