@@ -1221,7 +1221,7 @@ public class WorkflowExecutor {
 			boolean stateChanged = false;
 
 			workflow.getTasks().addAll(tasksToBeScheduled);
-			for(Task task : tasksToBeScheduled) {
+			for (Task task : tasksToBeScheduled) {
 				if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
 					if (!stt.isAsync() && stt.execute(workflow, task, this)) {
@@ -1561,9 +1561,7 @@ public class WorkflowExecutor {
 
 		// Tasks had to be started at previous scheduleTask call
 		List<Task> stuckSystemTasks = tasks.stream().filter(task -> {
-			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-			return stt != null
-				&& !stt.isAsync()
+			return SystemTaskType.is(task.getTaskType())
 				&& !created.contains(task)
 				&& task.isStarted() != null // to handle the legacy tasks which did not have that attribute
 				&& !task.isStarted();
@@ -1586,13 +1584,26 @@ public class WorkflowExecutor {
 				continue;
 			}
 
-			logger.debug("starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
-				+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
-				+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
 			try {
 				WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-				startTask(stt, workflow, task);
-				startedSystemTasks = true;
+				if (stt == null) {
+					throw new RuntimeException("No system task found by name " + task.getTaskType());
+				}
+
+				if (!stt.isAsync()) {
+					logger.debug("starting stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
+						+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
+						+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
+
+					startTask(stt, workflow, task);
+					startedSystemTasks = true;
+				} else {
+					logger.debug("queueing stuck task.workflowId=" + workflow.getWorkflowId() + ",correlationId="
+						+ workflow.getCorrelationId() + ",traceId=" + workflow.getTraceId() + ",taskId=" + task.getTaskId()
+						+ ",taskRefName=" + task.getReferenceTaskName() + ",contextUser=" + workflow.getContextUser());
+
+					addTaskToQueue(task);
+				}
 			} finally {
 				queue.remove(lockQueue, task.getTaskId());
 			}
