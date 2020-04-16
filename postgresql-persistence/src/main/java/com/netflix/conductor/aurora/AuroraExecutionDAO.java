@@ -99,8 +99,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				Preconditions.checkNotNull(task.getWorkflowInstanceId(), "Workflow instance id cannot be null");
 				Preconditions.checkNotNull(task.getReferenceTaskName(), "Task reference name cannot be null");
 
-				task.setScheduledTime(System.currentTimeMillis());
-
 				boolean taskAdded = addScheduledTask(tx, task);
 				if (!taskAdded) {
 					String taskKey = task.getReferenceTaskName() + task.getRetryCount();
@@ -108,6 +106,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 						", ref=" + task.getReferenceTaskName() + ", key=" + taskKey);
 					continue;
 				}
+				// Set schedule time here, after task was added to schedule table (it does not contain schedule time)
+				task.setScheduledTime(System.currentTimeMillis());
+				//The flag is boolean object, setting it to false so workflow executor can properly determine the state
+				task.setStarted(false);
 				addTaskInProgress(tx, task);
 				updateTask(tx, task);
 
