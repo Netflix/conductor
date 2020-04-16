@@ -24,6 +24,7 @@ import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
@@ -39,27 +40,30 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 @Singleton
 public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusListener {
-	private static Logger logger = LoggerFactory.getLogger(StatusEventPublisher.class);
+	private static final Logger logger = LoggerFactory.getLogger(StatusEventPublisher.class);
 
 	public enum StartEndState {
 		start, end
 	}
 
-	private ParametersUtils pu = new ParametersUtils();
-	private MetadataDAO metadata;
-	private ExecutionDAO edao;
-	private ObjectMapper om;
+	private final ParametersUtils pu = new ParametersUtils();
+	private final MetadataDAO metadata;
+	private final ExecutionDAO edao;
+	private final ObjectMapper om;
+	private final boolean useGroupId;
 
 	@Inject
-	public StatusEventPublisher(MetadataDAO metadata, ExecutionDAO edao, ObjectMapper om) {
+	public StatusEventPublisher(MetadataDAO metadata, ExecutionDAO edao, ObjectMapper om, Configuration config) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.om = om;
+		this.useGroupId = Boolean.parseBoolean(config.getProperty("io.shotgun.use.groupId.header", "false"));
 	}
 
 	@Override
@@ -112,7 +116,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			// Feed preProcessed map as defaults so that already processed for JQ engine
 			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
 			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, null, null, null);
-			sendMessage(doc, workflow.getTraceId());
+			sendMessage(doc, workflow.getTraceId(), workflow.getWorkflowId());
 		} catch (Exception ex) {
 			logger.debug("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
@@ -145,14 +149,14 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			// Feed preProcessed map as defaults so that already processed for JQ engine
 			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
 			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, task.getTaskId(), null, null);
-			sendMessage(doc, workflow.getTraceId());
+			sendMessage(doc, workflow.getTraceId(), workflow.getWorkflowId());
 		} catch (Exception ex) {
 			logger.debug("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
 		}
 	}
 
-	private void sendMessage(Map<String, Object> actionMap, String traceId) throws Exception {
+	private void sendMessage(Map<String, Object> actionMap, String traceId, String groupId) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 
 		Message msg = new Message();
@@ -161,6 +165,11 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 
 		String payload = mapper.writeValueAsString(actionMap.get("inputParameters"));
 		msg.setPayload(payload);
+		if (useGroupId) {
+			msg.setHeaders(new HashMap<String, String>(){{
+				put("JMSXGroupID", groupId);
+			}});
+		}
 
 		String sink = (String) actionMap.get("sink");
 		ObservableQueue queue = EventQueues.getQueue(sink, false);

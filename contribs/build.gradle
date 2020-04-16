@@ -17,7 +17,7 @@ dependencies {
 		exclude group: 'io.nats', module: 'jnats'
 	}
 
-	compile files('libs/one-mq-0.3.9.jar')
+	compile files('libs/one-mq-0.3.10.jar')
 	compile 'io.grpc:grpc-core:1.15.1'
 	compile 'io.grpc:grpc-netty-shaded:1.15.1'
 	compile 'io.grpc:grpc-protobuf:1.15.1'
