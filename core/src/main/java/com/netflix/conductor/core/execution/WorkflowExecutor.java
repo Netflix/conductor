@@ -1068,14 +1068,6 @@ public class WorkflowExecutor {
 				}
 			}
 		}
-		Task task2 = edao.getTask(result.getTaskId());
-		if (task2.getStatus().isTerminal()) {
-			// Task was already updated....
-			queue.remove(QueueUtils.getQueueName(task2), result.getTaskId());
-			String msg = "Task is already terminal as " + task2.getStatus() + "@" + task2.getEndTime() + ", workflow status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId() + ",taskId=" + task2.getTaskId()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser()+ ",clientId=" + wf.getClientId();
-			logger.debug(msg);
-			return;
-		}
 
 		if (result.isResetStartTime()) {
 			edao.resetStartTime(task, result.isUpdateOutput());
