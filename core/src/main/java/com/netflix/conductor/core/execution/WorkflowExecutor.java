@@ -1362,6 +1362,10 @@ public class WorkflowExecutor {
 	public void addTaskToQueue(Task task) throws Exception {
 		// put in queue
 		queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+		pushTaskToQueue(task);
+	}
+
+	public void pushTaskToQueue(Task task) throws Exception {
 		if (task.getCallbackAfterSeconds() > 0) {
 			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), task.getCallbackAfterSeconds());
 		} else {
@@ -1560,49 +1564,50 @@ public class WorkflowExecutor {
 		List<Task> toBeQueued = created.stream().filter(task -> !SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
 
 		// Tasks had to be started at previous scheduleTask call
-		List<Task> stuckSystemTasks = tasks.stream().filter(task -> {
-			return SystemTaskType.is(task.getTaskType())
-				&& !created.contains(task)
-				&& task.isStarted() != null // to handle the legacy tasks which did not have that attribute
-				&& !task.isStarted();
-		}).collect(Collectors.toList());
+		List<Task> stuckSystemTasks = tasks.stream().filter(task -> SystemTaskType.is(task.getTaskType())
+			&& !created.contains(task)
+			&& task.isStarted() != null // The legacy tasks which did not have started attribute
+			&& !task.isStarted()
+		).collect(Collectors.toList());
 		boolean startedSystemTasks = false;
 
 		// We need start those stuck tasks first
 		for (Task task : stuckSystemTasks) {
-			String lockQueue  = QueueUtils.getQueueName(task) + ".lock";
+			String lockQueue = QueueUtils.getQueueName(task) + ".lock";
+			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
+			if (stt == null) {
+				throw new RuntimeException("No system task found by name " + task.getTaskType());
+			}
 
-			// this basically prevents other containers to do the same action
+			// This prevents another containers executing the same action
 			// true means this session added the record to lock queue and can start the task
 			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600); // 10 minutes
 
 			// This session couldn't lock the task (cluster pooling)
 			if (!locked) {
-				logger.debug("skipping stuck task " + task +
+				logger.debug("skipping processing of stuck task " + task +
 					".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
 					",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
 				continue;
 			}
 
 			try {
-				WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-				if (stt == null) {
-					throw new RuntimeException("No system task found by name " + task.getTaskType());
-				}
-
-				if (!stt.isAsync()) {
+				if (stt.isAsync()) {
+					// Async task id exists in task queue - not the stuck task
+					boolean exists = queue.exists(QueueUtils.getQueueName(task), task.getTaskId());
+					if (!exists) {
+						logger.debug("queueing stuck task " + task +
+							".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
+							",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
+						pushTaskToQueue(task);
+					}
+				} else {
 					logger.debug("starting stuck task " + task +
 						".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
 						",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
 
 					startTask(stt, workflow, task);
 					startedSystemTasks = true;
-				} else {
-					logger.debug("queueing stuck task " + task +
-						".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
-						",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
-
-					addTaskToQueue(task);
 				}
 			} finally {
 				queue.remove(lockQueue, task.getTaskId());
