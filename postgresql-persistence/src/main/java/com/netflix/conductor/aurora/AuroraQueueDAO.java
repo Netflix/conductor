@@ -103,15 +103,14 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 							foundIds.addAll(ids);
 						}
 
+						// Commit
+						tx.commit();
+
 						// We recheck this condition after each message to ensure
 						// foundIds not greater than requested count and within timeout window
 						if (!keepPooling.get()) {
-							tx.commit();
 							break;
 						}
-
-						// Commit
-						tx.commit();
 					} catch (Exception ex) {
 						logger.debug("pop: rollback for {} with {}", queueName, ex.getMessage(), ex);
 						tx.rollback();
