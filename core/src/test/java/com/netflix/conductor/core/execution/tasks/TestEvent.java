@@ -22,6 +22,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueues.QueueType;
 import com.netflix.conductor.core.events.MockQueueProvider;
 import com.netflix.conductor.core.events.queue.Message;
@@ -50,6 +51,7 @@ import static org.mockito.Mockito.mock;
  *
  */
 public class TestEvent {
+	Configuration configuration = mock(Configuration.class);
 
 	@Before
 	public void setup() {
@@ -98,7 +100,7 @@ public class TestEvent {
 		task.setTaskType(WorkflowTask.Type.EVENT.name());
 		workflow.getTasks().add(task);
 		
-		Event event = new Event();
+		Event event = new Event(configuration);
 		ObservableQueue queue = event.getQueue(workflow, task);
 		assertNotNull(task.getReasonForIncompletion(), queue);
 		assertEquals("queue_name", queue.getName());
@@ -165,7 +167,7 @@ public class TestEvent {
 	@Test
 	@Ignore("FIXME: Unexpected NullPointerException")
 	public void test() throws Exception {
-		Event event = new Event();
+		Event event = new Event(configuration);
 		Workflow workflow = new Workflow();
 		workflow.setWorkflowType("testWorkflow");
 		workflow.setVersion(2);
@@ -225,7 +227,7 @@ public class TestEvent {
 	@Test
 	@Ignore("FIXME: Unexpected NullPointerException")
 	public void testFailures() throws Exception {
-		Event event = new Event();
+		Event event = new Event(configuration);
 		Workflow workflow = new Workflow();
 		workflow.setWorkflowType("testWorkflow");
 		workflow.setVersion(2);
@@ -261,7 +263,7 @@ public class TestEvent {
 	@Ignore("FIXME: Unexpected NullPointerException")
 	public void testDynamicSinks() {
 
-		Event event = new Event();
+		Event event = new Event(configuration);
 		Workflow workflow = new Workflow();
 		workflow.setWorkflowType("testWorkflow");
 		workflow.setVersion(2);
