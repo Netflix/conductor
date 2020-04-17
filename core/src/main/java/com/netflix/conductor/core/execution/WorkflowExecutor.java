@@ -761,7 +761,7 @@ public class WorkflowExecutor {
 				workflow.getOutput().put("conductor.cancel_workflow", cancelWFId);
 
 			} catch (Exception e) {
-				logger.debug("Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
+				logger.info("Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
 				workflow.getOutput().put("conductor.cancel_workflow", "Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
 				Monitors.recordWorkflowStartError(cancelWorkflow);
 			}
@@ -823,7 +823,7 @@ public class WorkflowExecutor {
 	public void terminateWorkflow(String workflowId, String reason) throws Exception {
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow.getStatus().isTerminal()) {
-			logger.debug("Workflow already finished. status=" + workflow.getStatus()
+			logger.info("Workflow already finished. status=" + workflow.getStatus()
 				+ ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
 				+ ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
 				+ ",clientId=" + workflow.getClientId());
@@ -934,7 +934,7 @@ public class WorkflowExecutor {
 						workflow.getWorkflowId(), null, null, null,
 						workflow.getWorkflowIds(), workflow.getTraceId());
 				} catch (Exception e) {
-					logger.debug("Error workflow " + workflowName + " failed to start. reason: " + e.getMessage(), e);
+					logger.info("Error workflow " + workflowName + " failed to start. reason: " + e.getMessage(), e);
 					Monitors.recordWorkflowStartError(workflowName);
 				}
 			}
@@ -983,7 +983,7 @@ public class WorkflowExecutor {
 				workflow.getOutput().put("conductor.failure_workflow", failureWFId);
 
 			} catch (Exception e) {
-				logger.debug("Error workflow " + failureWorkflow + " failed to start.  reason: " + e.getMessage());
+				logger.info("Error workflow " + failureWorkflow + " failed to start.  reason: " + e.getMessage());
 				workflow.getOutput().put("conductor.failure_workflow", "Error workflow " + failureWorkflow + " failed to start.  reason: " + e.getMessage());
 				Monitors.recordWorkflowStartError(failureWorkflow);
 			}
@@ -1301,7 +1301,7 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
 		if(!workflow.getStatus().equals(WorkflowStatus.PAUSED)){
-			logger.debug("Workflow is not is not PAUSED so cannot resume. Current status=" + workflow.getStatus()
+			logger.info("Workflow is not is not PAUSED so cannot resume. Current status=" + workflow.getStatus()
 				+ ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
 				+ ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
 				+ ",clientId=" + workflow.getClientId());
@@ -1324,7 +1324,7 @@ public class WorkflowExecutor {
 		// If the wf is not running then cannot skip any task
 		if(!wf.getStatus().equals(WorkflowStatus.RUNNING)){
 			String errorMsg = String.format("The workflow %s is not running so the task referenced by %s cannot be skipped", workflowId, taskReferenceName);
-			logger.debug(errorMsg);
+			logger.info(errorMsg);
 			throw new IllegalStateException(errorMsg);
 		}
 		// Check if the reference name is as per the workflowdef
@@ -1332,14 +1332,14 @@ public class WorkflowExecutor {
 		WorkflowTask wft = wfd.getTaskByRefName(taskReferenceName);
 		if(wft == null){
 			String errorMsg = String.format("The task referenced by %s does not exist in the WorkflowDef %s", taskReferenceName, wf.getWorkflowType());
-			logger.debug(errorMsg);
+			logger.info(errorMsg);
 			throw new IllegalStateException(errorMsg);
 		}
 		// If the task is already started the again it cannot be skipped
 		wf.getTasks().forEach(task -> {
 			if(task.getReferenceTaskName().equals(taskReferenceName)){
 				String errorMsg = String.format("The task referenced %s has already been processed, cannot be skipped", taskReferenceName);
-				logger.debug(errorMsg);
+				logger.info(errorMsg);
 				throw new IllegalStateException(errorMsg);
 			}
 		});
@@ -1466,7 +1466,7 @@ public class WorkflowExecutor {
 					} catch (Exception ex) {
 						task.setStatus(Status.FAILED);
 						task.setReasonForIncompletion(ex.getMessage());
-						logger.debug("Task {}/{} failed with Exception {}.", task.getTaskType(), task.getTaskId(),ex.getMessage());
+						logger.info("Task {}/{} failed with Exception {}.", task.getTaskType(), task.getTaskId(),ex.getMessage());
 					}
 					break;
 
@@ -1487,7 +1487,7 @@ public class WorkflowExecutor {
 				workflow.getTraceId(), workflow.getContextUser(),workflow.getClientId());
 
 		} catch (Exception e) {
-			logger.debug("ExecuteSystemTask failed with " + e.getMessage() + " for task id=" + taskId + ", system task=" + systemTask, e);
+			logger.info("ExecuteSystemTask failed with " + e.getMessage() + " for task id=" + taskId + ", system task=" + systemTask, e);
 		}
 	}
 
