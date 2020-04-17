@@ -66,81 +66,60 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
 		createQueueIfNotExists(queueName);
-		final String QUERY_LOCK = "SELECT id, version, message_id FROM queue_message " +
+		final String QUERY = "SELECT id FROM queue_message " +
 			"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
 			"ORDER BY deliver_on, version, id LIMIT ? FOR UPDATE SKIP LOCKED";
 
-		final String UPDATE = "UPDATE queue_message " +
+		final String LOCK = "UPDATE queue_message " +
 			"SET popped = true, unack_on = ?, version = version + 1 " +
-			"WHERE id = ? AND version = ?";
+			"WHERE id IN (" + QUERY + ") RETURNING id";
 
-		try (Connection tx = dataSource.getConnection()) {
-			tx.setAutoCommit(false);
+		try  {
 			long start = System.currentTimeMillis();
 
-			Set<String> foundIds = new HashSet<>();
-			try {
+			// Returns true until foundIds = count or time spent = timeout
+			Set<String> foundIds = new LinkedHashSet<>();
+			final Supplier<Boolean> keepPooling = () -> foundIds.size() < count
+				&& ((System.currentTimeMillis() - start) < timeout);
 
-				// Returns true until foundIds = count or time spent = timeout
-				Supplier<Boolean> keepPooling = () -> foundIds.size() < count
-					&& ((System.currentTimeMillis() - start) < timeout);
-
-				// Repeat until foundIds = count or time spent = timeout
-				while (keepPooling.get()) {
-
-					// Limit how many left to pick up
-					int limit = count - foundIds.size();
-
-					// Get the list of popped message ids
-					List<QueueMessage> messages = query(tx, QUERY_LOCK, q -> q
-						.addParameter(queueName.toLowerCase())
-						.addParameter(limit)
-						.executeAndFetch(rs -> {
-							List<QueueMessage> popped = new ArrayList<>(limit);
-							while (rs.next()) {
-								QueueMessage m = new QueueMessage();
-								m.id = rs.getLong("id");
-								m.version = rs.getLong("version");
-								m.message_id = rs.getString("message_id");
-
-								popped.add(m);
-							}
-							return popped;
-						}));
-
-					// Mark them as popped issuing commit at the end of the batch as this batch already hidden by PG
-					for (QueueMessage m : messages) {
-
-						// Continue to lock the record
+			// Repeat until foundIds = count or time spent = timeout
+			while (keepPooling.get()) {
+				try (Connection tx = dataSource.getConnection()) {
+					tx.setAutoCommit(false);
+					try  {
+						// Limit how many left to pick up
+						int limit = count - foundIds.size();
 						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
-						int updated = query(tx, UPDATE, u -> u
-							.addTimestampParameter(unack_on)
-							.addParameter(m.id)
-							.addParameter(m.version)
-							.executeUpdate());
 
-						// Means record being updated - we got it
-						if (updated > 0) {
-							foundIds.add(m.message_id);
+						// Get the list of popped message ids
+						List<String> ids = query(tx, LOCK, q -> q
+							.addTimestampParameter(unack_on)
+							.addParameter(queueName.toLowerCase())
+							.addParameter(limit)
+							.executeScalarList(String.class));
+
+						// Add if found
+						if (!ids.isEmpty()) {
+							foundIds.addAll(ids);
 						}
 
-						// Shall we stop pooling?
 						// We recheck this condition after each message to ensure
 						// foundIds not greater than requested count and within timeout window
 						if (!keepPooling.get()) {
 							tx.commit();
-							return Lists.newArrayList(foundIds);
+							break;
 						}
-					}
 
-					// Commit and wait a little bit
-					tx.commit();
-					Thread.sleep(10);
+						// Commit
+						tx.commit();
+					} catch (Exception ex) {
+						logger.debug("pop: rollback for {} with {}", queueName, ex.getMessage(), ex);
+						tx.rollback();
+					}
 				}
 
-				tx.commit();
-			} catch (Exception e) {
-				tx.rollback();
+				// Wait a little bit before next iteration
+				Thread.sleep(50);
 			}
 
 			return Lists.newArrayList(foundIds);
