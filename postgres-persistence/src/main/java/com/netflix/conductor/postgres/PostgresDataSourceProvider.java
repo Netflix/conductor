@@ -80,34 +80,37 @@ public class PostgresDataSourceProvider implements Provider<DataSource> {
     }
 
     private void flywayMigrate(DataSource dataSource) {
-		boolean enabled = configuration.isFlywayEnabled();
-		if (!enabled) {
-			logger.debug("Flyway migrations are disabled");
-			return;
-		}
 
+		  boolean enabled = configuration.isFlywayEnabled();
+		  if (!enabled) {
+			  logger.debug("Flyway migrations are disabled");
+			  return;
+		  }
 
-		Flyway flyway = new Flyway();
-		configuration.getFlywayTable().ifPresent(tableName -> {
-			logger.debug("Using Flyway migration table '{}'", tableName);
-			flyway.setTable(tableName);
-		});
+		  Flyway flyway = new Flyway();
+		  configuration.getFlywayTable().ifPresent(tableName -> {
+			  logger.debug("Using Flyway migration table '{}'", tableName);
+			  flyway.setTable(tableName);
+		  });
 
-		flyway.setBaselineOnMigrate(configuration.isFlywayBaselineOnMigrate());
+		  String[] locations = configuration.getFlywayLocations();
+		  if (locations.length > 0) {
+			  flyway.setLocations(locations);
+		  }
 
-		if (configuration.isFlywayBaselineOnMigrate()) {
-			logger.trace("Flyway baseline migration is enabled");
-			flyway.setBaselineVersionAsString("0");
-			flyway.setBaselineDescription("Conductor baseline migration");
-		}
+		  flyway.setDataSource(dataSource);
+		  flyway.setPlaceholderReplacement(false);
 
-		String[] locations = configuration.getFlywayLocations();
-		if (locations.length > 0) {
-			flyway.setLocations(locations);
-		}
+			flyway.setBaselineOnMigrate(configuration.isFlywayBaselineOnMigrate());
 
-		flyway.setDataSource(dataSource);
-		flyway.setPlaceholderReplacement(false);
-		flyway.migrate();
+			if (configuration.isFlywayBaselineOnMigrate()) {
+				logger.trace("Flyway baseline migration is enabled");
+
+				flyway.setBaselineVersionAsString(Integer.toString(configuration.getFlywayBaselineVersion()));
+				flyway.setBaselineDescription("Conductor baseline migration");
+			}
+
+		  flyway.migrate();
+
     }
 }
