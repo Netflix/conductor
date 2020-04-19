@@ -284,4 +284,4 @@ create table queue_message
 create unique index queue_name_msg on queue_message (queue_name, message_id);
 alter table queue_message
     add constraint queue_name_msg unique using index queue_name_msg;
-create index queue_name_deliver_on on queue_message (deliver_on);
+create index queue_name_deliver_on on queue_message (queue_name, deliver_on);
