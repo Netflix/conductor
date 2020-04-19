@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
 import org.apache.commons.collections.CollectionUtils;
@@ -82,11 +83,11 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			final Supplier<Boolean> keepPooling = () -> foundIds.size() < count
 				&& ((System.currentTimeMillis() - start) < timeout);
 
-			// Repeat until foundIds = count or time spent = timeout
-			while (keepPooling.get()) {
-				try (Connection tx = dataSource.getConnection()) {
-					tx.setAutoCommit(false);
-					try  {
+			try (Connection tx = dataSource.getConnection()) {
+				tx.setAutoCommit(false);
+				try {
+					// Repeat until foundIds = count or time spent = timeout
+					while (keepPooling.get()) {
 						// Limit how many left to pick up
 						int limit = count - foundIds.size();
 						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
@@ -98,29 +99,28 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 							.addParameter(limit)
 							.executeScalarList(String.class));
 
+						// Commit
+						tx.commit();
+
 						// Add if found
 						if (!ids.isEmpty()) {
 							foundIds.addAll(ids);
 						}
-
-						// Commit
-						tx.commit();
 
 						// We recheck this condition after each message to ensure
 						// foundIds not greater than requested count and within timeout window
 						if (!keepPooling.get()) {
 							break;
 						}
-					} catch (Exception ex) {
-						logger.debug("pop: rollback for {} with {}", queueName, ex.getMessage(), ex);
-						tx.rollback();
+
+						// Wait a little bit before next iteration
+						TimeUnit.MILLISECONDS.sleep(50);
 					}
+				} catch (Exception ex) {
+					logger.debug("pop: rollback for {} with {}", queueName, ex.getMessage(), ex);
+					tx.rollback();
 				}
-
-				// Wait a little bit before next iteration
-				Thread.sleep(50);
 			}
-
 			return Lists.newArrayList(foundIds);
 		} catch (Exception ex) {
 			logger.error("pop: failed for {} with {}", queueName, ex.getMessage(), ex);
@@ -150,9 +150,13 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		final String SQL = "UPDATE queue_message " +
 			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
-			"WHERE queue_name = ? AND popped = true AND unack_on < ?";
+			"WHERE queue_name = ? AND unack_on < ? AND popped = true";
 
-		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).addTimestampParameter(unack_on).executeUpdate());
+		try {
+			executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).addTimestampParameter(unack_on).executeUpdate());
+		} catch (Exception ex) {
+			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
+		}
 	}
 
 	@Override
@@ -331,13 +335,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private void processAllUnacks() {
-		long unack_on = System.currentTimeMillis();
-
-		final String SQL = "UPDATE queue_message " +
-			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
-			"WHERE popped = true AND unack_on < ?";
-
-		executeWithTransaction(SQL, q -> q.addTimestampParameter(unack_on).executeUpdate());
+		queues.forEach(this::processUnacks);
 	}
 
 	private static class QueueMessage {
