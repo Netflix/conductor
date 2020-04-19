@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
 import org.apache.commons.collections.CollectionUtils;
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
-	private static final Long UNACK_SCHEDULE_MS = 5_000L;
+	private static final Long UNACK_SCHEDULE_MS = 30_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
 
 	@Inject
@@ -73,7 +72,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		final String LOCK = "UPDATE queue_message " +
 			"SET popped = true, unack_on = ?, version = version + 1 " +
-			"WHERE id IN (" + QUERY + ") RETURNING id";
+			"WHERE id = ANY(?) RETURNING message_id";
 
 		try  {
 			long start = System.currentTimeMillis();
@@ -90,21 +89,26 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					while (keepPooling.get()) {
 						// Limit how many left to pick up
 						int limit = count - foundIds.size();
-						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
-						// Get the list of popped message ids
-						List<String> ids = query(tx, LOCK, q -> q
-							.addTimestampParameter(unack_on)
+						// Get the list of locked message ids
+						List<Long> locked = query(tx, QUERY, q -> q
 							.addParameter(queueName.toLowerCase())
 							.addParameter(limit)
+							.executeScalarList(Long.class));
+
+						// Update the locked records returning list of message_id
+						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+						List<String> updated = query(tx, LOCK, q -> q
+							.addTimestampParameter(unack_on)
+							.addLongListParameter(locked)
 							.executeScalarList(String.class));
 
 						// Commit
 						tx.commit();
 
 						// Add if found
-						if (!ids.isEmpty()) {
-							foundIds.addAll(ids);
+						if (!updated.isEmpty()) {
+							foundIds.addAll(updated);
 						}
 
 						// We recheck this condition after each message to ensure
@@ -146,14 +150,17 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
-		long unack_on = System.currentTimeMillis();
+		long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 
 		final String SQL = "UPDATE queue_message " +
 			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
 			"WHERE id IN (SELECT id FROM queue_message WHERE unack_on < ? AND queue_name = ? AND popped = true FOR UPDATE SKIP LOCKED)";
 
 		try {
-			executeWithTransaction(SQL, q -> q.addTimestampParameter(unack_on).addParameter(queueName.toLowerCase()).executeUpdate());
+			executeWithTransaction(SQL, q -> q
+				.addTimestampParameter(unack_on)
+				.addParameter(queueName.toLowerCase())
+				.executeUpdate());
 		} catch (Exception ex) {
 			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
 		}
