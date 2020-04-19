@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -87,6 +88,14 @@ public class Query implements AutoCloseable {
         return addParameterInternal((ps, idx) -> {
             String[] strings = value.toArray(new String[0]);
             Array arrayOf = ps.getConnection().createArrayOf("text", strings);
+            ps.setArray(idx, arrayOf);
+        });
+    }
+
+    public Query addLongListParameter(final Collection<Long> value) {
+        return addParameterInternal((ps, idx) -> {
+            Long[] values = value.toArray(new Long[0]);
+            Array arrayOf = ps.getConnection().createArrayOf("int8", values);
             ps.setArray(idx, arrayOf);
         });
     }
