@@ -106,7 +106,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 								.addLongListParameter(locked)
 								.executeScalarList(String.class));
 
-							// Add if found
+							// Add updated ids only
 							if (!updated.isEmpty()) {
 								foundIds.addAll(updated);
 							}
