@@ -39,12 +39,8 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 	private static final String MISSING_PRIMARY_CLUSTER = "Missing primary cluster information";
 	private static final String MISSING_PRIMARY_CLUSTER_BOOT_STRAP_SERVERS = "Missing primary cluster boot strap server information";
 	private static final String MISSING_PRIMARY_CLUSTER_AUTH_MECHANISM = "Missing primary cluster auth mechanism";
-	private static final String MISSING_PRIMARY_CLUSTER_USERNAME = "Missing primary cluster user name";
-	private static final String MISSING_PRIMARY_CLUSTER_PASSWORD = "Missing primary cluster password";
 	private static final String MISSING_SECONDARY_CLUSTER_BOOT_STRAP_SERVERS = "Missing secondary cluster boot auth mechanism";
 	private static final String MISSING_SECONDARY_CLUSTER_AUTH_MECHANISM = "Missing primary cluster auth mechanism";
-	private static final String MISSING_SECONDARY_CLUSTER_USERNAME = "Missing primary cluster user name";
-	private static final String MISSING_SECONDARY_CLUSTER_PASSWORD = "Missing primary cluster password";
 	private static final String MISSING_CLIENT_ID = "Missing producer client id";
 	private static final String MISSING_PRODUCER_ACK = "Missing producer ACK information";
 
@@ -112,12 +108,6 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 			} else if (primaryCluster.get("authMechanism") == null) {
 				markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER_AUTH_MECHANISM);
 				return;
-			} else if (primaryCluster.get("username") == null) {
-				markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER_USERNAME);
-				return;
-			} else if (primaryCluster.get("password") == null) {
-				markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER_PASSWORD);
-				return;
 			}
 		}
 
@@ -128,12 +118,6 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 				return;
 			} else if (secondaryCluster.get("authMechanism") == null) {
 				markTaskAsFailed(task, MISSING_SECONDARY_CLUSTER_AUTH_MECHANISM);
-				return;
-			} else if (secondaryCluster.get("username") == null) {
-				markTaskAsFailed(task, MISSING_SECONDARY_CLUSTER_USERNAME);
-				return;
-			} else if (secondaryCluster.get("password") == null) {
-				markTaskAsFailed(task, MISSING_SECONDARY_CLUSTER_PASSWORD);
 				return;
 			}
 		}
@@ -154,7 +138,7 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 		}
 
 		try {
-			Future<Record> record = kafkaPublish(input);
+			Future<Record> record = kafkaPublish(input, task.getTaskDefName());
 			try {
 				record.get();
 				task.setStatus(Task.Status.COMPLETED);
@@ -181,11 +165,11 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 	 * @return Future for execution.
 	 */
 	@SuppressWarnings("unchecked")
-	private Future<Record> kafkaPublish(ConfluentKafkaPublishTask.Input input) throws Exception {
+	private Future<Record> kafkaPublish(ConfluentKafkaPublishTask.Input input, String taskDefName) throws Exception {
 
 		long startPublishingEpochMillis = Instant.now().toEpochMilli();
 
-		Producer producer = confluentKafkaProducerManager.getProducer(input);
+		Producer producer = confluentKafkaProducerManager.getProducer(input, taskDefName);
 
 		long timeTakenToCreateProducer = Instant.now().toEpochMilli() - startPublishingEpochMillis;
 
@@ -231,6 +215,9 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 
 		@JsonProperty("producer_clientId")
 		private String clientId;
+
+		@JsonProperty("confluent_cluster_type")
+		private ConfluentKafkaProducerManager.TenantType clusterType;
 
 		@JsonProperty("retries")
 		private int retries;
@@ -283,6 +270,14 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 
 		public Map<String, Object> getTopic() {
 			return topic;
+		}
+
+		public ConfluentKafkaProducerManager.TenantType getClusterType() {
+			return clusterType;
+		}
+
+		public void setClusterType(ConfluentKafkaProducerManager.TenantType clusterType) {
+			this.clusterType = clusterType;
 		}
 
 		@Override
