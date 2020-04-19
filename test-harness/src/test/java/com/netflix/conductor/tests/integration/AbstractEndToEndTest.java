@@ -192,7 +192,9 @@ public abstract class AbstractEndToEndTest {
                 sb.append(line);
             }
             String sql = sb.toString();
-
+            if(sql.trim().isEmpty()){
+                continue;
+            }
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 ps.executeUpdate();
             } catch (Exception e) {
