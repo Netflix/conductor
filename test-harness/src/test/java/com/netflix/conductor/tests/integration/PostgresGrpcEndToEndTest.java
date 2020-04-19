@@ -15,8 +15,13 @@ import com.netflix.conductor.tests.utils.TestEnvironment;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Optional;
 
 import static com.netflix.conductor.core.config.Configuration.DB_PROPERTY_NAME;
@@ -34,6 +39,7 @@ public class PostgresGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
     protected static Optional<GRPCServer> server;
 
     private static final String JDBC_URL = "jdbc:postgresql://localhost:54320/conductor";
+    private static HikariDataSource dataSource;
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -45,7 +51,7 @@ public class PostgresGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
         config.setPassword("postgres");
         config.setAutoCommit(true);
 
-        HikariDataSource dataSource = new HikariDataSource(config);
+        dataSource = new HikariDataSource(config);
 
         // pre-populate the database, to test baseline.on.migrate feature
 
@@ -89,6 +95,21 @@ public class PostgresGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
         taskClient = new TaskClient("localhost", SERVER_PORT);
         workflowClient = new WorkflowClient("localhost", SERVER_PORT);
         metadataClient = new MetadataClient("localhost", SERVER_PORT);
+    }
+
+    @Test
+    public void testSchemaVersion() {
+        // ensure flyway schema_version was incremented
+        int numVers = 0;
+        try (Statement stmt = dataSource.getConnection().createStatement()) {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM schema_version WHERE version::INTEGER > 1");
+            while (rs.next()) {
+               numVers++;
+            }
+        } catch (SQLException e) {
+            Assert.fail(e.getMessage());
+        }
+        Assert.assertTrue(numVers > 0);
     }
 
     @AfterClass
