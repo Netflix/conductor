@@ -67,7 +67,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	public List<String> pop(String queueName, int count, int timeout) {
 		createQueueIfNotExists(queueName);
 		final String QUERY = "SELECT id FROM queue_message " +
-			"WHERE deliver_on < now() AND queue_name = ? AND popped = false " +
+			"WHERE queue_name = ? AND deliver_on < now() AND popped = false " +
 			"ORDER BY deliver_on, version, id LIMIT ? FOR UPDATE SKIP LOCKED";
 
 		final String LOCK = "UPDATE queue_message " +
@@ -154,12 +154,12 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		final String SQL = "UPDATE queue_message " +
 			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
-			"WHERE id IN (SELECT id FROM queue_message WHERE unack_on < ? AND queue_name = ? AND popped = true FOR UPDATE SKIP LOCKED)";
+			"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND unack_on < ? AND popped = true FOR UPDATE SKIP LOCKED)";
 
 		try {
 			executeWithTransaction(SQL, q -> q
-				.addTimestampParameter(unack_on)
 				.addParameter(queueName.toLowerCase())
+				.addTimestampParameter(unack_on)
 				.executeUpdate());
 		} catch (Exception ex) {
 			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
