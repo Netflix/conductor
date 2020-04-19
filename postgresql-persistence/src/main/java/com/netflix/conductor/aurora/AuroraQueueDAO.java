@@ -35,17 +35,20 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void push(String queueName, String id, long offsetSeconds) {
+		createQueueIfNotExists(queueName);
 		withTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds));
 	}
 
 	@Override
 	public void push(String queueName, List<Message> messages) {
+		createQueueIfNotExists(queueName);
 		withTransaction(tx -> messages
 			.forEach(message -> pushMessage(tx, queueName, message.getId(), message.getPayload(), 0)));
 	}
 
 	@Override
 	public boolean pushIfNotExists(String queueName, String id, long offsetSeconds) {
+		createQueueIfNotExists(queueName);
 		return getWithTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds));
 	}
 
@@ -65,7 +68,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	 */
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
-		createQueueIfNotExists(queueName);
 		final String QUERY = "SELECT id FROM queue_message " +
 			"WHERE queue_name = ? AND deliver_on < now() AND popped = false " +
 			"ORDER BY deliver_on, version, id LIMIT ? FOR UPDATE SKIP LOCKED";
@@ -290,8 +292,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private boolean pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
-		createQueueIfNotExists(queueName);
-
 		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
 			"VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
