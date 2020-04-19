@@ -99,19 +99,21 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 							.executeScalarList(Long.class));
 
 						// Update the locked records returning list of message_id
-						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
-						List<String> updated = query(tx, LOCK, q -> q
-							.addTimestampParameter(unack_on)
-							.addLongListParameter(locked)
-							.executeScalarList(String.class));
+						if (!locked.isEmpty()) {
+							long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+							List<String> updated = query(tx, LOCK, q -> q
+								.addTimestampParameter(unack_on)
+								.addLongListParameter(locked)
+								.executeScalarList(String.class));
+
+							// Add if found
+							if (!updated.isEmpty()) {
+								foundIds.addAll(updated);
+							}
+						}
 
 						// Commit
 						tx.commit();
-
-						// Add if found
-						if (!updated.isEmpty()) {
-							foundIds.addAll(updated);
-						}
 
 						// We recheck this condition after each message to ensure
 						// foundIds not greater than requested count and within timeout window
