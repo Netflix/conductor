@@ -31,27 +31,27 @@ public interface PostgresConfiguration extends Configuration {
     String JDBC_PASSWORD_PROPERTY_NAME = "jdbc.password";
     String JDBC_PASSWORD_DEFAULT_VALUE = "password";
 
-	  // If the target database already contains conductor tables but have yet to be
-	  // versioned in flyway or migrations were manually applied, then the flyway.baseline.on.migrate
-		// and flyway.baseline.version properties can be set in order to migrate to the latest tables.
-	  // The flyway.enabled property should also be set to true. The flyway.baseline.on.migrate property
-		// should be set to true and the flyway.baseline.version property should be set to the migration
-		// version that the target database is already at. For example, if the V1 schema was manually applied,
-		// flyway.baseline.version should be set to 1. When conductor is started with flyway.enabled = true,
-	  // conductor will apply all migration versions *after* V1.
-	  String FLYWAY_BASELINE_PROPERTY_NAME = "flyway.baseline.on.migrate";
-	boolean FLYWAY_BASELINE_DEFAULT_VALUE = false;
+    // If the target database already contains conductor tables but have yet to be
+    // versioned in flyway or migrations were manually applied, then the flyway.baseline.on.migrate
+    // and flyway.baseline.version properties can be set in order to migrate to the latest tables.
+    // The flyway.enabled property should also be set to true. The flyway.baseline.on.migrate property
+    // should be set to true and the flyway.baseline.version property should be set to the migration
+    // version that the target database is already at. For example, if the V1 schema was manually applied,
+    // flyway.baseline.version should be set to 1. When conductor is started with flyway.enabled = true,
+    // conductor will apply all migration versions *after* V1.
+    String FLYWAY_BASELINE_PROPERTY_NAME = "flyway.baseline.on.migrate";
+    boolean FLYWAY_BASELINE_DEFAULT_VALUE = false;
 
-	  String FLYWAY_BASELINE_VERSION_PROPERTY_NAME = "flyway.baseline.version";
-	  int FLYWAY_BASELINE_VERSION_DEFAULT_VALUE = 0;
+    String FLYWAY_BASELINE_VERSION_PROPERTY_NAME = "flyway.baseline.version";
+    int FLYWAY_BASELINE_VERSION_DEFAULT_VALUE = 0;
 
     String FLYWAY_ENABLED_PROPERTY_NAME = "flyway.enabled";
     boolean FLYWAY_ENABLED_DEFAULT_VALUE = true;
 
     String FLYWAY_TABLE_PROPERTY_NAME = "flyway.table";
 
-	String FLYWAY_LOCATIONS_PROPERTY_NAME = "flyway.locations";
-	String FLYWAY_DEFAULT_LOCATION = "db/migration_conductor";
+    String FLYWAY_LOCATIONS_PROPERTY_NAME = "flyway.locations";
+    String FLYWAY_DEFAULT_LOCATION = "db/migration_conductor";
 
     // The defaults are currently in line with the HikariConfig defaults, which are unfortunately private.
     String CONNECTION_POOL_MAX_SIZE_PROPERTY_NAME = "conductor.postgres.connection.pool.size.max";
@@ -92,35 +92,34 @@ public interface PostgresConfiguration extends Configuration {
         return getBoolProperty(FLYWAY_ENABLED_PROPERTY_NAME, FLYWAY_ENABLED_DEFAULT_VALUE);
     }
 
-	default boolean isFlywayBaselineOnMigrate() {
-		return getBoolProperty(FLYWAY_BASELINE_PROPERTY_NAME, FLYWAY_BASELINE_DEFAULT_VALUE);
-	}
+    default boolean isFlywayBaselineOnMigrate() {
+        return getBoolProperty(FLYWAY_BASELINE_PROPERTY_NAME, FLYWAY_BASELINE_DEFAULT_VALUE);
+    }
 
     default Optional<String> getFlywayTable() {
         return Optional.ofNullable(getProperty(FLYWAY_TABLE_PROPERTY_NAME, null));
     }
 
-	default String[] getFlywayLocations() {
-		String locationProp = StringUtils.trimToNull(getProperty(FLYWAY_LOCATIONS_PROPERTY_NAME, FLYWAY_DEFAULT_LOCATION));
-		if (null == locationProp) {
-			return new String[] {};
-		}
+    default String[] getFlywayLocations() {
+        String locationProp = StringUtils.trimToNull(getProperty(FLYWAY_LOCATIONS_PROPERTY_NAME, FLYWAY_DEFAULT_LOCATION));
+        if (null == locationProp) {
+            return new String[] {};
+        }
 
-		if (locationProp.contains(",")) {
-			return Arrays.stream(StringUtils.split(locationProp, ","))
-						 .map(StringUtils::trimToNull)
-						 .filter(Objects::nonNull)
-						 .collect(Collectors.toList())
-						 .toArray(new String[] {});
+        if (locationProp.contains(",")) {
+            return Arrays.stream(StringUtils.split(locationProp, ","))
+                 .map(StringUtils::trimToNull)
+                 .filter(Objects::nonNull)
+                 .collect(Collectors.toList())
+                 .toArray(new String[] {});
+        }
 
-		}
+        return new String[] {locationProp};
+    }
 
-		return new String[] {locationProp};
-	}
-
-	  default int getFlywayBaselineVersion() {
-		    return getIntProperty(FLYWAY_BASELINE_VERSION_PROPERTY_NAME, FLYWAY_BASELINE_VERSION_DEFAULT_VALUE);
-	  }
+    default int getFlywayBaselineVersion() {
+        return getIntProperty(FLYWAY_BASELINE_VERSION_PROPERTY_NAME, FLYWAY_BASELINE_VERSION_DEFAULT_VALUE);
+    }
 
     default int getConnectionPoolMaxSize() {
         return getIntProperty(CONNECTION_POOL_MAX_SIZE_PROPERTY_NAME, CONNECTION_POOL_MAX_SIZE_DEFAULT_VALUE);
