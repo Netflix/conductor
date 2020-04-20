@@ -60,6 +60,8 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 	static final String MISSING_CLIENT_ID = "Missing producer client id";
 	@VisibleForTesting
 	static final String MISSING_PRODUCER_ACK = "Missing producer ACK information";
+	@VisibleForTesting
+	static final String MISSING_CLUSTER_TYPE = "Missing confluent cluster type. It can be one of the value {BATCH, TXN, TXN-HA}";
 
 
 	private ObjectMapper objectMapper;
@@ -148,6 +150,12 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 			markTaskAsFailed(task, MISSING_PRODUCER_ACK);
 			return;
 		}
+
+		if (input.getClusterType() == null) {
+			markTaskAsFailed(task, MISSING_CLUSTER_TYPE);
+			return;
+		}
+
 
 		if (Objects.isNull(input.getValue())) {
 			markTaskAsFailed(task, MISSING_KAFKA_VALUE);

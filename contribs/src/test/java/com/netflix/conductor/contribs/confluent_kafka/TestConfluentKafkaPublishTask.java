@@ -149,8 +149,11 @@ public class TestConfluentKafkaPublishTask {
 		input.setAcks("q");
 		confluentKafkaPublishTask.start(Mockito.mock(Workflow.class), task, Mockito.mock(WorkflowExecutor.class));
 		Assert.assertEquals(Task.Status.FAILED, task.getStatus());
+		Assert.assertTrue(task.getReasonForIncompletion().contains(MISSING_CLUSTER_TYPE));
+		input.setClusterType("TXN");
+		confluentKafkaPublishTask.start(Mockito.mock(Workflow.class), task, Mockito.mock(WorkflowExecutor.class));
+		Assert.assertEquals(Task.Status.FAILED, task.getStatus());
 		Assert.assertTrue(task.getReasonForIncompletion().contains(MISSING_KAFKA_VALUE));
-
 
 	}
 
@@ -175,6 +178,7 @@ public class TestConfluentKafkaPublishTask {
 		input.setClientId("rr");
 		input.setAcks("q");
 		input.setValue("ee");
+		input.setClusterType("TXN");
 
 		ConfluentKafkaProducerManager confluentKafkaProducerManager = Mockito.mock(ConfluentKafkaProducerManager.class);
 		ConfluentKafkaPublishTask confluentKafkaPublishTask = new ConfluentKafkaPublishTask(new SystemPropertiesConfiguration(), confluentKafkaProducerManager, objectMapper);
