@@ -94,11 +94,7 @@ public class ConfluentKafkaProducerManager {
 	ProducerConfig getProducerProperties(ConfluentKafkaPublishTask.Input input, String taskDefName) {
 
 		Map<String, Topic> topics = new HashMap<>();
-		Topic topic = new Topic();
-		topic.setName(String.valueOf(input.getTopic().get("name")));
-		topic.setFaultStrategy(Topic.FaultStrategy.valueOf(String.valueOf(input.getTopic().get("faultStrategy"))));
-		topic.setEnableEncryption(Boolean.valueOf(String.valueOf(input.getTopic().get("enableEncryption"))));
-		topic.setKeyId(String.valueOf(input.getTopic().get("keyId")));
+        Topic topic = getTopic(input);
 		topics.put(topic.getName(), topic);
 
 		CommonConfig.Cluster primaryCluster =  new CommonConfig.Cluster();
@@ -106,10 +102,8 @@ public class ConfluentKafkaProducerManager {
 		primaryCluster.setBootstrapServers(String.valueOf(input.getPrimaryCluster().get("bootStrapServers")));
 		primaryCluster.setAuthMechanism(AuthMechanism.valueOf(String.valueOf(input.getPrimaryCluster().get("authMechanism"))));
 		if (input.getClusterType().equals(ClusterType.BATCH.name()) || input.getClusterType().equals(ClusterType.TXN.name())) {
-			String userName = getTaskKey(taskDefName, input.getClusterType());
-			String password = getTaskSecret(taskDefName,input.getClusterType());
-			primaryCluster.setUsername(userName);
-			primaryCluster.setPassword(password);
+			primaryCluster.setUsername(getTaskKey(taskDefName, input.getClusterType()));
+			primaryCluster.setPassword(getTaskSecret(taskDefName,input.getClusterType()));
 		} else {
 			primaryCluster.setUsername(getTaskKey(taskDefName, ClusterType.TXN_HA_PRIMARY.name()));
 			primaryCluster.setPassword(getTaskSecret(taskDefName, ClusterType.TXN_HA_PRIMARY.name()));
@@ -121,7 +115,9 @@ public class ConfluentKafkaProducerManager {
 		}
 		ProducerAcks producerAcks = ProducerAcks.valueOf(input.getAcks());
 		int retries = Math.min(input.getRetries(), 3);
-		ProducerConfig producerConfig = ProducerConfig.builder().primary(primaryCluster).clientId(input.getClientId()).enableCompression(input.isEnableCompression()).acks(producerAcks).topics(topics).retries(retries).build();
+		ProducerConfig producerConfig = ProducerConfig.builder().primary(primaryCluster).
+				clientId(input.getClientId()).enableCompression(input.isEnableCompression()).
+				acks(producerAcks).topics(topics).retries(retries).build();
 		if (secondaryCluster != null) {
 			producerConfig.setSecondary(secondaryCluster);
 		}
@@ -129,7 +125,16 @@ public class ConfluentKafkaProducerManager {
 		return producerConfig;
 	}
 
-	String getTaskKey(String taskDefName, String clusterType) {
+	private Topic getTopic(ConfluentKafkaPublishTask.Input input) {
+		Topic topic = new Topic();
+		topic.setName(String.valueOf(input.getTopic().get("name")));
+		topic.setFaultStrategy(Topic.FaultStrategy.valueOf(String.valueOf(input.getTopic().get("faultStrategy"))));
+		topic.setEnableEncryption(Boolean.valueOf(String.valueOf(input.getTopic().get("enableEncryption"))));
+		topic.setKeyId(String.valueOf(input.getTopic().get("keyId")));
+		return topic;
+	}
+
+	private String getTaskKey(String taskDefName, String clusterType) {
 		String userName = configuration.getProperty( FLO_PREFIX +  "__" + taskDefName +  "__" + ClusterType.valueOf(clusterType).key , "");
 		if (userName != "") {
 			return userName;
@@ -139,7 +144,7 @@ public class ConfluentKafkaProducerManager {
 		return "";
 	}
 
-	String getTaskSecret(String taskDefName, String clusterType) {
+	private String getTaskSecret(String taskDefName, String clusterType) {
 		String password = configuration.getProperty(FLO_PREFIX +  "__" + taskDefName +  "__" + ClusterType.valueOf(clusterType).secret, "");
 		if (password != "") {
 			return password;
