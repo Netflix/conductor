@@ -19,23 +19,19 @@
 package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
-import com.netflix.conductor.contribs.http.HttpTask;
-import com.netflix.conductor.contribs.http.RestClientManager;
+import com.netflix.conductor.contribs.taskupdate.TaskUpdateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * @author Oleksiy Lysak
- *
  */
-public class HttpModule extends AbstractModule {
-	private static Logger logger = LoggerFactory.getLogger(HttpModule.class);
+public class TaskUpdateModule extends AbstractModule {
+	private static Logger logger = LoggerFactory.getLogger(TaskUpdateModule.class);
 
 	@Override
 	protected void configure() {
-		bind(RestClientManager.class).asEagerSingleton();
-		bind(HttpTask.class).asEagerSingleton();
-		logger.debug("Http Module configured ...");
+		bind(TaskUpdateHandler.class).asEagerSingleton();
+		logger.debug("TaskUpdateHandler Module configured ...");
 	}
 }

@@ -16,26 +16,28 @@
 /**
  *
  */
-package com.netflix.conductor.contribs;
+package com.netflix.conductor.dao;
 
-import com.google.inject.AbstractModule;
-import com.netflix.conductor.contribs.http.HttpTask;
-import com.netflix.conductor.contribs.http.RestClientManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.netflix.conductor.common.run.ErrorLookup;
 
+import java.util.List;
+import java.util.Map;
 
 /**
- * @author Oleksiy Lysak
- *
+ * @author Pradeep Palat
  */
-public class HttpModule extends AbstractModule {
-	private static Logger logger = LoggerFactory.getLogger(HttpModule.class);
+public interface ErrorLookupDAO{
 
-	@Override
-	protected void configure() {
-		bind(RestClientManager.class).asEagerSingleton();
-		bind(HttpTask.class).asEagerSingleton();
-		logger.debug("Http Module configured ...");
-	}
+	List<ErrorLookup> getErrors();
+
+	boolean addError(ErrorLookup errorLookup);
+
+	boolean updateError(ErrorLookup errorLookup);
+
+	List<ErrorLookup> getErrorMatching(String errorString);
+
+	List<ErrorLookup> getErrorMatching(String workflow, String errorString);
+
+	List<ErrorLookup> getErrorByCode(String errorCode);
+
 }

@@ -99,7 +99,9 @@ public class WorkflowTask {
 	private SubWorkflowParams subWorkflow;
 	
 	private List<String> joinOn = new LinkedList<>();
-	
+
+	private List<String> joinOnConditions = new LinkedList<>();
+
 	private String sink;
 	
 	private Boolean optional;
@@ -341,6 +343,20 @@ public class WorkflowTask {
 	 */
 	public void setJoinOn(List<String> joinOn) {
 		this.joinOn = joinOn;
+	}
+
+	/**
+	 * @return the joinOnCondition list
+	 */
+	public List<String> getJoinOnConditions() {
+		return joinOnConditions;
+	}
+
+	/**
+	 * @param joinOnConditions list
+	 */
+	public void setJoinOnConditions(List<String> joinOnConditions) {
+		this.joinOnConditions = joinOnConditions;
 	}
 
 	/**

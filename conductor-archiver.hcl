@@ -74,8 +74,8 @@ job "conductor-archiver" {
       }
 
       resources {
-        cpu    = 512  # MHz
-        memory = 2048 # MB
+        cpu    = 128  # MHz
+        memory = 1024 # MB
 
         network {
           mbits = 4

@@ -40,6 +40,8 @@ public interface MetricsDAO {
 
 	Map<String, Object> getTaskCounters();
 
+	Map<String, Object> getTaskRefNameCounters();
+
 	Map<String, Object> getTaskAverage();
 
 	Map<String, Object> getWorkflowCounters();

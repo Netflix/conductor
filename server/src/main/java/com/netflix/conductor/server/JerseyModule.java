@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,85 +34,82 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 
+ *
  * @author Viren
  *
  */
 public final class JerseyModule extends JerseyServletModule {
-	
-    @Override
-    protected void configureServlets() {
-   
 
-    	filter("/*").through(apiOriginFilter());
-        
-        Map<String, String> jerseyParams = new HashMap<>();	
+	@Override
+	protected void configureServlets() {
+		filter("/*").through(apiOriginFilter());
+
+		Map<String, String> jerseyParams = new HashMap<>();
 		jerseyParams.put("com.sun.jersey.config.feature.FilterForwardOn404", "true");
 		jerseyParams.put("com.sun.jersey.config.property.WebPageContentRegex", "/(((webjars|api-docs|swagger-ui/docs|manage)/.*)|(favicon\\.ico))");
 		jerseyParams.put(PackagesResourceConfig.PROPERTY_PACKAGES, "com.netflix.conductor.server.resources;io.swagger.jaxrs.json;io.swagger.jaxrs.listing");
 		jerseyParams.put(ResourceConfig.FEATURE_DISABLE_WADL, "false");
 		serve("/api/*").with(GuiceContainer.class, jerseyParams);
-    }
-    
-    @Provides 
+	}
+
+	@Provides
 	@Singleton
 	public ObjectMapper objectMapper() {
-	    final ObjectMapper om = new ObjectMapper();
-        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        om.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-        om.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-        om.setSerializationInclusion(Include.NON_NULL);
-        om.setSerializationInclusion(Include.NON_EMPTY);
-	    return om;
+		final ObjectMapper om = new ObjectMapper();
+		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		om.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
+		om.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+		om.setSerializationInclusion(Include.NON_NULL);
+		om.setSerializationInclusion(Include.NON_EMPTY);
+		return om;
 	}
-	
-    
-    
-	@Provides 
+
+	@Provides
 	@Singleton
 	JacksonJsonProvider jacksonJsonProvider(ObjectMapper mapper) {
-	    return new JacksonJsonProvider(mapper);
+		return new JacksonJsonProvider(mapper);
 	}
-	
+
 	@Provides
-    @Singleton
-    public Filter apiOriginFilter() {
-        return new Filter(){
+	@Singleton
+	public Filter apiOriginFilter() {
+		return new Filter() {
 
 			@Override
-			public void init(FilterConfig filterConfig) throws ServletException {}
+			public void init(FilterConfig filterConfig) throws ServletException {
+			}
 
 			@Override
 			public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		        HttpServletResponse res = (HttpServletResponse) response;
-		        if (!res.containsHeader("Access-Control-Allow-Origin")) {
-		            res.setHeader("Access-Control-Allow-Origin", "*");
-		        }
-		        res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
-		        res.addHeader("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization");
+				HttpServletResponse res = (HttpServletResponse) response;
+				if (!res.containsHeader("Access-Control-Allow-Origin")) {
+					res.setHeader("Access-Control-Allow-Origin", "*");
+				}
+				res.addHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+				res.addHeader("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization");
 
-		        HttpServletRequest req = (HttpServletRequest) request;
-		        String requestURI = req.getRequestURI();
-		        if (requestURI.startsWith("/v1")) {
-		            request.getRequestDispatcher("/api" + requestURI).forward(request,response);
-		        } else {
-		            chain.doFilter(request, response);
-		        }
-		    }
+				HttpServletRequest req = (HttpServletRequest) request;
+				String requestURI = req.getRequestURI();
+				if (requestURI.startsWith("/v1")) {
+					request.getRequestDispatcher("/api" + requestURI).forward(request, response);
+				} else {
+					chain.doFilter(request, response);
+				}
+			}
+
 			@Override
-			public void destroy() {}
-        	
-        };
-    }
-    @Override
-    public boolean equals(Object obj) {
-        return obj != null && getClass().equals(obj.getClass());
-    }
+			public void destroy() {
+			}
+		};
+	}
 
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
-    
-    
+	@Override
+	public boolean equals(Object obj) {
+		return obj != null && getClass().equals(obj.getClass());
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode();
+	}
 }

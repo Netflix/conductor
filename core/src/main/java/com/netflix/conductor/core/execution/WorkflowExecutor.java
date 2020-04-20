@@ -134,11 +134,8 @@ public class WorkflowExecutor {
 		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null, null, null, false);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, null, null, null, false);
-	}
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser, String traceId) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser, traceId, false);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean asyncStart) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser, traceId, asyncStart);
 	}
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
 		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null, null, null, false);
@@ -160,6 +157,12 @@ public class WorkflowExecutor {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
+		} else {
+			// Make sure there is no workflow with given id
+			Workflow wf = edao.getWorkflow(workflowId, false);
+			if (wf != null) {
+				throw new ApplicationException(Code.NOT_FOUND, "Workflow already exists for given id " + workflowId);
+			}
 		}
 
 		try {
@@ -745,6 +748,7 @@ public class WorkflowExecutor {
 			input.put("clientId", workflow.getClientId());
 			input.put("cancelledBy", workflow.getCancelledBy());
 			input.put("correlationId", workflow.getCorrelationId());
+			input.put("reason", reason);
 
 
 			try {
@@ -913,6 +917,7 @@ public class WorkflowExecutor {
 				input.put("workflowId", workflow.getWorkflowId());
 				input.put("workflowType", workflow.getWorkflowType());
 				input.put("correlationId", workflow.getCorrelationId());
+				input.put("reason", reason);
 				input.put("workflowInput", workflow.getInput());
 				input.put("workflowVersion", workflow.getVersion());
 				input.put("contextUser", workflow.getContextUser());
@@ -1062,14 +1067,6 @@ public class WorkflowExecutor {
 					task.setEndTime(System.currentTimeMillis());
 				}
 			}
-		}
-		Task task2 = edao.getTask(result.getTaskId());
-		if (task2.getStatus().isTerminal()) {
-			// Task was already updated....
-			queue.remove(QueueUtils.getQueueName(task2), result.getTaskId());
-			String msg = "Task is already terminal as " + task2.getStatus() + "@" + task2.getEndTime() + ", workflow status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId() + ",taskId=" + task2.getTaskId()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser()+ ",clientId=" + wf.getClientId();
-			logger.debug(msg);
-			return;
 		}
 
 		if (result.isResetStartTime()) {
@@ -1224,7 +1221,7 @@ public class WorkflowExecutor {
 			boolean stateChanged = false;
 
 			workflow.getTasks().addAll(tasksToBeScheduled);
-			for(Task task : tasksToBeScheduled) {
+			for (Task task : tasksToBeScheduled) {
 				if (SystemTaskType.is(task.getTaskType()) && !task.getStatus().isTerminal()) {
 					WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
 					if (!stt.isAsync() && stt.execute(workflow, task, this)) {
@@ -1365,6 +1362,10 @@ public class WorkflowExecutor {
 	public void addTaskToQueue(Task task) throws Exception {
 		// put in queue
 		queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+		pushTaskToQueue(task);
+	}
+
+	public void pushTaskToQueue(Task task) throws Exception {
 		if (task.getCallbackAfterSeconds() > 0) {
 			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), task.getCallbackAfterSeconds());
 		} else {
@@ -1396,7 +1397,7 @@ public class WorkflowExecutor {
 				return;
 			}
 
-			if(task.getStatus().isTerminal()) {
+			if (task.getStatus().isTerminal()) {
 				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
 				logger.debug("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
@@ -1406,14 +1407,9 @@ public class WorkflowExecutor {
 			String workflowId = task.getWorkflowInstanceId();
 			Workflow workflow = edao.getWorkflow(workflowId, true);
 
-			if (task.getStartTime() == 0) {
-				task.setStartTime(System.currentTimeMillis());
-				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
-			}
-
-			if(workflow.getStatus().isTerminal()) {
+			if (workflow.getStatus().isTerminal()) {
 				logger.debug("Workflow {} has been completed for {}/{}", workflow.getWorkflowId(), systemTask.getName(), task.getTaskId());
-				if(!task.getStatus().isTerminal()) {
+				if (!task.getStatus().isTerminal()) {
 					task.setStatus(Status.CANCELED);
 				}
 				edao.updateTask(task);
@@ -1422,9 +1418,9 @@ public class WorkflowExecutor {
 				return;
 			}
 
-			if(task.getStatus().equals(Status.SCHEDULED)) {
+			if (task.getStatus().equals(Status.SCHEDULED)) {
 
-				if(edao.exceedsInProgressLimit(task)) {
+				if (edao.exceedsInProgressLimit(task)) {
 					logger.debug("Concurrent Execution limited for {}:{}", taskId, task.getTaskDefName());
 					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
 					return;
@@ -1439,7 +1435,7 @@ public class WorkflowExecutor {
 
 			// Workaround when workflow id disappears from the queue
 			boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
-			if (!exists)  {
+			if (!exists) {
 				// If not exists then need place back
 				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
 			}
@@ -1449,6 +1445,11 @@ public class WorkflowExecutor {
 				workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+			task.setStarted(true);
+			if (task.getStartTime() == 0) {
+				task.setStartTime(System.currentTimeMillis());
+				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
+			}
 			task.setPollCount(task.getPollCount() + 1);
 			edao.updateTask(task);
 
@@ -1461,7 +1462,7 @@ public class WorkflowExecutor {
 					} catch (Exception ex) {
 						task.setStatus(Status.FAILED);
 						task.setReasonForIncompletion(ex.getMessage());
-						logger.debug("Task {}/{} failed with Exception {}.", task.getTaskType(), task.getTaskId(),ex.getMessage());
+						logger.debug("Task {}/{} failed with Exception {}.", task.getTaskType(), task.getTaskId(), ex.getMessage());
 					}
 					break;
 
@@ -1472,14 +1473,14 @@ public class WorkflowExecutor {
 					break;
 			}
 
-			if(!task.getStatus().isTerminal()) {
+			if (!task.getStatus().isTerminal()) {
 				task.setCallbackAfterSeconds(callbackSeconds);
 			}
 
 			updateTask(new TaskResult(task));
 			logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
 				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(), workflow.getCorrelationId(),
-				workflow.getTraceId(), workflow.getContextUser(),workflow.getClientId());
+				workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 		} catch (Exception e) {
 			logger.debug("ExecuteSystemTask failed with " + e.getMessage() + " for task id=" + taskId + ", system task=" + systemTask, e);
@@ -1561,28 +1562,86 @@ public class WorkflowExecutor {
 		List<Task> created = edao.createTasks(tasks);
 		List<Task> createdSystemTasks = created.stream().filter(task -> SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
 		List<Task> toBeQueued = created.stream().filter(task -> !SystemTaskType.is(task.getTaskType())).collect(Collectors.toList());
-		boolean startedSystemTasks = false;
-		for(Task task : createdSystemTasks) {
 
+		// Tasks had to be started at previous scheduleTask call
+		List<Task> stuckSystemTasks = tasks.stream().filter(task -> SystemTaskType.is(task.getTaskType())
+			&& !created.contains(task)
+			&& task.isStarted() != null // The legacy tasks which did not have started attribute
+			&& !task.isStarted()
+		).collect(Collectors.toList());
+		boolean startedSystemTasks = false;
+
+		// We need start those stuck tasks first
+		for (Task task : stuckSystemTasks) {
+			String lockQueue = QueueUtils.getQueueName(task) + ".lock";
 			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
-			if(stt == null) {
+			if (stt == null) {
 				throw new RuntimeException("No system task found by name " + task.getTaskType());
 			}
-			task.setStartTime(System.currentTimeMillis());
-			if(!stt.isAsync()) {
-				taskStatusListener.onTaskStarted(task);
-				stt.start(workflow, task, this);
-				startedSystemTasks = true;
-				edao.updateTask(task);
-				if (task.getStatus().isTerminal()) {
-					taskStatusListener.onTaskFinished(task);
+
+			// This prevents another containers executing the same action
+			// true means this session added the record to lock queue and can start the task
+			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600); // 10 minutes
+
+			// This session couldn't lock the task (cluster pooling)
+			if (!locked) {
+				logger.debug("skipping processing of stuck task " + task +
+					".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
+					",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
+				continue;
+			}
+
+			try {
+				if (stt.isAsync()) {
+					// Async task id exists in task queue - not the stuck task
+					boolean exists = queue.exists(QueueUtils.getQueueName(task), task.getTaskId());
+					if (!exists) {
+						logger.debug("queueing stuck task " + task +
+							".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
+							",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
+						pushTaskToQueue(task);
+					}
+				} else {
+					logger.debug("starting stuck task " + task +
+						".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
+						",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
+
+					startTask(stt, workflow, task);
+					startedSystemTasks = true;
 				}
+			} finally {
+				queue.remove(lockQueue, task.getTaskId());
+			}
+		}
+
+		// Start the rest of the tasks
+		for (Task task : createdSystemTasks) {
+			WorkflowSystemTask stt = WorkflowSystemTask.get(task.getTaskType());
+			if (stt == null) {
+				throw new RuntimeException("No system task found by name " + task.getTaskType());
+			}
+			if (!stt.isAsync()) {
+				startTask(stt, workflow, task);
+				startedSystemTasks = true;
 			} else {
 				toBeQueued.add(task);
 			}
 		}
 		addTaskToQueue(toBeQueued);
 		return startedSystemTasks;
+	}
+
+	private void startTask(WorkflowSystemTask stt, Workflow workflow, Task task) throws Exception {
+		if (task.getStartTime() == 0) {
+			task.setStartTime(System.currentTimeMillis());
+		}
+		taskStatusListener.onTaskStarted(task);
+		stt.start(workflow, task, this);
+		task.setStarted(true);
+		edao.updateTask(task);
+		if (task.getStatus().isTerminal()) {
+			taskStatusListener.onTaskFinished(task);
+		}
 	}
 
 	private void addTaskToQueue(final List<Task> tasks) throws Exception {
@@ -1750,12 +1809,8 @@ public class WorkflowExecutor {
 	}
 
 	public void resetStartTime(String workflowId, String taskRefName) {
-		Workflow workflow = edao.getWorkflow(workflowId, true);
-		Task task = workflow.getTasks().stream()
-				.filter(t -> t.getReferenceTaskName().equalsIgnoreCase(taskRefName))
-				.filter(t -> t.getStatus().equals(Status.IN_PROGRESS))
-				.findFirst().orElse(null);
-		if (task != null) {
+		Task task = edao.getTask(workflowId, taskRefName);
+		if (task != null && task.getStatus() == Status.IN_PROGRESS) {
 			task.setStartTime(System.currentTimeMillis());
 			// We must reset endtime only when it is set
 			if (task.getEndTime() > 0) {

@@ -78,8 +78,11 @@ public class HttpTask extends GenericHttpTask {
 			if (null == hostAndPort) {
 				final String msg = "Service discovery failed for: " + input.getServiceDiscoveryQuery()
 						+ " . No records found.";
-				logger.error(msg);
-				throw new Exception(msg);
+			        logger.error(msg);
+				task.setStatus(Status.FAILED);
+				task.setReasonForIncompletion(msg);
+				task.getOutputData().put("response",msg);
+				return;
 			}
 		}
 

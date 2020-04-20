@@ -11,12 +11,12 @@ import org.apache.commons.collections.CollectionUtils;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
@@ -27,6 +27,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Inject
 	public AuroraQueueDAO(DataSource dataSource, ObjectMapper mapper) {
 		super(dataSource, mapper);
+		loadQueues();
 
 		Executors.newSingleThreadScheduledExecutor()
 			.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
@@ -65,9 +66,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
 		createQueueIfNotExists(queueName);
-		final String QUERY = "SELECT * FROM queue_message " +
+		final String QUERY_LOCK = "SELECT id, version, message_id FROM queue_message " +
 			"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
-			"ORDER BY deliver_on, version, id LIMIT ?";
+			"ORDER BY deliver_on, version, id LIMIT ? FOR UPDATE SKIP LOCKED";
 
 		final String UPDATE = "UPDATE queue_message " +
 			"SET popped = true, unack_on = ?, version = version + 1 " +
@@ -75,34 +76,43 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		try (Connection tx = dataSource.getConnection()) {
 			tx.setAutoCommit(false);
-
 			long start = System.currentTimeMillis();
+
 			Set<String> foundIds = new HashSet<>();
+			try {
 
-			while (foundIds.size() < count && ((System.currentTimeMillis() - start) < timeout)) {
+				// Returns true until foundIds = count or time spent = timeout
+				Supplier<Boolean> keepPooling = () -> foundIds.size() < count
+					&& ((System.currentTimeMillis() - start) < timeout);
 
-				// Get the list of popped message ids
-				List<QueueMessage> messages = query(tx, QUERY, q -> q
-					.addParameter(queueName.toLowerCase())
-					.addParameter(count)
-					.executeAndFetch(rs -> {
-						List<QueueMessage> popped = new LinkedList<>();
-						while (rs.next()) {
-							QueueMessage m = new QueueMessage();
-							m.id = rs.getLong("id");
-							m.version = rs.getLong("version");
-							m.message_id = rs.getString("message_id");
+				// Repeat until foundIds = count or time spent = timeout
+				while (keepPooling.get()) {
 
-							popped.add(m);
-						}
-						return popped;
-					}));
+					// Limit how many left to pick up
+					int limit = count - foundIds.size();
 
-				// Mark them as popped issuing commit after each of them
-				messages.forEach(m -> {
-					long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+					// Get the list of popped message ids
+					List<QueueMessage> messages = query(tx, QUERY_LOCK, q -> q
+						.addParameter(queueName.toLowerCase())
+						.addParameter(limit)
+						.executeAndFetch(rs -> {
+							List<QueueMessage> popped = new ArrayList<>(limit);
+							while (rs.next()) {
+								QueueMessage m = new QueueMessage();
+								m.id = rs.getLong("id");
+								m.version = rs.getLong("version");
+								m.message_id = rs.getString("message_id");
 
-					try {
+								popped.add(m);
+							}
+							return popped;
+						}));
+
+					// Mark them as popped issuing commit at the end of the batch as this batch already hidden by PG
+					for (QueueMessage m : messages) {
+
+						// Continue to lock the record
+						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
 						int updated = query(tx, UPDATE, u -> u
 							.addTimestampParameter(unack_on)
 							.addParameter(m.id)
@@ -114,21 +124,25 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 							foundIds.add(m.message_id);
 						}
 
-						tx.commit();
-					} catch (Throwable th) {
-						logger.error("pop: lock failed for {} with {}", queueName, th.getMessage(), th);
-						try {
-							tx.rollback();
-						} catch (SQLException ex) {
-							logger.error("pop: rollback failed for {} with {}", queueName, ex.getMessage(), ex);
+						// Shall we stop pooling?
+						// We recheck this condition after each message to ensure
+						// foundIds not greater than requested count and within timeout window
+						if (!keepPooling.get()) {
+							tx.commit();
+							return Lists.newArrayList(foundIds);
 						}
 					}
-				});
 
-				Thread.sleep(10);
+					// Commit and wait a little bit
+					tx.commit();
+					Thread.sleep(10);
+				}
+
+				tx.commit();
+			} catch (Exception e) {
+				tx.rollback();
 			}
 
-			tx.commit();
 			return Lists.newArrayList(foundIds);
 		} catch (Exception ex) {
 			logger.error("pop: failed for {} with {}", queueName, ex.getMessage(), ex);
@@ -323,13 +337,19 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeDelete());
 	}
 
+	private void loadQueues() {
+		final String SQL = "SELECT queue_name FROM queue"; // In the db, they always lower case
+		List<String> names = queryWithTransaction(SQL, q -> q.executeScalarList(String.class));
+		queues.addAll(names);
+	}
+
 	private void createQueueIfNotExists(String queueName) {
-		if (queues.contains(queueName)) {
+		if (queues.contains(queueName.toLowerCase())) {
 			return;
 		}
 		final String SQL = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT ON CONSTRAINT queue_name DO NOTHING";
 		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).executeUpdate());
-		queues.add(queueName);
+		queues.add(queueName.toLowerCase());
 	}
 
 	private void processAllUnacks() {

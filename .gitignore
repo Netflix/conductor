@@ -18,3 +18,7 @@ deploy.nomad
 bin
 .vscode
 terraform/.terraform
+dkill.sh
+drebuild.sh
+dstart.sh
+.gitignore

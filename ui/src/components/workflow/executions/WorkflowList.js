@@ -7,13 +7,15 @@ import { searchWorkflows, getWorkflowDefs } from '../../../actions/WorkflowActio
 import WorkflowAction  from './WorkflowAction';
 import Typeahead from 'react-bootstrap-typeahead';
 import Select from 'react-select';
+import moment from 'moment';
 const ILLEGAL_SEARCH_CHARACTERS = /#|"|%|&|\\/;
 const Workflow = React.createClass({
 
   getInitialState() {
    this.state = {
               datefrm: new Date(),
-              dateto:new Date()
+              dateto:new Date(),
+              csv:'false'
           };
     let h = this.props.location.query.h;
     let range = this.props.location.query.range;
@@ -114,11 +116,34 @@ const Workflow = React.createClass({
 
     this.refreshResults();
   },
-  searchBtnClick() {
-    this.state.update = true;
-    this.refreshResults();
-  },
-  refreshResults() {
+
+   async  exportcsv() {
+      this.state.update = true;
+      this.state.csv = 'true';
+      let search = '';
+        if(this.state.search != '') {
+          search = this.state.search;
+        }
+        let query = [];
+
+        if(this.state.workflowTypes.length > 0) {
+          query.push('workflowType IN (' + this.state.workflowTypes.join(',') + ') ');
+        }
+        if(this.state.status.length > 0) {
+          query.push('status IN (' + this.state.status.join(',') + ') ');
+        }
+       this.props.dispatch(searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start, this.state.range,this.state.datefrm,this.state.dateto,this.state.csv))
+       .then(() => {
+        this.table.handleExportCSV()
+        this.state.csv = ''
+       })
+    },
+
+    searchBtnClick() {
+        this.state.update = true;
+        this.refreshResults();
+      },
+    refreshResults() {
     if(this.state.update) {
       this.state.update = false;
       this.urlUpdate();
@@ -135,7 +160,8 @@ const Workflow = React.createClass({
     let range = this.state.range;
     let frmdate = this.state.datefrm;
     let todate = this.state.dateto;
-    this.props.history.pushState(null, "/workflow?q=" + q + "&h=" + h + "&workflowTypes=" + workflowTypes + "&status=" + status + "&start=" + start + "&range=" + range+"&frmdate="+frmdate+"todate="+todate);
+    let csv = this.state.csv;
+    this.props.history.pushState(null, "/workflow?q=" + q + "&h=" + h + "&workflowTypes=" + workflowTypes + "&status=" + status + "&start=" + start + "&range=" + range+"&frmdate="+frmdate+"&todate="+todate+"&csv="+csv);
   },
   doDispatch() {
 
@@ -151,7 +177,8 @@ const Workflow = React.createClass({
     if(this.state.status.length > 0) {
       query.push('status IN (' + this.state.status.join(',') + ') ');
     }
-    this.props.dispatch(searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start, this.state.range,this.state.datefrm,this.state.dateto));
+   this.props.dispatch(searchWorkflows(query.join(' AND '), search, this.state.h, this.state.fullstr, this.state.start, this.state.range,this.state.datefrm,this.state.dateto,this.state.csv))
+
   },
   workflowTypeChange(workflowTypes) {
     this.state.update = true;
@@ -234,6 +261,7 @@ dateChangeFrom(e){
   },
  render() {
     let wfs = [];
+    let dateTime = moment().format(moment.HTML5_FMT.DATETIME_LOCAL_SECONDS);
     let totalHits = 0;
     let found = 0;
     if(this.props.data.hits) {
@@ -241,6 +269,32 @@ dateChangeFrom(e){
       totalHits = this.props.data.totalHits;
       found = wfs.length;
     }
+      var jobId;
+      var orderId;
+      for ( var index = 0; index < wfs.length; index++) {
+             var res = String(wfs[index].correlationId);
+             var replaced=res.replace(/\"/g, "");
+             wfs[index].correlationId = replaced;
+             var jobidUrn = replaced.split(",").find(function(v){
+               return v.indexOf("jobid") > -1;
+             });
+              if(typeof jobidUrn != "undefined")
+              {
+                  jobId=jobidUrn.split(":");
+                  wfs[index].jobId=jobId[jobId.length - 1];
+              }
+
+               var orderidUrn = replaced.split(",").find(function(v){
+                        return v.indexOf("orderid") > -1;
+                 });
+
+                 if(typeof orderidUrn != "undefined")
+                  {
+                    orderId=orderidUrn.split(":");
+                    wfs[index].orderId=orderId[orderId.length - 1];
+                  }
+        }
+
     let start = parseInt(this.state.start);
     let max = start + 100;
     if(found < 100) {
@@ -256,6 +310,7 @@ dateChangeFrom(e){
     function linkMaker(cell, row) {
       return <Link to={`/workflow/id/${cell}`}>{cell}</Link>;
     };
+
     function zeroPad(num) {
       return ('0' + num).slice(-2);
     }
@@ -304,26 +359,25 @@ dateChangeFrom(e){
                 <Typeahead ref="range" onChange={this.rangeChange} options={rangeList} placeholder="Today by default" selected={this.state.range} multiple={true} disabled={this.state.h}/>
                 &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Filter by date range</label>
               </Col>
-              <Col md={3}>
+              <Col md={4}>
                 <Input type="input" placeholder="Search" groupClassName="" ref="search" value={this.state.search} labelClassName="" onKeyPress={this.keyPress} onChange={this.searchChange}/>
                 &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Free Text Query</label>
                 &nbsp;&nbsp;<input type="checkbox" checked={this.state.fullstr} onChange={this.prefChange} ref="fullstr"/><label className="small nobold">&nbsp;Search for entire string</label>
                 </Col>
-              <Col md={3}>
+              <Col md={5}>
                 <Typeahead ref="workflowTypes" onChange={this.workflowTypeChange} options={workflowNames} placeholder="Filter by workflow type" multiple={true} selected={this.state.workflowTypes}/>
                 &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Filter by Workflow Type</label>
               </Col>
-              <Col md={2}>
-                <Typeahead ref="status" onChange={this.statusChange} options={statusList} placeholder="Filter by status" selected={this.state.status} multiple={true}/>
-                &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Filter by Workflow Status</label>
-              </Col>
-              <Col md={2}>
-                <Input className="number-input" type="text" ref="h" groupClassName="inline" labelClassName="" label="" value={this.state.h} onChange={this.hourChange}/>
-                &nbsp;&nbsp;&nbsp;<Button bsSize="small" bsStyle="success" onClick={this.searchBtnClick} className="fa fa-search search-label">&nbsp;&nbsp;Search</Button>
-                <br/>&nbsp;&nbsp;&nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Created (in past hours)</label>
-              </Col>
             </Row>
              <Row className="show-grid">
+               <Col md={2}>
+                             <Typeahead ref="status" onChange={this.statusChange} options={statusList} placeholder="Filter by status" selected={this.state.status} multiple={true}/>
+                             &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Filter by Workflow Status</label>
+               </Col>
+                <Col md={2}>
+                             <Input className="number-input" type="text" ref="h" groupClassName="inline" labelClassName="" label="" value={this.state.h} onChange={this.hourChange}/>
+                             <br/>&nbsp;&nbsp;&nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Created (in past hours)</label>
+               </Col>
                <Col md={2}>
                   <input  name="datefrm"  type="date" value={this.state.datefrm} className="form-control"  onChange={ this.dateChangeFrom } />
                    &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">From Date</label>
@@ -333,8 +387,10 @@ dateChangeFrom(e){
                        &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">To Date</label>
 
                   </Col>
-                    <Col md={2}>
-                         <Button bsSize="small" bsStyle="success" onClick={this.clearBtnClick}>&nbsp;&nbsp;Clear date range</Button>
+                    <Col md={3}>
+                         <Button bsSize="small" bsStyle="success" onClick={this.clearBtnClick}>&nbsp;&nbsp;Clear date range</Button> &nbsp;&nbsp;
+                          <Button bsSize="small" bsStyle="success" onClick={this.exportcsv}>Export Report</Button>&nbsp;&nbsp;
+                          <Button bsSize="medium" bsStyle="success" onClick={this.searchBtnClick} className="fa fa-search search-label">&nbsp;&nbsp;Search</Button>
                      </Col>
              </Row>
           </Grid>
@@ -348,7 +404,8 @@ dateChangeFrom(e){
           {parseInt(this.state.start) >= 100?<a onClick={this.prevPage}><i className="fa fa-backward"></i>&nbsp;Previous Page</a>:''}
           {parseInt(this.state.start) + 100 <= totalHits?<a onClick={this.nextPage}>&nbsp;&nbsp;Next Page&nbsp;<i className="fa fa-forward"></i></a>:''}
         </span>
-        <BootstrapTable data={wfs} striped={true} hover={true} search={false} exportCSV={false} pagination={false} options={{sizePerPage:100}}>
+
+        <BootstrapTable ref={node => this.table = node} data={wfs} striped={true} hover={true} search={false} csvFileName={"conductorReport_"+dateTime+".csv"}  pagination={false} options={{sizePerPage:100}}>
           <TableHeaderColumn dataField="workflowType" isKey={true} dataAlign="left" dataSort={true}>Workflow</TableHeaderColumn>
           <TableHeaderColumn dataField="workflowId" dataSort={true} dataFormat={linkMaker}>Workflow ID</TableHeaderColumn>
           <TableHeaderColumn dataField="status" dataSort={true}>Status</TableHeaderColumn>
@@ -356,8 +413,10 @@ dateChangeFrom(e){
           <TableHeaderColumn dataField="updateTime" dataSort={true} dataFormat={formatDate}>Last Updated</TableHeaderColumn>
           <TableHeaderColumn dataField="endTime" hidden={false} dataFormat={formatDate}>End Time</TableHeaderColumn>
           <TableHeaderColumn dataField="reasonForIncompletion" hidden={false}>Failure Reason</TableHeaderColumn>
-          <TableHeaderColumn dataField="input" width="300">Input</TableHeaderColumn>
-          <TableHeaderColumn dataField="workflowId" width="300" dataFormat={miniDetails}>&nbsp;</TableHeaderColumn>
+          <TableHeaderColumn dataField="input" width="300"  hidden={true}>Input</TableHeaderColumn>
+          <TableHeaderColumn dataField="workflowId" width="300" dataFormat={miniDetails} hidden={true}>&nbsp;</TableHeaderColumn>
+          <TableHeaderColumn dataField="jobId">jobId</TableHeaderColumn>
+          <TableHeaderColumn dataField="orderId">orderId</TableHeaderColumn>
         </BootstrapTable>
 
         <br/><br/>

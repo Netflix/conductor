@@ -159,6 +159,14 @@ public class InfoResource {
 	}
 
 	@GET
+	@Path("/metrics/task/refName/counters")
+	@ApiOperation(value = "Get the task counter metrics by RefName")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, Object> taskRefNameCounters() {
+		return new TreeMap<>(metricsDAO.getTaskRefNameCounters());
+	}
+
+	@GET
 	@Path("/metrics/task/average")
 	@ApiOperation(value = "Get the task average metrics")
 	@Produces(MediaType.APPLICATION_JSON)
