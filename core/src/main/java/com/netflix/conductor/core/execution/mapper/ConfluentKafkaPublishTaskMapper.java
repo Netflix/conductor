@@ -36,7 +36,7 @@ public class ConfluentKafkaPublishTaskMapper implements TaskMapper  {
 	@Override
 	public List<Task> getMappedTasks(TaskMapperContext taskMapperContext) throws TerminateWorkflowException {
 
-		logger.debug("TaskMapperContext {} in KafkaPublishTaskMapper", taskMapperContext);
+		logger.debug("TaskMapperContext {} in ConfluentKafkaPublishTaskMapper", taskMapperContext);
 
 		WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
 		Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
@@ -49,27 +49,27 @@ public class ConfluentKafkaPublishTaskMapper implements TaskMapper  {
 
 		Map<String, Object> input = parametersUtils.getTaskInputV2(taskToSchedule.getInputParameters(), workflowInstance, taskId, taskDefinition);
 
-		Task kafkaPublishTask = new Task();
-		kafkaPublishTask.setTaskType(taskToSchedule.getType());
-		kafkaPublishTask.setTaskDefName(taskToSchedule.getName());
-		kafkaPublishTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
-		kafkaPublishTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
-		kafkaPublishTask.setWorkflowType(workflowInstance.getWorkflowName());
-		kafkaPublishTask.setCorrelationId(workflowInstance.getCorrelationId());
-		kafkaPublishTask.setScheduledTime(System.currentTimeMillis());
-		kafkaPublishTask.setTaskId(taskId);
-		kafkaPublishTask.setInputData(input);
-		kafkaPublishTask.setStatus(Task.Status.SCHEDULED);
-		kafkaPublishTask.setRetryCount(retryCount);
-		kafkaPublishTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
-		kafkaPublishTask.setWorkflowTask(taskToSchedule);
-		kafkaPublishTask.setWorkflowPriority(workflowInstance.getPriority());
+		Task confluentKafkaPublishTask = new Task();
+		confluentKafkaPublishTask.setTaskType(taskToSchedule.getType());
+		confluentKafkaPublishTask.setTaskDefName(taskToSchedule.getName());
+		confluentKafkaPublishTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
+		confluentKafkaPublishTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
+		confluentKafkaPublishTask.setWorkflowType(workflowInstance.getWorkflowName());
+		confluentKafkaPublishTask.setCorrelationId(workflowInstance.getCorrelationId());
+		confluentKafkaPublishTask.setScheduledTime(System.currentTimeMillis());
+		confluentKafkaPublishTask.setTaskId(taskId);
+		confluentKafkaPublishTask.setInputData(input);
+		confluentKafkaPublishTask.setStatus(Task.Status.SCHEDULED);
+		confluentKafkaPublishTask.setRetryCount(retryCount);
+		confluentKafkaPublishTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
+		confluentKafkaPublishTask.setWorkflowTask(taskToSchedule);
+		confluentKafkaPublishTask.setWorkflowPriority(workflowInstance.getPriority());
 		if (Objects.nonNull(taskDefinition)) {
-			kafkaPublishTask.setExecutionNameSpace(taskDefinition.getExecutionNameSpace());
-			kafkaPublishTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
-			kafkaPublishTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
-			kafkaPublishTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+			confluentKafkaPublishTask.setExecutionNameSpace(taskDefinition.getExecutionNameSpace());
+			confluentKafkaPublishTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
+			confluentKafkaPublishTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
+			confluentKafkaPublishTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
 		}
-		return Collections.singletonList(kafkaPublishTask);
+		return Collections.singletonList(confluentKafkaPublishTask);
 	}
 }

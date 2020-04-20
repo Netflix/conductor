@@ -3,12 +3,14 @@ package com.netflix.conductor.contribs.confluent_kafka;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.swiggy.kafka.clients.Record;
+import com.swiggy.kafka.clients.producer.CallbackFuture;
 import com.swiggy.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
@@ -21,28 +23,43 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 @Singleton
 public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 
-	static final String REQUEST_PARAMETER_NAME = "kafka_request";
-	private static final String NAME = "CONFLUENT_KAFKA_PUBLISH";
-	private static final String MISSING_REQUEST = "Missing Kafka request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key with KafkaTask.Input as value. See documentation for KafkaTask for required input parameters";
-	private static final String MISSING_KAFKA_TOPIC = "Missing Kafka topic. See documentation for KafkaTask for required input parameters";
-	private static final String MISSING_KAFKA_VALUE = "Missing Kafka value.  See documentation for KafkaTask for required input parameters";
-	private static final String FAILED_TO_INVOKE = "Failed to invoke kafka task due to: ";
-	private static final String MISSING_KAFKA_TOPIC_NAME = "Missing kafka topic name";
-	private static final String MISSING_KAFKA_TOPIC_FAULT_STRETAGY = "Missing kafka topic fault strategy";
-	private static final String MISSING_KAFKA_TOPIC_ENABLE_ENCRYPTION = "Missing kafka topic enable encryption";
-	private static final String MISSING_KAFKA_TOPIC_KEY_ID = "Missing kafka topic key id";
-	private static final String MISSING_PRIMARY_CLUSTER = "Missing primary cluster information";
-	private static final String MISSING_PRIMARY_CLUSTER_BOOT_STRAP_SERVERS = "Missing primary cluster boot strap server information";
-	private static final String MISSING_PRIMARY_CLUSTER_AUTH_MECHANISM = "Missing primary cluster auth mechanism";
-	private static final String MISSING_SECONDARY_CLUSTER_BOOT_STRAP_SERVERS = "Missing secondary cluster boot auth mechanism";
-	private static final String MISSING_SECONDARY_CLUSTER_AUTH_MECHANISM = "Missing primary cluster auth mechanism";
-	private static final String MISSING_CLIENT_ID = "Missing producer client id";
-	private static final String MISSING_PRODUCER_ACK = "Missing producer ACK information";
+	public static final String REQUEST_PARAMETER_NAME = "kafka_request";
+	@VisibleForTesting
+	static final String NAME = "CONFLUENT_KAFKA_PUBLISH";
+	@VisibleForTesting
+	static final String MISSING_REQUEST = "Missing Kafka request. Task input MUST have a '" + REQUEST_PARAMETER_NAME + "' key with KafkaTask.Input as value. See documentation for KafkaTask for required input parameters";
+	@VisibleForTesting
+	static final String MISSING_KAFKA_TOPIC = "Missing Kafka topic. See documentation for KafkaTask for required input parameters";
+	@VisibleForTesting
+	static final String MISSING_KAFKA_VALUE = "Missing Kafka value.  See documentation for KafkaTask for required input parameters";
+	@VisibleForTesting
+	static final String FAILED_TO_INVOKE = "Failed to invoke kafka task due to: ";
+	@VisibleForTesting
+	static final String MISSING_KAFKA_TOPIC_NAME = "Missing kafka topic name";
+	@VisibleForTesting
+	static final String MISSING_KAFKA_TOPIC_FAULT_STRETAGY = "Missing kafka topic fault strategy";
+	@VisibleForTesting
+	static final String MISSING_KAFKA_TOPIC_ENABLE_ENCRYPTION = "Missing kafka topic enable encryption";
+	@VisibleForTesting
+	static final String MISSING_KAFKA_TOPIC_KEY_ID = "Missing kafka topic key id";
+	@VisibleForTesting
+	static final String MISSING_PRIMARY_CLUSTER = "Missing primary cluster information";
+	@VisibleForTesting
+	static final String MISSING_PRIMARY_CLUSTER_BOOT_STRAP_SERVERS = "Missing primary cluster boot strap server information";
+	@VisibleForTesting
+	static final String MISSING_PRIMARY_CLUSTER_AUTH_MECHANISM = "Missing primary cluster auth mechanism";
+	@VisibleForTesting
+	static final String MISSING_SECONDARY_CLUSTER_BOOT_STRAP_SERVERS = "Missing secondary cluster boot auth mechanism";
+	@VisibleForTesting
+	static final String MISSING_SECONDARY_CLUSTER_AUTH_MECHANISM = "Missing primary cluster auth mechanism";
+	@VisibleForTesting
+	static final String MISSING_CLIENT_ID = "Missing producer client id";
+	@VisibleForTesting
+	static final String MISSING_PRODUCER_ACK = "Missing producer ACK information";
 
 
 	private ObjectMapper objectMapper;
@@ -138,7 +155,7 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 		}
 
 		try {
-			Future<Record> record = kafkaPublish(input, task.getTaskDefName());
+			CallbackFuture<Record> record = kafkaPublish(input, task.getTaskDefName());
 			try {
 				record.get();
 				task.setStatus(Task.Status.COMPLETED);
@@ -165,23 +182,13 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 	 * @return Future for execution.
 	 */
 	@SuppressWarnings("unchecked")
-	private Future<Record> kafkaPublish(ConfluentKafkaPublishTask.Input input, String taskDefName) throws Exception {
+	private CallbackFuture<Record> kafkaPublish(ConfluentKafkaPublishTask.Input input, String taskDefName) throws Exception {
 
 		long startPublishingEpochMillis = Instant.now().toEpochMilli();
-
 		Producer producer = confluentKafkaProducerManager.getProducer(input, taskDefName);
-
 		long timeTakenToCreateProducer = Instant.now().toEpochMilli() - startPublishingEpochMillis;
-
 		logger.debug("Time taken getting producer {}", timeTakenToCreateProducer);
-
-		Future send = producer.send(String.valueOf(input.getTopic().get("name")), input.getKey(), objectMapper.writeValueAsString(input.getValue()), input.getHeaders());
-
-		long timeTakenToPublish = Instant.now().toEpochMilli() - startPublishingEpochMillis;
-
-		logger.debug("Time taken publishing {}", timeTakenToPublish);
-
-		return send;
+		return producer.send(String.valueOf(input.getTopic().get("name")), input.getKey(), objectMapper.writeValueAsString(input.getValue()), input.getHeaders());
 	}
 
 	@Override
@@ -217,7 +224,7 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 		private String clientId;
 
 		@JsonProperty("confluent_cluster_type")
-		private ConfluentKafkaProducerManager.TenantType clusterType;
+		private String clusterType;
 
 		@JsonProperty("retries")
 		private int retries;
@@ -238,12 +245,24 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 			return primaryCluster;
 		}
 
+		public void setPrimaryCluster(Map<String, Object> primaryCluster) {
+			this.primaryCluster = primaryCluster;
+		}
+
+		public void setSecondaryCluster(Map<String, Object> secondaryCluster) {
+			this.secondaryCluster = secondaryCluster;
+		}
+
 		public Map<String, Object> getSecondaryCluster() {
 			return secondaryCluster;
 		}
 
 		public String getClientId() {
 			return clientId;
+		}
+
+		public void setClientId(String clientId) {
+			this.clientId = clientId;
 		}
 
 		public boolean isEnableCompression() {
@@ -258,25 +277,40 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 			return acks;
 		}
 
+		public void setAcks(String ack) {
+			this.acks = ack;
+		}
+
 		public Map<String, String> getHeaders() {
 			return headers;
 		}
 		public String getKey() {
 			return key;
 		}
+		public void setKey(String key) {
+			 this.key = key;
+		}
 		public Object getValue() {
 			return value;
+		}
+
+		public void setValue(Object value) {
+			 this.value = value;
 		}
 
 		public Map<String, Object> getTopic() {
 			return topic;
 		}
 
-		public ConfluentKafkaProducerManager.TenantType getClusterType() {
+		public void setTopic(Map<String, Object> topic) {
+			this.topic = topic;
+		}
+
+		public String getClusterType() {
 			return clusterType;
 		}
 
-		public void setClusterType(ConfluentKafkaProducerManager.TenantType clusterType) {
+		public void setClusterType(String clusterType) {
 			this.clusterType = clusterType;
 		}
 

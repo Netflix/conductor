@@ -30,7 +30,7 @@ public class ConfluentKafkaProducerManager {
 	private static final int DEFAULT_CACHE_TIME_IN_MILLIS = 120000;
 	private Configuration configuration;
 	private static final String FLO_PREFIX = "FLO__CONFLUENT_KAFKA_PUBLISH__";
-	public enum TenantType {
+	public enum ClusterType {
 		BATCH("KAFKA_BATCH_PRIMARY_API_KEY", "KAFKA_BATCH_PRIMARY_API_SECRET"),
 		TXN("KAFKA_TXN_PRIMARY_API_KEY", "KAFKA_TXN_PRIMARY_API_SECRET"),
 		TXN_HA_PRIMARY("KAFKA_TXN_HA_PRIMARY_API_KEY", "KAFKA_TXN_HA_PRIMARY_API_SECRET"),
@@ -40,7 +40,7 @@ public class ConfluentKafkaProducerManager {
 
 		private String secret;
 
-		TenantType(String key, String secret){
+		ClusterType(String key, String secret){
 			this.key = key;
 			this.secret = secret;
 		}
@@ -54,7 +54,8 @@ public class ConfluentKafkaProducerManager {
 	};
 
 
-	public final String requestTimeoutConfig;
+	@VisibleForTesting
+	final String requestTimeoutConfig;
 	private Cache<ProducerConfig, Producer> kafkaProducerCache;
 
 	public ConfluentKafkaProducerManager(Configuration configuration) {
@@ -104,19 +105,19 @@ public class ConfluentKafkaProducerManager {
 		CommonConfig.Cluster secondaryCluster = null;
 		primaryCluster.setBootstrapServers(String.valueOf(input.getPrimaryCluster().get("bootStrapServers")));
 		primaryCluster.setAuthMechanism(AuthMechanism.valueOf(String.valueOf(input.getPrimaryCluster().get("authMechanism"))));
-		if (input.getClusterType().equals(TenantType.BATCH) || input.getClusterType().equals(TenantType.TXN)) {
-			String userName = getTaskKey(input, taskDefName);
-			String password = getTaskSecret(input, taskDefName);
+		if (input.getClusterType().equals(ClusterType.BATCH.name()) || input.getClusterType().equals(ClusterType.TXN.name())) {
+			String userName = getTaskKey(taskDefName, input.getClusterType());
+			String password = getTaskSecret(taskDefName,input.getClusterType());
 			primaryCluster.setUsername(userName);
 			primaryCluster.setPassword(password);
 		} else {
-			primaryCluster.setUsername(configuration.getProperty(FLO_PREFIX +  "__" + taskDefName +  "__" + TenantType.TXN_HA_PRIMARY.key, ""));
-			primaryCluster.setPassword(configuration.getProperty(FLO_PREFIX +  "__" + taskDefName +  "__" + TenantType.TXN_HA_PRIMARY.secret, ""));
+			primaryCluster.setUsername(getTaskKey(taskDefName, ClusterType.TXN_HA_PRIMARY.name()));
+			primaryCluster.setPassword(getTaskSecret(taskDefName, ClusterType.TXN_HA_PRIMARY.name()));
 			secondaryCluster = new CommonConfig.Cluster();
 			secondaryCluster.setBootstrapServers(String.valueOf(input.getSecondaryCluster().get("bootStrapServers")));
 			secondaryCluster.setAuthMechanism(AuthMechanism.valueOf(String.valueOf(input.getSecondaryCluster().get("authMechanism"))));
-			secondaryCluster.setUsername(configuration.getProperty(FLO_PREFIX +  "__" + taskDefName +  "__" + TenantType.TXN_HA_SECONDARY.key, ""));
-			secondaryCluster.setPassword(configuration.getProperty(FLO_PREFIX +  "__" + taskDefName +  "__" + TenantType.TXN_HA_SECONDARY.secret, ""));
+			secondaryCluster.setUsername(getTaskKey(taskDefName, ClusterType.TXN_HA_SECONDARY.name()));
+			secondaryCluster.setPassword(getTaskSecret(taskDefName, ClusterType.TXN_HA_SECONDARY.name()));
 		}
 		ProducerAcks producerAcks = ProducerAcks.valueOf(input.getAcks());
 		int retries = Math.min(input.getRetries(), 3);
@@ -128,22 +129,22 @@ public class ConfluentKafkaProducerManager {
 		return producerConfig;
 	}
 
-	String getTaskKey(ConfluentKafkaPublishTask.Input input, String taskDefName) {
-		String userName = configuration.getProperty( FLO_PREFIX +  "__" + taskDefName +  "__" + input.getClusterType().key , "");
+	String getTaskKey(String taskDefName, String clusterType) {
+		String userName = configuration.getProperty( FLO_PREFIX +  "__" + taskDefName +  "__" + ClusterType.valueOf(clusterType).key , "");
 		if (userName != "") {
 			return userName;
 		} else if (Boolean.valueOf(configuration.getProperty( "DEFAULT_SECRET_ENABLED" , "false"))) {
-			return configuration.getProperty( input.getClusterType().key , "");
+			return configuration.getProperty( ClusterType.valueOf(clusterType).key, "");
 		}
 		return "";
 	}
 
-	String getTaskSecret(ConfluentKafkaPublishTask.Input input, String taskDefName) {
-		String password = configuration.getProperty(FLO_PREFIX +  "__" + taskDefName +  "__" + input.getClusterType().secret, "");
+	String getTaskSecret(String taskDefName, String clusterType) {
+		String password = configuration.getProperty(FLO_PREFIX +  "__" + taskDefName +  "__" + ClusterType.valueOf(clusterType).secret, "");
 		if (password != "") {
 			return password;
 		} else if (Boolean.valueOf(configuration.getProperty( "DEFAULT_SECRET_ENABLED" , "false"))) {
-			return configuration.getProperty( input.getClusterType().secret , "");
+			return configuration.getProperty( ClusterType.valueOf(clusterType).secret , "");
 		}
 		return "";
 	}
