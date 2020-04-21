@@ -96,69 +96,7 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 
 		ConfluentKafkaPublishTask.Input input = objectMapper.convertValue(request, ConfluentKafkaPublishTask.Input.class);
 
-		if (input.getTopic() == null) {
-			markTaskAsFailed(task, MISSING_KAFKA_TOPIC);
-			return;
-		} else {
-			Map<String, Object> topic = input.getTopic();
-			if (topic.get("name") == null) {
-				markTaskAsFailed(task, MISSING_KAFKA_TOPIC_NAME);
-				return;
-			} else if (topic.get("faultStrategy") == null) {
-				markTaskAsFailed(task, MISSING_KAFKA_TOPIC_FAULT_STRETAGY);
-				return;
-			} else if (topic.get("enableEncryption") == null) {
-				markTaskAsFailed(task, MISSING_KAFKA_TOPIC_ENABLE_ENCRYPTION);
-				return;
-			} else if (topic.get("keyId") == null) {
-				markTaskAsFailed(task, MISSING_KAFKA_TOPIC_KEY_ID);
-				return;
-			}
-		}
-
-		if (input.getPrimaryCluster() == null) {
-			markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER);
-			return;
-		} else {
-			Map<String, Object> primaryCluster = input.getPrimaryCluster();
-			if (primaryCluster.get("bootStrapServers") == null) {
-				markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER_BOOT_STRAP_SERVERS);
-				return;
-			} else if (primaryCluster.get("authMechanism") == null) {
-				markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER_AUTH_MECHANISM);
-				return;
-			}
-		}
-
-		if (input.getSecondaryCluster() != null) {
-			Map<String, Object> secondaryCluster = input.getSecondaryCluster();
-			if (secondaryCluster.get("bootStrapServers") == null) {
-				markTaskAsFailed(task, MISSING_SECONDARY_CLUSTER_BOOT_STRAP_SERVERS);
-				return;
-			} else if (secondaryCluster.get("authMechanism") == null) {
-				markTaskAsFailed(task, MISSING_SECONDARY_CLUSTER_AUTH_MECHANISM);
-				return;
-			}
-		}
-
-		if (input.getClientId() == null) {
-			markTaskAsFailed(task, MISSING_CLIENT_ID);
-			return;
-		}
-
-		if (input.getAcks() == null) {
-			markTaskAsFailed(task, MISSING_PRODUCER_ACK);
-			return;
-		}
-
-		if (input.getClusterType() == null) {
-			markTaskAsFailed(task, MISSING_CLUSTER_TYPE);
-			return;
-		}
-
-
-		if (Objects.isNull(input.getValue())) {
-			markTaskAsFailed(task, MISSING_KAFKA_VALUE);
+		if (!isTaskInputValid(input, task)) {
 			return;
 		}
 
@@ -178,6 +116,75 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 			logger.error("Failed to invoke kafka task:{} for input {} - unknown exception", task.getTaskId(), input, e);
 			markTaskAsFailed(task, FAILED_TO_INVOKE + e.getMessage());
 		}
+	}
+
+	private boolean isTaskInputValid(ConfluentKafkaPublishTask.Input input , Task task) {
+		if (input.getTopic() == null) {
+			markTaskAsFailed(task, MISSING_KAFKA_TOPIC);
+			return false;
+		} else {
+			Map<String, Object> topic = input.getTopic();
+			if (topic.get("name") == null) {
+				markTaskAsFailed(task, MISSING_KAFKA_TOPIC_NAME);
+				return false;
+			} else if (topic.get("faultStrategy") == null) {
+				markTaskAsFailed(task, MISSING_KAFKA_TOPIC_FAULT_STRETAGY);
+				return false;
+			} else if (topic.get("enableEncryption") == null) {
+				markTaskAsFailed(task, MISSING_KAFKA_TOPIC_ENABLE_ENCRYPTION);
+				return false;
+			} else if (topic.get("keyId") == null) {
+				markTaskAsFailed(task, MISSING_KAFKA_TOPIC_KEY_ID);
+				return false;
+			}
+		}
+
+		if (input.getPrimaryCluster() == null) {
+			markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER);
+			return false;
+		} else {
+			Map<String, Object> primaryCluster = input.getPrimaryCluster();
+			if (primaryCluster.get("bootStrapServers") == null) {
+				markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER_BOOT_STRAP_SERVERS);
+				return false;
+			} else if (primaryCluster.get("authMechanism") == null) {
+				markTaskAsFailed(task, MISSING_PRIMARY_CLUSTER_AUTH_MECHANISM);
+				return false;
+			}
+		}
+
+		if (input.getSecondaryCluster() != null) {
+			Map<String, Object> secondaryCluster = input.getSecondaryCluster();
+			if (secondaryCluster.get("bootStrapServers") == null) {
+				markTaskAsFailed(task, MISSING_SECONDARY_CLUSTER_BOOT_STRAP_SERVERS);
+				return false;
+			} else if (secondaryCluster.get("authMechanism") == null) {
+				markTaskAsFailed(task, MISSING_SECONDARY_CLUSTER_AUTH_MECHANISM);
+				return false;
+			}
+		}
+
+		if (input.getClientId() == null) {
+			markTaskAsFailed(task, MISSING_CLIENT_ID);
+			return false;
+		}
+
+		if (input.getAcks() == null) {
+			markTaskAsFailed(task, MISSING_PRODUCER_ACK);
+			return false;
+		}
+
+		if (input.getClusterType() == null) {
+			markTaskAsFailed(task, MISSING_CLUSTER_TYPE);
+			return false;
+		}
+
+
+		if (Objects.isNull(input.getValue())) {
+			markTaskAsFailed(task, MISSING_KAFKA_VALUE);
+			return false;
+		}
+		return true;
 	}
 
 	private void markTaskAsFailed(Task task, String reasonForIncompletion) {
