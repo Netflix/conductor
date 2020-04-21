@@ -261,9 +261,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			return Lists.newArrayList();
 		}
 
-		return getWithTransaction(tx -> taskIds.stream().map(id -> getTask(tx, id)))
+		return getWithTransaction(tx -> taskIds.stream()
+			.map(id -> getTask(tx, id))
 			.filter(Objects::nonNull)
-			.collect(Collectors.toList());
+			.collect(Collectors.toList()));
 	}
 
 	@Override
