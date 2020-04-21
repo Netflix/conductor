@@ -30,6 +30,7 @@ import com.netflix.conductor.core.events.SimpleActionProcessor;
 import com.netflix.conductor.core.events.SimpleEventProcessor;
 import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.ParametersUtils;
+import com.netflix.conductor.core.execution.mapper.ConfluentKafkaPublishTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
@@ -58,6 +59,7 @@ import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_CONFLUENT_KAFKA_PUBLISH;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DECISION;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DYNAMIC;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EVENT;
@@ -245,6 +247,14 @@ public class CoreModule extends AbstractModule {
     @Named(TASK_MAPPERS_QUALIFIER)
     public TaskMapper getKafkaPublishTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
         return new KafkaPublishTaskMapper(parametersUtils, metadataDAO);
+    }
+
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_CONFLUENT_KAFKA_PUBLISH)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getConfluentKafkaPublishTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
+        return new ConfluentKafkaPublishTaskMapper(parametersUtils, metadataDAO);
     }
 
 }
