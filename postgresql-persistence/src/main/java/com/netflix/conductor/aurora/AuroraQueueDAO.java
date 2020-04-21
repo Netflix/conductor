@@ -154,7 +154,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
-		long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+		long unack_on = System.currentTimeMillis() - UNACK_TIME_MS;
 
 		final String SQL = "UPDATE queue_message " +
 			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
