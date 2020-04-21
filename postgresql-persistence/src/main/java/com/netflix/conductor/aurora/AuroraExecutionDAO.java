@@ -270,7 +270,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	@Override
 	public List<Task> getTasksForWorkflow(String workflowId) {
 		String SQL = "SELECT task_id FROM task WHERE workflow_id = ?";
-		List<String> taskIds = getWithTransaction(tx -> query(tx, SQL, q -> q.addParameter(workflowId).executeScalarList(String.class)));
+		List<String> taskIds = queryWithTransaction(SQL, q -> q.addParameter(workflowId).executeAndFetch(String.class));
 		return getTasks(taskIds);
 	}
 
