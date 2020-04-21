@@ -246,11 +246,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return getWithTransaction(tx -> getTask(tx, taskId));
 	}
 
-	private Task getTask(Connection tx, String taskId) {
-		String GET_TASK = "SELECT json_data FROM task WHERE task_id = ?";
-		return query(tx, GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(Task.class));
-	}
-
 	@Override
 	public Task getTask(String workflowId, String taskRefName) {
 		String GET_TASK = "SELECT json_data FROM task WHERE workflow_id = ? and task_refname = ? ORDER BY id DESC";
@@ -265,19 +260,22 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		if (taskIds == null || taskIds.isEmpty()) {
 			return Lists.newArrayList();
 		}
-		return getWithTransaction(tx -> getTasks(tx, taskIds));
+
+		return getWithTransaction(tx -> taskIds.stream().map(id -> getTask(tx, id)))
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
 	}
 
 	@Override
 	public List<Task> getTasksForWorkflow(String workflowId) {
-		return getWithTransaction(tx -> getTasksForWorkflow(tx, workflowId));
+		String SQL = "SELECT task_id FROM task WHERE workflow_id = ?";
+		List<String> taskIds = getWithTransaction(tx -> query(tx, SQL, q -> q.addParameter(workflowId).executeScalarList(String.class)));
+		return getTasks(taskIds);
 	}
 
-	// For fetch performance reasons better to go over one by one instead of bulk fetch
-	private List<Task> getTasksForWorkflow(Connection tx, String workflowId) {
-		String SQL = "SELECT task_id FROM task WHERE workflow_id = ?";
-		List<String> taskIds = query(tx, SQL, q -> q.addParameter(workflowId).executeScalarList(String.class));
-		return getTasks(tx, taskIds);
+	private Task getTask(Connection tx, String taskId) {
+		String GET_TASK = "SELECT json_data FROM task WHERE task_id = ?";
+		return query(tx, GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(Task.class));
 	}
 
 	@Override
@@ -312,20 +310,16 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public Workflow getWorkflow(String workflowId) {
-		return getWithTransaction(tx -> getWorkflow(tx, workflowId, true));
+		return getWorkflow(workflowId, true);
 	}
 
 	@Override
 	public Workflow getWorkflow(String workflowId, boolean includeTasks) {
-		return getWithTransaction(tx -> getWorkflow(tx, workflowId, includeTasks));
-	}
-
-	private Workflow getWorkflow(Connection tx, String workflowId, boolean includeTasks) {
-		Workflow workflow = readWorkflow(tx, workflowId);
+		Workflow workflow = getWithTransaction(tx -> readWorkflow(tx, workflowId));
 
 		if (workflow != null) {
 			if (includeTasks) {
-				List<Task> tasks = getTasksForWorkflow(tx, workflowId);
+				List<Task> tasks = getTasksForWorkflow(workflowId);
 				tasks.sort(Comparator.comparingLong(Task::getScheduledTime).thenComparingInt(Task::getSeq));
 				workflow.setTasks(tasks);
 			}
@@ -350,14 +344,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	@Override
 	public List<Workflow> getPendingWorkflowsByType(String workflowName) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-
-		return getWithTransaction(tx -> {
-			List<String> workflowIds = getRunningWorkflowIds(tx, workflowName);
-			return workflowIds.stream()
-				.map(id -> getWorkflow(tx, id, true))
-				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
-		});
+		List<String> workflowIds = getWithTransaction(tx -> getRunningWorkflowIds(tx, workflowName));
+		return workflowIds.stream()
+			.map(id -> getWorkflow(id, true))
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
 	}
 
 	@Override
@@ -494,7 +485,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	 */
 	@Override
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
-		String SQL = "select count(*) from workflow where tags @> ?";
+		String SQL = "SELECT COUNT(*) FROM workflow WHERE tags @> ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeScalar(Long.class) > 0);
 	}
 
@@ -597,14 +588,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			removeTaskInProgress(tx, task);
 		}
-	}
-
-	private List<Task> getTasks(Connection tx, List<String> taskIds) {
-		if (taskIds == null || taskIds.isEmpty()) {
-			return Lists.newArrayList();
-		}
-
-		return taskIds.parallelStream().map(id -> getTask(tx, id)).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
