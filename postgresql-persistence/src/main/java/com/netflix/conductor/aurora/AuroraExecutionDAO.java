@@ -332,11 +332,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public List<String> getRunningWorkflowIds(String workflowName) {
+		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 		return getWithTransaction(tx -> getRunningWorkflowIds(tx, workflowName));
 	}
 
 	private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
-		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
 
 		return query(tx, SQL, q -> q.addParameter(workflowName).executeScalarList(String.class));
