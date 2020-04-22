@@ -206,7 +206,7 @@ class Grapher extends Component {
                     {this.state.selectedTask.taskType == 'SUB_WORKFLOW' &&
                         <div>
                             <p>
-                            <Link onClick={hideProps} to={'/workflow/id/' + this.state.selectedTask.outputData.subWorkflowId}>
+                            <Link onClick={hideProps} to={'/workflow/id/' + this.state.selectedTask.subWorkflowId}>
                                 <u>View Subworkflow</u>
                             </Link>
                             </p>
