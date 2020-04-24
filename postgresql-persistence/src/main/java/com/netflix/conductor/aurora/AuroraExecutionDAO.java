@@ -23,12 +23,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
-	private MetadataDAO metadata;
-	private IndexDAO indexer;
+	private final MetadataDAO metadata;
+	private final IndexDAO indexer;
 
 	@Inject
-	public AuroraExecutionDAO(DataSource dataSource, ObjectMapper mapper,
-							  MetadataDAO metadata, IndexDAO indexer) {
+	public AuroraExecutionDAO(DataSource dataSource, ObjectMapper mapper, MetadataDAO metadata, IndexDAO indexer) {
 		super(dataSource, mapper);
 		this.metadata = metadata;
 		this.indexer = indexer;
@@ -226,14 +225,14 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public void removeTask(String taskId) {
-		Task task = getTask(taskId);
-
-		if (task == null) {
-			logger.debug("No such task found by id {}", taskId);
-			return;
-		}
-
-		withTransaction(tx -> removeTask(tx, task));
+		withTransaction(tx -> {
+			Task task = getTask(tx, taskId);
+			if (task == null) {
+				logger.debug("No such task found by id {}", taskId);
+				return;
+			}
+			removeTask(tx, task);
+		});
 	}
 
 	@Override
@@ -274,11 +273,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return getTasks(taskIds);
 	}
 
-	private Task getTask(Connection tx, String taskId) {
-		String GET_TASK = "SELECT json_data FROM task WHERE task_id = ?";
-		return query(tx, GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(Task.class));
-	}
-
 	@Override
 	public String createWorkflow(Workflow workflow) {
 		return insertOrUpdateWorkflow(workflow, false);
@@ -317,29 +311,18 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	@Override
 	public Workflow getWorkflow(String workflowId, boolean includeTasks) {
 		Workflow workflow = getWithTransaction(tx -> readWorkflow(tx, workflowId));
-
-		if (workflow != null) {
-			if (includeTasks) {
-				List<Task> tasks = getTasksForWorkflow(workflowId);
-				tasks.sort(Comparator.comparingLong(Task::getScheduledTime).thenComparingInt(Task::getSeq));
-				workflow.setTasks(tasks);
-			}
-			return workflow;
+		if (workflow != null && includeTasks) {
+			List<Task> tasks = getTasksForWorkflow(workflowId);
+			tasks.sort(Comparator.comparingLong(Task::getScheduledTime).thenComparingInt(Task::getSeq));
+			workflow.setTasks(tasks);
 		}
-
-		return null;
+		return workflow;
 	}
 
 	@Override
 	public List<String> getRunningWorkflowIds(String workflowName) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 		return getWithTransaction(tx -> getRunningWorkflowIds(tx, workflowName));
-	}
-
-	private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
-		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
-
-		return query(tx, SQL, q -> q.addParameter(workflowName).executeScalarList(String.class));
 	}
 
 	@Override
@@ -356,14 +339,12 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	public long getPendingWorkflowCount(String workflowName) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 		String SQL = "SELECT COUNT(*) FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
-
 		return queryWithTransaction(SQL, q -> q.addParameter(workflowName).executeCount());
 	}
 
 	@Override
 	public long getInProgressTaskCount(String taskDefName) {
 		String SQL = "SELECT COUNT(*) FROM task_in_progress WHERE task_def_name = ? AND in_progress = true";
-
 		return queryWithTransaction(SQL, q -> q.addParameter(taskDefName).executeCount());
 	}
 
@@ -375,21 +356,18 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		List<Workflow> workflows = new LinkedList<>();
 
-		withTransaction(tx -> {
-			String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND date_str BETWEEN ? AND ?";
-
-			List<String> workflowIds = query(tx, SQL, q -> q.addParameter(workflowName)
-				.addParameter(dateStr(startTime)).addParameter(dateStr(endTime)).executeScalarList(String.class));
-			workflowIds.forEach(workflowId -> {
-				try {
-					Workflow wf = getWorkflow(workflowId);
-					if (wf.getCreateTime() >= startTime && wf.getCreateTime() <= endTime) {
-						workflows.add(wf);
-					}
-				} catch (Exception e) {
-					logger.error("Unable to load workflow id {} with name {}", workflowId, workflowName, e);
+		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND date_str BETWEEN ? AND ?";
+		List<String> workflowIds = queryWithTransaction(SQL, q -> q.addParameter(workflowName)
+			.addParameter(dateStr(startTime)).addParameter(dateStr(endTime)).executeScalarList(String.class));
+		workflowIds.forEach(workflowId -> {
+			try {
+				Workflow wf = getWorkflow(workflowId);
+				if (wf.getCreateTime() >= startTime && wf.getCreateTime() <= endTime) {
+					workflows.add(wf);
 				}
-			});
+			} catch (Exception e) {
+				logger.error("Unable to load workflow id {} with name {}", workflowId, workflowName, e);
+			}
 		});
 
 		return workflows;
@@ -399,10 +377,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	public List<Workflow> getWorkflowsByCorrelationId(String correlationId) {
 		Preconditions.checkNotNull(correlationId, "correlationId cannot be null");
 		String SQL = "SELECT workflow_id FROM workflow WHERE correlation_id = ?";
-
-		return queryWithTransaction(SQL,
-			q -> q.addParameter(correlationId).executeScalarList(String.class).stream()
-				.map(this::getWorkflow).collect(Collectors.toList()));
+		List<String> workflowIds = queryWithTransaction(SQL, q -> q.addParameter(correlationId).executeScalarList(String.class));
+		return workflowIds.stream().map(this::getWorkflow).collect(Collectors.toList());
 	}
 
 	@Override
@@ -504,6 +480,16 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.addJsonParameter(payload)
 			.addParameter(task.getTaskId())
 			.executeUpdate());
+	}
+
+	private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
+		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
+		return query(tx, SQL, q -> q.addParameter(workflowName).executeScalarList(String.class));
+	}
+
+	private Task getTask(Connection tx, String taskId) {
+		String GET_TASK = "SELECT json_data FROM task WHERE task_id = ?";
+		return query(tx, GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(Task.class));
 	}
 
 	private static int dateStr(Long timeInMs) {
