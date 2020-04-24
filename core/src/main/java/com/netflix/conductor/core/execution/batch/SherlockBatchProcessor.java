@@ -165,20 +165,20 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 				try {
 					if (task.getTaskId().equalsIgnoreCase(carried.getTaskId())) {
 						logger.info("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
-							",correlationId=" + task.getCorrelationId() +
-                                                        ",uniquenessGroup=" + group.getKey() +
-							",taskId=" + task.getTaskId() +
-							",taskReferenceName=" + task.getReferenceTaskName() +
-							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
+								",correlationId=" + task.getCorrelationId() +
+								",uniquenessGroup=" + group.getKey() +
+								",taskId=" + task.getTaskId() +
+								",taskReferenceName=" + task.getReferenceTaskName() +
+								",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					} else {
 						logger.info("batch task execution completed.carriedTaskId=" + carried.getTaskId() +
-							",carriedCorrelationId=" + carried.getCorrelationId() +
-                                                        ",uniquenessGroup=" + group.getKey() +
-							",workflowId=" + task.getWorkflowInstanceId() +
-							",correlationId=" + task.getCorrelationId() +
-							",taskId=" + task.getTaskId() +
-							",taskReferenceName=" + task.getReferenceTaskName() +
-							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
+								",carriedCorrelationId=" + carried.getCorrelationId() +
+								",uniquenessGroup=" + group.getKey() +
+								",workflowId=" + task.getWorkflowInstanceId() +
+								",correlationId=" + task.getCorrelationId() +
+								",taskId=" + task.getTaskId() +
+								",taskReferenceName=" + task.getReferenceTaskName() +
+								",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					}
 
 					boolean handled = handleStatusMapping(task, response);
