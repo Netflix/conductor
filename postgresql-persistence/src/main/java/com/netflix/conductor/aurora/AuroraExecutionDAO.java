@@ -354,11 +354,13 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		Preconditions.checkNotNull(startTime, "startTime cannot be null");
 		Preconditions.checkNotNull(endTime, "endTime cannot be null");
 
-		List<Workflow> workflows = new LinkedList<>();
-
 		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND date_str BETWEEN ? AND ?";
 		List<String> workflowIds = queryWithTransaction(SQL, q -> q.addParameter(workflowName)
-			.addParameter(dateStr(startTime)).addParameter(dateStr(endTime)).executeScalarList(String.class));
+			.addParameter(dateStr(startTime))
+			.addParameter(dateStr(endTime))
+			.executeScalarList(String.class));
+
+		List<Workflow> workflows = new LinkedList<>();
 		workflowIds.forEach(workflowId -> {
 			try {
 				Workflow wf = getWorkflow(workflowId);
@@ -369,7 +371,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				logger.error("Unable to load workflow id {} with name {}", workflowId, workflowName, e);
 			}
 		});
-
 		return workflows;
 	}
 
