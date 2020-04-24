@@ -165,13 +165,13 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 				try {
 					if (task.getTaskId().equalsIgnoreCase(carried.getTaskId())) {
 						logger.info("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
-							",correlationId=" + task.getCorrelationId() +
+							",correlationId=" + task.getCorrelationId() +",uniquenessGroup=" + group.getKey() +
 							",taskId=" + task.getTaskId() +
 							",taskReferenceName=" + task.getReferenceTaskName() +
 							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					} else {
 						logger.info("batch task execution completed.carriedTaskId=" + carried.getTaskId() +
-							",carriedCorrelationId=" + carried.getCorrelationId() +
+							",carriedCorrelationId=" + carried.getCorrelationId() +",uniquenessGroup=" + group.getKey() +
 							",workflowId=" + task.getWorkflowInstanceId() +
 							",correlationId=" + task.getCorrelationId() +
 							",taskId=" + task.getTaskId() +
