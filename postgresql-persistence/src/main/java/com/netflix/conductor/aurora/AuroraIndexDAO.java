@@ -81,14 +81,12 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 		}
 
 		String SQL = "INSERT INTO task_log(created_on, task_id, log) VALUES (?, ?, ?)";
-
 		withTransaction(tx -> {
 			for (TaskExecLog log : logs) {
-				execute(tx, SQL,
-					q -> q.addTimestampParameter(log.getCreatedTime(), System.currentTimeMillis())
-						.addParameter(log.getTaskId())
-						.addParameter(log.getLog())
-						.executeUpdate());
+				execute(tx, SQL, q -> q.addTimestampParameter(log.getCreatedTime(), System.currentTimeMillis())
+					.addParameter(log.getTaskId())
+					.addParameter(log.getLog())
+					.executeUpdate());
 			}
 		});
 	}
@@ -102,15 +100,11 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 	public void addMessage(String queue, Message msg) {
 		String SQL = "INSERT INTO event_message(queue_name, message_id, receipt, json_data) " +
 			"VALUES (?, ?, ?, ?)";
-
-		withTransaction(tx -> {
-			execute(tx, SQL,
-				q -> q.addParameter(queue)
-					.addParameter(msg.getId())
-					.addParameter(msg.getReceipt())
-					.addParameter(msg.getPayload())
-					.executeUpdate());
-		});
+		executeWithTransaction(SQL, q -> q.addParameter(queue)
+			.addParameter(msg.getId())
+			.addParameter(msg.getReceipt())
+			.addParameter(msg.getPayload())
+			.executeUpdate());
 	}
 
 	@Override
@@ -131,7 +125,7 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 		return queryWithTransaction(SQL.toString(), q -> {
 			params.forEach(p -> {
 				if (p instanceof Timestamp) {
-					q.addParameter((Timestamp)p);
+					q.addParameter((Timestamp) p);
 				} else if (p instanceof List) {
 					q.addParameter((Collection<String>) p);
 				} else if (p instanceof String) {
