@@ -125,7 +125,7 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 		return queryWithTransaction(SQL.toString(), q -> {
 			params.forEach(p -> {
 				if (p instanceof Timestamp) {
-					q.addParameter((Timestamp)p);
+					q.addParameter((Timestamp) p);
 				} else if (p instanceof List) {
 					q.addParameter((Collection<String>) p);
 				} else if (p instanceof String) {
