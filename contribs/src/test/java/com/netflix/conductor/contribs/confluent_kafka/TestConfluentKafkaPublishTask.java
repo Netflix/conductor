@@ -185,7 +185,7 @@ public class TestConfluentKafkaPublishTask {
 
 		Producer producer = Mockito.mock(Producer.class);
 
-		Mockito.when(confluentKafkaProducerManager.getProducer(Mockito.any(), Mockito.anyString())).thenReturn(producer);
+		Mockito.when(confluentKafkaProducerManager.getProducer(Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(producer);
 		CallbackFuture<Record> callbackFuture = Mockito.mock(CallbackFuture.class);
 		Mockito.doReturn(callbackFuture).when(producer).send(Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.any(Map.class));
 

@@ -20,14 +20,8 @@ public class TestConfluentKafkaProducerManager {
 		Assert.assertEquals( confluentKafkaProducerManager.requestTimeoutConfig, "100");
 	}
 
-	@Test
-	public void testBatchConfigurations() {
-
-		ConfluentKafkaProducerManager confluentKafkaProducerManager = new ConfluentKafkaProducerManager(new SystemPropertiesConfiguration());
-		Task task = new Task();
-		task.setTaskDefName("task");
+	public ConfluentKafkaPublishTask.Input getInput(boolean ha) {
 		ConfluentKafkaPublishTask.Input input = new ConfluentKafkaPublishTask.Input();
-		task.getInputData().put(ConfluentKafkaPublishTask.REQUEST_PARAMETER_NAME, input);
 
 		Map<String, Object> topic = new HashMap<>();
 		input.setTopic(topic);
@@ -39,21 +33,36 @@ public class TestConfluentKafkaProducerManager {
 		input.setPrimaryCluster(primaryCluster);
 		primaryCluster.put("bootStrapServers", "localhost:9093");
 		primaryCluster.put("authMechanism", "SASL_PLAIN");
+		if (ha) {
+			Map<String, Object> secondaryCluster = new HashMap<>();
+			input.setSecondaryCluster(secondaryCluster);
+			secondaryCluster.put("bootStrapServers", "localhost:9092");
+			secondaryCluster.put("authMechanism", "SASL_PLAIN");
+		}
 		input.setClientId("rr");
 		input.setAcks("q");
 		input.setValue("ee");
 		input.setAcks(ProducerAcks.ALL.name());
-		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.BATCH.name());
-		System.setProperty("DEFAULT_SECRET_ENABLED", "true");
-		System.setProperty("KAFKA_BATCH_PRIMARY_API_SECRET", "secret");
-		System.setProperty("KAFKA_BATCH_PRIMARY_API_KEY", "key");
-		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName());
+		return input;
+	}
+
+	public void validateProducerConfig(ProducerConfig producerConfig, boolean ha) {
+		if (ha) {
+			Assert.assertEquals(producerConfig.getPrimary().getPassword(), "primarysecret");
+			Assert.assertEquals(producerConfig.getPrimary().getUsername(), "primarykey");
+			Assert.assertEquals(producerConfig.getSecondary().getPassword(), "secondarysecret");
+			Assert.assertEquals(producerConfig.getSecondary().getUsername(), "secondarykey");
+		} else {
 		Assert.assertEquals(producerConfig.getPrimary().getPassword(), "secret");
-		Assert.assertEquals(producerConfig.getPrimary().getUsername(), "key");
+		Assert.assertEquals(producerConfig.getPrimary().getUsername(), "key");}
 		Assert.assertEquals(producerConfig.getClientId(), "rr");
 		Assert.assertEquals(producerConfig.isEnableCompression(), false);
 		Assert.assertEquals(producerConfig.getPrimary().getBootstrapServers(), "localhost:9093");
 		Assert.assertEquals(producerConfig.getPrimary().getAuthMechanism(), AuthMechanism.SASL_PLAIN);
+		if (ha) {
+			Assert.assertEquals(producerConfig.getSecondary().getBootstrapServers(), "localhost:9092");
+			Assert.assertEquals(producerConfig.getSecondary().getAuthMechanism(), AuthMechanism.SASL_PLAIN);
+		}
 		Assert.assertEquals(producerConfig.getTopics().size(), 1);
 		for (Map.Entry<String, Topic> entry : producerConfig.getTopics().entrySet()) {
 			Assert.assertEquals(entry.getKey(), "flo-event-logs");
@@ -63,7 +72,32 @@ public class TestConfluentKafkaProducerManager {
 			Assert.assertEquals(topic1.isEnableEncryption(), true);
 			Assert.assertEquals(topic1.getKeyId(), "ff-fxm");
 		}
+	}
 
+	@Test
+	public void testBatchConfigurations() {
+		ConfluentKafkaProducerManager confluentKafkaProducerManager = new ConfluentKafkaProducerManager(new SystemPropertiesConfiguration());
+		Task task = new Task();
+		task.setTaskDefName("task");
+		ConfluentKafkaPublishTask.Input input = getInput(false);
+		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.BATCH.name());
+		System.setProperty("KAFKA__TASK__BATCH_PRIMARY_API_SECRET", "secret");
+		System.setProperty("KAFKA__TASK__BATCH_PRIMARY_API_KEY", "key");
+		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
+		validateProducerConfig(producerConfig, false);
+	}
+
+	@Test
+	public void testWorkflowNameBatchConfigurations() {
+		ConfluentKafkaProducerManager confluentKafkaProducerManager = new ConfluentKafkaProducerManager(new SystemPropertiesConfiguration());
+		Task task = new Task();
+		task.setTaskDefName("task");
+		ConfluentKafkaPublishTask.Input input = getInput(false);
+		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.BATCH.name());
+		System.setProperty("KAFKA__TEST__TASK__BATCH_PRIMARY_API_SECRET", "secret");
+		System.setProperty("KAFKA__TEST__TASK__BATCH_PRIMARY_API_KEY", "key");
+		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
+		validateProducerConfig(producerConfig, false);
 	}
 
 	@Test
@@ -71,43 +105,25 @@ public class TestConfluentKafkaProducerManager {
 		ConfluentKafkaProducerManager confluentKafkaProducerManager = new ConfluentKafkaProducerManager(new SystemPropertiesConfiguration());
 		Task task = new Task();
 		task.setTaskDefName("task");
-		ConfluentKafkaPublishTask.Input input = new ConfluentKafkaPublishTask.Input();
-		task.getInputData().put(ConfluentKafkaPublishTask.REQUEST_PARAMETER_NAME, input);
-
-		Map<String, Object> topic = new HashMap<>();
-		input.setTopic(topic);
-		topic.put("name", "flo-event-logs");
-		topic.put("faultStrategy", "NONE");
-		topic.put("enableEncryption", "true");
-		topic.put("keyId", "ff-fxm");
-		Map<String, Object> primaryCluster = new HashMap<>();
-		input.setPrimaryCluster(primaryCluster);
-		primaryCluster.put("bootStrapServers", "localhost:9093");
-		primaryCluster.put("authMechanism", "SASL_PLAIN");
-		input.setClientId("rr");
-		input.setAcks("q");
-		input.setValue("ee");
-		input.setAcks(ProducerAcks.ALL.name());
+		ConfluentKafkaPublishTask.Input input = getInput(false);
 		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.TXN.name());
-		System.setProperty("DEFAULT_SECRET_ENABLED", "true");
-		System.setProperty("KAFKA_TXN_PRIMARY_API_SECRET", "secret");
-		System.setProperty("KAFKA_TXN_PRIMARY_API_KEY", "key");
-		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName());
-		Assert.assertEquals(producerConfig.getPrimary().getPassword(), "secret");
-		Assert.assertEquals(producerConfig.getPrimary().getUsername(), "key");
-		Assert.assertEquals(producerConfig.getClientId(), "rr");
-		Assert.assertEquals(producerConfig.isEnableCompression(), false);
-		Assert.assertEquals(producerConfig.getPrimary().getBootstrapServers(), "localhost:9093");
-		Assert.assertEquals(producerConfig.getPrimary().getAuthMechanism(), AuthMechanism.SASL_PLAIN);
-		Assert.assertEquals(producerConfig.getTopics().size(), 1);
-		for (Map.Entry<String, Topic> entry : producerConfig.getTopics().entrySet()) {
-			Assert.assertEquals(entry.getKey(), "flo-event-logs");
-			Topic topic1 = entry.getValue();
-			Assert.assertEquals(topic1.getName(), "flo-event-logs");
-			Assert.assertEquals(topic1.getFaultStrategy(), Topic.FaultStrategy.NONE);
-			Assert.assertEquals(topic1.isEnableEncryption(), true);
-			Assert.assertEquals(topic1.getKeyId(), "ff-fxm");
-		}
+		System.setProperty("KAFKA__TASK__TXN_PRIMARY_API_SECRET", "secret");
+		System.setProperty("KAFKA__TASK__TXN_PRIMARY_API_KEY", "key");
+		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
+		validateProducerConfig(producerConfig, false);
+	}
+
+	@Test
+	public void testWorkflowTXNConfigurations() {
+		ConfluentKafkaProducerManager confluentKafkaProducerManager = new ConfluentKafkaProducerManager(new SystemPropertiesConfiguration());
+		Task task = new Task();
+		task.setTaskDefName("task");
+		ConfluentKafkaPublishTask.Input input = getInput(false);
+		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.TXN.name());
+		System.setProperty("KAFKA__TEST__TASK__TXN_PRIMARY_API_SECRET", "secret");
+		System.setProperty("KAFKA__TEST__TASK__TXN_PRIMARY_API_KEY", "key");
+		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
+		validateProducerConfig(producerConfig, false);
 	}
 
 	@Test
@@ -115,76 +131,29 @@ public class TestConfluentKafkaProducerManager {
 		ConfluentKafkaProducerManager confluentKafkaProducerManager = new ConfluentKafkaProducerManager(new SystemPropertiesConfiguration());
 		Task task = new Task();
 		task.setTaskDefName("task");
-		ConfluentKafkaPublishTask.Input input = new ConfluentKafkaPublishTask.Input();
-		task.getInputData().put(ConfluentKafkaPublishTask.REQUEST_PARAMETER_NAME, input);
-
-		Map<String, Object> topic = new HashMap<>();
-		input.setTopic(topic);
-		topic.put("name", "flo-event-logs");
-		topic.put("faultStrategy", "NONE");
-		topic.put("enableEncryption", "true");
-		topic.put("keyId", "ff-fxm");
-		Map<String, Object> primaryCluster = new HashMap<>();
-		input.setPrimaryCluster(primaryCluster);
-		primaryCluster.put("bootStrapServers", "localhost:9093");
-		primaryCluster.put("authMechanism", "SASL_PLAIN");
-		Map<String, Object> secondaryCluster = new HashMap<>();
-		input.setSecondaryCluster(secondaryCluster);
-		secondaryCluster.put("bootStrapServers", "localhost:9092");
-		secondaryCluster.put("authMechanism", "SASL_PLAIN");
-		input.setClientId("rr");
-		input.setAcks("q");
-		input.setValue("ee");
-		input.setAcks(ProducerAcks.ALL.name());
+		ConfluentKafkaPublishTask.Input input = getInput(true);
 		input.setClusterType("TXN_HA");
-		System.setProperty("DEFAULT_SECRET_ENABLED", "true");
-		System.setProperty("KAFKA_TXN_HA_PRIMARY_API_SECRET", "primarysecret");
-		System.setProperty("KAFKA_TXN_HA_PRIMARY_API_KEY", "primarykey");
-		System.setProperty("KAFKA_TXN_HA_SECONDARY_API_SECRET", "secondarysecret");
-		System.setProperty("KAFKA_TXN_HA_SECONDARY_API_KEY", "secondarykey");
-		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName());
-		Assert.assertEquals(producerConfig.getPrimary().getPassword(), "primarysecret");
-		Assert.assertEquals(producerConfig.getPrimary().getUsername(), "primarykey");
-		Assert.assertEquals(producerConfig.getSecondary().getPassword(), "secondarysecret");
-		Assert.assertEquals(producerConfig.getSecondary().getUsername(), "secondarykey");
-		Assert.assertEquals(producerConfig.getClientId(), "rr");
-		Assert.assertEquals(producerConfig.isEnableCompression(), false);
-		Assert.assertEquals(producerConfig.getPrimary().getBootstrapServers(), "localhost:9093");
-		Assert.assertEquals(producerConfig.getPrimary().getAuthMechanism(), AuthMechanism.SASL_PLAIN);
-		Assert.assertEquals(producerConfig.getSecondary().getBootstrapServers(), "localhost:9092");
-		Assert.assertEquals(producerConfig.getSecondary().getAuthMechanism(), AuthMechanism.SASL_PLAIN);
-		Assert.assertEquals(producerConfig.getTopics().size(), 1);
-		for (Map.Entry<String, Topic> entry : producerConfig.getTopics().entrySet()) {
-			Assert.assertEquals(entry.getKey(), "flo-event-logs");
-			Topic topic1 = entry.getValue();
-			Assert.assertEquals(topic1.getName(), "flo-event-logs");
-			Assert.assertEquals(topic1.getFaultStrategy(), Topic.FaultStrategy.NONE);
-			Assert.assertEquals(topic1.isEnableEncryption(), true);
-			Assert.assertEquals(topic1.getKeyId(), "ff-fxm");
-		}
-
+		System.setProperty("KAFKA__TASK__TXN_HA_PRIMARY_API_SECRET", "primarysecret");
+		System.setProperty("KAFKA__TASK__TXN_HA_PRIMARY_API_KEY", "primarykey");
+		System.setProperty("KAFKA__TASK__TXN_HA_SECONDARY_API_SECRET", "secondarysecret");
+		System.setProperty("KAFKA__TASK__TXN_HA_SECONDARY_API_KEY", "secondarykey");
+		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
+		validateProducerConfig(producerConfig, true);
 	}
 
-	private ConfluentKafkaPublishTask.Input getInput() {
+	@Test
+	public void testTXNHAWorkflowConfigurations() {
+		ConfluentKafkaProducerManager confluentKafkaProducerManager = new ConfluentKafkaProducerManager(new SystemPropertiesConfiguration());
 		Task task = new Task();
 		task.setTaskDefName("task");
-		ConfluentKafkaPublishTask.Input input = new ConfluentKafkaPublishTask.Input();
-		task.getInputData().put(ConfluentKafkaPublishTask.REQUEST_PARAMETER_NAME, input);
-
-		Map<String, Object> topic = new HashMap<>();
-		input.setTopic(topic);
-		topic.put("name", "f");
-		topic.put("faultStrategy", "f");
-		topic.put("enableEncryption", "f");
-		topic.put("keyId", "f");
-		Map<String, Object> primaryCluster = new HashMap<>();
-		input.setPrimaryCluster(primaryCluster);
-		primaryCluster.put("bootStrapServers", "localhost:9093");
-		primaryCluster.put("authMechanism", "NONE");
-		input.setClientId("rr");
-		input.setAcks("q");
-		input.setValue("ee");
-		return input;
+		ConfluentKafkaPublishTask.Input input = getInput(true);
+		input.setClusterType("TXN_HA");
+		System.setProperty("KAFKA__TEST__TASK__TXN_HA_PRIMARY_API_SECRET", "primarysecret");
+		System.setProperty("KAFKA__TEST__TASK__TXN_HA_PRIMARY_API_KEY", "primarykey");
+		System.setProperty("KAFKA__TEST__TASK__TXN_HA_SECONDARY_API_SECRET", "secondarysecret");
+		System.setProperty("KAFKA__TEST__TASK__TXN_HA_SECONDARY_API_KEY", "secondarykey");
+		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
+		validateProducerConfig(producerConfig, true);
 	}
 
 }
