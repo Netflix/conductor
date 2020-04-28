@@ -137,14 +137,15 @@ public class ConfluentKafkaProducerManager {
 	private String getTaskKey(String taskDefName, String clusterType, String workflowName) {
 		String userName = configuration.getProperty( KAFKA_PREFIX +  "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).key , "");
 		if (userName != "") {
-			logger.info("Secret found for task" + taskDefName + " for cluster " + clusterType);
+			logger.info("Key found for task" + taskDefName + " for cluster " + clusterType);
 			return userName;
 		}
 		userName = configuration.getProperty( KAFKA_PREFIX +  "__" + workflowName.toUpperCase() + "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).key , "");
 		 if (userName != "") {
-			 logger.info("Secret found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
+			 logger.info("Key found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
 			return userName;
 		}
+		logger.info("Key not found for task" + taskDefName + " for cluster " + clusterType);
 		return "";
 	}
 
@@ -159,6 +160,7 @@ public class ConfluentKafkaProducerManager {
 			logger.info("Secret found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
 			return password;
 		}
+		logger.info("Secret not found for task" + taskDefName + " for cluster " + clusterType);
 		return "";
 	}
 }
