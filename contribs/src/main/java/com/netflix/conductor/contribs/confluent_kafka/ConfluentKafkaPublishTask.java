@@ -101,7 +101,7 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 		}
 
 		try {
-			CallbackFuture<Record> record = kafkaPublish(input, task.getTaskDefName());
+			CallbackFuture<Record> record = kafkaPublish(input, task.getTaskDefName(), workflow.getWorkflowName());
 			try {
 				record.get();
 				task.setStatus(Task.Status.COMPLETED);
@@ -197,10 +197,10 @@ public class ConfluentKafkaPublishTask extends WorkflowSystemTask {
 	 * @return Future for execution.
 	 */
 	@SuppressWarnings("unchecked")
-	private CallbackFuture<Record> kafkaPublish(ConfluentKafkaPublishTask.Input input, String taskDefName) throws Exception {
+	private CallbackFuture<Record> kafkaPublish(ConfluentKafkaPublishTask.Input input, String taskDefName, String workflowName) throws Exception {
 
 		long startPublishingEpochMillis = Instant.now().toEpochMilli();
-		Producer producer = confluentKafkaProducerManager.getProducer(input, taskDefName);
+		Producer producer = confluentKafkaProducerManager.getProducer(input, taskDefName, workflowName);
 		long timeTakenToCreateProducer = Instant.now().toEpochMilli() - startPublishingEpochMillis;
 		logger.debug("Time taken getting producer {}", timeTakenToCreateProducer);
 		return producer.send(String.valueOf(input.getTopic().get("name")), input.getKey(), objectMapper.writeValueAsString(input.getValue()), input.getHeaders());
