@@ -147,13 +147,13 @@ public class ConfluentKafkaProducerManager {
 	}
 
 	private String getTaskSecret(String taskDefName, String clusterType, String workflowName) {
-		String userName = configuration.getProperty( KAFKA_PREFIX +  "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).secret , "");
-		if (userName != "") {
-			return userName;
+		String password = configuration.getProperty( KAFKA_PREFIX +  "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).secret , "");
+		if (password != "") {
+			return password;
 		}
-		userName = configuration.getProperty( KAFKA_PREFIX +  "__" + workflowName.toUpperCase() + "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).secret , "");
-		if (userName != "") {
-			return userName;
+		password = configuration.getProperty( KAFKA_PREFIX +  "__" + workflowName.toUpperCase() + "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).secret , "");
+		if (password != "") {
+			return password;
 		}
 		return "";
 	}
