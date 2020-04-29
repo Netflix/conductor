@@ -81,8 +81,8 @@ public class TestConfluentKafkaProducerManager {
 		task.setTaskDefName("task");
 		ConfluentKafkaPublishTask.Input input = getInput(false);
 		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.BATCH.name());
-		System.setProperty("KAFKA__TASK__BATCH_PRIMARY_API_SECRET", "secret");
-		System.setProperty("KAFKA__TASK__BATCH_PRIMARY_API_KEY", "key");
+		System.setProperty("KAFKA_TASK_BATCH_PRIMARY_API_SECRET", "secret");
+		System.setProperty("KAFKA_TASK_BATCH_PRIMARY_API_KEY", "key");
 		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
 		validateProducerConfig(producerConfig, false);
 	}
@@ -94,8 +94,8 @@ public class TestConfluentKafkaProducerManager {
 		task.setTaskDefName("task");
 		ConfluentKafkaPublishTask.Input input = getInput(false);
 		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.BATCH.name());
-		System.setProperty("KAFKA__TEST__TASK__BATCH_PRIMARY_API_SECRET", "secret");
-		System.setProperty("KAFKA__TEST__TASK__BATCH_PRIMARY_API_KEY", "key");
+		System.setProperty("KAFKA_TEST_TASK_BATCH_PRIMARY_API_SECRET", "secret");
+		System.setProperty("KAFKA_TEST_TASK_BATCH_PRIMARY_API_KEY", "key");
 		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
 		validateProducerConfig(producerConfig, false);
 	}
@@ -107,8 +107,8 @@ public class TestConfluentKafkaProducerManager {
 		task.setTaskDefName("task");
 		ConfluentKafkaPublishTask.Input input = getInput(false);
 		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.TXN.name());
-		System.setProperty("KAFKA__TASK__TXN_PRIMARY_API_SECRET", "secret");
-		System.setProperty("KAFKA__TASK__TXN_PRIMARY_API_KEY", "key");
+		System.setProperty("KAFKA_TASK_TXN_PRIMARY_API_SECRET", "secret");
+		System.setProperty("KAFKA_TASK_TXN_PRIMARY_API_KEY", "key");
 		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
 		validateProducerConfig(producerConfig, false);
 	}
@@ -120,8 +120,8 @@ public class TestConfluentKafkaProducerManager {
 		task.setTaskDefName("task");
 		ConfluentKafkaPublishTask.Input input = getInput(false);
 		input.setClusterType(ConfluentKafkaProducerManager.ClusterType.TXN.name());
-		System.setProperty("KAFKA__TEST__TASK__TXN_PRIMARY_API_SECRET", "secret");
-		System.setProperty("KAFKA__TEST__TASK__TXN_PRIMARY_API_KEY", "key");
+		System.setProperty("KAFKA_TEST_TASK_TXN_PRIMARY_API_SECRET", "secret");
+		System.setProperty("KAFKA_TEST_TASK_TXN_PRIMARY_API_KEY", "key");
 		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
 		validateProducerConfig(producerConfig, false);
 	}
@@ -133,10 +133,10 @@ public class TestConfluentKafkaProducerManager {
 		task.setTaskDefName("task");
 		ConfluentKafkaPublishTask.Input input = getInput(true);
 		input.setClusterType("TXN_HA");
-		System.setProperty("KAFKA__TASK__TXN_HA_PRIMARY_API_SECRET", "primarysecret");
-		System.setProperty("KAFKA__TASK__TXN_HA_PRIMARY_API_KEY", "primarykey");
-		System.setProperty("KAFKA__TASK__TXN_HA_SECONDARY_API_SECRET", "secondarysecret");
-		System.setProperty("KAFKA__TASK__TXN_HA_SECONDARY_API_KEY", "secondarykey");
+		System.setProperty("KAFKA_TASK_TXN_HA_PRIMARY_API_SECRET", "primarysecret");
+		System.setProperty("KAFKA_TASK_TXN_HA_PRIMARY_API_KEY", "primarykey");
+		System.setProperty("KAFKA_TASK_TXN_HA_SECONDARY_API_SECRET", "secondarysecret");
+		System.setProperty("KAFKA_TASK_TXN_HA_SECONDARY_API_KEY", "secondarykey");
 		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
 		validateProducerConfig(producerConfig, true);
 	}
@@ -148,10 +148,10 @@ public class TestConfluentKafkaProducerManager {
 		task.setTaskDefName("task");
 		ConfluentKafkaPublishTask.Input input = getInput(true);
 		input.setClusterType("TXN_HA");
-		System.setProperty("KAFKA__TEST__TASK__TXN_HA_PRIMARY_API_SECRET", "primarysecret");
-		System.setProperty("KAFKA__TEST__TASK__TXN_HA_PRIMARY_API_KEY", "primarykey");
-		System.setProperty("KAFKA__TEST__TASK__TXN_HA_SECONDARY_API_SECRET", "secondarysecret");
-		System.setProperty("KAFKA__TEST__TASK__TXN_HA_SECONDARY_API_KEY", "secondarykey");
+		System.setProperty("KAFKA_TEST_TASK_TXN_HA_PRIMARY_API_SECRET", "primarysecret");
+		System.setProperty("KAFKA_TEST_TASK_TXN_HA_PRIMARY_API_KEY", "primarykey");
+		System.setProperty("KAFKA_TEST_TASK_TXN_HA_SECONDARY_API_SECRET", "secondarysecret");
+		System.setProperty("KAFKA_TEST_TASK_TXN_HA_SECONDARY_API_KEY", "secondarykey");
 		ProducerConfig producerConfig = confluentKafkaProducerManager.getProducerProperties(input, task.getTaskDefName(), "test");
 		validateProducerConfig(producerConfig, true);
 	}

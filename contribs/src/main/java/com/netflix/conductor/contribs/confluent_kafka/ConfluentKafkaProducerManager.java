@@ -135,12 +135,12 @@ public class ConfluentKafkaProducerManager {
 	}
 
 	private String getTaskKey(String taskDefName, String clusterType, String workflowName) {
-		String userName = configuration.getProperty( KAFKA_PREFIX +  "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).key , "");
+		String userName = configuration.getProperty( KAFKA_PREFIX +  "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).key , "");
 		if (userName != "") {
 			logger.info("Key found for task" + taskDefName + " for cluster " + clusterType);
 			return userName;
 		}
-		userName = configuration.getProperty( KAFKA_PREFIX +  "__" + workflowName.toUpperCase() + "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).key , "");
+		userName = configuration.getProperty( KAFKA_PREFIX +  "_" + workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).key , "");
 		 if (userName != "") {
 			 logger.info("Key found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
 			return userName;
@@ -150,12 +150,12 @@ public class ConfluentKafkaProducerManager {
 	}
 
 	private String getTaskSecret(String taskDefName, String clusterType, String workflowName) {
-		String password = configuration.getProperty( KAFKA_PREFIX +  "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).secret , "");
+		String password = configuration.getProperty( KAFKA_PREFIX +  "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).secret , "");
 		if (password != "") {
 			logger.info("Secret found for task" + taskDefName + " for cluster " + clusterType);
 			return password;
 		}
-		password = configuration.getProperty( KAFKA_PREFIX +  "__" + workflowName.toUpperCase() + "__" + taskDefName.toUpperCase() +  "__" + ClusterType.valueOf(clusterType).secret , "");
+		password = configuration.getProperty( KAFKA_PREFIX +  "_" + workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).secret , "");
 		if (password != "") {
 			logger.info("Secret found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
 			return password;
