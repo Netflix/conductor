@@ -154,7 +154,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
-		// Process regular queue
+		// Process regular queue messages
 		try {
 			long unack_on = System.currentTimeMillis() - UNACK_TIME_MS;
 
