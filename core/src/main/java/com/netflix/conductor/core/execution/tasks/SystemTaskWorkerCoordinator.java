@@ -145,7 +145,8 @@ public class SystemTaskWorkerCoordinator {
 
 						// This prevents another containers executing the same action
 						// true means this session added the record to lock queue and can start the task
-						boolean locked = taskQueues.pushIfNotExists(lockQueue, task, 600); // 10 minutes
+						long expireTime = systemTask.getRetryTimeInSecond() * 2 * 1000; // 2 times longer than task retry time
+						boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime);
 						if (!locked) {
 							logger.warn("Cannot lock the task " + task);
 							return;
