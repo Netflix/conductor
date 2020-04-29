@@ -1646,7 +1646,7 @@ public class WorkflowExecutor {
 
 	private void addTaskToQueue(final List<Task> tasks) throws Exception {
 		for (Task t : tasks) {
-			addTaskToQueue(t);
+			pushTaskToQueue(t);
 		}
 	}
 
