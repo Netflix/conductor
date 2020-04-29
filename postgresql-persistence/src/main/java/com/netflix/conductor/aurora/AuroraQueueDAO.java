@@ -154,17 +154,34 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
-		long unack_on = System.currentTimeMillis() - UNACK_TIME_MS;
-
-		final String SQL = "UPDATE queue_message " +
-			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
-			"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND unack_on < ? AND popped = true FOR UPDATE SKIP LOCKED)";
-
+		// Process regular queue
 		try {
+			long unack_on = System.currentTimeMillis() - UNACK_TIME_MS;
+
+			final String SQL = "UPDATE queue_message " +
+				"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
+				"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND unack_on < ? AND popped = true FOR UPDATE SKIP LOCKED)";
+
 			executeWithTransaction(SQL, q -> q
 				.addParameter(queueName.toLowerCase())
 				.addTimestampParameter(unack_on)
 				.executeUpdate());
+		} catch (Exception ex) {
+			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
+		}
+
+		// Cleanup locked expired messages
+		try {
+			long unack_on = System.currentTimeMillis() - UNACK_TIME_MS;
+
+			final String SQL = "DELETE FROM queue_message " +
+				"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND unack_on < ? FOR UPDATE SKIP LOCKED)";
+
+			String lockQueueName = queueName.toLowerCase() + ".lock";
+			executeWithTransaction(SQL, q -> q
+				.addParameter(lockQueueName)
+				.addTimestampParameter(unack_on)
+				.executeDelete());
 		} catch (Exception ex) {
 			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
 		}

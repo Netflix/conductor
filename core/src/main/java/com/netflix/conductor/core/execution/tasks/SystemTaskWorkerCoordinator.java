@@ -134,6 +134,7 @@ public class SystemTaskWorkerCoordinator {
 			}
 			
 			String name = systemTask.getName();
+			String lockQueue = name.toLowerCase() + ".lock";
 			List<String> polled = taskQueues.pop(name, pollCount, pollTimeout);
 			Monitors.recordTaskPoll(name);
 			logger.debug("Polling for {}, got {}", name, polled.size());
@@ -141,14 +142,24 @@ public class SystemTaskWorkerCoordinator {
 				try {
 					es.submit(()-> {
 						NDC.push("system-"+ UUID.randomUUID().toString());
+
+						// This prevents another containers executing the same action
+						// true means this session added the record to lock queue and can start the task
+						boolean locked = taskQueues.pushIfNotExists(lockQueue, task, 600); // 10 minutes
+						if (!locked) {
+							logger.warn("Cannot lock the task " + task);
+							return;
+						}
+
 						try {
 							executor.executeSystemTask(systemTask, task, unackTimeout);
 						} finally {
 							NDC.remove();
+							taskQueues.remove(lockQueue, task);
 						}
 					});
 				}catch(RejectedExecutionException ree) {
-					logger.warn("Queue full for workers {}", workerQueue.size());
+					logger.warn("Queue full for workers {}, taskId {}", workerQueue.size(), task);
 				}
 			}
 			
