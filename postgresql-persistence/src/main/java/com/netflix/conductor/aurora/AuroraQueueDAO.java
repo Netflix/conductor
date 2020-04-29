@@ -76,7 +76,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			"SET popped = true, unack_on = ?, version = version + 1 " +
 			"WHERE id = ANY(?) RETURNING message_id";
 
-		try  {
+		try {
 			long start = System.currentTimeMillis();
 
 			// Returns true until foundIds = count or time spent = timeout
