@@ -179,7 +179,7 @@ public class ForkJoinDynamicTaskMapper implements TaskMapper {
     Task createDynamicForkTask(WorkflowTask taskToSchedule, Workflow workflowInstance, String taskId, List<WorkflowTask> dynForkTasks) {
         Task forkDynamicTask = new Task();
         forkDynamicTask.setTaskType(SystemTaskType.FORK.name());
-        forkDynamicTask.setTaskDefName(SystemTaskType.FORK.name());
+        forkDynamicTask.setTaskDefName(taskToSchedule.getName());
         forkDynamicTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         forkDynamicTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         forkDynamicTask.setCorrelationId(workflowInstance.getCorrelationId());

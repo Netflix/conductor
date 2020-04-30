@@ -78,7 +78,7 @@ public class DecisionTaskMapper implements TaskMapper {
         //QQ why is the case value and the caseValue passed and caseOutput passes as the same ??
         Task decisionTask = new Task();
         decisionTask.setTaskType(SystemTaskType.DECISION.name());
-        decisionTask.setTaskDefName(SystemTaskType.DECISION.name());
+        decisionTask.setTaskDefName(taskToSchedule.getName());
         decisionTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         decisionTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         decisionTask.setWorkflowType(workflowInstance.getWorkflowName());

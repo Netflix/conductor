@@ -68,7 +68,7 @@ public class ForkJoinTaskMapper implements TaskMapper {
         List<Task> tasksToBeScheduled = new LinkedList<>();
         Task forkTask = new Task();
         forkTask.setTaskType(SystemTaskType.FORK.name());
-        forkTask.setTaskDefName(SystemTaskType.FORK.name());
+        forkTask.setTaskDefName(taskToSchedule.getName());
         forkTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         forkTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         forkTask.setWorkflowType(workflowInstance.getWorkflowName());
