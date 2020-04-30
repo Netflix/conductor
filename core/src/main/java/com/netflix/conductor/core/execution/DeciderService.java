@@ -74,7 +74,8 @@ public class DeciderService {
 
     private final Map<String, TaskMapper> taskMappers;
 
-    private final Predicate<Task> isNonPendingTask = task -> !task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted() ||  task.getWorkflowTask() != null && task.getWorkflowTask().getType() == TaskType.DECISION.name();
+    private final Predicate<Task> isNonPendingTask = task -> (!task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted()) ||
+            (task.getWorkflowTask() != null && task.getWorkflowTask().getType().equals(TaskType.DECISION.name()));
 
     private static final String PENDING_TASK_TIME_THRESHOLD_PROPERTY_NAME = "workflow.task.pending.time.threshold.minutes";
 
