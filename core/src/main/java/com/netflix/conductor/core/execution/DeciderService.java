@@ -183,8 +183,6 @@ public class DeciderService {
                 getTasksToBeScheduled(workflow, pendingTask.getWorkflowTask(), 0).forEach(nextTask -> {
                     tasksToBeScheduled.putIfAbsent(nextTask.getReferenceTaskName(), nextTask);
                 });
-
-                continue;
             }
 
             if (!pendingTask.getStatus().isSuccessful()) {
