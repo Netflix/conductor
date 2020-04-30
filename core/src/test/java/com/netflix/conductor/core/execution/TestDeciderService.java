@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -433,6 +434,69 @@ public class TestDeciderService {
         assertEquals(Status.IN_PROGRESS, scheduledTasks.get(0).getStatus());
         assertEquals(Status.SCHEDULED, scheduledTasks.get(1).getStatus());
 
+    }
+
+    @Test
+    public void testCompletedCaseStatement() {
+        WorkflowDef def = createConditionalWF2();
+
+        Workflow wf = new Workflow();
+        wf.setWorkflowDefinition(def);
+        wf.setCreateTime(0L);
+        wf.setWorkflowId("a");
+        wf.setCorrelationId("b");
+        wf.setStatus(WorkflowStatus.RUNNING);
+
+        WorkflowTask taskBeforeDecisionDef = null;
+        WorkflowTask decisionTaskDef = null;
+        for (WorkflowTask task : def.getTasks()) {
+            switch (task.getName()) {
+                case "junit_task_1":
+                    taskBeforeDecisionDef = task;
+                case "conditional":
+                    decisionTaskDef = task;
+            }
+        }
+
+        Task taskBeforeDecision = new Task();
+        taskBeforeDecision.setTaskType(taskBeforeDecisionDef.getName());
+        taskBeforeDecision.setTaskDefName(taskBeforeDecisionDef.getName());
+        taskBeforeDecision.setReferenceTaskName(taskBeforeDecisionDef.getTaskReferenceName());
+        taskBeforeDecision.setWorkflowInstanceId(wf.getWorkflowId());
+        taskBeforeDecision.setWorkflowType(wf.getWorkflowName());
+        taskBeforeDecision.setCorrelationId(wf.getCorrelationId());
+        taskBeforeDecision.setScheduledTime(System.currentTimeMillis());
+        taskBeforeDecision.setTaskId("c");
+        taskBeforeDecision.setStatus(Status.COMPLETED);
+        taskBeforeDecision.setExecuted(true);
+        taskBeforeDecision.setWorkflowTask(taskBeforeDecisionDef);
+        taskBeforeDecision.getOutputData().put("result", "true");
+
+        Task decisionTask = new Task();
+        decisionTask.setTaskType(decisionTaskDef.getName());
+        decisionTask.setTaskDefName(decisionTaskDef.getName());
+        decisionTask.setReferenceTaskName(decisionTaskDef.getTaskReferenceName());
+        decisionTask.setWorkflowInstanceId(wf.getWorkflowId());
+        decisionTask.setWorkflowType(wf.getWorkflowName());
+        decisionTask.setCorrelationId(wf.getCorrelationId());
+        decisionTask.setScheduledTime(System.currentTimeMillis());
+        decisionTask.setTaskId("d");
+        decisionTask.setStatus(Status.COMPLETED);
+        decisionTask.setExecuted(true);
+        decisionTask.setWorkflowTask(decisionTaskDef);
+        decisionTask.getInputData().put("case", "true");
+        decisionTask.getOutputData().put("caseOutput", Collections.singletonList("true"));
+
+        wf.setTasks(ImmutableList.of(taskBeforeDecision, decisionTask));
+
+        DeciderOutcome outcome = deciderService.decide(wf);
+        assertNotNull(outcome.tasksToBeScheduled);
+        assertNotNull(outcome.tasksToBeUpdated);
+        assertEquals(0, outcome.tasksToBeUpdated.size());
+        assertEquals(false, outcome.isComplete);
+        assertEquals(1, outcome.tasksToBeScheduled.size());
+        assertEquals(Status.SCHEDULED, outcome.tasksToBeScheduled.get(0).getStatus());
+        assertEquals("junit_task_2", outcome.tasksToBeScheduled.get(0).getTaskType());
     }
 
     @Test
@@ -1077,6 +1141,42 @@ public class TestDeciderService {
         finalDecisionTask.getDecisionCases().put("notify", Collections.singletonList(notifyTask));
 
         workflowDef.getTasks().add(finalDecisionTask);
+        return workflowDef;
+    }
+
+    private WorkflowDef createConditionalWF2() {
+        WorkflowDef workflowDef = new WorkflowDef();
+        workflowDef.setName("Conditional Workflow 2");
+        workflowDef.setDescription("Conditional Workflow");
+        workflowDef.setInputParameters(Arrays.asList("param1", "param2"));
+
+        WorkflowTask workflowTask1 = new WorkflowTask();
+        workflowTask1.setName("junit_task_1");
+        Map<String, Object> inputParams1 = new HashMap<>();
+        workflowTask1.setInputParameters(inputParams1);
+        workflowTask1.setTaskReferenceName("t1");
+        workflowTask1.setTaskDefinition(new TaskDef("junit_task_1"));
+        workflowDef.getTasks().add(workflowTask1);
+
+        WorkflowTask workflowTask2 = new WorkflowTask();
+        workflowTask2.setName("junit_task_2");
+        Map<String, Object> inputParams2 = new HashMap<>();
+        inputParams2.put("tp1", "workflow.input.param1");
+        workflowTask2.setInputParameters(inputParams2);
+        workflowTask2.setTaskReferenceName("t2");
+        workflowTask2.setTaskDefinition(new TaskDef("junit_task_2"));
+
+        WorkflowTask decisionTask = new WorkflowTask();
+        decisionTask.setType(TaskType.DECISION.name());
+        decisionTask.setCaseValueParam("case");
+        decisionTask.setName("conditional");
+        decisionTask.setTaskReferenceName("conditional2");
+        Map<String, List<WorkflowTask>> dc = new HashMap<>();
+        dc.put("true", Arrays.asList(workflowTask2));
+        decisionTask.setDecisionCases(dc);
+        decisionTask.getInputParameters().put("case", "${t1.output.result}");
+        workflowDef.getTasks().add(decisionTask);
+
         return workflowDef;
     }
 

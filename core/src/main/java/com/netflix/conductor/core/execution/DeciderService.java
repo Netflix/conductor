@@ -74,7 +74,7 @@ public class DeciderService {
 
     private final Map<String, TaskMapper> taskMappers;
 
-    private final Predicate<Task> isNonPendingTask = task -> !task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted();
+    private final Predicate<Task> isNonPendingTask = task -> !task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted() ||  task.getWorkflowTask() != null && task.getWorkflowTask().getType() == TaskType.DECISION.name();
 
     private static final String PENDING_TASK_TIME_THRESHOLD_PROPERTY_NAME = "workflow.task.pending.time.threshold.minutes";
 
@@ -174,12 +174,20 @@ public class DeciderService {
                 }
             }
 
-            if (!pendingTask.getStatus().isSuccessful()) {
-                WorkflowTask workflowTask = pendingTask.getWorkflowTask();
-                if (workflowTask == null) {
-                    workflowTask = workflow.getWorkflowDefinition().getTaskByRefName(pendingTask.getReferenceTaskName());
-                }
+            WorkflowTask workflowTask = pendingTask.getWorkflowTask();
+            if (workflowTask == null) {
+                workflowTask = workflow.getWorkflowDefinition().getTaskByRefName(pendingTask.getReferenceTaskName());
+            }
 
+            if (workflowTask.getType().equals(TaskType.DECISION.name()) && pendingTask.getStatus() == Status.COMPLETED) {
+                getTasksToBeScheduled(workflow, pendingTask.getWorkflowTask(), 0).forEach(nextTask -> {
+                    tasksToBeScheduled.putIfAbsent(nextTask.getReferenceTaskName(), nextTask);
+                });
+
+                continue;
+            }
+
+            if (!pendingTask.getStatus().isSuccessful()) {
                 Optional<Task> retryTask = retry(taskDefinition.orElse(null), workflowTask, pendingTask, workflow);
                 if (retryTask.isPresent()) {
                     tasksToBeScheduled.put(retryTask.get().getReferenceTaskName(), retryTask.get());
