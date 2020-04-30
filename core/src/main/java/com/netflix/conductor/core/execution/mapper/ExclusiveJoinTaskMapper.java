@@ -51,7 +51,7 @@ public class ExclusiveJoinTaskMapper implements TaskMapper {
 
 		Task joinTask = new Task();
 		joinTask.setTaskType(SystemTaskType.EXCLUSIVE_JOIN.name());
-		joinTask.setTaskDefName(SystemTaskType.EXCLUSIVE_JOIN.name());
+		joinTask.setTaskDefName(taskToSchedule.getName());
 		joinTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
 		joinTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
 		joinTask.setCorrelationId(workflowInstance.getCorrelationId());
