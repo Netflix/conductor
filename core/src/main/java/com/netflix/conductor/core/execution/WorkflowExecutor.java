@@ -984,36 +984,13 @@ public class WorkflowExecutor {
                         if (!workflowSystemTask.isAsync() && workflowSystemTask.execute(workflowInstance, task, this)) {
                             // FIXME: temporary hack to workaround TERMINATE task
                             if (TERMINATE.name().equals(task.getTaskType())) {
-                                deciderService.externalizeWorkflowData(workflow);
+                                deciderService.externalizeTaskData(task);
                                 executionDAOFacade.updateTask(task);
-                                workflow.setOutput(workflowInstance.getOutput());
-                                List<Task> terminateTasksToBeUpdated = new ArrayList<Task>();
-                                /*
-                                 * The TERMINATE task completes the workflow but does not do anything with SCHEDULED or IN_PROGRESS tasks to complete them
-                                 */
-                                for(Task workflowTask : workflow.getTasks()) {
-                                	if(workflowTask != task && !workflowTask.getStatus().isTerminal()) {
-                                		workflowTask.setStatus(SKIPPED);
-                                		terminateTasksToBeUpdated.add(workflowTask);
-                                	}
-                                }
-                                /*
-                                 * Now find nested subworkflows that also need to have their tasks skipped
-                                 */
-                                for(Task workflowTask : workflow.getTasks()) {
-                                	if(TaskType.SUB_WORKFLOW.name().equals(workflowTask.getTaskType()) && StringUtils.isNotBlank(workflowTask.getSubWorkflowId())) {
-                                   		Workflow subWorkflow = executionDAOFacade.getWorkflowById(workflowTask.getSubWorkflowId(), true);
-                                		if(subWorkflow != null) {
-                                			skipTasksAffectedByTerminateTask(subWorkflow);                                		
-                                		}
-                                	}
-                                }
-                                executionDAOFacade.updateTasks(terminateTasksToBeUpdated);
-                                if(workflowInstance.getStatus().equals(WorkflowStatus.COMPLETED)) {
-                                	completeWorkflow(workflow);
+                                if (workflowInstance.getStatus().equals(WorkflowStatus.COMPLETED)) {
+                                    completeWorkflow(workflow);
                                 } else {
                                     workflow.setStatus(workflowInstance.getStatus());
-                                	terminateWorkflow(workflow, "Workflow is FAILED by TERMINATE task: " + task.getTaskId(), null);
+                                    terminateWorkflow(workflow, "Workflow is FAILED by TERMINATE task: " + task.getTaskId(), null);
                                 }
                                 return true;
                             }
