@@ -984,16 +984,17 @@ public class WorkflowExecutor {
                         if (!workflowSystemTask.isAsync() && workflowSystemTask.execute(workflowInstance, task, this)) {
                             // FIXME: temporary hack to workaround TERMINATE task
                             if (TERMINATE.name().equals(task.getTaskType())) {
-                                workflow.setStatus(workflowInstance.getStatus());
-                                workflow.setOutput(workflowInstance.getOutput());
                                 deciderService.externalizeWorkflowData(workflow);
+                                executionDAOFacade.updateTask(task);
+                                workflow.setOutput(workflowInstance.getOutput());
+                                List<Task> terminateTasksToBeUpdated = new ArrayList<Task>();
                                 /*
                                  * The TERMINATE task completes the workflow but does not do anything with SCHEDULED or IN_PROGRESS tasks to complete them
                                  */
                                 for(Task workflowTask : workflow.getTasks()) {
                                 	if(workflowTask != task && !workflowTask.getStatus().isTerminal()) {
                                 		workflowTask.setStatus(SKIPPED);
-                                		tasksToBeUpdated.add(workflowTask);
+                                		terminateTasksToBeUpdated.add(workflowTask);
                                 	}
                                 }
                                 /*
@@ -1007,6 +1008,14 @@ public class WorkflowExecutor {
                                 		}
                                 	}
                                 }
+                                executionDAOFacade.updateTasks(terminateTasksToBeUpdated);
+                                if(workflowInstance.getStatus().equals(WorkflowStatus.COMPLETED)) {
+                                	completeWorkflow(workflow);
+                                } else {
+                                    workflow.setStatus(workflowInstance.getStatus());
+                                	terminateWorkflow(workflow, "Workflow is FAILED by TERMINATE task: " + task.getTaskId(), null);
+                                }
+                                return true;
                             }
                             deciderService.externalizeTaskData(task);
                             tasksToBeUpdated.add(task);
