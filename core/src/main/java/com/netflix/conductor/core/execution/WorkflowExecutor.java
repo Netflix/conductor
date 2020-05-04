@@ -984,7 +984,7 @@ public class WorkflowExecutor {
                         if (!workflowSystemTask.isAsync() && workflowSystemTask.execute(workflowInstance, task, this)) {
                             // FIXME: temporary hack to workaround TERMINATE task
                             if (TERMINATE.name().equals(task.getTaskType())) {
-                                deciderService.externalizeWorkflowData(workflow);
+                                deciderService.externalizeTaskData(task);
                                 executionDAOFacade.updateTask(task);
                                 workflow.setOutput(workflowInstance.getOutput());
                                 List<Task> terminateTasksToBeUpdated = new ArrayList<Task>();
