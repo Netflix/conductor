@@ -1,5 +1,5 @@
-/**
- * Copyright 2016 Netflix, Inc.
+/*
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,9 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-/**
- *
  */
 package com.netflix.conductor.core.execution.tasks;
 
@@ -40,6 +37,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 	private static final Logger logger = LoggerFactory.getLogger(SubWorkflow.class);
 	public static final String NAME = "SUB_WORKFLOW";
+    public static final String SUB_WORKFLOW_ID = "subWorkflowId";
 
 	public SubWorkflow() {
 		super(NAME);
@@ -66,25 +64,12 @@ public class SubWorkflow extends WorkflowSystemTask {
 			String subWorkflowId = provider.startWorkflow(name, version, wfInput, null, correlationId, workflow.getWorkflowId(), task.getTaskId(), null, taskToDomain);
 
             task.setSubWorkflowId(subWorkflowId);
+			// For backwards compatibility
+			task.getOutputData().put("subWorkflowId", subWorkflowId);
 
 			// Set task status based on current sub-workflow status, as the status can change in recursion by the time we update here.
 			Workflow subWorkflow = provider.getWorkflow(subWorkflowId, false);
-			switch (subWorkflow.getStatus()) {
-				case RUNNING:
-				case PAUSED:
-					task.setStatus(Status.IN_PROGRESS);
-					break;
-				case COMPLETED:
-					task.setStatus(Status.COMPLETED);
-					break;
-				case FAILED:
-				case TIMED_OUT:
-				case TERMINATED:
-					task.setStatus(Status.FAILED);
-					break;
-				default:
-					throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, "Subworkflow status does not conform to relevant task status.");
-			}
+			updateTaskStatus(subWorkflow.getStatus(), task);
 		} catch (Exception e) {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(e.getMessage());
@@ -109,12 +94,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 		} else {
 			task.getOutputData().putAll(subWorkflow.getOutput());
 		}
-		if (subWorkflowStatus.isSuccessful()) {
-			task.setStatus(Status.COMPLETED);
-		} else {
+		if (!subWorkflowStatus.isSuccessful()) {
 			task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
-			task.setStatus(Status.FAILED);
 		}
+		updateTaskStatus(subWorkflowStatus, task);
 		return true;
 	}
 
@@ -132,5 +115,38 @@ public class SubWorkflow extends WorkflowSystemTask {
 	@Override
 	public boolean isAsync() {
 		return true;
+	}
+
+    /**
+     * Keep Subworkflow task asyncComplete.
+     * The Subworkflow task will be executed once asynchronously to move to IN_PROGRESS state,
+     * and will move to termination by Subworkflow's completeWorkflow logic, there by avoiding periodic polling.
+     * @param task
+     * @return
+     */
+    @Override
+    public boolean isAsyncComplete(Task task) {
+        return true;
+    }
+
+	private void updateTaskStatus(WorkflowStatus status, Task task) {
+		switch (status) {
+			case RUNNING:
+			case PAUSED:
+				task.setStatus(Status.IN_PROGRESS);
+				break;
+			case COMPLETED:
+				task.setStatus(Status.COMPLETED);
+				break;
+			case FAILED:
+			case TERMINATED:
+				task.setStatus(Status.FAILED);
+				break;
+			case TIMED_OUT:
+				task.setStatus(Status.TIMED_OUT);
+				break;
+			default:
+				throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, "Subworkflow status does not conform to relevant task status.");
+		}
 	}
 }
