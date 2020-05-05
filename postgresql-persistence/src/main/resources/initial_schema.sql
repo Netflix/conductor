@@ -174,6 +174,7 @@ alter table task
     add constraint task_task_id unique using index task_task_id;
 create index task_type_status on task (task_type, task_status);
 create index task_workflow_id on task (workflow_id);
+create index task_type_time on task (task_type, start_time);
 
 create table task_scheduled
 (
@@ -243,6 +244,7 @@ create index event_execution_created_on on event_execution (created_on);
 create unique index event_execution_fields on event_execution (handler_name, event_name, message_id, execution_id);
 alter table event_execution
     add constraint event_execution_fields unique using index event_execution_fields;
+create index event_execution_combo ON event_execution(subject, received_on);
 
 create table event_published
 (
@@ -284,4 +286,5 @@ create table queue_message
 create unique index queue_name_msg on queue_message (queue_name, message_id);
 alter table queue_message
     add constraint queue_name_msg unique using index queue_name_msg;
-create index queue_message_deliver_on on queue_message (queue_name, deliver_on);
+create index queue_message_deliver_on on queue_message (deliver_on);
+create index queue_message_unack_on on queue_message (unack_on);
