@@ -27,7 +27,6 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Map;
 
 
 @SuppressWarnings("Duplicates")
@@ -71,23 +70,6 @@ public class PostgresDAOTestUtil {
         flywayMigrate(dataSource);
 
         return dataSource;
-    }
-
-    private DataSource getDatabase(String userName, String dbName, Map<String, String> properties) {
-        final PGSimpleDataSource ds = new PGSimpleDataSource();
-        ds.setServerName("localhost");
-        ds.setPortNumber(54320);
-        ds.setDatabaseName(dbName);
-        ds.setUser(userName);
-
-        properties.forEach((propertyKey, propertyValue) -> {
-            try {
-                ds.setProperty(propertyKey, propertyValue);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        return ds;
     }
 
     private void flywayMigrate(DataSource dataSource) {

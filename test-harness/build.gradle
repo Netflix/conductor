@@ -11,7 +11,6 @@ buildscript {
 
 apply plugin: 'docker-compose'
 
-
 configurations.all {
     resolutionStrategy {
         force "com.fasterxml.jackson.core:jackson-core:${revJacksonCore}"
@@ -52,14 +51,14 @@ dockerCompose{
 }
 
 task intDockerStart() {
-    group = "Postgres data access based Integration Test"
-    description "Starts a local db container for postgres data access integration tests."
+    group = "Postgres and Mysql data access based Integration Test"
+    description "Starts a local db container for postgres and mysql data access integration tests."
     dependsOn integrationTestDockerComposeDownForced
     dependsOn integrationTestDockerComposeUp
 }
 
 task intDockerDown(dependsOn: integrationTestDockerComposeDownForced) {
-    group = "Postgres data access based Integration Test"
+    group = "Postgres and Mysql data access based Integration Test"
     description "Stops a local db container for Artemis data access integration tests."
 }
 
