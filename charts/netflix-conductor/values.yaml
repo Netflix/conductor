@@ -48,6 +48,7 @@ server:
     EC2_AVAILABILITY_ZONE: "ap-southeast-2"
     workflow_namespace_prefix: "conductor"
     flyway_enabled: "true"
+  # extraEnv: []
 
 ui:
   repository: kayosportsau/netflixconductor
