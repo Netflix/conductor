@@ -72,8 +72,17 @@ spec:
               value: {{ .Values.server.newrelic.enabled | quote }}
             - name: NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
               value: {{ .Values.server.newrelic.tracing.enabled | quote }}
-{{- if .Values.server.extraEnv }}
-{{ toYaml .Values.server.extraEnv | indent 12 }}
+{{- if .Values.server.databaseSecrets }}
+            - name: jdbc_username
+              valueFrom:
+                secretKeyRef:
+                  key: {{ .Values.server.databaseSecrets.username | quote}}
+                  name: {{ .Values.server.databaseSecrets.secretname | quote}}
+            - name: jdbc_password
+              valueFrom:
+                secretKeyRef:
+                  key: {{ .Values.server.databaseSecrets.password | quote}}
+                  name: {{ .Values.server.databaseSecrets.secretname | quote}}
 {{- end }}
           ports:
             - name: server

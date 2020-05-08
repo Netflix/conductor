@@ -48,7 +48,11 @@ server:
     EC2_AVAILABILITY_ZONE: "ap-southeast-2"
     workflow_namespace_prefix: "conductor"
     flyway_enabled: "true"
-  # extraEnv: []
+#Add database secrets here.
+  #databaseSecrets:
+  #  secretname: secret_name
+  #  username: secret_key_username
+  #  password: secret_key_password
 
 ui:
   repository: kayosportsau/netflixconductor
