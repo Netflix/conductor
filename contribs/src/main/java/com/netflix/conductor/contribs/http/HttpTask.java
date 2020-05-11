@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import datadog.trace.api.Trace;
 /**
  * @author Viren Task that enables calling another http endpoint as part of its
  *         execution
@@ -60,6 +61,7 @@ public class HttpTask extends GenericHttpTask {
 		logger.debug("HttpTask initialized...");
 	}
 
+	@Trace(operationName = "Start Http Task", resourceName = "httpTask")
 	@Override
 	public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
 

@@ -45,6 +45,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import datadog.trace.api.Trace;
+
 /**
  * @author Viren
  * Action Processor subscribes to the Event Actions queue and processes the actions (e.g. start workflow etc)
@@ -105,6 +107,7 @@ public class ActionProcessor {
 
 	}
 
+	@Trace(operationName = "completeTask", resourceName = "eventhandler")
 	private Map<String, Object> completeTask(Action action, Object payload, TaskDetails taskDetails, Status status, String event, String messageId) {
 
 		Map<String, Object> input = new HashMap<>();
@@ -141,6 +144,7 @@ public class ActionProcessor {
 		return replaced;
 	}
 
+	@Trace(operationName = "startWorkflow", resourceName = "eventhandler")
 	private Map<String, Object> startWorkflow(Action action, Object payload, String event, String messageId) throws Exception {
 		StartWorkflow params = action.getStart_workflow();
 		Map<String, Object> op = new HashMap<>();
@@ -167,6 +171,7 @@ public class ActionProcessor {
 		return op;
 	}
 
+	@Trace(operationName = "updateTask", resourceName = "eventhandler")
 	private Map<String, Object> updateTask(Action action, Object payload, String event, String messageId) throws Exception {
 		UpdateTask updateTask = action.getUpdate_task();
 		Map<String, Object> op = new HashMap<>();
@@ -265,6 +270,7 @@ public class ActionProcessor {
 		return op;
 	}
 
+	@Trace(operationName = "find_update", resourceName = "eventhandler")
 	private Map<String, Object> find_update(Action action, Object payload, EventExecution ee) throws Exception {
 		EventHandler.FindUpdate params = action.getFind_update();
 		Map<String, Object> op = new HashMap<>();
@@ -289,6 +295,7 @@ public class ActionProcessor {
 		return op;
 	}
 
+	@Trace(operationName = "java_action", resourceName = "eventhandler")
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> java_action(Action action, Object payload, EventExecution ee) {
 		JavaAction params = action.getJava_action();
