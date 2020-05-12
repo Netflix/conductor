@@ -647,7 +647,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testDoWhileSingleIteration() throws Exception {
         try {
-            createDoWhileWorkflowWithIteration(1, false);
+            createDoWhileWorkflowWithIteration(1, false, true);
         } catch (Exception e) {
         }
         TaskDef taskDef = new TaskDef();
@@ -718,7 +718,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testDoWhileTwoIteration() throws Exception {
         try {
-            createDoWhileWorkflowWithIteration(2, false);
+            createDoWhileWorkflowWithIteration(2, false, true);
         } catch (Exception e) {
         }
 
@@ -847,7 +847,91 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testLoopConditionWithInputParamter() throws Exception {
         try {
-            createDoWhileWorkflowWithIteration(2, true);
+            createDoWhileWorkflowWithIteration(2, true, true);
+        } catch (Exception e) {
+        }
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("http1");
+        taskDef.setTimeoutSeconds(2);
+        taskDef.setRetryCount(1);
+        taskDef.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef.setRetryDelaySeconds(10);
+        metadataService.registerTaskDef(Arrays.asList(taskDef));
+
+        TaskDef taskDef2 = new TaskDef();
+        taskDef2.setName("http0");
+        taskDef2.setTimeoutSeconds(2);
+        taskDef2.setRetryCount(1);
+        taskDef2.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef2.setRetryDelaySeconds(10);
+        metadataService.registerTaskDef(Arrays.asList(taskDef2));
+
+        TaskDef taskDef1 = new TaskDef();
+        taskDef1.setName("http2");
+        taskDef1.setTimeoutSeconds(2);
+        taskDef1.setRetryCount(1);
+        taskDef1.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef1.setRetryDelaySeconds(10);
+        metadataService.registerTaskDef(Arrays.asList(taskDef1));
+
+        Map<String, Object> input = new HashMap<>();
+        String workflowId = startOrLoadWorkflowExecution(DO_WHILE_WF + "_3", 1, "looptest", input, null, null);
+        System.out.println("testDoWhile.wfid=" + workflowId);
+        printTaskStatuses(workflowId, "initiated");
+
+        Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals("Found " + workflow.getTasks(), RUNNING, workflow.getStatus());
+
+        Task task = workflowExecutionService.poll("HTTP", "test");
+        assertNotNull(task);
+        assertTrue(task.getReferenceTaskName().endsWith(TaskUtils.getLoopOverTaskRefNameSuffix(task.getIteration())));
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        task = workflowExecutionService.poll("FORK_JOIN", "test");
+        assertNull(task); // fork task is completed
+
+        task = workflowExecutionService.poll("HTTP", "test");
+        assertNotNull(task);
+        assertTrue(task.getReferenceTaskName().endsWith(TaskUtils.getLoopOverTaskRefNameSuffix(task.getIteration())));
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        task = workflowExecutionService.poll("HTTP", "test");
+        assertNotNull(task);
+        assertTrue(task.getReferenceTaskName().endsWith(TaskUtils.getLoopOverTaskRefNameSuffix(task.getIteration())));
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        task = workflowExecutionService.poll("JOIN", "test");
+        assertNull(task); // Both HTTP task completed.
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals("Found " + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
+    }
+
+    @Test
+    public void testLoopConditionWithInputParamterWithDef() throws Exception {
+    	testLoopConditionWithInputParamter(true);
+    }
+
+    @Test
+    public void testLoopConditionWithInputParamterNoDef() throws Exception {
+    	testLoopConditionWithInputParamter(false);
+    }
+
+    private void testLoopConditionWithInputParamter(boolean useDef) throws Exception {
+        try {
+            createDoWhileWorkflowWithIteration(2, true, useDef);
         } catch (Exception e) {
         }
 
@@ -1782,7 +1866,7 @@ public abstract class AbstractWorkflowServiceTest {
         metadataService.updateWorkflowDef(workflowDef);
     }
 
-    private void createDoWhileWorkflowWithIteration(int iteration, boolean isInputParameter) {
+    private void createDoWhileWorkflowWithIteration(int iteration, boolean isInputParameter, boolean useTaskDef) {
         WorkflowDef workflowDef = new WorkflowDef();
         if (isInputParameter) {
             workflowDef.setName(DO_WHILE_WF + "_3");
@@ -1802,14 +1886,15 @@ public abstract class AbstractWorkflowServiceTest {
         input.put("value", "${workflow.input.loop}");
         loopTask.setInputParameters(input);
 
-        TaskDef taskDef = new TaskDef();
-        taskDef.setName("loopTask");
-        taskDef.setTimeoutSeconds(200);
-        taskDef.setRetryCount(1);
-        taskDef.setTimeoutPolicy(TimeoutPolicy.RETRY);
-        taskDef.setRetryDelaySeconds(10);
-
-        metadataService.registerTaskDef(Arrays.asList(taskDef));
+        if(useTaskDef) {
+	        TaskDef taskDef = new TaskDef();
+	        taskDef.setName("loopTask");
+	        taskDef.setTimeoutSeconds(200);
+	        taskDef.setRetryCount(1);
+	        taskDef.setTimeoutPolicy(TimeoutPolicy.RETRY);
+	        taskDef.setRetryDelaySeconds(10);
+	        metadataService.registerTaskDef(Arrays.asList(taskDef));
+        }
 
         Map<String, Object> inputParams1 = new HashMap<>();
         inputParams1.put("p1", "workflow.input.param1");
@@ -1858,14 +1943,15 @@ public abstract class AbstractWorkflowServiceTest {
         workflowDef.getTasks().add(loopTask);
 
         if (iteration == 2 && isInputParameter == false) {
-            TaskDef taskDef2 = new TaskDef();
-            taskDef2.setName("loopTask2");
-            taskDef2.setTimeoutSeconds(200);
-            taskDef2.setRetryCount(3);
-            taskDef2.setTimeoutPolicy(TimeoutPolicy.RETRY);
-            taskDef2.setRetryDelaySeconds(10);
-
-            metadataService.registerTaskDef(Arrays.asList(taskDef2));
+        	if(useTaskDef) {
+	            TaskDef taskDef2 = new TaskDef();
+	            taskDef2.setName("loopTask2");
+	            taskDef2.setTimeoutSeconds(200);
+	            taskDef2.setRetryCount(3);
+	            taskDef2.setTimeoutPolicy(TimeoutPolicy.RETRY);
+	            taskDef2.setRetryDelaySeconds(10);
+	            metadataService.registerTaskDef(Arrays.asList(taskDef2));
+        	}
             WorkflowTask loopTask2 = new WorkflowTask();
             loopTask2.setType(TaskType.DO_WHILE.name());
             loopTask2.setTaskReferenceName("loopTask2");
@@ -6430,6 +6516,96 @@ public abstract class AbstractWorkflowServiceTest {
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
         assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
+    }
+
+    /**
+     * This test verifies that a Subworkflow with Terminate task calls decide on parent, and helps progress it immediately.
+     */
+    @Test
+    public void testTerminateTaskInASubworkflow() {
+        WorkflowDef subWorkflowDef = new WorkflowDef();
+        subWorkflowDef.setName("test_terminate_task_wf");
+        subWorkflowDef.setSchemaVersion(2);
+        subWorkflowDef.setVersion(1);
+
+        Map<String, Object> lambdaTaskInputParams = new HashMap<>();
+        lambdaTaskInputParams.put("input", "${workflow.input}");
+        lambdaTaskInputParams.put("scriptExpression", "if ($.input.a==1){return {testvalue: true}} else{return {testvalue: false}}");
+
+        WorkflowTask lambdaWorkflowTask = new WorkflowTask();
+        lambdaWorkflowTask.setWorkflowTaskType(TaskType.LAMBDA);
+        lambdaWorkflowTask.setName("lambda");
+        lambdaWorkflowTask.setInputParameters(lambdaTaskInputParams);
+        lambdaWorkflowTask.setTaskReferenceName("lambda0");
+
+        Map<String, Object> terminateTaskInputParams = new HashMap<>();
+        terminateTaskInputParams.put(Terminate.getTerminationStatusParameter(), "COMPLETED");
+        terminateTaskInputParams.put(Terminate.getTerminationWorkflowOutputParameter(), "${lambda0.output}");
+
+        WorkflowTask terminateWorkflowTask = new WorkflowTask();
+        terminateWorkflowTask.setType(TaskType.TASK_TYPE_TERMINATE);
+        terminateWorkflowTask.setName("terminate");
+        terminateWorkflowTask.setInputParameters(terminateTaskInputParams);
+        terminateWorkflowTask.setTaskReferenceName("terminate0");
+
+        WorkflowTask workflowTask2 = new WorkflowTask();
+        workflowTask2.setName("junit_task_2");
+        workflowTask2.setTaskReferenceName("t2");
+
+        subWorkflowDef.getTasks().addAll(Arrays.asList(lambdaWorkflowTask, terminateWorkflowTask, workflowTask2));
+
+        assertNotNull(subWorkflowDef);
+        metadataService.registerWorkflowDef(subWorkflowDef);
+
+        // Create Parent workflow
+        WorkflowDef parentWorkflowDef = new WorkflowDef();
+        parentWorkflowDef.setName("test_parent_wf_for_terminate_task_subwf");
+        parentWorkflowDef.setSchemaVersion(2);
+
+        WorkflowTask subWorkflowTask = new WorkflowTask();
+        subWorkflowTask.setWorkflowTaskType(SUB_WORKFLOW);
+        subWorkflowTask.setName("subWF");
+        subWorkflowTask.setTaskReferenceName("subWF");
+        SubWorkflowParams subWorkflowParams = new SubWorkflowParams();
+        subWorkflowParams.setName(subWorkflowDef.getName());
+        subWorkflowParams.setVersion(subWorkflowDef.getVersion());
+        subWorkflowTask.setSubWorkflowParam(subWorkflowParams);
+
+        parentWorkflowDef.getTasks().addAll(Arrays.asList(subWorkflowTask));
+
+        assertNotNull(parentWorkflowDef);
+        metadataService.registerWorkflowDef(parentWorkflowDef);
+
+        Map wfInput = Collections.singletonMap("a", 1);
+        String workflowId = startOrLoadWorkflowExecution(parentWorkflowDef.getName(), parentWorkflowDef.getVersion(), "", wfInput, null, null);
+        Workflow workflow = workflowExecutor.getWorkflow(workflowId, true);
+
+        assertNotNull(workflow);
+        assertEquals(1, workflow.getTasks().size());
+
+        SubWorkflow subWorkflowSystemTask = new SubWorkflow();
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("subWF").getTaskId();
+        workflowExecutor.executeSystemTask(subWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        Task task = workflow.getTaskByRefName("subWF");
+
+        Workflow subWorkflow = workflowExecutionService.getExecutionStatus(task.getSubWorkflowId(), true);
+
+        assertNotNull(workflow);
+        assertNotNull(task);
+        assertEquals(COMPLETED, task.getStatus());
+        assertNotNull(subWorkflow);
+        assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
+        assertEquals("tasks:" + subWorkflow.getTasks(), WorkflowStatus.COMPLETED, subWorkflow.getStatus());
+        assertEquals(TaskType.TASK_TYPE_LAMBDA, subWorkflow.getTasks().get(0).getTaskType());
+        assertEquals(TaskType.TASK_TYPE_TERMINATE, subWorkflow.getTasks().get(1).getTaskType());
+        assertEquals(subWorkflow.getTasks().get(1).getOutputData(), subWorkflow.getOutput());
+        assertEquals(SUB_WORKFLOW.name(), workflow.getTasks().get(0).getTaskType());
+
+        metadataService.unregisterWorkflowDef(parentWorkflowDef.getName(), parentWorkflowDef.getVersion());
+        metadataService.unregisterWorkflowDef(subWorkflowDef.getName(), subWorkflowDef.getVersion());
     }
 
     @Test

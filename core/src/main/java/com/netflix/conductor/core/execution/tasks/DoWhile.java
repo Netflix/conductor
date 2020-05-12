@@ -146,7 +146,13 @@ public class DoWhile extends WorkflowSystemTask {
 
 	@VisibleForTesting
 	boolean getEvaluatedCondition(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) throws ScriptException {
-		TaskDef taskDefinition = workflowExecutor.getTaskDefinition(task);
+		TaskDef taskDefinition = null;
+		try {
+			taskDefinition = workflowExecutor.getTaskDefinition(task);
+		} catch(TerminateWorkflowException e) {
+			// It is ok to not have a task definition for a DO_WHILE task
+		}
+
 		Map<String, Object> taskInput = parametersUtils.getTaskInputV2(task.getWorkflowTask().getInputParameters(), workflow, task.getTaskId(), taskDefinition);
 		taskInput.put(task.getReferenceTaskName(), task.getOutputData());
 		List<Task> loopOver = workflow.getTasks().stream().filter(t -> (task.getWorkflowTask().has(TaskUtils.removeIterationFromTaskRefName(t.getReferenceTaskName())) && !task.getReferenceTaskName().equals(t.getReferenceTaskName()))).collect(Collectors.toList());
