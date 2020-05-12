@@ -81,7 +81,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 		threadExecutor = Executors.newFixedThreadPool(threadPoolSize);
 
 		// The target service endpoint. e.g. /v1/execengine/isworkable
-		endpoint = config.getProperty("workflow.sweeper.batch.sherlock.endpoint", "/v1/execengine/isworkable");
+		endpoint = config.getProperty("workflow.sweeper.batch.sherlock.endpoint", "/v2/execengine/isworkable");
 
 		// The target dns service name. e.g. sherlock.service.${TLD}
 		service = config.getProperty("workflow.sweeper.batch.sherlock.service", "");
@@ -165,8 +165,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 					if (task.getTaskId().equalsIgnoreCase(carried.getTaskId())) {
 						logger.info("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
 							",correlationId=" + task.getCorrelationId() +
-							",uniquenessGroup=" + group.getKey() +
-							",taskId=" + task.getTaskId() +
+							",uniquenessGroup=" + group.getKey() + ",taskId=" + task.getTaskId() +
 							",taskReferenceName=" + task.getReferenceTaskName() +
 							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					} else {
@@ -174,8 +173,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 							",carriedCorrelationId=" + carried.getCorrelationId() +
 							",uniquenessGroup=" + group.getKey() +
 							",workflowId=" + task.getWorkflowInstanceId() +
-							",correlationId=" + task.getCorrelationId() +
-							",taskId=" + task.getTaskId() +
+							",correlationId=" + task.getCorrelationId() + ",taskId=" + task.getTaskId() +
 							",taskReferenceName=" + task.getReferenceTaskName() +
 							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					}
