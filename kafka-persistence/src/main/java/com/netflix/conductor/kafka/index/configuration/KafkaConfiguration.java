@@ -33,16 +33,7 @@ public class KafkaConfiguration {
         primaryCluster.setUsername(primaryProducerUsername);
         primaryCluster.setPassword(primaryProducerPassword);
 
-        String secondaryProducerBootStrapServer = configuration.getProperty("producer.secondary.bootstrapServers", "localhost:9093");
-        String secondaryProducerUsername = configuration.getProperty("producer.secondary.password", "");
-        String secondaryProducerPassword = configuration.getProperty("producer.secondary.username", "");
-        String secondaryProducerAuthMechanism = configuration.getProperty("producer.secondary.authMechanism", "NONE");
-        CommonConfig.Cluster secondaryCluster =  new CommonConfig.Cluster();
-        secondaryCluster.setBootstrapServers(secondaryProducerBootStrapServer);
-        secondaryCluster.setAuthMechanism(AuthMechanism.valueOf(secondaryProducerAuthMechanism));
-        secondaryCluster.setUsername(secondaryProducerUsername);
-        secondaryCluster.setPassword(secondaryProducerPassword);
-        ProducerConfig producerConfig = ProducerConfig.builder().primary(primaryCluster).secondary(secondaryCluster).clientId("ff-flo").enableCompression(true).acks(ProducerAcks.ALL).build();
+        ProducerConfig producerConfig = ProducerConfig.builder().primary(primaryCluster).clientId("ff-flo").enableCompression(true).acks(ProducerAcks.ALL).build();
         logger.info("Created producer config " + producerConfig + " successfully");
         return producerConfig;
     }
