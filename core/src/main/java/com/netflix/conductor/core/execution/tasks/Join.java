@@ -95,6 +95,9 @@ public class Join extends WorkflowSystemTask {
 			if (allSuccess) {
 				for (String joinOnRef : joinOn) {
 					Task forkedTask = workflow.getTaskByRefName(joinOnRef);
+					if (forkedTask == null)
+						continue;
+
 					// Cancel the task if that still running
 					if (!forkedTask.getStatus().isTerminal()) {
 						forkedTask.setStatus(Status.COMPLETED);

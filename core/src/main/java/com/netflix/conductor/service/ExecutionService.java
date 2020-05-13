@@ -122,7 +122,8 @@ public class ExecutionService {
 			if(edao.exceedsInProgressLimit(task)) {
 				continue;
 			}
-			
+
+			task.setStarted(true);
 			task.setStatus(Status.IN_PROGRESS);
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());

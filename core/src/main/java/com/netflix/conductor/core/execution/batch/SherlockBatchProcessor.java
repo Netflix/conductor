@@ -50,26 +50,25 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 /**
  * @author Oleksiy Lysak
  */
 @Singleton
 public class SherlockBatchProcessor extends AbstractBatchProcessor {
-	private static Logger logger = LoggerFactory.getLogger(SherlockBatchProcessor.class);
+	private static final Logger logger = LoggerFactory.getLogger(SherlockBatchProcessor.class);
 	private static final TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
 	};
 	private static final TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>() {
 	};
-	private ApacheHttpClient4 httpClient = ApacheHttpClient4.create();
-	private ExecutorService threadExecutor;
-	private WorkflowExecutor workflowExecutor;
-	private AuthManager authManager;
-	private ObjectMapper mapper;
-	private String endpoint;
-	private String service;
-	private String method;
+	private final ApacheHttpClient4 httpClient = ApacheHttpClient4.create();
+	private final ExecutorService threadExecutor;
+	private final WorkflowExecutor workflowExecutor;
+	private final AuthManager authManager;
+	private final ObjectMapper mapper;
+	private final String endpoint;
+	private final String service;
+	private final String method;
 
 	@Inject
 	public SherlockBatchProcessor(WorkflowExecutor executor, Configuration config,
@@ -166,12 +165,14 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 					if (task.getTaskId().equalsIgnoreCase(carried.getTaskId())) {
 						logger.info("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
 							",correlationId=" + task.getCorrelationId() +
+							",uniquenessGroup=" + group.getKey() +
 							",taskId=" + task.getTaskId() +
 							",taskReferenceName=" + task.getReferenceTaskName() +
 							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					} else {
 						logger.info("batch task execution completed.carriedTaskId=" + carried.getTaskId() +
 							",carriedCorrelationId=" + carried.getCorrelationId() +
+							",uniquenessGroup=" + group.getKey() +
 							",workflowId=" + task.getWorkflowInstanceId() +
 							",correlationId=" + task.getCorrelationId() +
 							",taskId=" + task.getTaskId() +

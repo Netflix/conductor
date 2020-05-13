@@ -124,6 +124,8 @@ public class Task {
 	private WorkflowTask workflowTask;
 	
 	private String domain;
+
+	private Boolean started;
 	
 	public Task(){
 		
@@ -529,6 +531,20 @@ public class Task {
 		this.domain = domain;
 	}
 
+	/**
+	 * @return Whether task been started or not
+	 */
+	public Boolean isStarted() {
+		return started;
+	}
+
+	/**
+	 * @param started Whether task been started or not
+	 */
+	public void setStarted(Boolean started) {
+		this.started = started;
+	}
+
 	public Task copy() {
 		
 		Task copy = new Task();
@@ -557,6 +573,7 @@ public class Task {
 
 	@Override
 	public String toString() {
-		return "type="+ taskType + ", name=" + taskDefName + ", refName=" + referenceTaskName + ", taskId=" + getTaskId() + ", retry=" + retryCount + ", status=" + status;
+		return "type="+ taskType + ", name=" + taskDefName + ", refName=" + referenceTaskName +
+			", taskId=" + getTaskId() + ", retry=" + retryCount + ", status=" + status + ", started=" + started;
 	}
 }

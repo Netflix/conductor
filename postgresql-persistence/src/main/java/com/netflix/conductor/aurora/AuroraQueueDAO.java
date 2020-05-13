@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
-	private static final Long UNACK_SCHEDULE_MS = 5_000L;
+	private static final Long UNACK_SCHEDULE_MS = 30_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
 
 	@Inject
@@ -35,17 +35,20 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void push(String queueName, String id, long offsetSeconds) {
+		createQueueIfNotExists(queueName);
 		withTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds));
 	}
 
 	@Override
 	public void push(String queueName, List<Message> messages) {
+		createQueueIfNotExists(queueName);
 		withTransaction(tx -> messages
 			.forEach(message -> pushMessage(tx, queueName, message.getId(), message.getPayload(), 0)));
 	}
 
 	@Override
 	public boolean pushIfNotExists(String queueName, String id, long offsetSeconds) {
+		createQueueIfNotExists(queueName);
 		return getWithTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds));
 	}
 
@@ -65,84 +68,67 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	 */
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
-		createQueueIfNotExists(queueName);
-		final String QUERY_LOCK = "SELECT id, version, message_id FROM queue_message " +
-			"WHERE queue_name = ? AND popped = false AND deliver_on < now() " +
+		final String QUERY = "SELECT id FROM queue_message " +
+			"WHERE queue_name = ? AND deliver_on < now() AND popped = false " +
 			"ORDER BY deliver_on, version, id LIMIT ? FOR UPDATE SKIP LOCKED";
 
-		final String UPDATE = "UPDATE queue_message " +
+		final String LOCK = "UPDATE queue_message " +
 			"SET popped = true, unack_on = ?, version = version + 1 " +
-			"WHERE id = ? AND version = ?";
+			"WHERE id = ANY(?) RETURNING message_id";
 
-		try (Connection tx = dataSource.getConnection()) {
-			tx.setAutoCommit(false);
+		try {
 			long start = System.currentTimeMillis();
 
-			Set<String> foundIds = new HashSet<>();
-			try {
+			// Returns true until foundIds = count or time spent = timeout
+			Set<String> foundIds = new LinkedHashSet<>();
+			final Supplier<Boolean> keepPooling = () -> foundIds.size() < count
+				&& ((System.currentTimeMillis() - start) < timeout);
 
-				// Returns true until foundIds = count or time spent = timeout
-				Supplier<Boolean> keepPooling = () -> foundIds.size() < count
-					&& ((System.currentTimeMillis() - start) < timeout);
+			try (Connection tx = dataSource.getConnection()) {
+				tx.setAutoCommit(false);
+				try {
+					// Repeat until foundIds = count or time spent = timeout
+					while (keepPooling.get()) {
+						// Limit how many left to pick up
+						int limit = count - foundIds.size();
 
-				// Repeat until foundIds = count or time spent = timeout
-				while (keepPooling.get()) {
+						// Get the list of locked message ids
+						List<Long> locked = query(tx, QUERY, q -> q
+							.addParameter(queueName.toLowerCase())
+							.addParameter(limit)
+							.executeScalarList(Long.class));
 
-					// Limit how many left to pick up
-					int limit = count - foundIds.size();
+						// Update the locked records returning list of message_id
+						if (!locked.isEmpty()) {
+							long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+							List<String> updated = query(tx, LOCK, q -> q
+								.addTimestampParameter(unack_on)
+								.addLongListParameter(locked)
+								.executeScalarList(String.class));
 
-					// Get the list of popped message ids
-					List<QueueMessage> messages = query(tx, QUERY_LOCK, q -> q
-						.addParameter(queueName.toLowerCase())
-						.addParameter(limit)
-						.executeAndFetch(rs -> {
-							List<QueueMessage> popped = new ArrayList<>(limit);
-							while (rs.next()) {
-								QueueMessage m = new QueueMessage();
-								m.id = rs.getLong("id");
-								m.version = rs.getLong("version");
-								m.message_id = rs.getString("message_id");
-
-								popped.add(m);
+							// Add updated ids only
+							if (!updated.isEmpty()) {
+								foundIds.addAll(updated);
 							}
-							return popped;
-						}));
-
-					// Mark them as popped issuing commit at the end of the batch as this batch already hidden by PG
-					for (QueueMessage m : messages) {
-
-						// Continue to lock the record
-						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
-						int updated = query(tx, UPDATE, u -> u
-							.addTimestampParameter(unack_on)
-							.addParameter(m.id)
-							.addParameter(m.version)
-							.executeUpdate());
-
-						// Means record being updated - we got it
-						if (updated > 0) {
-							foundIds.add(m.message_id);
 						}
 
-						// Shall we stop pooling?
+						// Commit
+						tx.commit();
+
 						// We recheck this condition after each message to ensure
 						// foundIds not greater than requested count and within timeout window
 						if (!keepPooling.get()) {
-							tx.commit();
-							return Lists.newArrayList(foundIds);
+							break;
 						}
+
+						// Wait a little bit before next iteration
+						TimeUnit.MILLISECONDS.sleep(50);
 					}
-
-					// Commit and wait a little bit
-					tx.commit();
-					Thread.sleep(10);
+				} catch (Exception ex) {
+					logger.debug("pop: rollback for {} with {}", queueName, ex.getMessage(), ex);
+					tx.rollback();
 				}
-
-				tx.commit();
-			} catch (Exception e) {
-				tx.rollback();
 			}
-
 			return Lists.newArrayList(foundIds);
 		} catch (Exception ex) {
 			logger.error("pop: failed for {} with {}", queueName, ex.getMessage(), ex);
@@ -168,13 +154,37 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	@Override
 	public void processUnacks(String queueName) {
-		long unack_on = System.currentTimeMillis();
+		// Process regular queue messages
+		try {
+			long unack_on = System.currentTimeMillis() - UNACK_TIME_MS;
 
-		final String SQL = "UPDATE queue_message " +
-			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
-			"WHERE queue_name = ? AND popped = true AND unack_on < ?";
+			final String SQL = "UPDATE queue_message " +
+				"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
+				"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND unack_on < ? AND popped = true FOR UPDATE SKIP LOCKED)";
 
-		executeWithTransaction(SQL, q -> q.addParameter(queueName.toLowerCase()).addTimestampParameter(unack_on).executeUpdate());
+			executeWithTransaction(SQL, q -> q
+				.addParameter(queueName.toLowerCase())
+				.addTimestampParameter(unack_on)
+				.executeUpdate());
+		} catch (Exception ex) {
+			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
+		}
+
+		// Cleanup locked expired messages
+		try {
+			long deliver_on = System.currentTimeMillis() - UNACK_TIME_MS;
+
+			final String SQL = "DELETE FROM queue_message " +
+				"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND deliver_on < ? FOR UPDATE SKIP LOCKED)";
+
+			String lockQueueName = queueName.toLowerCase() + ".lock";
+			executeWithTransaction(SQL, q -> q
+				.addParameter(lockQueueName)
+				.addTimestampParameter(deliver_on)
+				.executeDelete());
+		} catch (Exception ex) {
+			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
+		}
 	}
 
 	@Override
@@ -301,8 +311,6 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private boolean pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
-		createQueueIfNotExists(queueName);
-
 		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
 			"VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
@@ -353,13 +361,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private void processAllUnacks() {
-		long unack_on = System.currentTimeMillis();
-
-		final String SQL = "UPDATE queue_message " +
-			"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
-			"WHERE popped = true AND unack_on < ?";
-
-		executeWithTransaction(SQL, q -> q.addTimestampParameter(unack_on).executeUpdate());
+		queues.forEach(this::processUnacks);
 	}
 
 	private static class QueueMessage {
