@@ -3,7 +3,7 @@ dependencies {
 	compile project(':conductor-common')
 	compile project(':conductor-correlation')
 
-	compile 'com.datadoghq:dd-trace-api:0.33.0'
+	compile 'com.datadoghq:dd-trace-api:0.46.0'
 	compile 'io.reactivex:rxjava:1.2.2'
 	compile 'com.google.inject:guice:4.1.0'
 	compile 'com.netflix.spectator:spectator-api:0.68.0'
