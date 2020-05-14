@@ -654,7 +654,7 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
 		if (workflow.getStatus() == WorkflowStatus.COMPLETED) {
-			throw new ApplicationException(Code.CONFLICT, "Workflow has already been completed");
+			throw new ApplicationException(Code.CONFLICT, "Workflow "+workflowId+" has already been completed");
 		}
 
 		workflow.setStatus(WorkflowStatus.COMPLETED);
@@ -691,7 +691,7 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 
 		if (workflow.getStatus().isTerminal() || workflow.getStatus().equals(WorkflowStatus.CANCELLED) ) {
-			String msg = "Workflow can not be cancelled because its already "+workflow.getStatus() ;
+			String msg = "Workflow "+workflow.getWorkflowId()+" can not be cancelled because its already "+workflow.getStatus() ;
 			logger.debug("Workflow can not be cancelled because its already " + workflow.getStatus()
 				+ ",workflowId="+workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
 				+ ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
@@ -827,7 +827,7 @@ public class WorkflowExecutor {
 				+ ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
 				+ ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
 				+ ",clientId=" + workflow.getClientId());
-			throw new ApplicationException(Code.CONFLICT, "Workflow already finished. status=" + workflow.getStatus());
+			throw new ApplicationException(Code.CONFLICT, "Workflow "+workflow.getWorkflowId()+" already finished. status=" + workflow.getStatus());
 		}
 
 		terminateWorkflow(workflow, reason, null, null);
