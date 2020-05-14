@@ -25,7 +25,6 @@ import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.auth.AuthResponse;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.netflix.conductor.common.run.CommonParams;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
@@ -78,17 +77,17 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 		this.workflowExecutor = executor;
 		this.mapper = mapper;
 
-		int threadPoolSize = config.getIntProperty("workflow.batch.sherlock.worker.count", 100);
+		int threadPoolSize = config.getIntProperty("workflow.sweeper.batch.sherlock.worker.count", 100);
 		threadExecutor = Executors.newFixedThreadPool(threadPoolSize);
 
 		// The target service endpoint. e.g. /v1/execengine/isworkable
-		endpoint = config.getProperty("workflow.batch.sherlock.endpoint", "/v2/execengine/isworkable");
+		endpoint = config.getProperty("workflow.sweeper.batch.sherlock.endpoint", "/v1/execengine/isworkable");
 
 		// The target dns service name. e.g. sherlock.service.${TLD}
-		service = config.getProperty("workflow.batch.sherlock.service", "");
+		service = config.getProperty("workflow.sweeper.batch.sherlock.service", "");
 
 		// The target endpoint method.
-		method = config.getProperty("workflow.batch.sherlock.method", "POST");
+		method = config.getProperty("workflow.sweeper.batch.sherlock.method", "POST");
 	}
 
 	@Override
@@ -115,7 +114,7 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 			WebResource.Builder builder = httpClient.resource(url).type(MediaType.APPLICATION_JSON);
 
 			// Attaching Deluxe Owf Context
-			builder.header(CommonParams.DELUXE_OWF_CONTEXT, carried.getCorrelationId());
+			builder.header("Deluxe-Owf-Context", carried.getCorrelationId());
 
 			// Attach the Authorization header
 			Object authorize = carried.getInputData().get("authorize");
@@ -166,7 +165,8 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 					if (task.getTaskId().equalsIgnoreCase(carried.getTaskId())) {
 						logger.info("batch task execution completed.workflowId=" + task.getWorkflowInstanceId() +
 							",correlationId=" + task.getCorrelationId() +
-							",uniquenessGroup=" + group.getKey() + ",taskId=" + task.getTaskId() +
+							",uniquenessGroup=" + group.getKey() +
+							",taskId=" + task.getTaskId() +
 							",taskReferenceName=" + task.getReferenceTaskName() +
 							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					} else {
@@ -174,7 +174,8 @@ public class SherlockBatchProcessor extends AbstractBatchProcessor {
 							",carriedCorrelationId=" + carried.getCorrelationId() +
 							",uniquenessGroup=" + group.getKey() +
 							",workflowId=" + task.getWorkflowInstanceId() +
-							",correlationId=" + task.getCorrelationId() + ",taskId=" + task.getTaskId() +
+							",correlationId=" + task.getCorrelationId() +
+							",taskId=" + task.getTaskId() +
 							",taskReferenceName=" + task.getReferenceTaskName() +
 							",url=" + effectiveUrl + ",response code=" + response.statusCode + ",response=" + response.body);
 					}
