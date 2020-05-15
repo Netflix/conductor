@@ -60,7 +60,9 @@ public class Workflow extends Auditable {
 	private Map<String, Object> input = new HashMap<>();
 	
 	private Map<String, Object> output = new HashMap<>();;
-	
+
+	private Map<String, Object> attributes = new HashMap<>();;
+
 	private String workflowType;
 	
 	private int version;
@@ -422,6 +424,14 @@ public class Workflow extends Auditable {
 
 	public void setTraceId(String traceId) {
 		this.traceId = traceId;
+	}
+
+	public Map<String, Object> getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(Map<String, Object> attributes) {
+		this.attributes = attributes;
 	}
 
 	@Override
