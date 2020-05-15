@@ -47,6 +47,14 @@ public class Context {
 		this.urns = urns;
 	}
 
+	public String getUrn(String prefix) {
+		for (String urn : urns) {
+			if (urn.startsWith(prefix))
+				return urn;
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return "{" +

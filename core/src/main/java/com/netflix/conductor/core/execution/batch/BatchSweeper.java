@@ -20,6 +20,7 @@ package com.netflix.conductor.core.execution.batch;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.TaskStatusListener;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -29,6 +30,7 @@ import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class BatchSweeper {
     private static final Logger logger = LoggerFactory.getLogger(BatchSweeper.class);
+    private static final String JOB_ID_URN_PREFIX = "urn:deluxe:one-orders:deliveryjob:";
     private final Map<String, AbstractBatchProcessor> processors = new HashMap<>();
     private final TaskStatusListener taskStatusListener;
     private final WorkflowExecutor workflowExecutor;
@@ -224,6 +227,23 @@ public class BatchSweeper {
         if (MapUtils.isEmpty(body))
             throw new IllegalArgumentException("No body provided in input parameters for " + task);
 
-        return  (String)body.get("jobId");
+        // Trying to fetch job id from the request body (SH 1.20)
+        String jobId = (String)body.get("jobId");
+        if (StringUtils.isNotEmpty(jobId))
+            return jobId;
+
+        // Otherwise (legacy) retrieve it from the correlation id
+        if (StringUtils.isNotEmpty(task.getCorrelationId()))
+            return getJobId(task.getCorrelationId());
+
+        return null;
+    }
+
+    private String getJobId(String correlationId) {
+        Correlator correlator = new Correlator(logger, correlationId);
+        String jobIdUrn = correlator.getContext().getUrn(JOB_ID_URN_PREFIX);
+        if (StringUtils.isNotEmpty(jobIdUrn))
+            return jobIdUrn.substring(JOB_ID_URN_PREFIX.length());
+        return null;
     }
 }

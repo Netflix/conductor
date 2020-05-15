@@ -14,10 +14,9 @@ import java.util.Map;
  */
 public class Correlator implements ICorrelator {
 	public static final String headerKey = "Deluxe-Owf-Context";
-
 	private static final ObjectMapper mapper = new ObjectMapper();
+	private final Logger logger;
 	private Context context;
-	private Logger logger;
 
 	private Correlator(Logger logger) {
 		this.logger = logger;
@@ -88,5 +87,9 @@ public class Correlator implements ICorrelator {
 		int sequenceNo = context.getSequenceno();
 		sequenceNo++;
 		context.setSequenceno(sequenceNo);
+	}
+
+	public Context getContext() {
+		return context;
 	}
 }
