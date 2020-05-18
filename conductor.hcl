@@ -173,9 +173,9 @@ job "conductor" {
         workflow_sweeper_frequency                   = "500"
         workflow_sweeper_thread_count                = "50"
         workflow_sweeper_pool_timeout                = "1000"
-        workflow_sweeper_batch_sherlock_service      = "sherlock.service.${meta.tld}"
-        workflow_sweeper_batch_sherlock_worker_count = "100"
         workflow_sweeper_batch_names                 = "sherlock"
+        workflow_batch_sherlock_service              = "sherlock.service.${meta.tld}"
+        workflow_batch_sherlock_worker_count         = "100"
         workflow_batch_sherlock_enabled              = "true"
         workflow_lazy_decider                        = "true"
 
