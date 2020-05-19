@@ -9,6 +9,7 @@ import com.netflix.conductor.dao.kafka.index.data.Record;
 import com.netflix.conductor.kafka.index.configuration.KafkaConfiguration;
 import com.netflix.conductor.kafka.index.mapper.MapperFactory;
 import com.netflix.conductor.metrics.Monitors;
+import com.swiggy.kafka.clients.producer.CallbackFuture;
 import com.swiggy.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.concurrent.TimeUnit;
 
 @Trace
 @Singleton
@@ -41,7 +43,14 @@ public class KafkaProducer implements ProducerDAO {
 	public void send(String operationType, String documentType, Object value) {
 		try {
 			Record d = new Record(operationType, documentType, value);
-			producer.send(this.topic, om.writeValueAsString(d));
+			CallbackFuture<com.swiggy.kafka.clients.Record> callback = producer.send(this.topic, om.writeValueAsString(d));;
+			callback.callback((r, ex) -> {
+				if (ex != null) {
+					logger.error("Unable to send data " + r , ex );
+				} else {
+					logger.info("Data sent successfully " + r);
+				}
+			}, 3000, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			logger.error("Failed to publish to kafka - unknown exception:", e);
 			Monitors.recordKafkaPublishError();
