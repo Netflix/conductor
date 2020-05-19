@@ -23,8 +23,8 @@ public class KafkaConfiguration {
 
     public ProducerConfig producerConfig() {
         String primaryProducerBootStrapServer = configuration.getProperty("PRIMARY.BOOTSTRAP.SERVERS", "localhost:9092");
-        String primaryProducerUsername = configuration.getProperty("KAFKA.TXN.PRIMARY.API.SECRET", "");
-        String primaryProducerPassword = configuration.getProperty("KAFKA.TXN.PRIMARY.API.KEY", "");
+        String primaryProducerUsername = configuration.getProperty("KAFKA.TXN.PRIMARY.API.KEY", "");
+        String primaryProducerPassword = configuration.getProperty("KAFKA.TXN.PRIMARY.API.SECRET", "");
         String primaryProducerAuthMechanism = configuration.getProperty("PRIMARY.AUTH.MECHANISM", "NONE");
 
         CommonConfig.Cluster primaryCluster =  new CommonConfig.Cluster();
