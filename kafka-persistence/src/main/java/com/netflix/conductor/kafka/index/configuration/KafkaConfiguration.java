@@ -22,10 +22,10 @@ public class KafkaConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(KafkaProducer.class);
 
     public ProducerConfig producerConfig() {
-        String primaryProducerBootStrapServer = configuration.getProperty("producer.primary.bootstrapServers", "localhost:9092");
-        String primaryProducerUsername = configuration.getProperty("producer.primary.password", "");
-        String primaryProducerPassword = configuration.getProperty("producer.primary.username", "");
-        String primaryProducerAuthMechanism = configuration.getProperty("producer.primary.authMechanism", "NONE");
+        String primaryProducerBootStrapServer = configuration.getProperty("PRIMARY.BOOTSTRAP.SERVERS", "localhost:9092");
+        String primaryProducerUsername = configuration.getProperty("KAFKA.TXN.PRIMARY.API.SECRET", "");
+        String primaryProducerPassword = configuration.getProperty("KAFKA.TXN.PRIMARY.API.KEY", "");
+        String primaryProducerAuthMechanism = configuration.getProperty("PRIMARY.AUTH.MECHANISM", "NONE");
 
         CommonConfig.Cluster primaryCluster =  new CommonConfig.Cluster();
         primaryCluster.setBootstrapServers(primaryProducerBootStrapServer);
@@ -39,9 +39,9 @@ public class KafkaConfiguration {
     }
 
     public Topic floEventLogsTopic() {
-        String name = configuration.getProperty("flo.indexer.topic.name", "ff-flo-event-logs");
-        String keyId = configuration.getProperty("flo.indexer.topic.keyId", "flo_indexer_encryption_key_id");
-        boolean enableEncryption = Boolean.valueOf(configuration.getProperty("flo.indexer.topic.enableEncryption", "false"));
+        String name = configuration.getProperty("FLO.INDEXER.TOPIC.NAME", "ff-flo-event-logs");
+        String keyId = configuration.getProperty("ENCRYPTION.KEY.ID", "flo_indexer_encryption_key_id");
+        boolean enableEncryption = Boolean.valueOf(configuration.getProperty("FLO.INDEXER.TOPIC.ENABLE.ENCRYPTION", "false"));
         return Topic.builder().name(name).keyId(keyId).enableEncryption(enableEncryption).faultStrategy(Topic.FaultStrategy.NONE).build();
     }
 
