@@ -12,7 +12,7 @@ public class TaskStatusPublisher implements TaskStatusListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisher.class);
     private static final String NOTIFICATION_TYPE = "workflow/TaskNotifications";
-    private static final Integer QDEPTH = 10;
+    private static final Integer QDEPTH = Integer.parseInt(System.getenv("ENV_TASK_NOTIFICATION_QUEUE_SIZE"));
     private BlockingQueue<Task> blockingQueue = new LinkedBlockingDeque<>(QDEPTH);
     private boolean isConsumerRunning = false;
 
@@ -25,8 +25,6 @@ public class TaskStatusPublisher implements TaskStatusListener {
                 publishTaskNotification(taskNotification);
                 Thread.sleep(10);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
         catch (Exception e){
             LOGGER.info(e.getMessage());

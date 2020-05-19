@@ -13,7 +13,7 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowStatusPublisher.class);
     public static final String NOTIFICATION_TYPE = "workflow/WorkflowNotifications";
-    private static final Integer QDEPTH = 10;
+    private static final Integer QDEPTH = Integer.parseInt(System.getenv("ENV_WORKFLOW_NOTIFICATION_QUEUE_SIZE"));
     private BlockingQueue<Workflow> blockingQueue = new LinkedBlockingDeque<>(QDEPTH);
     private boolean isConsumerRunning = false;
     private final ObjectMapper objectMapper = new ObjectMapper();
