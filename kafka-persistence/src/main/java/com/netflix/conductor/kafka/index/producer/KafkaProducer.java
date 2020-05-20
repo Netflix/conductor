@@ -42,8 +42,8 @@ public class KafkaProducer implements ProducerDAO {
 	@Override
 	public void send(String operationType, String documentType, Object value) {
 		try {
-			Record d = new Record(operationType, documentType, value);
-			CallbackFuture<com.swiggy.kafka.clients.Record> callback = producer.send(this.topic, om.writeValueAsString(d));;
+			Record record = new Record(operationType, documentType, value);
+			CallbackFuture<com.swiggy.kafka.clients.Record> callback = producer.send(this.topic, om.writeValueAsString(record));
 			callback.callback((r, ex) -> {
 				if (ex != null) {
 					logger.error("Unable to send data " + r , ex );
