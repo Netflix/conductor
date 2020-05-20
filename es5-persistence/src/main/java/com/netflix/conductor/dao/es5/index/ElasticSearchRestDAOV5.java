@@ -39,6 +39,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -509,6 +510,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             searchSourceBuilder.query(fq);
             searchSourceBuilder.sort(new FieldSortBuilder("createdTime").order(SortOrder.ASC));
+            searchSourceBuilder.size(config.getElasticSearchTasklogLimit());
 
             // Generate the actual request to send to ES.
             SearchRequest searchRequest = new SearchRequest(logIndexPrefix + "*");
@@ -741,7 +743,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
     @Override
     public List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays) {
         QueryBuilder q = QueryBuilders.boolQuery()
-                .must(QueryBuilders.rangeQuery("endTime").lt(LocalDate.now().minusDays(archiveTtlDays).toString()).gte(LocalDate.now().minusDays(archiveTtlDays).minusDays(1).toString()))
+                .must(QueryBuilders.rangeQuery("endTime").lt(LocalDate.now(ZoneOffset.UTC).minusDays(archiveTtlDays).toString()).gte(LocalDate.now(ZoneOffset.UTC).minusDays(archiveTtlDays).minusDays(1).toString()))
                 .should(QueryBuilders.termQuery("status", "COMPLETED"))
                 .should(QueryBuilders.termQuery("status", "FAILED"))
                 .should(QueryBuilders.termQuery("status", "TIMED_OUT"))
@@ -805,8 +807,10 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     private synchronized void indexBulkRequest(String docType) {
         if (bulkRequests.get(docType).getBulkRequest() != null && bulkRequests.get(docType).getBulkRequest().numberOfActions() > 0) {
-            indexWithRetry(bulkRequests.get(docType).getBulkRequest(), "Bulk Indexing " + docType, docType);
-            bulkRequests.put(docType, new BulkRequests(System.currentTimeMillis(), new BulkRequest()));
+            synchronized (bulkRequests.get(docType).getBulkRequest()) {
+                indexWithRetry(bulkRequests.get(docType).getBulkRequest().get(), "Bulk Indexing " + docType, docType);
+                bulkRequests.put(docType, new BulkRequests(System.currentTimeMillis(), new BulkRequest()));
+            }
         }
     }
 
@@ -934,19 +938,19 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
     private static class BulkRequests {
         private final long lastFlushTime;
-        private final BulkRequest bulkRequest;
+        private final BulkRequestWrapper bulkRequestWrapper;
 
-        public long getLastFlushTime() {
+        long getLastFlushTime() {
             return lastFlushTime;
         }
 
-        public BulkRequest getBulkRequest() {
-            return bulkRequest;
+        BulkRequestWrapper getBulkRequest() {
+            return bulkRequestWrapper;
         }
 
-        BulkRequests(long lastFlushTime, BulkRequest bulkRequest) {
+        BulkRequests(long lastFlushTime, BulkRequest bulkRequestWrapper) {
             this.lastFlushTime = lastFlushTime;
-            this.bulkRequest = bulkRequest;
+            this.bulkRequestWrapper = new BulkRequestWrapper(bulkRequestWrapper);
         }
     }
 }

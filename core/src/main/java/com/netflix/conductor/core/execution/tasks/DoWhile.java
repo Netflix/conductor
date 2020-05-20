@@ -27,14 +27,17 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.ParametersUtils;
+import com.netflix.conductor.core.execution.TerminateWorkflowException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -66,7 +69,23 @@ public class DoWhile extends WorkflowSystemTask {
 		StringBuilder failureReason = new StringBuilder();
 		Map<String, Object> output = new HashMap<>();
 		task.getOutputData().put("iteration", task.getIteration());
-		List<Task> loopOver = workflow.getTasks().stream().filter(t -> (task.getWorkflowTask().has(TaskUtils.removeIterationFromTaskRefName(t.getReferenceTaskName())) && !task.getReferenceTaskName().equals(t.getReferenceTaskName()))).collect(Collectors.toList());
+
+		/*
+		 * Get the latest set of tasks (the ones that have the highest retry count). We don't want to evaluate any tasks
+		 * that have already failed if there is a more current one (a later retry count).
+		 */
+		Map<String, Task> relevantTasks = new HashMap<String, Task>();
+		Task relevantTask = null;
+		for(Task t : workflow.getTasks()) {
+			if(task.getWorkflowTask().has(TaskUtils.removeIterationFromTaskRefName(t.getReferenceTaskName())) 
+			&& !task.getReferenceTaskName().equals(t.getReferenceTaskName())) {
+				relevantTask = relevantTasks.get(t.getReferenceTaskName());
+				if(relevantTask == null || t.getRetryCount() > relevantTask.getRetryCount()) {
+					relevantTasks.put(t.getReferenceTaskName(), t);
+				}
+			}
+		}
+		Collection<Task> loopOver = relevantTasks.values();
 
 		for (Task loopOverTask : loopOver) {
 			Status taskStatus = loopOverTask.getStatus();
@@ -127,7 +146,13 @@ public class DoWhile extends WorkflowSystemTask {
 
 	@VisibleForTesting
 	boolean getEvaluatedCondition(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) throws ScriptException {
-		TaskDef taskDefinition = workflowExecutor.getTaskDefinition(task);
+		TaskDef taskDefinition = null;
+		try {
+			taskDefinition = workflowExecutor.getTaskDefinition(task);
+		} catch(TerminateWorkflowException e) {
+			// It is ok to not have a task definition for a DO_WHILE task
+		}
+
 		Map<String, Object> taskInput = parametersUtils.getTaskInputV2(task.getWorkflowTask().getInputParameters(), workflow, task.getTaskId(), taskDefinition);
 		taskInput.put(task.getReferenceTaskName(), task.getOutputData());
 		List<Task> loopOver = workflow.getTasks().stream().filter(t -> (task.getWorkflowTask().has(TaskUtils.removeIterationFromTaskRefName(t.getReferenceTaskName())) && !task.getReferenceTaskName().equals(t.getReferenceTaskName()))).collect(Collectors.toList());
