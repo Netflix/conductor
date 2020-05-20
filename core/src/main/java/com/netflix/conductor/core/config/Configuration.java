@@ -105,6 +105,9 @@ public interface Configuration {
     String EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME = "workflow.event.execution.persistence.ttl.seconds";
     int EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE = 0;
 
+    String WORKFLOW_ARCHIVAL_TTL_SECS_PROPERTY_NAME = "workflow.archival.ttl.seconds";
+    int WORKFLOW_ARCHIVAL_TTL_SECS_DEFAULT_VALUE = 0;
+
     String OWNER_EMAIL_MANDATORY_NAME = "workflow.owner.email.mandatory";
     boolean OWNER_EMAIL_MANDATORY_DEFAULT_VALUE = true;
 
@@ -315,6 +318,13 @@ public interface Configuration {
     default String getElasticSearchDocumentTypeOverride() {
         return getProperty(ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_PROPERTY_NAME,
             ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return The time to live in seconds for workflow archiving module. Currently, only RedisExecutionDAO supports it.
+     */
+    default int getWorkflowArchivalTTL() {
+        return getIntProperty(WORKFLOW_ARCHIVAL_TTL_SECS_PROPERTY_NAME, WORKFLOW_ARCHIVAL_TTL_SECS_DEFAULT_VALUE);
     }
 
     /**
