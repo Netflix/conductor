@@ -171,4 +171,9 @@ gulp.task(
   gulp.series('clean', gulp.parallel('set-env', 'browserSync', 'watchTask', 'public', 'styles', 'fonts', 'images'))
 );
 
-gulp.task('build', gulp.series('clean', gulp.parallel('server-bundle', 'styles', 'fonts', 'public', 'images')));
+gulp.task(
+  'build', cb => {
+    gulp.series('clean', gulp.parallel('server-bundle', 'styles', 'fonts', 'public', 'images'))
+    cb();
+  }
+);
