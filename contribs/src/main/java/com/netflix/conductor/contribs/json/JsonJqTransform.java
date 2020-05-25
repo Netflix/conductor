@@ -27,6 +27,7 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
+import net.thisptr.jackson.jq.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,8 @@ public class JsonJqTransform extends WorkflowSystemTask {
         try {
             final JsonNode input = objectMapper.valueToTree(taskInput);
             final JsonQuery query = queryCache.get(queryExpression);
-            final List<JsonNode> result = query.apply(input);
+            final Scope jsonScope = Scope.newEmptyScope();
+            final List<JsonNode> result = query.apply(jsonScope, input);
 
             task.setStatus(Task.Status.COMPLETED);
             if (result == null) {
