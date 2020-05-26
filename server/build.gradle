@@ -5,7 +5,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '2.0.4'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 configurations.all {
@@ -22,33 +22,32 @@ apply plugin: "org.akhikhl.gretty"
 dependencies {
 
     //Conductor
-    compile project(':conductor-core')
-    compile project(':conductor-jersey')
-    compile project(':conductor-redis-persistence')
-    compile project(':conductor-mysql-persistence')
-    compile project(':conductor-postgres-persistence')
-    compile project(':conductor-cassandra-persistence')
-    compile project(':conductor-contribs')
-    compile project(':conductor-es5-persistence')
-    compile project(':conductor-es6-persistence')
-    compile project(':conductor-grpc-server')
-    compile project(':conductor-zookeeper-lock')
-    compile project(':conductor-redis-lock')
+    implementation project(':conductor-core')
+    implementation project(':conductor-jersey')
+    implementation project(':conductor-redis-persistence')
+    implementation project(':conductor-mysql-persistence')
+    implementation project(':conductor-postgres-persistence')
+    implementation project(':conductor-cassandra-persistence')
+    implementation project(':conductor-contribs')
+    implementation project(':conductor-es6-persistence')
+    implementation project(':conductor-grpc-server')
+    implementation project(':conductor-zookeeper-lock')
+    implementation project(':conductor-redis-lock')
 
-    compile "com.netflix.runtime:health-guice:${revHealth}"
+    implementation "com.netflix.runtime:health-guice:${revHealth}"
 
     //Jetty
-    compile "org.eclipse.jetty:jetty-server:${revJetteyServer}"
-    compile "org.eclipse.jetty:jetty-servlet:${revJettyServlet}"
-    compile "org.eclipse.jetty:jetty-jmx:${revJettyServlet}"
+    implementation "org.eclipse.jetty:jetty-server:${revJetteyServer}"
+    implementation "org.eclipse.jetty:jetty-servlet:${revJettyServlet}"
+    implementation "org.eclipse.jetty:jetty-jmx:${revJettyServlet}"
 
     //Guice
-    compile "com.sun.jersey.contribs:jersey-guice:${revJerseyGuice}"
-    compile "com.google.inject:guice:${revGuice}"
-    compile "com.google.inject.extensions:guice-servlet:${revGuiceServlet}"
+    implementation "com.sun.jersey.contribs:jersey-guice:${revJerseyGuice}"
+    implementation "com.google.inject:guice:${revGuice}"
+    implementation "com.google.inject.extensions:guice-servlet:${revGuiceServlet}"
 
     //Swagger
-    compile "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
+    implementation "io.swagger:swagger-jersey-jaxrs:${revSwagger}"
 }
 
 shadowJar {

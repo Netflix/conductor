@@ -1,5 +1,6 @@
-apply plugin: 'findbugs'
-apply plugin: 'pmd'
+plugins {
+    id "com.github.spotbugs" version "4.2.2"
+}
 
 configurations.all {
     exclude group: 'amazon', module: 'aws-java-sdk'
@@ -19,9 +20,6 @@ dependencies {
     testCompile "org.slf4j:slf4j-log4j12:${revSlf4jlog4j}"
 }
 
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled false
-        html.enabled true
-    }
+spotbugs {
+    ignoreFailures = true
 }

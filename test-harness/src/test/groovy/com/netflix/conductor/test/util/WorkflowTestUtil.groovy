@@ -26,7 +26,7 @@ import com.netflix.conductor.dao.QueueDAO
 import com.netflix.conductor.service.ExecutionService
 import com.netflix.conductor.service.MetadataService
 import com.netflix.conductor.tests.utils.JsonUtils
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 
 import javax.annotation.PostConstruct
 import javax.inject.Inject

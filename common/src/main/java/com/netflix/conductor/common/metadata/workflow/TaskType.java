@@ -1,3 +1,15 @@
+/*
+ * Copyright 2020 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.netflix.conductor.common.metadata.workflow;
 
 import com.github.vmg.protogen.annotations.ProtoEnum;
@@ -23,9 +35,8 @@ public enum TaskType {
     KAFKA_PUBLISH(true);
 
     /**
-     * TaskType constants representing each of the possible enumeration values.
-     * Motivation: to not have any hardcoded/inline strings used in the code.
-     * Example of use: CoreModule
+     * TaskType constants representing each of the possible enumeration values. Motivation: to not have any
+     * hardcoded/inline strings used in the code. Example of use: CoreModule
      */
     public static final String TASK_TYPE_DECISION = "DECISION";
     public static final String TASK_TYPE_DYNAMIC = "DYNAMIC";
@@ -39,12 +50,12 @@ public enum TaskType {
     public static final String TASK_TYPE_USER_DEFINED = "USER_DEFINED";
     public static final String TASK_TYPE_SIMPLE = "SIMPLE";
     public static final String TASK_TYPE_HTTP = "HTTP";
-    public static final String TASK_TYPE_LAMBDA= "LAMBDA";
+    public static final String TASK_TYPE_LAMBDA = "LAMBDA";
     public static final String TASK_TYPE_EXCLUSIVE_JOIN = "EXCLUSIVE_JOIN";
     public static final String TASK_TYPE_TERMINATE = "TERMINATE";
     public static final String TASK_TYPE_KAFKA_PUBLISH = "KAFKA_PUBLISH";
-    
-    private boolean isSystemTask;
+
+    private final boolean isSystemTask;
 
     TaskType(boolean isSystemTask) {
         this.isSystemTask = isSystemTask;
