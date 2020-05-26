@@ -108,9 +108,11 @@ public interface Configuration {
     String WORKFLOW_ARCHIVAL_TTL_SECS_PROPERTY_NAME = "workflow.archival.ttl.seconds";
     int WORKFLOW_ARCHIVAL_TTL_SECS_DEFAULT_VALUE = 0;
 
-    String WORKFLOW_ARCHIVAL_ENABLED_PROPERTY_NAME = "workflow.archival.enabled";
-    boolean WORKFLOW_ARCHIVAL_ENABLED_DEFAULT_VALUE = true; //FIXME: Change this to false after testing
+//    String WORKFLOW_ARCHIVAL_ENABLED_PROPERTY_NAME = "workflow.archival.enabled";
+//    boolean WORKFLOW_ARCHIVAL_ENABLED_DEFAULT_VALUE = true; //FIXME: Change this to false after testing
 
+    String WORKFLOW_ARCHIVAL_DELAY_SECS_PROPERTY_NAME = "workflow.archival.delay.seconds";
+    int WORKFLOW_ARCHIVAL_DELAY_SECS_DEFAULT_VALUE = 60;
 
     String OWNER_EMAIL_MANDATORY_NAME = "workflow.owner.email.mandatory";
     boolean OWNER_EMAIL_MANDATORY_DEFAULT_VALUE = true;
@@ -198,6 +200,7 @@ public interface Configuration {
     default int getSystemTaskWorkerIsolatedThreadCount() {
         return getIntProperty(SYSTEM_TASK_WORKER_ISOLATED_THREAD_COUNT_PROPERTY_NAME, SYSTEM_TASK_WORKER_ISOLATED_THREAD_COUNT_DEFAULT_VALUE);
     }
+
 
     /**
      * @return time frequency in seconds, at which the workflow sweeper should run to evaluate running workflows.
@@ -331,9 +334,13 @@ public interface Configuration {
         return getIntProperty(WORKFLOW_ARCHIVAL_TTL_SECS_PROPERTY_NAME, WORKFLOW_ARCHIVAL_TTL_SECS_DEFAULT_VALUE);
     }
 
-    default boolean isWorkflowArchivalEnabled()
-    {
-        return getBooleanProperty(WORKFLOW_ARCHIVAL_ENABLED_PROPERTY_NAME, WORKFLOW_ARCHIVAL_ENABLED_DEFAULT_VALUE);
+//    default boolean isWorkflowArchivalEnabled()
+//    {
+//        return getBooleanProperty(WORKFLOW_ARCHIVAL_ENABLED_PROPERTY_NAME, WORKFLOW_ARCHIVAL_ENABLED_DEFAULT_VALUE);
+//    }
+
+    default int getWorkflowArchivalDelay() {
+        return getIntProperty(WORKFLOW_ARCHIVAL_DELAY_SECS_PROPERTY_NAME, WORKFLOW_ARCHIVAL_DELAY_SECS_DEFAULT_VALUE);
     }
 
     /**

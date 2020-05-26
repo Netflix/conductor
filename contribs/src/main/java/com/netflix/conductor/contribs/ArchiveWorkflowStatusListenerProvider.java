@@ -38,7 +38,7 @@ public class ArchiveWorkflowStatusListenerProvider implements Provider<WorkflowS
     @Override
     public WorkflowStatusListener get() {
         if (config.getWorkflowArchivalTTL() > 0) {
-            return new ArchivingWithTTLWorkflowStatusListener(executionDAOFacade, config.getWorkflowArchivalTTL());
+            return new ArchivingWithTTLWorkflowStatusListener(executionDAOFacade, config);
         } else {
             return new ArchivingWorkflowStatusListener(executionDAOFacade);
         }
