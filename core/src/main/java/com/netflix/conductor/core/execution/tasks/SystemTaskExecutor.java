@@ -80,7 +80,7 @@ class SystemTaskExecutor {
         try {
             //FIXME: Add documentation and unit tests
             //Since already one slot is acquired, now try if maxSlot-1 is available
-            int numSlots = Math.min(semaphoreUtil.availableSlots() - 1, maxPollCount);
+            int numSlots = Math.min(semaphoreUtil.availableSlots() - 1, maxPollCount-1);
 
             if (semaphoreUtil.acquireSlots(numSlots)) {
                 acquiredSlots += numSlots;
@@ -93,7 +93,7 @@ class SystemTaskExecutor {
             LOGGER.debug("Polling queue:{}, got {} tasks", queueName, polledTaskIds.size());
             if (polledTaskIds.size() > 0) {
                 for (String taskId : polledTaskIds) {
-                    if (StringUtils.isNotBlank(polledTaskIds.get(0))) {
+                    if (StringUtils.isNotBlank(taskId)) {
                         LOGGER.debug("Task: {} from queue: {} being sent to the workflow executor", taskId, queueName);
                         Monitors.recordTaskPollCount(queueName, "", 1);
 
