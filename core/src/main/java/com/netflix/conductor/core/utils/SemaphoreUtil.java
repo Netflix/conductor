@@ -62,4 +62,17 @@ public class SemaphoreUtil {
         LOGGER.debug("Number of available permits: {}", available);
         return available;
     }
+
+    public boolean acquireSlots(int numSlots)
+    {
+        return semaphore.tryAcquire(numSlots);
+    }
+
+    /**
+     * Signals that processing is complete and the permit can be released.
+     */
+    public void completeProcessing(int numSlots) {
+        LOGGER.debug("Completed execution; releasing permit");
+        semaphore.release(numSlots);
+    }
 }

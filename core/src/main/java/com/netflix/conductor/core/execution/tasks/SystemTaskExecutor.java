@@ -72,28 +72,48 @@ class SystemTaskExecutor {
             Monitors.recordSystemTaskWorkerPollingLimited(queueName);
             return;
         }
+
+        int acquiredSlots = 1;
+
+        int maxPollCount = 10; //FIXME: Remove hard-coding to config
+
         try {
-            List<String> polledTaskIds = queueDAO.pop(queueName, 1, 200);
-            Monitors.recordTaskPoll(queueName);
+            //FIXME: Add documentation and unit tests
+            //Since already one slot is acquired, now try if maxSlot-1 is available
+            int numSlots = Math.min(semaphoreUtil.availableSlots() - 1, maxPollCount);
+
+            if (semaphoreUtil.acquireSlots(numSlots)) {
+                acquiredSlots += numSlots;
+            }
+
+            List<String> polledTaskIds = queueDAO.pop(queueName, acquiredSlots, 200);
+
+            Monitors.recordTaskPoll(queueName); //FIXME: Increment number of slots
+
             LOGGER.debug("Polling queue:{}, got {} tasks", queueName, polledTaskIds.size());
-            if (polledTaskIds.size() == 1 && StringUtils.isNotBlank(polledTaskIds.get(0))) {
-                String taskId = polledTaskIds.get(0);
-                LOGGER.debug("Task: {} from queue: {} being sent to the workflow executor", taskId, queueName);
-                Monitors.recordTaskPollCount(queueName, "", 1);
+            if (polledTaskIds.size() > 0) {
+                for (String taskId : polledTaskIds) {
+                    if (StringUtils.isNotBlank(polledTaskIds.get(0))) {
+                        LOGGER.debug("Task: {} from queue: {} being sent to the workflow executor", taskId, queueName);
+                        Monitors.recordTaskPollCount(queueName, "", 1);
 
-                WorkflowSystemTask systemTask = SystemTaskWorkerCoordinator.taskNameWorkflowTaskMapping.get(taskName);
-                CompletableFuture<Void> taskCompletableFuture = CompletableFuture.runAsync(() ->
-                    workflowExecutor.executeSystemTask(systemTask, taskId, callbackTime), executorService);
+                        WorkflowSystemTask systemTask = SystemTaskWorkerCoordinator.taskNameWorkflowTaskMapping.get(taskName);
+                        CompletableFuture<Void> taskCompletableFuture = CompletableFuture.runAsync(() ->
+                                workflowExecutor.executeSystemTask(systemTask, taskId, callbackTime), executorService);
 
-                // release permit after processing is complete
-                taskCompletableFuture.whenComplete((r, e) -> semaphoreUtil.completeProcessing());
+                        // release permit after processing is complete
+                        taskCompletableFuture.whenComplete((r, e) -> semaphoreUtil.completeProcessing());
+                    } else {
+                        semaphoreUtil.completeProcessing();
+                    }
+                }
             } else {
                 // no task polled, release permit
-                semaphoreUtil.completeProcessing();
+                semaphoreUtil.completeProcessing(acquiredSlots);
             }
         } catch (Exception e) {
             // release the permit if exception is thrown during polling, because the thread would not be busy
-            semaphoreUtil.completeProcessing();
+            semaphoreUtil.completeProcessing(acquiredSlots);
             Monitors.recordTaskPollError(taskName, "", e.getClass().getSimpleName());
             LOGGER.error("Error polling system task in queue:{}", queueName, e);
         }
