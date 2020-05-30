@@ -75,14 +75,14 @@ class SystemTaskExecutor {
 
         int acquiredSlots = 1;
 
-        int maxPollCount = 10; //FIXME: Remove hard-coding to config
+        int maxPollCount = 10; //FIXME: Remove hard-coding to config - default 1
 
         try {
             //FIXME: Add documentation and unit tests
             //Since already one slot is acquired, now try if maxSlot-1 is available
-            int numSlots = Math.min(semaphoreUtil.availableSlots() - 1, maxPollCount-1);
+            int numSlots = Math.min(semaphoreUtil.availableSlots(), maxPollCount - 1);
 
-            if (semaphoreUtil.acquireSlots(numSlots)) {
+            if (numSlots > 0 && semaphoreUtil.acquireSlots(numSlots)) {
                 acquiredSlots += numSlots;
             }
 
@@ -91,7 +91,13 @@ class SystemTaskExecutor {
             Monitors.recordTaskPoll(queueName); //FIXME: Increment number of slots
 
             LOGGER.debug("Polling queue:{}, got {} tasks", queueName, polledTaskIds.size());
+
             if (polledTaskIds.size() > 0) {
+
+                if (polledTaskIds.size() < acquiredSlots) {
+                    semaphoreUtil.completeProcessing(acquiredSlots - polledTaskIds.size());
+                }
+
                 for (String taskId : polledTaskIds) {
                     if (StringUtils.isNotBlank(taskId)) {
                         LOGGER.debug("Task: {} from queue: {} being sent to the workflow executor", taskId, queueName);
