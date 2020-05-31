@@ -196,8 +196,6 @@ public class ExecutionDAOFacade {
         executionDAO.createWorkflow(workflow);
         // Add to decider queue
         queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), workflow.getPriority(), config.getSweepFrequency());
-        // if (config.enableAsyncIndexing() && !config.isWorkflowArchivalEnabled()) {
-        //FIXME: Add proper doc why archival should not execute this.
         if(config.enableAsyncIndexing()) {
             indexDAO.asyncIndexWorkflow(workflow);
         } else {
