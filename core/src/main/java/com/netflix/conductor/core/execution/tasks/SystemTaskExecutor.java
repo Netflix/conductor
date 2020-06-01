@@ -43,6 +43,7 @@ class SystemTaskExecutor {
     ExecutionConfig defaultExecutionConfig;
     private final WorkflowExecutor workflowExecutor;
     private final Configuration config;
+    private final int maxPollCount;
 
     ConcurrentHashMap<String, ExecutionConfig> queueExecutionConfigMap = new ConcurrentHashMap<>();
 
@@ -55,6 +56,7 @@ class SystemTaskExecutor {
         this.defaultExecutionConfig = new ExecutionConfig(threadCount, threadNameFormat);
         this.workflowExecutor = workflowExecutor;
         this.queueDAO = queueDAO;
+        this.maxPollCount = config.getSystemTaskMaxPollCount();
 
         LOGGER.info("Initialized the SystemTaskExecutor with {} threads and callback time: {} seconds", threadCount,
             callbackTime);
@@ -75,25 +77,23 @@ class SystemTaskExecutor {
 
         int acquiredSlots = 1;
 
-        int maxPollCount = 10; //FIXME: Remove hard-coding to config - default 1
-
         try {
-            //FIXME: Add documentation and unit tests
             //Since already one slot is acquired, now try if maxSlot-1 is available
-            int numSlots = Math.min(semaphoreUtil.availableSlots(), maxPollCount - 1);
+            int slotsToAcquire = Math.min(semaphoreUtil.availableSlots(), maxPollCount - 1);
 
-            if (numSlots > 0 && semaphoreUtil.acquireSlots(numSlots)) {
-                acquiredSlots += numSlots;
+            // Try to acquires remaining permits to achieve maxPollCount
+            if (slotsToAcquire > 0 && semaphoreUtil.acquireSlots(slotsToAcquire)) {
+                acquiredSlots += slotsToAcquire;
             }
+            LOGGER.debug("Polling queue: {} with {} slots acquired", queueName, acquiredSlots);
 
             List<String> polledTaskIds = queueDAO.pop(queueName, acquiredSlots, 200);
 
-            Monitors.recordTaskPoll(queueName); //FIXME: Increment number of slots
-
+            Monitors.recordTaskPoll(queueName);
             LOGGER.debug("Polling queue:{}, got {} tasks", queueName, polledTaskIds.size());
 
             if (polledTaskIds.size() > 0) {
-
+                // Immediately release unused permits when polled no. of messages are less than acquired permits
                 if (polledTaskIds.size() < acquiredSlots) {
                     semaphoreUtil.completeProcessing(acquiredSlots - polledTaskIds.size());
                 }

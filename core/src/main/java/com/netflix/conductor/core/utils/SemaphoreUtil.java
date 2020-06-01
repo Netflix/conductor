@@ -16,6 +16,7 @@
 package com.netflix.conductor.core.utils;
 
 import java.util.concurrent.Semaphore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ public class SemaphoreUtil {
      * Signals if processing is allowed based on whether a permit can be acquired.
      *
      * @return {@code true} - if permit is acquired
-     *         {@code false} - if permit could not be acquired
+     * {@code false} - if permit could not be acquired
      */
     public boolean canProcess() {
         boolean acquired = semaphore.tryAcquire();
@@ -63,13 +64,19 @@ public class SemaphoreUtil {
         return available;
     }
 
-    public boolean acquireSlots(int numSlots)
-    {
+    /**
+     * Signals if processing is allowed based on whether specified number of permits can be acquired.
+     *
+     * @param numSlots the number of permits to acquire
+     * @return {@code true} - if permit is acquired
+     * {@code false} - if permit could not be acquired
+     */
+    public boolean acquireSlots(int numSlots) {
         return semaphore.tryAcquire(numSlots);
     }
 
     /**
-     * Signals that processing is complete and the permit can be released.
+     * Signals that processing is complete and the specified number of permits can be released.
      */
     public void completeProcessing(int numSlots) {
         LOGGER.debug("Completed execution; releasing permit");
