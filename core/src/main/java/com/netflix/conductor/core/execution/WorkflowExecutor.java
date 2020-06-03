@@ -67,6 +67,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -339,7 +340,7 @@ public class WorkflowExecutor {
 
     private final Predicate<PollData> validateLastPolledTime = pd -> pd.getLastPollTime() > System.currentTimeMillis() - (activeWorkerLastPollInSecs * 1000);
 
-    private final Predicate<Task> isSystemTask = task -> SystemTaskType.is(task.getTaskType());
+    public static final Predicate<Task> isSystemTask = task -> SystemTaskType.is(task.getTaskType());
 
     private final Predicate<Task> isNonTerminalTask = task -> !task.getStatus().isTerminal();
 
@@ -654,6 +655,7 @@ public class WorkflowExecutor {
             decide(parent.getWorkflowId());
         }
         Monitors.recordWorkflowCompletion(workflow.getWorkflowName(), workflow.getEndTime() - workflow.getStartTime(), workflow.getOwnerApp());
+        Monitors.recordWorkflowCompleted(workflow.getWorkflowName());
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
 
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
