@@ -24,6 +24,8 @@ import com.netflix.dyno.queues.Message;
 import com.netflix.dyno.queues.ShardSupplier;
 import com.netflix.dyno.queues.redis.RedisDynoQueue;
 import com.netflix.dyno.queues.redis.RedisQueues;
+import com.netflix.dyno.queues.redis.sharding.RoundRobinStrategy;
+import com.netflix.dyno.queues.redis.sharding.ShardingStrategy;
 import com.netflix.dyno.queues.shard.DynoShardSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,6 +127,7 @@ public class DynoQueueDAO implements QueueDAO {
         if (domain != null) {
             prefix = prefix + "." + domain;
         }
+
         queues = new RedisQueues(dynoClient, dynoClientRead, prefix, ss, 60_000, 60_000);
         logger.info("DynoQueueDAO initialized with prefix " + prefix + "!");
     }

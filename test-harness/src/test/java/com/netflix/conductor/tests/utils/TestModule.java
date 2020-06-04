@@ -29,11 +29,13 @@ import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
 import com.netflix.conductor.dyno.RedisQueuesProvider;
+import com.netflix.conductor.dyno.RedisQueuesShardingStrategyProvider;
 import com.netflix.conductor.server.LocalRedisModule;
 import com.netflix.conductor.service.MetadataService;
 import com.netflix.conductor.service.MetadataServiceImpl;
 import com.netflix.dyno.queues.redis.RedisQueues;
 
+import com.netflix.dyno.queues.redis.sharding.ShardingStrategy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -57,6 +59,7 @@ public class TestModule extends AbstractModule {
         MockConfiguration config = new MockConfiguration();
         bind(Configuration.class).toInstance(config);
         install(new LocalRedisModule());
+        bind(ShardingStrategy.class).toProvider(RedisQueuesShardingStrategyProvider.class).asEagerSingleton();
         bind(RedisQueues.class).toProvider(RedisQueuesProvider.class);
 
         bind(MetadataDAO.class).to(RedisMetadataDAO.class);
