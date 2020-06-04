@@ -13,6 +13,7 @@
  */
 package com.netflix.conductor.dao;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
@@ -57,10 +58,12 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
     private static Logger logger = LoggerFactory.getLogger(KafkaDAO.class);
     private Histogram.Timer latencyTimer;
     private Histogram kafkaPublishLatency;
+    private ObjectMapper objectMapper;
 
     @Inject
     public KafkaDAO(KafkaProducer producer, RestClient lowLevelRestClient, ElasticSearchConfiguration config, ObjectMapper objectMapper) {
         super(lowLevelRestClient, config, objectMapper);
+        this.objectMapper = objectMapper;
         this.producerDAO = producer;
 
         // Set up a workerpool for performing async operations.
@@ -91,6 +94,12 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
     public void indexWorkflow(Workflow workflow) {
         latencyTimer = kafkaPublishLatency.labels(OperationTypes.CREATE, DocumentTypes.WORKFLOW_DOC_TYPE).startTimer();
         WorkflowSummary summary = new WorkflowSummary(workflow);
+        try {
+            summary.setInput(objectMapper.writeValueAsString(workflow.getInput()));
+            summary.setOutput(objectMapper.writeValueAsString(workflow.getOutput()));
+        } catch (JsonProcessingException e) {
+            logger.error("Unable to deserialize workflow I/O {}", e);
+        }
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.WORKFLOW_DOC_TYPE, summary);
         latencyTimer.observeDuration();
     }
@@ -104,6 +113,12 @@ public class KafkaDAO extends ElasticSearchRestDAOV5 {
     public void indexTask(Task task) {
         latencyTimer = kafkaPublishLatency.labels(OperationTypes.CREATE, DocumentTypes.TASK_DOC_TYPE).startTimer();
         TaskSummary summary = new TaskSummary(task);
+        try {
+            summary.setInput(objectMapper.writeValueAsString(task.getInputData()));
+            summary.setOutput(objectMapper.writeValueAsString(task.getOutputData()));
+        } catch (JsonProcessingException e) {
+            logger.error("Unable to deserialize task I/O {}", e);
+        }
         producerDAO.send(OperationTypes.CREATE, DocumentTypes.TASK_DOC_TYPE, summary);
         latencyTimer.observeDuration();
     }
