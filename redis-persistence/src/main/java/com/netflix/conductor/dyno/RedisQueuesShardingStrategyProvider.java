@@ -56,7 +56,7 @@ public class RedisQueuesShardingStrategyProvider implements Provider<ShardingStr
         }
     }
 
-    private static final class LocalOnlyStrategy implements ShardingStrategy {
+    static final class LocalOnlyStrategy implements ShardingStrategy {
         private static final Logger logger = LoggerFactory.getLogger(RedisQueuesShardingStrategyProvider.class);
 
         private final ShardSupplier shardSupplier;
