@@ -156,7 +156,13 @@ public class TestConfiguration implements PostgresConfiguration {
     }
     @Override
     public boolean getBooleanProperty(String name, boolean defaultValue) {
-        return false;
+        String val = getProperty(name, null);
+
+        if (val != null) {
+            return Boolean.parseBoolean(val);
+        } else {
+            return defaultValue;
+        }
     }
 
     @Override

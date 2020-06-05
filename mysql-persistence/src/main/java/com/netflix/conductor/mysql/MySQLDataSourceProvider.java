@@ -68,12 +68,12 @@ public class MySQLDataSourceProvider implements Provider<DataSource> {
     }
 
     private void flywayMigrate(DataSource dataSource) {
-		boolean enabled = configuration.isFlywayEnabled();
+
+    	boolean enabled = configuration.isFlywayEnabled();
 		if (!enabled) {
 			logger.debug("Flyway migrations are disabled");
 			return;
 		}
-
 
 		Flyway flyway = new Flyway();
 		configuration.getFlywayTable().ifPresent(tableName -> {
@@ -81,21 +81,24 @@ public class MySQLDataSourceProvider implements Provider<DataSource> {
 			flyway.setTable(tableName);
 		});
 
+			String[] locations = configuration.getFlywayLocations();
+			if (locations.length > 0) {
+				flyway.setLocations(locations);
+			}
+
 		flyway.setDataSource(dataSource);
 		flyway.setPlaceholderReplacement(false);
+
 		flyway.setBaselineOnMigrate(configuration.isFlywayBaselineOnMigrate());
 
 		if (configuration.isFlywayBaselineOnMigrate()) {
 			logger.trace("Flyway baseline migration is enabled");
-			flyway.setBaselineVersionAsString("0");
+
+				flyway.setBaselineVersionAsString(Integer.toString(configuration.getFlywayBaselineVersion()));
 			flyway.setBaselineDescription("Conductor baseline migration");
 		}
 
-		String[] locations = configuration.getFlywayLocations();
-		if (locations.length > 0) {
-			flyway.setLocations(locations);
-		}
-
 		flyway.migrate();
+
 	}
 }

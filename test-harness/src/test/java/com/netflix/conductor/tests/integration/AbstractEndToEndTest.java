@@ -7,10 +7,18 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringTokenizer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -159,4 +167,41 @@ public abstract class AbstractEndToEndTest {
     protected abstract TaskDef getTaskDefinition(String taskName);
 
     protected abstract void registerTaskDefinitions(List<TaskDef> taskDefinitionList);
+
+    private static String readFile(String path, Charset encoding) throws IOException {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
+    }
+
+    protected static void executeSQL(String file, Connection c) throws Exception {
+
+        String data = readFile(file, StandardCharsets.UTF_8);
+
+        StringTokenizer st = new StringTokenizer(data, ";");
+
+        while (st.hasMoreTokens()) {
+            StringBuilder sb = new StringBuilder();
+            String block = st.nextToken();
+            StringTokenizer lt = new StringTokenizer(block, "\n");
+
+            while (lt.hasMoreTokens()) {
+                String line = lt.nextToken();
+                if (line.matches("^(\n|--).*")) {
+                    continue;
+                }
+                sb.append(line);
+            }
+            String sql = sb.toString();
+            if(sql.trim().isEmpty()){
+                continue;
+            }
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.executeUpdate();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+    }
+
 }

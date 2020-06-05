@@ -19,8 +19,19 @@ public interface MySQLConfiguration extends Configuration {
 	String JDBC_PASSWORD_PROPERTY_NAME = "jdbc.password";
 	String JDBC_PASSWORD_DEFAULT_VALUE = "password";
 
-	String FLYWAY_BASELINE_PROPERTY_NAME = "flyway.baseline-on-migrate";
+	// If the target database already contains conductor tables but have yet to be
+	// versioned in flyway or migrations were manually applied, then the flyway.baseline.on.migrate
+	// and flyway.baseline.version properties can be set in order to migrate to the latest tables.
+	// The flyway.enabled property should also be set to true. The flyway.baseline.on.migrate property
+	// should be set to true and the flyway.baseline.version property should be set to the migration
+	// version that the target database is already at. For example, if the V1 schema was manually applied,
+	// flyway.baseline.version should be set to 1. When conductor is started with flyway.enabled = true,
+	// conductor will apply all migration versions *after* V1.
+	String FLYWAY_BASELINE_PROPERTY_NAME = "flyway.baseline.on.migrate";
 	boolean FLYWAY_BASELINE_DEFAULT_VALUE = false;
+
+	String FLYWAY_BASELINE_VERSION_PROPERTY_NAME = "flyway.baseline.version";
+	int FLYWAY_BASELINE_VERSION_DEFAULT_VALUE = 0;
 
 	String FLYWAY_ENABLED_PROPERTY_NAME = "flyway.enabled";
 	boolean FLYWAY_ENABLED_DEFAULT_VALUE = true;
@@ -93,6 +104,10 @@ public interface MySQLConfiguration extends Configuration {
 		}
 
 		return new String[] {locationProp};
+	}
+
+	default int getFlywayBaselineVersion() {
+		return getIntProperty(FLYWAY_BASELINE_VERSION_PROPERTY_NAME, FLYWAY_BASELINE_VERSION_DEFAULT_VALUE);
 	}
 
 	default int getConnectionPoolMaxSize() {

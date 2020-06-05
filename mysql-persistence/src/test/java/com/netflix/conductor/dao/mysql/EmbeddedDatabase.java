@@ -1,7 +1,5 @@
 package com.netflix.conductor.dao.mysql;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import ch.vorburger.mariadb4j.DBConfiguration;
 import ch.vorburger.mariadb4j.DBConfigurationBuilder;
 import org.slf4j.Logger;
@@ -15,7 +13,6 @@ public enum EmbeddedDatabase {
 
 	private final DB db;
 	private final Logger logger = LoggerFactory.getLogger(EmbeddedDatabase.class);
-	private static final AtomicBoolean hasBeenMigrated = new AtomicBoolean(false);
 
 	public DB getDB() {
 		return db;
