@@ -61,7 +61,7 @@ class SystemTaskExecutor {
         LOGGER.info("Initialized the SystemTaskExecutor with {} threads and callback time: {} seconds", threadCount,
             callbackTime);
     }
-
+    
     void pollAndExecute(String queueName) {
         // get the remaining capacity of worker queue to prevent queue full exception
         ExecutionConfig executionConfig = getExecutionConfig(queueName);
