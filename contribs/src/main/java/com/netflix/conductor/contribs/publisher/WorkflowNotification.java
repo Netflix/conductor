@@ -11,8 +11,8 @@ import java.util.LinkedHashMap;
 
 public class WorkflowNotification extends WorkflowSummary {
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowStatusPublisher.class);
-    private String domainGroupMoId;
-    private String accountMoId;
+    private String domainGroupMoId = "";
+    private String accountMoId = "";
 
     public String getDomainGroupMoId() {
         return domainGroupMoId;
@@ -23,8 +23,15 @@ public class WorkflowNotification extends WorkflowSummary {
 
     public WorkflowNotification(Workflow workflow) {
         super(workflow);
-        domainGroupMoId = ((LinkedHashMap) workflow.getInput().get("FusionMeta")).get("DomainGroupMoId").toString();
-        accountMoId = ((LinkedHashMap) workflow.getInput().get("FusionMeta")).get("AccountMoId").toString();
+
+        boolean isFusionMetaPresent =  workflow.getInput().containsKey("FusionMeta");
+        if (!isFusionMetaPresent) {
+            return;
+        }
+
+        LinkedHashMap fusionMeta = (LinkedHashMap) workflow.getInput().get("FusionMeta");
+        domainGroupMoId = fusionMeta.containsKey("DomainGroupMoId") ? fusionMeta.get("DomainGroupMoId").toString(): "";
+        accountMoId = fusionMeta.containsKey("AccountMoId") ? fusionMeta.get("AccountMoId").toString(): "";
     }
 
     String toJsonString() {
@@ -33,7 +40,7 @@ public class WorkflowNotification extends WorkflowSummary {
         try {
             jsonString = objectMapper.writeValueAsString(this);
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to convert Task: {} to String. Exception: {}", this, e);
+            LOGGER.error("Failed to convert workflow: {} to String. Exception: {}", this, e);
             throw new RuntimeException(e);
         }
         return jsonString;

@@ -24,7 +24,7 @@ public class TaskNotification extends TaskSummary {
         return accountMoId;
     }
 
-    TaskNotification(Task task) {
+    public TaskNotification(Task task) {
         super(task);
         workflowTaskType = task.getWorkflowTask().getType();
 
@@ -35,7 +35,7 @@ public class TaskNotification extends TaskSummary {
 
         LinkedHashMap fusionMeta = (LinkedHashMap) task.getInputData().get("FusionMeta");
         domainGroupMoId = fusionMeta.containsKey("DomainGroupMoId") ? fusionMeta.get("DomainGroupMoId").toString(): "";
-        accountMoId = fusionMeta.containsKey("accountMoId") ? fusionMeta.get("accountMoId").toString(): "";
+        accountMoId = fusionMeta.containsKey("AccountMoId") ? fusionMeta.get("AccountMoId").toString(): "";
 
     }
 
