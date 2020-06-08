@@ -5,59 +5,87 @@ import com.netflix.conductor.core.execution.TaskStatusListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Singleton;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
+class ExceptionHandler implements Thread.UncaughtExceptionHandler
+{
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisher.class);
+    private TaskStatusPublisher publisher;
+
+    public ExceptionHandler(TaskStatusPublisher publisher) {
+        this.publisher = publisher;
+    }
+    public void uncaughtException(Thread t, Throwable e)
+    {
+        LOGGER.info("An exception has been captured\n");
+        LOGGER.info("Thread: {}\n", t.getName());
+        LOGGER.info("Exception: {}: {}\n", e.getClass().getName(), e.getMessage());
+        LOGGER.info("Stack Trace: \n");
+        e.printStackTrace(System.out);
+        LOGGER.info("Thread status: {}\n", t.getState());
+        new ConsumerThread(this.publisher).start();
+    }
+}
+
+class ConsumerThread extends Thread {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisher.class);
+    private TaskStatusPublisher publisher;
+
+    public ConsumerThread(TaskStatusPublisher publisher) {
+        this.publisher = publisher;
+    }
+
+    public void run(){
+        this.setUncaughtExceptionHandler(new ExceptionHandler(this.publisher));
+        String tName = Thread.currentThread().getName();
+        LOGGER.info("{}: Starting consumer thread", tName);
+
+        while (true) {
+            try {
+                Task task = this.publisher.blockingQueue.take();
+                LOGGER.info("{}: Consume {}", tName, task);
+                TaskNotification taskNotification = new TaskNotification(task);
+                if (taskNotification.getAccountMoId() == "" || taskNotification.getDomainGroupMoId() == "") {
+                    LOGGER.info("{}: Skip publishing task notification", tName);
+                    continue;
+                }
+                this.publisher.publishTaskNotification(taskNotification);
+                Thread.sleep(10);
+            }
+            catch (Exception e) {
+                LOGGER.error("{}: Failed to consume Task: {} to String. Exception: {}", tName, this, e);
+                LOGGER.info(e.getMessage());
+            }
+        }
+    }
+}
+
+@Singleton
 public class TaskStatusPublisher implements TaskStatusListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusPublisher.class);
     private static final String NOTIFICATION_TYPE = "workflow/TaskNotifications";
     private static final Integer QDEPTH = Integer.parseInt(System.getenv("ENV_TASK_NOTIFICATION_QUEUE_SIZE"));
-    private BlockingQueue<Task> blockingQueue = new LinkedBlockingDeque<>(QDEPTH);
-    private boolean isConsumerRunning = false;
+    BlockingQueue<Task> blockingQueue = new LinkedBlockingDeque<>(QDEPTH);
 
-    private Thread consumerThread = new Thread(() -> {
-        try {
-            while (true) {
-                Task task = blockingQueue.take();
-                LOGGER.info("Consume " + task);
-                TaskNotification taskNotification = new TaskNotification(task);
-                publishTaskNotification(taskNotification);
-                Thread.sleep(10);
-            }
-        }
-        catch (Exception e){
-            LOGGER.info(e.getMessage());
-        }
-    });
+    public TaskStatusPublisher() {
+        ConsumerThread consumerThread = new ConsumerThread(this);
+        consumerThread.start();
+    }
 
     @Override
     public void onTaskScheduled(Task task) {
         try {
             LOGGER.info("#### Publishing Task {} on schedule callback", task.getTaskId());
             blockingQueue.put(task);
-
-            // start if consumer thread not running
-            if (isConsumerRunning) {
-                return;
-            }
-            consumerThread.start();
-            //consumerThread.join();
-            isConsumerRunning = true;
         } catch (Exception e){
-            LOGGER.info(e.getMessage());
+            LOGGER.error("Error on scheduling task. Exception: {}", this, e);
         }
-        /*new Thread(() -> {
-            try {
-                TaskNotification taskNotification = new TaskNotification(task);
-                publishTaskNotification(taskNotification);
-            } catch (Exception e){
-                LOGGER.info(e.getMessage());
-            }
-        }).start();*/
     }
 
-    private void publishTaskNotification(TaskNotification taskNotification) {
+    void publishTaskNotification(TaskNotification taskNotification) {
         String jsonTask = taskNotification.toJsonString();
         LOGGER.info("##### Task Message {} .", jsonTask);
         RestClient rc = new RestClient();
