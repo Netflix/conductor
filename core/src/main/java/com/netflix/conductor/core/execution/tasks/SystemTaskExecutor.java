@@ -69,7 +69,7 @@ class SystemTaskExecutor {
         ExecutorService executorService = executionConfig.getExecutorService();
         String taskName = QueueUtils.getTaskType(queueName);
 
-        if (!semaphoreUtil.canProcess()) {
+        if (!semaphoreUtil.acquireSlots(1)) {
             // no available permits, do not poll
             Monitors.recordSystemTaskWorkerPollingLimited(queueName);
             return;
@@ -108,9 +108,9 @@ class SystemTaskExecutor {
                                 workflowExecutor.executeSystemTask(systemTask, taskId, callbackTime), executorService);
 
                         // release permit after processing is complete
-                        taskCompletableFuture.whenComplete((r, e) -> semaphoreUtil.completeProcessing());
+                        taskCompletableFuture.whenComplete((r, e) -> semaphoreUtil.completeProcessing(1));
                     } else {
-                        semaphoreUtil.completeProcessing();
+                        semaphoreUtil.completeProcessing(1);
                     }
                 }
             } else {
