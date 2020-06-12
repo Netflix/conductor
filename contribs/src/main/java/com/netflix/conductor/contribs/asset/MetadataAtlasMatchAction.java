@@ -67,7 +67,7 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 			return Collections.emptyList();
 		}
 
-		String versionId = ScriptEvaluator.evalJq(params.atlasId, payload);
+		String versionId = ScriptEvaluator.evalJq(params.versionId, payload);
 
 		// Get the current logging context (owner)
 		String ndcValue = NDC.peek();
