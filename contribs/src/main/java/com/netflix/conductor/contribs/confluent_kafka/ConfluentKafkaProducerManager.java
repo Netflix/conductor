@@ -30,12 +30,11 @@ public class ConfluentKafkaProducerManager {
 	private static final String KAFKA_PRODUCER_CACHE_SIZE = "kafka.publish.producer.cache.size";
 	private static final int DEFAULT_CACHE_TIME_IN_MILLIS = 120000;
 	private Configuration configuration;
-	private static final String KAFKA_PREFIX = "KAFKA";
 	public enum ClusterType {
-		BATCH("BATCH_PRIMARY_API_KEY", "BATCH_PRIMARY_API_SECRET"),
-		TXN("TXN_PRIMARY_API_KEY", "TXN_PRIMARY_API_SECRET"),
-		TXN_HA_PRIMARY("TXN_HA_PRIMARY_API_KEY", "TXN_HA_PRIMARY_API_SECRET"),
-		TXN_HA_SECONDARY("TXN_HA_SECONDARY_API_KEY", "TXN_HA_SECONDARY_API_SECRET");
+		BATCH("KAFKA_BATCH_PRIMARY_API_KEY", "KAFKA_BATCH_PRIMARY_API_SECRET"),
+		TXN("KAFKA_TXN_PRIMARY_API_KEY", "KAFKA_TXN_PRIMARY_API_SECRET"),
+		TXN_HA_PRIMARY("KAFKA_TXN_HA_PRIMARY_API_KEY", "KAFKA_TXN_HA_PRIMARY_API_SECRET"),
+		TXN_HA_SECONDARY("KAFKA_TXN_HA_SECONDARY_API_KEY", "KAFKA_TXN_HA_SECONDARY_API_SECRET");
 
 		private String  key;
 
@@ -150,12 +149,12 @@ public class ConfluentKafkaProducerManager {
 	}
 
 	private String getTaskKey(String taskDefName, String clusterType, String workflowName) {
-		String userName = configuration.getProperty(taskDefName.toUpperCase() +  "_" + KAFKA_PREFIX + "_" + ClusterType.valueOf(clusterType).key, "");
+		String userName = configuration.getProperty(taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).key, "");
 		if (userName != "") {
 			logger.info("Key found for task" + taskDefName + " for cluster " + clusterType);
 			return userName;
 		}
-		userName = configuration.getProperty( workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + KAFKA_PREFIX + "_" + ClusterType.valueOf(clusterType).key, "");
+		userName = configuration.getProperty( workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).key, "");
 		 if (userName != "") {
 			 logger.info("Key found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
 			return userName;
@@ -165,12 +164,12 @@ public class ConfluentKafkaProducerManager {
 	}
 
 	private String getTaskSecret(String taskDefName, String clusterType, String workflowName) {
-		String password = configuration.getProperty(taskDefName.toUpperCase() +  "_" + KAFKA_PREFIX + "_" + ClusterType.valueOf(clusterType).secret , "");
+		String password = configuration.getProperty(taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).secret , "");
 		if (password != "") {
 			logger.info("Secret found for task" + taskDefName + " for cluster " + clusterType);
 			return password;
 		}
-		password = configuration.getProperty( workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + KAFKA_PREFIX + "_" + ClusterType.valueOf(clusterType).secret, "");
+		password = configuration.getProperty( workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).secret, "");
 		if (password != "") {
 			logger.info("Secret found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
 			return password;
