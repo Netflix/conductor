@@ -26,7 +26,7 @@ public class ConfluentKafkaProducerManager {
 	public static final String KAFKA_PUBLISH_REQUEST_TIMEOUT_MS = "kafka.publish.request.timeout.ms";
 	public static final String DEFAULT_REQUEST_TIMEOUT = "100";
 	private static final String KAFKA_PRODUCER_CACHE_TIME_IN_MILLIS = "kafka.publish.producer.cache.time.ms" ;
-	private static final int DEFAULT_CACHE_SIZE = 1;
+	private static final int DEFAULT_CACHE_SIZE = 10;
 	private static final String KAFKA_PRODUCER_CACHE_SIZE = "kafka.publish.producer.cache.size";
 	private static final int DEFAULT_CACHE_TIME_IN_MILLIS = 120000;
 	private Configuration configuration;
