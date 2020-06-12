@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +26,7 @@ public class ConfluentKafkaProducerManager {
 	public static final String KAFKA_PUBLISH_REQUEST_TIMEOUT_MS = "kafka.publish.request.timeout.ms";
 	public static final String DEFAULT_REQUEST_TIMEOUT = "100";
 	private static final String KAFKA_PRODUCER_CACHE_TIME_IN_MILLIS = "kafka.publish.producer.cache.time.ms" ;
-	private static final int DEFAULT_CACHE_SIZE = 10;
+	private static final int DEFAULT_CACHE_SIZE = 1;
 	private static final String KAFKA_PRODUCER_CACHE_SIZE = "kafka.publish.producer.cache.size";
 	private static final int DEFAULT_CACHE_TIME_IN_MILLIS = 120000;
 	private Configuration configuration;
@@ -48,7 +49,7 @@ public class ConfluentKafkaProducerManager {
 
 	private static final Logger logger = LoggerFactory.getLogger(ConfluentKafkaProducerManager.class);
 
-	public static final RemovalListener<ProducerConfig, Producer> LISTENER = notification -> {
+	public static final RemovalListener<Properties, Producer> LISTENER = notification -> {
 		notification.getValue().stop();
 		logger.info("Closed producer for {}",notification.getKey());
 	};
@@ -56,7 +57,7 @@ public class ConfluentKafkaProducerManager {
 
 	@VisibleForTesting
 	final String requestTimeoutConfig;
-	private Cache<ProducerConfig, Producer> kafkaProducerCache;
+	private Cache<Properties, Producer> kafkaProducerCache;
 
 	public ConfluentKafkaProducerManager(Configuration configuration) {
 		this.configuration = configuration;
@@ -73,7 +74,8 @@ public class ConfluentKafkaProducerManager {
 
 		ProducerConfig producerConfig = getProducerProperties(input, taskDefName, workflowName);
 
-		return getFromCache(producerConfig, () -> {
+
+		return getFromCache(getCacheProperties(taskDefName, workflowName,  input), () -> {
 				Producer producer = new Producer(producerConfig);
 				producer.start();
 				return producer;
@@ -82,12 +84,25 @@ public class ConfluentKafkaProducerManager {
 	}
 
 	@VisibleForTesting
-	Producer getFromCache(ProducerConfig producerConfig, Callable<Producer> createProducerCallable) {
+	Producer getFromCache(Properties properties, Callable<Producer> createProducerCallable) {
 		try {
-			return kafkaProducerCache.get(producerConfig, createProducerCallable);
+			return kafkaProducerCache.get(properties, createProducerCallable);
 		} catch (ExecutionException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	Properties getCacheProperties(String taskDefName, String workflowname, ConfluentKafkaPublishTask.Input input) {
+		Properties properties = new Properties();
+		properties.put("topic_name", String.valueOf(input.getTopic().get("name")));
+		properties.put("task_name", taskDefName);
+		properties.put("workflow_name", workflowname);
+		properties.put("primary_bootstrap_server", String.valueOf(input.getPrimaryCluster().get("bootStrapServers")));
+		if (!(input.getClusterType().equals(ClusterType.BATCH.name()) || input.getClusterType().equals(ClusterType.TXN.name()))) {
+			properties.put("secondary_bootstrap_server", String.valueOf(input.getPrimaryCluster().get("bootStrapServers")));
+		}
+		properties.put("client_id", input.getClientId());
+		return properties;
 	}
 
 	@VisibleForTesting
@@ -135,12 +150,12 @@ public class ConfluentKafkaProducerManager {
 	}
 
 	private String getTaskKey(String taskDefName, String clusterType, String workflowName) {
-		String userName = configuration.getProperty( KAFKA_PREFIX +  "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).key , "");
+		String userName = configuration.getProperty(taskDefName.toUpperCase() +  "_" + KAFKA_PREFIX + "_" + ClusterType.valueOf(clusterType).key, "");
 		if (userName != "") {
 			logger.info("Key found for task" + taskDefName + " for cluster " + clusterType);
 			return userName;
 		}
-		userName = configuration.getProperty( KAFKA_PREFIX +  "_" + workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).key , "");
+		userName = configuration.getProperty( workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + KAFKA_PREFIX + "_" + ClusterType.valueOf(clusterType).key, "");
 		 if (userName != "") {
 			 logger.info("Key found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
 			return userName;
@@ -150,12 +165,12 @@ public class ConfluentKafkaProducerManager {
 	}
 
 	private String getTaskSecret(String taskDefName, String clusterType, String workflowName) {
-		String password = configuration.getProperty( KAFKA_PREFIX +  "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).secret , "");
+		String password = configuration.getProperty(taskDefName.toUpperCase() +  "_" + KAFKA_PREFIX + "_" + ClusterType.valueOf(clusterType).secret , "");
 		if (password != "") {
 			logger.info("Secret found for task" + taskDefName + " for cluster " + clusterType);
 			return password;
 		}
-		password = configuration.getProperty( KAFKA_PREFIX +  "_" + workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + ClusterType.valueOf(clusterType).secret , "");
+		password = configuration.getProperty( workflowName.toUpperCase() + "_" + taskDefName.toUpperCase() +  "_" + KAFKA_PREFIX + "_" + ClusterType.valueOf(clusterType).secret, "");
 		if (password != "") {
 			logger.info("Secret found for task" + taskDefName + " in workflow " + workflowName + " for cluster " + clusterType);
 			return password;
