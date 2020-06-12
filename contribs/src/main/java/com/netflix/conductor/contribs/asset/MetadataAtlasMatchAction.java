@@ -67,18 +67,13 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 			return Collections.emptyList();
 		}
 
+		String versionId = ScriptEvaluator.evalJq(params.atlasId, payload);
+
 		// Get the current logging context (owner)
 		String ndcValue = NDC.peek();
 
-		// Get the tasks either by
-		// a) tags -> workflows -> WAIT + IN_PROGRESS task
-		// b) backward compatible for all 'WAIT + IN_PROGRESS'
-		List<Task> tasks;
-		if (CollectionUtils.isNotEmpty(ee.getTags())) {
-			tasks = executor.getPendingTasksByTags(Wait.NAME, ee.getTags());
-		} else {
-			tasks = executor.getPendingSystemTasks(Wait.NAME);
-		}
+		Set<String> tags = generateTags(atlasId, versionId);
+		List<Task> tasks = executor.getPendingTasksByAnyTags(Wait.NAME, tags);
 
 		boolean taskNamesDefined = CollectionUtils.isNotEmpty(params.taskRefNames);
 		tasks.parallelStream().forEach(task -> {
@@ -118,7 +113,7 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 				});
 
 				// Array match
-				if (!matches(taskRefKeys, atlasId)) {
+				if (!matches(taskRefKeys, atlasId, versionId)) {
 					return;
 				}
 
@@ -162,7 +157,23 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 		return new ArrayList<>(output);
 	}
 
-	private boolean matches(List<ReferenceKey> taskRefKeys, String atlasId) {
+	// generate all possible tags based on atlasId, versionId
+	private Set<String> generateTags(String atlasId, String versionId) {
+		Set<String> tags = new HashSet<>();
+		if (StringUtils.isNotBlank(versionId)) {
+			tags.addAll(Arrays.asList("featureVersionId" + versionId, "episodeVersionId" + versionId));
+		}
+		tags.addAll(Arrays.asList("featureId" + atlasId, "featureVersionId" + atlasId, "episodeId" + atlasId,
+				"episodeVersionId" + atlasId, "seriesId" + atlasId, "seasonId" + atlasId));
+		return tags;
+	}
+
+	private boolean matches(List<ReferenceKey> taskRefKeys, String atlasId, String versionId) {
+		if (StringUtils.isNotBlank(versionId)) {
+			return taskRefKeys.stream().anyMatch(trk -> Objects.equals(trk.titleKeys.featureVersionId, versionId) ||
+					Objects.equals(trk.titleKeys.episodeVersionId, versionId));
+		}
+
 		return taskRefKeys.stream().anyMatch(trk -> Objects.equals(trk.titleKeys.featureVersionId, atlasId) ||
 			Objects.equals(trk.titleKeys.featureId, atlasId) ||
 			Objects.equals(trk.titleKeys.episodeVersionId, atlasId) ||
@@ -178,6 +189,7 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 		public Set<String> taskRefNames;
 		public Map<String, String> statuses;
 		public String atlasId;
+		public String versionId;
 	}
 
 	private static class ReferenceKey {
