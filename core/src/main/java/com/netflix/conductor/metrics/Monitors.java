@@ -293,11 +293,7 @@ public class Monitors {
 		counter(classQualifier, "workflow_completed", "workflowName", workflowType);
 	}
 
-	public static void recordTaskCompleted(String taskType) {
-		counter(classQualifier, "task_completed", "taskType", taskType);
-	}
-
-	public static void recordSystemTaskCompleted(String taskType) {
-		counter(classQualifier, "system_task_completed", "taskType", taskType);
+	public static void recordTaskCompleted(String taskType, boolean isSystemTask) {
+		counter(classQualifier, "task_completed", "taskType", taskType, "isSystemTask", String.valueOf(isSystemTask));
 	}
 }

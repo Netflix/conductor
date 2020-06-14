@@ -345,11 +345,7 @@ public class ExecutionDAOFacade {
 
                 if (task.getStatus().isTerminal()) {
                     // In terminal state, monitor completion of tasks
-                    if (isSystemTask.test(task)) {
-                        Monitors.recordSystemTaskCompleted(task.getTaskDefName());
-                    } else {
-                        Monitors.recordTaskCompleted(task.getTaskDefName());
-                    }
+                    Monitors.recordTaskCompleted(task.getTaskDefName(), isSystemTask.test(task));
                 }
             }
             executionDAO.updateTask(task);
