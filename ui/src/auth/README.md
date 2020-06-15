@@ -5,8 +5,9 @@ To add authentication, authorization & audit to the UI you will need to:
 2. Choose an authentication/authorization method
 
 * Audit logs are written to the JSON log under the namespace `Conductor UI Auth` (using Bunyan).
-* The UI's footer will be added with a Logged in label (with the username) and a logout link. 
-* Persistence is done thorugh a signed cookie (the value is the user's object) 
+* The UI's left menu will be added with an account label (with the user's display name) and a logout link.
+  - Hovering over the user's name will show their email and roles in a tooltip. 
+* Persistence is done client-side thorugh a signed cookie (the value is the user's object) 
 
 ## Configuration File
 
