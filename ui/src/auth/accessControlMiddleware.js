@@ -61,7 +61,11 @@ const accessControlMiddleware = (options) => {
     // check roles
     if (requiredRoles.some(role => !req.user.roles.includes(role))) {
       options.audit && options.audit(`User ${req.user.name} tried to access ${req.method} ${req.originalUrl} without expected roles ${requiredRoles} (User has the roles ${req.user.roles})`);
-      return res.status(403).send({ message: 'Forbidden' });
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) { // XHR
+        return res.status(403).send({ message: 'Forbidden' });
+      }
+      // browser navigation
+      return res.redirect(options.loginPath + "?error=" + encodeURIComponent("You don't have permission to access the requested page."));
     } else {
       options.audit && options.audit(`User ${req.user.name} accessed ${req.method} ${req.originalUrl}`);
       next();
