@@ -5,7 +5,7 @@ FROM openjdk:8-jdk
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 RUN apt-get update -y && apt-get -y install git curl
-RUN curl -sL https://deb.nodesource.com/setup_9.x |  bash
+RUN curl -sL https://deb.nodesource.com/setup_10.x |  bash
 RUN apt-get install -y nodejs
 RUN apt-get install -y npm
 

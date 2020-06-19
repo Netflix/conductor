@@ -39,6 +39,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -46,6 +47,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
+@Ignore("This is taken care in the spock test, to de deleted once verified")
 public class ExclusiveJoinEndToEndTest {
 
 	private static TaskClient taskClient;
@@ -94,7 +96,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1Default() throws Exception {
+	public void testDecision1Default() {
 		workflowInput.put("decision_1", "null");
 
 		StartWorkflowRequest startWorkflowRequest = new StartWorkflowRequest().withName(CONDUCTOR_WORKFLOW_DEF_NAME)
@@ -115,7 +117,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1TrueAndDecision2Default() throws Exception {
+	public void testDecision1TrueAndDecision2Default() {
 		workflowInput.put("decision_1", "true");
 		workflowInput.put("decision_2", "null");
 
@@ -142,7 +144,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1TrueAndDecision2True() throws Exception {
+	public void testDecision1TrueAndDecision2True() {
 		workflowInput.put("decision_1", "true");
 		workflowInput.put("decision_2", "true");
 
@@ -174,7 +176,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1FalseAndDecision3Default() throws Exception {
+	public void testDecision1FalseAndDecision3Default() {
 		workflowInput.put("decision_1", "false");
 		workflowInput.put("decision_3", "null");
 
@@ -201,7 +203,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1FalseAndDecision3True() throws Exception {
+	public void testDecision1FalseAndDecision3True() {
 		workflowInput.put("decision_1", "false");
 		workflowInput.put("decision_3", "true");
 

@@ -1,4 +1,3 @@
-
 SET @dbname = DATABASE();
 SET @tablename = "queue_message";
 SET @columnname = "priority";

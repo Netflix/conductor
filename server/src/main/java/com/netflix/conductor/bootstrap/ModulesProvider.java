@@ -1,3 +1,15 @@
+/*
+ * Copyright 2019 Netflix, Inc.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.netflix.conductor.bootstrap;
 
 import com.google.inject.AbstractModule;
@@ -12,10 +24,12 @@ import com.netflix.conductor.contribs.json.JsonJqTransform;
 import com.netflix.conductor.contribs.kafka.KafkaProducerManager;
 import com.netflix.conductor.contribs.kafka.KafkaPublishTask;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.config.JacksonModule;
 import com.netflix.conductor.core.utils.NoopLockModule;
 import com.netflix.conductor.core.execution.WorkflowExecutorModule;
 import com.netflix.conductor.core.utils.DummyPayloadStorage;
 import com.netflix.conductor.core.utils.S3PayloadStorage;
+import com.netflix.conductor.noopindex.NoopIndexModule;
 import com.netflix.conductor.dao.RedisWorkflowModule;
 import com.netflix.conductor.elasticsearch.ElasticSearchModule;
 import com.netflix.conductor.locking.redis.config.RedisLockModule;
@@ -47,7 +61,8 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
     private final Configuration configuration;
 
     enum ExternalPayloadStorageType {
-        S3
+        S3,
+        DUMMY
     }
 
     @Inject
@@ -64,6 +79,9 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
     private List<AbstractModule> selectModulesToLoad() {
         Configuration.DB database;
         List<AbstractModule> modules = new ArrayList<>();
+
+        // Load Jackson module early to make ObjectMapper provider available across all the usages.
+        modules.add(new JacksonModule());
 
         try {
             database = configuration.getDB();
@@ -102,6 +120,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
             case CASSANDRA:
                 modules.add(new CassandraModule());
                 logger.info("Starting conductor server using cassandra.");
+                break;
             case REDIS_SENTINEL:
                 modules.add(new RedisSentinelModule());
                 modules.add(new RedisWorkflowModule());
@@ -109,7 +128,10 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 break;
         }
 
-        modules.add(new ElasticSearchModule());
+        if (configuration.isIndexingPersistenceEnabled())
+            modules.add(new ElasticSearchModule());
+        else
+            modules.add(new NoopIndexModule());
 
         modules.add(new WorkflowExecutorModule());
 
@@ -147,7 +169,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         }
 
         ExternalPayloadStorageType externalPayloadStorageType = null;
-        String externalPayloadStorageString = configuration.getProperty("workflow.external.payload.storage", "");
+        String externalPayloadStorageString = configuration.getProperty("workflow.external.payload.storage", "DUMMY");
         try {
             externalPayloadStorageType = ExternalPayloadStorageType.valueOf(externalPayloadStorageString);
         } catch (IllegalArgumentException e) {
@@ -171,8 +193,8 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         }
 
         new HttpTask(new RestClientManager(configuration), configuration, new JsonMapperProvider().get());
-        new KafkaPublishTask(configuration, new KafkaProducerManager(configuration));
-        new JsonJqTransform();
+        new KafkaPublishTask(configuration, new KafkaProducerManager(configuration), new JsonMapperProvider().get());
+        new JsonJqTransform(new JsonMapperProvider().get());
         modules.add(new ServerModule());
 
         return modules;

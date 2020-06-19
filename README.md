@@ -1,9 +1,11 @@
 ![Conductor](docs/docs/img/conductor-vector-x.png)
 
+
 ## Conductor
 Forked from [netflix-conductor](https://github.com/Netflix/conductor)
 
 Conductor is an _orchestration_ engine that runs in the cloud.
+
 
 
 [![License](https://img.shields.io/github/license/Netflix/conductor.svg)](http://www.apache.org/licenses/LICENSE-2.0)
@@ -11,6 +13,16 @@ Conductor is an _orchestration_ engine that runs in the cloud.
 
 ## Community
 [![Gitter](https://badges.gitter.im/netflix-conductor/community.svg)](https://gitter.im/netflix-conductor/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) Please feel free to join our Gitter for questions and interacting with the community.
+
+[Access here other Conductor related projects made by the community!](/RELATED.md) - Backup tool, Cron like workflow starter, Docker containers...
+
+## Builds
+Conductor builds are run on Travis CI [here](https://travis-ci.org/Netflix/conductor).
+
+| Branch |                                                     Build                                                     |                                                                 Coverage (coveralls.io)                                                                |                                                        Coverage (codecov.io)                                                       |
+|:------:|:-------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------:|
+| master | [![Build Status](https://travis-ci.org/Netflix/conductor.svg?branch=master)](https://travis-ci.org/Netflix/conductor) | [![Coverage Status](https://coveralls.io/repos/github/Netflix/conductor/badge.svg?branch=master)](https://coveralls.io/github/Netflix/conductor?branch=master) | [![codecov](https://codecov.io/gh/Netflix/conductor/branch/master/graph/badge.svg)](https://codecov.io/gh/Netflix/conductor/branch/master) |
+| dev | [![Build Status](https://travis-ci.org/Netflix/conductor.svg?branch=dev)](https://travis-ci.org/Netflix/conductor) | [![Coverage Status](https://coveralls.io/repos/github/Netflix/conductor/badge.svg?branch=dev)](https://coveralls.io/github/Netflix/conductor?branch=dev) | [![codecov](https://codecov.io/gh/Netflix/conductor/branch/dev/graph/badge.svg)](https://codecov.io/gh/Netflix/conductor/branch/dev) |
 
 ## Documentation & Getting Started
 [Wiki](https://foxsportsau.atlassian.net/wiki/spaces/DEV/pages/442138974/Conductor)

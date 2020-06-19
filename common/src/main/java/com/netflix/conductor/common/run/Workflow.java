@@ -35,7 +35,12 @@ public class Workflow extends Auditable{
 
     @ProtoEnum
 	public enum  WorkflowStatus {
-		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false), PAUSED(false, true);
+		RUNNING(false, false),
+		COMPLETED(true, true),
+		FAILED(true, false),
+		TIMED_OUT(true, false),
+		TERMINATED(true, false),
+		PAUSED(false, true);
 
 		private boolean terminal;
 
@@ -485,7 +490,7 @@ public class Workflow extends Auditable{
 		copy.setWorkflowDefinition(workflowDefinition);
 		copy.setPriority(priority);
 		copy.setTasks(tasks.stream()
-				.map(Task::copy)
+				.map(Task::deepCopy)
 				.collect(Collectors.toList()));
 		return copy;
 	}
@@ -549,4 +554,5 @@ public class Workflow extends Auditable{
 				getPriority()
         );
     }
+
 }
