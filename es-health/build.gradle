@@ -1,0 +1,9 @@
+dependencies {
+
+    compile "org.elasticsearch:elasticsearch:${revElasticSearch5}"
+    compile "org.elasticsearch.client:transport:${revElasticSearch5}"
+    compileOnly "org.elasticsearch:elasticsearch:${revElasticSearch6}"
+    compileOnly "org.elasticsearch.client:transport:${revElasticSearch6}"
+
+    compile "com.netflix.runtime:health-guice:${revHealth}"
+}

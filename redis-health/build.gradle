@@ -1,0 +1,6 @@
+dependencies {
+
+    compile "redis.clients:jedis:${revJedis}"
+
+    compile "com.netflix.runtime:health-guice:${revHealth}"
+}
