@@ -25,7 +25,8 @@ const ROOT_REDIRECT_URL = '#/';
 
 export const USER_AUTHORIZED_ROLES = [
   'deluxe.conductor-ui.admin',
-  'deluxe.conductor-ui.developer'
+  'deluxe.conductor-ui.developer',
+  'deluxe.conductor-ui.viewer'
 ];
 
 export const USER_AUTHORIZED_ROLES_SET = new Set(USER_AUTHORIZED_ROLES);
@@ -319,8 +320,20 @@ const authUserInfo = (token) => (dispatch) => {
         let userRolesSet = new Set(roles);
         let userRolesIntersection = [...USER_AUTHORIZED_ROLES_SET].filter(role => userRolesSet.has(role));
         if (userRolesIntersection.length > 0) {
-          dispatch(authAuthorizationSuccessful());
-          dispatch(authInfoSucceeded(data.name, data.preferred_username, data.email, data.roles));
+        let primary_role;
+        for (let item of userRolesSet)
+        {
+        if(item=="deluxe.conductor-ui.admin")
+        {
+         primary_role="ADMIN";
+        }
+        else if(item=="deluxe.conductor-ui.developer" || item=="deluxe.conductor-ui.viewer")
+        {
+         primary_role="VIEWER";
+        }
+        }
+         dispatch(authAuthorizationSuccessful());
+         dispatch(authInfoSucceeded(data.name, data.preferred_username, data.email, data.roles ,primary_role));
         } else {
           removeTokensLocally();
           dispatch(authAuthorizationReset());

@@ -48,6 +48,9 @@ const WorkflowAction = React.createClass({
         Resume workflow execution
       </Popover>
     );
+
+
+    let is_admin_role = this.props.user.primary_role === 'ADMIN';
     let terminating = this.props.terminating;
     let cancelling = this.props.cancelling;
     let rerunning = this.state.rerunning;
@@ -57,7 +60,8 @@ const WorkflowAction = React.createClass({
     let resuming = this.props.resuming;
 
     if(this.props.workflowStatus == 'RUNNING'){
-
+      if(is_admin_role)
+      {
       return (
         <ButtonGroup>
           <OverlayTrigger placement="bottom" overlay={tt_term}>
@@ -67,7 +71,7 @@ const WorkflowAction = React.createClass({
           </OverlayTrigger>
           <OverlayTrigger placement="bottom" overlay={tt_cancel}>
             <Button
-              bsStyle="danger" bsSize="xsmall"  disabled={cancelling}  onClick={!cancelling ? this.cancel : null}> {cancelling ? (<i className="fa fa-spinner fa-spin"></i>) : 'Cancel'}
+              bsStyle="danger" bsSize="xsmall"  disabled={cancelling}   onClick={!cancelling ? this.cancel : null}> {cancelling ? (<i className="fa fa-spinner fa-spin"></i>) : 'Cancel'}
             </Button>
           </OverlayTrigger>
           <OverlayTrigger placement="bottom" overlay={tt_pause}>
@@ -78,8 +82,17 @@ const WorkflowAction = React.createClass({
         </ButtonGroup>
 
       );
-
+     }
+     else
+     {
+       return (
+             <ButtonGroup>
+             </ButtonGroup>
+           );
+     }
     }if(this.props.workflowStatus == 'COMPLETED' || this.props.workflowStatus == 'CANCELLED'){
+     if(is_admin_role)
+      {
       return (
         <OverlayTrigger placement="bottom" overlay={tt_restart}>
         <Button
@@ -87,33 +100,60 @@ const WorkflowAction = React.createClass({
         </Button>
         </OverlayTrigger>
       );
+     }
+      else
+      {
+            return (
+                  <ButtonGroup>
+                  </ButtonGroup>
+                );
+      }
     }else if(this.props.workflowStatus == 'FAILED' || this.props.workflowStatus == 'TERMINATED' || this.props.workflowStatus == 'RESET' || this.props.workflowStatus == 'FAILED_NO_RETRY'){
+    if(is_admin_role)
+          {
       return (
         <ButtonGroup>
           <OverlayTrigger placement="bottom" overlay={tt_restart}>
             <Button
-              bsStyle="default" bsSize="xsmall"  disabled={restarting}  onClick={!restarting ? this.restart : null}> {restarting ? (<i className="fa fa-spinner fa-spin"></i>) : 'Restart'}
+              bsStyle="default" bsSize="xsmall"  disabled={restarting}   onClick={!restarting ? this.restart : null}> {restarting ? (<i className="fa fa-spinner fa-spin"></i>) : 'Restart'}
             </Button>
           </OverlayTrigger>
           <OverlayTrigger placement="bottom" overlay={tt_retry}>
             <Button
-            bsStyle="default" bsSize="xsmall"  disabled={retrying}  onClick={!retrying ? this.retry : null}> {retrying ? (<i className="fa fa-spinner fa-spin"></i>) : 'Retry'}
+            bsStyle="default" bsSize="xsmall"  disabled={retrying}   onClick={!retrying ? this.retry : null}> {retrying ? (<i className="fa fa-spinner fa-spin"></i>) : 'Retry'}
             </Button>
           </OverlayTrigger>
           </ButtonGroup>
       );
+      }
+    else
+    {
+             return (
+                   <ButtonGroup>
+                   </ButtonGroup>
+                 );
+    }
     }else if(this.props.workflowStatus == 'PAUSED'){
+     if(is_admin_role)
+     {
       return (
         <ButtonGroup>
           <OverlayTrigger placement="bottom" overlay={tt_resume}>
             <Button
-              bsStyle="success" bsSize="xsmall"  disabled={resuming}  onClick={!resuming ? this.resume : null}> {resuming ? (<i className="fa fa-spinner fa-spin"></i>) : 'Resume'}
+              bsStyle="success" bsSize="xsmall"  disabled={resuming}   onClick={!resuming ? this.resume : null}> {resuming ? (<i className="fa fa-spinner fa-spin"></i>) : 'Resume'}
             </Button>
           </OverlayTrigger>
           </ButtonGroup>
       );
+      }
+       else
+       {
+             return (
+                   <ButtonGroup>
+                   </ButtonGroup>
+                 );
+        }
     }else {
-
       return (
         <ButtonGroup>
           <OverlayTrigger placement="bottom" overlay={tt_restart}>
@@ -155,4 +195,4 @@ const WorkflowAction = React.createClass({
   }
 });
 
-export default connect(state => state.workflow)(WorkflowAction);
+export default connect(state => state.global)(WorkflowAction);

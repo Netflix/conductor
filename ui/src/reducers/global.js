@@ -30,7 +30,8 @@ const initialState = {
     name: '',
     preferredUsername: '',
     email: '',
-    roles: []
+    roles: [],
+    primary_role:''
   },
   inActiveTime: ''
 };
@@ -87,7 +88,8 @@ export default function global(state = initialState, action) {
           name: action.payload.user.name,
           preferredUsername: action.payload.user.preferredUsername,
           email: action.payload.user.email,
-          roles: action.payload.user.roles
+          roles: action.payload.user.roles,
+          primary_role: action.payload.user.primary_role
         },
       });
 
