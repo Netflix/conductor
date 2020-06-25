@@ -1720,7 +1720,7 @@ public class WorkflowExecutor {
 	}
 
 	public Map<String, Object> validateAuth(WorkflowDef workflowDef, HttpHeaders headers) {
-		if (!validateAuth) {
+		if (!validateAuth || MapUtils.isEmpty(workflowDef.getAuthValidation())) {
 			return null;
 		}
 
@@ -1750,16 +1750,8 @@ public class WorkflowExecutor {
 		// Do a validation
 		Map<String, Object> failedList;
 		try {
-
 			decoded = auth.decode(token);
-			if (!workflowDef.getAuthValidation().isEmpty()) {
-				failedList = auth.validate(decoded, workflowDef.getAuthValidation());
-			} else {
-				Map<String, String> rules = new HashMap<>();
-				rules.put("token.issuer", ".iss | contains(\".service.\") or contains(\".dmlib.\")");
-				rules.put("deluxe.conductor.admin", ".resource_access[\"deluxe.conductor\"].roles+.resource_access[\"deluxe.conductor-ui\"].roles | contains([\"deluxe.conductor.admin\"]) or contains([\"deluxe.conductor-ui.admin\"])");
-				failedList = auth.validate(decoded, rules);
-			}
+			failedList = auth.validate(decoded, workflowDef.getAuthValidation());
 		} catch (Exception ex) {
 			throw new ApplicationException(Code.UNAUTHORIZED, "Auth validation failed: " + ex.getMessage());
 		}
