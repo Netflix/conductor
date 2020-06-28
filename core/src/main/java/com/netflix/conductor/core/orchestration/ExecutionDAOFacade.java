@@ -17,6 +17,7 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
+import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.queue.Message;
@@ -24,17 +25,15 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.metrics.Monitors;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.events.EventException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service that acts as a facade for accessing execution data from the {@link ExecutionDAO} and {@link IndexDAO} storage layers
@@ -180,19 +179,18 @@ public class ExecutionDAOFacade {
     public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
         try {
             Workflow workflow = getWorkflowById(workflowId, true);
-            EventExecution eventExecution = null;
+            List<Task> eventTasks = workflow.getTasks().stream().filter(task -> task.getTaskType().equals(TaskType.TASK_TYPE_EVENT)).collect(Collectors.toList());
+            List<EventExecution> eventExecutions = eventTasks.stream().map(
+                    task -> {
+                        EventExecution eventExecution = new EventExecution();
+                        eventExecution.setName(task.getWorkflowType());
+                        eventExecution.setMessageId(task.getTaskId());
+                        eventExecution.setId(task.getTaskId() + "_" + 0);
+                        eventExecution.setEvent((String)task.getOutputData().get("event_produced"));
 
-            if (StringUtils.isNotEmpty(workflow.getEvent())) {
-                String messageId = (String)workflow.getInput().get("conductor.event.messageId");
-                String id = messageId + "_" + 0;
-
-                eventExecution = new EventExecution();
-
-                eventExecution.setEvent(workflow.getEvent());
-                eventExecution.setName(workflow.getWorkflowName());
-                eventExecution.setMessageId(messageId);
-                eventExecution.setId(id);
-            }
+                        return eventExecution;
+                    }
+            ).collect(Collectors.toList());
 
             // remove workflow from ES
             if (archiveWorkflow) {
@@ -208,9 +206,7 @@ public class ExecutionDAOFacade {
             // remove workflow from DAO
             try {
                 executionDAO.removeWorkflow(workflowId);
-                if (eventExecution != null) {
-                    executionDAO.removeEventExecution(eventExecution);
-                }
+                eventExecutions.forEach(executionDAO::removeEventExecution);
             } catch (Exception ex) {
                 Monitors.recordDaoError("executionDao", "removeWorkflow");
                 throw ex;
