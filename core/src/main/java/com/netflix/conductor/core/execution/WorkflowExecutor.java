@@ -1719,6 +1719,59 @@ public class WorkflowExecutor {
 		validateAuth(workflowDef, headers);
 	}
 
+	public String checkUserRoles(HttpHeaders headers) {
+		List<String> strings = headers.getRequestHeader(HttpHeaders.AUTHORIZATION);
+		String primary_role = "";
+		if (strings == null || strings.isEmpty())
+			throw new ApplicationException(Code.UNAUTHORIZED, "No " + HttpHeaders.AUTHORIZATION + " header provided");
+		try {
+			String header = strings.get(0);
+			if (StringUtils.isEmpty(header))
+				throw new ApplicationException(Code.UNAUTHORIZED, HttpHeaders.AUTHORIZATION + " header is empty");
+
+			if (header.length() <= BEARER.length())
+				throw new ApplicationException(Code.UNAUTHORIZED, HttpHeaders.AUTHORIZATION + " header too short");
+
+			String type = header.substring(0, BEARER.length());
+			String token = header.substring(BEARER.length() + 1);
+
+			// Checking bearer format
+			if (!BEARER.equalsIgnoreCase(type))
+				throw new ApplicationException(Code.UNAUTHORIZED, "Invalid " + HttpHeaders.AUTHORIZATION + " type(" + type + ")");
+
+			Map<String, Object> decoded = auth.decode(token);
+			Map<String, Object> resource_access = (Map<String, Object>) decoded.get("resource_access");
+			Map<String, Object> conductor_role = (Map<String, Object>) resource_access.get("deluxe.conductor");
+			List<String> conductor_roles = null;
+			List<String> conductor_roles_ui = null;
+			if (conductor_role != null && !conductor_role.isEmpty()) {
+				conductor_roles = (List<String>) conductor_role.get("roles");
+			}
+			Map<String, Object> conductor_role_ui = (Map<String, Object>) resource_access.get("deluxe.conductor-ui");
+			if (conductor_role_ui != null && !conductor_role_ui.isEmpty()) {
+				conductor_roles_ui = (List<String>) conductor_role_ui.get("roles");
+			}
+			if (conductor_roles!=null && !conductor_roles.isEmpty()) {
+                if (conductor_roles.contains("deluxe.conductor.admin")) {
+                    primary_role = "deluxe.conductor.admin";
+                } else if (conductor_roles.contains("deluxe.conductor.viewer")) {
+                    primary_role = "deluxe.conductor.viewer";
+                } else if (conductor_roles.contains("deluxe.conductor.developer")) {
+                    primary_role = "deluxe.conductor.viewer";
+                }
+            }
+			if (conductor_role_ui!=null && !conductor_role_ui.isEmpty()) {
+				if (conductor_roles_ui.contains("deluxe.conductor-ui.admin")) {
+					return "deluxe.conductor-ui.admin";
+				}
+			}
+			return primary_role;
+		} catch (Exception ex) {
+			logger.debug("checkUserRoles failed with " + ex.getMessage(), ex);
+			throw new ApplicationException(Code.UNAUTHORIZED, "checkUserRoles failed: " + ex.getMessage());
+		}
+	}
+
 	public Map<String, Object> validateAuth(WorkflowDef workflowDef, HttpHeaders headers) {
 		if (!validateAuth || MapUtils.isEmpty(workflowDef.getAuthValidation())) {
 			return null;

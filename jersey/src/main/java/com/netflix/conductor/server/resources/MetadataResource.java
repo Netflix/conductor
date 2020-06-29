@@ -21,6 +21,7 @@ package com.netflix.conductor.server.resources;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.service.MetadataService;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -28,7 +29,14 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
-
+import io.swagger.annotations.*;
+import com.netflix.conductor.core.execution.ApplicationException;
+import com.netflix.conductor.core.execution.ApplicationException.Code;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.config.Configuration;
+import org.apache.commons.collections.CollectionUtils;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 
 /**
  * @author Viren
@@ -41,24 +49,49 @@ import java.util.List;
 public class MetadataResource {
 
 	private MetadataService service;
-	
+	private boolean auth_referer_bypass;
+	private WorkflowExecutor executor;
 	@Inject
-	public MetadataResource(MetadataService service) {
+	public MetadataResource(MetadataService service,Configuration config,WorkflowExecutor executor) {
+		this.auth_referer_bypass = Boolean.parseBoolean(config.getProperty("workflow.auth.referer.bypass", "false"));
 		this.service = service;
+		this.executor = executor;
 	}
 
 	@POST
 	@Path("/workflow")
 	@ApiOperation("Create a new workflow definition")
-	public void create(WorkflowDef def) throws Exception{
-		service.registerWorkflowDef(def);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void create(WorkflowDef def,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (primarRole.contains("admin")) {
+				service.registerWorkflowDef(def);
+			} else {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+		} else {
+			service.registerWorkflowDef(def);
+		}
 	}
 	
 	@PUT
 	@Path("/workflow")
 	@ApiOperation("Create or update workflow definition")
-	public void update(List<WorkflowDef> defs) throws Exception{
-		service.updateWorkflowDef(defs);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void update(List<WorkflowDef> defs,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (primarRole.contains("admin")) {
+				service.updateWorkflowDef(defs);
+			} else {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+		} else {
+			service.updateWorkflowDef(defs);
+		}
 	}
 
 	@GET
@@ -78,15 +111,37 @@ public class MetadataResource {
 	@POST
 	@Path("/taskdefs")
 	@ApiOperation("Create new task definition(s)")
-	public void registerTaskDef(List<TaskDef> taskDefs) throws Exception {
-		service.registerTaskDef(taskDefs);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void registerTaskDef(List<TaskDef> taskDefs,@Context HttpHeaders headers) throws Exception {
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (primarRole.contains("admin")) {
+				service.registerTaskDef(taskDefs);
+			} else {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+		} else {
+			service.registerTaskDef(taskDefs);
+		}
 	}
 	
 	@PUT
 	@Path("/taskdefs")
 	@ApiOperation("Update an existing task")
-	public void registerTaskDef(TaskDef taskDef) throws Exception {
-		service.updateTaskDef(taskDef);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void registerTaskDef(TaskDef taskDef,@Context HttpHeaders headers) throws Exception {
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (primarRole.contains("admin")) {
+				service.updateTaskDef(taskDef);
+			} else {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+		} else {
+			service.updateTaskDef(taskDef);
+		}
 	}
 
 	@GET
@@ -108,15 +163,47 @@ public class MetadataResource {
 	@DELETE
 	@Path("/taskdefs/{tasktype}")
 	@ApiOperation("Remove a task definition")
-	public void unregisterTaskDef(@PathParam("tasktype") String taskType){
-		service.unregisterTaskDef(taskType);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void unregisterTaskDef(@PathParam("tasktype") String taskType,@Context HttpHeaders headers){
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (primarRole.contains("admin")) {
+				service.unregisterTaskDef(taskType);
+			} else {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+		} else {
+			service.unregisterTaskDef(taskType);
+		}
 	}
 
 	@DELETE
 	@Path("/workflow/{name}")
 	@ApiOperation("Remove a workflow definition")
-	public void unregisterWorkflow(@PathParam("name") String name, @QueryParam("version") Integer version){
-		service.unregisterWorkflow(name, version);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void unregisterWorkflow(@PathParam("name") String name, @QueryParam("version") Integer version,@Context HttpHeaders headers){
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (primarRole.contains("admin")) {
+				service.unregisterWorkflow(name, version);
+			} else {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+		} else {
+			service.unregisterWorkflow(name, version);
+		}
 	}
-	
+
+
+	private boolean bypassAuth(HttpHeaders headers) {
+		if (!auth_referer_bypass)
+			return false;
+
+		List<String> strings = headers.getRequestHeader("Referer");
+		if (CollectionUtils.isEmpty(strings))
+			return false;
+		return strings.get(0).contains("/docs");
+	}
 }
