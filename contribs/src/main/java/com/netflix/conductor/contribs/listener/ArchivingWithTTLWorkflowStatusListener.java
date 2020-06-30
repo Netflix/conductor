@@ -91,23 +91,27 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
     }
 
     private class DelayArchiveWorkflow implements Runnable {
-        private final Workflow workflow;
+        private final String workflowId;
+        private final String workflowName;
+        private final Workflow.WorkflowStatus status;
         private final ExecutionDAOFacade executionDAOFacade;
 
         DelayArchiveWorkflow(Workflow workflow, ExecutionDAOFacade executionDAOFacade) {
-            this.workflow = workflow;
+            this.workflowId = workflow.getWorkflowId();
+            this.workflowName = workflow.getWorkflowName();
+            this.status = workflow.getStatus();
             this.executionDAOFacade = executionDAOFacade;
         }
 
         @Override
         public void run() {
             try {
-                this.executionDAOFacade.removeWorkflowWithExpiry(workflow.getWorkflowId(), true, archiveTTLSeconds);
-                LOGGER.info("Archived workflow {}", workflow.getWorkflowId());
-                Monitors.recordWorkflowArchived(workflow.getWorkflowName(), workflow.getStatus());
+                this.executionDAOFacade.removeWorkflowWithExpiry(workflowId, true, archiveTTLSeconds);
+                LOGGER.info("Archived workflow {}", workflowId);
+                Monitors.recordWorkflowArchived(workflowName, status);
                 Monitors.recordArchivalDelayQueueSize(scheduledThreadPoolExecutor.getQueue().size());
             } catch (Exception e) {
-                LOGGER.error("Unable to archive workflow: {}", workflow.getWorkflowId(), e);
+                LOGGER.error("Unable to archive workflow: {}", workflowId, e);
             }
         }
     }
