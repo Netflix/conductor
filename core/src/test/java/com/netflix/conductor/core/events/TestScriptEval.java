@@ -35,6 +35,8 @@ public class TestScriptEval {
 	public void testScript() throws Exception {
 		Map<String, Object> payload = new HashMap<>();
 		Map<String, Object> app = new HashMap<>();
+		Map<String, Object> defaults = new HashMap<>();
+		defaults.put("workflowStatus", "TERMINATED");
 		app.put("name", "conductor");
 		app.put("version", 2.0);
 		app.put("license", "Apace 2.0");
@@ -42,6 +44,7 @@ public class TestScriptEval {
 		payload.put("app", app);
 		payload.put("author", "Netflix");
 		payload.put("oss", true);
+		payload.put("defaults", defaults);
 		
 		String script1 = "$.app.name == 'conductor'";		//true
 		String script2 = "$.version > 3";					//false
@@ -52,6 +55,9 @@ public class TestScriptEval {
 		assertFalse(ScriptEvaluator.evalBool(script2, payload));
 		assertTrue(ScriptEvaluator.evalBool(script3, payload));
 		assertFalse(ScriptEvaluator.evalBool(script4, payload));
-		
+
+		assertTrue(ScriptEvaluator.evalBool("$.defaults.workflowStatus == 'TERMINATED'", payload));
+		assertTrue(ScriptEvaluator.evalBool("$.defaults.workflowStatus != undefined && $.defaults.workflowStatus == 'TERMINATED'", payload));
+
 	}
 }
