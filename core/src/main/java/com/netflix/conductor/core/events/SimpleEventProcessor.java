@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Netflix, Inc.
+ * Copyright 2020 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,6 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import com.spotify.futures.CompletableFutures;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,17 +45,20 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Viren
  * Event Processor is used to dispatch actions based on the incoming events to execution queue.
  */
-public class SimpleEventProcessor implements EventProcessor{
+public class SimpleEventProcessor implements EventProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleEventProcessor.class);
     private static final String className = SimpleEventProcessor.class.getSimpleName();
     private static final int RETRY_COUNT = 3;
-
 
     private final MetadataService metadataService;
     private final ExecutionService executionService;
@@ -69,19 +67,27 @@ public class SimpleEventProcessor implements EventProcessor{
 
     private ExecutorService executorService;
     private final Map<String, ObservableQueue> eventToQueueMap = new ConcurrentHashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final JsonUtils jsonUtils;
+    private final boolean isEventMessageIndexingEnabled;
 
     @Inject
-    public SimpleEventProcessor(ExecutionService executionService, MetadataService metadataService,
-                                ActionProcessor actionProcessor, EventQueues eventQueues, JsonUtils jsonUtils, Configuration config) {
+    public SimpleEventProcessor(ExecutionService executionService,
+                                MetadataService metadataService,
+                                ActionProcessor actionProcessor,
+                                EventQueues eventQueues,
+                                JsonUtils jsonUtils,
+                                Configuration configuration,
+                                ObjectMapper objectMapper) {
         this.executionService = executionService;
         this.metadataService = metadataService;
         this.actionProcessor = actionProcessor;
         this.eventQueues = eventQueues;
+        this.objectMapper = objectMapper;
         this.jsonUtils = jsonUtils;
 
-        int executorThreadCount = config.getIntProperty("workflow.event.processor.thread.count", 2);
+        this.isEventMessageIndexingEnabled = configuration.isEventMessageIndexingEnabled();
+        int executorThreadCount = configuration.getIntProperty("workflow.event.processor.thread.count", 2);
         if (executorThreadCount > 0) {
             executorService = Executors.newFixedThreadPool(executorThreadCount);
             refresh();
@@ -113,7 +119,7 @@ public class SimpleEventProcessor implements EventProcessor{
 
     private void refresh() {
         try {
-            Set<String> events = metadataService.getEventHandlers().stream()
+            Set<String> events = metadataService.getAllEventHandlers().stream()
                     .map(EventHandler::getEvent)
                     .collect(Collectors.toSet());
 
@@ -140,24 +146,27 @@ public class SimpleEventProcessor implements EventProcessor{
         queue.observe().subscribe((Message msg) -> handle(queue, msg));
     }
 
-    @SuppressWarnings({"unchecked"})
     private void handle(ObservableQueue queue, Message msg) {
         try {
-            executionService.addMessage(queue.getName(), msg);
-
+            if (isEventMessageIndexingEnabled) {
+                executionService.addMessage(queue.getName(), msg);
+            }
             String event = queue.getType() + ":" + queue.getName();
             logger.debug("Evaluating message: {} for event: {}", msg.getId(), event);
             List<EventExecution> transientFailures = executeEvent(event, msg);
 
             if (transientFailures.isEmpty()) {
                 queue.ack(Collections.singletonList(msg));
+                logger.debug("Message: {} acked on queue: {}", msg.getId(), queue.getName());
             } else if (queue.rePublishIfNoAck()) {
                 // re-submit this message to the queue, to be retried later
                 // This is needed for queues with no unack timeout, since messages are removed from the queue
                 queue.publish(Collections.singletonList(msg));
+                logger.debug("Message: {} published to queue: {}", msg.getId(), queue.getName());
             }
         } catch (Exception e) {
             logger.error("Error handling message: {} on queue:{}", msg, queue.getName(), e);
+            Monitors.recordEventQueueMessagesError(queue.getType(), queue.getName());
         } finally {
             Monitors.recordEventQueueMessagesHandled(queue.getType(), queue.getName());
         }
@@ -235,11 +244,10 @@ public class SimpleEventProcessor implements EventProcessor{
     /**
      * @param eventExecution the instance of {@link EventExecution}
      * @param action         the {@link Action} to be executed for the event
-     * @param payload        the {@link Message#payload}
+     * @param payload        the {@link Message#getPayload()}
      * @return the event execution updated with execution output, if the execution is completed/failed with non-transient error
      * the input event execution, if the execution failed due to transient error
      */
-    @SuppressWarnings("Guava")
     @VisibleForTesting
     EventExecution execute(EventExecution eventExecution, Action action, Object payload) {
         try {
@@ -253,12 +261,14 @@ public class SimpleEventProcessor implements EventProcessor{
                 eventExecution.getOutput().putAll(output);
             }
             eventExecution.setStatus(Status.COMPLETED);
+            Monitors.recordEventExecutionSuccess(eventExecution.getEvent(), eventExecution.getName(), eventExecution.getAction().name());
         } catch (RuntimeException e) {
             logger.error("Error executing action: {} for event: {} with messageId: {}", action.getAction(), eventExecution.getEvent(), eventExecution.getMessageId(), e);
             if (!isTransientException(e.getCause())) {
                 // not a transient error, fail the event execution
                 eventExecution.setStatus(Status.FAILED);
                 eventExecution.getOutput().put("exception", e.getMessage());
+                Monitors.recordEventExecutionError(eventExecution.getEvent(), eventExecution.getName(), eventExecution.getAction().name(), e.getClass().getSimpleName());
             }
         }
         return eventExecution;

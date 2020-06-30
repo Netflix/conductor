@@ -54,3 +54,13 @@ Make sure that the worker is actively polling for this task. Navigate to the `Po
 ### How do I configure a notification when my workflow completes or fails?
 
 Refer this [documentation](../configuration/workflowdef/#workflow-notifications) to extend conductor to send out events/notifications upon workflow completion/failure.
+
+
+### I want my worker to stop polling and executing tasks when the process is being terminated. (Java client)
+
+In a `PreDestroy` block within your application, call the `shutdown()` method on the `TaskRunnerConfigurer` instance that you have created to facilitate a graceful shutdown of your worker in case the process is being terminated.
+
+
+### Can I exit early from a task without executing the configured automatic retries in the task definition?
+
+Set the status to `FAILED_WITH_TERMINAL_ERROR` in the TaskResult object within your worker. This would mark the task as FAILED and fail the workflow without retrying the task as a fail-fast mechanism.

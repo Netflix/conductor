@@ -49,16 +49,17 @@ public class Event extends WorkflowSystemTask {
 	private static final Logger logger = LoggerFactory.getLogger(Event.class);
 	public static final String NAME = "EVENT";
 
-	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final ObjectMapper objectMapper;
 	private final ParametersUtils parametersUtils;
 	private final EventQueues eventQueues;
 	private boolean isAsync=false;
 
 	@Inject
-	public Event(EventQueues eventQueues, ParametersUtils parametersUtils) {
+	public Event(EventQueues eventQueues, ParametersUtils parametersUtils, ObjectMapper objectMapper) {
 		super(NAME);
 		this.parametersUtils = parametersUtils;
 		this.eventQueues = eventQueues;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -81,6 +82,7 @@ public class Event extends WorkflowSystemTask {
 		ObservableQueue queue = getQueue(workflow, task);
 		if(queue != null) {
 			queue.publish(Collections.singletonList(message));
+			logger.debug("Published message:{} to queue:{}", message.getId(), queue.getName());
 			task.getOutputData().putAll(payload);
 			if (isAsyncComplete(task)) {
 				task.setStatus(Status.IN_PROGRESS);

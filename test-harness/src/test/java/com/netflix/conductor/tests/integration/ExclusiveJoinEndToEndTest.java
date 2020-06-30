@@ -16,17 +16,6 @@
 
 package com.netflix.conductor.tests.integration;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.netflix.conductor.bootstrap.BootstrapModule;
@@ -38,6 +27,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
@@ -45,7 +35,19 @@ import com.netflix.conductor.jetty.server.JettyServer;
 import com.netflix.conductor.tests.integration.model.TaskWrapper;
 import com.netflix.conductor.tests.utils.JsonUtils;
 import com.netflix.conductor.tests.utils.TestEnvironment;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+
+@Ignore("This is taken care in the spock test, to de deleted once verified")
 public class ExclusiveJoinEndToEndTest {
 
 	private static TaskClient taskClient;
@@ -69,6 +71,7 @@ public class ExclusiveJoinEndToEndTest {
 		TestEnvironment.setup();
         System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9205");
         System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "localhost:9305");
+		System.setProperty(Configuration.EXECUTION_LOCK_ENABLED_PROPERTY_NAME, "false");
 
 		Injector bootInjector = Guice.createInjector(new BootstrapModule());
 		Injector serverInjector = Guice.createInjector(bootInjector.getInstance(ModulesProvider.class).get());
@@ -93,7 +96,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1Default() throws Exception {
+	public void testDecision1Default() {
 		workflowInput.put("decision_1", "null");
 
 		StartWorkflowRequest startWorkflowRequest = new StartWorkflowRequest().withName(CONDUCTOR_WORKFLOW_DEF_NAME)
@@ -114,7 +117,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1TrueAndDecision2Default() throws Exception {
+	public void testDecision1TrueAndDecision2Default() {
 		workflowInput.put("decision_1", "true");
 		workflowInput.put("decision_2", "null");
 
@@ -141,7 +144,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1TrueAndDecision2True() throws Exception {
+	public void testDecision1TrueAndDecision2True() {
 		workflowInput.put("decision_1", "true");
 		workflowInput.put("decision_2", "true");
 
@@ -173,7 +176,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1FalseAndDecision3Default() throws Exception {
+	public void testDecision1FalseAndDecision3Default() {
 		workflowInput.put("decision_1", "false");
 		workflowInput.put("decision_3", "null");
 
@@ -200,7 +203,7 @@ public class ExclusiveJoinEndToEndTest {
 	}
 
 	@Test
-	public void testDecision1FalseAndDecision3True() throws Exception {
+	public void testDecision1FalseAndDecision3True() {
 		workflowInput.put("decision_1", "false");
 		workflowInput.put("decision_3", "true");
 

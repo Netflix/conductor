@@ -74,6 +74,8 @@ class ConductorWorker:
             task['status'] = resp['status']
             task['outputData'] = resp['output']
             task['logs'] = resp['logs']
+            if 'reasonForIncompletion' in resp:
+                task['reasonForIncompletion'] = resp['reasonForIncompletion']
             self.taskClient.updateTask(task)
         except Exception as err:
             print('Error executing task: ' + str(err))
@@ -85,8 +87,8 @@ class ConductorWorker:
             time.sleep(float(self.polling_interval))
             polled = self.taskClient.pollForTask(taskType, self.worker_id, domain)
             if polled is not None:
-                if self.taskClient.ackTask(polled['taskId'], self.worker_id):
-                    self.execute(polled, exec_function)
+                self.taskClient.ackTask(polled['taskId'], self.worker_id)
+                self.execute(polled, exec_function)
 
     def start(self, taskType, exec_function, wait, domain=None):
         """

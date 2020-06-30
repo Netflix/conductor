@@ -46,7 +46,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -54,7 +54,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -65,7 +65,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -80,12 +80,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -121,9 +115,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -165,7 +160,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -193,33 +191,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -281,7 +305,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -290,6 +317,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -336,13 +369,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -359,7 +385,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -375,7 +402,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -409,6 +439,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -426,7 +463,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -437,7 +474,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -461,25 +501,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -490,6 +511,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -504,12 +531,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -517,12 +548,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
@@ -600,7 +634,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -608,7 +642,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -619,7 +653,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -634,12 +668,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -675,9 +703,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -719,7 +748,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -747,33 +779,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -835,7 +893,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -844,6 +905,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -890,13 +957,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -913,7 +973,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -929,7 +990,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -963,6 +1027,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -980,7 +1051,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -991,7 +1062,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -1015,25 +1089,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -1044,6 +1099,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -1058,12 +1119,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -1071,12 +1136,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
@@ -1154,7 +1222,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -1162,7 +1230,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -1173,7 +1241,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -1188,12 +1256,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -1229,9 +1291,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -1273,7 +1336,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -1301,33 +1367,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -1389,7 +1481,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -1398,6 +1493,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -1444,13 +1545,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -1467,7 +1561,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -1483,7 +1578,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -1517,6 +1615,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -1534,7 +1639,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -1545,7 +1650,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -1569,25 +1677,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -1598,6 +1687,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -1612,12 +1707,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -1625,12 +1724,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
@@ -1771,7 +1873,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -1779,7 +1881,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -1790,7 +1892,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -1805,12 +1907,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -1846,9 +1942,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -1890,7 +1987,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -1918,33 +2018,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -2006,7 +2132,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -2015,6 +2144,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -2061,13 +2196,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -2084,7 +2212,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -2100,7 +2229,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -2134,6 +2266,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -2151,7 +2290,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -2162,7 +2301,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -2186,25 +2328,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -2215,6 +2338,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -2229,12 +2358,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -2242,12 +2375,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
@@ -2325,7 +2461,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -2333,7 +2469,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -2344,7 +2480,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -2359,12 +2495,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -2400,9 +2530,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -2444,7 +2575,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -2472,33 +2606,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -2560,7 +2720,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -2569,6 +2732,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -2615,13 +2784,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -2638,7 +2800,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -2654,7 +2817,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -2688,6 +2854,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -2705,7 +2878,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -2716,7 +2889,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -2740,25 +2916,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -2769,6 +2926,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -2783,12 +2946,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -2796,12 +2963,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
@@ -2879,7 +3049,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -2887,7 +3057,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -2898,7 +3068,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -2913,12 +3083,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -2954,9 +3118,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -2998,7 +3163,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -3026,33 +3194,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -3114,7 +3308,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -3123,6 +3320,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -3169,13 +3372,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -3192,7 +3388,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -3208,7 +3405,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -3220,6 +3420,18 @@
             "locked": "1.2.17",
             "transitive": [
                 "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -3246,6 +3458,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -3263,7 +3482,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -3274,7 +3493,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -3304,25 +3526,6 @@
                 "junit:junit"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -3330,11 +3533,11 @@
             ]
         },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
-            "locked": "2.1",
+            "locked": "2.6",
             "transitive": [
                 "org.mockito:mockito-core"
             ]
@@ -3343,6 +3546,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -3357,12 +3566,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -3370,12 +3583,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
@@ -3453,7 +3669,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -3461,7 +3677,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -3472,7 +3688,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -3487,12 +3703,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -3528,9 +3738,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -3572,7 +3783,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -3600,33 +3814,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -3688,7 +3928,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -3697,6 +3940,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -3743,13 +3992,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -3766,7 +4008,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -3782,7 +4025,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -3794,6 +4040,18 @@
             "locked": "1.2.17",
             "transitive": [
                 "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -3820,6 +4078,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -3837,7 +4102,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -3848,7 +4113,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -3878,25 +4146,6 @@
                 "junit:junit"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -3904,11 +4153,11 @@
             ]
         },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
-            "locked": "2.1",
+            "locked": "2.6",
             "transitive": [
                 "org.mockito:mockito-core"
             ]
@@ -3917,6 +4166,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -3931,12 +4186,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -3944,12 +4203,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
@@ -4027,7 +4289,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -4035,7 +4297,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -4046,7 +4308,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -4061,12 +4323,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -4102,9 +4358,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -4146,7 +4403,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -4174,33 +4434,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -4262,7 +4548,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -4271,6 +4560,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -4317,13 +4612,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -4340,7 +4628,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -4356,7 +4645,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -4368,6 +4660,18 @@
             "locked": "1.2.17",
             "transitive": [
                 "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -4394,6 +4698,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -4411,7 +4722,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -4422,7 +4733,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -4452,25 +4766,6 @@
                 "junit:junit"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -4478,11 +4773,11 @@
             ]
         },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
-            "locked": "2.1",
+            "locked": "2.6",
             "transitive": [
                 "org.mockito:mockito-core"
             ]
@@ -4491,6 +4786,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -4505,12 +4806,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -4518,12 +4823,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
@@ -4601,7 +4909,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.netflix.archaius:archaius-core",
@@ -4609,7 +4917,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -4620,7 +4928,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -4635,12 +4943,6 @@
             "locked": "2.6.6",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -4676,9 +4978,10 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.3",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -4720,7 +5023,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -4748,33 +5054,59 @@
             "project": true
         },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
-            "requested": "2.0.0-rc5"
+            "locked": "2.0.13",
+            "requested": "2.0.13"
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -4836,7 +5168,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-client"
             ]
@@ -4845,6 +5180,12 @@
             "locked": "1.4.10",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
@@ -4891,13 +5232,6 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -4914,7 +5248,8 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -4930,7 +5265,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix"
             ]
         },
@@ -4942,6 +5280,18 @@
             "locked": "1.2.17",
             "transitive": [
                 "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -4968,6 +5318,13 @@
                 "org.antlr:antlr-runtime"
             ]
         },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
@@ -4985,7 +5342,7 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
             ]
@@ -4996,7 +5353,10 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4"
             ]
@@ -5026,25 +5386,6 @@
                 "junit:junit"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.luaj:luaj-jse": {
             "locked": "3.0",
             "transitive": [
@@ -5052,11 +5393,11 @@
             ]
         },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
-            "locked": "2.1",
+            "locked": "2.6",
             "transitive": [
                 "org.mockito:mockito-core"
             ]
@@ -5065,6 +5406,12 @@
             "locked": "5.0.3",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
             ]
         },
         "org.rarefiedredis.redis:redis-java": {
@@ -5079,12 +5426,16 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "org.slf4j:slf4j-log4j12"
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -5092,12 +5443,15 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
-            "requested": "2.9.0",
+            "locked": "3.0.1",
+            "requested": "3.0.+",
             "transitive": [
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"

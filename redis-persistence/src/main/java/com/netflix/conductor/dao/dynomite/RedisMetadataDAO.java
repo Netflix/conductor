@@ -1,5 +1,5 @@
-/**
- * Copyright 2016 Netflix, Inc.
+/*
+ * Copyright 2019 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 import com.netflix.conductor.annotations.Trace;
-import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.Configuration;
@@ -28,11 +27,6 @@ import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dyno.DynoProxy;
 import com.netflix.conductor.metrics.Monitors;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -43,6 +37,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 @Trace
@@ -54,8 +52,6 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
     private final static String ALL_TASK_DEFS = "TASK_DEFS";
     private final static String WORKFLOW_DEF_NAMES = "WORKFLOW_DEF_NAMES";
     private final static String WORKFLOW_DEF = "WORKFLOW_DEF";
-    private final static String EVENT_HANDLERS = "EVENT_HANDLERS";
-    private final static String EVENT_HANDLERS_BY_EVENT = "EVENT_HANDLERS_BY_EVENT";
     private final static String LATEST = "latest";
 
     private Map<String, TaskDef> taskDefCache = new HashMap<>();
@@ -65,18 +61,16 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
         super(dynoClient, objectMapper, config);
         refreshTaskDefs();
         int cacheRefreshTime = config.getIntProperty("conductor.taskdef.cache.refresh.time.seconds", 60);
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(()->refreshTaskDefs(), cacheRefreshTime, cacheRefreshTime, TimeUnit.SECONDS);
+        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this::refreshTaskDefs, cacheRefreshTime, cacheRefreshTime, TimeUnit.SECONDS);
     }
 
     @Override
-    public String createTaskDef(TaskDef taskDef) {
-        taskDef.setCreateTime(System.currentTimeMillis());
-        return insertOrUpdateTaskDef(taskDef);
+    public void createTaskDef(TaskDef taskDef) {
+        insertOrUpdateTaskDef(taskDef);
     }
 
     @Override
     public String updateTaskDef(TaskDef taskDef) {
-        taskDef.setUpdateTime(System.currentTimeMillis());
         return insertOrUpdateTaskDef(taskDef);
     }
 
@@ -123,7 +117,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 
 	@Override
 	public List<TaskDef> getAllTaskDefs() {
-		List<TaskDef> allTaskDefs = new LinkedList<TaskDef>();
+		List<TaskDef> allTaskDefs = new LinkedList<>();
 
 		recordRedisDaoRequests("getAllTaskDefs");
 		Map<String, String> taskDefs = dynoClient.hgetAll(nsKey(ALL_TASK_DEFS));
@@ -153,17 +147,15 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	}
 
 	@Override
-	public void create(WorkflowDef def) {
+	public void createWorkflowDef(WorkflowDef def) {
 		if (dynoClient.hexists(nsKey(WORKFLOW_DEF, def.getName()), String.valueOf(def.getVersion()))) {
 			throw new ApplicationException(Code.CONFLICT, "Workflow with " + def.key() + " already exists!");
 		}
-		def.setCreateTime(System.currentTimeMillis());
 		_createOrUpdate(def);
 	}
 
 	@Override
-	public void update(WorkflowDef def) {
-		def.setUpdateTime(System.currentTimeMillis());
+	public void updateWorkflowDef(WorkflowDef def) {
 		_createOrUpdate(def);
 	}
 
@@ -173,7 +165,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	 * @return     Latest version of workflow definition
 	 * @see        WorkflowDef
 	 */
-	public Optional<WorkflowDef> getLatest(String name) {
+	public Optional<WorkflowDef> getLatestWorkflowDef(String name) {
 		Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
 		WorkflowDef workflowDef = null;
 
@@ -217,7 +209,7 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 	}
 
 	@Override
-	public Optional<WorkflowDef> get(String name, int version) {
+	public Optional<WorkflowDef> getWorkflowDef(String name, int version) {
 		Preconditions.checkNotNull(name, "WorkflowDef name cannot be null");
 		WorkflowDef def = null;
 
@@ -252,14 +244,13 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 		recordRedisDaoRequests("removeWorkflowDef");
 	}
 
-	@Override
 	public List<String> findAll() {
 		Set<String> wfNames = dynoClient.smembers(nsKey(WORKFLOW_DEF_NAMES));
 		return new ArrayList<>(wfNames);
 	}
 
 	@Override
-	public List<WorkflowDef> getAll() {
+	public List<WorkflowDef> getAllWorkflowDefs() {
 		List<WorkflowDef> workflows = new LinkedList<WorkflowDef>();
 
 		// Get all from WORKFLOW_DEF_NAMES
@@ -281,97 +272,6 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 		return workflows;
 	}
 
-	//Event Handler APIs
-
-	@Override
-	public void addEventHandler(EventHandler eventHandler) {
-		Preconditions.checkNotNull(eventHandler.getName(), "Missing Name");
-		if(getEventHandler(eventHandler.getName()) != null) {
-			throw new ApplicationException(Code.CONFLICT, "EventHandler with name " + eventHandler.getName() + " already exists!");
-		}
-		index(eventHandler);
-		dynoClient.hset(nsKey(EVENT_HANDLERS), eventHandler.getName(), toJson(eventHandler));
-		recordRedisDaoRequests("addEventHandler");
-	}
-
-	@Override
-	public void updateEventHandler(EventHandler eventHandler) {
-		Preconditions.checkNotNull(eventHandler.getName(), "Missing Name");
-		EventHandler existing = getEventHandler(eventHandler.getName());
-		if(existing == null) {
-			throw new ApplicationException(Code.NOT_FOUND, "EventHandler with name " + eventHandler.getName() + " not found!");
-		}
-		index(eventHandler);
-		dynoClient.hset(nsKey(EVENT_HANDLERS), eventHandler.getName(), toJson(eventHandler));
-		recordRedisDaoRequests("updateEventHandler");
-	}
-
-	@Override
-	public void removeEventHandlerStatus(String name) {
-		EventHandler existing = getEventHandler(name);
-		if(existing == null) {
-			throw new ApplicationException(Code.NOT_FOUND, "EventHandler with name " + name + " not found!");
-		}
-		dynoClient.hdel(nsKey(EVENT_HANDLERS), name);
-		recordRedisDaoRequests("removeEventHandler");
-		removeIndex(existing);
-	}
-
-	@Override
-	public List<EventHandler> getEventHandlers() {
-		Map<String, String> all = dynoClient.hgetAll(nsKey(EVENT_HANDLERS));
-		List<EventHandler> handlers = new LinkedList<>();
-		all.entrySet().forEach(e -> {
-			String json = e.getValue();
-			EventHandler eh = readValue(json, EventHandler.class);
-			handlers.add(eh);
-		});
-		recordRedisDaoRequests("getAllEventHandlers");
-		return handlers;
-	}
-	
-	private void index(EventHandler eh) {
-		String event = eh.getEvent();
-		String key = nsKey(EVENT_HANDLERS_BY_EVENT, event);
-		dynoClient.sadd(key, eh.getName());
-	}
-	
-	private void removeIndex(EventHandler eh) {
-		String event = eh.getEvent();
-		String key = nsKey(EVENT_HANDLERS_BY_EVENT, event);
-		dynoClient.srem(key, eh.getName());
-	}
-	
-	@Override
-	public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
-		String key = nsKey(EVENT_HANDLERS_BY_EVENT, event);
-		Set<String> names = dynoClient.smembers(key);
-		List<EventHandler> handlers = new LinkedList<>();
-		for(String name : names) {
-			try {
-				EventHandler eventHandler = getEventHandler(name);
-				recordRedisDaoEventRequests("getEventHandler", event);
-				if(eventHandler.getEvent().equals(event) && (!activeOnly || eventHandler.isActive())) {
-					handlers.add(eventHandler);
-				}
-			} catch (ApplicationException ae) {
-				if(ae.getCode() == Code.NOT_FOUND) {}
-				throw ae;
-			}
-		}
-		return handlers;
-	}
-	
-	private EventHandler getEventHandler(String name) {
-		EventHandler eventHandler = null;
-		String json = dynoClient.hget(nsKey(EVENT_HANDLERS), name);
-		if (json != null) {
-			eventHandler = readValue(json, EventHandler.class);
-		}
-		return eventHandler;
-
-	}
-
     private void _createOrUpdate(WorkflowDef workflowDef) {
         // First set the workflow def
         dynoClient.hset(nsKey(WORKFLOW_DEF, workflowDef.getName()), String.valueOf(workflowDef.getVersion()),
@@ -380,5 +280,4 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
         dynoClient.sadd(nsKey(WORKFLOW_DEF_NAMES), workflowDef.getName());
         recordRedisDaoRequests("storeWorkflowDef", "n/a", workflowDef.getName());
     }
-
 }

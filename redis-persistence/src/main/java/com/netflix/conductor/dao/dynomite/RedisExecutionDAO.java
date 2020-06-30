@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
-import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -32,7 +31,6 @@ import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dyno.DynoProxy;
 import com.netflix.conductor.metrics.Monitors;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +43,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -59,24 +56,25 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	// Keys Families
 	private static final String TASK_LIMIT_BUCKET = "TASK_LIMIT_BUCKET";
-	private static final String TASK_RATE_LIMIT_BUCKET = "TASK_RATE_LIMIT_BUCKET";
 	private final static String IN_PROGRESS_TASKS = "IN_PROGRESS_TASKS";
 	private final static String TASKS_IN_PROGRESS_STATUS = "TASKS_IN_PROGRESS_STATUS";	//Tasks which are in IN_PROGRESS status.
 	private final static String WORKFLOW_TO_TASKS = "WORKFLOW_TO_TASKS";
 	private final static String SCHEDULED_TASKS = "SCHEDULED_TASKS";
 	private final static String TASK = "TASK";
-
 	private final static String WORKFLOW = "WORKFLOW";
 	private final static String PENDING_WORKFLOWS = "PENDING_WORKFLOWS";
 	private final static String WORKFLOW_DEF_TO_WORKFLOWS = "WORKFLOW_DEF_TO_WORKFLOWS";
 	private final static String CORR_ID_TO_WORKFLOWS = "CORR_ID_TO_WORKFLOWS";
-	private final static String POLL_DATA = "POLL_DATA";
+
+	private final int ttlEventExecutionSeconds;
 
 	private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
 
 	@Inject
 	public RedisExecutionDAO(DynoProxy dynoClient, ObjectMapper objectMapper, Configuration config) {
 		super(dynoClient, objectMapper, config);
+
+		ttlEventExecutionSeconds = config.getEventExecutionPersistenceTTL();
 	}
 
 	@Override
@@ -195,57 +193,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		if (!taskIds.contains(task.getTaskId())) {
 		    correlateTaskToWorkflowInDS(task.getTaskId(), task.getWorkflowInstanceId());
         }
-	}
-
-	/**
-	 * This method evaluates if the {@link Task} is rate limited or not based on {@link Task#getRateLimitPerFrequency()}
-	 * and {@link Task#getRateLimitFrequencyInSeconds()}
-	 *
-	 * The rate limiting is implemented using the Redis constructs of sorted set and TTL of each element in the rate limited bucket.
-	 * <ul>
-	 *     <li>All the entries that are in the not in the frequency bucket are cleaned up by leveraging {@link DynoProxy#zremrangeByScore(String, String, String)},
-	 *     this is done to make the next step of evaluation efficient</li>
-	 *     <li>A current count(tasks executed within the frequency) is calculated based on the current time and the beginning of the rate limit frequency time(which is current time - {@link Task#getRateLimitFrequencyInSeconds()} in millis),
-	 *     this is achieved by using {@link DynoProxy#zcount(String, double, double)} </li>
-	 *     <li>Once the count is calculated then a evaluation is made to determine if it is within the bounds of {@link Task#getRateLimitPerFrequency()}, if so the count is increased and an expiry TTL is added to the entry</li>
-	 * </ul>
-	 *
-	 * @param task: which needs to be evaluated whether it is rateLimited or not
-	 * @return true: If the {@link Task} is rateLimited
-	 * 		false: If the {@link Task} is not rateLimited
-	 */
-	@Override
-	public boolean exceedsRateLimitPerFrequency(Task task) {
-		int rateLimitPerFrequency = task.getRateLimitPerFrequency();
-		int rateLimitFrequencyInSeconds = task.getRateLimitFrequencyInSeconds();
-		if (rateLimitPerFrequency <= 0 || rateLimitFrequencyInSeconds <=0) {
-			logger.debug("Rate limit not applied to the Task: {}  either rateLimitPerFrequency: {} or rateLimitFrequencyInSeconds: {} is 0 or less",
-					task, rateLimitPerFrequency, rateLimitFrequencyInSeconds);
-			return false;
-		} else {
-			logger.debug("Evaluating rate limiting for Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {}",
-					task, rateLimitPerFrequency, rateLimitFrequencyInSeconds);
-			long currentTimeEpochMillis = System.currentTimeMillis();
-			long currentTimeEpochMinusRateLimitBucket = currentTimeEpochMillis - (rateLimitFrequencyInSeconds * 1000);
-			String key = nsKey(TASK_RATE_LIMIT_BUCKET, task.getTaskDefName());
-			dynoClient.zremrangeByScore(key, "-inf", String.valueOf(currentTimeEpochMinusRateLimitBucket));
-			int currentBucketCount = Math.toIntExact(
-					dynoClient.zcount(key,
-							currentTimeEpochMinusRateLimitBucket,
-							currentTimeEpochMillis));
-			if (currentBucketCount < rateLimitPerFrequency) {
-				dynoClient.zadd(key, currentTimeEpochMillis, String.valueOf(currentTimeEpochMillis));
-				dynoClient.expire(key, rateLimitFrequencyInSeconds);
-				logger.info("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} within the rate limit with current count {}",
-						task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, ++currentBucketCount);
-				Monitors.recordTaskRateLimited(task.getTaskDefName(), rateLimitPerFrequency);
-				return false;
-			} else {
-				logger.info("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} is out of bounds of rate limit with current count {}",
-						task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, currentBucketCount);
-				return true;
-			}
-		}
 	}
 
 
@@ -412,8 +359,14 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		return workflow;
 	}
 
+	/**
+	 * @param workflowName name of the workflow
+	 * @param version the workflow version
+	 * @return list of workflow ids that are in RUNNING state
+	 * <em>returns workflows of all versions for the given workflow name</em>
+	 */
 	@Override
-	public List<String> getRunningWorkflowIds(String workflowName) {
+	public List<String> getRunningWorkflowIds(String workflowName, int version) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
 		List<String> workflowIds;
 		recordRedisDaoRequests("getRunningWorkflowsByName");
@@ -422,15 +375,19 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		return workflowIds;
 	}
 
+	/**
+	 * @param workflowName name of the workflow
+	 * @param version the workflow version
+	 * @return list of workflows that are in RUNNING state
+	 */
 	@Override
-	public List<Workflow> getPendingWorkflowsByType(String workflowName) {
+	public List<Workflow> getPendingWorkflowsByType(String workflowName, int version) {
 		Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-		List<Workflow> workflows = new LinkedList<>();
-		List<String> wfIds = getRunningWorkflowIds(workflowName);
-		for(String wfId : wfIds) {
-			workflows.add(getWorkflow(wfId));
-		}
-		return workflows;
+		List<String> workflowIds = getRunningWorkflowIds(workflowName, version);
+		return workflowIds.stream()
+				.map(this::getWorkflow)
+				.filter(workflow -> workflow.getWorkflowVersion() == version)
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -568,7 +525,13 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			String json = objectMapper.writeValueAsString(eventExecution);
 			recordRedisDaoEventRequests("addEventExecution", eventExecution.getEvent());
 			recordRedisDaoPayloadSize("addEventExecution", json.length(), eventExecution.getEvent(), "n/a");
-            return dynoClient.hsetnx(key, eventExecution.getId(), json) == 1L;
+            boolean added =  dynoClient.hsetnx(key, eventExecution.getId(), json) == 1L;
+
+			if (ttlEventExecutionSeconds > 0) {
+				dynoClient.expire(key, ttlEventExecutionSeconds);
+			}
+
+            return added;
 		} catch (Exception e) {
 			throw new ApplicationException(Code.BACKEND_ERROR, "Unable to add event execution for " + eventExecution.getId(), e);
 		}
@@ -601,7 +564,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		}
 	}
 
-	@Override
 	public List<EventExecution> getEventExecutions(String eventHandlerName, String eventName, String messageId, int max) {
 		try {
 			String key = nsKey(EVENT_EXECUTION, eventHandlerName, eventName, messageId);
@@ -623,56 +585,6 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		} catch (Exception e) {
 			throw new ApplicationException(Code.BACKEND_ERROR, "Unable to get event executions for " + eventHandlerName, e);
 		}
-	}
-
-	@Override
-	public void updateLastPoll(String taskDefName, String domain, String workerId) {
-		Preconditions.checkNotNull(taskDefName, "taskDefName name cannot be null");
-		PollData pollData = new PollData(taskDefName, domain, workerId, System.currentTimeMillis());
-
-		String key = nsKey(POLL_DATA, pollData.getQueueName());
-		String field = (domain == null)?"DEFAULT":domain;
-
-		String payload = toJson(pollData);
-		recordRedisDaoRequests("updatePollData");
-		recordRedisDaoPayloadSize("updatePollData", payload.length(),"n/a","n/a");
-		dynoClient.hset(key, field, payload);
-	}
-
-	@Override
-	public PollData getPollData(String taskDefName, String domain) {
-		Preconditions.checkNotNull(taskDefName, "taskDefName name cannot be null");
-
-		String key = nsKey(POLL_DATA, taskDefName);
-		String field = (domain == null)?"DEFAULT":domain;
-
-		String pollDataJsonString = dynoClient.hget(key, field);
-		recordRedisDaoRequests("getPollData");
-		recordRedisDaoPayloadSize("getPollData", StringUtils.length(pollDataJsonString), "n/a", "n/a");
-
-		PollData pollData = null;
-		if (pollDataJsonString != null) {
-			pollData = readValue(pollDataJsonString, PollData.class);
-		}
-		return pollData;
-	}
-
-	@Override
-	public List<PollData> getPollData(String taskDefName) {
-		Preconditions.checkNotNull(taskDefName, "taskDefName name cannot be null");
-
-		String key = nsKey(POLL_DATA, taskDefName);
-
-		Map<String, String> pMapdata = dynoClient.hgetAll(key);
-		List<PollData> pollData = new ArrayList<PollData>();
-		if(pMapdata != null){
-			pMapdata.values().forEach(pollDataJsonString -> {
-				pollData.add(readValue(pollDataJsonString, PollData.class));
-				recordRedisDaoRequests("getPollData");
-				recordRedisDaoPayloadSize("getPollData", pollDataJsonString.length(), "n/a", "n/a");
-			});
-		}
-		return pollData;
 	}
 
     /**

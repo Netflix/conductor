@@ -18,16 +18,32 @@ package com.netflix.conductor.tests.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.run.ExternalStorageLocation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
-
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.netflix.conductor.common.utils.JsonMapperProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class MockExternalPayloadStorage implements ExternalPayloadStorage {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockExternalPayloadStorage.class);
+
+    public static final String INPUT_PAYLOAD_PATH = "payload/input";
+
+    public static final String INITIAL_WORKFLOW_INPUT_PATH = "workflow/input";
+    public static final String WORKFLOW_OUTPUT_PATH = "workflow/output";
+    public static final String TASK_OUTPUT_PATH = "task/output";
+
+    public static final String TEMP_FILE_PATH = "/input.json";
+
+    private ObjectMapper objectMapper = new JsonMapperProvider().get();
 
     @Override
     public ExternalStorageLocation getLocation(Operation operation, PayloadType payloadType, String path) {
@@ -35,10 +51,14 @@ public class MockExternalPayloadStorage implements ExternalPayloadStorage {
         location.setUri("http://some/uri");
         switch (payloadType) {
             case TASK_INPUT:
-                location.setPath("task/input");
+            case WORKFLOW_INPUT:
+                location.setPath(INPUT_PAYLOAD_PATH);
                 break;
             case WORKFLOW_OUTPUT:
-                location.setPath("workflow/output");
+                location.setPath(WORKFLOW_OUTPUT_PATH);
+                break;
+            case TASK_OUTPUT:
+                location.setPath(TASK_OUTPUT_PATH);
                 break;
         }
         return location;
@@ -46,6 +66,28 @@ public class MockExternalPayloadStorage implements ExternalPayloadStorage {
 
     @Override
     public void upload(String path, InputStream payload, long payloadSize) {
+        try {
+            URL filePathURL = MockExternalPayloadStorage.class.getResource(TEMP_FILE_PATH);
+            File file = new File(filePathURL.toURI());
+            try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                int read;
+                byte[] bytes = new byte[1024];
+                while ((read = payload.read(bytes)) != -1) {
+                    outputStream.write(bytes, 0, read);
+                }
+                outputStream.flush();
+            }
+        } catch (Exception e) {
+            // just handle this exception here and return empty map so that test will fail in case this exception is thrown
+        } finally {
+            try {
+                if (payload != null) {
+                    payload.close();
+                }
+            } catch (IOException e) {
+                LOGGER.warn("Unable to close inputstream when writing to file");
+            }
+        }
     }
 
     @Override
@@ -64,14 +106,17 @@ public class MockExternalPayloadStorage implements ExternalPayloadStorage {
         Map<String, Object> stringObjectMap = new HashMap<>();
         try {
             switch (path) {
-                case "workflow/input":
+                case INITIAL_WORKFLOW_INPUT_PATH:
                     stringObjectMap.put("param1", "p1 value");
                     stringObjectMap.put("param2", "p2 value");
                     return stringObjectMap;
-                case "task/input":
-                case "task/output":
-                    InputStream stream = MockExternalPayloadStorage.class.getResourceAsStream("/payload.json");
-                    return objectMapper.readValue(stream, Map.class);
+                case TASK_OUTPUT_PATH:
+                    InputStream opStream = MockExternalPayloadStorage.class.getResourceAsStream("/output.json");
+                    return objectMapper.readValue(opStream, Map.class);
+                case INPUT_PAYLOAD_PATH:
+                case WORKFLOW_OUTPUT_PATH:
+                    InputStream ipStream = MockExternalPayloadStorage.class.getResourceAsStream(TEMP_FILE_PATH);
+                    return objectMapper.readValue(ipStream, Map.class);
             }
         } catch (IOException e) {
             // just handle this exception here and return empty map so that test will fail in case this exception is thrown
