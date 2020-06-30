@@ -66,11 +66,10 @@ public class MetadataResource {
 	public void create(WorkflowDef def,@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.registerWorkflowDef(def);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.registerWorkflowDef(def);
 		} else {
 			service.registerWorkflowDef(def);
 		}
@@ -84,11 +83,10 @@ public class MetadataResource {
 	public void update(List<WorkflowDef> defs,@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.updateWorkflowDef(defs);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.updateWorkflowDef(defs);
 		} else {
 			service.updateWorkflowDef(defs);
 		}
@@ -116,11 +114,10 @@ public class MetadataResource {
 	public void registerTaskDef(List<TaskDef> taskDefs,@Context HttpHeaders headers) throws Exception {
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.registerTaskDef(taskDefs);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.registerTaskDef(taskDefs);
 		} else {
 			service.registerTaskDef(taskDefs);
 		}
@@ -134,11 +131,10 @@ public class MetadataResource {
 	public void registerTaskDef(TaskDef taskDef,@Context HttpHeaders headers) throws Exception {
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.updateTaskDef(taskDef);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.updateTaskDef(taskDef);
 		} else {
 			service.updateTaskDef(taskDef);
 		}
@@ -168,11 +164,10 @@ public class MetadataResource {
 	public void unregisterTaskDef(@PathParam("tasktype") String taskType,@Context HttpHeaders headers){
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.unregisterTaskDef(taskType);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.unregisterTaskDef(taskType);
 		} else {
 			service.unregisterTaskDef(taskType);
 		}
@@ -186,11 +181,10 @@ public class MetadataResource {
 	public void unregisterWorkflow(@PathParam("name") String name, @QueryParam("version") Integer version,@Context HttpHeaders headers){
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.unregisterWorkflow(name, version);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.unregisterWorkflow(name, version);
 		} else {
 			service.unregisterWorkflow(name, version);
 		}

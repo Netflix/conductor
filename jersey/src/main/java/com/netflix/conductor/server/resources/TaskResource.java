@@ -120,17 +120,16 @@ public class TaskResource {
     public String updateTask(TaskResult task, @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                NDC.push("rest-update-task-" + UUID.randomUUID().toString());
-                try {
-                    taskService.updateTask(task);
-                } finally {
-                    NDC.remove();
-                }
-                return "\"" + task.getTaskId() + "\"";
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            NDC.push("rest-update-task-" + UUID.randomUUID().toString());
+            try {
+                taskService.updateTask(task);
+            } finally {
+                NDC.remove();
+            }
+            return "\"" + task.getTaskId() + "\"";
         } else {
             NDC.push("rest-update-task-" + UUID.randomUUID().toString());
             try {
@@ -151,11 +150,10 @@ public class TaskResource {
     public String ack(@PathParam("taskId") String taskId, @QueryParam("workerid") String workerId, @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                return "" + taskService.ackTaskRecieved(taskId, workerId);
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            return "" + taskService.ackTaskRecieved(taskId, workerId);
         } else {
             return "" + taskService.ackTaskRecieved(taskId, workerId);
         }
@@ -169,11 +167,10 @@ public class TaskResource {
     public void log(@PathParam("taskId") String taskId, String log, @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                taskService.log(taskId, log);
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            taskService.log(taskId, log);
         } else {
             taskService.log(taskId, log);
         }
@@ -203,11 +200,10 @@ public class TaskResource {
     public void remvoeTaskFromQueue(@PathParam("taskType") String taskType, @PathParam("taskId") String taskId, @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                taskService.removeTaskfromQueue(taskType, taskId);
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            taskService.removeTaskfromQueue(taskType, taskId);
         } else {
             taskService.removeTaskfromQueue(taskType, taskId);
         }
@@ -276,11 +272,10 @@ public class TaskResource {
     public String requeue(@Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                return "" + taskService.requeuePendingTasks();
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            return "" + taskService.requeuePendingTasks();
         } else {
             return "" + taskService.requeuePendingTasks();
         }
@@ -296,11 +291,10 @@ public class TaskResource {
     public String requeue(@PathParam("taskType") String taskType, @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                return "" + taskService.requeuePendingTasks(taskType);
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            return "" + taskService.requeuePendingTasks(taskType);
         } else {
             return "" + taskService.requeuePendingTasks(taskType);
         }

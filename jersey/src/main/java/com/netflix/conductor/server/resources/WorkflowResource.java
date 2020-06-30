@@ -152,24 +152,29 @@ public class WorkflowResource {
 		String userInvoked = executor.decodeAuthorizationUser(headers);
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				Map<String, Object> auth = executor.validateAuth(def, headers);
-				NDC.push("rest-start-" + UUID.randomUUID().toString());
-				try {
-					logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked + ",path=/{name}");
-					executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
-							request.getInput(), null, request.getTaskToDomain(),
-							auth, contextToken, contextUser, traceId, asyncStart);
-				} finally {
-					NDC.remove();
-				}
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			Map<String, Object> auth = executor.validateAuth(def, headers);
+			NDC.push("rest-start-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked + ",path=/{name}");
+				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
+						request.getInput(), null, request.getTaskToDomain(),
+						auth, contextToken, contextUser, traceId, asyncStart);
+			} finally {
+				NDC.remove();
+			}
 		} else {
-			executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
-					request.getInput(), null, request.getTaskToDomain(),
-					Collections.emptyMap(), contextToken, contextUser, traceId, asyncStart);
+			NDC.push("rest-start-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked + ",path=/{name}");
+				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
+						request.getInput(), null, request.getTaskToDomain(),
+						Collections.emptyMap(), contextToken, contextUser, traceId, asyncStart);
+			} finally {
+				NDC.remove();
+			}
 		}
 		return builder.build();
 	}
@@ -338,16 +343,15 @@ public class WorkflowResource {
 		if (!bypassAuth(headers)) {
 			executor.validateAuth(workflowId, headers);
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				NDC.push("rest-pause-" + UUID.randomUUID().toString());
-				try {
-					logger.info("About to pause workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/pause");
-					executor.pauseWorkflow(workflowId, correlationId);
-				} finally {
-					NDC.remove();
-				}
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			NDC.push("rest-pause-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to pause workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/pause");
+				executor.pauseWorkflow(workflowId, correlationId);
+			} finally {
+				NDC.remove();
 			}
 		} else {
 			NDC.push("rest-pause-" + UUID.randomUUID().toString());
@@ -382,17 +386,16 @@ public class WorkflowResource {
 		String userInvoked = executor.decodeAuthorizationUser(headers);
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				executor.validateAuth(workflowId, headers);
-				NDC.push("rest-resume-" + UUID.randomUUID().toString());
-				try {
-					logger.info("About to resume workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/resume");
-					executor.resumeWorkflow(workflowId, correlationId);
-				} finally {
-					NDC.remove();
-				}
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			executor.validateAuth(workflowId, headers);
+			NDC.push("rest-resume-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to resume workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/resume");
+				executor.resumeWorkflow(workflowId, correlationId);
+			} finally {
+				NDC.remove();
 			}
 		} else {
 			NDC.push("rest-resume-" + UUID.randomUUID().toString());
@@ -454,17 +457,16 @@ public class WorkflowResource {
 		String userInvoked = executor.decodeAuthorizationUser(headers);
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				executor.validateAuth(workflowId, headers);
-				NDC.push("rest-rerun-" + UUID.randomUUID().toString());
-				try {
-					logger.info("About to rerun workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/rerun");
-					executor.rerun(request);
-				} finally {
-					NDC.remove();
-				}
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			executor.validateAuth(workflowId, headers);
+			NDC.push("rest-rerun-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to rerun workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/rerun");
+				executor.rerun(request);
+			} finally {
+				NDC.remove();
 			}
 		} else {
 			NDC.push("rest-rerun-" + UUID.randomUUID().toString());
@@ -499,17 +501,16 @@ public class WorkflowResource {
 		String userInvoked = executor.decodeAuthorizationUser(headers);
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				executor.validateAuth(workflowId, headers);
-				NDC.push("rest-restart-" + UUID.randomUUID().toString());
-				try {
-					logger.info("About to restart workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/restart");
-					executor.rewind(workflowId, correlationId);
-				} finally {
-					NDC.remove();
-				}
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			executor.validateAuth(workflowId, headers);
+			NDC.push("rest-restart-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to restart workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/restart");
+				executor.rewind(workflowId, correlationId);
+			} finally {
+				NDC.remove();
 			}
 		} else {
 			NDC.push("rest-restart-" + UUID.randomUUID().toString());
@@ -545,22 +546,18 @@ public class WorkflowResource {
 		String userInvoked = executor.decodeAuthorizationUser(headers);
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				executor.validateAuth(workflowId, headers);
-				NDC.push("rest-retry-" + UUID.randomUUID().toString());
-				try {
-					logger.info("About to retry workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/retry");
-					executor.retry(workflowId, correlationId);
-				} finally {
-					NDC.remove();
-				}
-			}
-			else
-			{
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
-		}
-		else
+			executor.validateAuth(workflowId, headers);
+			NDC.push("rest-retry-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to retry workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/retry");
+				executor.retry(workflowId, correlationId);
+			} finally {
+				NDC.remove();
+			}
+		} else
 		{
 			NDC.push("rest-retry-" + UUID.randomUUID().toString());
 			try {
@@ -594,17 +591,16 @@ public class WorkflowResource {
 		String userInvoked = executor.decodeAuthorizationUser(headers);
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				executor.validateAuth(workflowId, headers);
-				NDC.push("rest-terminate-" + UUID.randomUUID().toString());
-				try {
-					logger.info("About to terminate workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}");
-					executor.terminateWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Terminated from api"));
-				} finally {
-					NDC.remove();
-				}
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			executor.validateAuth(workflowId, headers);
+			NDC.push("rest-terminate-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to terminate workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}");
+				executor.terminateWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Terminated from api"));
+			} finally {
+				NDC.remove();
 			}
 		} else {
 			NDC.push("rest-terminate-" + UUID.randomUUID().toString());
@@ -639,15 +635,14 @@ public class WorkflowResource {
 			handleCorrelationId(workflowIds.get(i), headers, builder);
 			if (!bypassAuth(headers)) {
 				String primarRole = executor.checkUserRoles(headers);
-				if (primarRole.contains("admin")) {
-					executor.validateAuth(workflowIds.get(i), headers);
-					try {
-						executor.terminateWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Terminated from api"));
-					} finally {
-						NDC.remove();
-					}
-				} else {
+				if (!primarRole.endsWith("admin")) {
 					throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+				}
+				executor.validateAuth(workflowIds.get(i), headers);
+				try {
+					executor.terminateWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Terminated from api"));
+				} finally {
+					NDC.remove();
 				}
 			} else {
 				try {
@@ -682,16 +677,15 @@ public class WorkflowResource {
 			handleCorrelationId(workflowIds.get(i), headers, builder);
 			if (!bypassAuth(headers)) {
 				String primarRole = executor.checkUserRoles(headers);
-				if (primarRole.contains("admin")) {
-					executor.validateAuth(workflowIds.get(i), headers);
-					NDC.push("rest-cancel-" + UUID.randomUUID().toString());
-					try {
-						executor.cancelWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
-					} finally {
-						NDC.remove();
-					}
-				} else {
+				if (!primarRole.endsWith("admin")) {
 					throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+				}
+				executor.validateAuth(workflowIds.get(i), headers);
+				NDC.push("rest-cancel-" + UUID.randomUUID().toString());
+				try {
+					executor.cancelWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
+				} finally {
+					NDC.remove();
 				}
 			} else {
 				NDC.push("rest-cancel-" + UUID.randomUUID().toString());
@@ -726,16 +720,15 @@ public class WorkflowResource {
 			handleCorrelationId(workflowIds.get(i), headers, builder);
 			if (!bypassAuth(headers)) {
 				String primarRole = executor.checkUserRoles(headers);
-				if (primarRole.contains("admin")) {
-					executor.validateAuth(workflowIds.get(i), headers);
-					NDC.push("rest-complete-" + UUID.randomUUID().toString());
-					try {
-						executor.forceCompleteWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Force completed by API"));
-					} finally {
-						NDC.remove();
-					}
-				} else {
+				if (!primarRole.endsWith("admin")) {
 					throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+				}
+				executor.validateAuth(workflowIds.get(i), headers);
+				NDC.push("rest-complete-" + UUID.randomUUID().toString());
+				try {
+					executor.forceCompleteWorkflow(workflowIds.get(i), StringUtils.defaultIfEmpty(reason, "Force completed by API"));
+				} finally {
+					NDC.remove();
 				}
 			} else {
 				NDC.push("rest-complete-" + UUID.randomUUID().toString());
@@ -772,19 +765,18 @@ public class WorkflowResource {
 		String userInvoked = executor.decodeAuthorizationUser(headers);
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				executor.validateAuth(workflowId, headers);
-				NDC.push("rest-cancel-" + UUID.randomUUID().toString());
-				try {
-
-					logger.info("About to cancel workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/cancel");
-
-					executor.cancelWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
-				} finally {
-					NDC.remove();
-				}
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			executor.validateAuth(workflowId, headers);
+			NDC.push("rest-cancel-" + UUID.randomUUID().toString());
+			try {
+
+				logger.info("About to cancel workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/cancel");
+
+				executor.cancelWorkflow(workflowId, StringUtils.defaultIfEmpty(reason, "Cancelled from api"));
+			} finally {
+				NDC.remove();
 			}
 		} else {
 			NDC.push("rest-cancel-" + UUID.randomUUID().toString());
@@ -819,26 +811,21 @@ public class WorkflowResource {
 		String userInvoked = executor.decodeAuthorizationUser(headers);
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				executor.validateAuth(workflowId, headers);
-				NDC.push("rest-complete-" + UUID.randomUUID().toString());
-				try {
-					logger.info("About to complete workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/complete");
-					executor.forceCompleteWorkflow(workflowId, "Force completed by API");
-				} finally {
-					NDC.remove();
-				}
-			}
-			else
-			{
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
-		}
-		else
-		{
+			executor.validateAuth(workflowId, headers);
 			NDC.push("rest-complete-" + UUID.randomUUID().toString());
 			try {
-				logger.info("About to complete workflowId " + workflowId + ",userInvoked=" + userInvoked+",path=/{workflowId}/complete");
+				logger.info("About to complete workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/complete");
+				executor.forceCompleteWorkflow(workflowId, "Force completed by API");
+			} finally {
+				NDC.remove();
+			}
+		} else {
+			NDC.push("rest-complete-" + UUID.randomUUID().toString());
+			try {
+				logger.info("About to complete workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/complete");
 				executor.forceCompleteWorkflow(workflowId, "Force completed by API");
 			} finally {
 				NDC.remove();

@@ -120,11 +120,10 @@ public class AdminResource {
     public void addConfig(@PathParam("name") String name, String value, @Context HttpHeaders headers) {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                metadata.addConfig(name, value);
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            metadata.addConfig(name, value);
         } else {
             metadata.addConfig(name, value);
         }
@@ -139,11 +138,10 @@ public class AdminResource {
     public void updateConfig(@PathParam("name") String name,  String value, @Context HttpHeaders headers) {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                metadata.updateConfig(name, value);
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            metadata.updateConfig(name, value);
         } else {
             metadata.updateConfig(name, value);
         }
@@ -158,11 +156,10 @@ public class AdminResource {
     public void deleteConfig(@PathParam("name") String name, @Context HttpHeaders headers) {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                metadata.deleteConfig(name);
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            metadata.deleteConfig(name);
         } else {
             metadata.deleteConfig(name);
         }
@@ -178,11 +175,10 @@ public class AdminResource {
     public void reloadAllConfig(@Context HttpHeaders headers) {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                service.reloadConfig();
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            service.reloadConfig();
         } else {
             service.reloadConfig();
         }
@@ -210,12 +206,11 @@ public class AdminResource {
     public String requeueSweep(@PathParam("workflowId") String workflowId, @Context HttpHeaders headers) throws Exception {
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
-            if (primarRole.contains("admin")) {
-                boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
-                return pushed + "." + workflowId;
-            } else {
+            if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
+            boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
+            return pushed + "." + workflowId;
         } else {
             boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
             return pushed + "." + workflowId;

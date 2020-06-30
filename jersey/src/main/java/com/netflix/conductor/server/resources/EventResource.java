@@ -83,11 +83,10 @@ public class EventResource {
 	public void addEventHandler(EventHandler eventHandler,@Context HttpHeaders headers) throws Exception {
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.addEventHandler(eventHandler);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.addEventHandler(eventHandler);
 		} else {
 			service.addEventHandler(eventHandler);
 		}
@@ -100,11 +99,10 @@ public class EventResource {
 	public void updateEventHandler(EventHandler eventHandler,@Context HttpHeaders headers) throws Exception {
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.updateEventHandler(eventHandler);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.updateEventHandler(eventHandler);
 		} else {
 			service.updateEventHandler(eventHandler);
 		}
@@ -118,11 +116,10 @@ public class EventResource {
 	public void disable(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.disableEventHandler(name);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.disableEventHandler(name);
 		} else {
 			service.disableEventHandler(name);
 		}
@@ -136,11 +133,10 @@ public class EventResource {
 	public void enable(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.enableEventHandler(name);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.enableEventHandler(name);
 		} else {
 			service.enableEventHandler(name);
 		}
@@ -154,11 +150,10 @@ public class EventResource {
 	public void refresh(@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				ep.refresh();
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			ep.refresh();
 		} else {
 			ep.refresh();
 		}
@@ -172,11 +167,10 @@ public class EventResource {
 	public void removeEventHandlerStatus(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
-			if (primarRole.contains("admin")) {
-				service.removeEventHandlerStatus(name);
-			} else {
+			if (!primarRole.endsWith("admin")) {
 				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
 			}
+			service.removeEventHandlerStatus(name);
 		} else {
 			service.removeEventHandlerStatus(name);
 		}
