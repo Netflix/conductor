@@ -354,7 +354,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      */
     @Service
     public void resetWorkflow(String workflowId) {
-        workflowExecutor.resetCallbacksForInProgressTasks(workflowId);
+        workflowExecutor.resetCallbacksForWorkflow(workflowId);
     }
 
     /**
