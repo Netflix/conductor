@@ -49,6 +49,9 @@ public interface Configuration {
     String SYSTEM_TASK_WORKER_ISOLATED_THREAD_COUNT_PROPERTY_NAME = "workflow.isolated.system.task.worker.thread.count";
     int SYSTEM_TASK_WORKER_ISOLATED_THREAD_COUNT_DEFAULT_VALUE = 1;
 
+    String SYSTEM_TASK_MAX_POLL_COUNT_PROPERTY_NAME = "workflow.system.task.queue.pollCount";
+    int SYSTEM_TASK_MAX_POLL_COUNT_DEFAULT_VALUE = 1;
+
     String ENVIRONMENT_PROPERTY_NAME = "environment";
     String ENVIRONMENT_DEFAULT_VALUE = "test";
 
@@ -90,6 +93,9 @@ public interface Configuration {
     String EVENT_MESSAGE_INDEXING_ENABLED_PROPERTY_NAME = "workflow.event.message.indexing.enabled";
     boolean EVENT_MESSAGE_INDEXING_ENABLED_DEFAULT_VALUE = true;
 
+    String EVENT_EXECUTION_INDEXING_ENABLED_PROPERTY_NAME = "workflow.event.execution.indexing.enabled";
+    boolean EVENT_EXECUTION_INDEXING_ENABLED_DEFAULT_VALUE = true;
+
     String TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME = "workflow.taskExecLog.indexing.enabled";
     boolean TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE = true;
 
@@ -107,6 +113,12 @@ public interface Configuration {
 
     String OWNER_EMAIL_MANDATORY_NAME = "workflow.owner.email.mandatory";
     boolean OWNER_EMAIL_MANDATORY_DEFAULT_VALUE = true;
+
+    String ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_PROPERTY_NAME = "workflow.elasticsearch.auto.index.management.enabled";
+    boolean ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_DEFAULT_VALUE = true;
+
+    String ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_PROPERTY_NAME = "workflow.elasticsearch.document.type.override";
+    String ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_DEFAULT_VALUE = "";
 
     //TODO add constants for input/output external payload related properties.
 
@@ -187,6 +199,13 @@ public interface Configuration {
     }
 
     /**
+     * @return the max number of system task to poll from queues
+     */
+    default int getSystemTaskMaxPollCount() {
+        return getIntProperty(SYSTEM_TASK_MAX_POLL_COUNT_PROPERTY_NAME, SYSTEM_TASK_MAX_POLL_COUNT_DEFAULT_VALUE);
+    }
+
+    /**
      * @return time frequency in seconds, at which the workflow sweeper should run to evaluate running workflows.
      */
     int getSweepFrequency();
@@ -207,6 +226,11 @@ public interface Configuration {
      * @return when set to true, message from the event processing are indexed
      */
     boolean isEventMessageIndexingEnabled();
+
+    /**
+     * @return when set to true, event execution results are indexed
+     */
+    boolean isEventExecutionIndexingEnabled();
 
     /**
      * @return ID of the server.  Can be host name, IP address or any other meaningful identifier.  Used for logging
@@ -291,6 +315,24 @@ public interface Configuration {
      */
     default int getEventExecutionPersistenceTTL() {
         return getIntProperty(EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME, EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE);
+    }
+
+    default boolean isElasticSearchAutoIndexManagementEnabled() {
+        return getBooleanProperty(ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_PROPERTY_NAME,
+            ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
+     * Document types are deprecated in ES6 and removed from ES7. This property can be used to disable the use of
+     * specific document types with an override. This property is currently used in ES6 module.
+     * <p>
+     * <em>Note that this property will only take effect if
+     * {@link Configuration#isElasticSearchAutoIndexManagementEnabled} is set to false and index management
+     * is handled outside of this module.</em>
+     */
+    default String getElasticSearchDocumentTypeOverride() {
+        return getProperty(ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_PROPERTY_NAME,
+            ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_DEFAULT_VALUE);
     }
 
     /**
@@ -394,6 +436,6 @@ public interface Configuration {
     }
 
     enum LOCKING_SERVER {
-        NOOP_LOCK, REDIS, ZOOKEEPER
+        NOOP_LOCK, REDIS, ZOOKEEPER, LOCAL_ONLY
     }
 }
