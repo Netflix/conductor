@@ -5454,20 +5454,32 @@ public abstract class AbstractWorkflowServiceTest {
         workflowExecutor.decide(workflowId);
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
 
+System.out.println("assert 1");
         assertNotNull(workflow);
+System.out.println("assert 2");
         assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.FAILED, workflow.getStatus());
+System.out.println("assert 3");
         assertEquals(TaskType.TASK_TYPE_LAMBDA, workflow.getTasks().get(0).getTaskType());
+System.out.println("assert 4");
         assertEquals(TaskType.TASK_TYPE_TERMINATE, workflow.getTasks().get(1).getTaskType());
+System.out.println("assert 5");
         assertNotNull(workflow.getOutput());
+System.out.println("assert 6");
         assertNotNull(workflow.getOutput().get("conductor.failure_workflow"));
 
         String failureWorkflowId = (String)workflow.getOutput().get("conductor.failure_workflow");
         Workflow failureWorkflow = workflowExecutionService.getExecutionStatus(failureWorkflowId, true);
+System.out.println("assert 7");
         assertNotNull(failureWorkflow);
+System.out.println("assert 8");
         assertEquals(failureWorkflowName, failureWorkflow.getWorkflowName());
+System.out.println("assert 9");
         assertEquals(workflowId, failureWorkflow.getInput().get("workflowId"));
+System.out.println("assert 10");
         assertEquals(WorkflowStatus.COMPLETED, failureWorkflow.getStatus());
+System.out.println("assert 11");
         assertEquals(1, failureWorkflow.getTasks().size());
+System.out.println("assert 12");
         assertEquals(TaskType.TASK_TYPE_LAMBDA, failureWorkflow.getTasks().get(0).getTaskType());
 
         metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
