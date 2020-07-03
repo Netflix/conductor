@@ -5403,6 +5403,7 @@ public abstract class AbstractWorkflowServiceTest {
 
     @Test
     public void testTerminateTaskWithFailedStatus() {
+        String failureWorkflowName = "failure_workflow";
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("test_terminate_task_wf");
         workflowDef.setSchemaVersion(2);
@@ -5433,6 +5434,13 @@ public abstract class AbstractWorkflowServiceTest {
 
         workflowDef.getTasks().addAll(Arrays.asList(lambdaWorkflowTask, terminateWorkflowTask, workflowTask2));
 
+        WorkflowDef failureWorkflowDef = new WorkflowDef();
+        failureWorkflowDef.setName(failureWorkflowName);
+        failureWorkflowDef.setTasks(Collections.singletonList(lambdaWorkflowTask));
+
+        workflowDef.setFailureWorkflow(failureWorkflowName);
+
+        metadataService.registerWorkflowDef(failureWorkflowDef);
         metadataService.registerWorkflowDef(workflowDef);
 
         Map<String, Object> wfInput = new HashMap<>();
@@ -5451,8 +5459,19 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(TaskType.TASK_TYPE_LAMBDA, workflow.getTasks().get(0).getTaskType());
         assertEquals(TaskType.TASK_TYPE_TERMINATE, workflow.getTasks().get(1).getTaskType());
         assertNotNull(workflow.getOutput());
+        assertNotNull(workflow.getOutput().get("conductor.failure_workflow"));
+
+        String failureWorkflowId = (String)workflow.getOutput().get("conductor.failure_workflow");
+        Workflow failureWorkflow = workflowExecutionService.getExecutionStatus(failureWorkflowId, true);
+        assertNotNull(failureWorkflow);
+        assertEquals(failureWorkflowName, failureWorkflow.getWorkflowName());
+        assertEquals(workflowId, failureWorkflow.getInput().get("workflowId"));
+        assertEquals(WorkflowStatus.COMPLETED, failureWorkflow.getStatus());
+        assertEquals(1, failureWorkflow.getTasks().size());
+        assertEquals(TaskType.TASK_TYPE_LAMBDA, failureWorkflow.getTasks().get(0).getTaskType());
 
         metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
+        metadataService.unregisterWorkflowDef(failureWorkflowName, 1);
     }
 
     @Test

@@ -1019,7 +1019,7 @@ public class WorkflowExecutor {
                                 	completeWorkflow(workflow);
                                 } else {
                                     workflow.setStatus(workflowInstance.getStatus());
-                                	  terminateWorkflow(workflow, "Workflow is FAILED by TERMINATE task: " + task.getTaskId(), null);
+                                	terminate(workflow, new TerminateWorkflowException("Workflow is FAILED by TERMINATE task: " + task.getTaskId()));
                                 }
                                 return true;
                             }
