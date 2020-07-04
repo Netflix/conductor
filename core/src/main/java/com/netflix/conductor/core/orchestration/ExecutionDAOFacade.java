@@ -20,6 +20,7 @@ import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
+import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
@@ -247,6 +248,18 @@ public class ExecutionDAOFacade {
     public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
         try {
             Workflow workflow = getWorkflowById(workflowId, true);
+            List<Task> eventTasks = workflow.getTasks().stream().filter(task -> task.getTaskType().equals(TaskType.TASK_TYPE_EVENT)).collect(Collectors.toList());
+            List<EventExecution> eventExecutions = eventTasks.stream().map(
+                    task -> {
+                        EventExecution eventExecution = new EventExecution();
+                        eventExecution.setName(task.getWorkflowType());
+                        eventExecution.setMessageId(task.getTaskId());
+                        eventExecution.setId(task.getTaskId() + "_" + 0);
+                        eventExecution.setEvent((String)task.getOutputData().get("event_produced"));
+
+                        return eventExecution;
+                    }
+            ).collect(Collectors.toList());
 
             if (archiveWorkflow) {
                 if (workflow.getStatus().isTerminal()) {
@@ -266,6 +279,7 @@ public class ExecutionDAOFacade {
             // remove workflow from DAO
             try {
                 executionDAO.removeWorkflow(workflowId);
+                eventExecutions.forEach(executionDAO::removeEventExecution);
             } catch (Exception ex) {
                 Monitors.recordDaoError("executionDao", "removeWorkflow");
                 throw ex;
