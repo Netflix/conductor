@@ -168,6 +168,36 @@ public class ExecutionDAOFacade {
         return executionDAO.getWorkflowsByCorrelationId(correlationId, includeTasks);
     }
 
+    /**
+     * Retrieve all workflow executions with the given correlationId and workflow type
+     * Uses the {@link IndexDAO} to search across workflows if the {@link ExecutionDAO} cannot perform searches across workflows.
+     *
+     * @param workflowName, workflow type to be queried
+     * @param correlationId the correlation id to be queried
+     * @param includeTasks  if true, fetches the {@link Task} data within the workflows
+     * @return the list of {@link Workflow} executions matching the correlationId
+     */
+    public List<Workflow> getWorkflowsByCorrelationId(String workflowName, String correlationId, boolean includeTasks) {
+        if (!executionDAO.canSearchAcrossWorkflows()) {
+        	String query = "correlationId='" + correlationId + "' and workflowType='" + workflowName + "'";
+            SearchResult<String> result = indexDAO.searchWorkflows(query, "*", 0, 1000, null);
+            return result.getResults().stream()
+                .parallel()
+                .map(workflowId -> {
+                    try {
+                        return getWorkflowById(workflowId, includeTasks);
+                    } catch (ApplicationException e) {
+                        // This might happen when the workflow archival failed and the workflow was removed from primary datastore
+                        LOGGER.error("Error getting the workflow: {}  for correlationId: {} from datastore/index", workflowId, correlationId, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        }
+        return executionDAO.getWorkflowsByCorrelationId(workflowName,correlationId, includeTasks);
+    }
+
     public List<Workflow> getWorkflowsByName(String workflowName, Long startTime, Long endTime) {
         return executionDAO.getWorkflowsByType(workflowName, startTime, endTime);
     }

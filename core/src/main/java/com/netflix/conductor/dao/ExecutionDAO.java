@@ -207,6 +207,16 @@ public interface ExecutionDAO {
 	List<Workflow> getWorkflowsByCorrelationId(String correlationId, boolean includeTasks);
 
 	/**
+	 * 
+	 * @param workflowName workflow name
+	 * @param correlationId Correlation Id
+	 * @param includeTasks Option to includeTasks in results
+	 * @return List of workflows by correlation id
+	 *  
+	 */
+	List<Workflow> getWorkflowsByCorrelationId(String workflowName, String correlationId, boolean includeTasks);
+
+	/**
 	 *
 	 * @return true, if the DAO implementation is capable of searching across workflows
 	 * false, if the DAO implementation cannot perform searches across workflows (and needs to use indexDAO)
