@@ -199,15 +199,6 @@ public interface ExecutionDAO {
 
 	/**
 	 * 
-	 * @param correlationId Correlation Id
-	 * @param includeTasks Option to includeTasks in results
-	 * @return List of workflows by correlation id
-	 *  
-	 */
-	List<Workflow> getWorkflowsByCorrelationId(String correlationId, boolean includeTasks);
-
-	/**
-	 * 
 	 * @param workflowName workflow name
 	 * @param correlationId Correlation Id
 	 * @param includeTasks Option to includeTasks in results

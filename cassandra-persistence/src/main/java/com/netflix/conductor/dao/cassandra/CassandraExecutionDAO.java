@@ -495,15 +495,6 @@ public class CassandraExecutionDAO extends CassandraBaseDAO implements Execution
      * for Cassandra backed Conductor
      */
     @Override
-    public List<Workflow> getWorkflowsByCorrelationId(String correlationId, boolean includeTasks) {
-        throw new UnsupportedOperationException("This method is not implemented in CassandraExecutionDAO. Please use ExecutionDAOFacade instead.");
-    }
-
-    /**
-     * This is a dummy implementation and this feature is not implemented
-     * for Cassandra backed Conductor
-     */
-    @Override
     public List<Workflow> getWorkflowsByCorrelationId(String workflowName, String correlationId, boolean includeTasks) {
         throw new UnsupportedOperationException("This method is not implemented in CassandraExecutionDAO. Please use ExecutionDAOFacade instead.");
     }
