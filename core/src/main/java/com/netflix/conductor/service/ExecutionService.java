@@ -350,7 +350,7 @@ public class ExecutionService {
 				// including tasks for subset of workflows to increase performance
 				if (includeTasks) {
 					List<Task> tasks = executionDAOFacade.getTasksForWorkflow(wf.getWorkflowId());
-					tasks.sort(Comparator.comparingLong(Task::getScheduledTime).thenComparingInt(Task::getSeq));
+					tasks.sort(Comparator.comparingInt(Task::getSeq));
 					wf.setTasks(tasks);
 				}
 				return true;
