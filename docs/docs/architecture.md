@@ -20,7 +20,11 @@ Follow the steps below to quickly bring up a local Conductor instance backed by 
 ```
 git clone git@github.com:Netflix/conductor.git
 ```
+
 #### Start Local Server
+
+The server is in the directory `conductor/server`.
+
 ```shell
 cd server
 ../gradlew server
@@ -29,10 +33,20 @@ cd server
 Swagger APIs can be accessed at [http://localhost:8080/](http://localhost:8080/)
 
 #### Start UI Server
+
+The UI Server is in the directory `conductor/ui`.
+
+To run it, you need [Node.js](https://nodejs.org) installed and gulp installed with `npm i -g gulp`.
+
+In a terminal other than the one running the Conductor server: 
+
 ```shell
 cd ui
+npm i
 gulp watch
 ```
+
+If you get an error message `ReferenceError: primordials is not defined`, you need to use an earlier version of Node (pre-12). See [this issue for more details](https://github.com/Netflix/conductor/issues/1232).
 
 #### Or Start all the services using [docker-compose](https://github.com/Netflix/conductor/blob/master/docker/docker-compose.yaml)
 
@@ -44,7 +58,7 @@ docker-compose up
 If you ran it locally, launch UI at [http://localhost:3000/](http://localhost:3000/) OR if you ran it using docker-compose launch the UI at [http://localhost:5000/](http://localhost:5000/)
 
 !!! Note
-	The server will load a sample kitchensink workflow definition by default.  See [here](/labs/kitchensink/) for details.
+	The server will load a sample kitchensink workflow definition by default.  See [here](../labs/kitchensink/) for details.
 
 ## Runtime Model
 Conductor follows RPC based communication model where workers are running on a separate machine from the server. Workers communicate with server over HTTP based endpoints and employs polling model for managing work queues.

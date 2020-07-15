@@ -27,6 +27,7 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
@@ -66,6 +67,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -127,7 +129,7 @@ public class TestElasticSearchRestDAOV5 {
 
         restClient.performRequest("GET", "/_cluster/health", params);
 
-        objectMapper = new ObjectMapper();
+        objectMapper = new JsonMapperProvider().get();
         indexDAO = new ElasticSearchRestDAOV5(restClient, configuration, objectMapper);
     }
 
@@ -302,7 +304,7 @@ public class TestElasticSearchRestDAOV5 {
     @Test
     public void testSearchArchivableWorkflows() throws IOException {
         String workflowId = "search-workflow-id";
-        Long time = DateTime.now().minusDays(7).toDate().getTime();
+        Long time = DateTime.now(DateTimeZone.UTC).minusDays(7).toDate().getTime();
 
         workflow.setWorkflowId(workflowId);
         workflow.setStatus(Workflow.WorkflowStatus.COMPLETED);
@@ -434,7 +436,7 @@ public class TestElasticSearchRestDAOV5 {
 
         restClient.performRequest("GET", "/_cluster/health", params);
 
-        objectMapper = new ObjectMapper();
+        objectMapper = new JsonMapperProvider().get();
         indexDAO = new ElasticSearchRestDAOV5(restClient, configuration, objectMapper);
     }
 

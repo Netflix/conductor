@@ -32,30 +32,23 @@
                 "com.amazonaws:aws-java-sdk-s3"
             ]
         },
-        "com.carrotsearch:hppc": {
-            "locked": "0.7.1",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -64,40 +57,15 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.6.6",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
-            ]
-        },
-        "com.github.spullara.mustache.java:compiler": {
-            "locked": "0.9.3",
-            "transitive": [
-                "org.elasticsearch.plugin:lang-mustache-client"
             ]
         },
         "com.github.vmg.protogen:protogen-annotations": {
@@ -172,29 +140,10 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "com.tdunning:t-digest": {
-            "locked": "3.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
         "commons-codec:commons-codec": {
-            "locked": "1.10",
+            "locked": "1.9",
             "transitive": [
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "commons-io:commons-io": {
@@ -205,68 +154,12 @@
             "locked": "1.2",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
-        "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -280,14 +173,14 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.8.1",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -302,10 +195,11 @@
                 "com.jayway.jsonpath:json-path"
             ]
         },
-        "net.sf.jopt-simple:jopt-simple": {
-            "locked": "5.0.2",
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -315,285 +209,34 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "org.apache.httpcomponents:httpasyncclient": {
-            "locked": "4.1.2",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
         "org.apache.httpcomponents:httpclient": {
             "locked": "4.5.2",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "org.apache.httpcomponents:httpcore": {
-            "locked": "4.4.5",
+            "locked": "4.4.4",
             "transitive": [
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
-        "org.apache.httpcomponents:httpcore-nio": {
-            "locked": "4.4.5",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.9.1",
             "requested": "2.9.1",
             "transitive": [
-                "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
-                "org.elasticsearch:elasticsearch"
+                "org.apache.logging.log4j:log4j-core"
             ]
         },
         "org.apache.logging.log4j:log4j-core": {
             "locked": "2.9.1",
-            "requested": "2.9.1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "org.apache.lucene:lucene-analyzers-common": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-backward-codecs": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-core": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-grouping": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-highlighter": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-join": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-memory": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-misc": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-queries": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-queryparser": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-sandbox": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial-extras": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial3d": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-suggest": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.elasticsearch.client:elasticsearch-rest-client": {
-            "locked": "6.5.1",
-            "requested": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.plugin:reindex-client"
-            ]
-        },
-        "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "6.5.1",
-            "requested": "6.5.1"
-        },
-        "org.elasticsearch.client:transport": {
-            "locked": "6.5.1",
-            "requested": "6.5.1"
-        },
-        "org.elasticsearch.plugin:aggs-matrix-stats-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client"
-            ]
-        },
-        "org.elasticsearch.plugin:lang-mustache-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:parent-join-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:percolator-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:reindex-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:transport-netty3-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:transport-netty4-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "6.5.1",
-            "requested": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
+            "requested": "2.9.1"
         },
         "org.glassfish:javax.el": {
             "locked": "3.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.hdrhistogram:HdrHistogram": {
-            "locked": "2.1.9",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "org.ow2.asm:asm": {
@@ -609,12 +252,6 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api"
-            ]
-        },
-        "org.yaml:snakeyaml": {
-            "locked": "1.15",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
             ]
         },
         "software.amazon.ion:ion-java": {
@@ -664,23 +301,23 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -689,28 +326,22 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -798,21 +429,9 @@
             ]
         },
         "com.tdunning:t-digest": {
-            "locked": "3.0",
+            "locked": "3.2",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "commons-codec:commons-codec": {
@@ -834,50 +453,44 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
         "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
@@ -885,13 +498,6 @@
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -905,11 +511,12 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.10.1",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "org.elasticsearch:elasticsearch"
@@ -930,7 +537,14 @@
         "net.sf.jopt-simple:jopt-simple": {
             "locked": "5.0.2",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-cli"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -967,31 +581,386 @@
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
+            "locked": "2.11.1",
             "requested": "2.9.1",
             "transitive": [
                 "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "org.apache.logging.log4j:log4j-core": {
             "locked": "2.9.1",
-            "requested": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.apache.lucene:lucene-analyzers-common": {
+            "locked": "7.5.0",
             "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-backward-codecs": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-core": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-grouping": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-highlighter": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-join": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-memory": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-misc": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-queries": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-queryparser": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-sandbox": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-spatial": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-spatial-extras": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-spatial3d": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.apache.lucene:lucene-suggest": {
+            "locked": "7.5.0",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch.client:elasticsearch-rest-client": {
+            "locked": "6.5.1",
+            "requested": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
+                "org.elasticsearch.plugin:reindex-client"
+            ]
+        },
+        "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
+            "locked": "6.5.1",
+            "requested": "6.5.1"
+        },
+        "org.elasticsearch.client:transport": {
+            "locked": "6.5.1",
+            "requested": "6.5.1"
+        },
+        "org.elasticsearch.plugin:aggs-matrix-stats-client": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client"
+            ]
+        },
+        "org.elasticsearch.plugin:lang-mustache-client": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch.plugin:parent-join-client": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch.plugin:percolator-client": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch.plugin:rank-eval-client": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch.plugin:reindex-client": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch.plugin:transport-netty4-client": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch:elasticsearch": {
+            "locked": "6.5.1",
+            "requested": "6.5.1",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-cli": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-core": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch",
+                "org.elasticsearch:elasticsearch-cli",
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-secure-sm": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-x-content": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:jna": {
+            "locked": "4.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.hdrhistogram:HdrHistogram": {
+            "locked": "2.1.9",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.ow2.asm:asm": {
+            "locked": "5.0.3",
+            "transitive": [
+                "net.minidev:accessors-smart"
+            ]
+        },
+        "org.slf4j:slf4j-api": {
+            "locked": "1.7.25",
+            "transitive": [
+                "com.jayway.jsonpath:json-path",
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.servo:servo-core",
+                "com.netflix.spectator:spectator-api"
+            ]
+        },
+        "org.yaml:snakeyaml": {
+            "locked": "1.17",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "software.amazon.ion:ion-java": {
+            "locked": "1.0.1",
+            "transitive": [
+                "com.amazonaws:aws-java-sdk-core"
+            ]
+        }
+    },
+    "compileOnly": {
+        "com.carrotsearch:hppc": {
+            "locked": "0.7.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.8.11",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
+            "locked": "2.8.11",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
+            "locked": "2.8.11",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
+            "locked": "2.8.11",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "com.github.spullara.mustache.java:compiler": {
+            "locked": "0.9.3",
+            "transitive": [
+                "org.elasticsearch.plugin:lang-mustache-client"
+            ]
+        },
+        "com.tdunning:t-digest": {
+            "locked": "3.2",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "commons-codec:commons-codec": {
+            "locked": "1.10",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "commons-logging:commons-logging": {
+            "locked": "1.1.3",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "io.netty:netty-buffer": {
+            "locked": "4.1.30.Final",
+            "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-codec": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-codec-http": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-common": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-handler": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-resolver": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-transport": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "joda-time:joda-time": {
+            "locked": "2.10.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "net.sf.jopt-simple:jopt-simple": {
+            "locked": "5.0.2",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-cli"
+            ]
+        },
+        "org.apache.httpcomponents:httpasyncclient": {
+            "locked": "4.1.2",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "org.apache.httpcomponents:httpclient": {
+            "locked": "4.5.2",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "org.apache.httpcomponents:httpcore": {
+            "locked": "4.4.5",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "org.apache.httpcomponents:httpcore-nio": {
+            "locked": "4.4.5",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.11.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
             ]
         },
         "org.apache.lucene:lucene-analyzers-common": {
@@ -1109,6 +1078,7 @@
         "org.elasticsearch.plugin:lang-mustache-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
@@ -1125,13 +1095,14 @@
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:reindex-client": {
+        "org.elasticsearch.plugin:rank-eval-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:transport-netty3-client": {
+        "org.elasticsearch.plugin:reindex-client": {
             "locked": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:transport"
@@ -1148,40 +1119,39 @@
             "requested": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-cli": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-core": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch",
+                "org.elasticsearch:elasticsearch-cli",
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-secure-sm": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-x-content": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
             ]
         },
         "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
+            "locked": "4.5.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.glassfish:javax.el": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.hdrhistogram:HdrHistogram": {
@@ -1190,62 +1160,10 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "org.ow2.asm:asm": {
-            "locked": "5.0.3",
-            "transitive": [
-                "net.minidev:accessors-smart"
-            ]
-        },
-        "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
-            "transitive": [
-                "com.jayway.jsonpath:json-path",
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.servo:servo-core",
-                "com.netflix.spectator:spectator-api"
-            ]
-        },
         "org.yaml:snakeyaml": {
-            "locked": "1.15",
+            "locked": "1.17",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "software.amazon.ion:ion-java": {
-            "locked": "1.0.1",
-            "transitive": [
-                "com.amazonaws:aws-java-sdk-core"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         }
     },
@@ -1282,30 +1200,23 @@
                 "com.amazonaws:aws-java-sdk-s3"
             ]
         },
-        "com.carrotsearch:hppc": {
-            "locked": "0.7.1",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -1314,40 +1225,15 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.6.6",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
-            ]
-        },
-        "com.github.spullara.mustache.java:compiler": {
-            "locked": "0.9.3",
-            "transitive": [
-                "org.elasticsearch.plugin:lang-mustache-client"
             ]
         },
         "com.github.vmg.protogen:protogen-annotations": {
@@ -1422,29 +1308,10 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "com.tdunning:t-digest": {
-            "locked": "3.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
         "commons-codec:commons-codec": {
-            "locked": "1.10",
+            "locked": "1.9",
             "transitive": [
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "commons-io:commons-io": {
@@ -1455,68 +1322,12 @@
             "locked": "1.2",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
-        "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -1530,14 +1341,14 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.8.1",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -1552,10 +1363,11 @@
                 "com.jayway.jsonpath:json-path"
             ]
         },
-        "net.sf.jopt-simple:jopt-simple": {
-            "locked": "5.0.2",
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -1565,285 +1377,34 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "org.apache.httpcomponents:httpasyncclient": {
-            "locked": "4.1.2",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
         "org.apache.httpcomponents:httpclient": {
             "locked": "4.5.2",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "org.apache.httpcomponents:httpcore": {
-            "locked": "4.4.5",
+            "locked": "4.4.4",
             "transitive": [
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
-        "org.apache.httpcomponents:httpcore-nio": {
-            "locked": "4.4.5",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.9.1",
             "requested": "2.9.1",
             "transitive": [
-                "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
-                "org.elasticsearch:elasticsearch"
+                "org.apache.logging.log4j:log4j-core"
             ]
         },
         "org.apache.logging.log4j:log4j-core": {
             "locked": "2.9.1",
-            "requested": "2.9.1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "org.apache.lucene:lucene-analyzers-common": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-backward-codecs": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-core": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-grouping": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-highlighter": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-join": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-memory": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-misc": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-queries": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-queryparser": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-sandbox": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial-extras": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial3d": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-suggest": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.elasticsearch.client:elasticsearch-rest-client": {
-            "locked": "6.5.1",
-            "requested": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.plugin:reindex-client"
-            ]
-        },
-        "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "6.5.1",
-            "requested": "6.5.1"
-        },
-        "org.elasticsearch.client:transport": {
-            "locked": "6.5.1",
-            "requested": "6.5.1"
-        },
-        "org.elasticsearch.plugin:aggs-matrix-stats-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client"
-            ]
-        },
-        "org.elasticsearch.plugin:lang-mustache-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:parent-join-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:percolator-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:reindex-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:transport-netty3-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:transport-netty4-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "6.5.1",
-            "requested": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
+            "requested": "2.9.1"
         },
         "org.glassfish:javax.el": {
             "locked": "3.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.hdrhistogram:HdrHistogram": {
-            "locked": "2.1.9",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "org.ow2.asm:asm": {
@@ -1859,12 +1420,6 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api"
-            ]
-        },
-        "org.yaml:snakeyaml": {
-            "locked": "1.15",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
             ]
         },
         "software.amazon.ion:ion-java": {
@@ -1970,30 +1525,23 @@
                 "com.amazonaws:aws-java-sdk-s3"
             ]
         },
-        "com.carrotsearch:hppc": {
-            "locked": "0.7.1",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -2002,40 +1550,15 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.6.6",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
-            ]
-        },
-        "com.github.spullara.mustache.java:compiler": {
-            "locked": "0.9.3",
-            "transitive": [
-                "org.elasticsearch.plugin:lang-mustache-client"
             ]
         },
         "com.github.vmg.protogen:protogen-annotations": {
@@ -2110,29 +1633,10 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "com.tdunning:t-digest": {
-            "locked": "3.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
         "commons-codec:commons-codec": {
-            "locked": "1.10",
+            "locked": "1.9",
             "transitive": [
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "commons-io:commons-io": {
@@ -2143,68 +1647,12 @@
             "locked": "1.2",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
-        "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -2218,14 +1666,14 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.8.1",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -2240,10 +1688,11 @@
                 "com.jayway.jsonpath:json-path"
             ]
         },
-        "net.sf.jopt-simple:jopt-simple": {
-            "locked": "5.0.2",
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -2253,285 +1702,34 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "org.apache.httpcomponents:httpasyncclient": {
-            "locked": "4.1.2",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
         "org.apache.httpcomponents:httpclient": {
             "locked": "4.5.2",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "org.apache.httpcomponents:httpcore": {
-            "locked": "4.4.5",
+            "locked": "4.4.4",
             "transitive": [
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
-        "org.apache.httpcomponents:httpcore-nio": {
-            "locked": "4.4.5",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.9.1",
             "requested": "2.9.1",
             "transitive": [
-                "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
-                "org.elasticsearch:elasticsearch"
+                "org.apache.logging.log4j:log4j-core"
             ]
         },
         "org.apache.logging.log4j:log4j-core": {
             "locked": "2.9.1",
-            "requested": "2.9.1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "org.apache.lucene:lucene-analyzers-common": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-backward-codecs": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-core": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-grouping": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-highlighter": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-join": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-memory": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-misc": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-queries": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-queryparser": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-sandbox": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial-extras": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-spatial3d": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.lucene:lucene-suggest": {
-            "locked": "7.5.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.elasticsearch.client:elasticsearch-rest-client": {
-            "locked": "6.5.1",
-            "requested": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.plugin:reindex-client"
-            ]
-        },
-        "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
-            "locked": "6.5.1",
-            "requested": "6.5.1"
-        },
-        "org.elasticsearch.client:transport": {
-            "locked": "6.5.1",
-            "requested": "6.5.1"
-        },
-        "org.elasticsearch.plugin:aggs-matrix-stats-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client"
-            ]
-        },
-        "org.elasticsearch.plugin:lang-mustache-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:parent-join-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:percolator-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:reindex-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:transport-netty3-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch.plugin:transport-netty4-client": {
-            "locked": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:transport"
-            ]
-        },
-        "org.elasticsearch:elasticsearch": {
-            "locked": "6.5.1",
-            "requested": "6.5.1",
-            "transitive": [
-                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
+            "requested": "2.9.1"
         },
         "org.glassfish:javax.el": {
             "locked": "3.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.hdrhistogram:HdrHistogram": {
-            "locked": "2.1.9",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "org.ow2.asm:asm": {
@@ -2547,12 +1745,6 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api"
-            ]
-        },
-        "org.yaml:snakeyaml": {
-            "locked": "1.15",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
             ]
         },
         "software.amazon.ion:ion-java": {
@@ -2595,30 +1787,23 @@
                 "com.amazonaws:aws-java-sdk-s3"
             ]
         },
-        "com.carrotsearch:hppc": {
-            "locked": "0.7.1",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -2627,40 +1812,15 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.6.6",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
-            ]
-        },
-        "com.github.spullara.mustache.java:compiler": {
-            "locked": "0.9.3",
-            "transitive": [
-                "org.elasticsearch.plugin:lang-mustache-client"
             ]
         },
         "com.github.vmg.protogen:protogen-annotations": {
@@ -2735,29 +1895,10 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
-        "com.tdunning:t-digest": {
-            "locked": "3.0",
-            "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
         "commons-codec:commons-codec": {
-            "locked": "1.10",
+            "locked": "1.9",
             "transitive": [
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "commons-io:commons-io": {
@@ -2768,68 +1909,12 @@
             "locked": "1.2",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client"
-            ]
-        },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
-        "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.apache.httpcomponents:httpclient"
             ]
         },
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -2843,14 +1928,14 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.8.1",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "com.amazonaws:aws-java-sdk-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -2865,10 +1950,11 @@
                 "com.jayway.jsonpath:json-path"
             ]
         },
-        "net.sf.jopt-simple:jopt-simple": {
-            "locked": "5.0.2",
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -2876,6 +1962,167 @@
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.apache.httpcomponents:httpclient": {
+            "locked": "4.5.2",
+            "transitive": [
+                "com.amazonaws:aws-java-sdk-core"
+            ]
+        },
+        "org.apache.httpcomponents:httpcore": {
+            "locked": "4.4.4",
+            "transitive": [
+                "org.apache.httpcomponents:httpclient"
+            ]
+        },
+        "org.apache.logging.log4j:log4j-api": {
+            "locked": "2.9.1",
+            "requested": "2.9.1",
+            "transitive": [
+                "org.apache.logging.log4j:log4j-core"
+            ]
+        },
+        "org.apache.logging.log4j:log4j-core": {
+            "locked": "2.9.1",
+            "requested": "2.9.1"
+        },
+        "org.glassfish:javax.el": {
+            "locked": "3.0.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.ow2.asm:asm": {
+            "locked": "5.0.3",
+            "transitive": [
+                "net.minidev:accessors-smart"
+            ]
+        },
+        "org.slf4j:slf4j-api": {
+            "locked": "1.7.25",
+            "transitive": [
+                "com.jayway.jsonpath:json-path",
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.servo:servo-core",
+                "com.netflix.spectator:spectator-api"
+            ]
+        },
+        "software.amazon.ion:ion-java": {
+            "locked": "1.0.1",
+            "transitive": [
+                "com.amazonaws:aws-java-sdk-core"
+            ]
+        }
+    },
+    "shadow": {
+        "com.carrotsearch:hppc": {
+            "locked": "0.7.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "com.fasterxml.jackson.core:jackson-core": {
+            "locked": "2.8.11",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
+            "locked": "2.8.11",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
+            "locked": "2.8.11",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
+            "locked": "2.8.11",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "com.github.spullara.mustache.java:compiler": {
+            "locked": "0.9.3",
+            "transitive": [
+                "org.elasticsearch.plugin:lang-mustache-client"
+            ]
+        },
+        "com.tdunning:t-digest": {
+            "locked": "3.2",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "commons-codec:commons-codec": {
+            "locked": "1.10",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "commons-logging:commons-logging": {
+            "locked": "1.1.3",
+            "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "io.netty:netty-buffer": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-codec": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-codec-http": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-common": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-handler": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-resolver": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "io.netty:netty-transport": {
+            "locked": "4.1.30.Final",
+            "transitive": [
+                "org.elasticsearch.plugin:transport-netty4-client"
+            ]
+        },
+        "joda-time:joda-time": {
+            "locked": "2.10.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "net.sf.jopt-simple:jopt-simple": {
+            "locked": "5.0.2",
+            "transitive": [
+                "org.elasticsearch:elasticsearch-cli"
             ]
         },
         "org.apache.httpcomponents:httpasyncclient": {
@@ -2887,14 +2134,12 @@
         "org.apache.httpcomponents:httpclient": {
             "locked": "4.5.2",
             "transitive": [
-                "com.amazonaws:aws-java-sdk-core",
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
         "org.apache.httpcomponents:httpcore": {
             "locked": "4.4.5",
             "transitive": [
-                "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
@@ -2905,31 +2150,9 @@
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
-            "requested": "2.9.1",
+            "locked": "2.11.1",
             "transitive": [
-                "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.9.1",
-            "requested": "2.9.1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "org.apache.lucene:lucene-analyzers-common": {
@@ -3047,6 +2270,7 @@
         "org.elasticsearch.plugin:lang-mustache-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
@@ -3063,13 +2287,14 @@
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:reindex-client": {
+        "org.elasticsearch.plugin:rank-eval-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:transport-netty3-client": {
+        "org.elasticsearch.plugin:reindex-client": {
             "locked": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:transport"
@@ -3086,40 +2311,39 @@
             "requested": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.client:transport"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-cli": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-core": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch",
+                "org.elasticsearch:elasticsearch-cli",
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-secure-sm": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-x-content": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
             ]
         },
         "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
+            "locked": "4.5.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "org.glassfish:javax.el": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.hdrhistogram:HdrHistogram": {
@@ -3128,62 +2352,10 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
-        "org.ow2.asm:asm": {
-            "locked": "5.0.3",
-            "transitive": [
-                "net.minidev:accessors-smart"
-            ]
-        },
-        "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
-            "transitive": [
-                "com.jayway.jsonpath:json-path",
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.servo:servo-core",
-                "com.netflix.spectator:spectator-api"
-            ]
-        },
         "org.yaml:snakeyaml": {
-            "locked": "1.15",
+            "locked": "1.17",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "software.amazon.ion:ion-java": {
-            "locked": "1.0.1",
-            "transitive": [
-                "com.amazonaws:aws-java-sdk-core"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         }
     },
@@ -3227,23 +2399,23 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -3252,28 +2424,22 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -3361,21 +2527,9 @@
             ]
         },
         "com.tdunning:t-digest": {
-            "locked": "3.0",
+            "locked": "3.2",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "commons-codec:commons-codec": {
@@ -3397,50 +2551,44 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
         "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
@@ -3448,13 +2596,6 @@
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -3468,11 +2609,12 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.10.1",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "org.elasticsearch:elasticsearch"
@@ -3486,6 +2628,18 @@
             "locked": "1.2.17",
             "transitive": [
                 "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -3503,7 +2657,14 @@
         "net.sf.jopt-simple:jopt-simple": {
             "locked": "5.0.2",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-cli"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -3540,32 +2701,16 @@
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
+            "locked": "2.11.1",
             "requested": "2.9.1",
             "transitive": [
                 "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "org.apache.logging.log4j:log4j-core": {
             "locked": "2.9.1",
-            "requested": "2.9.1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
+            "requested": "2.9.1"
         },
         "org.apache.lucene:lucene-analyzers-common": {
             "locked": "7.5.0",
@@ -3686,6 +2831,7 @@
         "org.elasticsearch.plugin:lang-mustache-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
@@ -3702,13 +2848,14 @@
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:reindex-client": {
+        "org.elasticsearch.plugin:rank-eval-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:transport-netty3-client": {
+        "org.elasticsearch.plugin:reindex-client": {
             "locked": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:transport"
@@ -3725,31 +2872,37 @@
             "requested": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
+        "org.elasticsearch:elasticsearch-cli": {
+            "locked": "6.5.1",
             "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
+        "org.elasticsearch:elasticsearch-core": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch",
+                "org.elasticsearch:elasticsearch-cli",
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-secure-sm": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-x-content": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:jna": {
+            "locked": "4.5.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
             ]
@@ -3781,40 +2934,9 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
             "locked": "2.6",
@@ -3844,9 +2966,9 @@
             "requested": "1.8.0-alpha1"
         },
         "org.yaml:snakeyaml": {
-            "locked": "1.15",
+            "locked": "1.17",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "software.amazon.ion:ion-java": {
@@ -3896,23 +3018,23 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -3921,28 +3043,22 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -4030,21 +3146,9 @@
             ]
         },
         "com.tdunning:t-digest": {
-            "locked": "3.0",
+            "locked": "3.2",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "commons-codec:commons-codec": {
@@ -4066,50 +3170,44 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
         "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
@@ -4117,13 +3215,6 @@
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -4137,11 +3228,12 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.10.1",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "org.elasticsearch:elasticsearch"
@@ -4155,6 +3247,18 @@
             "locked": "1.2.17",
             "transitive": [
                 "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -4172,7 +3276,14 @@
         "net.sf.jopt-simple:jopt-simple": {
             "locked": "5.0.2",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-cli"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -4209,32 +3320,16 @@
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
+            "locked": "2.11.1",
             "requested": "2.9.1",
             "transitive": [
                 "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "org.apache.logging.log4j:log4j-core": {
             "locked": "2.9.1",
-            "requested": "2.9.1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
+            "requested": "2.9.1"
         },
         "org.apache.lucene:lucene-analyzers-common": {
             "locked": "7.5.0",
@@ -4355,6 +3450,7 @@
         "org.elasticsearch.plugin:lang-mustache-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
@@ -4371,13 +3467,14 @@
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:reindex-client": {
+        "org.elasticsearch.plugin:rank-eval-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:transport-netty3-client": {
+        "org.elasticsearch.plugin:reindex-client": {
             "locked": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:transport"
@@ -4394,31 +3491,37 @@
             "requested": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
+        "org.elasticsearch:elasticsearch-cli": {
+            "locked": "6.5.1",
             "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
+        "org.elasticsearch:elasticsearch-core": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch",
+                "org.elasticsearch:elasticsearch-cli",
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-secure-sm": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-x-content": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:jna": {
+            "locked": "4.5.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
             ]
@@ -4450,40 +3553,9 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
             "locked": "2.6",
@@ -4513,9 +3585,9 @@
             "requested": "1.8.0-alpha1"
         },
         "org.yaml:snakeyaml": {
-            "locked": "1.15",
+            "locked": "1.17",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "software.amazon.ion:ion-java": {
@@ -4565,23 +3637,23 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -4590,28 +3662,22 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -4699,21 +3765,9 @@
             ]
         },
         "com.tdunning:t-digest": {
-            "locked": "3.0",
+            "locked": "3.2",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "commons-codec:commons-codec": {
@@ -4735,50 +3789,44 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
         "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
@@ -4786,13 +3834,6 @@
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -4806,11 +3847,12 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.10.1",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "org.elasticsearch:elasticsearch"
@@ -4824,6 +3866,18 @@
             "locked": "1.2.17",
             "transitive": [
                 "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -4841,7 +3895,14 @@
         "net.sf.jopt-simple:jopt-simple": {
             "locked": "5.0.2",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-cli"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -4878,32 +3939,16 @@
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
+            "locked": "2.11.1",
             "requested": "2.9.1",
             "transitive": [
                 "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "org.apache.logging.log4j:log4j-core": {
             "locked": "2.9.1",
-            "requested": "2.9.1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
+            "requested": "2.9.1"
         },
         "org.apache.lucene:lucene-analyzers-common": {
             "locked": "7.5.0",
@@ -5024,6 +4069,7 @@
         "org.elasticsearch.plugin:lang-mustache-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
@@ -5040,13 +4086,14 @@
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:reindex-client": {
+        "org.elasticsearch.plugin:rank-eval-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:transport-netty3-client": {
+        "org.elasticsearch.plugin:reindex-client": {
             "locked": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:transport"
@@ -5063,31 +4110,37 @@
             "requested": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
+        "org.elasticsearch:elasticsearch-cli": {
+            "locked": "6.5.1",
             "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
+        "org.elasticsearch:elasticsearch-core": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch",
+                "org.elasticsearch:elasticsearch-cli",
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-secure-sm": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-x-content": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:jna": {
+            "locked": "4.5.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
             ]
@@ -5119,40 +4172,9 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
             "locked": "2.6",
@@ -5182,9 +4204,9 @@
             "requested": "1.8.0-alpha1"
         },
         "org.yaml:snakeyaml": {
-            "locked": "1.15",
+            "locked": "1.17",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "software.amazon.ion:ion-java": {
@@ -5234,23 +4256,23 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.8.6",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
@@ -5259,28 +4281,22 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-smile": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.8.11",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -5368,21 +4384,9 @@
             ]
         },
         "com.tdunning:t-digest": {
-            "locked": "3.0",
+            "locked": "3.2",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
-            ]
-        },
-        "com.vividsolutions:jts": {
-            "locked": "1.13",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "commons-codec:commons-codec": {
@@ -5404,50 +4408,44 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
-        "io.netty:netty": {
-            "locked": "3.10.6.Final",
-            "transitive": [
-                "org.elasticsearch.plugin:transport-netty3-client"
-            ]
-        },
         "io.netty:netty-buffer": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-codec-http": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
         "io.netty:netty-transport": {
-            "locked": "4.1.13.Final",
+            "locked": "4.1.30.Final",
             "transitive": [
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
@@ -5455,13 +4453,6 @@
         "io.reactivex:rxjava": {
             "locked": "1.2.2",
             "transitive": [
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -5475,11 +4466,12 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
-            "locked": "2.9.5",
+            "locked": "2.10.1",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "org.elasticsearch:elasticsearch"
@@ -5493,6 +4485,18 @@
             "locked": "1.2.17",
             "transitive": [
                 "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -5510,7 +4514,14 @@
         "net.sf.jopt-simple:jopt-simple": {
             "locked": "5.0.2",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-cli"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "org.apache.commons:commons-lang3": {
@@ -5547,32 +4558,16 @@
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.9.1",
+            "locked": "2.11.1",
             "requested": "2.9.1",
             "transitive": [
                 "org.apache.logging.log4j:log4j-core",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "org.apache.logging.log4j:log4j-core": {
             "locked": "2.9.1",
-            "requested": "2.9.1",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
+            "requested": "2.9.1"
         },
         "org.apache.lucene:lucene-analyzers-common": {
             "locked": "7.5.0",
@@ -5693,6 +4688,7 @@
         "org.elasticsearch.plugin:lang-mustache-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
@@ -5709,13 +4705,14 @@
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:reindex-client": {
+        "org.elasticsearch.plugin:rank-eval-client": {
             "locked": "6.5.1",
             "transitive": [
+                "org.elasticsearch.client:elasticsearch-rest-high-level-client",
                 "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch.plugin:transport-netty3-client": {
+        "org.elasticsearch.plugin:reindex-client": {
             "locked": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:transport"
@@ -5732,31 +4729,37 @@
             "requested": "6.5.1",
             "transitive": [
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
-                "org.elasticsearch.client:transport",
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.client:transport"
             ]
         },
-        "org.elasticsearch:jna": {
-            "locked": "4.4.0-1",
+        "org.elasticsearch:elasticsearch-cli": {
+            "locked": "6.5.1",
             "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client",
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.elasticsearch:securesm": {
-            "locked": "1.2",
+        "org.elasticsearch:elasticsearch-core": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch",
+                "org.elasticsearch:elasticsearch-cli",
+                "org.elasticsearch:elasticsearch-x-content"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-secure-sm": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:elasticsearch-x-content": {
+            "locked": "6.5.1",
+            "transitive": [
+                "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.elasticsearch:jna": {
+            "locked": "4.5.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
             ]
@@ -5788,40 +4791,9 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ]
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
-        "org.locationtech.spatial4j:spatial4j": {
-            "locked": "0.6",
-            "transitive": [
-                "org.elasticsearch.plugin:aggs-matrix-stats-client",
-                "org.elasticsearch.plugin:lang-mustache-client",
-                "org.elasticsearch.plugin:parent-join-client",
-                "org.elasticsearch.plugin:percolator-client",
-                "org.elasticsearch.plugin:reindex-client",
-                "org.elasticsearch.plugin:transport-netty3-client",
-                "org.elasticsearch.plugin:transport-netty4-client"
-            ]
-        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
             "locked": "2.6",
@@ -5851,9 +4823,9 @@
             "requested": "1.8.0-alpha1"
         },
         "org.yaml:snakeyaml": {
-            "locked": "1.15",
+            "locked": "1.17",
             "transitive": [
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch-x-content"
             ]
         },
         "software.amazon.ion:ion-java": {

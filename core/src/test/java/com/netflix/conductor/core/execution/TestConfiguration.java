@@ -41,6 +41,16 @@ public class TestConfiguration implements Configuration {
 	}
 
 	@Override
+	public boolean isEventMessageIndexingEnabled() {
+		return true;
+	}
+
+	@Override
+	public boolean isEventExecutionIndexingEnabled() {
+		return true;
+	}
+
+	@Override
 	public String getServerId() {
 		return "server_id";
 	}

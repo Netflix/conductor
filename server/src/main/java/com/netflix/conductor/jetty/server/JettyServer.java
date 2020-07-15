@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.bootstrap.Main;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.service.Lifecycle;
 import com.sun.jersey.api.client.Client;
@@ -107,14 +108,19 @@ public class JettyServer implements Lifecycle {
 
     private static void createKitchenSink(int port) throws Exception {
         Client client = Client.create();
-        ObjectMapper objectMapper = new ObjectMapper();
-
+        ObjectMapper objectMapper = new JsonMapperProvider().get();
 
         List<TaskDef> taskDefs = new LinkedList<>();
+        TaskDef taskDef;
         for (int i = 0; i < 40; i++) {
-            taskDefs.add(new TaskDef("task_" + i, "task_" + i, 1, 0));
+            taskDef = new TaskDef("task_" + i, "task_" + i, 1, 0);
+            taskDef.setOwnerEmail("example@email.com");
+            taskDefs.add(taskDef);
         }
-        taskDefs.add(new TaskDef("search_elasticsearch", "search_elasticsearch", 1, 0));
+
+        taskDef = new TaskDef("search_elasticsearch", "search_elasticsearch", 1, 0);
+        taskDef.setOwnerEmail("example@email.com");
+        taskDefs.add(taskDef);
 
         client.resource("http://localhost:" + port + "/api/metadata/taskdefs").type(MediaType.APPLICATION_JSON).post(objectMapper.writeValueAsString(taskDefs));
 
