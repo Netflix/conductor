@@ -536,9 +536,9 @@ public class AMQPObservableQueue implements ObservableQueue {
 			if (useExchange) {
 				// Consume messages from an exchange
 				getOrCreateExchange();
-				// Declare an exclusive not durable with auto-delete queue
+				// Create queue if not present based on the settings
 				final AMQP.Queue.DeclareOk declareOk = getOrCreateQueue(
-						String.format("bound_to_%s", settings.getQueueOrExchangeName()), false, true, true,
+						String.format("bound_to_%s", settings.getQueueOrExchangeName()), settings.isDurable(), settings.isExclusive(), settings.autoDelete(),
 						Maps.newHashMap());
 				// Bind the declared queue to exchange
 				queueName = declareOk.getQueue();
