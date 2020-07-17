@@ -708,9 +708,19 @@ public class MySQLExecutionDAO extends MySQLBaseDAO implements ExecutionDAO, Rat
 
     private void insertOrUpdatePollData(Connection connection, PollData pollData, String domain) {
 
-        String INSERT_POLL_DATA = "INSERT INTO poll_data (queue_name, domain, json_data, modified_on) VALUES (?, ?, ?, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE json_data=VALUES(json_data), modified_on=VALUES(modified_on)";
-        execute(connection, INSERT_POLL_DATA, q -> q.addParameter(pollData.getQueueName()).addParameter(domain)
-                .addJsonParameter(pollData).executeUpdate());
+    	/*
+    	 * Most times the row will be updated so let's try the update first. This used to be an 'INSERT/ON DUPLICATE KEY update' sql statement. The problem with that
+    	 * is that if we try the INSERT first, the sequence will be increased even if the ON DUPLICATE KEY happens. Since polling happens *a lot*, the sequence can increase 
+    	 * dramatically even though it won't be used.
+    	 */
+        String UPDATE_POLL_DATA = "UPDATE poll_data SET json_data=?, modified_on=CURRENT_TIMESTAMP WHERE queue_name=? AND domain=?";
+        int rowsUpdated = query(connection, UPDATE_POLL_DATA, q -> q.addJsonParameter(pollData).addParameter(pollData.getQueueName()).addParameter(domain).executeUpdate());
+        
+       if(rowsUpdated == 0) {
+          String INSERT_POLL_DATA = "INSERT INTO poll_data (queue_name, domain, json_data, modified_on) VALUES (?, ?, ?, CURRENT_TIMESTAMP)";
+          execute(connection, INSERT_POLL_DATA, q -> q.addParameter(pollData.getQueueName()).addParameter(domain)
+                  .addJsonParameter(pollData).executeUpdate());
+        }
     }
 
     private PollData readPollData(Connection connection, String queueName, String domain) {
