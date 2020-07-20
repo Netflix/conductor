@@ -201,7 +201,11 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
 
         createQueueIfNotExists(connection, queueName);
 
-        if(!existsMessage(connection, queueName, messageId)) {
+        String UPDATE_MESSAGE = "UPDATE queue_message SET payload=?, deliver_on=? WHERE queue_name = ? AND message_id = ?";
+        int rowsUpdated = query(connection, UPDATE_MESSAGE, q -> q.addParameter(payload).addParameter(offsetTimeInSecond)
+        	.addParameter(queueName).addParameter(messageId).executeUpdate());
+        		
+        if(rowsUpdated == 0) {
             String PUSH_MESSAGE = "INSERT INTO queue_message (deliver_on, queue_name, message_id, priority, offset_time_seconds, payload) VALUES ((current_timestamp + (? ||' seconds')::interval), ?,?,?,?,?) ON CONFLICT (queue_name,message_id) DO UPDATE SET payload=excluded.payload, deliver_on=excluded.deliver_on";
 	        execute(connection, PUSH_MESSAGE, q -> q.addParameter(offsetTimeInSecond).addParameter(queueName)
 	                .addParameter(messageId).addParameter(priority).addParameter(offsetTimeInSecond)

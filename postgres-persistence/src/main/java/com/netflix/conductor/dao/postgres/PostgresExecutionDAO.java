@@ -635,10 +635,10 @@ public class PostgresExecutionDAO extends PostgresBaseDAO implements ExecutionDA
     @VisibleForTesting
     boolean addScheduledTask(Connection connection, Task task, String taskKey) {
 
-        final String EXISTS_SCHEDULED_TASK = "SELECT EXISTS(SELECT 1 FROM task_scheduled where workflow_id = ? AND task_key = ? AND task_id = ?)";
+        final String EXISTS_SCHEDULED_TASK = "SELECT EXISTS(SELECT 1 FROM task_scheduled where workflow_id = ? AND task_key = ?)";
 
         boolean exists = query(connection, EXISTS_SCHEDULED_TASK, q -> q.addParameter(task.getWorkflowInstanceId())
-                .addParameter(taskKey).addParameter(task.getTaskId()).exists());
+                .addParameter(taskKey).exists());
 
         if(!exists) {
             final String INSERT_IGNORE_SCHEDULED_TASK = "INSERT INTO task_scheduled (workflow_id, task_key, task_id) VALUES (?, ?, ?) ON CONFLICT (workflow_id,task_key) DO NOTHING";
@@ -647,7 +647,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO implements ExecutionDA
                     .addParameter(taskKey).addParameter(task.getTaskId()).executeUpdate());
             return count > 0;
         } else {
-        	return true;
+        	return false;
         }
 
     }
