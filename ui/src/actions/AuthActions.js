@@ -62,7 +62,7 @@ export function authLoginFailed(message) {
   };
 }
 
-export function authInfoSucceeded(name, preferredUsername, email, roles) {
+export function authInfoSucceeded(name, preferredUsername, email, roles,primary_role) {
   return dispatch => {
     dispatch({
       type: AUTH_INFO_SUCCEEDED,
@@ -71,7 +71,8 @@ export function authInfoSucceeded(name, preferredUsername, email, roles) {
           name: name,
           preferredUsername: preferredUsername,
           email: email,
-          roles: roles
+          roles: roles,
+          primary_role:primary_role
         },
       }
     });

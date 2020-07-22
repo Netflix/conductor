@@ -40,8 +40,14 @@ import com.netflix.conductor.core.events.EventProcessor;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.service.MetadataService;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
+import com.netflix.conductor.core.execution.ApplicationException;
+import com.netflix.conductor.core.execution.ApplicationException.Code;
+import com.netflix.conductor.core.config.Configuration;
+import org.apache.commons.collections.CollectionUtils;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 
 
 /**
@@ -58,51 +64,116 @@ public class EventResource {
 	private MetadataService service;
 	
 	private EventProcessor ep;
-	
+
+	private boolean auth_referer_bypass;
+
+	private WorkflowExecutor executor;
 	@Inject
-	public EventResource(MetadataService service, EventProcessor ep) {
+	public EventResource(MetadataService service, EventProcessor ep,Configuration config,WorkflowExecutor executor) {
 		this.service = service;
 		this.ep = ep;
+		this.executor = executor;
+		this.auth_referer_bypass = Boolean.parseBoolean(config.getProperty("workflow.auth.referer.bypass", "false"));
 	}
 
 	@POST
 	@ApiOperation("Add a new event handler.")
-	public void addEventHandler(EventHandler eventHandler) {
-		service.addEventHandler(eventHandler);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void addEventHandler(EventHandler eventHandler,@Context HttpHeaders headers) throws Exception {
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			service.addEventHandler(eventHandler);
+		} else {
+			service.addEventHandler(eventHandler);
+		}
 	}
 
 	@PUT
 	@ApiOperation("Update an existing event handler.")
-	public void updateEventHandler(EventHandler eventHandler) {
-		service.updateEventHandler(eventHandler);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void updateEventHandler(EventHandler eventHandler,@Context HttpHeaders headers) throws Exception {
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			service.updateEventHandler(eventHandler);
+		} else {
+			service.updateEventHandler(eventHandler);
+		}
 	}
 
 	@PUT
 	@Path("/{name}/disable")
 	@ApiOperation("Disable an event handler")
-	public void disable(@PathParam("name") String name) {
-		service.disableEventHandler(name);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void disable(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			service.disableEventHandler(name);
+		} else {
+			service.disableEventHandler(name);
+		}
 	}
 
 	@PUT
 	@Path("/{name}/enable")
 	@ApiOperation("Enable an event handler")
-	public void enable(@PathParam("name") String name) {
-		service.enableEventHandler(name);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void enable(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			service.enableEventHandler(name);
+		} else {
+			service.enableEventHandler(name);
+		}
 	}
 
 	@POST
 	@Path("/refresh")
 	@ApiOperation("Force conductor to refresh event handlers")
-	public void refresh() {
-		ep.refresh();
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void refresh(@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			ep.refresh();
+		} else {
+			ep.refresh();
+		}
 	}
 
 	@DELETE
 	@Path("/{name}")
 	@ApiOperation("Remove an event handler")
-	public void removeEventHandlerStatus(@PathParam("name") String name) {
-		service.removeEventHandlerStatus(name);
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public void removeEventHandlerStatus(@PathParam("name") String name,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			service.removeEventHandlerStatus(name);
+		} else {
+			service.removeEventHandlerStatus(name);
+		}
 	}
 
 	@GET
@@ -130,6 +201,17 @@ public class EventResource {
 	@ApiOperation("Get registered queue providers")
 	public List<String> getEventQueueProviders() {
 		return EventQueues.providers();
+	}
+
+
+	private boolean bypassAuth(HttpHeaders headers) {
+		if (!auth_referer_bypass)
+			return false;
+
+		List<String> strings = headers.getRequestHeader("Referer");
+		if (CollectionUtils.isEmpty(strings))
+			return false;
+		return strings.get(0).contains("/docs");
 	}
 	
 }
