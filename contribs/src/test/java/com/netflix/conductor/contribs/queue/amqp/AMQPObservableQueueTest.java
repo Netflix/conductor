@@ -311,6 +311,30 @@ public class AMQPObservableQueueTest {
 		testPublishMessagesToExchangeAndDefaultConfiguration(channel, connection, true, false);
 	}
 
+	@Test
+	public void testAck() throws IOException, TimeoutException {
+		// Mock channel and connection
+		Channel channel = mockBaseChannel();
+		Connection connection = mockGoodConnection(channel);
+		final Random random = new Random();
+
+		final String name = RandomStringUtils.randomAlphabetic(30), type = "topic",
+				routingKey = RandomStringUtils.randomAlphabetic(30);
+
+		final AMQPSettings settings = new AMQPSettings(configuration).fromURI("amqp_exchange:" + name + "?exchangeType="
+				+ type + "&routingKey=" + routingKey);
+		AMQPObservableQueue observableQueue = new AMQPObservableQueue(mockConnectionFactory(connection), addresses,
+				true, settings, batchSize, pollTimeMs);
+		List<Message> messages = new LinkedList<>();
+		Message msg = new Message();
+		msg.setId("0e3eef8f-ebb1-4244-9665-759ab5bdf433");
+		msg.setPayload("Payload");
+		msg.setReceipt("1");
+		messages.add(msg);
+		List<String> deliveredTags = observableQueue.ack(messages);
+		assertNotNull(deliveredTags);
+	}
+
 	private void testGetMessagesFromExchangeAndDefaultConfiguration(Channel channel, Connection connection,
 			boolean exists, boolean useWorkingChannel) throws IOException, TimeoutException {
 
