@@ -26,6 +26,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueues;
+import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ParametersUtils;
@@ -43,6 +44,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Singleton
 public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusListener {
@@ -116,6 +119,13 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			// Feed preProcessed map as defaults so that already processed for JQ engine
 			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
 			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, null, null, null);
+
+			String condition = (String) eventMap.get("condition");
+			if (isNotEmpty(condition) && !ScriptEvaluator.evalBool(condition, doc)) {
+				// skipping message due to condition
+				return;
+			}
+
 			sendMessage(doc, workflow.getTraceId(), workflow.getWorkflowId());
 		} catch (Exception ex) {
 			logger.debug("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
