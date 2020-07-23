@@ -29,7 +29,7 @@
     },
     "type" : "SUB_WORKFLOW",
     "subWorkflowParam": {
-      "name": "integration_test_wf"
+      "name": "sub_workflow"
     },
     "startDelay" : 0,
     "joinOn" : [ ],
