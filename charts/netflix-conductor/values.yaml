@@ -23,6 +23,7 @@ server:
       cpu: "250m"
   service:
     type: ClusterIP
+  probePath: /api/health
   ingress:
     annotations:
       fabric8.io/expose: "true"
