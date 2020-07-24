@@ -1604,7 +1604,7 @@ public class WorkflowExecutor {
             }
         } else {
             // On workflow retry or restart..
-            if (StringUtils.isBlank(parentDef.getFailureWorkflow()) && parentWorkflow.getStatus().isTerminal() && subWorkflowTask.getStatus().isTerminal()) {
+            if (parentWorkflow.getStatus().isTerminal() && subWorkflowTask.getStatus().isTerminal()) {
                 LOGGER.debug("Subworkflow: {} is {}, resetting failed parent workflow: {}, and Subworkflow task: {} status to IN_PROGRESS",
                         subWorkflow.getWorkflowId(), subWorkflow.getStatus().name(), parentWorkflow.getWorkflowId(), subWorkflow.getParentWorkflowTaskId());
                 subWorkflowTask.setStatus(IN_PROGRESS);
