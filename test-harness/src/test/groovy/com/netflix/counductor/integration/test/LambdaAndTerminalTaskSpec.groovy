@@ -49,12 +49,20 @@ class LambdaAndTerminalTaskSpec extends Specification {
     @Shared
     def  WORKFLOW_WITH_LAMBDA_TASK = 'test_lambda_wf'
 
+    @Shared
+    def PARENT_WORKFLOW_WITH_TERMINATE_TASK = 'test_terminate_task_parent_wf'
+
+    @Shared
+    def SUBWORKFLOW_FOR_TERMINATE_TEST = 'test_terminate_task_sub_wf'
+
     def setup() {
         workflowTestUtil.registerWorkflows(
                 'failure_workflow_for_terminate_task_workflow.json',
                 'terminate_task_completed_workflow_integration_test.json',
                 'terminate_task_failed_workflow_integration.json',
-                'simple_lambda_workflow_integration_test.json'
+                'simple_lambda_workflow_integration_test.json',
+                'terminate_task_parent_workflow.json',
+                'terminate_task_sub_workflow.json'
         )
     }
 
