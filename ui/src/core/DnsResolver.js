@@ -10,10 +10,18 @@ class DnsResolver {
     else
       dns.resolveSrv(host, (err, addresses) => {
         if (err) {
-          logger.error("Error: " + err);
+          logger.error("resolveSrv error: " + err);
           error({error: err})
         } else {
-          success(addresses);
+          let instance = addresses[0];
+          dns.resolve4(instance.name, (err2, ipaddress) => {
+            if (err2) {
+              logger.error("resolve4 error: " + err2);
+              error({error: err2})
+            } else {
+              success([{'name': ipaddress, 'port': instance.port}]);
+            }
+          });
         }
       });
   }
