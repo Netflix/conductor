@@ -91,11 +91,11 @@ spec:
           livenessProbe:
             initialDelaySeconds: 210
             httpGet:
-              path: /
+              path: {{ .Values.server.probePath }}
               port: server
           readinessProbe:
             httpGet:
-              path: /
+              path: {{ .Values.server.probePath }}
               port: server
             initialDelaySeconds: 120
             periodSeconds: 10
