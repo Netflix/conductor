@@ -17,6 +17,7 @@
 package com.netflix.counductor.integration.test
 
 import com.netflix.conductor.common.metadata.tasks.Task
+import com.netflix.conductor.common.metadata.tasks.TaskResult
 import com.netflix.conductor.common.run.Workflow
 import com.netflix.conductor.core.execution.WorkflowExecutor
 import com.netflix.conductor.service.ExecutionService
