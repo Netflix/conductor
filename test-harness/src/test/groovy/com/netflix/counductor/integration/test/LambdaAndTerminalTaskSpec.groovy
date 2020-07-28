@@ -118,6 +118,63 @@ class LambdaAndTerminalTaskSpec extends Specification {
         }
     }
 
+    def "Test workflow with a terminate task when the workflow has a subworkflow"() {
+        given: "workflow input"
+        def workflowInput = new HashMap()
+        workflowInput['a'] = 1
+
+        when: "Start the workflow which has the terminate task"
+        def workflowInstanceId = workflowExecutor.startWorkflow(PARENT_WORKFLOW_WITH_TERMINATE_TASK, 1,
+                '', workflowInput, null, null, null)
+
+        then: "verify that the workflow has started and the tasks are as expected"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 6
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[0].taskType == 'FORK'
+            tasks[1].status == Task.Status.COMPLETED
+            tasks[1].taskType == 'LAMBDA'
+            tasks[1].referenceTaskName == 'lambdaTask1'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].taskType == 'LAMBDA'
+            tasks[2].referenceTaskName == 'lambdaTask2'
+            tasks[3].status == Task.Status.IN_PROGRESS
+            tasks[3].taskType == 'JOIN'
+            tasks[4].status == Task.Status.IN_PROGRESS
+            tasks[4].taskType == 'SUB_WORKFLOW'
+            tasks[5].status == Task.Status.IN_PROGRESS
+            tasks[5].taskType == 'WAIT'
+        }
+
+        when: "Complete the WAIT task that should cause the TERMINATE task to execute"
+        def waitTask = workflowExecutionService.getExecutionStatus(workflowInstanceId, true).tasks[5]
+        waitTask.status = Task.Status.COMPLETED
+        workflowExecutor.updateTask(new TaskResult(waitTask))
+
+        then:"Verify that the workflow has completed and the SUB_WORKFLOW is not still IN_PROGRESS (should be SKIPPED)"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 7
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[0].taskType == 'FORK'
+            tasks[1].status == Task.Status.COMPLETED
+            tasks[1].taskType == 'LAMBDA'
+            tasks[1].referenceTaskName == 'lambdaTask1'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].taskType == 'LAMBDA'
+            tasks[2].referenceTaskName == 'lambdaTask2'
+            tasks[3].status != Task.Status.IN_PROGRESS
+            tasks[3].taskType == 'JOIN'
+            tasks[4].status != Task.Status.IN_PROGRESS
+            tasks[4].taskType == 'SUB_WORKFLOW'
+            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].taskType == 'WAIT'
+            tasks[6].status == Task.Status.COMPLETED
+            tasks[6].taskType == 'TERMINATE'
+        }
+    }
+
     def "Test workflow with lambda task"() {
         given: "workflow input"
         def workflowInput = new HashMap()
