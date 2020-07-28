@@ -142,7 +142,6 @@ class LambdaAndTerminalTaskSpec extends Specification {
             tasks[2].referenceTaskName == 'lambdaTask2'
             tasks[3].status == Task.Status.IN_PROGRESS
             tasks[3].taskType == 'JOIN'
-            tasks[4].status == Task.Status.IN_PROGRESS || task[4].status == Task.Status.SCHEDULED
             tasks[4].taskType == 'SUB_WORKFLOW'
             tasks[5].status == Task.Status.IN_PROGRESS
             tasks[5].taskType == 'WAIT'
