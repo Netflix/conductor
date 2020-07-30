@@ -142,6 +142,7 @@ class LambdaAndTerminalTaskSpec extends Specification {
             tasks[2].referenceTaskName == 'lambdaTask2'
             tasks[3].status == Task.Status.IN_PROGRESS
             tasks[3].taskType == 'JOIN'
+            tasks[4].status == Task.Status.SCHEDULED || tasks[4].status == Task.Status.IN_PROGRESS
             tasks[4].taskType == 'SUB_WORKFLOW'
             tasks[5].status == Task.Status.IN_PROGRESS
             tasks[5].taskType == 'WAIT'
@@ -164,9 +165,9 @@ class LambdaAndTerminalTaskSpec extends Specification {
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].taskType == 'LAMBDA'
             tasks[2].referenceTaskName == 'lambdaTask2'
-            tasks[3].status != Task.Status.IN_PROGRESS
+            tasks[3].status == Task.Status.SKIPPED
             tasks[3].taskType == 'JOIN'
-            tasks[4].status != Task.Status.IN_PROGRESS
+            tasks[4].status == Task.Status.SKIPPED
             tasks[4].taskType == 'SUB_WORKFLOW'
             tasks[5].status == Task.Status.COMPLETED
             tasks[5].taskType == 'WAIT'
