@@ -28,9 +28,9 @@ public class RestClient {
     }
 
     public void post(String uri, String input, String domainGroupMoId, String accountMoId) {
-        LOGGER.info("URL: " + uri);
-        LOGGER.info("Input: " + input);
-        LOGGER.info("domainGroupId: " + domainGroupMoId);
+        //LOGGER.info("URL: " + uri);
+        //LOGGER.info("Input: " + input);
+        //LOGGER.info("domainGroupId: " + domainGroupMoId);
         int timeoutInSeconds = 10;
         client.setConnectTimeout(1000 * timeoutInSeconds);
         client.setReadTimeout(1000 * timeoutInSeconds );
@@ -47,30 +47,8 @@ public class RestClient {
                         + response.getStatus());
             }
             response.bufferEntity();
-            LOGGER.info("Response" + response.getEntity(String.class));
-        }
-        catch (Exception e) {
-            LOGGER.info("#####3" + e.toString());
-            e.printStackTrace();
-        }
-    }
-
-    public void get(String uri) {
-        LOGGER.info("URL: " + uri);
-        try {
-            LOGGER.info("#####1");
-            WebResource webResource = client.resource(uri);
-            ClientResponse response = webResource.type("application/json")
-                    .get(ClientResponse.class);
-            LOGGER.info("#####2");
-            LOGGER.info(response.toString());
-            if (response.getStatus() != 200) {
-                LOGGER.info("Failed : HTTP error code : "
-                        + response.getStatus());
-                throw new RuntimeException("Failed : HTTP error code : "
-                        + response.getStatus());
-            }
-            LOGGER.info("Record sent with Status " + response.getEntity(String.class));
+            //LOGGER.info("Response" + response.getEntity(String.class));
+            //LOGGER.info("Task {} is published successfully.", )
         }
         catch (Exception e) {
             LOGGER.info("#####3" + e.toString());

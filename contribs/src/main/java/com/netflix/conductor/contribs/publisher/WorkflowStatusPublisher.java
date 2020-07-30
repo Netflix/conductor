@@ -41,17 +41,23 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
             while (true) {
                 try {
                     Workflow workflow = blockingQueue.take();
-                    LOGGER.info("{}: Consume {}", tName, workflow);
                     WorkflowNotification workflowNotification = new WorkflowNotification(workflow);
-                    if (workflowNotification.getAccountMoId().equals("") || workflowNotification.getDomainGroupMoId().equals("")) {
-                        LOGGER.info("{}: Skip publishing workflow notification", tName);
+                    String taskMsg = String.format("Publishing workflow '%s.",workflowNotification.getWorkflowId());
+                    LOGGER.info(taskMsg);
+                    if (workflowNotification.getAccountMoId().equals("")) {
+                        LOGGER.info("Skip workflow '{}' notification. Account Id is empty.", workflowNotification.getWorkflowId());
+                        continue;
+                    }
+                    if (workflowNotification.getDomainGroupMoId().equals("")) {
+                        LOGGER.info("Skip workflow '{}' notification. Domain group is empty.", workflowNotification.getWorkflowId());
                         continue;
                     }
                     publishWorkflowNotification(workflowNotification);
-                    Thread.sleep(10);
+                    LOGGER.info("Workflow {} publish is successful.", workflowNotification.getWorkflowId());
+                    Thread.sleep(5);
                 }
                 catch (Exception e) {
-                    LOGGER.error("{}: Failed to consume workflow: {} to String. Exception: {}", tName, this, e);
+                    LOGGER.error("Failed to publish workflow: {} to String. Exception: {}", this, e);
                     LOGGER.info(e.getMessage());
                 }
             }
@@ -66,27 +72,26 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
     @Override
     public void onWorkflowCompleted(Workflow workflow) {
         try {
-            LOGGER.info("#### Publishing workflow {} on completion callback", workflow.getWorkflowId());
             blockingQueue.put(workflow);
         } catch (Exception e){
+            LOGGER.error("Failed to enqueue workflow: {} to String. Exception: {}", this, e);
             LOGGER.info(e.getMessage());
         }
     }
 
     @Override
     public void onWorkflowTerminated(Workflow workflow) {
-
         try {
-            LOGGER.info("#### Publishing workflow {} on termination callback", workflow.getWorkflowId());
             blockingQueue.put(workflow);
         } catch (Exception e){
+            LOGGER.error("Failed to enqueue workflow: {} to String. Exception: {}", this, e);
             LOGGER.info(e.getMessage());
         }
     }
 
      private void publishWorkflowNotification(WorkflowNotification workflowNotification) {
         String jsonWorkflow = workflowNotification.toJsonString();
-        LOGGER.info("##### Task Message {} .", jsonWorkflow);
+        LOGGER.info("{}", jsonWorkflow);
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
         rc.post(url, jsonWorkflow, workflowNotification.getDomainGroupMoId(), workflowNotification.getAccountMoId());

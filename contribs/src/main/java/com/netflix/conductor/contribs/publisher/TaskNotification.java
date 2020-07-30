@@ -28,12 +28,12 @@ public class TaskNotification extends TaskSummary {
         super(task);
         workflowTaskType = task.getWorkflowTask().getType();
 
-        boolean isFusionMetaPresent =  task.getInputData().containsKey("FusionMeta");
+        boolean isFusionMetaPresent =  task.getInputData().containsKey("_ioMeta");
         if (!isFusionMetaPresent) {
             return;
         }
 
-        LinkedHashMap fusionMeta = (LinkedHashMap) task.getInputData().get("FusionMeta");
+        LinkedHashMap fusionMeta = (LinkedHashMap) task.getInputData().get("_ioMeta");
         domainGroupMoId = fusionMeta.containsKey("DomainGroupMoId") ? fusionMeta.get("DomainGroupMoId").toString(): "";
         accountMoId = fusionMeta.containsKey("AccountMoId") ? fusionMeta.get("AccountMoId").toString(): "";
 
