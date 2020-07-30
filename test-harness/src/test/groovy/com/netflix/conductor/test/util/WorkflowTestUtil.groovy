@@ -32,21 +32,7 @@ import javax.annotation.PostConstruct
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Copyright 2020 Netflix, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.COMPLETED
 
 /**
  * This is a helper class used to initialize task definitions required by the tests when loaded up.
@@ -123,6 +109,12 @@ class WorkflowTestUtil {
         simpleSubWorkflowTask.setName('simple_task_in_sub_wf')
         simpleSubWorkflowTask.setRetryCount(0)
 
+        TaskDef subWorkflowTask = new TaskDef()
+        subWorkflowTask.setName('sub_workflow_task')
+        subWorkflowTask.setRetryCount(1)
+        subWorkflowTask.setResponseTimeoutSeconds(5)
+        subWorkflowTask.setRetryDelaySeconds(0)
+
         TaskDef waitTimeOutTask = new TaskDef()
         waitTimeOutTask.name = 'waitTimeout'
         waitTimeOutTask.timeoutSeconds = 2
@@ -130,7 +122,32 @@ class WorkflowTestUtil {
         waitTimeOutTask.timeoutPolicy = TaskDef.TimeoutPolicy.RETRY
         waitTimeOutTask.retryDelaySeconds = 10
 
-        metadataService.registerTaskDef([taskWithResponseTimeOut, optionalTask, simpleSubWorkflowTask, waitTimeOutTask])
+        TaskDef userTask = new TaskDef()
+        userTask.setName("user_task")
+        userTask.setTimeoutSeconds(20)
+        userTask.setRetryCount(1)
+        userTask.setTimeoutPolicy(TaskDef.TimeoutPolicy.RETRY)
+        userTask.setRetryDelaySeconds(10)
+
+
+        TaskDef concurrentExecutionLimitedTask = new TaskDef()
+        concurrentExecutionLimitedTask.name = "test_task_with_concurrency_limit"
+        concurrentExecutionLimitedTask.concurrentExecLimit = 1
+
+        TaskDef rateLimitedTask = new TaskDef()
+        rateLimitedTask.name = 'test_task_with_rateLimits'
+        rateLimitedTask.rateLimitFrequencyInSeconds = 600
+        rateLimitedTask.rateLimitPerFrequency = 1
+
+        TaskDef eventTaskX = new TaskDef()
+        eventTaskX.name = 'eventX'
+        eventTaskX.timeoutSeconds = 1
+
+        metadataService.registerTaskDef(
+                [taskWithResponseTimeOut, optionalTask, simpleSubWorkflowTask,
+                 subWorkflowTask, waitTimeOutTask, userTask, eventTaskX,
+                 rateLimitedTask, concurrentExecutionLimitedTask]
+        )
     }
 
     /**
@@ -239,7 +256,7 @@ class WorkflowTestUtil {
     Tuple pollAndCompleteTask(String taskName, String workerId, Map<String, Object> outputParams = null, int waitAtEndSeconds = 0) {
         def polledIntegrationTask = workflowExecutionService.poll(taskName, workerId)
         def ackPolledIntegrationTask = workflowExecutionService.ackTaskReceived(polledIntegrationTask.taskId)
-        polledIntegrationTask.status = Task.Status.COMPLETED
+        polledIntegrationTask.status = COMPLETED
         if (outputParams) {
             outputParams.forEach { k, v ->
                 polledIntegrationTask.outputData[k] = v
@@ -247,6 +264,17 @@ class WorkflowTestUtil {
         }
         workflowExecutionService.updateTask(polledIntegrationTask)
         return waitAtEndSecondsAndReturn(waitAtEndSeconds, polledIntegrationTask, ackPolledIntegrationTask)
+    }
+
+    Tuple pollAndCompleteLargePayloadTask(String taskName, String workerId, String outputPayloadPath) {
+        def polledIntegrationTask = workflowExecutionService.poll(taskName, workerId)
+        def ackPolledIntegrationTask = workflowExecutionService.ackTaskReceived(polledIntegrationTask.taskId)
+        polledIntegrationTask.status = COMPLETED
+        polledIntegrationTask.outputData = null
+        polledIntegrationTask.externalOutputPayloadStoragePath = outputPayloadPath
+        polledIntegrationTask.status = COMPLETED
+        workflowExecutionService.updateTask(polledIntegrationTask)
+        return new Tuple(polledIntegrationTask, ackPolledIntegrationTask)
     }
 
     /**
@@ -268,5 +296,13 @@ class WorkflowTestUtil {
                     assert polledIntegrationTask.inputData[k] == v
             }
         }
+    }
+
+    static void verifyPolledAndAcknowledgedLargePayloadTask(Tuple completedTaskAndAck) {
+        assert completedTaskAndAck[0] : "The task polled cannot be null"
+        def polledIntegrationTask = completedTaskAndAck[0] as Task
+        def ackPolledIntegrationTask = completedTaskAndAck[1] as boolean
+        assert polledIntegrationTask
+        assert ackPolledIntegrationTask
     }
 }
