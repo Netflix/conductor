@@ -66,6 +66,13 @@ public interface ObservableQueue {
 	void publish(List<Message> messages);
 
 	/**
+	 * @param messages messages that had failures 
+	 * @param failures failures that occurred during the processing of the messages 
+	 */
+	default void processFailures(List<Message> messages, EventProcessingFailures failures) {
+	}
+
+	/**
 	 * Used to determine if the queue supports unack/visibility timeout such that the messages
      * will re-appear on the queue after a specific period and are available to be picked up again and retried.
      *

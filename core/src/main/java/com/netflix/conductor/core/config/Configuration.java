@@ -128,6 +128,44 @@ public interface Configuration {
     String ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_PROPERTY_NAME = "workflow.elasticsearch.document.type.override";
     String ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_DEFAULT_VALUE = "";
 
+    String KAFKA_EVENTS_BOOTSTRAP_SERVERS_PROPERTY_NAME = "kafka.events.bootstrap.servers";
+    String KAFKA_DEFAULT_BOOTSTRAP_SERVERS_PROPERTY_NAME = "kafka.default.bootstrap.servers";
+    String KAFKA_DEFAULT_BOOTSTRAP_SERVERS_DEFAULT_VALUE = "localhost:9092";
+
+    String KAFKA_EVENTS_CONSUMER_GROUP_ID_PROPERTY_NAME = "kafka.events.consumer.group.id";
+    String KAFKA_DEFAULT_CONSUMER_GROUP_ID_PROPERTY_NAME = "kafka.default.consumer.group.id";
+    String KAFKA_DEFAULT_CONSUMER_GROUP_ID_DEFAULT_VALUE = "";
+
+    String KAFKA_EVENTS_JAAS_CONFIG_FILE_PROPERTY_NAME = "kafka.events.jaas.config.file";
+    String KAFKA_DEFAULT_JAAS_CONFIG_FILE_PROPERTY_NAME = "kafka.default.jaas.config.file";
+    String KAFKA_DEFAULT_JAAS_CONFIG_FILE_DEFAULT_VALUE = "";
+
+    String KAFKA_EVENTS_POLLING_INTERVAL_MS_PROPERTY_NAME = "kafka.events.pollingInterval";
+    String KAFKA_DEFAULT_POLLING_INTERVAL_MS_PROPERTY_NAME = "kafka.default.pollingInterval";
+    int KAFKA_DEFAULT_POLLING_INTERVAL_MS_DEFAULT_VALUE = 1000;
+
+    String KAFKA_EVENTS_POLL_TIMEOUT_MS_PROPERTY_NAME = "kafka.events.longPollTimeout";
+    String KAFKA_DEFAULT_POLL_TIMEOUT_MS_PROPERTY_NAME = "kafka.default.longPollTimeout";
+    int KAFKA_DEFAULT_POLL_TIMEOUT_MS_DEFAULT_VALUE = 1000;
+
+    String KAFKA_EVENTS_ERRORS_PER_EMAIL_PROPERTY_NAME = "kafka.events.errorsPerEmail";
+    int KAFKA_EVENTS_ERRORS_PER_EMAIL_DEFAULT_VALUE = 100;
+
+    String KAFKA_EVENTS_MINUTES_UNTIL_ERROR_EMAIL_PROPERTY_NAME = "kafka.events.minutesUntilErrorEmail";
+    int KAFKA_EVENTS_MINUTES_UNTIL_ERROR_EMAIL_DEFAULT_VALUE = 30;
+
+    String KAFKA_EVENTS_ERROR_EMAIL_ADDL_RECIPIENTS_PROPERTY_NAME = "kafka.events.errorEmailsAddlRecipients";
+    String KAFKA_EVENTS_ERROR_EMAIL_ADDL_RECIPIENTS_DEFAULT_VALUE = "";
+
+    String EMAIL_SMTP_HOST_PROPERTY_NAME = "email.smtp.host";
+    String EMAIL_SMTP_HOST_DEFAULT_VALUE = "";
+    
+    String EMAIL_ADDRESS_FROM_PROPERTY_NAME = "email.address.from";
+    String EMAIL_ADDRESS_FROM_DEFAULT_VALUE = "";
+    
+    String EMAIL_ADDRESS_REPLYTO_PROPERTY_NAME = "email.address.replyto";
+    String EMAIL_ADDRESS_REPLYTO_DEFAULT_VALUE = "";
+
     //TODO add constants for input/output external payload related properties.
 
     default DB getDB() {
@@ -364,6 +402,154 @@ public interface Configuration {
         return getIntProperty(WORKFLOW_ARCHIVAL_DELAY_QUEUE_WORKER_THREAD_COUNT_PROPERTY_NAME, WORKFLOW_ARCHIVAL_DELAY_QUEUE_WORKER_THREAD_COUNT_DEFAULT_VALUE);
     }
 
+
+    /**
+     * There are several uses for Kafka topics. If all the topics are in the same Kafka cluster, this property can be used.
+     * Otherwise, the bootstrap servers for each specific use should be used.
+     */
+    default String getKafkaDefaultBootstrapServers() {
+        return getProperty(KAFKA_DEFAULT_BOOTSTRAP_SERVERS_PROPERTY_NAME,
+            KAFKA_DEFAULT_BOOTSTRAP_SERVERS_DEFAULT_VALUE);
+    }
+
+    /**
+     * Get the Kafka bootstrap servers for the 'events' topic
+     * @return
+     */
+    default String getKafkaEventsBootstrapServers() {
+        return getProperty(KAFKA_EVENTS_BOOTSTRAP_SERVERS_PROPERTY_NAME,
+            getKafkaDefaultBootstrapServers());
+    }
+
+    /**
+     * Get the JAAS config file for the 'events' topic
+     * @return
+     */
+    default String getKafkaAutoOffsetResetConfig() {
+        return getProperty(KAFKA_EVENTS_POLLING_INTERVAL_MS_PROPERTY_NAME, "latest");
+    }
+
+    /**
+     * There are several uses for Kafka topics. If all the topics are in the same Kafka cluster, this property can be used.
+     * Otherwise, the consumer group id for each specific use should be used.
+     */
+    default String getKafkaDefaultConsumerGroupId() {
+        return getProperty(KAFKA_DEFAULT_CONSUMER_GROUP_ID_PROPERTY_NAME,
+            KAFKA_DEFAULT_CONSUMER_GROUP_ID_DEFAULT_VALUE);
+    }
+
+    /**
+     * Get the Kafka consumer group id for the 'events' topic
+     * @return
+     */
+    default String getKafkaEventsConsumerGroupId() {
+        return getProperty(KAFKA_EVENTS_CONSUMER_GROUP_ID_PROPERTY_NAME,
+            getKafkaDefaultConsumerGroupId());
+    }
+
+    /**
+     * There are several uses for Kafka topics. If all the topics are in the same Kafka cluster, this property can be used.
+     * Otherwise, the JAAS config file for each specific use should be used.
+     */
+    default String getKafkaDefaultJaasConfigFile() {
+        return getProperty(KAFKA_DEFAULT_JAAS_CONFIG_FILE_PROPERTY_NAME,
+            KAFKA_DEFAULT_JAAS_CONFIG_FILE_DEFAULT_VALUE);
+    }
+
+    /**
+     * Get the Kafka JAAS config file  for the 'events' topic
+     */
+    default String getKafkaEventsJaasConfigFile() {
+        return getProperty(KAFKA_EVENTS_JAAS_CONFIG_FILE_PROPERTY_NAME,
+            getKafkaDefaultJaasConfigFile());
+    }
+
+    /**
+     * There are several uses for Kafka topics. If all the topics are in the same Kafka cluster, this property can be used.
+     * Otherwise, the polling interval for each specific use should be used.
+     */
+    default int getKafkaDefaultPollingIntervalMS() {
+        return getIntProperty(KAFKA_DEFAULT_POLLING_INTERVAL_MS_PROPERTY_NAME,
+            KAFKA_DEFAULT_POLLING_INTERVAL_MS_DEFAULT_VALUE);
+    }
+
+    /**
+     * There are several uses for Kafka topics. If all the topics are in the same Kafka cluster, this property can be used.
+     * Otherwise, the polling interval for each specific use should be used.
+     */
+    default int getKafkaEventsPollingIntervalMS() {
+        return getIntProperty(KAFKA_DEFAULT_POLLING_INTERVAL_MS_PROPERTY_NAME,
+            getKafkaDefaultPollingIntervalMS());
+    }
+
+    /**
+     * There are several uses for Kafka topics. If all the topics are in the same Kafka cluster, this property can be used.
+     * Otherwise, the poll timeout for each specific use should be used.
+     */
+    default int getKafkaDefaultPollTimeoutMS() {
+        return getIntProperty(KAFKA_DEFAULT_POLL_TIMEOUT_MS_PROPERTY_NAME,
+            KAFKA_DEFAULT_POLL_TIMEOUT_MS_DEFAULT_VALUE);
+    }
+
+    /**
+     * Get the poll timeout for the 'events' topic
+     * @return
+     */
+    default int getKafkaEventsPollTimeoutMS() {
+        return getIntProperty(KAFKA_EVENTS_POLL_TIMEOUT_MS_PROPERTY_NAME, 
+       		getKafkaDefaultPollTimeoutMS());
+    }
+
+    /**
+     * Return the number of errors per error email for Kafka event errors
+     * @return
+     */
+    default int getKafkaEventsErrorsPerEmail() {
+        return getIntProperty(KAFKA_EVENTS_ERRORS_PER_EMAIL_PROPERTY_NAME,
+        		KAFKA_EVENTS_ERRORS_PER_EMAIL_DEFAULT_VALUE);
+    }
+
+    /**
+     * Return the number of minutes until we send out the next error email for Kafka event errors
+     * @return
+     */
+    default int getKafkaEventsMinutesUntilErrorEmail() {
+        return getIntProperty(KAFKA_EVENTS_MINUTES_UNTIL_ERROR_EMAIL_PROPERTY_NAME,
+        		KAFKA_EVENTS_MINUTES_UNTIL_ERROR_EMAIL_DEFAULT_VALUE);
+    }
+
+    /**
+     * Return the additional recipients that will get the Kafka events error emails
+     * @return
+     */
+    default String getKafkaEventsErrorEmailAddlRecipients() {
+        return getProperty(KAFKA_EVENTS_ERROR_EMAIL_ADDL_RECIPIENTS_PROPERTY_NAME,
+        		KAFKA_EVENTS_ERROR_EMAIL_ADDL_RECIPIENTS_DEFAULT_VALUE);
+    }
+
+    /**
+     * Get the SMTP host that will be used to send emails
+     * @return
+     */
+    default String getEmailSmtpHost() {
+    	return getProperty(EMAIL_SMTP_HOST_PROPERTY_NAME, EMAIL_SMTP_HOST_DEFAULT_VALUE);
+    }
+
+    /**
+     * Get the 'from' email address that will be used on sent emails
+     * @return
+     */
+    default String getEmailAddressFrom() {
+    	return getProperty(EMAIL_ADDRESS_FROM_PROPERTY_NAME, EMAIL_ADDRESS_FROM_DEFAULT_VALUE);
+    }
+
+    /**
+     * Get the 'reply to' email address that will be associated with sent emails
+     * @return
+     */
+    default String getEmailAddressReplyTo() {
+    	return getProperty(EMAIL_ADDRESS_REPLYTO_PROPERTY_NAME, EMAIL_ADDRESS_REPLYTO_DEFAULT_VALUE);
+    }
 
     /**
      * @param name         Name of the property

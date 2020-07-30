@@ -23,6 +23,7 @@ import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.queue.EventProcessingFailures;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException;
@@ -153,9 +154,9 @@ public class SimpleEventProcessor implements EventProcessor {
             }
             String event = queue.getType() + ":" + queue.getName();
             logger.debug("Evaluating message: {} for event: {}", msg.getId(), event);
-            List<EventExecution> transientFailures = executeEvent(event, msg);
+            EventProcessingFailures allFailures = executeEvent(event, msg);
 
-            if (transientFailures.isEmpty()) {
+            if (allFailures.getTransientFailures().isEmpty()) {
                 queue.ack(Collections.singletonList(msg));
                 logger.debug("Message: {} acked on queue: {}", msg.getId(), queue.getName());
             } else if (queue.rePublishIfNoAck()) {
@@ -163,6 +164,9 @@ public class SimpleEventProcessor implements EventProcessor {
                 // This is needed for queues with no unack timeout, since messages are removed from the queue
                 queue.publish(Collections.singletonList(msg));
                 logger.debug("Message: {} published to queue: {}", msg.getId(), queue.getName());
+            }
+            if(!allFailures.isEmpty()) {
+            	queue.processFailures(Collections.singletonList(msg), allFailures);
             }
         } catch (Exception e) {
             logger.error("Error handling message: {} on queue:{}", msg, queue.getName(), e);
@@ -178,11 +182,12 @@ public class SimpleEventProcessor implements EventProcessor {
      *
      * @return a list of {@link EventExecution} that failed due to transient failures.
      */
-    private List<EventExecution> executeEvent(String event, Message msg) throws Exception {
+    private EventProcessingFailures executeEvent(String event, Message msg) throws Exception {
+        EventProcessingFailures allFailures = new EventProcessingFailures();
+
         List<EventHandler> eventHandlerList = metadataService.getEventHandlersForEvent(event, true);
         Object payloadObject = getPayloadObject(msg.getPayload());
 
-        List<EventExecution> transientFailures = new ArrayList<>();
         for (EventHandler eventHandler : eventHandlerList) {
             String condition = eventHandler.getCondition();
             if (StringUtils.isNotEmpty(condition)) {
@@ -207,13 +212,16 @@ public class SimpleEventProcessor implements EventProcessor {
             future.whenComplete((result, error) -> result.forEach(eventExecution -> {
                 if (error != null || eventExecution.getStatus() == Status.IN_PROGRESS) {
                     executionService.removeEventExecution(eventExecution);
-                    transientFailures.add(eventExecution);
+                    allFailures.getTransientFailures().add(eventExecution);
                 } else {
                     executionService.updateEventExecution(eventExecution);
+                    if(eventExecution.getStatus() == Status.FAILED) {
+                    	allFailures.getFailures().add(eventExecution);
+                    }
                 }
             })).get();
         }
-        return transientFailures;
+        return allFailures;
     }
 
     /**
