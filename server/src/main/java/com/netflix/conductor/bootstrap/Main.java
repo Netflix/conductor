@@ -15,10 +15,10 @@ package com.netflix.conductor.bootstrap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
-import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
-import com.netflix.conductor.grpc.server.GRPCServer;
-import com.netflix.conductor.grpc.server.GRPCServerProvider;
+//import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
+//import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
+//import com.netflix.conductor.grpc.server.GRPCServer;
+//import com.netflix.conductor.grpc.server.GRPCServerProvider;
 import com.netflix.conductor.jetty.server.JettyServerProvider;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -44,8 +44,8 @@ public class Main {
         ModulesProvider modulesProvider = bootstrapInjector.getInstance(ModulesProvider.class);
         Injector serverInjector = Guice.createInjector(modulesProvider.get());
 
-        Optional<EmbeddedElasticSearch> embeddedElasticSearch = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get();
-        embeddedElasticSearch.ifPresent(BootstrapUtil::startEmbeddedElasticsearchServer);
+//        Optional<EmbeddedElasticSearch> embeddedElasticSearch = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get();
+//        embeddedElasticSearch.ifPresent(BootstrapUtil::startEmbeddedElasticsearchServer);
 
         BootstrapUtil.setupIndex(serverInjector.getInstance(IndexDAO.class));
 
@@ -65,9 +65,9 @@ public class Main {
         System.out.println(" \\___\\___/|_| |_|\\__,_|\\__,_|\\___|\\__\\___/|_|   ");
         System.out.println("\n\n\n");
 
-        Optional<GRPCServer> grpcServer = serverInjector.getInstance(GRPCServerProvider.class).get();
+//        Optional<GRPCServer> grpcServer = serverInjector.getInstance(GRPCServerProvider.class).get();
 
-        grpcServer.ifPresent(BootstrapUtil::startGRPCServer);
+//        grpcServer.ifPresent(BootstrapUtil::startGRPCServer);
 
         serverInjector.getInstance(JettyServerProvider.class).get().ifPresent(server -> {
             try {

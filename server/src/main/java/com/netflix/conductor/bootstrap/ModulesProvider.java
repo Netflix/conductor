@@ -15,7 +15,7 @@ package com.netflix.conductor.bootstrap;
 import com.google.inject.AbstractModule;
 import com.google.inject.ProvisionException;
 import com.google.inject.util.Modules;
-import com.netflix.conductor.cassandra.CassandraModule;
+//import com.netflix.conductor.cassandra.CassandraModule;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.contribs.http.HttpTask;
@@ -31,19 +31,19 @@ import com.netflix.conductor.core.execution.WorkflowExecutorModule;
 import com.netflix.conductor.core.utils.DummyPayloadStorage;
 import com.netflix.conductor.core.utils.S3PayloadStorage;
 import com.netflix.conductor.noopindex.NoopIndexModule;
-import com.netflix.conductor.dao.RedisWorkflowModule;
+//import com.netflix.conductor.dao.RedisWorkflowModule;
 import com.netflix.conductor.elasticsearch.ElasticSearchModule;
-import com.netflix.conductor.locking.redis.config.RedisLockModule;
+//import com.netflix.conductor.locking.redis.config.RedisLockModule;
 import com.netflix.conductor.mysql.MySQLWorkflowModule;
 import com.netflix.conductor.server.DynomiteClusterModule;
 import com.netflix.conductor.server.JerseyModule;
 import com.netflix.conductor.server.LocalRedisModule;
-import com.netflix.conductor.server.RedisClusterModule;
-import com.netflix.conductor.server.RedisSentinelModule;
+//import com.netflix.conductor.server.RedisClusterModule;
+//import com.netflix.conductor.server.RedisSentinelModule;
 import com.netflix.conductor.server.ServerModule;
 import com.netflix.conductor.server.SwaggerModule;
-import com.netflix.conductor.zookeeper.config.ZookeeperModule;
-import com.netflix.conductor.postgres.PostgresWorkflowModule;
+//import com.netflix.conductor.zookeeper.config.ZookeeperModule;
+//import com.netflix.conductor.postgres.PostgresWorkflowModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,8 +96,8 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         switch (database) {
             case REDIS:
             case DYNOMITE:
-                modules.add(new DynomiteClusterModule());
-                modules.add(new RedisWorkflowModule());
+//                modules.add(new DynomiteClusterModule());
+//                modules.add(new RedisWorkflowModule());
                 logger.info("Starting conductor server using dynomite/redis cluster.");
                 break;
             case MYSQL:
@@ -105,26 +105,26 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 logger.info("Starting conductor server using MySQL data store.");
                 break;
             case POSTGRES:
-                modules.add(new PostgresWorkflowModule());
+//                modules.add(new PostgresWorkflowModule());
                 logger.info("Starting conductor server using Postgres data store.");
                 break;
             case MEMORY:
-                modules.add(new LocalRedisModule());
-                modules.add(new RedisWorkflowModule());
+//                modules.add(new LocalRedisModule());
+//                modules.add(new RedisWorkflowModule());
                 logger.info("Starting conductor server using in memory data store.");
                 break;
             case REDIS_CLUSTER:
-                modules.add(new RedisClusterModule());
-                modules.add(new RedisWorkflowModule());
+//                modules.add(new RedisClusterModule());
+//                modules.add(new RedisWorkflowModule());
                 logger.info("Starting conductor server using redis_cluster.");
                 break;
             case CASSANDRA:
-                modules.add(new CassandraModule());
+//                modules.add(new CassandraModule());
                 logger.info("Starting conductor server using cassandra.");
                 break;
             case REDIS_SENTINEL:
-                modules.add(new RedisSentinelModule());
-                modules.add(new RedisWorkflowModule());
+//                modules.add(new RedisSentinelModule());
+//                modules.add(new RedisWorkflowModule());
                 logger.info("Starting conductor server using redis_sentinel.");
                 break;
         }
@@ -154,11 +154,11 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
 
             switch (lockingServer) {
                 case REDIS:
-                    modules.add(new RedisLockModule());
+//                    modules.add(new RedisLockModule());
                     logger.info("Starting locking module using Redis cluster.");
                     break;
                 case ZOOKEEPER:
-                    modules.add(new ZookeeperModule());
+//                    modules.add(new ZookeeperModule());
                     logger.info("Starting locking module using Zookeeper cluster.");
                     break;
                 case LOCAL_ONLY:

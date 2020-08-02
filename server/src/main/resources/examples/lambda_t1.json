@@ -1,0 +1,17 @@
+{
+  "name": "lambda_t1",
+  "description": "lambda test 1",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "LAMBDA",
+      "taskReferenceName": "test",
+      "type": "LAMBDA",
+      "inputParameters": {
+        "scriptExpression": "return 2;"
+      }
+    }
+  ],
+  "schemaVersion": 2,
+  "ownerEmail": "fyfhust@gmail.com"
+}

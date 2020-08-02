@@ -22,7 +22,7 @@ import com.netflix.conductor.core.config.CoreModule;
 import com.netflix.conductor.core.config.ValidationModule;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.dyno.SystemPropertiesDynomiteConfiguration;
-import com.netflix.conductor.grpc.server.GRPCModule;
+//import com.netflix.conductor.grpc.server.GRPCModule;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
 import com.netflix.conductor.jetty.server.JettyModule;
 import com.netflix.conductor.service.WorkflowMonitor;
@@ -43,7 +43,7 @@ public class ServerModule extends AbstractModule {
         install(new ArchaiusModule());
         install(new HealthModule());
         install(new JettyModule());
-        install(new GRPCModule());
+//        install(new GRPCModule());
 
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Service.class), new ServiceInterceptor(getProvider(Validator.class)));
         bind(Configuration.class).to(SystemPropertiesDynomiteConfiguration.class);

@@ -1,0 +1,35 @@
+{
+  "name": "dowhile_t1",
+  "description": "dowhile test 1",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "LAMBDA",
+      "taskReferenceName": "test",
+      "type": "LAMBDA",
+      "inputParameters": {
+        "scriptExpression": "return 2;"
+      }
+    },
+    {
+      "name": "Loop Task",
+      "taskReferenceName": "LoopTask",
+      "type": "DO_WHILE",
+      "inputParameters": {
+      },
+      "loopCondition": "$.LoopTask.iteration < 2",
+      "loopOver": [
+        {
+          "name": "LAMBDA",
+          "taskReferenceName": "test2",
+          "type": "LAMBDA",
+          "inputParameters": {
+            "scriptExpression": "return 3;"
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 2,
+  "ownerEmail": "fyfhust@gmail.com"
+}

@@ -26,14 +26,14 @@ dependencies {
     compile project(':conductor-jersey')
     compile project(':conductor-redis-persistence')
     compile project(':conductor-mysql-persistence')
-    compile project(':conductor-postgres-persistence')
-    compile project(':conductor-cassandra-persistence')
+//    compile project(':conductor-postgres-persistence')
+//    compile project(':conductor-cassandra-persistence')
     compile project(':conductor-contribs')
     compile project(':conductor-es5-persistence')
-    compile project(':conductor-es6-persistence')
-    compile project(':conductor-grpc-server')
-    compile project(':conductor-zookeeper-lock')
-    compile project(':conductor-redis-lock')
+//    compile project(':conductor-es6-persistence')
+//    compile project(':conductor-grpc-server')
+//    compile project(':conductor-zookeeper-lock')
+//    compile project(':conductor-redis-lock')
 
     compile "com.netflix.runtime:health-guice:${revHealth}"
 
@@ -87,7 +87,7 @@ build.dependsOn('shadowJar')
 task server(type: JavaExec) {
     systemProperty 'workflow.elasticsearch.url', 'localhost:9300'
     // Switch between Elasticsearch versions 2 & 5 with major version number.
-    systemProperty 'loadSample', 'true'
+    systemProperty 'loadSample', 'false'
     // Unlink Jetty logger to reduce clutter in local server.
     systemProperty 'org.eclipse.jetty.util.log.class', 'org.eclipse.jetty.util.log.StdErrLog'
     // Set Jetty logger level to INFO.

@@ -17,7 +17,7 @@ package com.netflix.conductor.bootstrap;
 
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
-import com.netflix.conductor.grpc.server.GRPCServer;
+//import com.netflix.conductor.grpc.server.GRPCServer;
 import org.apache.log4j.PropertyConfigurator;
 
 import java.io.FileInputStream;
@@ -54,15 +54,15 @@ public class BootstrapUtil {
         }
     }
 
-    static void startGRPCServer(GRPCServer grpcServer) {
-        try {
-            grpcServer.start();
-        } catch (IOException ioe) {
-            System.out.println("Error starting GRPC server");
-            ioe.printStackTrace(System.err);
-            System.exit(3);
-        }
-    }
+//    static void startGRPCServer(GRPCServer grpcServer) {
+//        try {
+//            grpcServer.start();
+//        } catch (IOException ioe) {
+//            System.out.println("Error starting GRPC server");
+//            ioe.printStackTrace(System.err);
+//            System.exit(3);
+//        }
+//    }
 
     public static void loadConfigFile(String propertyFile) throws IOException {
         if (propertyFile == null) return;
