@@ -58,4 +58,6 @@ message Task {
     int32 workflow_priority = 36;
     string execution_name_space = 37;
     string isolation_group_id = 38;
+    int32 iteration = 40;
+    string sub_workflow_id = 41;
 }

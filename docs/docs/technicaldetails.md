@@ -40,3 +40,109 @@ We plan to improve this further by removing the indexing from the critical path 
 ### Elasticsearch 5/6 Support
 Indexing workflow execution is one of the primary features of Conductor. This enables archival of terminal state workflows from the primary data store, along with providing a clean search capability from the UI. 
 In Conductor 1.x, we supported both versions 2 and 5 of Elasticsearch by shadowing version 5 and all its dependencies. This proved to be rather tedious increasing build times by over 10 minutes. In Conductor 2.x, we have removed active support for ES 2.x, because of valuable community contributions for elasticsearch 5 and elasticsearch 6 modules. Unlike Conductor 1.x, Conductor 2.x supports elasticsearch 5 by default, which can easily be replaced with version 6 by following the simple instructions [here](https://github.com/Netflix/conductor/tree/master/es6-persistence#build).
+
+### Maintaining workflow consistency with distributed locking and fencing tokens
+
+#### Problem
+
+Conductor’s Workflow decide is the core logic which recursively evaluates the state of the workflow, schedules tasks, persists workflow and task(s) state at several checkpoints, and progresses the workflow.
+ 
+In a multi-node Conductor server deployment, the decide on a workflow can be triggered concurrently. For example, the worker can update Conductor server with latest task state, which calls decide, while the sweeper service (which periodically evaluates the workflow state to progress from task timeouts) would also call the decide on a different instance. The decide can be run concurrently in two different jvm nodes with two different workflow states, and based on the workflow configuration and current state, the result could be inconsistent.
+
+#### A two-part solution to maintain Workflow Consistency
+
+**Preventing concurrent decides with distributed locking:**
+The goal is to allow only one decide to run on a workflow at any given time across the whole Conductor Server cluster. This can be achieved by plugging in distributed locking implementations like Zookeeper, Redlock etc. A Zookeeper module implementing Conductor’s Locking service is provided.
+
+**Preventing stale data updates with fencing tokens:**
+While the locking service helps to run one decide at a time, it might still be possible for nodes with timed out locks to reactivate and continue execution from where it left off (usually with stale data). This can be avoided with fencing tokens, which basically is an incrementing counter on workflow state with read-before-write support in a transaction or similar construct.
+
+*At Netflix, we use Cassandra. Considering the tradeoffs of Cassandra’s Lightweight Transactions (LWT) and the probability of this stale updates happening, and our testing results, we’ve decided to first only rollout distributed locking with Zookeeper. We'll monitor our system and add C* LWT if needed.
+
+#### Setting up desired level of consistency
+
+Based on your requirements, it is possible to use none, one or both of the distributed locking and fencing tokens implementations.
+
+#### Alternative solution to distributed "decide" evaluation
+
+As mentioned in the previous section, the "decide" logic is triggered from multiple places in a conductor instance. Either a direct trigger such as user starting a workflow or a timed trigger from the Sweeper service.
+
+> Sweeper service is responsible for continually checking state of all workflows executions and trigger the "decide" logic which in turn can time the workflow out.
+
+In a single node deployment (single dynomite rack and single conductor server) this shouldn't be a problem. But when running multiple replicated dynomite racks and a conductor server on top of each rack, this might trigger the race condition described in previous section.
+
+> Dynomite rack is a single or multiple instance dynomite setup that holds all the data.
+
+> More on dynomite HA setup: (https://netflixtechblog.com/introducing-dynomite-making-non-distributed-databases-distributed-c7bce3d89404)
+
+In a cluster deployment, the default behavior for Dyno Queues is such, that it distributes the workload (round-robin style) to all the conductor servers.
+This can create a situation where the first task to be executed is queued for conductor server #1 but the sweeper service is queued for conductor server #2.
+
+##### More on dyno queues
+
+Dyno queues are the default queuing mechanism of conductor.
+
+Queues are allocated and used for:
+* Task execution - each task type gets a queue
+* Workflow execution - single queue with all currently executing workflows (deciderQueue)
+  * This queue is used by SweeperService
+
+**Each conductor server instance gets its own set of queues**. Or more precisely a queue shard of its own.
+This means that if you have 2 task types, you end up with 6 queues altogether e.g.
+
+```
+conductor_queues.test.QUEUE._deciderQueue.c
+conductor_queues.test.QUEUE._deciderQueue.d
+conductor_queues.test.QUEUE.HTTP.c
+conductor_queues.test.QUEUE.HTTP.d
+conductor_queues.test.QUEUE.LAMBDA.c
+conductor_queues.test.QUEUE.LAMBDA.d
+```
+
+> The "c" and "d" suffixes are the shards identifying conductor server instace #1 and instance #2 respectively.
+
+> The shard names are extracted from dynomite rack name such as us-east-1c that is set in "LOCAL_RACK" or "EC2_AVAILABILTY_ZONE"
+
+Considering an execution of a simple workflow with just 2 tasks: [HTTP, LAMBDA], you should end up with queues being filled as follows:
+
+```
+Workflow execution    -> conductor_queues.test.QUEUE._deciderQueue.c
+HTTP taks execution   -> conductor_queues.test.QUEUE.HTTP.d
+LAMBDA task execution -> conductor_queues.test.QUEUE.LAMBDA.c
+```
+
+Which means that SweeperService in conductor instance #1 is responsible for sweeping the workflow, conductor #2 is responsible for executing HTTP task and conductor #1 again responsible for executing LAMBDA task.
+
+This illustrates the race condition: If the HTTP task completion in instance #2 happens at the same time as sweep in instance #1 ... you can end up with 2 different updates to a workflow execution: one update timing workflow out while the other completing the task and scheduling next.
+
+> The round-robin strategy responsible for work distribution is defined [here](https://github.com/Netflix/dyno-queues/blob/1cde55bbb69acd631c671a0cb2f9db2419163e33/dyno-queues-redis/src/main/java/com/netflix/dyno/queues/redis/sharding/RoundRobinStrategy.java)
+
+##### Back to alternative solution
+
+The alternative solution here is **Switching round-robin queue allocation for a local-only strategy**.
+Meaning that a workflow and its task executions are queued only for the conductor instance which started the workflow.
+
+This completely avoids the race condition for the price of removing task execution distribution.
+
+Since all tasks and the sweeper service read/write only from/to "local" queues, it is impossible to run into a race condition between conductor instances.
+
+The downside here is that the workload is not distributed across all conductor servers. Which might be an advantage in active-standby deployments.
+
+Considering other downsides ...
+
+Considering a situation where a conductor instance goes down:
+* With local-only strategy, the workflow executions from failed conductor instance will not progress until:
+  * The conductor instance is restarted or
+  * The executions are manually terminated and restarted from a different node
+* With round-robin strategy, there is a chance the tasks will be rescheduled on a different conductor node
+  * This is nondeterministic though
+  
+**Enabling local only queue allocation strategy for dyno queues:**
+
+Just enable following setting the config.properties:
+
+```
+workflow.dyno.queue.sharding.strategy=localOnly
+```
+
+> The default is roundRobin

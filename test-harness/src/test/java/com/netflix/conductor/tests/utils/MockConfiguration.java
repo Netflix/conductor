@@ -43,6 +43,16 @@ public class MockConfiguration implements Configuration {
     }
 
     @Override
+    public boolean isEventMessageIndexingEnabled() {
+        return true;
+    }
+
+    @Override
+    public boolean isEventExecutionIndexingEnabled() {
+        return true;
+    }
+
+    @Override
     public String getServerId() {
         try {
             return InetAddress.getLocalHost().getHostName();
@@ -108,7 +118,7 @@ public class MockConfiguration implements Configuration {
 
     @Override
     public Long getTaskInputPayloadSizeThresholdKB() {
-        return 1L;
+        return 10L;
     }
 
     @Override

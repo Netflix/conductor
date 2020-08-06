@@ -1,4 +1,21 @@
+/*
+ * Copyright 2019 Netflix, Inc.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.netflix.conductor.dao.es5.index;
+
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -10,6 +27,7 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.es5.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.ElasticSearchConfiguration;
@@ -18,29 +36,6 @@ import com.netflix.conductor.elasticsearch.EmbeddedElasticSearch;
 import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
 import com.netflix.conductor.elasticsearch.es5.EmbeddedElasticSearchV5;
 import com.netflix.conductor.elasticsearch.query.parser.ParserException;
-import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortOrder;
-import org.joda.time.DateTime;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -57,17 +52,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestElasticSearchRestDAOV5 {
 
     private static final Logger logger = LoggerFactory.getLogger(TestElasticSearchRestDAOV5.class);
-
-    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyyMMww");
 
     private static final String INDEX_NAME = "conductor";
     private static final String LOG_INDEX_PREFIX = "task_log";
@@ -96,6 +107,7 @@ public class TestElasticSearchRestDAOV5 {
     public static void startServer() throws Exception {
         System.setProperty(ElasticSearchConfiguration.EMBEDDED_PORT_PROPERTY_NAME, "9204");
         System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_URL_PROPERTY_NAME, "http://localhost:9204");
+        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, "1");
 
         configuration = new SystemPropertiesElasticSearchConfiguration();
 
@@ -117,7 +129,7 @@ public class TestElasticSearchRestDAOV5 {
 
         restClient.performRequest("GET", "/_cluster/health", params);
 
-        objectMapper = new ObjectMapper();
+        objectMapper = new JsonMapperProvider().get();
         indexDAO = new ElasticSearchRestDAOV5(restClient, configuration, objectMapper);
     }
 
@@ -200,7 +212,7 @@ public class TestElasticSearchRestDAOV5 {
     @Test
     public void assertInitialSetup() throws Exception {
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMww");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMWW");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
         String taskLogIndex = "task_log_" + dateFormat.format(new Date());
@@ -292,7 +304,7 @@ public class TestElasticSearchRestDAOV5 {
     @Test
     public void testSearchArchivableWorkflows() throws IOException {
         String workflowId = "search-workflow-id";
-        Long time = DateTime.now().minusDays(7).toDate().getTime();
+        Long time = DateTime.now(DateTimeZone.UTC).minusDays(7).toDate().getTime();
 
         workflow.setWorkflowId(workflowId);
         workflow.setStatus(Workflow.WorkflowStatus.COMPLETED);
@@ -308,7 +320,7 @@ public class TestElasticSearchRestDAOV5 {
                 .atMost(5, TimeUnit.SECONDS)
                 .untilAsserted(
                         () -> {
-                            List<String> searchIds = indexDAO.searchArchivableWorkflows("conductor",1);
+                            List<String> searchIds = indexDAO.searchArchivableWorkflows("conductor",6);
                             assertEquals(1, searchIds.size());
                             assertEquals(workflowId, searchIds.get(0));
                         }
@@ -365,6 +377,67 @@ public class TestElasticSearchRestDAOV5 {
                     assertTrue("should return 1 or more search results", result.getResults().size() > 0);
                     assertEquals("taskId should match the indexed task", "some-task-id", result.getResults().get(0));
                 });
+    }
+
+    @Test
+    public void indexTaskWithBatchSizeTwo() throws Exception {
+        embeddedElasticSearch.stop();
+        startElasticSearchWithBatchSize(2);
+        String correlationId = "some-correlation-id";
+
+        Task task = new Task();
+        task.setTaskId("some-task-id");
+        task.setWorkflowInstanceId("some-workflow-instance-id");
+        task.setTaskType("some-task-type");
+        task.setStatus(Status.FAILED);
+        task.setInputData(new HashMap<String, Object>() {{ put("input_key", "input_value"); }});
+        task.setCorrelationId(correlationId);
+        task.setTaskDefName("some-task-def-name");
+        task.setReasonForIncompletion("some-failure-reason");
+
+        indexDAO.indexTask(task);
+        indexDAO.indexTask(task);
+
+        await()
+                .atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    SearchResult<String> result = indexDAO
+                            .searchTasks("correlationId='" + correlationId + "'", "*", 0, 10000, null);
+
+                    assertTrue("should return 1 or more search results", result.getResults().size() > 0);
+                    assertEquals("taskId should match the indexed task", "some-task-id", result.getResults().get(0));
+                });
+
+        embeddedElasticSearch.stop();
+        startElasticSearchWithBatchSize(1);
+
+    }
+
+    private void startElasticSearchWithBatchSize(int i) throws Exception {
+        System.setProperty(ElasticSearchConfiguration.ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME, String.valueOf(i));
+
+        configuration = new SystemPropertiesElasticSearchConfiguration();
+
+        String host = configuration.getEmbeddedHost();
+        int port = configuration.getEmbeddedPort();
+        String clusterName = configuration.getEmbeddedClusterName();
+
+        embeddedElasticSearch = new EmbeddedElasticSearchV5(clusterName, host, port);
+        embeddedElasticSearch.start();
+
+        ElasticSearchRestClientProvider restClientProvider =
+                new ElasticSearchRestClientProvider(configuration);
+        restClient = restClientProvider.get();
+        elasticSearchClient = new RestHighLevelClient(restClient);
+
+        Map<String, String> params = new HashMap<>();
+        params.put("wait_for_status", "yellow");
+        params.put("timeout", "30s");
+
+        restClient.performRequest("GET", "/_cluster/health", params);
+
+        objectMapper = new JsonMapperProvider().get();
+        indexDAO = new ElasticSearchRestDAOV5(restClient, configuration, objectMapper);
     }
 
     @Test

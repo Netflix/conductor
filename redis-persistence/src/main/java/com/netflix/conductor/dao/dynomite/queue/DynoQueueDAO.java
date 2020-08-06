@@ -16,6 +16,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.discovery.DiscoveryClient;
 import com.netflix.dyno.connectionpool.Host;
+import com.netflix.dyno.connectionpool.HostBuilder;
 import com.netflix.dyno.contrib.EurekaHostsSupplier;
 import com.netflix.dyno.jedis.DynoJedisClient;
 import com.netflix.dyno.queues.DynoQueue;
@@ -24,19 +25,17 @@ import com.netflix.dyno.queues.ShardSupplier;
 import com.netflix.dyno.queues.redis.RedisDynoQueue;
 import com.netflix.dyno.queues.redis.RedisQueues;
 import com.netflix.dyno.queues.shard.DynoShardSupplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisCommands;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import redis.clients.jedis.commands.JedisCommands;
 
 @Singleton
 public class DynoQueueDAO implements QueueDAO {
@@ -75,15 +74,32 @@ public class DynoQueueDAO implements QueueDAO {
             public List<Host> getHosts() {
                 List<Host> hosts = super.getHosts();
                 List<Host> updatedHosts = new ArrayList<>(hosts.size());
-                hosts.forEach(host -> {
-                    updatedHosts.add(new Host(host.getHostName(), host.getIpAddress(), readConnPort, host.getRack(), host.getDatacenter(), host.isUp() ? Host.Status.Up : Host.Status.Down));
-                });
+                hosts.forEach(host -> updatedHosts.add(
+                        new HostBuilder()
+                                .setHostname(host.getHostName())
+                                .setIpAddress(host.getIpAddress())
+                                .setPort(readConnPort)
+                                .setRack(host.getRack())
+                                .setDatacenter(host.getDatacenter())
+                                .setStatus(host.isUp() ? Host.Status.Up : Host.Status.Down)
+                                .createHost()
+                ));
                 return updatedHosts;
             }
         };
 
-        this.dynoClientRead = new DynoJedisClient.Builder().withApplicationName(config.getAppId()).withDynomiteClusterName(cluster).withHostSupplier(hostSupplier).build();
-        DynoJedisClient dyno = new DynoJedisClient.Builder().withApplicationName(config.getAppId()).withDynomiteClusterName(cluster).withDiscoveryClient(dc).build();
+        this.dynoClientRead = new DynoJedisClient.Builder()
+            .withApplicationName(config.getAppId())
+            .withDynomiteClusterName(cluster)
+            .withHostSupplier(hostSupplier)
+            .withConnectionPoolConsistency("DC_ONE")
+            .build();
+
+        DynoJedisClient dyno = new DynoJedisClient.Builder()
+            .withApplicationName(config.getAppId())
+            .withDynomiteClusterName(cluster)
+            .withDiscoveryClient(dc)
+            .build();
 
         this.dynoClient = dyno;
 
@@ -117,6 +133,7 @@ public class DynoQueueDAO implements QueueDAO {
         if (domain != null) {
             prefix = prefix + "." + domain;
         }
+
         queues = new RedisQueues(dynoClient, dynoClientRead, prefix, ss, 60_000, 60_000);
         logger.info("DynoQueueDAO initialized with prefix " + prefix + "!");
     }
@@ -232,15 +249,9 @@ public class DynoQueueDAO implements QueueDAO {
     }
 
     @Override
-    public boolean setOffsetTime(String queueName, String id, long offsetTimeInSecond) {
+    public boolean resetOffsetTime(String queueName, String id) {
         DynoQueue queue = queues.get(queueName);
-        return queue.setTimeout(id, offsetTimeInSecond);
+        return queue.setTimeout(id, 0);
 
     }
-
-	@Override
-	public boolean exists(String queueName, String id) {
-		DynoQueue queue = queues.get(queueName);
-		return Optional.ofNullable(queue.get(id)).isPresent();
-	}
 }

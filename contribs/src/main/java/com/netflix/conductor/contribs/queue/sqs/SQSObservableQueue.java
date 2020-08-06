@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.Observable.OnSubscribe;
+import rx.Scheduler;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,13 +83,22 @@ public class SQSObservableQueue implements ObservableQueue {
 
 	private String queueURL;
 
-	private SQSObservableQueue(String queueName, AmazonSQSClient client, int visibilityTimeoutInSeconds, int batchSize, int pollTimeInMS, List<String> accountsToAuthorize) {
+	private final Scheduler scheduler;
+
+	private SQSObservableQueue(String queueName,
+							   AmazonSQSClient client,
+							   int visibilityTimeoutInSeconds,
+							   int batchSize,
+							   int pollTimeInMS,
+							   List<String> accountsToAuthorize,
+							   Scheduler scheduler) {
 		this.queueName = queueName;
 		this.client = client;
 		this.visibilityTimeoutInSeconds = visibilityTimeoutInSeconds;
 		this.batchSize = batchSize;
 		this.pollTimeInMS = pollTimeInMS;
 		this.queueURL = getOrCreateQueue();
+		this.scheduler = scheduler;
 		addPolicy(accountsToAuthorize);
 	}
 
@@ -167,6 +177,8 @@ public class SQSObservableQueue implements ObservableQueue {
 
 		private List<String> accountsToAuthorize = new LinkedList<>();
 
+		private Scheduler scheduler;
+
 		public Builder withQueueName(String queueName) {
 			this.queueName = queueName;
 			return this;
@@ -207,8 +219,13 @@ public class SQSObservableQueue implements ObservableQueue {
 			return this;
 		}
 
+		public Builder withScheduler(Scheduler scheduler) {
+			this.scheduler = scheduler;
+			return this;
+		}
+
 		public SQSObservableQueue build() {
-			return new SQSObservableQueue(queueName, client, visibilityTimeout, batchSize, pollTimeInMS, accountsToAuthorize);
+			return new SQSObservableQueue(queueName, client, visibilityTimeout, batchSize, pollTimeInMS, accountsToAuthorize, scheduler);
 		}
 	}
 
@@ -267,15 +284,15 @@ public class SQSObservableQueue implements ObservableQueue {
     }
 
 	private void publishMessages(List<Message> messages) {
-		logger.info("Sending {} messages to the SQS queue: {}", messages.size(), queueName);
+		logger.debug("Sending {} messages to the SQS queue: {}", messages.size(), queueName);
 		SendMessageBatchRequest batch = new SendMessageBatchRequest(queueURL);
 		messages.forEach(msg -> {
 			SendMessageBatchRequestEntry sendr = new SendMessageBatchRequestEntry(msg.getId(), msg.getPayload());
 			batch.getEntries().add(sendr);
 		});
-		logger.info("sending {} messages in batch", batch.getEntries().size());
+		logger.debug("sending {} messages in batch", batch.getEntries().size());
 		SendMessageBatchResult result = client.sendMessageBatch(batch);
-		logger.info("send result: {} for SQS queue: {}", result.getFailed().toString(), queueName);
+		logger.debug("send result: {} for SQS queue: {}", result.getFailed().toString(), queueName);
 	}
 
 	@VisibleForTesting

@@ -2,9 +2,6 @@ package com.netflix.conductor.core.execution.tasks;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.MetadataService;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,7 +14,7 @@ public class TestIsolatedTaskQueueProducer {
 	@Test
 	public void addTaskQueuesAddsElementToQueue() throws InterruptedException {
 
-		SystemTaskWorkerCoordinator.taskNameWorkFlowTaskMapping.put("HTTP", Mockito.mock(WorkflowSystemTask.class));
+		SystemTaskWorkerCoordinator.taskNameWorkflowTaskMapping.put("HTTP", Mockito.mock(WorkflowSystemTask.class));
 		MetadataService metadataService = Mockito.mock(MetadataService.class);
 		IsolatedTaskQueueProducer isolatedTaskQueueProducer = new IsolatedTaskQueueProducer(metadataService, Mockito.mock(Configuration.class));
 		TaskDef taskDef = new TaskDef();

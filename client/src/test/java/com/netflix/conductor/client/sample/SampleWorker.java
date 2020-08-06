@@ -1,5 +1,5 @@
-/**
- * Copyright 2017 Netflix, Inc.
+/*
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * 
- */
 package com.netflix.conductor.client.sample;
 
 import com.netflix.conductor.client.worker.Worker;
@@ -23,37 +20,29 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.tasks.TaskResult.Status;
 
-/**
- * @author Viren
- * 
- */
 public class SampleWorker implements Worker {
 
-	private String taskDefName;
-	
-	public SampleWorker(String taskDefName) {
-		this.taskDefName = taskDefName;
-	}
-	
-	@Override
-	public String getTaskDefName() {
-		return taskDefName;
-	}
+    private String taskDefName;
 
-	@Override
-	public TaskResult execute(Task task) {
-		
-		System.out.printf("Executing %s%n", taskDefName);
-		
-		TaskResult result = new TaskResult(task);
-		result.setStatus(Status.COMPLETED);
-		
-		//Register the output of the task
-		result.getOutputData().put("outputKey1", "value");
-		result.getOutputData().put("oddEven", 1);
-		result.getOutputData().put("mod", 4);
-		
-		return result;
-	}
+    public SampleWorker(String taskDefName) {
+        this.taskDefName = taskDefName;
+    }
 
+    @Override
+    public String getTaskDefName() {
+        return taskDefName;
+    }
+
+    @Override
+    public TaskResult execute(Task task) {
+        TaskResult result = new TaskResult(task);
+        result.setStatus(Status.COMPLETED);
+
+        //Register the output of the task
+        result.getOutputData().put("outputKey1", "value");
+        result.getOutputData().put("oddEven", 1);
+        result.getOutputData().put("mod", 4);
+
+        return result;
+    }
 }

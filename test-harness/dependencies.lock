@@ -76,36 +76,14 @@
                 "com.google.inject:guice"
             ]
         },
-        "ch.vorburger.mariaDB4j:mariaDB4j": {
-            "locked": "2.2.3",
-            "requested": "2.2.3"
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-core": {
-            "locked": "2.2.3",
+        "cglib:cglib-nodep": {
+            "locked": "3.2.2",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-linux64": {
-            "locked": "10.1.13",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-mac64": {
-            "locked": "10.1.9",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-win32": {
-            "locked": "10.1.20",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
+                "com.netflix.governator:governator-test-spock"
             ]
         },
         "com.amazonaws:aws-java-sdk-core": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-kms",
                 "com.amazonaws:aws-java-sdk-s3",
@@ -126,13 +104,13 @@
             ]
         },
         "com.amazonaws:aws-java-sdk-sqs": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.netflix.conductor:conductor-contribs"
             ]
         },
         "com.amazonaws:jmespath-java": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-kms",
                 "com.amazonaws:aws-java-sdk-s3",
@@ -143,6 +121,12 @@
             "locked": "0.7.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "com.cyrusinnovation:mockito-groovy-support": {
+            "locked": "1.3",
+            "transitive": [
+                "com.netflix.governator:governator-test-spock"
             ]
         },
         "com.datastax.cassandra:cassandra-driver-core": {
@@ -158,7 +142,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
@@ -169,7 +153,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -177,31 +161,33 @@
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
                 "com.fasterxml.jackson.datatype:jackson-datatype-joda",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.eureka:eureka-client",
-                "org.elasticsearch:elasticsearch"
+                "de.ruedigermoeller:fst",
+                "org.elasticsearch:elasticsearch",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.eureka:eureka-client",
+                "com.netflix.governator:governator",
                 "io.swagger:swagger-core",
-                "net.thisptr:jackson-jq"
+                "net.thisptr:jackson-jq",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
@@ -224,11 +210,12 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.9.10",
             "transitive": [
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-jaxrs",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
@@ -238,29 +225,23 @@
             ]
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
             ]
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.netflix.conductor:conductor-client",
                 "io.swagger:swagger-jaxrs"
             ]
         },
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -298,6 +279,12 @@
             "locked": "1.0.2",
             "transitive": [
                 "com.github.jnr:jnr-ffi"
+            ]
+        },
+        "com.github.luben:zstd-jni": {
+            "locked": "1.3.8-1",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -347,10 +334,11 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.7",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
                 "com.google.protobuf:protobuf-java-util",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix",
                 "io.grpc:grpc-core"
             ]
@@ -375,6 +363,9 @@
                 "io.grpc:grpc-protobuf-lite",
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-jaxrs",
+                "org.apache.curator:curator-client",
+                "org.apache.curator:curator-framework",
+                "org.apache.curator:curator-recipes",
                 "org.reflections:reflections"
             ]
         },
@@ -418,6 +409,7 @@
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-server",
                 "com.netflix.dyno-queues:dyno-queues-redis",
@@ -454,7 +446,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -476,19 +471,29 @@
         "com.netflix.archaius:archaius2-api": {
             "locked": "2.1.10",
             "transitive": [
-                "com.netflix.archaius:archaius2-core"
+                "com.netflix.archaius:archaius2-core",
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.archaius:archaius2-core": {
             "locked": "2.1.10",
             "transitive": [
-                "com.netflix.archaius:archaius2-guice"
+                "com.netflix.archaius:archaius2-guice",
+                "com.netflix.archaius:archaius2-test",
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.archaius:archaius2-guice": {
             "locked": "2.1.10",
             "transitive": [
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-guice"
+            ]
+        },
+        "com.netflix.archaius:archaius2-test": {
+            "locked": "2.1.10",
+            "transitive": [
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.conductor:conductor-cassandra-persistence": {
@@ -524,16 +529,26 @@
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
                 "com.netflix.conductor:conductor-jersey",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
-                "com.netflix.conductor:conductor-server"
+                "com.netflix.conductor:conductor-server",
+                "com.netflix.conductor:conductor-zookeeper-lock"
             ]
         },
         "com.netflix.conductor:conductor-es5-persistence": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-es6-persistence": {
             "project": true,
             "transitive": [
                 "com.netflix.conductor:conductor-server"
@@ -567,6 +582,18 @@
                 "com.netflix.conductor:conductor-server"
             ]
         },
+        "com.netflix.conductor:conductor-postgres-persistence": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-redis-lock": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.conductor:conductor-redis-persistence": {
             "project": true,
             "transitive": [
@@ -576,36 +603,68 @@
         "com.netflix.conductor:conductor-server": {
             "project": true
         },
+        "com.netflix.conductor:conductor-zookeeper-lock": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
             ]
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -616,18 +675,38 @@
                 "com.netflix.dyno:dyno-contrib"
             ]
         },
-        "com.netflix.governator:governator-api": {
-            "locked": "1.15.7",
+        "com.netflix.governator:governator": {
+            "locked": "1.17.10",
             "transitive": [
+                "com.netflix.governator:governator-test"
+            ]
+        },
+        "com.netflix.governator:governator-api": {
+            "locked": "1.17.10",
+            "transitive": [
+                "com.netflix.governator:governator",
                 "com.netflix.governator:governator-core",
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-core"
             ]
         },
         "com.netflix.governator:governator-core": {
-            "locked": "1.15.7",
+            "locked": "1.17.10",
             "transitive": [
+                "com.netflix.governator:governator",
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-guice"
             ]
+        },
+        "com.netflix.governator:governator-test": {
+            "locked": "1.17.10",
+            "transitive": [
+                "com.netflix.governator:governator-test-spock"
+            ]
+        },
+        "com.netflix.governator:governator-test-spock": {
+            "locked": "1.17.10",
+            "requested": "latest.release"
         },
         "com.netflix.netflix-commons:netflix-eventbus": {
             "locked": "0.3.0",
@@ -676,7 +755,20 @@
             "transitive": [
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-core",
-                "com.netflix.runtime:health-core"
+                "com.netflix.runtime:health-core",
+                "com.netflix.spectator:spectator-reg-metrics3"
+            ]
+        },
+        "com.netflix.spectator:spectator-reg-metrics3": {
+            "locked": "0.68.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
+            ]
+        },
+        "com.rabbitmq:amqp-client": {
+            "locked": "5.8.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
             ]
         },
         "com.spotify:completable-futures": {
@@ -737,7 +829,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs.jersey-oauth:oauth-signature",
                 "com.sun.jersey.contribs:jersey-multipart",
@@ -787,11 +882,18 @@
         "com.zaxxer:HikariCP": {
             "locked": "3.2.0",
             "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
+                "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
-            "locked": "1.10",
+            "locked": "1.11",
             "transitive": [
                 "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
@@ -806,10 +908,11 @@
         "commons-io:commons-io": {
             "locked": "2.6",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.dyno:dyno-core"
             ]
         },
@@ -831,14 +934,20 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "commons-configuration:commons-configuration",
                 "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client",
-                "org.springframework:spring-core"
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "de.ruedigermoeller:fst": {
+            "locked": "2.57",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "io.dropwizard.metrics:metrics-core": {
             "locked": "3.2.2",
             "transitive": [
-                "com.datastax.cassandra:cassandra-driver-core"
+                "com.datastax.cassandra:cassandra-driver-core",
+                "com.netflix.spectator:spectator-reg-metrics3"
             ]
         },
         "io.grpc:grpc-context": {
@@ -902,20 +1011,33 @@
             ]
         },
         "io.netty:netty-buffer": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-handler",
+                "io.netty:netty-resolver-dns",
                 "io.netty:netty-transport",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-codec-http",
                 "io.netty:netty-codec-socks",
                 "io.netty:netty-handler",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
+            ]
+        },
+        "io.netty:netty-codec-dns": {
+            "locked": "4.1.41.Final",
+            "transitive": [
+                "io.netty:netty-resolver-dns"
             ]
         },
         "io.netty:netty-codec-http": {
@@ -939,19 +1061,26 @@
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "io.netty:netty-buffer",
+                "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
+                "io.netty:netty-handler",
                 "io.netty:netty-resolver",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "io.netty:netty-transport",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "com.datastax.cassandra:cassandra-driver-core",
                 "io.netty:netty-codec-http2",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-handler-proxy": {
@@ -961,19 +1090,29 @@
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-resolver-dns",
                 "io.netty:netty-transport",
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
+        "io.netty:netty-resolver-dns": {
+            "locked": "4.1.41.Final",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
         "io.netty:netty-transport": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-handler",
                 "io.netty:netty-handler-proxy",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.opencensus:opencensus-api": {
@@ -987,6 +1126,18 @@
             "locked": "0.12.3",
             "transitive": [
                 "io.grpc:grpc-core"
+            ]
+        },
+        "io.projectreactor:reactor-core": {
+            "locked": "3.2.6.RELEASE",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
+        "io.reactivex.rxjava2:rxjava": {
+            "locked": "2.2.7",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "io.reactivex:rxjava": {
@@ -1028,11 +1179,35 @@
                 "io.swagger:swagger-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
+        "jakarta.activation:jakarta.activation-api": {
+            "locked": "1.2.1",
             "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
+                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
+                "jakarta.xml.bind:jakarta.xml.bind-api"
+            ]
+        },
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "1.3.5",
+            "transitive": [
+                "com.netflix.governator:governator-core"
+            ]
+        },
+        "jakarta.xml.bind:jakarta.xml.bind-api": {
+            "locked": "2.3.2",
+            "transitive": [
+                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.cache:cache-api": {
+            "locked": "1.0.0",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "javax.inject:javax.inject": {
@@ -1064,8 +1239,10 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "io.swagger:swagger-core",
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-jersey",
+                "io.swagger:swagger-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -1078,6 +1255,18 @@
                 "io.swagger:swagger-jaxrs"
             ]
         },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.governator:governator"
+            ]
+        },
+        "jline:jline": {
+            "locked": "0.9.94",
+            "transitive": [
+                "org.apache.zookeeper:zookeeper"
+            ]
+        },
         "joda-time:joda-time": {
             "locked": "2.9.5",
             "transitive": [
@@ -1085,20 +1274,27 @@
                 "com.fasterxml.jackson.datatype:jackson-datatype-joda",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "junit:junit": {
             "locked": "4.12",
-            "requested": "4.12"
+            "requested": "4.12",
+            "transitive": [
+                "org.spockframework:spock-core"
+            ]
         },
         "log4j:log4j": {
             "locked": "1.2.17",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
+                "org.apache.zookeeper:zookeeper",
                 "org.slf4j:slf4j-log4j12"
             ]
         },
@@ -1106,6 +1302,19 @@
             "locked": "8.0.11",
             "transitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.16",
+            "transitive": [
+                "org.mockito:mockito-core",
+                "org.redisson:redisson"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -1127,7 +1336,7 @@
             ]
         },
         "net.thisptr:jackson-jq": {
-            "locked": "0.0.8",
+            "locked": "0.0.11",
             "transitive": [
                 "com.netflix.conductor:conductor-contribs"
             ]
@@ -1144,27 +1353,23 @@
                 "org.antlr:antlr-runtime"
             ]
         },
-        "org.apache.commons:commons-collections4": {
-            "locked": "4.1",
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
-            ]
-        },
-        "org.apache.commons:commons-exec": {
-            "locked": "1.3",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-jersey"
             ]
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.netflix.archaius:archaius2-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.governator:governator-test",
                 "io.swagger:swagger-core"
             ]
         },
@@ -1176,9 +1381,27 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
+            ]
+        },
+        "org.apache.curator:curator-client": {
+            "locked": "2.4.0",
+            "transitive": [
+                "org.apache.curator:curator-framework"
+            ]
+        },
+        "org.apache.curator:curator-framework": {
+            "locked": "2.4.0",
+            "transitive": [
+                "org.apache.curator:curator-recipes"
+            ]
+        },
+        "org.apache.curator:curator-recipes": {
+            "locked": "2.4.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-zookeeper-lock"
             ]
         },
         "org.apache.httpcomponents:httpasyncclient": {
@@ -1188,19 +1411,22 @@
             ]
         },
         "org.apache.httpcomponents:httpclient": {
-            "locked": "4.5.5",
+            "locked": "4.5.9",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4",
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
         "org.apache.httpcomponents:httpcore": {
-            "locked": "4.4.9",
+            "locked": "4.4.11",
             "transitive": [
                 "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
@@ -1212,10 +1438,17 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
+        "org.apache.kafka:kafka-clients": {
+            "locked": "2.2.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
+            ]
+        },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.9.1",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "org.apache.logging.log4j:log4j-core",
                 "org.elasticsearch.plugin:aggs-matrix-stats-client",
                 "org.elasticsearch.plugin:lang-mustache-client",
@@ -1231,6 +1464,7 @@
             "locked": "2.9.1",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "org.elasticsearch.plugin:aggs-matrix-stats-client",
                 "org.elasticsearch.plugin:lang-mustache-client",
                 "org.elasticsearch.plugin:parent-join-client",
@@ -1330,9 +1564,25 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
+        "org.apache.zookeeper:zookeeper": {
+            "locked": "3.4.5",
+            "transitive": [
+                "org.apache.curator:curator-client",
+                "org.apache.curator:curator-framework",
+                "org.apache.curator:curator-recipes"
+            ]
+        },
         "org.awaitility:awaitility": {
             "locked": "3.1.2",
             "requested": "3.1.2"
+        },
+        "org.codehaus.groovy:groovy-all": {
+            "locked": "2.4.15",
+            "requested": "2.4.15",
+            "transitive": [
+                "com.cyrusinnovation:mockito-groovy-support",
+                "org.spockframework:spock-core"
+            ]
         },
         "org.codehaus.jettison:jettison": {
             "locked": "1.3.7",
@@ -1347,47 +1597,56 @@
             ]
         },
         "org.eclipse.jetty:jetty-http": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-server"
             ]
         },
         "org.eclipse.jetty:jetty-io": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
+                "org.eclipse.jetty:jetty-http",
                 "org.eclipse.jetty:jetty-server"
             ]
         },
+        "org.eclipse.jetty:jetty-jmx": {
+            "locked": "9.4.22.v20191022",
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "org.eclipse.jetty:jetty-security": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-servlet"
             ]
         },
         "org.eclipse.jetty:jetty-server": {
-            "locked": "9.3.9.v20160517",
-            "requested": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
+            "requested": "9.4.22.v20191022",
             "transitive": [
                 "com.netflix.conductor:conductor-server",
                 "org.eclipse.jetty:jetty-security"
             ]
         },
         "org.eclipse.jetty:jetty-servlet": {
-            "locked": "9.3.9.v20160517",
-            "requested": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
+            "requested": "9.4.22.v20191022",
             "transitive": [
                 "com.netflix.conductor:conductor-server"
             ]
         },
         "org.eclipse.jetty:jetty-util": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-http",
-                "org.eclipse.jetty:jetty-io"
+                "org.eclipse.jetty:jetty-io",
+                "org.eclipse.jetty:jetty-jmx"
             ]
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
@@ -1396,12 +1655,14 @@
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ]
         },
         "org.elasticsearch.client:transport": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ]
@@ -1487,7 +1748,8 @@
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
             "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
+                "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence"
             ]
         },
         "org.glassfish:javax.el": {
@@ -1517,40 +1779,39 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core",
-                "com.netflix.conductor:conductor-jersey"
-            ]
-        },
         "org.javassist:javassist": {
-            "locked": "3.18.2-GA",
+            "locked": "3.21.0-GA",
             "transitive": [
+                "de.ruedigermoeller:fst",
                 "org.reflections:reflections"
             ]
         },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
+        "org.jboss.netty:netty": {
+            "locked": "3.2.2.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.apache.zookeeper:zookeeper"
+            ]
+        },
+        "org.jodd:jodd-bean": {
+            "locked": "5.0.13",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
+        "org.jodd:jodd-core": {
+            "locked": "5.0.13",
+            "transitive": [
+                "org.jodd:jodd-bean"
             ]
         },
         "org.jruby.jcodings:jcodings": {
-            "locked": "1.0.13",
+            "locked": "1.0.43",
             "transitive": [
                 "org.jruby.joni:joni"
             ]
         },
         "org.jruby.joni:joni": {
-            "locked": "2.1.11",
+            "locked": "2.1.27",
             "transitive": [
                 "net.thisptr:jackson-jq"
             ]
@@ -1579,13 +1840,29 @@
                 "org.rarefiedredis.redis:redis-java"
             ]
         },
+        "org.lz4:lz4-java": {
+            "locked": "1.5.0",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
+            ]
+        },
+        "org.mockito:mockito-all": {
+            "locked": "1.9.5",
+            "transitive": [
+                "com.cyrusinnovation:mockito-groovy-support"
+            ]
+        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0",
+            "transitive": [
+                "com.netflix.governator:governator-test"
+            ]
         },
         "org.objenesis:objenesis": {
             "locked": "2.6",
             "transitive": [
+                "de.ruedigermoeller:fst",
                 "org.awaitility:awaitility",
                 "org.mockito:mockito-core"
             ]
@@ -1625,11 +1902,36 @@
                 "com.github.jnr:jnr-ffi"
             ]
         },
+        "org.postgresql:postgresql": {
+            "locked": "42.2.6",
+            "transitive": [
+                "com.netflix.conductor:conductor-postgres-persistence"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
+            ]
+        },
         "org.rarefiedredis.redis:redis-java": {
             "locked": "0.0.17",
             "requested": "0.0.17",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
+            ]
+        },
+        "org.reactivestreams:reactive-streams": {
+            "locked": "1.0.2",
+            "transitive": [
+                "io.projectreactor:reactor-core",
+                "io.reactivex.rxjava2:rxjava"
+            ]
+        },
+        "org.redisson:redisson": {
+            "locked": "3.11.4",
+            "transitive": [
+                "com.netflix.conductor:conductor-redis-lock"
             ]
         },
         "org.reflections:reflections": {
@@ -1639,9 +1941,8 @@
             ]
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
+            "locked": "1.7.29",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.datastax.cassandra:cassandra-driver-core",
                 "com.jayway.jsonpath:json-path",
                 "com.netflix.archaius:archaius-core",
@@ -1649,17 +1950,27 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.governator:governator-core",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
+                "com.netflix.spectator:spectator-reg-metrics3",
+                "com.rabbitmq:amqp-client",
                 "com.zaxxer:HikariCP",
                 "io.dropwizard.metrics:metrics-core",
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-models",
-                "org.slf4j:slf4j-log4j12"
+                "org.apache.curator:curator-client",
+                "org.apache.kafka:kafka-clients",
+                "org.apache.zookeeper:zookeeper",
+                "org.redisson:redisson",
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -1667,24 +1978,35 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
+                "org.apache.zookeeper:zookeeper"
             ]
         },
-        "org.springframework:spring-core": {
-            "locked": "4.3.6.RELEASE",
+        "org.spockframework:spock-core": {
+            "locked": "1.3-groovy-2.4",
+            "requested": "1.3-groovy-2.4",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
+                "com.netflix.governator:governator-test-spock"
+            ]
+        },
+        "org.xerial.snappy:snappy-java": {
+            "locked": "1.1.7.2",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
             ]
         },
         "org.yaml:snakeyaml": {
-            "locked": "1.17",
+            "locked": "1.23",
             "transitive": [
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
+            "locked": "3.0.1",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.dyno:dyno-jedis",
@@ -1730,36 +2052,14 @@
                 "com.google.inject:guice"
             ]
         },
-        "ch.vorburger.mariaDB4j:mariaDB4j": {
-            "locked": "2.2.3",
-            "requested": "2.2.3"
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-core": {
-            "locked": "2.2.3",
+        "cglib:cglib-nodep": {
+            "locked": "3.2.2",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-linux64": {
-            "locked": "10.1.13",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-mac64": {
-            "locked": "10.1.9",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-win32": {
-            "locked": "10.1.20",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
+                "com.netflix.governator:governator-test-spock"
             ]
         },
         "com.amazonaws:aws-java-sdk-core": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-kms",
                 "com.amazonaws:aws-java-sdk-s3",
@@ -1780,13 +2080,13 @@
             ]
         },
         "com.amazonaws:aws-java-sdk-sqs": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.netflix.conductor:conductor-contribs"
             ]
         },
         "com.amazonaws:jmespath-java": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-kms",
                 "com.amazonaws:aws-java-sdk-s3",
@@ -1797,6 +2097,12 @@
             "locked": "0.7.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "com.cyrusinnovation:mockito-groovy-support": {
+            "locked": "1.3",
+            "transitive": [
+                "com.netflix.governator:governator-test-spock"
             ]
         },
         "com.datastax.cassandra:cassandra-driver-core": {
@@ -1812,7 +2118,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
@@ -1823,7 +2129,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -1831,31 +2137,33 @@
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
                 "com.fasterxml.jackson.datatype:jackson-datatype-joda",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.eureka:eureka-client",
-                "org.elasticsearch:elasticsearch"
+                "de.ruedigermoeller:fst",
+                "org.elasticsearch:elasticsearch",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.eureka:eureka-client",
+                "com.netflix.governator:governator",
                 "io.swagger:swagger-core",
-                "net.thisptr:jackson-jq"
+                "net.thisptr:jackson-jq",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
@@ -1878,11 +2186,12 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.9.10",
             "transitive": [
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-jaxrs",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
@@ -1892,29 +2201,23 @@
             ]
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
             ]
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.netflix.conductor:conductor-client",
                 "io.swagger:swagger-jaxrs"
             ]
         },
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -1952,6 +2255,12 @@
             "locked": "1.0.2",
             "transitive": [
                 "com.github.jnr:jnr-ffi"
+            ]
+        },
+        "com.github.luben:zstd-jni": {
+            "locked": "1.3.8-1",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -2001,10 +2310,11 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.7",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
                 "com.google.protobuf:protobuf-java-util",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix",
                 "io.grpc:grpc-core"
             ]
@@ -2029,6 +2339,9 @@
                 "io.grpc:grpc-protobuf-lite",
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-jaxrs",
+                "org.apache.curator:curator-client",
+                "org.apache.curator:curator-framework",
+                "org.apache.curator:curator-recipes",
                 "org.reflections:reflections"
             ]
         },
@@ -2072,6 +2385,7 @@
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-server",
                 "com.netflix.dyno-queues:dyno-queues-redis",
@@ -2108,7 +2422,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -2130,19 +2447,29 @@
         "com.netflix.archaius:archaius2-api": {
             "locked": "2.1.10",
             "transitive": [
-                "com.netflix.archaius:archaius2-core"
+                "com.netflix.archaius:archaius2-core",
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.archaius:archaius2-core": {
             "locked": "2.1.10",
             "transitive": [
-                "com.netflix.archaius:archaius2-guice"
+                "com.netflix.archaius:archaius2-guice",
+                "com.netflix.archaius:archaius2-test",
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.archaius:archaius2-guice": {
             "locked": "2.1.10",
             "transitive": [
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-guice"
+            ]
+        },
+        "com.netflix.archaius:archaius2-test": {
+            "locked": "2.1.10",
+            "transitive": [
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.conductor:conductor-cassandra-persistence": {
@@ -2178,16 +2505,26 @@
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
                 "com.netflix.conductor:conductor-jersey",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
-                "com.netflix.conductor:conductor-server"
+                "com.netflix.conductor:conductor-server",
+                "com.netflix.conductor:conductor-zookeeper-lock"
             ]
         },
         "com.netflix.conductor:conductor-es5-persistence": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-es6-persistence": {
             "project": true,
             "transitive": [
                 "com.netflix.conductor:conductor-server"
@@ -2221,6 +2558,18 @@
                 "com.netflix.conductor:conductor-server"
             ]
         },
+        "com.netflix.conductor:conductor-postgres-persistence": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-redis-lock": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.conductor:conductor-redis-persistence": {
             "project": true,
             "transitive": [
@@ -2230,36 +2579,68 @@
         "com.netflix.conductor:conductor-server": {
             "project": true
         },
+        "com.netflix.conductor:conductor-zookeeper-lock": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
             ]
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -2270,18 +2651,38 @@
                 "com.netflix.dyno:dyno-contrib"
             ]
         },
-        "com.netflix.governator:governator-api": {
-            "locked": "1.15.7",
+        "com.netflix.governator:governator": {
+            "locked": "1.17.10",
             "transitive": [
+                "com.netflix.governator:governator-test"
+            ]
+        },
+        "com.netflix.governator:governator-api": {
+            "locked": "1.17.10",
+            "transitive": [
+                "com.netflix.governator:governator",
                 "com.netflix.governator:governator-core",
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-core"
             ]
         },
         "com.netflix.governator:governator-core": {
-            "locked": "1.15.7",
+            "locked": "1.17.10",
             "transitive": [
+                "com.netflix.governator:governator",
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-guice"
             ]
+        },
+        "com.netflix.governator:governator-test": {
+            "locked": "1.17.10",
+            "transitive": [
+                "com.netflix.governator:governator-test-spock"
+            ]
+        },
+        "com.netflix.governator:governator-test-spock": {
+            "locked": "1.17.10",
+            "requested": "latest.release"
         },
         "com.netflix.netflix-commons:netflix-eventbus": {
             "locked": "0.3.0",
@@ -2330,7 +2731,20 @@
             "transitive": [
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-core",
-                "com.netflix.runtime:health-core"
+                "com.netflix.runtime:health-core",
+                "com.netflix.spectator:spectator-reg-metrics3"
+            ]
+        },
+        "com.netflix.spectator:spectator-reg-metrics3": {
+            "locked": "0.68.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
+            ]
+        },
+        "com.rabbitmq:amqp-client": {
+            "locked": "5.8.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
             ]
         },
         "com.spotify:completable-futures": {
@@ -2391,7 +2805,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs.jersey-oauth:oauth-signature",
                 "com.sun.jersey.contribs:jersey-multipart",
@@ -2441,11 +2858,18 @@
         "com.zaxxer:HikariCP": {
             "locked": "3.2.0",
             "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
+                "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
-            "locked": "1.10",
+            "locked": "1.11",
             "transitive": [
                 "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
@@ -2460,10 +2884,11 @@
         "commons-io:commons-io": {
             "locked": "2.6",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.dyno:dyno-core"
             ]
         },
@@ -2485,14 +2910,20 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "commons-configuration:commons-configuration",
                 "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client",
-                "org.springframework:spring-core"
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "de.ruedigermoeller:fst": {
+            "locked": "2.57",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "io.dropwizard.metrics:metrics-core": {
             "locked": "3.2.2",
             "transitive": [
-                "com.datastax.cassandra:cassandra-driver-core"
+                "com.datastax.cassandra:cassandra-driver-core",
+                "com.netflix.spectator:spectator-reg-metrics3"
             ]
         },
         "io.grpc:grpc-context": {
@@ -2556,20 +2987,33 @@
             ]
         },
         "io.netty:netty-buffer": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-handler",
+                "io.netty:netty-resolver-dns",
                 "io.netty:netty-transport",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-codec-http",
                 "io.netty:netty-codec-socks",
                 "io.netty:netty-handler",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
+            ]
+        },
+        "io.netty:netty-codec-dns": {
+            "locked": "4.1.41.Final",
+            "transitive": [
+                "io.netty:netty-resolver-dns"
             ]
         },
         "io.netty:netty-codec-http": {
@@ -2593,19 +3037,26 @@
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "io.netty:netty-buffer",
+                "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
+                "io.netty:netty-handler",
                 "io.netty:netty-resolver",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "io.netty:netty-transport",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "com.datastax.cassandra:cassandra-driver-core",
                 "io.netty:netty-codec-http2",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-handler-proxy": {
@@ -2615,19 +3066,29 @@
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-resolver-dns",
                 "io.netty:netty-transport",
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
+        "io.netty:netty-resolver-dns": {
+            "locked": "4.1.41.Final",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
         "io.netty:netty-transport": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-handler",
                 "io.netty:netty-handler-proxy",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.opencensus:opencensus-api": {
@@ -2641,6 +3102,18 @@
             "locked": "0.12.3",
             "transitive": [
                 "io.grpc:grpc-core"
+            ]
+        },
+        "io.projectreactor:reactor-core": {
+            "locked": "3.2.6.RELEASE",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
+        "io.reactivex.rxjava2:rxjava": {
+            "locked": "2.2.7",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "io.reactivex:rxjava": {
@@ -2682,11 +3155,35 @@
                 "io.swagger:swagger-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
+        "jakarta.activation:jakarta.activation-api": {
+            "locked": "1.2.1",
             "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
+                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
+                "jakarta.xml.bind:jakarta.xml.bind-api"
+            ]
+        },
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "1.3.5",
+            "transitive": [
+                "com.netflix.governator:governator-core"
+            ]
+        },
+        "jakarta.xml.bind:jakarta.xml.bind-api": {
+            "locked": "2.3.2",
+            "transitive": [
+                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.cache:cache-api": {
+            "locked": "1.0.0",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "javax.inject:javax.inject": {
@@ -2718,8 +3215,10 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "io.swagger:swagger-core",
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-jersey",
+                "io.swagger:swagger-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -2732,6 +3231,18 @@
                 "io.swagger:swagger-jaxrs"
             ]
         },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.governator:governator"
+            ]
+        },
+        "jline:jline": {
+            "locked": "0.9.94",
+            "transitive": [
+                "org.apache.zookeeper:zookeeper"
+            ]
+        },
         "joda-time:joda-time": {
             "locked": "2.9.5",
             "transitive": [
@@ -2739,20 +3250,27 @@
                 "com.fasterxml.jackson.datatype:jackson-datatype-joda",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "junit:junit": {
             "locked": "4.12",
-            "requested": "4.12"
+            "requested": "4.12",
+            "transitive": [
+                "org.spockframework:spock-core"
+            ]
         },
         "log4j:log4j": {
             "locked": "1.2.17",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
+                "org.apache.zookeeper:zookeeper",
                 "org.slf4j:slf4j-log4j12"
             ]
         },
@@ -2760,6 +3278,19 @@
             "locked": "8.0.11",
             "transitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.16",
+            "transitive": [
+                "org.mockito:mockito-core",
+                "org.redisson:redisson"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -2781,7 +3312,7 @@
             ]
         },
         "net.thisptr:jackson-jq": {
-            "locked": "0.0.8",
+            "locked": "0.0.11",
             "transitive": [
                 "com.netflix.conductor:conductor-contribs"
             ]
@@ -2798,27 +3329,23 @@
                 "org.antlr:antlr-runtime"
             ]
         },
-        "org.apache.commons:commons-collections4": {
-            "locked": "4.1",
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
-            ]
-        },
-        "org.apache.commons:commons-exec": {
-            "locked": "1.3",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-jersey"
             ]
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.netflix.archaius:archaius2-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.governator:governator-test",
                 "io.swagger:swagger-core"
             ]
         },
@@ -2830,9 +3357,27 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
+            ]
+        },
+        "org.apache.curator:curator-client": {
+            "locked": "2.4.0",
+            "transitive": [
+                "org.apache.curator:curator-framework"
+            ]
+        },
+        "org.apache.curator:curator-framework": {
+            "locked": "2.4.0",
+            "transitive": [
+                "org.apache.curator:curator-recipes"
+            ]
+        },
+        "org.apache.curator:curator-recipes": {
+            "locked": "2.4.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-zookeeper-lock"
             ]
         },
         "org.apache.httpcomponents:httpasyncclient": {
@@ -2842,19 +3387,22 @@
             ]
         },
         "org.apache.httpcomponents:httpclient": {
-            "locked": "4.5.5",
+            "locked": "4.5.9",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4",
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
         "org.apache.httpcomponents:httpcore": {
-            "locked": "4.4.9",
+            "locked": "4.4.11",
             "transitive": [
                 "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
@@ -2866,10 +3414,17 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
+        "org.apache.kafka:kafka-clients": {
+            "locked": "2.2.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
+            ]
+        },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.9.1",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "org.apache.logging.log4j:log4j-core",
                 "org.elasticsearch.plugin:aggs-matrix-stats-client",
                 "org.elasticsearch.plugin:lang-mustache-client",
@@ -2885,6 +3440,7 @@
             "locked": "2.9.1",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "org.elasticsearch.plugin:aggs-matrix-stats-client",
                 "org.elasticsearch.plugin:lang-mustache-client",
                 "org.elasticsearch.plugin:parent-join-client",
@@ -2984,9 +3540,25 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
+        "org.apache.zookeeper:zookeeper": {
+            "locked": "3.4.5",
+            "transitive": [
+                "org.apache.curator:curator-client",
+                "org.apache.curator:curator-framework",
+                "org.apache.curator:curator-recipes"
+            ]
+        },
         "org.awaitility:awaitility": {
             "locked": "3.1.2",
             "requested": "3.1.2"
+        },
+        "org.codehaus.groovy:groovy-all": {
+            "locked": "2.4.15",
+            "requested": "2.4.15",
+            "transitive": [
+                "com.cyrusinnovation:mockito-groovy-support",
+                "org.spockframework:spock-core"
+            ]
         },
         "org.codehaus.jettison:jettison": {
             "locked": "1.3.7",
@@ -3001,47 +3573,56 @@
             ]
         },
         "org.eclipse.jetty:jetty-http": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-server"
             ]
         },
         "org.eclipse.jetty:jetty-io": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
+                "org.eclipse.jetty:jetty-http",
                 "org.eclipse.jetty:jetty-server"
             ]
         },
+        "org.eclipse.jetty:jetty-jmx": {
+            "locked": "9.4.22.v20191022",
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "org.eclipse.jetty:jetty-security": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-servlet"
             ]
         },
         "org.eclipse.jetty:jetty-server": {
-            "locked": "9.3.9.v20160517",
-            "requested": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
+            "requested": "9.4.22.v20191022",
             "transitive": [
                 "com.netflix.conductor:conductor-server",
                 "org.eclipse.jetty:jetty-security"
             ]
         },
         "org.eclipse.jetty:jetty-servlet": {
-            "locked": "9.3.9.v20160517",
-            "requested": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
+            "requested": "9.4.22.v20191022",
             "transitive": [
                 "com.netflix.conductor:conductor-server"
             ]
         },
         "org.eclipse.jetty:jetty-util": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-http",
-                "org.eclipse.jetty:jetty-io"
+                "org.eclipse.jetty:jetty-io",
+                "org.eclipse.jetty:jetty-jmx"
             ]
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
@@ -3050,12 +3631,14 @@
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ]
         },
         "org.elasticsearch.client:transport": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ]
@@ -3141,7 +3724,8 @@
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
             "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
+                "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence"
             ]
         },
         "org.glassfish:javax.el": {
@@ -3171,40 +3755,39 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core",
-                "com.netflix.conductor:conductor-jersey"
-            ]
-        },
         "org.javassist:javassist": {
-            "locked": "3.18.2-GA",
+            "locked": "3.21.0-GA",
             "transitive": [
+                "de.ruedigermoeller:fst",
                 "org.reflections:reflections"
             ]
         },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
+        "org.jboss.netty:netty": {
+            "locked": "3.2.2.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.apache.zookeeper:zookeeper"
+            ]
+        },
+        "org.jodd:jodd-bean": {
+            "locked": "5.0.13",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
+        "org.jodd:jodd-core": {
+            "locked": "5.0.13",
+            "transitive": [
+                "org.jodd:jodd-bean"
             ]
         },
         "org.jruby.jcodings:jcodings": {
-            "locked": "1.0.13",
+            "locked": "1.0.43",
             "transitive": [
                 "org.jruby.joni:joni"
             ]
         },
         "org.jruby.joni:joni": {
-            "locked": "2.1.11",
+            "locked": "2.1.27",
             "transitive": [
                 "net.thisptr:jackson-jq"
             ]
@@ -3233,13 +3816,29 @@
                 "org.rarefiedredis.redis:redis-java"
             ]
         },
+        "org.lz4:lz4-java": {
+            "locked": "1.5.0",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
+            ]
+        },
+        "org.mockito:mockito-all": {
+            "locked": "1.9.5",
+            "transitive": [
+                "com.cyrusinnovation:mockito-groovy-support"
+            ]
+        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0",
+            "transitive": [
+                "com.netflix.governator:governator-test"
+            ]
         },
         "org.objenesis:objenesis": {
             "locked": "2.6",
             "transitive": [
+                "de.ruedigermoeller:fst",
                 "org.awaitility:awaitility",
                 "org.mockito:mockito-core"
             ]
@@ -3279,11 +3878,36 @@
                 "com.github.jnr:jnr-ffi"
             ]
         },
+        "org.postgresql:postgresql": {
+            "locked": "42.2.6",
+            "transitive": [
+                "com.netflix.conductor:conductor-postgres-persistence"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
+            ]
+        },
         "org.rarefiedredis.redis:redis-java": {
             "locked": "0.0.17",
             "requested": "0.0.17",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
+            ]
+        },
+        "org.reactivestreams:reactive-streams": {
+            "locked": "1.0.2",
+            "transitive": [
+                "io.projectreactor:reactor-core",
+                "io.reactivex.rxjava2:rxjava"
+            ]
+        },
+        "org.redisson:redisson": {
+            "locked": "3.11.4",
+            "transitive": [
+                "com.netflix.conductor:conductor-redis-lock"
             ]
         },
         "org.reflections:reflections": {
@@ -3293,9 +3917,8 @@
             ]
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
+            "locked": "1.7.29",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.datastax.cassandra:cassandra-driver-core",
                 "com.jayway.jsonpath:json-path",
                 "com.netflix.archaius:archaius-core",
@@ -3303,17 +3926,27 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.governator:governator-core",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
+                "com.netflix.spectator:spectator-reg-metrics3",
+                "com.rabbitmq:amqp-client",
                 "com.zaxxer:HikariCP",
                 "io.dropwizard.metrics:metrics-core",
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-models",
-                "org.slf4j:slf4j-log4j12"
+                "org.apache.curator:curator-client",
+                "org.apache.kafka:kafka-clients",
+                "org.apache.zookeeper:zookeeper",
+                "org.redisson:redisson",
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -3321,24 +3954,35 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
+                "org.apache.zookeeper:zookeeper"
             ]
         },
-        "org.springframework:spring-core": {
-            "locked": "4.3.6.RELEASE",
+        "org.spockframework:spock-core": {
+            "locked": "1.3-groovy-2.4",
+            "requested": "1.3-groovy-2.4",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
+                "com.netflix.governator:governator-test-spock"
+            ]
+        },
+        "org.xerial.snappy:snappy-java": {
+            "locked": "1.1.7.2",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
             ]
         },
         "org.yaml:snakeyaml": {
-            "locked": "1.17",
+            "locked": "1.23",
             "transitive": [
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
+            "locked": "3.0.1",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.dyno:dyno-jedis",
@@ -3384,36 +4028,14 @@
                 "com.google.inject:guice"
             ]
         },
-        "ch.vorburger.mariaDB4j:mariaDB4j": {
-            "locked": "2.2.3",
-            "requested": "2.2.3"
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-core": {
-            "locked": "2.2.3",
+        "cglib:cglib-nodep": {
+            "locked": "3.2.2",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-linux64": {
-            "locked": "10.1.13",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-mac64": {
-            "locked": "10.1.9",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-win32": {
-            "locked": "10.1.20",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
+                "com.netflix.governator:governator-test-spock"
             ]
         },
         "com.amazonaws:aws-java-sdk-core": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-kms",
                 "com.amazonaws:aws-java-sdk-s3",
@@ -3434,13 +4056,13 @@
             ]
         },
         "com.amazonaws:aws-java-sdk-sqs": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.netflix.conductor:conductor-contribs"
             ]
         },
         "com.amazonaws:jmespath-java": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-kms",
                 "com.amazonaws:aws-java-sdk-s3",
@@ -3451,6 +4073,12 @@
             "locked": "0.7.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "com.cyrusinnovation:mockito-groovy-support": {
+            "locked": "1.3",
+            "transitive": [
+                "com.netflix.governator:governator-test-spock"
             ]
         },
         "com.datastax.cassandra:cassandra-driver-core": {
@@ -3466,7 +4094,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
@@ -3477,7 +4105,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -3485,31 +4113,33 @@
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
                 "com.fasterxml.jackson.datatype:jackson-datatype-joda",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.eureka:eureka-client",
-                "org.elasticsearch:elasticsearch"
+                "de.ruedigermoeller:fst",
+                "org.elasticsearch:elasticsearch",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.eureka:eureka-client",
+                "com.netflix.governator:governator",
                 "io.swagger:swagger-core",
-                "net.thisptr:jackson-jq"
+                "net.thisptr:jackson-jq",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
@@ -3532,11 +4162,12 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.9.10",
             "transitive": [
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-jaxrs",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
@@ -3546,29 +4177,23 @@
             ]
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
             ]
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.netflix.conductor:conductor-client",
                 "io.swagger:swagger-jaxrs"
             ]
         },
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -3606,6 +4231,12 @@
             "locked": "1.0.2",
             "transitive": [
                 "com.github.jnr:jnr-ffi"
+            ]
+        },
+        "com.github.luben:zstd-jni": {
+            "locked": "1.3.8-1",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -3655,10 +4286,11 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.7",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
                 "com.google.protobuf:protobuf-java-util",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix",
                 "io.grpc:grpc-core"
             ]
@@ -3683,6 +4315,9 @@
                 "io.grpc:grpc-protobuf-lite",
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-jaxrs",
+                "org.apache.curator:curator-client",
+                "org.apache.curator:curator-framework",
+                "org.apache.curator:curator-recipes",
                 "org.reflections:reflections"
             ]
         },
@@ -3726,6 +4361,7 @@
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-server",
                 "com.netflix.dyno-queues:dyno-queues-redis",
@@ -3762,7 +4398,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -3784,19 +4423,29 @@
         "com.netflix.archaius:archaius2-api": {
             "locked": "2.1.10",
             "transitive": [
-                "com.netflix.archaius:archaius2-core"
+                "com.netflix.archaius:archaius2-core",
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.archaius:archaius2-core": {
             "locked": "2.1.10",
             "transitive": [
-                "com.netflix.archaius:archaius2-guice"
+                "com.netflix.archaius:archaius2-guice",
+                "com.netflix.archaius:archaius2-test",
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.archaius:archaius2-guice": {
             "locked": "2.1.10",
             "transitive": [
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-guice"
+            ]
+        },
+        "com.netflix.archaius:archaius2-test": {
+            "locked": "2.1.10",
+            "transitive": [
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.conductor:conductor-cassandra-persistence": {
@@ -3832,16 +4481,26 @@
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
                 "com.netflix.conductor:conductor-jersey",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
-                "com.netflix.conductor:conductor-server"
+                "com.netflix.conductor:conductor-server",
+                "com.netflix.conductor:conductor-zookeeper-lock"
             ]
         },
         "com.netflix.conductor:conductor-es5-persistence": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-es6-persistence": {
             "project": true,
             "transitive": [
                 "com.netflix.conductor:conductor-server"
@@ -3875,6 +4534,18 @@
                 "com.netflix.conductor:conductor-server"
             ]
         },
+        "com.netflix.conductor:conductor-postgres-persistence": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-redis-lock": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.conductor:conductor-redis-persistence": {
             "project": true,
             "transitive": [
@@ -3884,36 +4555,68 @@
         "com.netflix.conductor:conductor-server": {
             "project": true
         },
+        "com.netflix.conductor:conductor-zookeeper-lock": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
             ]
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -3924,18 +4627,38 @@
                 "com.netflix.dyno:dyno-contrib"
             ]
         },
-        "com.netflix.governator:governator-api": {
-            "locked": "1.15.7",
+        "com.netflix.governator:governator": {
+            "locked": "1.17.10",
             "transitive": [
+                "com.netflix.governator:governator-test"
+            ]
+        },
+        "com.netflix.governator:governator-api": {
+            "locked": "1.17.10",
+            "transitive": [
+                "com.netflix.governator:governator",
                 "com.netflix.governator:governator-core",
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-core"
             ]
         },
         "com.netflix.governator:governator-core": {
-            "locked": "1.15.7",
+            "locked": "1.17.10",
             "transitive": [
+                "com.netflix.governator:governator",
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-guice"
             ]
+        },
+        "com.netflix.governator:governator-test": {
+            "locked": "1.17.10",
+            "transitive": [
+                "com.netflix.governator:governator-test-spock"
+            ]
+        },
+        "com.netflix.governator:governator-test-spock": {
+            "locked": "1.17.10",
+            "requested": "latest.release"
         },
         "com.netflix.netflix-commons:netflix-eventbus": {
             "locked": "0.3.0",
@@ -3984,7 +4707,20 @@
             "transitive": [
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-core",
-                "com.netflix.runtime:health-core"
+                "com.netflix.runtime:health-core",
+                "com.netflix.spectator:spectator-reg-metrics3"
+            ]
+        },
+        "com.netflix.spectator:spectator-reg-metrics3": {
+            "locked": "0.68.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
+            ]
+        },
+        "com.rabbitmq:amqp-client": {
+            "locked": "5.8.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
             ]
         },
         "com.spotify:completable-futures": {
@@ -4045,7 +4781,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs.jersey-oauth:oauth-signature",
                 "com.sun.jersey.contribs:jersey-multipart",
@@ -4095,11 +4834,18 @@
         "com.zaxxer:HikariCP": {
             "locked": "3.2.0",
             "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
+                "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
-            "locked": "1.10",
+            "locked": "1.11",
             "transitive": [
                 "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
@@ -4114,10 +4860,11 @@
         "commons-io:commons-io": {
             "locked": "2.6",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.dyno:dyno-core"
             ]
         },
@@ -4139,14 +4886,20 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "commons-configuration:commons-configuration",
                 "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client",
-                "org.springframework:spring-core"
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "de.ruedigermoeller:fst": {
+            "locked": "2.57",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "io.dropwizard.metrics:metrics-core": {
             "locked": "3.2.2",
             "transitive": [
-                "com.datastax.cassandra:cassandra-driver-core"
+                "com.datastax.cassandra:cassandra-driver-core",
+                "com.netflix.spectator:spectator-reg-metrics3"
             ]
         },
         "io.grpc:grpc-context": {
@@ -4210,20 +4963,33 @@
             ]
         },
         "io.netty:netty-buffer": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-handler",
+                "io.netty:netty-resolver-dns",
                 "io.netty:netty-transport",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-codec-http",
                 "io.netty:netty-codec-socks",
                 "io.netty:netty-handler",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
+            ]
+        },
+        "io.netty:netty-codec-dns": {
+            "locked": "4.1.41.Final",
+            "transitive": [
+                "io.netty:netty-resolver-dns"
             ]
         },
         "io.netty:netty-codec-http": {
@@ -4247,19 +5013,26 @@
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "io.netty:netty-buffer",
+                "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
+                "io.netty:netty-handler",
                 "io.netty:netty-resolver",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "io.netty:netty-transport",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "com.datastax.cassandra:cassandra-driver-core",
                 "io.netty:netty-codec-http2",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-handler-proxy": {
@@ -4269,19 +5042,29 @@
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-resolver-dns",
                 "io.netty:netty-transport",
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
+        "io.netty:netty-resolver-dns": {
+            "locked": "4.1.41.Final",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
         "io.netty:netty-transport": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-handler",
                 "io.netty:netty-handler-proxy",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.opencensus:opencensus-api": {
@@ -4295,6 +5078,18 @@
             "locked": "0.12.3",
             "transitive": [
                 "io.grpc:grpc-core"
+            ]
+        },
+        "io.projectreactor:reactor-core": {
+            "locked": "3.2.6.RELEASE",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
+        "io.reactivex.rxjava2:rxjava": {
+            "locked": "2.2.7",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "io.reactivex:rxjava": {
@@ -4336,11 +5131,35 @@
                 "io.swagger:swagger-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
+        "jakarta.activation:jakarta.activation-api": {
+            "locked": "1.2.1",
             "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
+                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
+                "jakarta.xml.bind:jakarta.xml.bind-api"
+            ]
+        },
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "1.3.5",
+            "transitive": [
+                "com.netflix.governator:governator-core"
+            ]
+        },
+        "jakarta.xml.bind:jakarta.xml.bind-api": {
+            "locked": "2.3.2",
+            "transitive": [
+                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.cache:cache-api": {
+            "locked": "1.0.0",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "javax.inject:javax.inject": {
@@ -4372,8 +5191,10 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "io.swagger:swagger-core",
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-jersey",
+                "io.swagger:swagger-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -4386,6 +5207,18 @@
                 "io.swagger:swagger-jaxrs"
             ]
         },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.governator:governator"
+            ]
+        },
+        "jline:jline": {
+            "locked": "0.9.94",
+            "transitive": [
+                "org.apache.zookeeper:zookeeper"
+            ]
+        },
         "joda-time:joda-time": {
             "locked": "2.9.5",
             "transitive": [
@@ -4393,20 +5226,27 @@
                 "com.fasterxml.jackson.datatype:jackson-datatype-joda",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "junit:junit": {
             "locked": "4.12",
-            "requested": "4.12"
+            "requested": "4.12",
+            "transitive": [
+                "org.spockframework:spock-core"
+            ]
         },
         "log4j:log4j": {
             "locked": "1.2.17",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
+                "org.apache.zookeeper:zookeeper",
                 "org.slf4j:slf4j-log4j12"
             ]
         },
@@ -4414,6 +5254,19 @@
             "locked": "8.0.11",
             "transitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.16",
+            "transitive": [
+                "org.mockito:mockito-core",
+                "org.redisson:redisson"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -4435,7 +5288,7 @@
             ]
         },
         "net.thisptr:jackson-jq": {
-            "locked": "0.0.8",
+            "locked": "0.0.11",
             "transitive": [
                 "com.netflix.conductor:conductor-contribs"
             ]
@@ -4452,27 +5305,23 @@
                 "org.antlr:antlr-runtime"
             ]
         },
-        "org.apache.commons:commons-collections4": {
-            "locked": "4.1",
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
-            ]
-        },
-        "org.apache.commons:commons-exec": {
-            "locked": "1.3",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-jersey"
             ]
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.netflix.archaius:archaius2-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.governator:governator-test",
                 "io.swagger:swagger-core"
             ]
         },
@@ -4484,9 +5333,27 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
+            ]
+        },
+        "org.apache.curator:curator-client": {
+            "locked": "2.4.0",
+            "transitive": [
+                "org.apache.curator:curator-framework"
+            ]
+        },
+        "org.apache.curator:curator-framework": {
+            "locked": "2.4.0",
+            "transitive": [
+                "org.apache.curator:curator-recipes"
+            ]
+        },
+        "org.apache.curator:curator-recipes": {
+            "locked": "2.4.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-zookeeper-lock"
             ]
         },
         "org.apache.httpcomponents:httpasyncclient": {
@@ -4496,19 +5363,22 @@
             ]
         },
         "org.apache.httpcomponents:httpclient": {
-            "locked": "4.5.5",
+            "locked": "4.5.9",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4",
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
         "org.apache.httpcomponents:httpcore": {
-            "locked": "4.4.9",
+            "locked": "4.4.11",
             "transitive": [
                 "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
@@ -4520,10 +5390,17 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
+        "org.apache.kafka:kafka-clients": {
+            "locked": "2.2.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
+            ]
+        },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.9.1",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "org.apache.logging.log4j:log4j-core",
                 "org.elasticsearch.plugin:aggs-matrix-stats-client",
                 "org.elasticsearch.plugin:lang-mustache-client",
@@ -4539,6 +5416,7 @@
             "locked": "2.9.1",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "org.elasticsearch.plugin:aggs-matrix-stats-client",
                 "org.elasticsearch.plugin:lang-mustache-client",
                 "org.elasticsearch.plugin:parent-join-client",
@@ -4638,9 +5516,25 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
+        "org.apache.zookeeper:zookeeper": {
+            "locked": "3.4.5",
+            "transitive": [
+                "org.apache.curator:curator-client",
+                "org.apache.curator:curator-framework",
+                "org.apache.curator:curator-recipes"
+            ]
+        },
         "org.awaitility:awaitility": {
             "locked": "3.1.2",
             "requested": "3.1.2"
+        },
+        "org.codehaus.groovy:groovy-all": {
+            "locked": "2.4.15",
+            "requested": "2.4.15",
+            "transitive": [
+                "com.cyrusinnovation:mockito-groovy-support",
+                "org.spockframework:spock-core"
+            ]
         },
         "org.codehaus.jettison:jettison": {
             "locked": "1.3.7",
@@ -4655,47 +5549,56 @@
             ]
         },
         "org.eclipse.jetty:jetty-http": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-server"
             ]
         },
         "org.eclipse.jetty:jetty-io": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
+                "org.eclipse.jetty:jetty-http",
                 "org.eclipse.jetty:jetty-server"
             ]
         },
+        "org.eclipse.jetty:jetty-jmx": {
+            "locked": "9.4.22.v20191022",
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "org.eclipse.jetty:jetty-security": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-servlet"
             ]
         },
         "org.eclipse.jetty:jetty-server": {
-            "locked": "9.3.9.v20160517",
-            "requested": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
+            "requested": "9.4.22.v20191022",
             "transitive": [
                 "com.netflix.conductor:conductor-server",
                 "org.eclipse.jetty:jetty-security"
             ]
         },
         "org.eclipse.jetty:jetty-servlet": {
-            "locked": "9.3.9.v20160517",
-            "requested": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
+            "requested": "9.4.22.v20191022",
             "transitive": [
                 "com.netflix.conductor:conductor-server"
             ]
         },
         "org.eclipse.jetty:jetty-util": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-http",
-                "org.eclipse.jetty:jetty-io"
+                "org.eclipse.jetty:jetty-io",
+                "org.eclipse.jetty:jetty-jmx"
             ]
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
@@ -4704,12 +5607,14 @@
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ]
         },
         "org.elasticsearch.client:transport": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ]
@@ -4795,7 +5700,8 @@
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
             "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
+                "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence"
             ]
         },
         "org.glassfish:javax.el": {
@@ -4825,40 +5731,39 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core",
-                "com.netflix.conductor:conductor-jersey"
-            ]
-        },
         "org.javassist:javassist": {
-            "locked": "3.18.2-GA",
+            "locked": "3.21.0-GA",
             "transitive": [
+                "de.ruedigermoeller:fst",
                 "org.reflections:reflections"
             ]
         },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
+        "org.jboss.netty:netty": {
+            "locked": "3.2.2.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.apache.zookeeper:zookeeper"
+            ]
+        },
+        "org.jodd:jodd-bean": {
+            "locked": "5.0.13",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
+        "org.jodd:jodd-core": {
+            "locked": "5.0.13",
+            "transitive": [
+                "org.jodd:jodd-bean"
             ]
         },
         "org.jruby.jcodings:jcodings": {
-            "locked": "1.0.13",
+            "locked": "1.0.43",
             "transitive": [
                 "org.jruby.joni:joni"
             ]
         },
         "org.jruby.joni:joni": {
-            "locked": "2.1.11",
+            "locked": "2.1.27",
             "transitive": [
                 "net.thisptr:jackson-jq"
             ]
@@ -4887,13 +5792,29 @@
                 "org.rarefiedredis.redis:redis-java"
             ]
         },
+        "org.lz4:lz4-java": {
+            "locked": "1.5.0",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
+            ]
+        },
+        "org.mockito:mockito-all": {
+            "locked": "1.9.5",
+            "transitive": [
+                "com.cyrusinnovation:mockito-groovy-support"
+            ]
+        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0",
+            "transitive": [
+                "com.netflix.governator:governator-test"
+            ]
         },
         "org.objenesis:objenesis": {
             "locked": "2.6",
             "transitive": [
+                "de.ruedigermoeller:fst",
                 "org.awaitility:awaitility",
                 "org.mockito:mockito-core"
             ]
@@ -4933,11 +5854,36 @@
                 "com.github.jnr:jnr-ffi"
             ]
         },
+        "org.postgresql:postgresql": {
+            "locked": "42.2.6",
+            "transitive": [
+                "com.netflix.conductor:conductor-postgres-persistence"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
+            ]
+        },
         "org.rarefiedredis.redis:redis-java": {
             "locked": "0.0.17",
             "requested": "0.0.17",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
+            ]
+        },
+        "org.reactivestreams:reactive-streams": {
+            "locked": "1.0.2",
+            "transitive": [
+                "io.projectreactor:reactor-core",
+                "io.reactivex.rxjava2:rxjava"
+            ]
+        },
+        "org.redisson:redisson": {
+            "locked": "3.11.4",
+            "transitive": [
+                "com.netflix.conductor:conductor-redis-lock"
             ]
         },
         "org.reflections:reflections": {
@@ -4947,9 +5893,8 @@
             ]
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
+            "locked": "1.7.29",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.datastax.cassandra:cassandra-driver-core",
                 "com.jayway.jsonpath:json-path",
                 "com.netflix.archaius:archaius-core",
@@ -4957,17 +5902,27 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.governator:governator-core",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
+                "com.netflix.spectator:spectator-reg-metrics3",
+                "com.rabbitmq:amqp-client",
                 "com.zaxxer:HikariCP",
                 "io.dropwizard.metrics:metrics-core",
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-models",
-                "org.slf4j:slf4j-log4j12"
+                "org.apache.curator:curator-client",
+                "org.apache.kafka:kafka-clients",
+                "org.apache.zookeeper:zookeeper",
+                "org.redisson:redisson",
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -4975,24 +5930,35 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
+                "org.apache.zookeeper:zookeeper"
             ]
         },
-        "org.springframework:spring-core": {
-            "locked": "4.3.6.RELEASE",
+        "org.spockframework:spock-core": {
+            "locked": "1.3-groovy-2.4",
+            "requested": "1.3-groovy-2.4",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
+                "com.netflix.governator:governator-test-spock"
+            ]
+        },
+        "org.xerial.snappy:snappy-java": {
+            "locked": "1.1.7.2",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
             ]
         },
         "org.yaml:snakeyaml": {
-            "locked": "1.17",
+            "locked": "1.23",
             "transitive": [
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
+            "locked": "3.0.1",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.dyno:dyno-jedis",
@@ -5038,36 +6004,14 @@
                 "com.google.inject:guice"
             ]
         },
-        "ch.vorburger.mariaDB4j:mariaDB4j": {
-            "locked": "2.2.3",
-            "requested": "2.2.3"
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-core": {
-            "locked": "2.2.3",
+        "cglib:cglib-nodep": {
+            "locked": "3.2.2",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-linux64": {
-            "locked": "10.1.13",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-mac64": {
-            "locked": "10.1.9",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
-            ]
-        },
-        "ch.vorburger.mariaDB4j:mariaDB4j-db-win32": {
-            "locked": "10.1.20",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j"
+                "com.netflix.governator:governator-test-spock"
             ]
         },
         "com.amazonaws:aws-java-sdk-core": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-kms",
                 "com.amazonaws:aws-java-sdk-s3",
@@ -5088,13 +6032,13 @@
             ]
         },
         "com.amazonaws:aws-java-sdk-sqs": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.netflix.conductor:conductor-contribs"
             ]
         },
         "com.amazonaws:jmespath-java": {
-            "locked": "1.11.528",
+            "locked": "1.11.796",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-kms",
                 "com.amazonaws:aws-java-sdk-s3",
@@ -5105,6 +6049,12 @@
             "locked": "0.7.1",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "com.cyrusinnovation:mockito-groovy-support": {
+            "locked": "1.3",
+            "transitive": [
+                "com.netflix.governator:governator-test-spock"
             ]
         },
         "com.datastax.cassandra:cassandra-driver-core": {
@@ -5120,7 +6070,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
@@ -5131,7 +6081,7 @@
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor",
@@ -5139,31 +6089,33 @@
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
                 "com.fasterxml.jackson.datatype:jackson-datatype-joda",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.eureka:eureka-client",
-                "org.elasticsearch:elasticsearch"
+                "de.ruedigermoeller:fst",
+                "org.elasticsearch:elasticsearch",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.8.7",
+            "locked": "2.10.0",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.amazonaws:jmespath-java",
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
                 "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.eureka:eureka-client",
+                "com.netflix.governator:governator",
                 "io.swagger:swagger-core",
-                "net.thisptr:jackson-jq"
+                "net.thisptr:jackson-jq",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor": {
@@ -5186,11 +6138,12 @@
             ]
         },
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml": {
-            "locked": "2.8.6",
+            "locked": "2.9.10",
             "transitive": [
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-jaxrs",
-                "org.elasticsearch:elasticsearch"
+                "org.elasticsearch:elasticsearch",
+                "org.redisson:redisson"
             ]
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-joda": {
@@ -5200,29 +6153,23 @@
             ]
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
             ]
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.netflix.conductor:conductor-client",
                 "io.swagger:swagger-jaxrs"
             ]
         },
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations": {
-            "locked": "2.7.5",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
                 "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-            ]
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
             ]
         },
         "com.github.andrewoma.dexx:dexx-collections": {
@@ -5260,6 +6207,12 @@
             "locked": "1.0.2",
             "transitive": [
                 "com.github.jnr:jnr-ffi"
+            ]
+        },
+        "com.github.luben:zstd-jni": {
+            "locked": "1.3.8-1",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
             ]
         },
         "com.github.rholder:guava-retrying": {
@@ -5309,10 +6262,11 @@
             ]
         },
         "com.google.code.gson:gson": {
-            "locked": "2.7",
+            "locked": "2.8.5",
             "transitive": [
                 "com.ecwid.consul:consul-api",
                 "com.google.protobuf:protobuf-java-util",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix",
                 "io.grpc:grpc-core"
             ]
@@ -5337,6 +6291,9 @@
                 "io.grpc:grpc-protobuf-lite",
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-jaxrs",
+                "org.apache.curator:curator-client",
+                "org.apache.curator:curator-framework",
+                "org.apache.curator:curator-recipes",
                 "org.reflections:reflections"
             ]
         },
@@ -5380,6 +6337,7 @@
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-server",
                 "com.netflix.dyno-queues:dyno-queues-redis",
@@ -5416,7 +6374,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
             ]
         },
         "com.jayway.jsonpath:json-path": {
@@ -5438,19 +6399,29 @@
         "com.netflix.archaius:archaius2-api": {
             "locked": "2.1.10",
             "transitive": [
-                "com.netflix.archaius:archaius2-core"
+                "com.netflix.archaius:archaius2-core",
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.archaius:archaius2-core": {
             "locked": "2.1.10",
             "transitive": [
-                "com.netflix.archaius:archaius2-guice"
+                "com.netflix.archaius:archaius2-guice",
+                "com.netflix.archaius:archaius2-test",
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.archaius:archaius2-guice": {
             "locked": "2.1.10",
             "transitive": [
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-guice"
+            ]
+        },
+        "com.netflix.archaius:archaius2-test": {
+            "locked": "2.1.10",
+            "transitive": [
+                "com.netflix.governator:governator-test"
             ]
         },
         "com.netflix.conductor:conductor-cassandra-persistence": {
@@ -5486,16 +6457,26 @@
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
                 "com.netflix.conductor:conductor-jersey",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
-                "com.netflix.conductor:conductor-server"
+                "com.netflix.conductor:conductor-server",
+                "com.netflix.conductor:conductor-zookeeper-lock"
             ]
         },
         "com.netflix.conductor:conductor-es5-persistence": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-es6-persistence": {
             "project": true,
             "transitive": [
                 "com.netflix.conductor:conductor-server"
@@ -5529,6 +6510,18 @@
                 "com.netflix.conductor:conductor-server"
             ]
         },
+        "com.netflix.conductor:conductor-postgres-persistence": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-redis-lock": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.conductor:conductor-redis-persistence": {
             "project": true,
             "transitive": [
@@ -5538,36 +6531,68 @@
         "com.netflix.conductor:conductor-server": {
             "project": true
         },
+        "com.netflix.conductor:conductor-zookeeper-lock": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.dyno-queues:dyno-queues-core": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno-queues:dyno-queues-redis": {
-            "locked": "2.0.0-rc5",
+            "locked": "2.0.13",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
             ]
         },
         "com.netflix.dyno:dyno-contrib": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache"
             ]
         },
         "com.netflix.dyno:dyno-core": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-core",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-demo": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno-queues:dyno-queues-redis"
             ]
         },
         "com.netflix.dyno:dyno-jedis": {
-            "locked": "1.6.5",
+            "locked": "1.7.2-rc2",
             "transitive": [
-                "com.netflix.dyno-queues:dyno-queues-redis"
+                "com.netflix.dyno-queues:dyno-queues-redis",
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-recipes"
+            ]
+        },
+        "com.netflix.dyno:dyno-memcache": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
+            ]
+        },
+        "com.netflix.dyno:dyno-recipes": {
+            "locked": "1.7.2-rc2",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "com.netflix.eureka:eureka-client": {
@@ -5578,18 +6603,38 @@
                 "com.netflix.dyno:dyno-contrib"
             ]
         },
-        "com.netflix.governator:governator-api": {
-            "locked": "1.15.7",
+        "com.netflix.governator:governator": {
+            "locked": "1.17.10",
             "transitive": [
+                "com.netflix.governator:governator-test"
+            ]
+        },
+        "com.netflix.governator:governator-api": {
+            "locked": "1.17.10",
+            "transitive": [
+                "com.netflix.governator:governator",
                 "com.netflix.governator:governator-core",
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-core"
             ]
         },
         "com.netflix.governator:governator-core": {
-            "locked": "1.15.7",
+            "locked": "1.17.10",
             "transitive": [
+                "com.netflix.governator:governator",
+                "com.netflix.governator:governator-test",
                 "com.netflix.runtime:health-guice"
             ]
+        },
+        "com.netflix.governator:governator-test": {
+            "locked": "1.17.10",
+            "transitive": [
+                "com.netflix.governator:governator-test-spock"
+            ]
+        },
+        "com.netflix.governator:governator-test-spock": {
+            "locked": "1.17.10",
+            "requested": "latest.release"
         },
         "com.netflix.netflix-commons:netflix-eventbus": {
             "locked": "0.3.0",
@@ -5638,7 +6683,20 @@
             "transitive": [
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-core",
-                "com.netflix.runtime:health-core"
+                "com.netflix.runtime:health-core",
+                "com.netflix.spectator:spectator-reg-metrics3"
+            ]
+        },
+        "com.netflix.spectator:spectator-reg-metrics3": {
+            "locked": "0.68.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
+            ]
+        },
+        "com.rabbitmq:amqp-client": {
+            "locked": "5.8.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
             ]
         },
         "com.spotify:completable-futures": {
@@ -5699,7 +6757,10 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs.jersey-oauth:oauth-signature",
                 "com.sun.jersey.contribs:jersey-multipart",
@@ -5749,11 +6810,18 @@
         "com.zaxxer:HikariCP": {
             "locked": "3.2.0",
             "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
+                "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence"
+            ]
+        },
+        "commons-cli:commons-cli": {
+            "locked": "1.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-demo"
             ]
         },
         "commons-codec:commons-codec": {
-            "locked": "1.10",
+            "locked": "1.11",
             "transitive": [
                 "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
@@ -5768,10 +6836,11 @@
         "commons-io:commons-io": {
             "locked": "2.6",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.dyno:dyno-core"
             ]
         },
@@ -5793,14 +6862,20 @@
                 "com.amazonaws:aws-java-sdk-core",
                 "commons-configuration:commons-configuration",
                 "org.apache.httpcomponents:httpclient",
-                "org.elasticsearch.client:elasticsearch-rest-client",
-                "org.springframework:spring-core"
+                "org.elasticsearch.client:elasticsearch-rest-client"
+            ]
+        },
+        "de.ruedigermoeller:fst": {
+            "locked": "2.57",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "io.dropwizard.metrics:metrics-core": {
             "locked": "3.2.2",
             "transitive": [
-                "com.datastax.cassandra:cassandra-driver-core"
+                "com.datastax.cassandra:cassandra-driver-core",
+                "com.netflix.spectator:spectator-reg-metrics3"
             ]
         },
         "io.grpc:grpc-context": {
@@ -5864,20 +6939,33 @@
             ]
         },
         "io.netty:netty-buffer": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-handler",
+                "io.netty:netty-resolver-dns",
                 "io.netty:netty-transport",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-codec": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-codec-http",
                 "io.netty:netty-codec-socks",
                 "io.netty:netty-handler",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
+            ]
+        },
+        "io.netty:netty-codec-dns": {
+            "locked": "4.1.41.Final",
+            "transitive": [
+                "io.netty:netty-resolver-dns"
             ]
         },
         "io.netty:netty-codec-http": {
@@ -5901,19 +6989,26 @@
             ]
         },
         "io.netty:netty-common": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "io.netty:netty-buffer",
+                "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
+                "io.netty:netty-handler",
                 "io.netty:netty-resolver",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "io.netty:netty-transport",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-handler": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "com.datastax.cassandra:cassandra-driver-core",
                 "io.netty:netty-codec-http2",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.netty:netty-handler-proxy": {
@@ -5923,19 +7018,29 @@
             ]
         },
         "io.netty:netty-resolver": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
+                "io.netty:netty-resolver-dns",
                 "io.netty:netty-transport",
                 "org.elasticsearch.plugin:transport-netty4-client"
             ]
         },
+        "io.netty:netty-resolver-dns": {
+            "locked": "4.1.41.Final",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
         "io.netty:netty-transport": {
-            "locked": "4.1.27.Final",
+            "locked": "4.1.41.Final",
             "transitive": [
                 "io.netty:netty-codec",
+                "io.netty:netty-codec-dns",
                 "io.netty:netty-handler",
                 "io.netty:netty-handler-proxy",
-                "org.elasticsearch.plugin:transport-netty4-client"
+                "io.netty:netty-resolver-dns",
+                "org.elasticsearch.plugin:transport-netty4-client",
+                "org.redisson:redisson"
             ]
         },
         "io.opencensus:opencensus-api": {
@@ -5949,6 +7054,18 @@
             "locked": "0.12.3",
             "transitive": [
                 "io.grpc:grpc-core"
+            ]
+        },
+        "io.projectreactor:reactor-core": {
+            "locked": "3.2.6.RELEASE",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
+        "io.reactivex.rxjava2:rxjava": {
+            "locked": "2.2.7",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "io.reactivex:rxjava": {
@@ -5990,11 +7107,35 @@
                 "io.swagger:swagger-core"
             ]
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
+        "jakarta.activation:jakarta.activation-api": {
+            "locked": "1.2.1",
             "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
+                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
+                "jakarta.xml.bind:jakarta.xml.bind-api"
+            ]
+        },
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "1.3.5",
+            "transitive": [
+                "com.netflix.governator:governator-core"
+            ]
+        },
+        "jakarta.xml.bind:jakarta.xml.bind-api": {
+            "locked": "2.3.2",
+            "transitive": [
+                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.cache:cache-api": {
+            "locked": "1.0.0",
+            "transitive": [
+                "org.redisson:redisson"
             ]
         },
         "javax.inject:javax.inject": {
@@ -6026,8 +7167,10 @@
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
             "transitive": [
-                "io.swagger:swagger-core",
-                "org.hibernate.validator:hibernate-validator"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-jersey",
+                "io.swagger:swagger-core"
             ]
         },
         "javax.ws.rs:jsr311-api": {
@@ -6040,6 +7183,18 @@
                 "io.swagger:swagger-jaxrs"
             ]
         },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.governator:governator"
+            ]
+        },
+        "jline:jline": {
+            "locked": "0.9.94",
+            "transitive": [
+                "org.apache.zookeeper:zookeeper"
+            ]
+        },
         "joda-time:joda-time": {
             "locked": "2.9.5",
             "transitive": [
@@ -6047,20 +7202,27 @@
                 "com.fasterxml.jackson.datatype:jackson-datatype-joda",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.netflix-commons:netflix-infix",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "junit:junit": {
             "locked": "4.12",
-            "requested": "4.12"
+            "requested": "4.12",
+            "transitive": [
+                "org.spockframework:spock-core"
+            ]
         },
         "log4j:log4j": {
             "locked": "1.2.17",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
+                "org.apache.zookeeper:zookeeper",
                 "org.slf4j:slf4j-log4j12"
             ]
         },
@@ -6068,6 +7230,19 @@
             "locked": "8.0.11",
             "transitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.16",
+            "transitive": [
+                "org.mockito:mockito-core",
+                "org.redisson:redisson"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -6089,7 +7264,7 @@
             ]
         },
         "net.thisptr:jackson-jq": {
-            "locked": "0.0.8",
+            "locked": "0.0.11",
             "transitive": [
                 "com.netflix.conductor:conductor-contribs"
             ]
@@ -6106,27 +7281,23 @@
                 "org.antlr:antlr-runtime"
             ]
         },
-        "org.apache.commons:commons-collections4": {
-            "locked": "4.1",
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
-            ]
-        },
-        "org.apache.commons:commons-exec": {
-            "locked": "1.3",
-            "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
+                "com.netflix.conductor:conductor-common",
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-jersey"
             ]
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.6",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.netflix.archaius:archaius2-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.governator:governator-test",
                 "io.swagger:swagger-core"
             ]
         },
@@ -6138,9 +7309,27 @@
             ]
         },
         "org.apache.commons:commons-pool2": {
-            "locked": "2.4.2",
+            "locked": "2.4.3",
             "transitive": [
                 "redis.clients:jedis"
+            ]
+        },
+        "org.apache.curator:curator-client": {
+            "locked": "2.4.0",
+            "transitive": [
+                "org.apache.curator:curator-framework"
+            ]
+        },
+        "org.apache.curator:curator-framework": {
+            "locked": "2.4.0",
+            "transitive": [
+                "org.apache.curator:curator-recipes"
+            ]
+        },
+        "org.apache.curator:curator-recipes": {
+            "locked": "2.4.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-zookeeper-lock"
             ]
         },
         "org.apache.httpcomponents:httpasyncclient": {
@@ -6150,19 +7339,22 @@
             ]
         },
         "org.apache.httpcomponents:httpclient": {
-            "locked": "4.5.5",
+            "locked": "4.5.9",
             "transitive": [
                 "com.amazonaws:aws-java-sdk-core",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey.contribs:jersey-apache-client4",
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
         "org.apache.httpcomponents:httpcore": {
-            "locked": "4.4.9",
+            "locked": "4.4.11",
             "transitive": [
                 "org.apache.httpcomponents:httpclient",
                 "org.elasticsearch.client:elasticsearch-rest-client"
@@ -6174,10 +7366,17 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
+        "org.apache.kafka:kafka-clients": {
+            "locked": "2.2.0",
+            "transitive": [
+                "com.netflix.conductor:conductor-contribs"
+            ]
+        },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.9.1",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "org.apache.logging.log4j:log4j-core",
                 "org.elasticsearch.plugin:aggs-matrix-stats-client",
                 "org.elasticsearch.plugin:lang-mustache-client",
@@ -6193,6 +7392,7 @@
             "locked": "2.9.1",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
+                "com.netflix.conductor:conductor-es6-persistence",
                 "org.elasticsearch.plugin:aggs-matrix-stats-client",
                 "org.elasticsearch.plugin:lang-mustache-client",
                 "org.elasticsearch.plugin:parent-join-client",
@@ -6292,9 +7492,25 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
+        "org.apache.zookeeper:zookeeper": {
+            "locked": "3.4.5",
+            "transitive": [
+                "org.apache.curator:curator-client",
+                "org.apache.curator:curator-framework",
+                "org.apache.curator:curator-recipes"
+            ]
+        },
         "org.awaitility:awaitility": {
             "locked": "3.1.2",
             "requested": "3.1.2"
+        },
+        "org.codehaus.groovy:groovy-all": {
+            "locked": "2.4.15",
+            "requested": "2.4.15",
+            "transitive": [
+                "com.cyrusinnovation:mockito-groovy-support",
+                "org.spockframework:spock-core"
+            ]
         },
         "org.codehaus.jettison:jettison": {
             "locked": "1.3.7",
@@ -6309,47 +7525,56 @@
             ]
         },
         "org.eclipse.jetty:jetty-http": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-server"
             ]
         },
         "org.eclipse.jetty:jetty-io": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
+                "org.eclipse.jetty:jetty-http",
                 "org.eclipse.jetty:jetty-server"
             ]
         },
+        "org.eclipse.jetty:jetty-jmx": {
+            "locked": "9.4.22.v20191022",
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "org.eclipse.jetty:jetty-security": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-servlet"
             ]
         },
         "org.eclipse.jetty:jetty-server": {
-            "locked": "9.3.9.v20160517",
-            "requested": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
+            "requested": "9.4.22.v20191022",
             "transitive": [
                 "com.netflix.conductor:conductor-server",
                 "org.eclipse.jetty:jetty-security"
             ]
         },
         "org.eclipse.jetty:jetty-servlet": {
-            "locked": "9.3.9.v20160517",
-            "requested": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
+            "requested": "9.4.22.v20191022",
             "transitive": [
                 "com.netflix.conductor:conductor-server"
             ]
         },
         "org.eclipse.jetty:jetty-util": {
-            "locked": "9.3.9.v20160517",
+            "locked": "9.4.22.v20191022",
             "transitive": [
                 "org.eclipse.jetty:jetty-http",
-                "org.eclipse.jetty:jetty-io"
+                "org.eclipse.jetty:jetty-io",
+                "org.eclipse.jetty:jetty-jmx"
             ]
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence",
                 "org.elasticsearch.client:elasticsearch-rest-high-level-client",
@@ -6358,12 +7583,14 @@
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ]
         },
         "org.elasticsearch.client:transport": {
             "locked": "5.6.8",
+            "requested": "5.6.8",
             "transitive": [
                 "com.netflix.conductor:conductor-es5-persistence"
             ]
@@ -6449,7 +7676,8 @@
         "org.flywaydb:flyway-core": {
             "locked": "4.0.3",
             "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
+                "com.netflix.conductor:conductor-mysql-persistence",
+                "com.netflix.conductor:conductor-postgres-persistence"
             ]
         },
         "org.glassfish:javax.el": {
@@ -6479,40 +7707,39 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core",
-                "com.netflix.conductor:conductor-jersey"
-            ]
-        },
         "org.javassist:javassist": {
-            "locked": "3.18.2-GA",
+            "locked": "3.21.0-GA",
             "transitive": [
+                "de.ruedigermoeller:fst",
                 "org.reflections:reflections"
             ]
         },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
+        "org.jboss.netty:netty": {
+            "locked": "3.2.2.Final",
             "transitive": [
-                "org.hibernate.validator:hibernate-validator"
+                "org.apache.zookeeper:zookeeper"
+            ]
+        },
+        "org.jodd:jodd-bean": {
+            "locked": "5.0.13",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
+        "org.jodd:jodd-core": {
+            "locked": "5.0.13",
+            "transitive": [
+                "org.jodd:jodd-bean"
             ]
         },
         "org.jruby.jcodings:jcodings": {
-            "locked": "1.0.13",
+            "locked": "1.0.43",
             "transitive": [
                 "org.jruby.joni:joni"
             ]
         },
         "org.jruby.joni:joni": {
-            "locked": "2.1.11",
+            "locked": "2.1.27",
             "transitive": [
                 "net.thisptr:jackson-jq"
             ]
@@ -6541,13 +7768,29 @@
                 "org.rarefiedredis.redis:redis-java"
             ]
         },
+        "org.lz4:lz4-java": {
+            "locked": "1.5.0",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
+            ]
+        },
+        "org.mockito:mockito-all": {
+            "locked": "1.9.5",
+            "transitive": [
+                "com.cyrusinnovation:mockito-groovy-support"
+            ]
+        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0",
+            "transitive": [
+                "com.netflix.governator:governator-test"
+            ]
         },
         "org.objenesis:objenesis": {
             "locked": "2.6",
             "transitive": [
+                "de.ruedigermoeller:fst",
                 "org.awaitility:awaitility",
                 "org.mockito:mockito-core"
             ]
@@ -6587,11 +7830,36 @@
                 "com.github.jnr:jnr-ffi"
             ]
         },
+        "org.postgresql:postgresql": {
+            "locked": "42.2.6",
+            "transitive": [
+                "com.netflix.conductor:conductor-postgres-persistence"
+            ]
+        },
+        "org.projectlombok:lombok": {
+            "locked": "1.18.4",
+            "transitive": [
+                "com.netflix.dyno:dyno-jedis"
+            ]
+        },
         "org.rarefiedredis.redis:redis-java": {
             "locked": "0.0.17",
             "requested": "0.0.17",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence"
+            ]
+        },
+        "org.reactivestreams:reactive-streams": {
+            "locked": "1.0.2",
+            "transitive": [
+                "io.projectreactor:reactor-core",
+                "io.reactivex.rxjava2:rxjava"
+            ]
+        },
+        "org.redisson:redisson": {
+            "locked": "3.11.4",
+            "transitive": [
+                "com.netflix.conductor:conductor-redis-lock"
             ]
         },
         "org.reflections:reflections": {
@@ -6601,9 +7869,8 @@
             ]
         },
         "org.slf4j:slf4j-api": {
-            "locked": "1.7.25",
+            "locked": "1.7.29",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core",
                 "com.datastax.cassandra:cassandra-driver-core",
                 "com.jayway.jsonpath:json-path",
                 "com.netflix.archaius:archaius-core",
@@ -6611,17 +7878,27 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
+                "com.netflix.dyno:dyno-demo",
                 "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
                 "com.netflix.governator:governator-core",
                 "com.netflix.netflix-commons:netflix-eventbus",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
+                "com.netflix.spectator:spectator-reg-metrics3",
+                "com.rabbitmq:amqp-client",
                 "com.zaxxer:HikariCP",
                 "io.dropwizard.metrics:metrics-core",
                 "io.swagger:swagger-core",
                 "io.swagger:swagger-models",
-                "org.slf4j:slf4j-log4j12"
+                "org.apache.curator:curator-client",
+                "org.apache.kafka:kafka-clients",
+                "org.apache.zookeeper:zookeeper",
+                "org.redisson:redisson",
+                "org.slf4j:slf4j-log4j12",
+                "redis.clients:jedis"
             ]
         },
         "org.slf4j:slf4j-log4j12": {
@@ -6629,24 +7906,35 @@
             "transitive": [
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
-                "com.netflix.dyno:dyno-jedis"
+                "com.netflix.dyno:dyno-demo",
+                "com.netflix.dyno:dyno-jedis",
+                "com.netflix.dyno:dyno-memcache",
+                "com.netflix.dyno:dyno-recipes",
+                "org.apache.zookeeper:zookeeper"
             ]
         },
-        "org.springframework:spring-core": {
-            "locked": "4.3.6.RELEASE",
+        "org.spockframework:spock-core": {
+            "locked": "1.3-groovy-2.4",
+            "requested": "1.3-groovy-2.4",
             "transitive": [
-                "ch.vorburger.mariaDB4j:mariaDB4j-core"
+                "com.netflix.governator:governator-test-spock"
+            ]
+        },
+        "org.xerial.snappy:snappy-java": {
+            "locked": "1.1.7.2",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
             ]
         },
         "org.yaml:snakeyaml": {
-            "locked": "1.17",
+            "locked": "1.23",
             "transitive": [
                 "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
                 "org.elasticsearch:elasticsearch"
             ]
         },
         "redis.clients:jedis": {
-            "locked": "2.9.0",
+            "locked": "3.0.1",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.dyno:dyno-jedis",

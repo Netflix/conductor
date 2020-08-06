@@ -1,27 +1,21 @@
 {
     "compile": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -39,7 +33,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -51,7 +45,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -63,7 +57,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -72,32 +66,24 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -105,22 +91,6 @@
         "org.glassfish:javax.el": {
             "locked": "3.0.0",
             "requested": "3.0.0"
-        },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -129,27 +99,21 @@
     },
     "compileClasspath": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -167,7 +131,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -179,7 +143,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -191,7 +155,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -200,32 +164,24 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -233,22 +189,6 @@
         "org.glassfish:javax.el": {
             "locked": "3.0.0",
             "requested": "3.0.0"
-        },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -257,27 +197,21 @@
     },
     "default": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -295,7 +229,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -307,7 +241,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -319,7 +253,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -328,32 +262,24 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -361,22 +287,6 @@
         "org.glassfish:javax.el": {
             "locked": "3.0.0",
             "requested": "3.0.0"
-        },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -448,27 +358,21 @@
     },
     "runtime": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -486,7 +390,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -498,7 +402,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -510,7 +414,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -519,32 +423,24 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -552,22 +448,6 @@
         "org.glassfish:javax.el": {
             "locked": "3.0.0",
             "requested": "3.0.0"
-        },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
         },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
@@ -576,27 +456,21 @@
     },
     "runtimeClasspath": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -614,7 +488,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -626,7 +500,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -638,7 +512,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -647,32 +521,24 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -681,22 +547,6 @@
             "locked": "3.0.0",
             "requested": "3.0.0"
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.slf4j:slf4j-api": {
             "locked": "1.7.25",
             "requested": "1.7.25"
@@ -704,27 +554,21 @@
     },
     "testCompile": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -742,7 +586,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -754,7 +598,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -766,7 +610,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -775,36 +619,40 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
         },
         "junit:junit": {
             "locked": "4.12",
             "requested": "4.12"
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -819,28 +667,12 @@
                 "junit:junit"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
-            "locked": "2.1",
+            "locked": "2.6",
             "transitive": [
                 "org.mockito:mockito-core"
             ]
@@ -852,27 +684,21 @@
     },
     "testCompileClasspath": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -890,7 +716,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -902,7 +728,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -914,7 +740,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -923,36 +749,40 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
         },
         "junit:junit": {
             "locked": "4.12",
             "requested": "4.12"
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -967,28 +797,12 @@
                 "junit:junit"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
-            "locked": "2.1",
+            "locked": "2.6",
             "transitive": [
                 "org.mockito:mockito-core"
             ]
@@ -1000,27 +814,21 @@
     },
     "testRuntime": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -1038,7 +846,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -1050,7 +858,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -1062,7 +870,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -1071,36 +879,40 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
         },
         "junit:junit": {
             "locked": "4.12",
             "requested": "4.12"
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -1115,28 +927,12 @@
                 "junit:junit"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
-            "locked": "2.1",
+            "locked": "2.6",
             "transitive": [
                 "org.mockito:mockito-core"
             ]
@@ -1148,27 +944,21 @@
     },
     "testRuntimeClasspath": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.7.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.7.5",
-            "requested": "2.7.5",
+            "locked": "2.10.0",
+            "requested": "2.10.0",
             "transitive": [
                 "com.fasterxml.jackson.core:jackson-databind"
             ]
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.7.5",
-            "requested": "2.7.5"
-        },
-        "com.fasterxml:classmate": {
-            "locked": "1.3.4",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "locked": "2.10.0",
+            "requested": "2.10.0"
         },
         "com.github.rholder:guava-retrying": {
             "locked": "2.0.0",
@@ -1186,7 +976,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.2.0",
+            "locked": "2.3.4",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -1198,7 +988,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "27.1-jre",
+            "locked": "29.0-jre",
             "transitive": [
                 "com.github.rholder:guava-retrying"
             ]
@@ -1210,7 +1000,7 @@
             ]
         },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -1219,36 +1009,40 @@
             "locked": "3.5.1",
             "requested": "3.5.1"
         },
-        "javax.el:javax.el-api": {
-            "locked": "3.0.0",
-            "requested": "3.0.0"
-        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "requested": "1"
         },
         "javax.validation:validation-api": {
             "locked": "2.0.1.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
+            "requested": "2.0.1.Final"
         },
         "junit:junit": {
             "locked": "4.12",
             "requested": "4.12"
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "org.apache.bval:bval-jsr": {
+            "locked": "2.0.3",
+            "requested": "2.0.3"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.0",
             "requested": "3.0"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.5.2",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.17",
+            "locked": "2.11.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -1263,28 +1057,12 @@
                 "junit:junit"
             ]
         },
-        "org.hibernate.validator:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "transitive": [
-                "org.hibernate:hibernate-validator"
-            ]
-        },
-        "org.hibernate:hibernate-validator": {
-            "locked": "6.0.13.Final",
-            "requested": "6.0.13.Final"
-        },
-        "org.jboss.logging:jboss-logging": {
-            "locked": "3.3.2.Final",
-            "transitive": [
-                "org.hibernate.validator:hibernate-validator"
-            ]
-        },
         "org.mockito:mockito-core": {
-            "locked": "1.10.19",
-            "requested": "1.10.19"
+            "locked": "3.1.0",
+            "requested": "3.1.0"
         },
         "org.objenesis:objenesis": {
-            "locked": "2.1",
+            "locked": "2.6",
             "transitive": [
                 "org.mockito:mockito-core"
             ]

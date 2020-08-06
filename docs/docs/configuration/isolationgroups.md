@@ -67,11 +67,11 @@ Example Workflow task
 
 - puts `encode` in `HTTP-myIsolationGroupId` queue, and allocates a new thread pool for this for execution.
 
-<b>Note: </b>  To enable the this feature, the `workflow.isolated.system.task.enable` property needs to be made `true`,its default value is `false`
+<b>Note: </b>  To enable this feature, the `workflow.isolated.system.task.enable` property needs to be made `true`,its default value is `false`
 
 The property `workflow.isolated.system.task.worker.thread.count`  sets the thread pool size for isolated tasks; default is `1`.
 
-isolationGroupId is currently supported only in HTTP Task. 
+isolationGroupId is currently supported only in HTTP and kafka Task. 
 
 #### Execution Name Space
 

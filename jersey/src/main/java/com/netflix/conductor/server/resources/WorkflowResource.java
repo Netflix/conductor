@@ -31,8 +31,6 @@ import io.swagger.annotations.ApiOperation;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -197,7 +195,7 @@ public class WorkflowResource {
 
     @POST
     @Path("/{workflowId}/resetcallbacks")
-    @ApiOperation("Resets callback times of all in_progress tasks to 0")
+    @ApiOperation("Resets callback times of all non-terminal SIMPLE tasks to 0")
     @Consumes(MediaType.WILDCARD)
     public void resetWorkflow(@PathParam("workflowId") String workflowId) {
         workflowService.resetWorkflow(workflowId);
