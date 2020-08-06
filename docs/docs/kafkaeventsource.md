@@ -258,7 +258,12 @@ happened executing that event, with exception information in the 'output' attrib
 You can have a Kafka consumer application that subscribes to that errors topic if you want to automatically process the errors. Either way, it is a good idea to specify an
 'errorNotificationEmail' attribute in your events so that someone will be notified of the failures.
 
-## Conductor properties for the Kafka Event Source
+## Conductor properties for the Kafka event source
+The first thing you need to do to allow the Kafka event source to be initialized and available is to add it as an 'additional module':
+```text
+conductor.additional.modules=com.netflix.conductor.contribs.KafkaModule
+```
+
 |field|description|Notes|
 |---|---|---|
 |name|Task Type. Unique name of the Task that resonates with it's function.|Unique|
