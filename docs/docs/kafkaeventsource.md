@@ -275,8 +275,17 @@ Since there is now more than one Kafka component in Conductor (Kafka Publish tas
 |kafka.default.jaas.config.file|The JAAS configuration file that defines security associated with the Kafka topics|optional - only needed if there is security associated with the topics|
 |kafka.default.jaas.username|The username to use if the JAAS configuration file specifies to use the com.netflix.conductor.contribs.kafka.KafkaLoginModule|This is the username that has access to the topics|
 |kafka.default.jaas.passwrd|The password to use if the JAAS configuration file specifies to use the com.netflix.conductor.contribs.kafka.KafkaLoginModule|This is the password for the username specified in the kafka.default.jaas.username property|
-|kafka.default.bootstrap.servers|A comma-delimited list of Kafka servers that will apply to all Kafka components|These are the servers in the Kafka cluster|
+|kafka.producer.key.serializer|The serializer to use when producing a key for a document going to the Kafka topic|For Strings typically the org.apache.kafka.common.serialization.StringSerializer will be used|
+|kafka.producer.value.serializer|The serializer to use when producing a value for a document going to the Kafka topic|For Strings typically the org.apache.kafka.common.serialization.StringSerializer will be used|
+|kafka.consumer.key.deserializer|The deserializer to use when consuming a key for a document consumed on the Kafka topic|For Strings typically the org.apache.kafka.common.serialization.StringDeserializer will be used|
+|kafka.consumer.value.deserializer|The deserializer to use when consuming a value for a document consumed on the Kafka topic|For Strings typically the org.apache.kafka.common.serialization.StringDeserializer will be used|
 ### Event Kafka properties
 |field|description|Notes|
 |---|---|---|
-|name|Task Type. Unique name of the Task that resonates with it's function.|Unique|
+|kafka.events.bootstrap.servers|A comma-delimited list of Kafka servers that will apply to just the Kafka event source component|These are the servers in the Kafka cluster|
+|kafka.events.consumer.group.id|The consumer group id that will be used to consume from the Kafka event source topics associated with all queues||
+|kafka.events.jaas.config.file|The JAAS configuration file that defines security associated with the Kafka event source topics|optional - only needed if there is security associated with the topics|
+|kafka.events.jaas.username|The username to use for the Kafka event source if the JAAS configuration file specifies to use the com.netflix.conductor.contribs.kafka.KafkaLoginModule|This is the username that has access to the topics|
+|kafka.events.jaas.passwrd|The password to use for the Kafka event source if the JAAS configuration file specifies to use the com.netflix.conductor.contribs.kafka.KafkaLoginModule|This is the password for the username specified in the kafka.default.jaas.username property|
+|kafka.events.minutesUntilErrorEmail|The number of minutes to accumulate errors before the next errors email gets sent|The 'kafka.events.errorsPerEmail property overrides this|
+|kafka.events.errorsPerEmail|the maximum number of erros that will be in one email|If this number is hit before the kafka.events.minutesUntilEmail happens, it overrides that property|
