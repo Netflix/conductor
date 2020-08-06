@@ -270,7 +270,12 @@ Since there is now more than one Kafka component in Conductor (Kafka Publish tas
 ### General Kafka properties
 |field|description|Notes|
 |---|---|---|
-|name|Task Type. Unique name of the Task that resonates with it's function.|Unique|
+|kafka.default.bootstrap.servers|A comma-delimited list of Kafka servers that will apply to all Kafka components|These are the servers in the Kafka cluster|
+|kafka.default.consumer.group.id|The consumer group id that will be used to consume from the Kafka topics associated with all queues||
+|kafka.default.jaas.config.file|The JAAS configuration file that defines security associated with the Kafka topics|optional - only needed if there is security associated with the topics|
+|kafka.default.jaas.username|The username to use if the JAAS configuration file specifies to use the com.netflix.conductor.contribs.kafka.KafkaLoginModule|This is the username that has access to the topics|
+|kafka.default.jaas.passwrd|The password to use if the JAAS configuration file specifies to use the com.netflix.conductor.contribs.kafka.KafkaLoginModule|This is the password for the username specified in the kafka.default.jaas.username property|
+|kafka.default.bootstrap.servers|A comma-delimited list of Kafka servers that will apply to all Kafka components|These are the servers in the Kafka cluster|
 ### Event Kafka properties
 |field|description|Notes|
 |---|---|---|
