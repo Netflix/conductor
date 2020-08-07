@@ -407,6 +407,8 @@ public class WorkflowExecutor {
         for (Task task : workflow.getTasks()) {
             switch (task.getStatus()) {
                 case FAILED:
+                case FAILED_WITH_TERMINAL_ERROR:
+                case TIMED_OUT:
                     retriableMap.put(task.getReferenceTaskName(), task);
                     break;
                 case CANCELED:
