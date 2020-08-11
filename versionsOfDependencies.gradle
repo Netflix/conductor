@@ -24,6 +24,7 @@ ext {
     revHealth = '1.1.+'
     revHikariCP = '3.2.0'
     revJsonPath = '2.2.0'
+    revJavaMail = '1.6.2'
     revJaxrsJackson = '2.10.0'
     revJavaElApi = '3.0.0'
     revBval = '2.0.3'
