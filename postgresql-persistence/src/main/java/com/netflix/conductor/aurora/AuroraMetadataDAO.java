@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 	private static final String PROP_TASKDEF_CACHE_REFRESH = "conductor.taskdef.cache.refresh.time.seconds";
@@ -331,19 +332,19 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 
 	private void refreshTaskDefs() {
 		try {
-			withTransaction(tx -> {
-				Map<String, TaskDef> map = new HashMap<>();
-				findAllTaskDefs(tx).forEach(taskDef -> map.put(taskDef.getName(), taskDef));
+			List<TaskDef> taskDefs = getAllTaskDefs();
 
-				synchronized (taskDefCache) {
-					taskDefCache.clear();
-					taskDefCache.putAll(map);
-				}
+			Map<String, TaskDef> taskDefMap = taskDefs.stream()
+				.collect(Collectors.toMap(TaskDef::getName, taskDef -> taskDef));
 
-				if (logger.isTraceEnabled()) {
-					logger.trace("Refreshed {} TaskDefs", taskDefCache.size());
-				}
-			});
+			synchronized (taskDefCache) {
+				taskDefCache.clear();
+				taskDefCache.putAll(taskDefMap);
+			}
+
+			if (logger.isTraceEnabled()) {
+				logger.trace("Refreshed {} TaskDefs", taskDefCache.size());
+			}
 		} catch (Exception e) {
 			logger.error("refresh TaskDefs failed ", e);
 		}
