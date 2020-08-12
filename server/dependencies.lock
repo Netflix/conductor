@@ -4,13 +4,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -225,7 +225,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -350,7 +350,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -450,7 +450,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -464,13 +464,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -685,7 +685,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -810,7 +810,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -910,7 +910,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -924,13 +924,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -1145,7 +1145,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -1270,7 +1270,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -1370,7 +1370,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -1384,13 +1384,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -1605,7 +1605,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -1730,7 +1730,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -1830,7 +1830,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -1916,13 +1916,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.748"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -2137,7 +2137,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -2376,13 +2376,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -2597,7 +2597,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -2722,7 +2722,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -2822,7 +2822,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -2836,13 +2836,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -3057,7 +3057,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -3182,7 +3182,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -3282,7 +3282,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -3296,13 +3296,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -3517,7 +3517,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -3646,7 +3646,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -3750,7 +3750,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -3764,13 +3764,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -3985,7 +3985,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -4114,7 +4114,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -4218,7 +4218,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -4232,13 +4232,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -4453,7 +4453,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -4582,7 +4582,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -4686,7 +4686,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [
@@ -4700,13 +4700,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.11.700"
+            "locked": "1.11.825"
         },
         "com.datastax.cassandra:cassandra-driver-core": {
             "firstLevelTransitive": [
@@ -4921,7 +4921,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "com.zaxxer:HikariCP": {
             "firstLevelTransitive": [
@@ -5050,7 +5050,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.6"
+            "locked": "3.9"
         },
         "org.apache.curator:curator-recipes": {
             "firstLevelTransitive": [
@@ -5154,7 +5154,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         },
         "redis.clients:jedis": {
             "firstLevelTransitive": [

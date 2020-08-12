@@ -4,7 +4,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -99,7 +99,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -137,7 +137,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -161,7 +161,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         }
     },
     "compileClasspath": {
@@ -169,7 +169,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -264,7 +264,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -302,7 +302,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -326,7 +326,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         }
     },
     "default": {
@@ -334,7 +334,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -429,7 +429,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -467,7 +467,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -491,7 +491,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         }
     },
     "jacocoAgent": {
@@ -511,7 +511,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -606,7 +606,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -644,7 +644,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -668,7 +668,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         }
     },
     "runtimeClasspath": {
@@ -676,7 +676,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -771,7 +771,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -809,7 +809,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -833,7 +833,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "1.7.25"
+            "locked": "1.7.28"
         }
     },
     "testCompile": {
@@ -841,7 +841,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -940,7 +940,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -982,7 +982,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -1022,7 +1022,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -1121,7 +1121,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -1163,7 +1163,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -1203,7 +1203,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -1302,7 +1302,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -1344,7 +1344,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -1384,7 +1384,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.11.86"
+            "locked": "1.11.475"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -1483,7 +1483,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "1.3.1-274"
+            "locked": "1.6.11-376"
         },
         "io.prometheus:simpleclient": {
             "firstLevelTransitive": [
@@ -1525,7 +1525,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.0"
+            "locked": "3.9"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
