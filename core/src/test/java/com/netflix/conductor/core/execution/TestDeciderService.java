@@ -984,6 +984,7 @@ public class TestDeciderService {
         Workflow workflow = new Workflow();
         workflow.setOwnerApp("junit");
         workflow.setStartTime(System.currentTimeMillis() - 5_000);
+        workflow.setWorkflowId("workflow_id");
 
         // no-op
         workflow.setWorkflowDefinition(null);
@@ -1004,7 +1005,7 @@ public class TestDeciderService {
         workflowDef.setTimeoutPolicy(WorkflowDef.TimeoutPolicy.TIME_OUT_WF);
         workflow.setWorkflowDefinition(workflowDef);
         exception.expect(TerminateWorkflowException.class);
-        exception.expectMessage("Workflow timed out");
+        exception.expectMessage("Workflow 'workflow_id' timed out");
         deciderService.checkWorkflowTimeout(workflow);
         assertEquals(1, counter.count());
     }
