@@ -31,7 +31,7 @@ public class SetVariable extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(Workflow workflow, Task task, WorkflowExecutor provider) {
+    public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) {
         Map<String, Object> workflowVars = workflow.getVariables();
         Map<String, Object> input = task.getInputData();
         String taskId = task.getTaskId();
@@ -43,5 +43,6 @@ public class SetVariable extends WorkflowSystemTask {
             });
         }
         task.setStatus(Task.Status.COMPLETED);
+        return true;
     }
 }
