@@ -21,7 +21,7 @@ public enum TaskType {
     EXCLUSIVE_JOIN(true),
     TERMINATE(true),
     KAFKA_PUBLISH(true),
-    SET_WORKFLOW_VARIABLE(true);
+    SET_VARIABLE(true);
 
     /**
      * TaskType constants representing each of the possible enumeration values.
@@ -44,7 +44,7 @@ public enum TaskType {
     public static final String TASK_TYPE_EXCLUSIVE_JOIN = "EXCLUSIVE_JOIN";
     public static final String TASK_TYPE_TERMINATE = "TERMINATE";
     public static final String TASK_TYPE_KAFKA_PUBLISH = "KAFKA_PUBLISH";
-    public static final String TASK_TYPE_SET_VARIABLE = "SET_WORKFLOW_VARIABLE";
+    public static final String TASK_TYPE_SET_VARIABLE = "SET_VARIABLE";
     
     private boolean isSystemTask;
 

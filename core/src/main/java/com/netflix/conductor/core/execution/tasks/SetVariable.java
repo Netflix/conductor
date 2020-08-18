@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public class SetVariable extends WorkflowSystemTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetVariable.class);
 
-    public static final String NAME = "SET_WORKFLOW_VARIABLE";
+    public static final String NAME = "SET_VARIABLE";
 
     public SetVariable() {
         super(NAME);
