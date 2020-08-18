@@ -709,7 +709,7 @@ For JQ playground go to https://jqplay.org/
 }
 ```
 
-In the example above the value of `jq_1.output.result` will be `{ "output": ["a","b","c","d"] }`
+In the example above the value of `jq_1.output.result` will be `{ "out": ["a","b","c","d"] }`
 
 The task output can then be referenced in downstream tasks like:
 `"${jq_1.output.result.out}"`
