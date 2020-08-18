@@ -19,9 +19,11 @@ import json
 import sys
 import socket
 import warnings
+import logging
 
 
 hostname = socket.gethostname()
+log = logging.getLogger(__name__)
 
 
 class BaseClient(object):
@@ -92,7 +94,7 @@ class BaseClient(object):
 
     def __print(self, resp):
         if self.printUrl:
-            print(resp.url)
+            log.debug(resp.url)
 
     def __return(self, resp, header):
         retval = ''
@@ -109,7 +111,7 @@ class BaseClient(object):
         try:
             resp.raise_for_status()
         except requests.HTTPError:
-            print("ERROR: " + resp.text)
+            log.debug("ERROR: " + resp.text)
             raise
 
 
@@ -184,7 +186,7 @@ class TaskClient(BaseClient):
         headers = {'Accept': 'text/plain'}
         self.post(url, None, taskObj, headers)
 
-    def pollForTask(self, taskType, workerid, domain=None):
+    def pollForTask(self, taskType, workerid, log, domain=None):
         url = self.makeUrl('poll/{}', taskType)
         params = {}
         params['workerid'] = workerid
@@ -194,7 +196,7 @@ class TaskClient(BaseClient):
         try:
             return self.get(url, params)
         except Exception as err:
-            print('Error while polling ' + str(err))
+            log.debug('Error while polling ' + str(err))
             return None
 
     def pollForBatch(self, taskType, count, timeout, workerid, domain=None):
@@ -210,7 +212,7 @@ class TaskClient(BaseClient):
         try:
             return self.get(url, params)
         except Exception as err:
-            print('Error while polling ' + str(err))
+            log.debug('Error while polling ' + str(err))
             return None
 
     def ackTask(self, taskId, workerid):

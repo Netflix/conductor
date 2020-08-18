@@ -18,8 +18,11 @@ import time
 from conductor.conductor import WFClientMgr
 from threading import Thread
 import socket
+import logging
+
 
 hostname = socket.gethostname()
+log = logging.getLogger(__name__)
 
 
 class ConductorWorker:
@@ -66,7 +69,7 @@ class ConductorWorker:
         self.polling_interval = polling_interval
         self.worker_id = worker_id or hostname
 
-    def execute(self, task, exec_function):
+    def execute(self, task, exec_function, log):
         try:
             resp = exec_function(task)
             if type(resp) is not dict or not all(key in resp for key in ('status', 'output', 'logs')):
@@ -78,7 +81,7 @@ class ConductorWorker:
                 task['reasonForIncompletion'] = resp['reasonForIncompletion']
             self.taskClient.updateTask(task)
         except Exception as err:
-            print('Error executing task: ' + str(err))
+            log.debug('Error executing task: ' + str(err))
             task['status'] = 'FAILED'
             task['outputData'] = {'error-message' : str(err) }
             self.taskClient.updateTask(task)
@@ -117,8 +120,10 @@ class ConductorWorker:
             The domain of the task under which the worker will run. For
             further details refer to the conductor server documentation
             By default, it is set to None
+        log: logger
+            Parameter for logger object.
         """
-        print('Polling for task %s at a %f ms interval with %d threads for task execution, with worker id as %s' % (taskType, self.polling_interval * 1000, self.thread_count, self.worker_id))
+        log.debug('Polling for task %s at a %f ms interval with %d threads for task execution, with worker id as %s' % (taskType, self.polling_interval * 1000, self.thread_count, self.worker_id))
         for x in range(0, int(self.thread_count)):
             thread = Thread(target=self.poll_and_execute, args=(taskType, exec_function, domain,))
             thread.daemon = True
