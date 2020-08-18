@@ -44,7 +44,7 @@ public enum TaskType {
     public static final String TASK_TYPE_EXCLUSIVE_JOIN = "EXCLUSIVE_JOIN";
     public static final String TASK_TYPE_TERMINATE = "TERMINATE";
     public static final String TASK_TYPE_KAFKA_PUBLISH = "KAFKA_PUBLISH";
-    public static final String TASK_TYPE_SET_WORKFLOW_VARIABLE = "SET_WORKFLOW_VARIABLE";
+    public static final String TASK_TYPE_SET_VARIABLE = "SET_WORKFLOW_VARIABLE";
     
     private boolean isSystemTask;
 

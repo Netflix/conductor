@@ -675,3 +675,31 @@ Do while task does NOT support domain or isolation group execution. Nesting of D
 ```
 If any of loopover task will be failed then do while task will be failed. In such case retry will start iteration from 1. TaskType SUB_WORKFLOW is not supported as a part of loopover task. Since loopover tasks will be executed in loop inside scope of parent do while task, crossing branching outside of DO_WHILE task will not be respected. Branching inside loopover task will be supported.
 In case of exception while evaluating loopCondition, do while task will be failed with FAILED_WITH_TERMINAL_ERROR.
+
+
+## Set Variable Task
+
+This task allows to set workflow variables by creating or updating them with new values.
+Variables can be initialized in the workflow definition as well as during the workflow run.
+Once a variable was initialized it can be read or overwritten with a new value by any other task.
+
+!!!warning
+	Use variable values with caution for payload size. Do not use large payload since these values are not externalized to the [external payload storage](../externalpayloadstorage).
+
+**Parameters:**
+
+The parameters for this task are the variable names with their respective values.
+
+**Example**
+```json
+{
+  "type": "SET_VARIABLE",
+  "name": "set_stage_start",
+  "taskReferenceName": "set_stage_start",
+  "inputParameters": {
+    "stage": "START"
+  }
+}
+```
+
+Later in that workflow, the variable can be referenced by `"${workflow.variables.stage}"`

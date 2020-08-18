@@ -58,7 +58,7 @@ public class CoreModule extends AbstractModule {
         bind(Lambda.class).asEagerSingleton();
         bind(Terminate.class).asEagerSingleton();
         bind(IsolatedTaskQueueProducer.class).asEagerSingleton();
-        bind(SetWorkflowVariable.class).asEagerSingleton();
+        bind(SetVariable.class).asEagerSingleton();
         // start processing events when instance starts
         bind(ActionProcessor.class).to(SimpleActionProcessor.class);
         bind(EventProcessor.class).to(SimpleEventProcessor.class).asEagerSingleton();
@@ -215,10 +215,10 @@ public class CoreModule extends AbstractModule {
     }
 
     @ProvidesIntoMap
-    @StringMapKey(TASK_TYPE_SET_WORKFLOW_VARIABLE)
+    @StringMapKey(TASK_TYPE_SET_VARIABLE)
     @Singleton
     @Named(TASK_MAPPERS_QUALIFIER)
-    public TaskMapper getSetWorkflowVariableTaskMapper() {
-        return new SetWorkflowVariableMapper();
+    public TaskMapper getSetVariableTaskMapper() {
+        return new SetVariableTaskMapper();
     }
 }
