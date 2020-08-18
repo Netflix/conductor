@@ -77,7 +77,9 @@ public class Event extends WorkflowSystemTask {
 		message.setTraceId(workflow.getTraceId());
 		if (useGroupId) {
 			message.setHeaders(new HashMap<String, String>(){{
-				put("JMSXGroupID", getJMXGroupId(workflow));
+				String jmsxGroupId = getJMXGroupId(workflow);
+				logger.info("Conductor Event Message header JMSXGroupID " + jmsxGroupId);
+				put("JMSXGroupID", jmsxGroupId);
 			}});
 		}
 
@@ -169,6 +171,7 @@ public class Event extends WorkflowSystemTask {
 		if ( StringUtils.isNotEmpty(correlationId)){
 			String jobId = getJobId(correlationId);
 			if ( StringUtils.isNotEmpty(jobId)){
+				logger.info("Conductor Event Message: Getting Job ID " + jobId);
 				jmsxGroupId = jobId;
 			}
 		}
