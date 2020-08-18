@@ -21,12 +21,8 @@ package com.netflix.conductor.core.execution;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.netflix.conductor.core.execution.tasks.Decision;
-import com.netflix.conductor.core.execution.tasks.ExclusiveJoin;
-import com.netflix.conductor.core.execution.tasks.Fork;
-import com.netflix.conductor.core.execution.tasks.Join;
-import com.netflix.conductor.core.execution.tasks.DoWhile;
-import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
+import com.netflix.conductor.core.execution.tasks.*;
+
 /**
  * Defines a system task type
  * 
@@ -34,7 +30,7 @@ import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
  */
 public enum SystemTaskType {
 
-	DECISION(new Decision()), FORK(new Fork()), JOIN(new Join()), EXCLUSIVE_JOIN(new ExclusiveJoin()), DO_WHILE(new DoWhile());
+	DECISION(new Decision()), FORK(new Fork()), JOIN(new Join()), EXCLUSIVE_JOIN(new ExclusiveJoin()), DO_WHILE(new DoWhile()),SET_WORKFLOW_VARIABLE(new SetWorkflowVariable());
 	
 	private static Set<String> builtInTasks = new HashSet<>();
 	static {
@@ -43,6 +39,7 @@ public enum SystemTaskType {
 		builtInTasks.add(SystemTaskType.FORK.name());
 		builtInTasks.add(SystemTaskType.JOIN.name());
 		builtInTasks.add(SystemTaskType.EXCLUSIVE_JOIN.name());
+		builtInTasks.add(SystemTaskType.SET_WORKFLOW_VARIABLE.name());
 	}
 
 	private WorkflowSystemTask impl;
