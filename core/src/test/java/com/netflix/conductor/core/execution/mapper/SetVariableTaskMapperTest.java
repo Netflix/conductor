@@ -6,24 +6,13 @@ import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.utils.IDGenerator;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
-import static org.mockito.Mockito.mock;
-
 public class SetVariableTaskMapperTest {
-
-    private ParametersUtils parametersUtils;
-
-    @Before
-    public void setUp() {
-        parametersUtils = mock(ParametersUtils.class);
-    }
 
     @Test
     public void getMappedTasks() throws Exception {
@@ -46,7 +35,7 @@ public class SetVariableTaskMapperTest {
                 .withTaskId(taskId)
                 .build();
 
-        List<Task> mappedTasks = new TerminateTaskMapper(parametersUtils).getMappedTasks(taskMapperContext);
+        List<Task> mappedTasks = new SetVariableTaskMapper().getMappedTasks(taskMapperContext);
 
         Assert.assertNotNull(mappedTasks);
         Assert.assertEquals(1, mappedTasks.size());

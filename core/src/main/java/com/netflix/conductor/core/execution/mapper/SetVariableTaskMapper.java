@@ -22,16 +22,15 @@ import org.slf4j.LoggerFactory;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.execution.SystemTaskType;
 import com.netflix.conductor.core.execution.TerminateWorkflowException;
 
 public class SetVariableTaskMapper implements TaskMapper {
 
-    Logger logger = LoggerFactory.getLogger(SetVariableTaskMapper.class);
+    public static final Logger LOGGER = LoggerFactory.getLogger(SetVariableTaskMapper.class);
 
     @Override
     public List<Task> getMappedTasks(TaskMapperContext taskMapperContext) throws TerminateWorkflowException {
-        logger.debug("TaskMapperContext {} in SetVariableMapper", taskMapperContext);
+        LOGGER.debug("TaskMapperContext {} in SetVariableMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
@@ -39,8 +38,8 @@ public class SetVariableTaskMapper implements TaskMapper {
         String taskId = taskMapperContext.getTaskId();
 
         Task varTask = new Task();
-        varTask.setTaskType(SystemTaskType.SET_VARIABLE.name());
-        varTask.setTaskDefName(SystemTaskType.SET_VARIABLE.name());
+        varTask.setTaskType(taskToSchedule.getType());
+        varTask.setTaskDefName(taskToSchedule.getName());
         varTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         varTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         varTask.setWorkflowType(workflowInstance.getWorkflowName());
