@@ -1,5 +1,9 @@
 from __future__ import print_function
 from conductor.ConductorWorker import ConductorWorker
+import logging
+
+log = logging.getLogger(__name__)
+
 
 def execute(task):
     return {'status': 'COMPLETED', 'output': {'mod': 5, 'taskToExecute': 'task_1', 'oddEven': 0}, 'logs': ['one','two']}
@@ -10,7 +14,7 @@ def execute4(task):
     return {'status': 'COMPLETED', 'output': {'mod': 5, 'taskToExecute': 'task_1', 'oddEven': 0, 'dynamicTasks': forkTasks, 'inputs': input}, 'logs': ['one','two']}
 
 def main():
-    print('Starting Kitchensink workflows')
+    log.info('Starting Kitchensink workflows')
     cc = ConductorWorker('http://localhost:8080/api', 1, 0.1)
     for x in range(1, 30):
         if(x == 4):
