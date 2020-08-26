@@ -722,7 +722,7 @@ Variables can be initialized in the workflow definition as well as during the wo
 Once a variable was initialized it can be read or overwritten with a new value by any other task.
 
 !!!warning
-	Use variable values with caution for payload size. Do not use large payload since these values are not externalized to the [external payload storage](../externalpayloadstorage).
+	There is a hard barrier for variables payload size in KB defined in the JVM system properties (`conductor.max.workflow.variables.payload.threshold.kb`) the default value is `256`. Passing this barrier will fail the task and the workflow.
 
 **Parameters:**
 

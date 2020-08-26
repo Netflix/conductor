@@ -66,11 +66,39 @@ class SetVariableTaskSpec extends Specification {
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 1
-            tasks[0].status == Task.Status.COMPLETED
             tasks[0].taskType == 'SET_VARIABLE'
+            tasks[0].status == Task.Status.COMPLETED
             variables as String == '[var:var_test_value]'
             output as String == '[variables:[var:var_test_value]]'
         }
     }
 
+    def "Test workflow with set variable task passing variables payload size threshold"() {
+        given: "workflow input"
+        def workflowInput = new HashMap()
+        // Threshold is defined in MockConfiguration under getMaxWorkflowVariablesPayloadSizeThresholdKB
+        long maxThreshold = 2
+        workflowInput['var'] = String.join("",
+            Collections.nCopies(1 + ((int)(maxThreshold * 1024 / 8)), "01234567" ));
+
+        when: "Start the workflow which has the set variable task"
+        def workflowInstanceId = workflowExecutor.startWorkflow(SET_VARIABLE_WF, 1,
+            '', workflowInput, null, null, null)
+        def EXTRA_HASHMAP_SIZE = 17
+        def expectedErrorMessage =
+            String.format(
+                "The variables payload size: %dB of workflow: %s is greater than the permissible limit: %dKB",
+                    EXTRA_HASHMAP_SIZE + maxThreshold * 1024 + 1, workflowInstanceId, maxThreshold);
+
+        then:"verify that the task is completed and variables were set"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.FAILED
+            tasks.size() == 1
+            tasks[0].taskType == 'SET_VARIABLE'
+            tasks[0].status == Task.Status.FAILED_WITH_TERMINAL_ERROR
+            tasks[0].reasonForIncompletion == expectedErrorMessage
+            variables as String == '[:]'
+            output as String == '[variables:[:]]'
+        }
+    }
 }
