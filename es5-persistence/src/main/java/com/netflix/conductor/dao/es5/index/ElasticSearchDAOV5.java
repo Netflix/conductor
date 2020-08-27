@@ -38,6 +38,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -423,7 +424,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
         try {
             long startTime = Instant.now().toEpochMilli();
-            BulkRequestBuilder bulkRequestBuilder = elasticSearchClient.prepareBulk();
+            BulkRequestBuilderWrapper bulkRequestBuilder = new BulkRequestBuilderWrapper(elasticSearchClient.prepareBulk());
             for (TaskExecLog log : taskExecLogs) {
                 IndexRequest request = new IndexRequest(logIndexName, LOG_DOC_TYPE);
                 request.source(objectMapper.writeValueAsBytes(log), XContentType.JSON);
@@ -469,8 +470,9 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(logIndexPrefix + "*")
                 .setQuery(fq)
                 .setTypes(LOG_DOC_TYPE)
-                .addSort(sortBuilder);
-
+                .addSort(sortBuilder)
+                .setSize(config.getElasticSearchTasklogLimit());
+            
             SearchResponse response = srb.execute().actionGet();
 
             return Arrays.stream(response.getHits().getHits())
@@ -563,7 +565,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         }
     }
 
-    private void updateWithRetry(BulkRequestBuilder request, String docType) {
+    private void updateWithRetry(BulkRequestBuilderWrapper request, String docType) {
         try {
             long startTime = Instant.now().toEpochMilli();
             new RetryUtil<BulkResponse>().retryOnException(
@@ -723,7 +725,7 @@ public class ElasticSearchDAOV5 implements IndexDAO {
     @Override
     public List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays) {
         QueryBuilder q = QueryBuilders.boolQuery()
-            .must(QueryBuilders.rangeQuery("endTime").lt(LocalDate.now().minusDays(archiveTtlDays).toString()).gte(LocalDate.now().minusDays(archiveTtlDays).minusDays(1).toString()))
+            .must(QueryBuilders.rangeQuery("endTime").lt(LocalDate.now(ZoneOffset.UTC).minusDays(archiveTtlDays).toString()).gte(LocalDate.now(ZoneOffset.UTC).minusDays(archiveTtlDays).minusDays(1).toString()))
             .should(QueryBuilders.termQuery("status", "COMPLETED"))
             .should(QueryBuilders.termQuery("status", "FAILED"))
             .should(QueryBuilders.termQuery("status", "TIMED_OUT"))
@@ -856,19 +858,19 @@ public class ElasticSearchDAOV5 implements IndexDAO {
 
     private static class BulkRequests {
         private final long lastFlushTime;
-        private final BulkRequestBuilder bulkRequestBuilder;
+        private final BulkRequestBuilderWrapper bulkRequestBuilder;
 
         public long getLastFlushTime() {
             return lastFlushTime;
         }
 
-        public BulkRequestBuilder getBulkRequestBuilder() {
+        public BulkRequestBuilderWrapper getBulkRequestBuilder() {
             return bulkRequestBuilder;
         }
 
         BulkRequests(long lastFlushTime, BulkRequestBuilder bulkRequestBuilder) {
             this.lastFlushTime = lastFlushTime;
-            this.bulkRequestBuilder = bulkRequestBuilder;
+            this.bulkRequestBuilder = new BulkRequestBuilderWrapper(bulkRequestBuilder);
         }
     }
 }

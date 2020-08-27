@@ -69,6 +69,8 @@ public class TaskResult {
 
     private String externalOutputPayloadStoragePath;
 
+    private String subWorkflowId;
+
     public TaskResult(Task task) {
         this.workflowInstanceId = task.getWorkflowInstanceId();
         this.taskId = task.getTaskId();
@@ -77,6 +79,7 @@ public class TaskResult {
         this.workerId = task.getWorkerId();
         this.outputData = task.getOutputData();
         this.externalOutputPayloadStoragePath = task.getExternalOutputPayloadStoragePath();
+        this.subWorkflowId = task.getSubWorkflowId();
         switch (task.getStatus()) {
             case CANCELED:
             case COMPLETED_WITH_ERRORS:
@@ -240,6 +243,14 @@ public class TaskResult {
         this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
     }
 
+    public String getSubWorkflowId() {
+        return subWorkflowId;
+    }
+
+    public void setSubWorkflowId(String subWorkflowId) {
+        this.subWorkflowId = subWorkflowId;
+    }
+
     @Override
     public String toString() {
         return "TaskResult{" +
@@ -253,6 +264,7 @@ public class TaskResult {
                 ", outputMessage=" + outputMessage +
                 ", logs=" + logs +
                 ", externalOutputPayloadStoragePath='" + externalOutputPayloadStoragePath + '\'' +
+                ", subWorkflowId='" + subWorkflowId + '\'' +
                 '}';
     }
 
@@ -278,5 +290,24 @@ public class TaskResult {
         TaskResult result = new TaskResult();
         result.setStatus(status);
         return result;
+    }
+
+    /**
+     * Copy the given task result object
+     * @return a deep copy of the task result object except the externalOutputPayloadStoragePath field
+     */
+    public TaskResult copy() {
+        TaskResult taskResult = new TaskResult();
+        taskResult.setWorkflowInstanceId(workflowInstanceId);
+        taskResult.setTaskId(taskId);
+        taskResult.setReasonForIncompletion(reasonForIncompletion);
+        taskResult.setCallbackAfterSeconds(callbackAfterSeconds);
+        taskResult.setWorkerId(workerId);
+        taskResult.setStatus(status);
+        taskResult.setOutputData(outputData);
+        taskResult.setOutputMessage(outputMessage);
+        taskResult.setLogs(logs);
+        taskResult.setSubWorkflowId(subWorkflowId);
+        return taskResult;
     }
 }

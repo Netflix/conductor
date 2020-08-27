@@ -1,17 +1,14 @@
 /*
- * Copyright 2016 Netflix, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2020 Netflix, Inc.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.netflix.conductor.service;
 
@@ -20,6 +17,7 @@ import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -44,6 +42,7 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.utils.ServiceUtils;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -76,12 +75,11 @@ public class ExecutionService {
 	private final ExternalPayloadStorage externalPayloadStorage;
 
     private final int taskRequeueTimeout;
-    private final int maxSearchSize;
+	private int queueTaskMessagePostponeSeconds;
 
-    private static final int MAX_POLL_TIMEOUT_MS = 5000;
+	private static final int MAX_POLL_TIMEOUT_MS = 5000;
     private static final int POLL_COUNT_ONE = 1;
     private static final int POLLING_TIMEOUT_IN_MS = 100;
-
     private static final int MAX_SEARCH_SIZE = 5_000;
 
 	@Inject
@@ -96,8 +94,9 @@ public class ExecutionService {
 		this.metadataDAO = metadataDAO;
 		this.queueDAO = queueDAO;
 		this.externalPayloadStorage = externalPayloadStorage;
+
 		this.taskRequeueTimeout = config.getIntProperty("task.requeue.timeout", 60_000);
-        this.maxSearchSize = config.getIntProperty("workflow.max.search.size", 5_000);
+		this.queueTaskMessagePostponeSeconds = config.getIntProperty("task.queue.message.postponeSeconds", 60);
 	}
 
 	public Task poll(String taskType, String workerId) {
@@ -123,19 +122,38 @@ public class ExecutionService {
 		}
 		String queueName = QueueUtils.getQueueName(taskType, domain, null,null);
 
+		List<String> taskIds = new LinkedList<>();
 		List<Task> tasks = new LinkedList<>();
 		try {
-			List<String> taskIds = queueDAO.pop(queueName, count, timeoutInMilliSecond);
-			for (String taskId : taskIds) {
+			taskIds = queueDAO.pop(queueName, count, timeoutInMilliSecond);
+		} catch (Exception e) {
+			logger.error("Error polling for task: {} from worker: {} in domain: {}, count: {}", taskType, workerId,
+				domain, count, e);
+			Monitors.error(this.getClass().getCanonicalName(), "taskPoll");
+			Monitors.recordTaskPollError(taskType, domain, e.getClass().getSimpleName());
+		}
+
+		for (String taskId : taskIds) {
+			try {
 				Task task = getTask(taskId);
 				if (task == null || task.getStatus().isTerminal()) {
 					// Remove taskId(s) without a valid Task/terminal state task from the queue
 					queueDAO.remove(queueName, taskId);
-					logger.debug("Removed taskId from the queue: {}, {}", queueName, taskId);
+					logger.debug("Removed task: {} from the queue: {}", taskId, queueName);
 					continue;
 				}
 
 				if (executionDAOFacade.exceedsInProgressLimit(task)) {
+					// Postpone this message, so that it would be available for poll again.
+					queueDAO.postpone(queueName, taskId, task.getWorkflowPriority(), queueTaskMessagePostponeSeconds);
+					logger.debug("Postponed task: {} in queue: {} by {} seconds", taskId, queueName, queueTaskMessagePostponeSeconds);
+					continue;
+				}
+				TaskDef taskDef = task.getTaskDefinition().isPresent() ? task.getTaskDefinition().get() : null;
+				if (task.getRateLimitPerFrequency() > 0 && executionDAOFacade.exceedsRateLimitPerFrequency(task, taskDef)) {
+					// Postpone this message, so that it would be available for poll again.
+					queueDAO.postpone(queueName, taskId, task.getWorkflowPriority(), queueTaskMessagePostponeSeconds);
+					logger.debug("RateLimit Execution limited for {}:{}, limit:{}", taskId, task.getTaskDefName(), task.getRateLimitPerFrequency());
 					continue;
 				}
 
@@ -149,13 +167,15 @@ public class ExecutionService {
 				task.setPollCount(task.getPollCount() + 1);
 				executionDAOFacade.updateTask(task);
 				tasks.add(task);
+			} catch (Exception e) {
+				// db operation failed for dequeued message, re-enqueue with a delay
+				logger.warn("DB operation failed for task: {}, postponing task in queue", taskId, e);
+				Monitors.recordTaskPollError(taskType, domain, e.getClass().getSimpleName());
+				queueDAO.postpone(queueName, taskId, 0, queueTaskMessagePostponeSeconds);
 			}
-			executionDAOFacade.updateTaskLastPoll(taskType, domain, workerId);
-			Monitors.recordTaskPoll(queueName);
-		} catch (Exception e) {
-			logger.error("Error polling for task: {} from worker: {} in domain: {}, count: {}", taskType, workerId, domain, count, e);
-			Monitors.error(this.getClass().getCanonicalName(), "taskPoll");
 		}
+		executionDAOFacade.updateTaskLastPoll(taskType, domain, workerId);
+		Monitors.recordTaskPoll(queueName);
 		return tasks;
 	}
 
@@ -328,15 +348,20 @@ public class ExecutionService {
 
 	public List<Workflow> getWorkflowInstances(String workflowName, String correlationId, boolean includeClosed, boolean includeTasks) {
 
-		List<Workflow> workflows = executionDAOFacade.getWorkflowsByCorrelationId(correlationId, includeTasks);
-		List<Workflow> result = new LinkedList<>();
-		for (Workflow wf : workflows) {
-			if (wf.getWorkflowName().equals(workflowName) && (includeClosed || wf.getStatus().equals(Workflow.WorkflowStatus.RUNNING))) {
-				result.add(wf);
+		List<Workflow> workflows = executionDAOFacade.getWorkflowsByCorrelationId(workflowName, correlationId, false);
+		return workflows.stream().parallel().filter(wf -> {
+			if (includeClosed || wf.getStatus().equals(Workflow.WorkflowStatus.RUNNING)) {
+				// including tasks for subset of workflows to increase performance
+				if (includeTasks) {
+					List<Task> tasks = executionDAOFacade.getTasksForWorkflow(wf.getWorkflowId());
+					tasks.sort(Comparator.comparingInt(Task::getSeq));
+					wf.setTasks(tasks);
+				}
+				return true;
+			} else {
+				return false;
 			}
-		}
-
-		return result;
+		}).collect(Collectors.toList());
 	}
 
 	public Workflow getExecutionStatus(String workflowId, boolean includeTasks) {

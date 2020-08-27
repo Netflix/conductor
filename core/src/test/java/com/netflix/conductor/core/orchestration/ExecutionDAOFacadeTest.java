@@ -91,8 +91,8 @@ public class ExecutionDAOFacadeTest {
     @Test
     public void testGetWorkflowsByCorrelationId() {
         when(executionDAO.canSearchAcrossWorkflows()).thenReturn(true);
-        when(executionDAO.getWorkflowsByCorrelationId(any(), anyBoolean())).thenReturn(Collections.singletonList(new Workflow()));
-        List<Workflow> workflows = executionDAOFacade.getWorkflowsByCorrelationId("correlationId", true);
+        when(executionDAO.getWorkflowsByCorrelationId(any(), any(), anyBoolean())).thenReturn(Collections.singletonList(new Workflow()));
+        List<Workflow> workflows = executionDAOFacade.getWorkflowsByCorrelationId("workflowName", "correlationId", true);
         assertNotNull(workflows);
         assertEquals(1, workflows.size());
         verify(indexDAO, never()).searchWorkflows(anyString(), anyString(), anyInt(), anyInt(), any());
@@ -104,7 +104,7 @@ public class ExecutionDAOFacadeTest {
         searchResult.setResults(workflowIds);
         when(indexDAO.searchWorkflows(anyString(), anyString(), anyInt(), anyInt(), any())).thenReturn(searchResult);
         when(executionDAO.getWorkflow("workflowId", true)).thenReturn(new Workflow());
-        workflows = executionDAOFacade.getWorkflowsByCorrelationId("correlationId", true);
+        workflows = executionDAOFacade.getWorkflowsByCorrelationId("workflowName", "correlationId", true);
         assertNotNull(workflows);
         assertEquals(1, workflows.size());
     }
@@ -116,7 +116,7 @@ public class ExecutionDAOFacadeTest {
         when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
         executionDAOFacade.removeWorkflow("workflowId", false);
         verify(indexDAO, never()).updateWorkflow(any(), any(), any());
-        verify(indexDAO, times(1)).asyncRemoveWorkflow(anyString());
+        verify(indexDAO, times(1)).asyncRemoveWorkflow(workflow.getWorkflowId());
     }
 
     @Test

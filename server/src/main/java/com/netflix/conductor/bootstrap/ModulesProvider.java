@@ -25,10 +25,12 @@ import com.netflix.conductor.contribs.kafka.KafkaProducerManager;
 import com.netflix.conductor.contribs.kafka.KafkaPublishTask;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.JacksonModule;
+import com.netflix.conductor.core.utils.LocalOnlyLockModule;
 import com.netflix.conductor.core.utils.NoopLockModule;
 import com.netflix.conductor.core.execution.WorkflowExecutorModule;
 import com.netflix.conductor.core.utils.DummyPayloadStorage;
 import com.netflix.conductor.core.utils.S3PayloadStorage;
+import com.netflix.conductor.noopindex.NoopIndexModule;
 import com.netflix.conductor.dao.RedisWorkflowModule;
 import com.netflix.conductor.elasticsearch.ElasticSearchModule;
 import com.netflix.conductor.locking.redis.config.RedisLockModule;
@@ -119,6 +121,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
             case CASSANDRA:
                 modules.add(new CassandraModule());
                 logger.info("Starting conductor server using cassandra.");
+                break;
             case REDIS_SENTINEL:
                 modules.add(new RedisSentinelModule());
                 modules.add(new RedisWorkflowModule());
@@ -126,7 +129,10 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 break;
         }
 
-        modules.add(new ElasticSearchModule());
+        if (configuration.isIndexingPersistenceEnabled())
+            modules.add(new ElasticSearchModule());
+        else
+            modules.add(new NoopIndexModule());
 
         modules.add(new WorkflowExecutorModule());
 
@@ -154,6 +160,10 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 case ZOOKEEPER:
                     modules.add(new ZookeeperModule());
                     logger.info("Starting locking module using Zookeeper cluster.");
+                    break;
+                case LOCAL_ONLY:
+                    modules.add(new LocalOnlyLockModule());
+                    logger.info("Starting locking module using local only JVM locking.");
                     break;
                 default:
                     break;

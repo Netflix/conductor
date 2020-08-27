@@ -44,8 +44,8 @@ public interface CassandraConfiguration extends Configuration {
     String CASSANDRA_READ_CONSISTENCY_LEVEL = "workflow.cassandra.read.consistency.level";
     String CASSANDRA_READ_CONSISTENCY_LEVEL_DEFAULT_VALUE = "LOCAL_QUORUM";
 
-    String CASSANDRA_WRITE_CONSISTENCY_LEVEL = "workflow.cassandra.write.consistency.level";
     String CASSANDRA_WRITE_CONSISTENCY_LEVEL_DEFAULT_VALUE = "LOCAL_QUORUM";
+    String CASSANDRA_WRITE_CONSISTENCY_LEVEL = "workflow.cassandra.write.consistency.level";
 
     default String getHostAddress() {
         return getProperty(CASSANDRA_HOST_ADDRESS_PROPERTY_NAME, CASSANDRA_HOST_ADDRESS_DEFAULT_VALUE);

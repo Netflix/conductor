@@ -8,6 +8,7 @@ Conductor maintains a registry of worker tasks.  A task MUST be registered befor
   "retryCount": 3,
   
   "timeoutSeconds": 1200,
+  "pollTimeoutSeconds": 3600,
   "inputKeys": [
     "sourceRequestId",
     "qcElementType"
@@ -36,6 +37,7 @@ Conductor maintains a registry of worker tasks.  A task MUST be registered befor
 |retryDelaySeconds|Time to wait before retries|defaults to 60 seconds|
 |timeoutPolicy|Task's timeout policy|see possible values below|
 |timeoutSeconds|Time in seconds, after which the task is marked as `TIMED_OUT` if not completed after transitioning to `IN_PROGRESS` status for the first time|No timeouts if set to 0|
+|pollTimeoutSeconds|Time in seconds, after which the task is marked as `TIMED_OUT` if not polled by a worker|No timeouts if set to 0|
 |responseTimeoutSeconds|Must be greater than 0 and less than timeoutSeconds. The task is rescheduled if not updated with a status after this time (heartbeat mechanism). Useful when the worker polls for the task but fails to complete due to errors/network failure.|defaults to 3600|
 |inputKeys|Array of keys of task's expected input.  Used for documenting task's input. See [Using inputKeys and outputKeys](#using-inputkeys-and-outputkeys). |optional|
 |outputKeys|Array of keys of task's expected output.  Used for documenting task's output|optional|
@@ -47,7 +49,7 @@ Conductor maintains a registry of worker tasks.  A task MUST be registered befor
 ### Retry Logic
 
 * FIXED : Reschedule the task after the ```retryDelaySeconds```
-* EXPONENTIAL_BACKOFF : reschedule after ```retryDelaySeconds  * attemptNumber```
+* EXPONENTIAL_BACKOFF : Reschedule after ```retryDelaySeconds  * attemptNumber```
  
 ### Timeout Policy
 
@@ -68,7 +70,8 @@ If you have 1000 task executions waiting in the queue, and 1000 workers polling 
 * `rateLimitPerFrequency`defines the number of Tasks that can be given to Workers per given "frequency window".  
 **Example:**  
 Let's set `rateLimitFrequencyInSeconds = 5`, and `rateLimitPerFrequency = 12`. This means, our frequency window is of 5 seconds duration, and for each frequency window, Conductor would only give 12 tasks to workers. So, in a given minute, Conductor would only give 12*(60/5) = 144 tasks to workers irrespective of the number of workers that are polling for the task.  
-Note that unlike `concurrentExecLimit`, rate limiting doesn't take into account tasks already in progress/completed. Even if all the previous tasks are executed within 1 sec, or would take a few days, the new tasks are still given to workers at configured frequency, 144 tasks per minute in above example.
+Note that unlike `concurrentExecLimit`, rate limiting doesn't take into account tasks already in progress/completed. Even if all the previous tasks are executed within 1 sec, or would take a few days, the new tasks are still given to workers at configured frequency, 144 tasks per minute in above example.   
+Note: Rate limiting is only supported for the Redis-persistence module and is not available with other persistence layers.
 
 ### Using inputKeys and outputKeys
 

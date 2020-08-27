@@ -1,17 +1,14 @@
 /*
- * Copyright 2016 Netflix, Inc.
+ * Copyright 2020 Netflix, Inc.
  * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
  * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package com.netflix.conductor.tests.integration;
 
@@ -147,6 +144,8 @@ public abstract class AbstractWorkflowServiceTest {
     protected MetadataMapperService metadataMapperService;
 
     private ObjectMapper objectMapper = new JsonMapperProvider().get();
+
+    SubWorkflow dummySubWorkflowSystemTask = new SubWorkflow(objectMapper);
 
     private static boolean registered;
 
@@ -647,7 +646,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testDoWhileSingleIteration() throws Exception {
         try {
-            createDoWhileWorkflowWithIteration(1, false);
+            createDoWhileWorkflowWithIteration(1, false, true);
         } catch (Exception e) {
         }
         TaskDef taskDef = new TaskDef();
@@ -718,13 +717,13 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testDoWhileTwoIteration() throws Exception {
         try {
-            createDoWhileWorkflowWithIteration(2, false);
+            createDoWhileWorkflowWithIteration(2, false, true);
         } catch (Exception e) {
         }
 
         TaskDef taskDef = new TaskDef();
         taskDef.setName("http1");
-        taskDef.setTimeoutSeconds(2);
+        taskDef.setTimeoutSeconds(5);
         taskDef.setRetryCount(1);
         taskDef.setTimeoutPolicy(TimeoutPolicy.RETRY);
         taskDef.setRetryDelaySeconds(10);
@@ -732,7 +731,7 @@ public abstract class AbstractWorkflowServiceTest {
 
         TaskDef taskDef2 = new TaskDef();
         taskDef2.setName("http0");
-        taskDef2.setTimeoutSeconds(2);
+        taskDef2.setTimeoutSeconds(5);
         taskDef2.setRetryCount(1);
         taskDef2.setTimeoutPolicy(TimeoutPolicy.RETRY);
         taskDef2.setRetryDelaySeconds(10);
@@ -740,11 +739,19 @@ public abstract class AbstractWorkflowServiceTest {
 
         TaskDef taskDef1 = new TaskDef();
         taskDef1.setName("http2");
-        taskDef1.setTimeoutSeconds(2);
+        taskDef1.setTimeoutSeconds(5);
         taskDef1.setRetryCount(1);
         taskDef1.setTimeoutPolicy(TimeoutPolicy.RETRY);
         taskDef1.setRetryDelaySeconds(10);
         metadataService.registerTaskDef(Arrays.asList(taskDef1));
+
+        TaskDef taskDef3 = new TaskDef();
+        taskDef1.setName("http3");
+        taskDef1.setTimeoutSeconds(5);
+        taskDef1.setRetryCount(1);
+        taskDef1.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef1.setRetryDelaySeconds(10);
+        metadataService.registerTaskDef(Arrays.asList(taskDef3));
 
         Map<String, Object> input = new HashMap<>();
         String workflowId = startOrLoadWorkflowExecution(DO_WHILE_WF + "_2", 1, "looptest", input, null, null);
@@ -821,13 +828,109 @@ public abstract class AbstractWorkflowServiceTest {
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
+        assertEquals("Found " + workflow.getTasks(), RUNNING, workflow.getStatus());
+
+        task = workflowExecutionService.poll("HTTP", "test");
+        assertNotNull(task);
+        assertTrue(task.getReferenceTaskName().endsWith(TaskUtils.getLoopOverTaskRefNameSuffix(task.getIteration())));
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
         assertEquals("Found " + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
     }
 
     @Test
     public void testLoopConditionWithInputParamter() throws Exception {
         try {
-            createDoWhileWorkflowWithIteration(2, true);
+            createDoWhileWorkflowWithIteration(2, true, true);
+        } catch (Exception e) {
+        }
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("http1");
+        taskDef.setTimeoutSeconds(2);
+        taskDef.setRetryCount(1);
+        taskDef.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef.setRetryDelaySeconds(10);
+        metadataService.registerTaskDef(Arrays.asList(taskDef));
+
+        TaskDef taskDef2 = new TaskDef();
+        taskDef2.setName("http0");
+        taskDef2.setTimeoutSeconds(2);
+        taskDef2.setRetryCount(1);
+        taskDef2.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef2.setRetryDelaySeconds(10);
+        metadataService.registerTaskDef(Arrays.asList(taskDef2));
+
+        TaskDef taskDef1 = new TaskDef();
+        taskDef1.setName("http2");
+        taskDef1.setTimeoutSeconds(2);
+        taskDef1.setRetryCount(1);
+        taskDef1.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef1.setRetryDelaySeconds(10);
+        metadataService.registerTaskDef(Arrays.asList(taskDef1));
+
+        Map<String, Object> input = new HashMap<>();
+        String workflowId = startOrLoadWorkflowExecution(DO_WHILE_WF + "_3", 1, "looptest", input, null, null);
+        System.out.println("testDoWhile.wfid=" + workflowId);
+        printTaskStatuses(workflowId, "initiated");
+
+        Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals("Found " + workflow.getTasks(), RUNNING, workflow.getStatus());
+
+        Task task = workflowExecutionService.poll("HTTP", "test");
+        assertNotNull(task);
+        assertTrue(task.getReferenceTaskName().endsWith(TaskUtils.getLoopOverTaskRefNameSuffix(task.getIteration())));
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        task = workflowExecutionService.poll("FORK_JOIN", "test");
+        assertNull(task); // fork task is completed
+
+        task = workflowExecutionService.poll("HTTP", "test");
+        assertNotNull(task);
+        assertTrue(task.getReferenceTaskName().endsWith(TaskUtils.getLoopOverTaskRefNameSuffix(task.getIteration())));
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        task = workflowExecutionService.poll("HTTP", "test");
+        assertNotNull(task);
+        assertTrue(task.getReferenceTaskName().endsWith(TaskUtils.getLoopOverTaskRefNameSuffix(task.getIteration())));
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        task = workflowExecutionService.poll("JOIN", "test");
+        assertNull(task); // Both HTTP task completed.
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals("Found " + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
+    }
+
+    @Test
+    public void testLoopConditionWithInputParamterWithDef() throws Exception {
+    	testLoopConditionWithInputParamter(true);
+    }
+
+    @Test
+    public void testLoopConditionWithInputParamterNoDef() throws Exception {
+    	testLoopConditionWithInputParamter(false);
+    }
+
+    private void testLoopConditionWithInputParamter(boolean useDef) throws Exception {
+        try {
+            createDoWhileWorkflowWithIteration(2, true, useDef);
         } catch (Exception e) {
         }
 
@@ -1103,19 +1206,19 @@ public abstract class AbstractWorkflowServiceTest {
         String wfid = startOrLoadWorkflowExecution(FORK_JOIN_NESTED_WF, 1, "fork_join_nested_test", input, null, null);
         System.out.println("testForkJoinNested.wfid=" + wfid);
 
-        Workflow wf = workflowExecutionService.getExecutionStatus(wfid, true);
-        assertNotNull(wf);
-        assertEquals(RUNNING, wf.getStatus());
+        Workflow workflow = workflowExecutionService.getExecutionStatus(wfid, true);
+        assertNotNull(workflow);
+        assertEquals(RUNNING, workflow.getStatus());
 
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t11")));
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t12")));
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t13")));
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("sw1")));
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("fork1")));
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("fork2")));
-        assertFalse(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t16")));
-        assertFalse(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t1")));
-        assertFalse(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t2")));
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t11")));
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t12")));
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t13")));
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("sw1")));
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("fork1")));
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("fork2")));
+        assertFalse(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t16")));
+        assertFalse(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t1")));
+        assertFalse(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t2")));
 
 
         Task t1 = workflowExecutionService.poll("junit_task_11", "test");
@@ -1140,10 +1243,14 @@ public abstract class AbstractWorkflowServiceTest {
         workflowExecutionService.updateTask(t3);
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
-        wf = workflowExecutionService.getExecutionStatus(wfid, true);
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("sw1").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t16")));
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t14")));
+        workflow = workflowExecutionService.getExecutionStatus(wfid, true);
+
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t16")));
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t14")));
 
         String[] tasks = new String[]{"junit_task_1", "junit_task_2", "junit_task_14", "junit_task_16"};
         for (String tt : tasks) {
@@ -1153,13 +1260,16 @@ public abstract class AbstractWorkflowServiceTest {
             workflowExecutionService.updateTask(polled);
         }
 
-        wf = workflowExecutionService.getExecutionStatus(wfid, true);
-        assertNotNull(wf);
-        assertEquals(RUNNING, wf.getStatus());
+        // Execute again to complete the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
-        assertTrue(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t19")));
-        assertFalse(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t15")));        //Not there yet
-        assertFalse(wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t20")));        //Not there yet
+        workflow = workflowExecutionService.getExecutionStatus(wfid, true);
+        assertNotNull(workflow);
+        assertEquals(RUNNING, workflow.getStatus());
+
+        assertTrue(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t19")));
+        assertFalse(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t15")));        //Not there yet
+        assertFalse(workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t20")));        //Not there yet
 
         Task task19 = workflowExecutionService.poll("junit_task_19", "test");
         assertNotNull(task19);
@@ -1171,23 +1281,23 @@ public abstract class AbstractWorkflowServiceTest {
         task20.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task20);
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-        wf = workflowExecutionService.getExecutionStatus(wfid, true);
-        assertNotNull(wf);
-        assertEquals(RUNNING, wf.getStatus());
+        workflow = workflowExecutionService.getExecutionStatus(wfid, true);
+        assertNotNull(workflow);
+        assertEquals(RUNNING, workflow.getStatus());
 
-        Set<String> pendingTasks = wf.getTasks().stream().filter(t -> !t.getStatus().isTerminal()).map(t -> t.getReferenceTaskName()).collect(Collectors.toSet());
-        assertTrue("Found only this: " + pendingTasks, wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("join1")));
+        Set<String> pendingTasks = workflow.getTasks().stream().filter(t -> !t.getStatus().isTerminal()).map(t -> t.getReferenceTaskName()).collect(Collectors.toSet());
+        assertTrue("Found only this: " + pendingTasks, workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("join1")));
 
-        pendingTasks = wf.getTasks().stream().filter(t -> !t.getStatus().isTerminal()).map(t -> t.getReferenceTaskName()).collect(Collectors.toSet());
-        assertTrue("Found only this: " + pendingTasks, wf.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t15")));
+        pendingTasks = workflow.getTasks().stream().filter(t -> !t.getStatus().isTerminal()).map(t -> t.getReferenceTaskName()).collect(Collectors.toSet());
+        assertTrue("Found only this: " + pendingTasks, workflow.getTasks().stream().anyMatch(t -> t.getReferenceTaskName().equals("t15")));
         Task task15 = workflowExecutionService.poll("junit_task_15", "test");
         assertNotNull(task15);
         task15.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task15);
 
-        wf = workflowExecutionService.getExecutionStatus(wfid, true);
-        assertNotNull(wf);
-        assertEquals(WorkflowStatus.COMPLETED, wf.getStatus());
+        workflow = workflowExecutionService.getExecutionStatus(wfid, true);
+        assertNotNull(workflow);
+        assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
 
     }
 
@@ -1754,7 +1864,7 @@ public abstract class AbstractWorkflowServiceTest {
         metadataService.updateWorkflowDef(workflowDef);
     }
 
-    private void createDoWhileWorkflowWithIteration(int iteration, boolean isInputParameter) {
+    private void createDoWhileWorkflowWithIteration(int iteration, boolean isInputParameter, boolean useTaskDef) {
         WorkflowDef workflowDef = new WorkflowDef();
         if (isInputParameter) {
             workflowDef.setName(DO_WHILE_WF + "_3");
@@ -1774,14 +1884,15 @@ public abstract class AbstractWorkflowServiceTest {
         input.put("value", "${workflow.input.loop}");
         loopTask.setInputParameters(input);
 
-        TaskDef taskDef = new TaskDef();
-        taskDef.setName("loopTask");
-        taskDef.setTimeoutSeconds(2);
-        taskDef.setRetryCount(1);
-        taskDef.setTimeoutPolicy(TimeoutPolicy.RETRY);
-        taskDef.setRetryDelaySeconds(10);
-
-        metadataService.registerTaskDef(Arrays.asList(taskDef));
+        if(useTaskDef) {
+	        TaskDef taskDef = new TaskDef();
+	        taskDef.setName("loopTask");
+	        taskDef.setTimeoutSeconds(200);
+	        taskDef.setRetryCount(1);
+	        taskDef.setTimeoutPolicy(TimeoutPolicy.RETRY);
+	        taskDef.setRetryDelaySeconds(10);
+	        metadataService.registerTaskDef(Arrays.asList(taskDef));
+        }
 
         Map<String, Object> inputParams1 = new HashMap<>();
         inputParams1.put("p1", "workflow.input.param1");
@@ -1828,6 +1939,32 @@ public abstract class AbstractWorkflowServiceTest {
         }
 
         workflowDef.getTasks().add(loopTask);
+
+        if (iteration == 2 && isInputParameter == false) {
+        	if(useTaskDef) {
+	            TaskDef taskDef2 = new TaskDef();
+	            taskDef2.setName("loopTask2");
+	            taskDef2.setTimeoutSeconds(200);
+	            taskDef2.setRetryCount(3);
+	            taskDef2.setTimeoutPolicy(TimeoutPolicy.RETRY);
+	            taskDef2.setRetryDelaySeconds(10);
+	            metadataService.registerTaskDef(Arrays.asList(taskDef2));
+        	}
+            WorkflowTask loopTask2 = new WorkflowTask();
+            loopTask2.setType(TaskType.DO_WHILE.name());
+            loopTask2.setTaskReferenceName("loopTask2");
+            loopTask2.setName("loopTask2");
+            loopTask2.setWorkflowTaskType(TaskType.DO_WHILE);
+            loopTask2.setInputParameters(input);
+            WorkflowTask http3 = new WorkflowTask();
+            http3.setName("http3");
+            http3.setInputParameters(inputParams1);
+            http3.setTaskReferenceName("http3");
+            http3.setWorkflowTaskType(TaskType.HTTP);
+            loopTask2.setLoopCondition("if ($.loopTask2['iteration'] < 1) { true; } else { false; }");
+            loopTask2.getLoopOver().add(http3);
+            workflowDef.getTasks().add(loopTask2);
+        }
         metadataService.registerWorkflowDef(workflowDef);
     }
 
@@ -2231,13 +2368,21 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(RUNNING, workflow.getStatus());
         assertEquals("found " + workflow.getTasks().stream().map(Task::toString).collect(Collectors.toList()), 4, workflow.getTasks().size());
 
-        String subWorkflowId1 = workflow.getTasks().get(1).getOutputData().get(SubWorkflow.SUB_WORKFLOW_ID).toString();
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId1 = workflow.getTaskByRefName("st1").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId1, 1);
+        String subWorkflowTaskId2 = workflow.getTaskByRefName("st2").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId2, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        String subWorkflowId1 = workflow.getTasks().get(1).getSubWorkflowId();
         Workflow subWorkflow1 = workflowExecutionService.getExecutionStatus(subWorkflowId1, true);
         assertNotNull(subWorkflow1);
         assertEquals(RUNNING, subWorkflow1.getStatus());
         assertEquals(1, subWorkflow1.getTasks().size());
 
-        String subWorkflowId2 = workflow.getTasks().get(2).getOutputData().get(SubWorkflow.SUB_WORKFLOW_ID).toString();
+        String subWorkflowId2 = workflow.getTasks().get(2).getSubWorkflowId();
         Workflow subWorkflow2 = workflowExecutionService.getExecutionStatus(subWorkflowId2, true);
         assertNotNull(subWorkflow2);
         assertEquals(RUNNING, subWorkflow2.getStatus());
@@ -2265,6 +2410,9 @@ public abstract class AbstractWorkflowServiceTest {
         subWorkflow2 = workflowExecutionService.getExecutionStatus(subWorkflowId2, true);
         assertNotNull(subWorkflow2);
         assertEquals(RUNNING, subWorkflow2.getStatus());
+
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId1, 1);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -2294,6 +2442,9 @@ public abstract class AbstractWorkflowServiceTest {
         subWorkflow2 = workflowExecutionService.getExecutionStatus(subWorkflowId2, true);
         assertNotNull(subWorkflow2);
         assertEquals(WorkflowStatus.FAILED, subWorkflow2.getStatus());
+
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId2, 1);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -2525,19 +2676,35 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(RUNNING, workflow.getStatus());
         assertEquals(1, workflow.getTasks().size());
 
-        String level1SubWorkflowId = workflow.getTasks().get(0).getOutputData().get(SubWorkflow.SUB_WORKFLOW_ID).toString();
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskIdLevel1 = workflow.getTaskByRefName("junit_sw_level_1_task").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskIdLevel1, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        String level1SubWorkflowId = workflow.getTasks().get(0).getSubWorkflowId();
         Workflow level1SubWorkflow = workflowExecutionService.getExecutionStatus(level1SubWorkflowId, true);
         assertNotNull(level1SubWorkflow);
         assertEquals(RUNNING, level1SubWorkflow.getStatus());
         assertEquals(1, level1SubWorkflow.getTasks().size());
 
-        String level2SubWorkflowId = level1SubWorkflow.getTasks().get(0).getOutputData().get(SubWorkflow.SUB_WORKFLOW_ID).toString();
+        String subWorkflowTaskIdLevel2 = level1SubWorkflow.getTaskByRefName("junit_sw_level_2_task").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskIdLevel2, 1);
+
+        level1SubWorkflow = workflowExecutionService.getExecutionStatus(level1SubWorkflowId, true);
+
+        String level2SubWorkflowId = level1SubWorkflow.getTasks().get(0).getSubWorkflowId();
         Workflow level2SubWorkflow = workflowExecutionService.getExecutionStatus(level2SubWorkflowId, true);
         assertNotNull(level2SubWorkflow);
         assertEquals(RUNNING, level2SubWorkflow.getStatus());
         assertEquals(1, level2SubWorkflow.getTasks().size());
 
-        String level3SubWorkflowId = level2SubWorkflow.getTasks().get(0).getOutputData().get(SubWorkflow.SUB_WORKFLOW_ID).toString();
+        String subWorkflowTaskIdLevel3 = level2SubWorkflow.getTaskByRefName("junit_sw_level_3_task").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskIdLevel3, 1);
+
+        level2SubWorkflow = workflowExecutionService.getExecutionStatus(level2SubWorkflowId, true);
+
+        String level3SubWorkflowId = level2SubWorkflow.getTasks().get(0).getSubWorkflowId();
         Workflow level3SubWorkflow = workflowExecutionService.getExecutionStatus(level3SubWorkflowId, true);
         assertNotNull(level3SubWorkflow);
         assertEquals(RUNNING, level3SubWorkflow.getStatus());
@@ -2664,7 +2831,7 @@ public abstract class AbstractWorkflowServiceTest {
         String subWorkflowId = null;
         for (Task task : workflow.getTasks()) {
             if (task.getTaskType().equalsIgnoreCase(SubWorkflow.NAME)) {
-                subWorkflowId = task.getOutputData().get(SubWorkflow.SUB_WORKFLOW_ID).toString();
+                subWorkflowId = task.getSubWorkflowId();
             }
         }
         assertNotNull(subWorkflowId);
@@ -2678,7 +2845,6 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(subWorkflowTask1);
 
         RerunWorkflowRequest rerunWorkflowRequest = new RerunWorkflowRequest();
-        rerunWorkflowRequest.setReRunFromTaskId(subWorkflowTask1.getTaskId());
 
         Map<String, Object> newInput = new HashMap<>();
         newInput.put("p1", "1");
@@ -2742,6 +2908,9 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(subWorkflow);
         assertEquals(WorkflowStatus.COMPLETED, subWorkflow.getStatus());
         assertEquals(2, subWorkflow.getTasks().size());
+
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflow.getParentWorkflowTaskId(), 1);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -2813,9 +2982,13 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        workflow = workflowExecutionService.getExecutionStatus(workflowId, false);
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
         assertEquals(RUNNING, workflow.getStatus());
+
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("sw1").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
         task = workflowExecutionService.poll("junit_task_1", "task1.junit.worker");
         assertNotNull(task);
@@ -2838,6 +3011,9 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         task.setReasonForIncompletion("unit test failure");
         workflowExecutionService.updateTask(task);
+
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -2941,6 +3117,10 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(RUNNING, workflow.getStatus());
         assertEquals(2, workflow.getTasks().size());
 
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("sw1").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
         task = workflowExecutionService.poll("junit_task_1", "task1.junit.worker");
         assertNull(task);
         task = workflowExecutionService.poll("junit_task_1", "task1.junit.worker", "domain12");
@@ -2968,6 +3148,9 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         task.setReasonForIncompletion("unit test failure");
         workflowExecutionService.updateTask(task);
+
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -3155,7 +3338,7 @@ public abstract class AbstractWorkflowServiceTest {
         assertNull(task);
 
         // Reset the callbackAfterSeconds
-        workflowExecutor.resetCallbacksForInProgressTasks(workflowId);
+        workflowExecutor.resetCallbacksForWorkflow(workflowId);
 
         // Now Polling for the first task should return the same task as before
         task = workflowExecutionService.poll("junit_task_1", "task1.junit.worker");
@@ -3272,6 +3455,7 @@ public abstract class AbstractWorkflowServiceTest {
         createConditionalWF(1);
         runConditionalWorkflowTest();
     }
+
 
     @Test
     public void testCaseStatementsSchemaVersion2() {
@@ -4664,62 +4848,75 @@ public abstract class AbstractWorkflowServiceTest {
         String wfId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
         assertNotNull(wfId);
 
-        Workflow es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
+        Workflow workflow = workflowExecutionService.getExecutionStatus(wfId, true);
+        assertNotNull(workflow);
 
-        Task task = workflowExecutionService.poll("junit_task_5", "test");
-        assertNotNull(task);
-        task.setStatus(COMPLETED);
-        workflowExecutionService.updateTask(task);
+        Task simpleTask = workflowExecutionService.poll("junit_task_5", "test");
+        assertNotNull(simpleTask);
+        simpleTask.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(simpleTask);
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
+        workflow = workflowExecutionService.getExecutionStatus(wfId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
 
-        task = es.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
-        assertNotNull(task);
-        assertNotNull(task.getOutputData());
-        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getOutputData().get("subWorkflowId"));
-        assertNotNull(task.getInputData());
-        assertTrue(task.getInputData().containsKey("workflowInput"));
-        assertEquals(42, ((Map<String, Object>) task.getInputData().get("workflowInput")).get("param2"));
-        String subWorkflowId = task.getOutputData().get("subWorkflowId").toString();
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("a2").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
-        assertEquals(wfId, es.getParentWorkflowId());
-        assertEquals(RUNNING, es.getStatus());
+        workflow = workflowExecutionService.getExecutionStatus(wfId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
 
-        task = workflowExecutionService.poll("junit_task_1", "test");
-        task.setStatus(COMPLETED);
-        workflowExecutionService.updateTask(task);
+        Task subWorkflowTask = workflow.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
+        assertNotNull(subWorkflowTask);
+        assertNotNull(subWorkflowTask.getOutputData());
+        assertNotNull(subWorkflowTask.getInputData());
+        assertNotNull("Output: " + subWorkflowTask.getSubWorkflowId() + ", status: " + subWorkflowTask.getStatus(), subWorkflowTask.getSubWorkflowId());
+        assertTrue(subWorkflowTask.getInputData().containsKey("workflowInput"));
+        assertEquals(42, ((Map<String, Object>) subWorkflowTask.getInputData().get("workflowInput")).get("param2"));
+        String subWorkflowId = subWorkflowTask.getSubWorkflowId();
 
-        task = workflowExecutionService.poll("junit_task_2", "test");
-        assertEquals(subWorkflowId, task.getWorkflowInstanceId());
+        workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
+        assertEquals(wfId, workflow.getParentWorkflowId());
+        assertEquals(RUNNING, workflow.getStatus());
+
+        simpleTask = workflowExecutionService.poll("junit_task_1", "test");
+        simpleTask.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(simpleTask);
+
+        simpleTask = workflowExecutionService.poll("junit_task_2", "test");
+        assertEquals(subWorkflowId, simpleTask.getWorkflowInstanceId());
         String uuid = UUID.randomUUID().toString();
-        task.getOutputData().put("uuid", uuid);
-        task.setStatus(COMPLETED);
-        workflowExecutionService.updateTask(task);
+        simpleTask.getOutputData().put("uuid", uuid);
+        simpleTask.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(simpleTask);
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
-        assertNotNull(es.getOutput());
-        assertTrue(es.getOutput().containsKey("o1"));
-        assertTrue(es.getOutput().containsKey("o2"));
-        assertEquals("sub workflow input param1", es.getOutput().get("o1"));
-        assertEquals(uuid, es.getOutput().get("o2"));
+        workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(workflow);
+        assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
+        assertEquals(LINEAR_WORKFLOW_T1_T2, workflow.getWorkflowName());
+        assertNotNull(workflow.getOutput());
+        assertTrue(workflow.getOutput().containsKey("o1"));
+        assertTrue(workflow.getOutput().containsKey("o2"));
+        assertEquals("sub workflow input param1", workflow.getOutput().get("o1"));
+        assertEquals(uuid, workflow.getOutput().get("o2"));
 
-        task = workflowExecutionService.poll("junit_task_6", "test");
-        assertNotNull(task);
-        task.setStatus(COMPLETED);
-        workflowExecutionService.updateTask(task);
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
-        assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
+        subWorkflowTask = workflowExecutionService.poll("junit_task_6", "test");
+        assertNotNull(subWorkflowTask);
+        subWorkflowTask.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(subWorkflowTask);
+
+        workflow = workflowExecutionService.getExecutionStatus(wfId, true);
+        assertNotNull(workflow);
+        assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
     }
 
     @Test
@@ -4739,49 +4936,52 @@ public abstract class AbstractWorkflowServiceTest {
         input.put("param1", "param 1 value");
         input.put("param3", "param 2 value");
         input.put("wfName", LINEAR_WORKFLOW_T1_T2);
-        String wfId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
-        assertNotNull(wfId);
+        String workflowId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
+        assertNotNull(workflowId);
 
-        Workflow es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
+        Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
 
         Task task = workflowExecutionService.poll("junit_task_5", "test");
         assertNotNull(task);
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
-        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
-        task = es.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("a2").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
+        task = workflow.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
         assertNotNull(task);
         assertNotNull(task.getOutputData());
-        assertNotNull(task.getOutputData().get("subWorkflowId"));
-        String subWorkflowId = task.getOutputData().get("subWorkflowId").toString();
+        assertNotNull(task.getSubWorkflowId());
+        String subWorkflowId = task.getSubWorkflowId();
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
+        Workflow subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertNotNull(subWorkflow.getTasks());
 
-        assertEquals(wfId, es.getParentWorkflowId());
-        assertEquals(RUNNING, es.getStatus());
+        assertEquals(workflowId, subWorkflow.getParentWorkflowId());
+        assertEquals(RUNNING, subWorkflow.getStatus());
 
         task = workflowExecutionService.poll("junit_task_1", "test");
         assertNotNull(task);
         task.setStatus(FAILED);
         workflowExecutionService.updateTask(task);
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertEquals(WorkflowStatus.FAILED, es.getStatus());
-        workflowExecutor.executeSystemTask(subworkflow, es.getParentWorkflowTaskId(), 1);
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertEquals(WorkflowStatus.FAILED, es.getStatus());
-
-        taskDef.setTimeoutSeconds(0);
-        taskDef.setRetryCount(RETRY_COUNT);
-        metadataService.updateTaskDef(taskDef);
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(WorkflowStatus.FAILED, subWorkflow.getStatus());
+        workflowExecutor.executeSystemTask(subworkflow, subWorkflow.getParentWorkflowTaskId(), 1);
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertEquals(WorkflowStatus.FAILED, workflow.getStatus());
+        task = workflow.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
+        assertEquals(FAILED, task.getStatus());
     }
 
     @Test
@@ -4802,39 +5002,44 @@ public abstract class AbstractWorkflowServiceTest {
         input.put("param1", "param 1 value");
         input.put("param3", "param 2 value");
         input.put("wfName", LINEAR_WORKFLOW_T1_T2);
-        String wfId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
-        assertNotNull(wfId);
+        String workflowId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
+        assertNotNull(workflowId);
 
-        Workflow es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
+        Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
 
         Task task = workflowExecutionService.poll("junit_task_5", "test");
         assertNotNull(task);
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
-        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
-        task = es.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("a2").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
+        task = workflow.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
         assertNotNull(task);
         assertNotNull(task.getOutputData());
-        assertNotNull(task.getOutputData().get("subWorkflowId"));
-        String subWorkflowId = task.getOutputData().get("subWorkflowId").toString();
+        assertNotNull(task.getSubWorkflowId());
+        String subWorkflowId = task.getSubWorkflowId();
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
-        assertEquals(wfId, es.getParentWorkflowId());
-        assertEquals(RUNNING, es.getStatus());
+        workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
+        assertEquals(workflowId, workflow.getParentWorkflowId());
+        assertEquals(RUNNING, workflow.getStatus());
 
-        workflowExecutor.terminateWorkflow(wfId, "fail");
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertEquals(WorkflowStatus.TERMINATED, es.getStatus());
+        workflowExecutor.terminateWorkflow(workflowId, "fail");
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertEquals(WorkflowStatus.TERMINATED, workflow.getStatus());
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertEquals(WorkflowStatus.TERMINATED, es.getStatus());
+        workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertEquals(WorkflowStatus.TERMINATED, workflow.getStatus());
 
     }
 
@@ -4849,6 +5054,17 @@ public abstract class AbstractWorkflowServiceTest {
         // create a workflow with sub-workflow
         createSubWorkflow();
         WorkflowDef found = metadataService.getWorkflowDef(WF_WITH_SUB_WF, 1);
+
+        WorkflowTask workflowTask = found.getTasks().stream().filter(t -> t.getType().equals(SUB_WORKFLOW.name())).findAny().orElse(null);
+
+        // Set subworkflow task retry count to 1.
+        TaskDef subWorkflowTaskDef = new TaskDef();
+        subWorkflowTaskDef.setRetryCount(1);
+        subWorkflowTaskDef.setName("test_subworkflow_task");
+        subWorkflowTaskDef.setOwnerEmail("test@qbc.com");
+        workflowTask.setTaskDefinition(subWorkflowTaskDef);
+
+        metadataService.updateWorkflowDef(found);
 
         // start the workflow
         Map<String, Object> workflowInputParams = new HashMap<>();
@@ -4868,6 +5084,12 @@ public abstract class AbstractWorkflowServiceTest {
         workflowExecutionService.updateTask(task);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("a2").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
         assertNotNull(workflow.getTasks());
         assertEquals(2, workflow.getTasks().size());
@@ -4875,8 +5097,8 @@ public abstract class AbstractWorkflowServiceTest {
         task = workflow.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().orElse(null);
         assertNotNull(task);
         assertNotNull(task.getOutputData());
-        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getOutputData().get("subWorkflowId"));
-        String subWorkflowId = task.getOutputData().get("subWorkflowId").toString();
+        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getSubWorkflowId());
+        String subWorkflowId = task.getSubWorkflowId();
 
         workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
         assertNotNull(workflow);
@@ -4889,9 +5111,43 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(FAILED);
         workflowExecutionService.updateTask(task);
 
-        workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        Workflow subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(WorkflowStatus.FAILED, subWorkflow.getStatus());
+        subWorkflowTaskId = subWorkflow.getParentWorkflowTaskId();
+
+        workflowExecutor.executeSystemTask(subworkflow, subWorkflowTaskId, 1);
+
+        // Ensure failed Subworkflow task is rescheduled.
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
-        assertEquals(WorkflowStatus.FAILED, workflow.getStatus());
+        assertEquals(RUNNING, workflow.getStatus());
+
+        task = workflow.getTasks().stream()
+                .filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name()))
+                .filter(t -> t.getStatus().equals(SCHEDULED))
+                .findAny().orElse(null);
+        assertNotNull(task);
+        subWorkflowTaskId = task.getTaskId();
+
+        workflowExecutor.executeSystemTask(subworkflow, task.getTaskId(), 1);
+
+        // Get the latest workflow and task, and then acquire latest subWorkflowId
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+
+        task = workflow.getTasks().stream()
+                .filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name()))
+                .filter(t -> t.getStatus().equals(IN_PROGRESS))
+                .findAny().orElse(null);
+        assertNotNull(task);
+        assertNotNull("Retried task in scheduled state shouldn't have a SubworkflowId yet", task.getSubWorkflowId());
+        subWorkflowId = task.getSubWorkflowId();
+
+        // poll and fail the first task in sub-workflow
+        task = workflowExecutionService.poll("junit_task_1", "test");
+        task.setStatus(FAILED);
+        workflowExecutionService.updateTask(task);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -4903,9 +5159,9 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(workflow);
-        assertEquals(RUNNING, workflow.getStatus());
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(RUNNING, subWorkflow.getStatus());
 
         task = workflowExecutionService.poll("junit_task_2", "test");
         assertEquals(subWorkflowId, task.getWorkflowInstanceId());
@@ -4914,14 +5170,17 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(workflow);
-        assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
-        assertNotNull(workflow.getOutput());
-        assertTrue(workflow.getOutput().containsKey("o1"));
-        assertTrue(workflow.getOutput().containsKey("o2"));
-        assertEquals("sub workflow input param1", workflow.getOutput().get("o1"));
-        assertEquals(uuid, workflow.getOutput().get("o2"));
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(WorkflowStatus.COMPLETED, subWorkflow.getStatus());
+        assertNotNull(subWorkflow.getOutput());
+        assertTrue(subWorkflow.getOutput().containsKey("o1"));
+        assertTrue(subWorkflow.getOutput().containsKey("o2"));
+        assertEquals("sub workflow input param1", subWorkflow.getOutput().get("o1"));
+        assertEquals(uuid, subWorkflow.getOutput().get("o2"));
+
+        // Simulating SystemTaskWorkerCoordinator
+        workflowExecutor.executeSystemTask(subworkflow, subWorkflow.getParentWorkflowTaskId(), 1);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -4940,6 +5199,10 @@ public abstract class AbstractWorkflowServiceTest {
         taskDef = notFoundSafeGetTaskDef(taskName);
         taskDef.setRetryCount(retryCount);
         metadataService.updateTaskDef(taskDef);
+
+        workflowTask = found.getTasks().stream().filter(t -> t.getType().equals(SUB_WORKFLOW.name())).findAny().orElse(null);
+        workflowTask.setTaskDefinition(null);
+        metadataService.updateWorkflowDef(found);
     }
 
     @Test
@@ -5114,7 +5377,8 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(workflowDef);
         metadataService.registerWorkflowDef(workflowDef);
 
-        Map wfInput = Collections.singletonMap("a", 1);
+        Map<String, Object> wfInput = new HashMap<>();
+        wfInput.put("a", 1);
         String workflowId = startOrLoadWorkflowExecution(workflowDef.getName(), workflowDef.getVersion(), "", wfInput, null, null);
         Workflow workflow = workflowExecutor.getWorkflow(workflowId, true);
 
@@ -5135,6 +5399,7 @@ public abstract class AbstractWorkflowServiceTest {
 
     @Test
     public void testTerminateTaskWithFailedStatus() {
+        String failureWorkflowName = "failure_workflow";
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setName("test_terminate_task_wf");
         workflowDef.setSchemaVersion(2);
@@ -5165,11 +5430,17 @@ public abstract class AbstractWorkflowServiceTest {
 
         workflowDef.getTasks().addAll(Arrays.asList(lambdaWorkflowTask, terminateWorkflowTask, workflowTask2));
 
-        assertNotNull(workflowDef);
+        WorkflowDef failureWorkflowDef = new WorkflowDef();
+        failureWorkflowDef.setName(failureWorkflowName);
+        failureWorkflowDef.setTasks(Collections.singletonList(lambdaWorkflowTask));
+
+        workflowDef.setFailureWorkflow(failureWorkflowName);
+
+        metadataService.registerWorkflowDef(failureWorkflowDef);
         metadataService.registerWorkflowDef(workflowDef);
 
-        Map wfInput = Collections.singletonMap("a", 1);
-        //noinspection unchecked
+        Map<String, Object> wfInput = new HashMap<>();
+        wfInput.put("a", 1);
         String workflowId = startOrLoadWorkflowExecution(workflowDef.getName(), workflowDef.getVersion(), "", wfInput, null, null);
         Workflow workflow = workflowExecutor.getWorkflow(workflowId, true);
 
@@ -5183,9 +5454,20 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.FAILED, workflow.getStatus());
         assertEquals(TaskType.TASK_TYPE_LAMBDA, workflow.getTasks().get(0).getTaskType());
         assertEquals(TaskType.TASK_TYPE_TERMINATE, workflow.getTasks().get(1).getTaskType());
-        assertEquals(workflow.getTasks().get(1).getOutputData(), workflow.getOutput());
+        assertNotNull(workflow.getOutput());
+        assertNotNull(workflow.getOutput().get("conductor.failure_workflow"));
+
+        String failureWorkflowId = (String)workflow.getOutput().get("conductor.failure_workflow");
+        Workflow failureWorkflow = workflowExecutionService.getExecutionStatus(failureWorkflowId, true);
+        assertNotNull(failureWorkflow);
+        assertEquals(failureWorkflowName, failureWorkflow.getWorkflowName());
+        assertEquals(workflowId, failureWorkflow.getInput().get("workflowId"));
+        assertEquals(WorkflowStatus.COMPLETED, failureWorkflow.getStatus());
+        assertEquals(1, failureWorkflow.getTasks().size());
+        assertEquals(TaskType.TASK_TYPE_LAMBDA, failureWorkflow.getTasks().get(0).getTaskType());
 
         metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
+        metadataService.unregisterWorkflowDef(failureWorkflowName, 1);
     }
 
     @Test
@@ -5605,6 +5887,10 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(INPUT_PAYLOAD_PATH, workflow.getTasks().get(1).getExternalInputPayloadStoragePath());
         assertEquals(SUB_WORKFLOW.name(), workflow.getTasks().get(1).getTaskType());
 
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("swt").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
         // Polling for the task within the sub_workflow
         task = workflowExecutionService.poll("junit_task_3", "task3.junit.worker");
         assertNotNull(task);
@@ -5630,6 +5916,9 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
         // check the sub workflow
         subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
         assertNotNull(subWorkflow);
@@ -5644,6 +5933,15 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(workflow);
         assertEquals(WorkflowStatus.RUNNING, workflow.getStatus());
         assertEquals(3, workflow.getTasks().size());
+
+        // Check if subworkflow task has external payload path copied from subworkflow
+        Task subWorkflowTask = workflow.getTasks().stream()
+                .filter(wtask -> wtask.getTaskType().equals(SUB_WORKFLOW.name()))
+                .collect(Collectors.toList()).get(0);
+
+        assertEquals(subWorkflowTask.getStatus(), COMPLETED);
+        assertTrue(subWorkflowTask.getOutputData().isEmpty());
+        assertNotNull(subWorkflowTask.getExternalOutputPayloadStoragePath());
 
         // Polling for the last task
         task = workflowExecutionService.poll("junit_task_2", "junit.worker.task_2");
@@ -5860,60 +6158,72 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(WORKFLOW_OUTPUT_PATH, workflow.getExternalOutputPayloadStoragePath());
     }
 
-    //@Test
+    @Test
     public void testRateLimiting() {
+        // Create a dynamic workflow definition with one simple task
+        WorkflowDef workflowDef = new WorkflowDef();
+        workflowDef.setName("test_concurrency_limits");
+        workflowDef.setVersion(1);
 
-        TaskDef td = new TaskDef();
-        td.setName("eventX1");
-        td.setTimeoutSeconds(1);
-        td.setConcurrentExecLimit(1);
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("test_task_with_ratelimits");
+        taskDef.setRateLimitFrequencyInSeconds(600);
+        taskDef.setRateLimitPerFrequency(1);
 
-        metadataService.registerTaskDef(Arrays.asList(td));
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setTaskReferenceName("test_task_with_ratelimits");
+        workflowTask.setName("test_task_with_ratelimits");
+        workflowTask.setType(UserTask.NAME);
+        workflowTask.setTaskDefinition(taskDef);
+        Map<String, Object> userIP = new HashMap<>();
 
-        WorkflowDef def = new WorkflowDef();
-        def.setName("test_rate_limit");
-        def.setSchemaVersion(2);
+        workflowDef.setTasks(Arrays.asList(workflowTask));
 
-        WorkflowTask event = new WorkflowTask();
-        event.setType(UserTask.NAME);
-        event.setName("eventX1");
-        event.setTaskReferenceName("event0");
-        event.setSink("conductor");
+        String workflowInstanceId1 = workflowExecutor.startWorkflow(workflowDef, new HashMap<>(),
+                "",
+                "",
+                0,
+                "",
+                "",
+                "",
+                new HashMap<>());
 
-        def.getTasks().add(event);
-        metadataService.registerWorkflowDef(def);
+        assertNotNull(workflowInstanceId1);
 
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
-            queueDAO.processUnacks("USER_TASK");
-        }, 2, 2, TimeUnit.SECONDS);
+        Workflow workflow1 = workflowExecutionService.getExecutionStatus(workflowInstanceId1, true);
+        assertNotNull(workflow1);
+        assertEquals(RUNNING, workflow1.getStatus());
+        assertEquals(1, workflow1.getTasks().size());        //The very first task is the one that should be scheduled.
 
-        String[] ids = new String[100];
-        ExecutorService es = Executors.newFixedThreadPool(10);
-        for (int i = 0; i < 10; i++) {
-            final int index = i;
-            es.submit(() -> {
-                try {
-                    String id = startOrLoadWorkflowExecution(def.getName(), def.getVersion(), "", new HashMap<>(), null, null);
-                    ids[index] = id;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        UserTask userTask = new UserTask();
 
-            });
-        }
-        Uninterruptibles.sleepUninterruptibly(20, TimeUnit.SECONDS);
-        for (int i = 0; i < 10; i++) {
-            String id = ids[i];
-            Workflow workflow = workflowExecutor.getWorkflow(id, true);
-            assertNotNull(workflow);
-            assertEquals(1, workflow.getTasks().size());
+        Task task = workflow1.getTasks().get(0);
+        workflowExecutor.executeSystemTask(userTask, task.getTaskId(), 30);
 
-            Task eventTask = workflow.getTasks().get(0);
-            assertEquals(COMPLETED, eventTask.getStatus());
-            assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
-            assertTrue(!eventTask.getOutputData().isEmpty());
-            assertNotNull(eventTask.getOutputData().get("event_produced"));
-        }
+        workflow1 = workflowExecutionService.getExecutionStatus(workflowInstanceId1, true);
+
+        String workflowInstanceId2 = workflowExecutor.startWorkflow(workflowDef, new HashMap<>(),
+                "",
+                "",
+                0,
+                "",
+                "",
+                "",
+                new HashMap<>());
+
+        assertNotNull(workflowInstanceId2);
+
+        Workflow workflow2 = workflowExecutionService.getExecutionStatus(workflowInstanceId2, true);
+        assertNotNull(workflow2);
+        assertEquals(RUNNING, workflow2.getStatus());
+        assertEquals(1, workflow2.getTasks().size());        //The very first task is the one that should be scheduled.
+
+        // Try to execute second task
+        Task task2 = workflow2.getTasks().get(0);
+        workflowExecutor.executeSystemTask(userTask, task2.getTaskId(), 30);
+        workflow2 = workflowExecutionService.getExecutionStatus(workflowInstanceId2, true);
+        task2 = workflow2.getTasks().get(0);
+        assertEquals(SCHEDULED, task2.getStatus());
     }
 
     @Test
@@ -6059,11 +6369,11 @@ public abstract class AbstractWorkflowServiceTest {
         input.put("param3", "param 2 value");
 
         input.put("wfName", LINEAR_WORKFLOW_T1_T2);
-        String wfId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
-        assertNotNull(wfId);
+        String workflowId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
+        assertNotNull(workflowId);
 
-        Workflow es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
+        Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
 
         Task task = workflowExecutionService.poll("junit_task_5", "test");
         assertNotNull(task);
@@ -6071,24 +6381,30 @@ public abstract class AbstractWorkflowServiceTest {
         workflowExecutionService.updateTask(task);
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
 
-        task = es.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("a2").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        task = workflow.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
         assertNotNull(task);
         assertNotNull(task.getOutputData());
-        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getOutputData().get("subWorkflowId"));
+        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getSubWorkflowId());
         assertNotNull(task.getInputData());
         assertTrue(task.getInputData().containsKey("workflowInput"));
         assertEquals(42, ((Map<String, Object>) task.getInputData().get("workflowInput")).get("param2"));
-        String subWorkflowId = task.getOutputData().get("subWorkflowId").toString();
+        String subWorkflowId = task.getSubWorkflowId();
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
-        assertEquals(wfId, es.getParentWorkflowId());
-        assertEquals(RUNNING, es.getStatus());
+        Workflow subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertNotNull(subWorkflow.getTasks());
+        assertEquals(workflowId, subWorkflow.getParentWorkflowId());
+        assertEquals(RUNNING, subWorkflow.getStatus());
 
         task = workflowExecutionService.poll("junit_task_1", "test", "unittest1");
         task.setStatus(COMPLETED);
@@ -6101,24 +6417,27 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
-        assertNotNull(es.getOutput());
-        assertTrue(es.getOutput().containsKey("o1"));
-        assertTrue(es.getOutput().containsKey("o2"));
-        assertEquals("sub workflow input param1", es.getOutput().get("o1"));
-        assertEquals(uuid, es.getOutput().get("o2"));
-        assertEquals(taskToDomain, es.getTaskToDomain());
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(WorkflowStatus.COMPLETED, subWorkflow.getStatus());
+        assertNotNull(subWorkflow.getOutput());
+        assertTrue(subWorkflow.getOutput().containsKey("o1"));
+        assertTrue(subWorkflow.getOutput().containsKey("o2"));
+        assertEquals("sub workflow input param1", subWorkflow.getOutput().get("o1"));
+        assertEquals(uuid, subWorkflow.getOutput().get("o2"));
+        assertEquals(taskToDomain, subWorkflow.getTaskToDomain());
+
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
         task = workflowExecutionService.poll("junit_task_6", "test");
         assertNotNull(task);
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
-        assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
     }
 
     @Test
@@ -6132,11 +6451,11 @@ public abstract class AbstractWorkflowServiceTest {
         input.put("param3", "param 2 value");
 
         input.put("wfName", LINEAR_WORKFLOW_T1_T2);
-        String wfId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
-        assertNotNull(wfId);
+        String workflowId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", input, null, null);
+        assertNotNull(workflowId);
 
-        Workflow es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
+        Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
 
         Task task = workflowExecutionService.poll("junit_task_5", "test");
         assertNotNull(task);
@@ -6144,24 +6463,30 @@ public abstract class AbstractWorkflowServiceTest {
         workflowExecutionService.updateTask(task);
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
 
-        task = es.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("a2").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        task = workflow.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().get();
         assertNotNull(task);
         assertNotNull(task.getOutputData());
-        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getOutputData().get("subWorkflowId"));
+        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getSubWorkflowId());
         assertNotNull(task.getInputData());
         assertTrue(task.getInputData().containsKey("workflowInput"));
         assertEquals(42, ((Map<String, Object>) task.getInputData().get("workflowInput")).get("param2"));
-        String subWorkflowId = task.getOutputData().get("subWorkflowId").toString();
+        String subWorkflowId = task.getSubWorkflowId();
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertNotNull(es.getTasks());
-        assertEquals(wfId, es.getParentWorkflowId());
-        assertEquals(RUNNING, es.getStatus());
+        Workflow subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertNotNull(subWorkflow.getTasks());
+        assertEquals(workflowId, subWorkflow.getParentWorkflowId());
+        assertEquals(RUNNING, subWorkflow.getStatus());
 
         task = workflowExecutionService.poll("junit_task_1", "test", "unittest");
         task.setStatus(COMPLETED);
@@ -6174,24 +6499,193 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        es = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
-        assertNotNull(es);
-        assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
-        assertNotNull(es.getOutput());
-        assertTrue(es.getOutput().containsKey("o1"));
-        assertTrue(es.getOutput().containsKey("o2"));
-        assertEquals("sub workflow input param1", es.getOutput().get("o1"));
-        assertEquals(uuid, es.getOutput().get("o2"));
-        assertEquals(taskToDomain, es.getTaskToDomain());
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(WorkflowStatus.COMPLETED, subWorkflow.getStatus());
+        assertNotNull(subWorkflow.getOutput());
+        assertTrue(subWorkflow.getOutput().containsKey("o1"));
+        assertTrue(subWorkflow.getOutput().containsKey("o2"));
+        assertEquals("sub workflow input param1", subWorkflow.getOutput().get("o1"));
+        assertEquals(uuid, subWorkflow.getOutput().get("o2"));
+        assertEquals(taskToDomain, subWorkflow.getTaskToDomain());
+
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
         task = workflowExecutionService.poll("junit_task_6", "test");
         assertNotNull(task);
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        es = workflowExecutionService.getExecutionStatus(wfId, true);
-        assertNotNull(es);
-        assertEquals(WorkflowStatus.COMPLETED, es.getStatus());
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
+    }
+
+    /**
+     * This test verifies that a Subworkflow with Terminate task calls decide on parent, and helps progress it immediately.
+     */
+    @Test
+    public void testTerminateTaskInASubworkflow() {
+        WorkflowDef subWorkflowDef = new WorkflowDef();
+        subWorkflowDef.setName("test_terminate_task_wf");
+        subWorkflowDef.setSchemaVersion(2);
+        subWorkflowDef.setVersion(1);
+
+        Map<String, Object> lambdaTaskInputParams = new HashMap<>();
+        lambdaTaskInputParams.put("input", "${workflow.input}");
+        lambdaTaskInputParams.put("scriptExpression", "if ($.input.a==1){return {testvalue: true}} else{return {testvalue: false}}");
+
+        WorkflowTask lambdaWorkflowTask = new WorkflowTask();
+        lambdaWorkflowTask.setWorkflowTaskType(TaskType.LAMBDA);
+        lambdaWorkflowTask.setName("lambda");
+        lambdaWorkflowTask.setInputParameters(lambdaTaskInputParams);
+        lambdaWorkflowTask.setTaskReferenceName("lambda0");
+
+        Map<String, Object> terminateTaskInputParams = new HashMap<>();
+        terminateTaskInputParams.put(Terminate.getTerminationStatusParameter(), "COMPLETED");
+        terminateTaskInputParams.put(Terminate.getTerminationWorkflowOutputParameter(), "${lambda0.output}");
+
+        WorkflowTask terminateWorkflowTask = new WorkflowTask();
+        terminateWorkflowTask.setType(TaskType.TASK_TYPE_TERMINATE);
+        terminateWorkflowTask.setName("terminate");
+        terminateWorkflowTask.setInputParameters(terminateTaskInputParams);
+        terminateWorkflowTask.setTaskReferenceName("terminate0");
+
+        WorkflowTask workflowTask2 = new WorkflowTask();
+        workflowTask2.setName("junit_task_2");
+        workflowTask2.setTaskReferenceName("t2");
+
+        subWorkflowDef.getTasks().addAll(Arrays.asList(lambdaWorkflowTask, terminateWorkflowTask, workflowTask2));
+
+        assertNotNull(subWorkflowDef);
+        metadataService.registerWorkflowDef(subWorkflowDef);
+
+        // Create Parent workflow
+        WorkflowDef parentWorkflowDef = new WorkflowDef();
+        parentWorkflowDef.setName("test_parent_wf_for_terminate_task_subwf");
+        parentWorkflowDef.setSchemaVersion(2);
+
+        WorkflowTask subWorkflowTask = new WorkflowTask();
+        subWorkflowTask.setWorkflowTaskType(SUB_WORKFLOW);
+        subWorkflowTask.setName("subWF");
+        subWorkflowTask.setTaskReferenceName("subWF");
+        SubWorkflowParams subWorkflowParams = new SubWorkflowParams();
+        subWorkflowParams.setName(subWorkflowDef.getName());
+        subWorkflowParams.setVersion(subWorkflowDef.getVersion());
+        subWorkflowTask.setSubWorkflowParam(subWorkflowParams);
+
+        parentWorkflowDef.getTasks().addAll(Arrays.asList(subWorkflowTask));
+
+        assertNotNull(parentWorkflowDef);
+        metadataService.registerWorkflowDef(parentWorkflowDef);
+
+        Map wfInput = Collections.singletonMap("a", 1);
+        String workflowId = startOrLoadWorkflowExecution(parentWorkflowDef.getName(), parentWorkflowDef.getVersion(), "", wfInput, null, null);
+        Workflow workflow = workflowExecutor.getWorkflow(workflowId, true);
+
+        assertNotNull(workflow);
+        assertEquals(1, workflow.getTasks().size());
+
+        SubWorkflow subWorkflowSystemTask = new SubWorkflow();
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("subWF").getTaskId();
+        workflowExecutor.executeSystemTask(subWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        Task task = workflow.getTaskByRefName("subWF");
+
+        Workflow subWorkflow = workflowExecutionService.getExecutionStatus(task.getSubWorkflowId(), true);
+
+        assertNotNull(workflow);
+        assertNotNull(task);
+        assertEquals(COMPLETED, task.getStatus());
+        assertNotNull(subWorkflow);
+        assertEquals("tasks:" + workflow.getTasks(), WorkflowStatus.COMPLETED, workflow.getStatus());
+        assertEquals("tasks:" + subWorkflow.getTasks(), WorkflowStatus.COMPLETED, subWorkflow.getStatus());
+        assertEquals(TaskType.TASK_TYPE_LAMBDA, subWorkflow.getTasks().get(0).getTaskType());
+        assertEquals(TaskType.TASK_TYPE_TERMINATE, subWorkflow.getTasks().get(1).getTaskType());
+        assertEquals(subWorkflow.getTasks().get(1).getOutputData(), subWorkflow.getOutput());
+        assertEquals(SUB_WORKFLOW.name(), workflow.getTasks().get(0).getTaskType());
+
+        metadataService.unregisterWorkflowDef(parentWorkflowDef.getName(), parentWorkflowDef.getVersion());
+        metadataService.unregisterWorkflowDef(subWorkflowDef.getName(), subWorkflowDef.getVersion());
+    }
+
+    @Test
+    public void testPollWithConcurrentExecutionLimits() {
+        // Create a dynamic workflow definition with one simple task
+        WorkflowDef workflowDef = new WorkflowDef();
+        workflowDef.setName("test_concurrency_limits");
+        workflowDef.setVersion(1);
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("test_task_with_cl");
+        taskDef.setConcurrentExecLimit(1);
+
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setTaskReferenceName("test_task_with_cl");
+        workflowTask.setName("test_task_with_cl");
+        workflowTask.setType("SIMPLE");
+        workflowTask.setTaskDefinition(taskDef);
+
+        workflowDef.setTasks(Arrays.asList(workflowTask));
+
+        String workflowInstanceId1 = workflowExecutor.startWorkflow(workflowDef, new HashMap<>(),
+                "",
+                "",
+                0,
+                "",
+                "",
+                "",
+                new HashMap<>());
+
+        assertNotNull(workflowInstanceId1);
+
+        Workflow workflow1 = workflowExecutionService.getExecutionStatus(workflowInstanceId1, true);
+        assertNotNull(workflow1);
+        assertEquals(RUNNING, workflow1.getStatus());
+        assertEquals(1, workflow1.getTasks().size());        //The very first task is the one that should be scheduled.
+
+        // Polling for the first task
+        Task task = workflowExecutionService.poll("test_task_with_cl", "test.worker");
+        assertNotNull(task);
+        assertEquals("test_task_with_cl", task.getTaskType());
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+        assertEquals(workflowInstanceId1, task.getWorkflowInstanceId());
+
+        String workflowInstanceId2 = workflowExecutor.startWorkflow(workflowDef, new HashMap<>(),
+                "",
+                "",
+                0,
+                "",
+                "",
+                "",
+                new HashMap<>());
+
+        assertNotNull(workflowInstanceId2);
+
+        Workflow workflow2 = workflowExecutionService.getExecutionStatus(workflowInstanceId2, true);
+        assertNotNull(workflow2);
+        assertEquals(RUNNING, workflow2.getStatus());
+        assertEquals(1, workflow2.getTasks().size());        //The very first task is the one that should be scheduled.
+
+        // Polling for the second task
+        Task task2 = workflowExecutionService.poll("test_task_with_cl", "test.worker");
+        assertNull("Polling for the task shouldn't return anything, as concurrency limit is met.", task2);
+
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        // Reset task offset time to make it available for poll again.
+        queueDAO.resetOffsetTime("test_task_with_cl", workflow2.getTasks().get(0).getTaskId());
+
+        // Polling for the second task
+        task2 = workflowExecutionService.poll("test_task_with_cl", "test.worker");
+        assertNotNull(task2);
+        assertEquals("test_task_with_cl", task2.getTaskType());
+        assertTrue(workflowExecutionService.ackTaskReceived(task2.getTaskId()));
+        assertEquals(workflowInstanceId2, task2.getWorkflowInstanceId());
     }
 
     private void createSubWorkflow() {
@@ -6290,7 +6784,7 @@ public abstract class AbstractWorkflowServiceTest {
         workflowDef.setVersion(1);
         workflowDef.setInputParameters(Arrays.asList("param1", "param2"));
         Map<String, Object> outputParameters = new HashMap<>();
-        outputParameters.put("o3", "${swt.output.op}");
+        outputParameters.put("o3", "${t1.output.op}");
         workflowDef.setOutputParameters(outputParameters);
         workflowDef.setSchemaVersion(2);
         LinkedList<WorkflowTask> wftasks = new LinkedList<>();
@@ -6340,7 +6834,7 @@ public abstract class AbstractWorkflowServiceTest {
         WorkflowTask wft2 = new WorkflowTask();
         wft2.setName("junit_task_2");
         Map<String, Object> ip2 = new HashMap<>();
-        ip2.put("op", "${swt.output.op}");
+        ip2.put("op", "${t1.output.op}");
         wft2.setInputParameters(ip2);
         wft2.setTaskReferenceName("t2");
 
@@ -6687,11 +7181,17 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(RUNNING, workflow.getStatus());
         assertEquals(2, workflow.getTasks().size());
 
+        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
+        String subWorkflowTaskId = workflow.getTaskByRefName("sw1").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
         // Get the sub workflow id
         String subWorkflowId = null;
         for (Task t : workflow.getTasks()) {
             if (t.getTaskType().equalsIgnoreCase("SUB_WORKFLOW")) {
-                subWorkflowId = t.getOutputData().get("subWorkflowId").toString();
+                subWorkflowId = t.getSubWorkflowId();
             }
         }
         assertNotNull(subWorkflowId);
@@ -6733,6 +7233,9 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(subWorkflow);
         assertEquals(WorkflowStatus.COMPLETED, subWorkflow.getStatus());
         assertEquals(2, subWorkflow.getTasks().size());
+
+        // Execute again to re-evaluate the Subworkflow task.
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Netflix, Inc.
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -13,7 +13,6 @@
 package com.netflix.conductor.core.config;
 
 import com.google.inject.AbstractModule;
-
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +33,24 @@ public interface Configuration {
     String DISABLE_ASYNC_WORKERS_PROPERTY_NAME = "conductor.disable.async.workers";
     // FIXME This really should be typed correctly.
     String DISABLE_ASYNC_WORKERS_DEFAULT_VALUE = "false";
+
+    String SYSTEM_TASK_WORKER_THREAD_COUNT_PROPERTY_NAME = "workflow.system.task.worker.thread.count";
+    int SYSTEM_TASK_WORKER_THREAD_COUNT_DEFAULT_VALUE = 10;
+
+    String SYSTEM_TASK_WORKER_CALLBACK_SECONDS_PROPERTY_NAME = "workflow.system.task.worker.callback.seconds";
+    int SYSTEM_TASK_WORKER_CALLBACK_SECONDS_DEFAULT_VALUE = 30;
+
+    String SYSTEM_TASK_WORKER_POLL_INTERVAL_PROPERTY_NAME = "workflow.system.task.worker.poll.interval";
+    int SYSTEM_TASK_WORKER_POLL_INTERVAL_DEFAULT_VALUE = 50;
+
+    String SYSTEM_TASK_WORKER_EXECUTION_NAMESPACE_PROPERTY_NAME = "workflow.system.task.worker.executionNameSpace";
+    String SYSTEM_TASK_WORKER_EXECUTION_NAMESPACE_DEFAULT_VALUE = "";
+
+    String SYSTEM_TASK_WORKER_ISOLATED_THREAD_COUNT_PROPERTY_NAME = "workflow.isolated.system.task.worker.thread.count";
+    int SYSTEM_TASK_WORKER_ISOLATED_THREAD_COUNT_DEFAULT_VALUE = 1;
+
+    String SYSTEM_TASK_MAX_POLL_COUNT_PROPERTY_NAME = "workflow.system.task.queue.pollCount";
+    int SYSTEM_TASK_MAX_POLL_COUNT_DEFAULT_VALUE = 1;
 
     String ENVIRONMENT_PROPERTY_NAME = "environment";
     String ENVIRONMENT_DEFAULT_VALUE = "test";
@@ -73,11 +90,45 @@ public interface Configuration {
     String IGNORE_LOCKING_EXCEPTIONS_PROPERTY_NAME = "workflow.decider.locking.exceptions.ignore";
     boolean IGNORE_LOCKING_EXCEPTIONS_DEFAULT_VALUE = false;
 
-    String EVENT_MESSAGE_INDEXING_ENABLED_PROPERTY_NAME = "worklfow.event.message.indexing.enabled";
+    String EVENT_MESSAGE_INDEXING_ENABLED_PROPERTY_NAME = "workflow.event.message.indexing.enabled";
     boolean EVENT_MESSAGE_INDEXING_ENABLED_DEFAULT_VALUE = true;
+
+    String EVENT_EXECUTION_INDEXING_ENABLED_PROPERTY_NAME = "workflow.event.execution.indexing.enabled";
+    boolean EVENT_EXECUTION_INDEXING_ENABLED_DEFAULT_VALUE = true;
 
     String TASKEXECLOG_INDEXING_ENABLED_PROPERTY_NAME = "workflow.taskExecLog.indexing.enabled";
     boolean TASKEXECLOG_INDEXING_ENABLED_DEFAULT_VALUE = true;
+
+    String INDEXING_ENABLED_PROPERTY_NAME = "workflow.indexing.enabled";
+    boolean INDEXING_ENABLED_DEFAULT_VALUE = true;
+
+    String TASK_DEF_REFRESH_TIME_SECS_PROPERTY_NAME = "conductor.taskdef.cache.refresh.time.seconds";
+    int TASK_DEF_REFRESH_TIME_SECS_DEFAULT_VALUE = 60;
+
+    String EVENT_HANDLER_REFRESH_TIME_SECS_PROPERTY_NAME = "conductor.eventhandler.cache.refresh.time.seconds";
+    int EVENT_HANDLER_REFRESH_TIME_SECS_DEFAULT_VALUE = 60;
+
+    String EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME = "workflow.event.execution.persistence.ttl.seconds";
+    int EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE = 0;
+
+    String WORKFLOW_ARCHIVAL_TTL_SECS_PROPERTY_NAME = "workflow.archival.ttl.seconds";
+    int WORKFLOW_ARCHIVAL_TTL_SECS_DEFAULT_VALUE = 0;
+
+    String WORKFLOW_ARCHIVAL_DELAY_SECS_PROPERTY_NAME = "workflow.archival.delay.seconds";
+
+    String WORKFLOW_ARCHIVAL_DELAY_QUEUE_WORKER_THREAD_COUNT_PROPERTY_NAME = "workflow.archival.delay.queue.worker.thread.count";
+    int WORKFLOW_ARCHIVAL_DELAY_QUEUE_WORKER_THREAD_COUNT_DEFAULT_VALUE = 5;
+
+    String OWNER_EMAIL_MANDATORY_NAME = "workflow.owner.email.mandatory";
+    boolean OWNER_EMAIL_MANDATORY_DEFAULT_VALUE = true;
+
+    String ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_PROPERTY_NAME = "workflow.elasticsearch.auto.index.management.enabled";
+    boolean ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_DEFAULT_VALUE = true;
+
+    String ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_PROPERTY_NAME = "workflow.elasticsearch.document.type.override";
+    String ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_DEFAULT_VALUE = "";
+
+    String EVENT_QUEUE_POLL_SCHEDULER_THREAD_COUNT_PROPERTY_NAME = "workflow.event.queue.scheduler.poll.thread.count";
 
     //TODO add constants for input/output external payload related properties.
 
@@ -116,6 +167,55 @@ public interface Configuration {
     }
 
     /**
+     * @return if true(default), enables indexing persistence
+     */
+    default boolean isIndexingPersistenceEnabled() {
+            return getBooleanProperty(INDEXING_ENABLED_PROPERTY_NAME, INDEXING_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the number of threads to be used within the threadpool for system task workers
+     */
+    default int getSystemTaskWorkerThreadCount() {
+        return getIntProperty(SYSTEM_TASK_WORKER_THREAD_COUNT_PROPERTY_NAME, SYSTEM_TASK_WORKER_THREAD_COUNT_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the interval (in seconds) after which a system task will be checked for completion
+     */
+    default int getSystemTaskWorkerCallbackSeconds() {
+        return getIntProperty(SYSTEM_TASK_WORKER_CALLBACK_SECONDS_PROPERTY_NAME, SYSTEM_TASK_WORKER_CALLBACK_SECONDS_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the interval (in seconds) at which system task queues will be polled by the system task workers
+     */
+    default int getSystemTaskWorkerPollInterval() {
+        return getIntProperty(SYSTEM_TASK_WORKER_POLL_INTERVAL_PROPERTY_NAME, SYSTEM_TASK_WORKER_POLL_INTERVAL_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the namespace for the system task workers to provide instance level isolation
+     */
+    default String getSystemTaskWorkerExecutionNamespace() {
+        return getProperty(SYSTEM_TASK_WORKER_EXECUTION_NAMESPACE_PROPERTY_NAME, SYSTEM_TASK_WORKER_EXECUTION_NAMESPACE_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the number of threads to be used within the threadpool for system task workers in each isolation group
+     */
+    default int getSystemTaskWorkerIsolatedThreadCount() {
+        return getIntProperty(SYSTEM_TASK_WORKER_ISOLATED_THREAD_COUNT_PROPERTY_NAME, SYSTEM_TASK_WORKER_ISOLATED_THREAD_COUNT_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the max number of system task to poll from queues
+     */
+    default int getSystemTaskMaxPollCount() {
+        return getIntProperty(SYSTEM_TASK_MAX_POLL_COUNT_PROPERTY_NAME, SYSTEM_TASK_MAX_POLL_COUNT_DEFAULT_VALUE);
+    }
+
+    /**
      * @return time frequency in seconds, at which the workflow sweeper should run to evaluate running workflows.
      */
     int getSweepFrequency();
@@ -136,6 +236,11 @@ public interface Configuration {
      * @return when set to true, message from the event processing are indexed
      */
     boolean isEventMessageIndexingEnabled();
+
+    /**
+     * @return when set to true, event execution results are indexed
+     */
+    boolean isEventExecutionIndexingEnabled();
 
     /**
      * @return ID of the server.  Can be host name, IP address or any other meaningful identifier.  Used for logging
@@ -191,6 +296,84 @@ public interface Configuration {
 
     default boolean getJerseyEnabled() {
         return getBooleanProperty(JERSEY_ENABLED_PROPERTY_NAME, JERSEY_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return true if owner email is mandatory for task definitions and workflow definitions
+     */
+    default boolean isOwnerEmailMandatory() {
+            return getBooleanProperty(OWNER_EMAIL_MANDATORY_NAME, OWNER_EMAIL_MANDATORY_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the refresh time for the in-memory task definition cache
+     */
+    default int getTaskDefRefreshTimeSecsDefaultValue() {
+        return getIntProperty(TASK_DEF_REFRESH_TIME_SECS_PROPERTY_NAME, TASK_DEF_REFRESH_TIME_SECS_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the refresh time for the in-memory event handler cache
+     */
+    default int getEventHandlerRefreshTimeSecsDefaultValue() {
+        return getIntProperty(EVENT_HANDLER_REFRESH_TIME_SECS_PROPERTY_NAME,
+            EVENT_HANDLER_REFRESH_TIME_SECS_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return The time to live in seconds of the event execution persisted. Currently, only RedisExecutionDAO supports it.
+     */
+    default int getEventExecutionPersistenceTTL() {
+        return getIntProperty(EVENT_EXECUTION_PERSISTENCE_TTL_SECS_PROPERTY_NAME, EVENT_EXECUTION_PERSISTENCE_TTL_SECS_DEFAULT_VALUE);
+    }
+
+    default boolean isElasticSearchAutoIndexManagementEnabled() {
+        return getBooleanProperty(ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_PROPERTY_NAME,
+            ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
+     * Document types are deprecated in ES6 and removed from ES7. This property can be used to disable the use of
+     * specific document types with an override. This property is currently used in ES6 module.
+     * <p>
+     * <em>Note that this property will only take effect if
+     * {@link Configuration#isElasticSearchAutoIndexManagementEnabled} is set to false and index management
+     * is handled outside of this module.</em>
+     */
+    default String getElasticSearchDocumentTypeOverride() {
+        return getProperty(ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_PROPERTY_NAME,
+            ELASTIC_SEARCH_DOCUMENT_TYPE_OVERRIDE_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return The time to live in seconds for workflow archiving module. Currently, only RedisExecutionDAO supports it.
+     */
+    default int getWorkflowArchivalTTL() {
+        return getIntProperty(WORKFLOW_ARCHIVAL_TTL_SECS_PROPERTY_NAME, WORKFLOW_ARCHIVAL_TTL_SECS_DEFAULT_VALUE);
+    }
+
+    /**
+     * @return the time to delay the archival of workflow
+     */
+    default int getWorkflowArchivalDelay() {
+        return getIntProperty(WORKFLOW_ARCHIVAL_DELAY_SECS_PROPERTY_NAME, getAsyncUpdateDelay());
+    }
+
+    /**
+     * @return the number of threads to process the delay queue in workflow archival
+     */
+    default int getWorkflowArchivalDelayQueueWorkerThreadCount() {
+        return getIntProperty(WORKFLOW_ARCHIVAL_DELAY_QUEUE_WORKER_THREAD_COUNT_PROPERTY_NAME, WORKFLOW_ARCHIVAL_DELAY_QUEUE_WORKER_THREAD_COUNT_DEFAULT_VALUE);
+    }
+
+
+    /**
+     * @return the number of threads to be use in Scheduler used for polling events from multiple event queues.
+     * By default, a thread count equal to the number of CPU cores is chosen.
+     */
+    default int getEventSchedulerPollThreadCount()
+    {
+        return getIntProperty(EVENT_QUEUE_POLL_SCHEDULER_THREAD_COUNT_PROPERTY_NAME, Runtime.getRuntime().availableProcessors());
     }
 
     /**
@@ -294,6 +477,6 @@ public interface Configuration {
     }
 
     enum LOCKING_SERVER {
-        NOOP_LOCK, REDIS, ZOOKEEPER
+        NOOP_LOCK, REDIS, ZOOKEEPER, LOCAL_ONLY
     }
 }

@@ -199,12 +199,18 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
     private void pushMessage(Connection connection, String queueName, String messageId, String payload, Integer priority,
                              long offsetTimeInSecond) {
 
-        String PUSH_MESSAGE = "INSERT INTO queue_message (deliver_on, queue_name, message_id, priority, offset_time_seconds, payload) VALUES ((current_timestamp + (? ||' seconds')::interval), ?,?,?,?,?) ON CONFLICT (queue_name,message_id) DO UPDATE SET payload=excluded.payload, deliver_on=excluded.deliver_on";
         createQueueIfNotExists(connection, queueName);
 
-        execute(connection, PUSH_MESSAGE, q -> q.addParameter(offsetTimeInSecond).addParameter(queueName)
-                .addParameter(messageId).addParameter(priority).addParameter(offsetTimeInSecond)
-                .addParameter(payload).executeUpdate());
+        String UPDATE_MESSAGE = "UPDATE queue_message SET payload=?, deliver_on=(current_timestamp + (? ||' seconds')::interval) WHERE queue_name = ? AND message_id = ?";
+        int rowsUpdated = query(connection, UPDATE_MESSAGE, q -> q.addParameter(payload).addParameter(offsetTimeInSecond)
+        	.addParameter(queueName).addParameter(messageId).executeUpdate());
+        		
+        if(rowsUpdated == 0) {
+            String PUSH_MESSAGE = "INSERT INTO queue_message (deliver_on, queue_name, message_id, priority, offset_time_seconds, payload) VALUES ((current_timestamp + (? ||' seconds')::interval), ?,?,?,?,?) ON CONFLICT (queue_name,message_id) DO UPDATE SET payload=excluded.payload, deliver_on=excluded.deliver_on";
+	        execute(connection, PUSH_MESSAGE, q -> q.addParameter(offsetTimeInSecond).addParameter(queueName)
+	                .addParameter(messageId).addParameter(priority).addParameter(offsetTimeInSecond)
+	                .addParameter(payload).executeUpdate());
+        }
     }
 
     private boolean removeMessage(Connection connection, String queueName, String messageId) {
@@ -248,25 +254,26 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
             return messages;
         }
 
-        final String POP_MESSAGES = "UPDATE queue_message SET popped = true WHERE queue_name = ? AND message_id IN (%s) AND popped = false";
+        List<Message> poppedMessages = new ArrayList<>();
+        for (Message message: messages) {
+            final String POP_MESSAGE = "UPDATE queue_message SET popped = true WHERE queue_name = ? AND message_id = ? AND popped = false";
+            int result = query(connection, POP_MESSAGE, q -> q.addParameter(queueName).addParameter(message.getId()).executeUpdate());
 
-        final List<String> Ids = messages.stream().map(Message::getId).collect(Collectors.toList());
-        final String query = String.format(POP_MESSAGES, Query.generateInBindings(messages.size()));
-
-        int result = query(connection, query, q -> q.addParameter(queueName).addParameters(Ids).executeUpdate());
-
-        if (result != messages.size()) {
-            String message = String.format("Could not pop all messages for given ids: %s (%d messages were popped)",
-                    Ids, result);
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, message);
+            if (result == 1) {
+                poppedMessages.add(message);
+            }
         }
-        return messages;
+        return poppedMessages;
     }
 
 
     private void createQueueIfNotExists(Connection connection, String queueName) {
         logger.trace("Creating new queue '{}'", queueName);
-        final String CREATE_QUEUE = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT (queue_name) DO NOTHING";
-        execute(connection, CREATE_QUEUE, q -> q.addParameter(queueName).executeUpdate());
+        final String EXISTS_QUEUE = "SELECT EXISTS(SELECT 1 FROM queue WHERE queue_name = ?)";
+        boolean exists = query(connection, EXISTS_QUEUE, q -> q.addParameter(queueName).exists());
+        if(!exists) {
+	        final String CREATE_QUEUE = "INSERT INTO queue (queue_name) VALUES (?) ON CONFLICT (queue_name) DO NOTHING";
+	        execute(connection, CREATE_QUEUE, q -> q.addParameter(queueName).executeUpdate());
+        }
     }
 }

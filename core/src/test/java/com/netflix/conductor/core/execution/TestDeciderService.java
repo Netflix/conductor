@@ -467,7 +467,7 @@ public class TestDeciderService {
     @Test
     public void testTaskTimeout() {
         Counter counter = registry.counter("task_timeout", "class", "WorkflowMonitor", "taskType", "test");
-        assertEquals(0, counter.count());
+        long counterCount = counter.count();
 
         TaskDef taskType = new TaskDef();
         taskType.setName("test");
@@ -483,7 +483,7 @@ public class TestDeciderService {
         //Task should be marked as timed out
         assertEquals(Status.TIMED_OUT, task.getStatus());
         assertNotNull(task.getReasonForIncompletion());
-        assertEquals(1, counter.count());
+        assertEquals(++counterCount, counter.count());
 
         taskType.setTimeoutPolicy(TimeoutPolicy.ALERT_ONLY);
         task.setStatus(Status.IN_PROGRESS);
@@ -493,7 +493,7 @@ public class TestDeciderService {
         //Nothing will happen
         assertEquals(Status.IN_PROGRESS, task.getStatus());
         assertNull(task.getReasonForIncompletion());
-        assertEquals(2, counter.count());
+        assertEquals(++counterCount, counter.count());
 
         boolean exception = false;
         taskType.setTimeoutPolicy(TimeoutPolicy.TIME_OUT_WF);
@@ -508,7 +508,7 @@ public class TestDeciderService {
         assertTrue(exception);
         assertEquals(Status.TIMED_OUT, task.getStatus());
         assertNotNull(task.getReasonForIncompletion());
-        assertEquals(3, counter.count());
+        assertEquals(++counterCount, counter.count());
 
         taskType.setTimeoutPolicy(TimeoutPolicy.TIME_OUT_WF);
         task.setStatus(Status.IN_PROGRESS);
@@ -517,8 +517,37 @@ public class TestDeciderService {
 
         assertEquals(Status.IN_PROGRESS, task.getStatus());
         assertNull(task.getReasonForIncompletion());
-        assertEquals(3, counter.count());
+        assertEquals(counterCount, counter.count());
+    }
 
+    @Test
+    public void testCheckTaskPollTimeout() {
+        Counter counter = registry.counter("task_timeout", "class", "WorkflowMonitor", "taskType", "test");
+        long counterCount = counter.count();
+
+        TaskDef taskType = new TaskDef();
+        taskType.setName("test");
+        taskType.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskType.setPollTimeoutSeconds(1);
+
+        Task task = new Task();
+        task.setTaskType(taskType.getName());
+        task.setScheduledTime(System.currentTimeMillis() - 2_000);
+        task.setStatus(Status.SCHEDULED);
+        deciderService.checkTaskPollTimeout(taskType, task);
+
+        assertEquals(++counterCount, counter.count());
+        assertEquals(Status.TIMED_OUT, task.getStatus());
+        assertNotNull(task.getReasonForIncompletion());
+
+        task.setScheduledTime(System.currentTimeMillis());
+        task.setReasonForIncompletion(null);
+        task.setStatus(Status.SCHEDULED);
+        deciderService.checkTaskPollTimeout(taskType, task);
+
+        assertEquals(counterCount, counter.count());
+        assertEquals(Status.SCHEDULED, task.getStatus());
+        assertNull(task.getReasonForIncompletion());
     }
 
     @SuppressWarnings("unchecked")
@@ -644,6 +673,87 @@ public class TestDeciderService {
         when(metadataDAO.getWorkflowDef(anyString(), anyInt())).thenReturn(Optional.of(new WorkflowDef()));
         exception.expect(TerminateWorkflowException.class);
         deciderService.retry(taskDef, workflowTask, task3, workflow);
+    }
+
+    @Test
+    public void testWorkflowTaskRetry() {
+        Workflow workflow = createDefaultWorkflow();
+
+        workflow.getWorkflowDefinition().setSchemaVersion(2);
+
+        Map<String, Object> inputParams = new HashMap<>();
+        inputParams.put("workflowInputParam", "${workflow.input.requestId}");
+        inputParams.put("taskOutputParam", "${task2.output.location}");
+        inputParams.put("constParam", "Some String value");
+        inputParams.put("nullValue", null);
+        inputParams.put("task2Status", "${task2.status}");
+        inputParams.put("null", null);
+        inputParams.put("task_id", "${CPEWF_TASK_ID}");
+
+        Map<String, Object> env = new HashMap<>();
+        env.put("env_task_id", "${CPEWF_TASK_ID}");
+        inputParams.put("env", env);
+
+        Map<String, Object> taskInput = parametersUtils.getTaskInput(inputParams, workflow, null, "t1");
+
+        // Create a first failed task
+        Task task = new Task();
+        task.getInputData().putAll(taskInput);
+        task.setStatus(Status.FAILED);
+        task.setTaskId("t1");
+
+        TaskDef taskDef = new TaskDef();
+        assertEquals(3, taskDef.getRetryCount());
+
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.getInputParameters().put("task_id", "${CPEWF_TASK_ID}");
+        workflowTask.getInputParameters().put("env", env);
+        workflowTask.setRetryCount(1);
+
+        // Retry the failed task and assert that a new one has been created
+        Optional<Task> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
+        assertEquals("t1", task.getInputData().get("task_id"));
+        assertEquals("t1", ((Map<String, Object>) task.getInputData().get("env")).get("env_task_id"));
+
+        assertNotSame(task.getTaskId(), task2.get().getTaskId());
+        assertEquals(task2.get().getTaskId(), task2.get().getInputData().get("task_id"));
+        assertEquals(task2.get().getTaskId(), ((Map<String, Object>) task2.get().getInputData().get("env")).get("env_task_id"));
+
+        // Set the retried task to FAILED, retry it again and assert that the workflow failed
+        task2.get().setStatus(Status.FAILED);
+        exception.expect(TerminateWorkflowException.class);
+        final Optional<Task> task3 = deciderService.retry(taskDef, workflowTask, task2.get(), workflow);
+
+        assertFalse(task3.isPresent());
+        assertEquals(WorkflowStatus.FAILED, workflow.getStatus());
+    }
+
+    @Test
+    public void testExponentialBackoff() {
+        Workflow workflow = createDefaultWorkflow();
+
+        Task task = new Task();
+        task.setStatus(Status.FAILED);
+        task.setTaskId("t1");
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setRetryDelaySeconds(60);
+        taskDef.setRetryLogic(TaskDef.RetryLogic.EXPONENTIAL_BACKOFF);
+        WorkflowTask workflowTask = new WorkflowTask();
+
+        Optional<Task> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
+        assertEquals(60, task2.get().getCallbackAfterSeconds());
+
+        Optional<Task> task3 = deciderService.retry(taskDef, workflowTask, task2.get(), workflow);
+        assertEquals(120, task3.get().getCallbackAfterSeconds());
+
+        Optional<Task> task4 = deciderService.retry(taskDef, workflowTask, task3.get(), workflow);
+        assertEquals(240, task4.get().getCallbackAfterSeconds());
+
+        taskDef.setRetryCount(Integer.MAX_VALUE);
+        task4.get().setRetryCount(Integer.MAX_VALUE - 100);
+        Optional<Task> task5 = deciderService.retry(taskDef, workflowTask, task4.get(), workflow);
+        assertEquals(Integer.MAX_VALUE, task5.get().getCallbackAfterSeconds());
     }
 
     @Test
@@ -809,9 +919,14 @@ public class TestDeciderService {
         task.setTaskDefName("test_rt");
         task.setStatus(Status.IN_PROGRESS);
         task.setTaskId("aa");
+        task.setTaskType(TaskType.TASK_TYPE_SIMPLE);
         task.setUpdateTime(System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(11));
 
         assertTrue(deciderService.isResponseTimedOut(taskDef, task));
+
+        // verify that sub workflow tasks are not response timed out
+        task.setTaskType(TaskType.TASK_TYPE_SUB_WORKFLOW);
+        assertFalse(deciderService.isResponseTimedOut(taskDef, task));
     }
 
     @Test
@@ -922,6 +1037,7 @@ public class TestDeciderService {
         Workflow workflow = new Workflow();
         workflow.setOwnerApp("junit");
         workflow.setStartTime(System.currentTimeMillis() - 5_000);
+        workflow.setWorkflowId("workflow_id");
 
         // no-op
         workflow.setWorkflowDefinition(null);
@@ -942,7 +1058,7 @@ public class TestDeciderService {
         workflowDef.setTimeoutPolicy(WorkflowDef.TimeoutPolicy.TIME_OUT_WF);
         workflow.setWorkflowDefinition(workflowDef);
         exception.expect(TerminateWorkflowException.class);
-        exception.expectMessage("Workflow timed out");
+        exception.expectMessage("Workflow 'workflow_id' timed out");
         deciderService.checkWorkflowTimeout(workflow);
         assertEquals(1, counter.count());
     }

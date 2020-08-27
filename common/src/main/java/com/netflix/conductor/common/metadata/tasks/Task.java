@@ -190,7 +190,7 @@ public class Task {
 
     @ProtoField(id = 36)
     private int workflowPriority;
-    
+
     @ProtoField(id = 37)
     private String  executionNameSpace;
 
@@ -199,6 +199,9 @@ public class Task {
 
     @ProtoField(id = 40)
     private int iteration;
+
+    @ProtoField(id = 41)
+    private String subWorkflowId;
 
     public Task() {
     }
@@ -733,6 +736,26 @@ public class Task {
         this.workflowPriority = workflowPriority;
     }
 
+    public String getSubWorkflowId() {
+        // For backwards compatibility
+        if (StringUtils.isNotBlank(subWorkflowId)) {
+            return subWorkflowId;
+        } else {
+            return 
+               	this.getOutputData() != null && (String) this.getOutputData().get("subWorkflowId") != null ? (String) this.getOutputData().get("subWorkflowId") : 
+               	this.getInputData() != null ? (String) this.getInputData().get("subWorkflowId") : null;
+        }
+    }
+
+    public void setSubWorkflowId(String subWorkflowId) {
+        this.subWorkflowId = subWorkflowId;
+        // For backwards compatibility
+        if (this.getOutputData() != null && this.getOutputData().containsKey("subWorkflowId")) {
+            this.getOutputData().put("subWorkflowId", subWorkflowId);
+        }
+    }
+
+
     public Task copy() {
         Task copy = new Task();
         copy.setCallbackAfterSeconds(callbackAfterSeconds);
@@ -763,6 +786,7 @@ public class Task {
         copy.setIteration(iteration);
         copy.setExecutionNameSpace(executionNameSpace);
         copy.setIsolationGroupId(isolationGroupId);
+        copy.setSubWorkflowId(getSubWorkflowId());
 
         return copy;
     }
@@ -786,6 +810,7 @@ public class Task {
     deepCopy.setEndTime(endTime);
     deepCopy.setWorkerId(workerId);
     deepCopy.setReasonForIncompletion(reasonForIncompletion);
+    deepCopy.setSeq(seq);
 
     return deepCopy;
   }

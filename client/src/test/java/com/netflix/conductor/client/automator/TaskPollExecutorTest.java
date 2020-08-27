@@ -17,9 +17,9 @@ package com.netflix.conductor.client.automator;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskResult.Status.IN_PROGRESS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -52,7 +52,7 @@ public class TaskPollExecutorTest {
             throw new NoSuchMethodError();
         });
         TaskClient taskClient = Mockito.mock(TaskClient.class);
-        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, "test-worker-");
+        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, new HashMap<>(), "test-worker-");
 
         when(taskClient.pollTask(any(), any(), any())).thenReturn(testTask());
         when(taskClient.ack(any(), any())).thenReturn(true);
@@ -97,7 +97,7 @@ public class TaskPollExecutorTest {
         });
 
         TaskClient taskClient = Mockito.mock(TaskClient.class);
-        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, "test-worker-");
+        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, new HashMap<>(), "test-worker-");
         when(taskClient.pollTask(any(), any(), any())).thenReturn(task);
         when(taskClient.ack(any(), any())).thenReturn(true);
         CountDownLatch latch = new CountDownLatch(3);
@@ -138,10 +138,15 @@ public class TaskPollExecutorTest {
         when(taskClient.pollTask(any(), any(), any())).thenReturn(task);
         when(taskClient.ack(any(), any())).thenReturn(true);
 
-        doThrow(ConductorClientException.class).when(taskClient)
-            .evaluateAndUploadLargePayload(any(TaskResult.class), any());
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            TaskResult result = (TaskResult) args[0];
+            assertNull(result.getReasonForIncompletion());
+            result.setReasonForIncompletion("some_reason");
+            throw new ConductorClientException();
+        }).when(taskClient).evaluateAndUploadLargePayload(any(TaskResult.class), any());
 
-        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 3, "test-worker-");
+        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 3, new HashMap<>(), "test-worker-");
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
                 latch.countDown();
@@ -171,7 +176,7 @@ public class TaskPollExecutorTest {
             .thenThrow(ConductorClientException.class)
             .thenReturn(task);
 
-        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, "test-worker-");
+        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, new HashMap<>(), "test-worker-");
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
                 Object[] args = invocation.getArguments();
@@ -204,7 +209,7 @@ public class TaskPollExecutorTest {
             .thenReturn(new Task())
             .thenReturn(task);
 
-        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, "test-worker-");
+        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, new HashMap<>(), "test-worker-");
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
                 Object[] args = invocation.getArguments();
@@ -221,6 +226,33 @@ public class TaskPollExecutorTest {
 
         Uninterruptibles.awaitUninterruptibly(latch);
         verify(taskClient).updateTask(any());
+    }
+
+    @Test
+    public void testTaskPollDomain() {
+        TaskClient taskClient = Mockito.mock(TaskClient.class);
+        String testDomain = "foo";
+        Map<String, String> taskToDomain = new HashMap<>();
+        taskToDomain.put(TEST_TASK_DEF_NAME, testDomain);
+        TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, taskToDomain, "test-worker-");
+
+        String workerName = "test-worker";
+        Worker worker = mock(Worker.class);
+        when(worker.getTaskDefName()).thenReturn(TEST_TASK_DEF_NAME);
+        when(worker.getIdentity()).thenReturn(workerName);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        doAnswer(invocation -> {
+                latch.countDown();
+                return null;
+            }
+        ).when(taskClient).pollTask(TEST_TASK_DEF_NAME, workerName, testDomain);
+
+        Executors.newSingleThreadScheduledExecutor()
+            .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
+
+        Uninterruptibles.awaitUninterruptibly(latch);
+        verify(taskClient).pollTask(TEST_TASK_DEF_NAME, workerName, testDomain);
     }
 
     private Task testTask() {

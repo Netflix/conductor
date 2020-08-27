@@ -52,6 +52,16 @@ public class InvalidTestConfiguration implements AzureBlobConfiguration {
     }
 
     @Override
+    public boolean isEventMessageIndexingEnabled() {
+        return true;
+    }
+
+    @Override
+    public boolean isEventExecutionIndexingEnabled() {
+        return true;
+    }
+
+    @Override
     public String getProperty(String string, String def) {
         return "dummy";
     }
