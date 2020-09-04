@@ -153,6 +153,7 @@ public interface ElasticSearchConfiguration extends Configuration {
 
     default boolean isAwsEs() {
         return getBooleanProperty(AWS_ELASTIC_SEARCH_PROPERTY_ENABLED_NAME, AWS_ELASTIC_SEARCH_PROPERTY_ENABLED_VALUE);
+    }
 
     default int getIndexBatchSize() {
         return getIntProperty(ELASTIC_SEARCH_INDEX_BATCH_SIZE_PROPERTY_NAME,

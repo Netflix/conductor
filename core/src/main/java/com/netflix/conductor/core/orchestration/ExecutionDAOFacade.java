@@ -35,6 +35,7 @@ import com.netflix.conductor.dao.RateLimitingDAO;
 import com.netflix.conductor.metrics.Monitors;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -252,10 +253,6 @@ public class ExecutionDAOFacade {
         try {
             Workflow workflow = getWorkflowById(workflowId, true);
 
-            // remove workflow from ES
-            if (archiveWorkflow) {
-                //Add to elasticsearch
-                indexDAO.updateWorkflow(workflowId,
             removeWorkflowIndex(workflow, archiveWorkflow);
             // remove workflow from DAO
             try {
