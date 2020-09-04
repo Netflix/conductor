@@ -77,7 +77,7 @@ public abstract class AbstractGrpcEndToEndTest extends AbstractEndToEndTest {
         assertNotNull(taskClient);
         List<TaskDef> defs = new LinkedList<>();
         for (int i = 0; i < 5; i++) {
-            TaskDef def = new TaskDef("t" + i, "task " + i);
+            TaskDef def = new TaskDef("t" + i, "task " + i, DEFAULT_EMAIL_ADDRESS, 3, 60, 60);
             def.setTimeoutPolicy(TimeoutPolicy.RETRY);
             defs.add(def);
         }
@@ -189,7 +189,7 @@ public abstract class AbstractGrpcEndToEndTest extends AbstractEndToEndTest {
         assertNotNull(wf);
         assertEquals(WorkflowStatus.TERMINATED, wf.getStatus());
 
-        workflowClient.restart(workflowId);
+        workflowClient.restart(workflowId, false);
         wf = workflowClient.getWorkflow(workflowId, true);
         assertNotNull(wf);
         assertEquals(WorkflowStatus.RUNNING, wf.getStatus());

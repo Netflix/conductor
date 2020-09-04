@@ -23,15 +23,16 @@ import com.google.common.io.Resources;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.orchestration.ExecutionDAOFacade;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.tests.utils.TestRunner;
-import org.apache.commons.io.Charsets;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import javax.inject.Inject;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static org.junit.Assert.fail;
@@ -51,6 +52,9 @@ public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
 
     @Inject
     private Configuration configuration;
+
+    @Inject
+    ExecutionDAOFacade executionDAOFacade;
 
     @Override
     public String startOrLoadWorkflowExecution(String snapshotResourceName, String workflowName,
@@ -77,8 +81,8 @@ public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
             task.setCorrelationId(correlationId);
         });
 
-        executionDAO.createTasks(workflow.getTasks());
-        executionDAO.createWorkflow(workflow);
+        executionDAOFacade.createWorkflow(workflow);
+        executionDAOFacade.createTasks(workflow.getTasks());
 
         /*
          * Apart from loading a workflow snapshot,
@@ -95,7 +99,7 @@ public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
 
     private Workflow loadWorkflowSnapshot(String resourcePath) throws Exception {
 
-        String content = Resources.toString(WorkflowLegacyMigrationTest.class.getResource(resourcePath), Charsets.UTF_8);
+        String content = Resources.toString(WorkflowLegacyMigrationTest.class.getResource(resourcePath), StandardCharsets.UTF_8);
         String workflowId = IDGenerator.generate();
         content = content.replace(WORKFLOW_INSTANCE_ID_PLACEHOLDER, workflowId);
 
@@ -117,5 +121,35 @@ public class WorkflowLegacyMigrationTest extends AbstractWorkflowServiceTest {
      * ForkJoins are also tested on testForkJoin()
      */
     public void testForkJoinNestedWithSubWorkflow() {
+    }
+
+    @Ignore
+    @Test
+    @Override
+    public void testTerminateTaskWithFailedStatus() {
+    }
+
+    @Ignore
+    @Test
+    @Override
+    public void testTerminateTaskWithCompletedStatus() {
+    }
+
+    @Ignore
+    @Test
+    @Override
+    public void testTerminateMultiLevelWorkflow() {
+    }
+
+    @Ignore
+    @Test
+    @Override
+    public void testForkJoinWithOptionalSubworkflows() {
+    }
+
+    @Ignore
+    @Test
+    @Override
+    public void testTerminateTaskInASubworkflow() {
     }
 }

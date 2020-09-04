@@ -35,7 +35,7 @@ public interface CassandraConfiguration extends Configuration {
     String CASSANDRA_REPLICATION_FACTOR_KEY_PROPERTY_NAME = "workflow.cassandra.replication.factor.key";
     String CASSANDRA_REPLICATION_FACTOR_KEY_DEFAULT_VALUE = "replication_factor";
 
-    String CASSANDRA_REPLICATION_FACTOR_VALUE_PROPERTY_NAME = "workflow.cassandra.replicaton.factor.value";
+    String CASSANDRA_REPLICATION_FACTOR_VALUE_PROPERTY_NAME = "workflow.cassandra.replication.factor.value";
     int CASSANDRA_REPLICATION_FACTOR_VALUE_DEFAULT_VALUE = 3;
 
     String CASSANDRA_SHARD_SIZE_PROPERTY_KEY = "workflow.cassandra.shard.size";
@@ -44,8 +44,8 @@ public interface CassandraConfiguration extends Configuration {
     String CASSANDRA_READ_CONSISTENCY_LEVEL = "workflow.cassandra.read.consistency.level";
     String CASSANDRA_READ_CONSISTENCY_LEVEL_DEFAULT_VALUE = "LOCAL_QUORUM";
 
-    String CASSANDRA_WRITE_CONSISTENCY_LEVEL = "workflow.cassandra.write.consistency.level";
     String CASSANDRA_WRITE_CONSISTENCY_LEVEL_DEFAULT_VALUE = "LOCAL_QUORUM";
+    String CASSANDRA_WRITE_CONSISTENCY_LEVEL = "workflow.cassandra.write.consistency.level";
 
     default String getHostAddress() {
         return getProperty(CASSANDRA_HOST_ADDRESS_PROPERTY_NAME, CASSANDRA_HOST_ADDRESS_DEFAULT_VALUE);

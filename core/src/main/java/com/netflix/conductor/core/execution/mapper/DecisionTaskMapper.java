@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,11 +24,12 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.SystemTaskType;
+import com.netflix.conductor.core.execution.TerminateWorkflowException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +43,7 @@ import java.util.Map;
  */
 public class DecisionTaskMapper implements TaskMapper {
 
-    Logger logger = LoggerFactory.getLogger(DecisionTaskMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(DecisionTaskMapper.class);
 
     /**
      * This method gets the list of tasks that need to scheduled when the the task to scheduled is of type {@link TaskType#DECISION}.
@@ -87,8 +88,10 @@ public class DecisionTaskMapper implements TaskMapper {
         decisionTask.getInputData().put("case", caseValue);
         decisionTask.getOutputData().put("caseOutput", Collections.singletonList(caseValue));
         decisionTask.setTaskId(taskId);
+        decisionTask.setStartTime(System.currentTimeMillis());
         decisionTask.setStatus(Task.Status.IN_PROGRESS);
         decisionTask.setWorkflowTask(taskToSchedule);
+        decisionTask.setWorkflowPriority(workflowInstance.getPriority());
         tasksToBeScheduled.add(decisionTask);
 
         //get the list of tasks based on the decision
@@ -114,21 +117,22 @@ public class DecisionTaskMapper implements TaskMapper {
      *
      * @param taskToSchedule: The decision task that has the case expression to be evaluated.
      * @param taskInput:      the input which has the values that will be used in evaluating the case expression.
-     * @return: A String representation of the evaluated result
+     * @return A String representation of the evaluated result
      */
     @VisibleForTesting
     String getEvaluatedCaseValue(WorkflowTask taskToSchedule, Map<String, Object> taskInput) {
         String expression = taskToSchedule.getCaseExpression();
         String caseValue;
-        if (expression != null) {
+        if (StringUtils.isNotBlank(expression)) {
             logger.debug("Case being evaluated using decision expression: {}", expression);
             try {
                 //Evaluate the expression by using the Nashhorn based script evaluator
                 Object returnValue = ScriptEvaluator.eval(expression, taskInput);
                 caseValue = (returnValue == null) ? "null" : returnValue.toString();
             } catch (ScriptException e) {
-                logger.error(e.getMessage(), e);
-                throw new RuntimeException("Error while evaluating the script " + expression, e);
+                String errorMsg = String.format("Error while evaluating script: %s", expression);
+                logger.error(errorMsg, e);
+                throw new TerminateWorkflowException(errorMsg);
             }
 
         } else {//In case of no case expression, get the caseValueParam and treat it as a string representation of caseValue

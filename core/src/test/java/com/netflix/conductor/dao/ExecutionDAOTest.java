@@ -12,20 +12,18 @@
  */
 package com.netflix.conductor.dao;
 
-import com.netflix.conductor.common.metadata.tasks.PollData;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.ApplicationException;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -34,12 +32,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public abstract class ExecutionDAOTest {
 
@@ -113,31 +109,6 @@ public abstract class ExecutionDAOTest {
         expectedException.expect(ApplicationException.class);
         expectedException.expectMessage("Task reference name cannot be null");
         getExecutionDAO().createTasks(Collections.singletonList(task));
-    }
-
-    @Test
-    public void testPollData() {
-        getExecutionDAO().updateLastPoll("taskDef", null, "workerId1");
-        PollData pd = getExecutionDAO().getPollData("taskDef", null);
-        assertNotNull(pd);
-        assertTrue(pd.getLastPollTime() > 0);
-        assertEquals(pd.getQueueName(), "taskDef");
-        assertNull(pd.getDomain());
-        assertEquals(pd.getWorkerId(), "workerId1");
-
-        getExecutionDAO().updateLastPoll("taskDef", "domain1", "workerId1");
-        pd = getExecutionDAO().getPollData("taskDef", "domain1");
-        assertNotNull(pd);
-        assertTrue(pd.getLastPollTime() > 0);
-        assertEquals(pd.getQueueName(), "taskDef");
-        assertEquals(pd.getDomain(), "domain1");
-        assertEquals(pd.getWorkerId(), "workerId1");
-
-        List<PollData> pData = getExecutionDAO().getPollData("taskDef");
-        assertEquals(pData.size(), 2);
-
-        pd = getExecutionDAO().getPollData("taskDef", "domain2");
-        assertNull(pd);
     }
 
     @Test
@@ -243,15 +214,13 @@ public abstract class ExecutionDAOTest {
         Task matching = pending.stream().filter(task -> task.getTaskId().equals(tasks.get(0).getTaskId())).findAny().get();
         assertTrue(EqualsBuilder.reflectionEquals(matching, tasks.get(0)));
 
-        List<Task> update = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
             Task found = getExecutionDAO().getTask(workflowId + "_t" + i);
             assertNotNull(found);
             found.getOutputData().put("updated", true);
             found.setStatus(Task.Status.COMPLETED);
-            update.add(found);
+            getExecutionDAO().updateTask(found);
         }
-        getExecutionDAO().updateTasks(update);
 
         List<String> taskIds = tasks.stream().map(Task::getTaskId).collect(Collectors.toList());
         List<Task> found = getExecutionDAO().getTasks(taskIds);
@@ -315,19 +284,19 @@ public abstract class ExecutionDAOTest {
         assertTrue(found.getInput().containsKey("updated"));
         assertEquals(true, found.getInput().get("updated"));
 
-        List<String> running = getExecutionDAO().getRunningWorkflowIds(workflow.getWorkflowName());
+        List<String> running = getExecutionDAO().getRunningWorkflowIds(workflow.getWorkflowName(), workflow.getWorkflowVersion());
         assertNotNull(running);
         assertTrue(running.isEmpty());
 
         workflow.setStatus(Workflow.WorkflowStatus.RUNNING);
         getExecutionDAO().updateWorkflow(workflow);
 
-        running = getExecutionDAO().getRunningWorkflowIds(workflow.getWorkflowName());
+        running = getExecutionDAO().getRunningWorkflowIds(workflow.getWorkflowName(), workflow.getWorkflowVersion());
         assertNotNull(running);
         assertEquals(1, running.size());
         assertEquals(workflow.getWorkflowId(), running.get(0));
 
-        List<Workflow> pending = getExecutionDAO().getPendingWorkflowsByType(workflow.getWorkflowName());
+        List<Workflow> pending = getExecutionDAO().getPendingWorkflowsByType(workflow.getWorkflowName(), workflow.getWorkflowVersion());
         assertNotNull(pending);
         assertEquals(1, pending.size());
         assertEquals(3, pending.get(0).getTasks().size());
@@ -336,7 +305,7 @@ public abstract class ExecutionDAOTest {
 
         workflow.setStatus(Workflow.WorkflowStatus.COMPLETED);
         getExecutionDAO().updateWorkflow(workflow);
-        running = getExecutionDAO().getRunningWorkflowIds(workflow.getWorkflowName());
+        running = getExecutionDAO().getRunningWorkflowIds(workflow.getWorkflowName(), workflow.getWorkflowVersion());
         assertNotNull(running);
         assertTrue(running.isEmpty());
 

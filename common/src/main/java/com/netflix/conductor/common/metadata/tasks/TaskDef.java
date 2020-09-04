@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * 
- */
+
 package com.netflix.conductor.common.metadata.tasks;
 
 import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
+import com.netflix.conductor.common.constraints.OwnerEmailMandatoryConstraint;
 import com.netflix.conductor.common.constraints.TaskTimeoutConstraint;
 import com.netflix.conductor.common.metadata.Auditable;
-
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Viren
@@ -42,11 +41,12 @@ import java.util.Objects;
 @TaskTimeoutConstraint
 @Valid
 public class TaskDef extends Auditable {
-	@ProtoEnum
-	public static enum TimeoutPolicy {RETRY, TIME_OUT_WF, ALERT_ONLY}
 
 	@ProtoEnum
-	public static enum RetryLogic {FIXED, EXPONENTIAL_BACKOFF}
+	public enum TimeoutPolicy {RETRY, TIME_OUT_WF, ALERT_ONLY}
+
+	@ProtoEnum
+	public enum RetryLogic {FIXED, EXPONENTIAL_BACKOFF}
 
 	private static final int ONE_HOUR = 60 * 60;
 
@@ -94,14 +94,29 @@ public class TaskDef extends Auditable {
 	private Map<String, Object> inputTemplate = new HashMap<>();
 
 	// This field is deprecated, do not use id 13.
-//	@ProtoField(id = 13)
-//	private Integer rateLimitPerSecond;
+	//	@ProtoField(id = 13)
+	//	private Integer rateLimitPerSecond;
 
 	@ProtoField(id = 14)
 	private Integer rateLimitPerFrequency;
 
 	@ProtoField(id = 15)
 	private Integer rateLimitFrequencyInSeconds;
+
+	@ProtoField(id = 16)
+	private String isolationGroupId;
+
+	@ProtoField(id = 17)
+	private String executionNameSpace;
+
+	@ProtoField(id = 18)
+	@OwnerEmailMandatoryConstraint
+	@Email(message = "ownerEmail should be valid email address")
+	private String ownerEmail;
+
+	@ProtoField(id = 19)
+	@Min(value = 0, message = "TaskDef pollTimeoutSeconds: {value} must be >= 0")
+	private Integer pollTimeoutSeconds;
 
 	public TaskDef() {
 	}
@@ -115,11 +130,21 @@ public class TaskDef extends Auditable {
 		this.description = description;
 	}
 
-	public TaskDef(String name, String description, int retryCount, int timeout) {
+	public TaskDef(String name, String description, int retryCount, long timeoutSeconds) {
 		this.name = name;
 		this.description = description;
 		this.retryCount = retryCount;
-		this.timeoutSeconds = timeout;
+		this.timeoutSeconds = timeoutSeconds;
+	}
+
+	public TaskDef(String name, String description, String ownerEmail, int retryCount,
+		long timeoutSeconds, long responseTimeoutSeconds) {
+		this.name = name;
+		this.description = description;
+		this.ownerEmail = ownerEmail;
+		this.retryCount = retryCount;
+		this.timeoutSeconds = timeoutSeconds;
+		this.responseTimeoutSeconds = responseTimeoutSeconds;
 	}
 
 	/**
@@ -327,7 +352,7 @@ public class TaskDef extends Auditable {
 	 * @return concurrency limit
 	 */
 	public int concurrencyLimit() {
-		return concurrentExecLimit == null ? 0 : concurrentExecLimit.intValue();
+		return concurrentExecLimit == null ? 0 : concurrentExecLimit;
 	}
 
 	/**
@@ -336,6 +361,50 @@ public class TaskDef extends Auditable {
 	 */
 	public void setInputTemplate(Map<String, Object> inputTemplate) {
 		this.inputTemplate = inputTemplate;
+	}
+
+	public String getIsolationGroupId() {
+		return isolationGroupId;
+	}
+
+	public void setIsolationGroupId(String isolationGroupId) {
+		this.isolationGroupId = isolationGroupId;
+	}
+
+	public String getExecutionNameSpace() {
+		return executionNameSpace;
+	}
+
+	public void setExecutionNameSpace(String executionNameSpace) {
+		this.executionNameSpace = executionNameSpace;
+	}
+
+	/**
+	 * @return the email of the owner of this task definition
+	 */
+	public String getOwnerEmail() {
+		return ownerEmail;
+	}
+
+	/**
+	 * @param ownerEmail the owner email to set
+	 */
+	public void setOwnerEmail(String ownerEmail) {
+		this.ownerEmail = ownerEmail;
+	}
+
+	/**
+	 * @param pollTimeoutSeconds the poll timeout to set
+	 */
+	public void setPollTimeoutSeconds(Integer pollTimeoutSeconds) {
+		this.pollTimeoutSeconds = pollTimeoutSeconds;
+	}
+
+	/**
+	 * @return the poll timeout of this task definition
+	 */
+	public Integer getPollTimeoutSeconds() {
+		return pollTimeoutSeconds;
 	}
 
 	@Override
@@ -360,7 +429,10 @@ public class TaskDef extends Auditable {
 				getRetryLogic() == taskDef.getRetryLogic() &&
 				Objects.equals(getConcurrentExecLimit(), taskDef.getConcurrentExecLimit()) &&
 				Objects.equals(getRateLimitPerFrequency(), taskDef.getRateLimitPerFrequency()) &&
-				Objects.equals(getInputTemplate(), taskDef.getInputTemplate());
+				Objects.equals(getInputTemplate(), taskDef.getInputTemplate()) &&
+				Objects.equals(getIsolationGroupId(), taskDef.getIsolationGroupId()) &&
+				Objects.equals(getExecutionNameSpace(), taskDef.getExecutionNameSpace()) &&
+				Objects.equals(getOwnerEmail(), taskDef.getOwnerEmail());
 	}
 
 	@Override
@@ -368,7 +440,7 @@ public class TaskDef extends Auditable {
 
 		return Objects.hash(getName(), getDescription(), getRetryCount(), getTimeoutSeconds(), getInputKeys(),
 				getOutputKeys(), getTimeoutPolicy(), getRetryLogic(), getRetryDelaySeconds(),
-				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate());
+				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate(),
+				getIsolationGroupId(), getExecutionNameSpace(), getOwnerEmail());
 	}
-
 }

@@ -2,10 +2,10 @@ package com.netflix.conductor.core.events.sqs;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +16,9 @@ import com.netflix.conductor.contribs.queue.sqs.SQSObservableQueue;
 import com.netflix.conductor.core.config.Configuration;
 import org.junit.Before;
 import org.junit.Test;
+import rx.schedulers.Schedulers;
+
+import java.util.concurrent.Executors;
 
 public class TestSQSEventQueueProvider {
     private AmazonSQSClient amazonSQSClient;
@@ -34,7 +37,7 @@ public class TestSQSEventQueueProvider {
         ListQueuesResult listQueuesResult = new ListQueuesResult().withQueueUrls("test_queue_1");
         when(amazonSQSClient.listQueues(any(ListQueuesRequest.class))).thenReturn(listQueuesResult);
 
-        SQSEventQueueProvider sqsEventQueueProvider = new SQSEventQueueProvider(amazonSQSClient, configuration);
+        SQSEventQueueProvider sqsEventQueueProvider = new SQSEventQueueProvider(amazonSQSClient, configuration, Schedulers.from(Executors.newSingleThreadExecutor()));
         SQSObservableQueue sqsObservableQueue = (SQSObservableQueue) sqsEventQueueProvider.getQueue("test_queue_1");
 
         assertNotNull(sqsObservableQueue);
@@ -52,7 +55,7 @@ public class TestSQSEventQueueProvider {
         ListQueuesResult listQueuesResult = new ListQueuesResult().withQueueUrls("test_queue_1");
         when(amazonSQSClient.listQueues(any(ListQueuesRequest.class))).thenReturn(listQueuesResult);
 
-        SQSEventQueueProvider sqsEventQueueProvider = new SQSEventQueueProvider(amazonSQSClient, configuration);
+        SQSEventQueueProvider sqsEventQueueProvider = new SQSEventQueueProvider(amazonSQSClient, configuration, Schedulers.from(Executors.newSingleThreadExecutor()));
         SQSObservableQueue sqsObservableQueue = (SQSObservableQueue) sqsEventQueueProvider.getQueue("test_queue_1");
 
         assertNotNull(sqsObservableQueue);

@@ -26,8 +26,10 @@ import com.netflix.conductor.common.run.ExternalStorageLocation;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Audit
@@ -152,22 +155,50 @@ public class TaskServiceImpl implements TaskService {
     /**
      * Ack Task is received.
      *
-     * @param taskId   Id of the task
+     * @param taskId Id of the task
      * @return `true|false` if task if received or not
      */
     @Service
     public boolean ackTaskReceived(String taskId) {
         LOGGER.debug("Ack received for task: {}", taskId);
-        boolean ackResult;
+        String ackTaskDesc = "Ack Task with taskId: " + taskId;
+        String ackTaskOperation = "ackTaskReceived";
+        AtomicBoolean ackResult = new AtomicBoolean(false);
         try {
-            ackResult = executionService.ackTaskReceived(taskId);
+            new RetryUtil<>().retryOnException(() -> {
+                ackResult.set(executionService.ackTaskReceived(taskId));
+                return null;
+            }, null, null, 3, ackTaskDesc, ackTaskOperation);
+
         } catch (Exception e) {
-            // safe to ignore exception here, since the task will not be processed by the worker due to ack failure
-            // The task will eventually be available to be polled again after the unack timeout
-            LOGGER.error("Exception when trying to ack task {}", taskId, e);
-            ackResult = false;
+            // Fail the task and let decide reevaluate the workflow, thereby preventing workflow being stuck from transient ack errors.
+            String errorMsg = String.format("Error when trying to ack task %s", taskId);
+            LOGGER.error(errorMsg, e);
+            Task task = executionService.getTask(taskId);
+            Monitors.recordAckTaskError(task.getTaskType());
+            failTask(task, errorMsg);
+            ackResult.set(false);
         }
-        return ackResult;
+        return ackResult.get();
+    }
+
+    /**
+     * Updates the task with FAILED status; On exception, fails the workflow.
+     * @param task
+     * @param errorMsg
+     */
+    private void failTask(Task task, String errorMsg) {
+        try {
+            TaskResult taskResult = new TaskResult();
+            taskResult.setStatus(TaskResult.Status.FAILED);
+            taskResult.setTaskId(task.getTaskId());
+            taskResult.setWorkflowInstanceId(task.getWorkflowInstanceId());
+            taskResult.setReasonForIncompletion(errorMsg);
+            executionService.updateTask(taskResult);
+        } catch (Exception e) {
+            LOGGER.error("Unable to fail task: {} in workflow: {}", task.getTaskId(), task.getWorkflowInstanceId(), e);
+            executionService.terminateWorkflow(task.getWorkflowInstanceId(), "Failed to ack task: " + task.getTaskId());
+        }
     }
 
     /**
@@ -217,7 +248,7 @@ public class TaskServiceImpl implements TaskService {
     /**
      * Remove Task from a Task type queue.
      *
-     * @param taskId   ID of the task
+     * @param taskId ID of the task
      */
     @Service
     public void removeTaskFromQueue(String taskId) {
@@ -314,10 +345,20 @@ public class TaskServiceImpl implements TaskService {
     /**
      * Get the external storage location where the task output payload is stored/to be stored
      *
-     * @param path the path for which the external storage location is to be populated
+     * @param path      the path for which the external storage location is to be populated
+     * @param operation the operation to be performed (read or write)
+     * @param type      the type of payload (input or output)
      * @return {@link ExternalStorageLocation} containing the uri and the path to the payload is stored in external storage
      */
-    public ExternalStorageLocation getExternalStorageLocation(String path) {
-        return executionService.getExternalStorageLocation(ExternalPayloadStorage.Operation.WRITE, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, path);
+    public ExternalStorageLocation getExternalStorageLocation(String path, String operation, String type) {
+        try {
+            ExternalPayloadStorage.Operation payloadOperation = ExternalPayloadStorage.Operation.valueOf(StringUtils.upperCase(operation));
+            ExternalPayloadStorage.PayloadType payloadType = ExternalPayloadStorage.PayloadType.valueOf(StringUtils.upperCase(type));
+            return executionService.getExternalStorageLocation(payloadOperation, payloadType, path);
+        } catch (Exception e) {
+            // FIXME: for backwards compatibility
+            LOGGER.error("Invalid input - Operation: {}, PayloadType: {}, defaulting to WRITE/TASK_OUTPUT", operation, type);
+            return executionService.getExternalStorageLocation(ExternalPayloadStorage.Operation.WRITE, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, path);
+        }
     }
 }
