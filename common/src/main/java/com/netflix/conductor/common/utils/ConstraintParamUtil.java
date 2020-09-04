@@ -6,7 +6,6 @@ import com.netflix.conductor.common.utils.EnvUtils.SystemParameters;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -56,8 +55,8 @@ public class ConstraintParamUtil {
     private static List<String> extractParamPathComponentsFromString(String key, String value, String taskName, WorkflowDef workflow) {
         ArrayList<String> errorList = new ArrayList<>();
 
-        if (StringUtils.isEmpty(value)) {
-            String message = String.format( "key: %s input parameter value: is null or empty", key);
+        if (value == null) {
+            String message = String.format("key: %s input parameter value: is null", key);
             errorList.add(message);
             return errorList;
         }

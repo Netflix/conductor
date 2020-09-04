@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 /**
- * 
+ *
  */
 package com.netflix.conductor.contribs.queue;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,43 +55,44 @@ import com.netflix.conductor.service.ExecutionService;
 public class QueueManager {
 
 	private static Logger logger = LoggerFactory.getLogger(QueueManager.class);
-	
+
 	private Map<Task.Status, ObservableQueue> queues;
-	
+
 	private ExecutionService executionService;
-	
+
 	private static final TypeReference<Map<String, Object>> _mapType = new TypeReference<Map<String, Object>>() {};
-	
-	private ObjectMapper objectMapper = new ObjectMapper();
-	
+
+	private ObjectMapper objectMapper;
+
 	@Inject
-	public QueueManager(Map<Task.Status, ObservableQueue> queues, ExecutionService executionService) {
+	public QueueManager(Map<Task.Status, ObservableQueue> queues, ExecutionService executionService, ObjectMapper objectMapper) {
 		this.queues = queues;
 		this.executionService = executionService;
+		this.objectMapper = objectMapper;
 		queues.entrySet().forEach(e -> {
 			Status status = e.getKey();
 			ObservableQueue queue = e.getValue();
 			startMonitor(status, queue);
 		});
 	}
-	
+
 	private void startMonitor(Status status, ObservableQueue queue) {
-		
+
 		queue.observe().subscribe((Message msg) -> {
-			
+
 			try {
 
 				logger.debug("Got message {}", msg.getPayload());
-				
+
 				String payload = msg.getPayload();
 				JsonNode payloadJSON = objectMapper.readTree(payload);
 				String externalId = getValue("externalId", payloadJSON);
 				if(externalId == null || "".equals(externalId)) {
 					logger.error("No external Id found in the payload {}", payload);
-					queue.ack(Arrays.asList(msg));
+					queue.ack(Collections.singletonList(msg));
 					return;
 				}
-				
+
 				JsonNode json = objectMapper.readTree(externalId);
 				String workflowId = getValue("workflowId", json);
 				String taskRefName = getValue("taskRefName", json);
@@ -98,7 +100,7 @@ public class QueueManager {
 				if(workflowId == null || "".equals(workflowId)) {
 					//This is a bad message, we cannot process it
 					logger.error("No workflow id found in the message. {}", payload);
-					queue.ack(Arrays.asList(msg));
+					queue.ack(Collections.singletonList(msg));
 					return;
 				}
 				Workflow workflow = executionService.getExecutionStatus(workflowId, true);
@@ -111,43 +113,43 @@ public class QueueManager {
 				} else {
 					taskOptional = workflow.getTasks().stream().filter(task -> !task.getStatus().isTerminal() && task.getReferenceTaskName().equals(taskRefName)).findFirst();
 				}
-				
+
 				if(!taskOptional.isPresent()) {
-					logger.error("No matching tasks to be found to be marked as completed for workflow {}, taskRefName {}, taskId {}", workflowId, taskRefName, taskId);
-					queue.ack(Arrays.asList(msg));
+					logger.error("No matching tasks found to be marked as completed for workflow {}, taskRefName {}, taskId {}", workflowId, taskRefName, taskId);
+					queue.ack(Collections.singletonList(msg));
 					return;
 				}
-				
+
 				Task task = taskOptional.get();
 				task.setStatus(status);
 				task.getOutputData().putAll(objectMapper.convertValue(payloadJSON, _mapType));
 				executionService.updateTask(task);
-				
-				List<String> failures = queue.ack(Arrays.asList(msg));
+
+				List<String> failures = queue.ack(Collections.singletonList(msg));
 				if(!failures.isEmpty()) {
 					logger.error("Not able to ack the messages {}", failures.toString());
 				}
-				
+
 			} catch(JsonParseException e) {
-				logger.error("Bad mesage? " + e.getMessage(), e);
-				queue.ack(Arrays.asList(msg));
-				
+				logger.error("Bad message? : {} ", msg, e);
+				queue.ack(Collections.singletonList(msg));
+
 			} catch(ApplicationException e) {
 				if(e.getCode().equals(Code.NOT_FOUND)) {
-					logger.error("Workflow ID specified is not valid for this environment: " + e.getMessage());
-					queue.ack(Arrays.asList(msg));
+					logger.error("Workflow ID specified is not valid for this environment");
+					queue.ack(Collections.singletonList(msg));
 				}
-				logger.error(e.getMessage(), e);
+				logger.error("Error processing message: {}", msg, e);
 			} catch(Exception e) {
-				logger.error(e.getMessage(), e);
+				logger.error("Error processing message: {}", msg, e);
 			}
-			
+
 		}, (Throwable t) -> {
 			logger.error(t.getMessage(), t);
 		});
 		logger.info("QueueListener::STARTED...listening for " + queue.getName());
 	}
-	
+
 	private String getValue(String fieldName, JsonNode json) {
 		JsonNode node = json.findValue(fieldName);
 		if(node == null) {
@@ -160,16 +162,16 @@ public class QueueManager {
 		Map<String, Long> size = new HashMap<>();
 		queues.entrySet().forEach(e -> {
 			ObservableQueue queue = e.getValue();
-			size.put(queue.getName(), queue.size());	
+			size.put(queue.getName(), queue.size());
 		});
 		return size;
 	}
-	
+
 	public Map<Status, String> queues() {
 		Map<Status, String> size = new HashMap<>();
 		queues.entrySet().forEach(e -> {
 			ObservableQueue queue = e.getValue();
-			size.put(e.getKey(), queue.getURI());	
+			size.put(e.getKey(), queue.getURI());
 		});
 		return size;
 	}

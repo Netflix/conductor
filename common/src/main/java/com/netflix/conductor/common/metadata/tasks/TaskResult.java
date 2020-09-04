@@ -16,26 +16,27 @@
 
 package com.netflix.conductor.common.metadata.tasks;
 
+import com.github.vmg.protogen.annotations.ProtoEnum;
+import com.github.vmg.protogen.annotations.ProtoField;
+import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.google.protobuf.Any;
-import com.github.vmg.protogen.annotations.*;
-
-import javax.validation.constraints.NotEmpty;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import javax.validation.constraints.NotEmpty;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author Viren
  * Result of the task execution.
- *
  */
 @ProtoMessage
 public class TaskResult {
 
     @ProtoEnum
     public enum Status {
-        IN_PROGRESS, FAILED, FAILED_WITH_TERMINAL_ERROR, COMPLETED, SCHEDULED, NO_OP;        //SCHEDULED is added for the backward compatibility and should NOT be used when updating the task result
+        IN_PROGRESS, FAILED, FAILED_WITH_TERMINAL_ERROR, COMPLETED, NO_OP;
     }
 
     @NotEmpty(message = "Workflow Id cannot be null or empty")
@@ -68,15 +69,31 @@ public class TaskResult {
 
     private String externalOutputPayloadStoragePath;
 
+    private String subWorkflowId;
+
     public TaskResult(Task task) {
         this.workflowInstanceId = task.getWorkflowInstanceId();
         this.taskId = task.getTaskId();
         this.reasonForIncompletion = task.getReasonForIncompletion();
         this.callbackAfterSeconds = task.getCallbackAfterSeconds();
-        this.status = Status.valueOf(task.getStatus().name());
         this.workerId = task.getWorkerId();
         this.outputData = task.getOutputData();
         this.externalOutputPayloadStoragePath = task.getExternalOutputPayloadStoragePath();
+        this.subWorkflowId = task.getSubWorkflowId();
+        switch (task.getStatus()) {
+            case CANCELED:
+            case COMPLETED_WITH_ERRORS:
+            case TIMED_OUT:
+            case SKIPPED:
+                this.status = Status.FAILED;
+                break;
+            case SCHEDULED:
+                this.status = Status.IN_PROGRESS;
+                break;
+            default:
+                this.status = Status.valueOf(task.getStatus().name());
+                break;
+        }
     }
 
     public TaskResult() {
@@ -84,7 +101,6 @@ public class TaskResult {
     }
 
     /**
-     *
      * @return Workflow instance id for which the task result is produced
      */
     public String getWorkflowInstanceId() {
@@ -108,7 +124,7 @@ public class TaskResult {
     }
 
     public void setReasonForIncompletion(String reasonForIncompletion) {
-        this.reasonForIncompletion = reasonForIncompletion;
+        this.reasonForIncompletion = StringUtils.substring(reasonForIncompletion, 0, 500);
     }
 
     public long getCallbackAfterSeconds() {
@@ -118,6 +134,7 @@ public class TaskResult {
     /**
      * When set to non-zero values, the task remains in the queue for the specified seconds before sent back to the worker when polled.
      * Useful for the long running task, where the task is updated as IN_PROGRESS and should not be polled out of the queue for a specified amount of time.  (delayed queue implementation)
+     *
      * @param callbackAfterSeconds Amount of time in seconds the task should be held in the queue before giving it to a polling worker.
      */
     public void setCallbackAfterSeconds(long callbackAfterSeconds) {
@@ -129,9 +146,8 @@ public class TaskResult {
     }
 
     /**
-     *
      * @param workerId a free form string identifying the worker host.
-     * Could be hostname, IP Address or any other meaningful identifier that can help identify the host/process which executed the task, in case of troubleshooting.
+     *                 Could be hostname, IP Address or any other meaningful identifier that can help identify the host/process which executed the task, in case of troubleshooting.
      */
     public void setWorkerId(String workerId) {
         this.workerId = workerId;
@@ -145,15 +161,13 @@ public class TaskResult {
     }
 
     /**
-     *
      * @param status Status of the task
-     * <p>
-     * <b>IN_PROGRESS</b>: Use this for long running tasks, indicating the task is still in progress and should be checked again at a later time.
-     *                  e.g. the worker checks the status of the job in the DB, while the job is being executed by another process.
-     * </p><p>
-     * <b>FAILED, FAILED_WITH_TERMINAL_ERROR, COMPLETED</b>: Terminal statuses for the task.
-     * </p>
-     *
+     *               <p>
+     *               <b>IN_PROGRESS</b>: Use this for long running tasks, indicating the task is still in progress and should be checked again at a later time.
+     *               e.g. the worker checks the status of the job in the DB, while the job is being executed by another process.
+     *               </p><p>
+     *               <b>FAILED, FAILED_WITH_TERMINAL_ERROR, COMPLETED</b>: Terminal statuses for the task. Use FAILED_WITH_TERMINAL_ERROR when you do not want the task to be retried.
+     *               </p>
      * @see #setCallbackAfterSeconds(long)
      */
     public void setStatus(Status status) {
@@ -165,7 +179,6 @@ public class TaskResult {
     }
 
     /**
-     *
      * @param outputData output data to be set for the task execution result
      */
     public void setOutputData(Map<String, Object> outputData) {
@@ -174,7 +187,8 @@ public class TaskResult {
 
     /**
      * Adds output
-     * @param key output field
+     *
+     * @param key   output field
      * @param value value
      * @return current instance
      */
@@ -192,7 +206,6 @@ public class TaskResult {
     }
 
     /**
-     *
      * @return Task execution logs
      */
     public List<TaskExecLog> getLogs() {
@@ -200,7 +213,6 @@ public class TaskResult {
     }
 
     /**
-     *
      * @param logs Task execution logs
      */
     public void setLogs(List<TaskExecLog> logs) {
@@ -209,7 +221,6 @@ public class TaskResult {
 
 
     /**
-     *
      * @param log Log line to be added
      * @return Instance of TaskResult
      */
@@ -219,7 +230,6 @@ public class TaskResult {
     }
 
     /**
-     *
      * @return the path where the task output is stored in external storage
      */
     public String getExternalOutputPayloadStoragePath() {
@@ -227,11 +237,18 @@ public class TaskResult {
     }
 
     /**
-     *
      * @param externalOutputPayloadStoragePath path in the external storage where the task output is stored
      */
     public void setExternalOutputPayloadStoragePath(String externalOutputPayloadStoragePath) {
         this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
+    }
+
+    public String getSubWorkflowId() {
+        return subWorkflowId;
+    }
+
+    public void setSubWorkflowId(String subWorkflowId) {
+        this.subWorkflowId = subWorkflowId;
     }
 
     @Override
@@ -247,6 +264,7 @@ public class TaskResult {
                 ", outputMessage=" + outputMessage +
                 ", logs=" + logs +
                 ", externalOutputPayloadStoragePath='" + externalOutputPayloadStoragePath + '\'' +
+                ", subWorkflowId='" + subWorkflowId + '\'' +
                 '}';
     }
 
@@ -272,5 +290,24 @@ public class TaskResult {
         TaskResult result = new TaskResult();
         result.setStatus(status);
         return result;
+    }
+
+    /**
+     * Copy the given task result object
+     * @return a deep copy of the task result object except the externalOutputPayloadStoragePath field
+     */
+    public TaskResult copy() {
+        TaskResult taskResult = new TaskResult();
+        taskResult.setWorkflowInstanceId(workflowInstanceId);
+        taskResult.setTaskId(taskId);
+        taskResult.setReasonForIncompletion(reasonForIncompletion);
+        taskResult.setCallbackAfterSeconds(callbackAfterSeconds);
+        taskResult.setWorkerId(workerId);
+        taskResult.setStatus(status);
+        taskResult.setOutputData(outputData);
+        taskResult.setOutputMessage(outputMessage);
+        taskResult.setLogs(logs);
+        taskResult.setSubWorkflowId(subWorkflowId);
+        return taskResult;
     }
 }

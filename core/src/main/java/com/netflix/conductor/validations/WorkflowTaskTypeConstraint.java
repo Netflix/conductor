@@ -1,21 +1,38 @@
+/*
+ * Copyright 2020 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.conductor.validations;
+
+import static com.netflix.conductor.core.execution.tasks.Terminate.getTerminationStatusParameter;
+import static com.netflix.conductor.core.execution.tasks.Terminate.validateInputStatus;
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.TYPE;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.Payload;
+import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Optional;
-
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.TYPE;
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.Payload;
 
 /**
  * This constraint class validates following things.
@@ -66,6 +83,18 @@ public @interface WorkflowTaskTypeConstraint {
                 case TaskType.TASK_TYPE_FORK_JOIN:
                     valid = isForkJoinTaskValid(workflowTask, context);
                     break;
+                case TaskType.TASK_TYPE_TERMINATE:
+                    valid = isTerminateTaskValid(workflowTask, context);
+                    break;
+                case TaskType.TASK_TYPE_KAFKA_PUBLISH:
+                    valid = isKafkaPublishTaskValid(workflowTask, context);
+                    break;
+                case TaskType.TASK_TYPE_DO_WHILE:
+                    valid = isDoWhileTaskValid(workflowTask, context);
+                    break;
+                case TaskType.TASK_TYPE_SUB_WORKFLOW:
+                    valid = isSubWorkflowTaskValid(workflowTask, context);
+                    break;
             }
 
             return valid;
@@ -97,6 +126,27 @@ public @interface WorkflowTaskTypeConstraint {
             else if ((workflowTask.getDecisionCases() != null || workflowTask.getCaseExpression() != null) &&
                 (workflowTask.getDecisionCases().size() == 0)){
                 String message = String.format("decisionCases should have atleast one task for taskType: %s taskName: %s", TaskType.DECISION, workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+            return valid;
+        }
+
+        private boolean isDoWhileTaskValid(WorkflowTask workflowTask, ConstraintValidatorContext context) {
+            boolean valid = true;
+            if (workflowTask.getLoopCondition() == null){
+                String message = String.format(PARAM_REQUIRED_STRING_FORMAT, "loopExpression", TaskType.DO_WHILE,
+                        workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+            if (workflowTask.getLoopOver() == null || workflowTask.getLoopOver().size() == 0) {
+                String message = String.format(PARAM_REQUIRED_STRING_FORMAT, "loopover", TaskType.DO_WHILE, workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+            if (workflowTask.collectTasks().stream().anyMatch(t -> t.getType().equals(SubWorkflow.NAME))) {
+                String message = String.format("SUB_WORKFLOW task inside loopover task: %s is not supported.", workflowTask.getName());
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 valid = false;
             }
@@ -178,6 +228,57 @@ public @interface WorkflowTaskTypeConstraint {
                 valid = false;
             }
 
+            return valid;
+        }
+
+        private boolean isTerminateTaskValid(WorkflowTask workflowTask, ConstraintValidatorContext context) {
+            boolean valid = true;
+            Object inputStatusParam = workflowTask.getInputParameters().get(getTerminationStatusParameter());
+            if(workflowTask.isOptional()) {
+                String message = String.format("terminate task cannot be optional, taskName: %s",  workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+            if(inputStatusParam == null || !validateInputStatus(inputStatusParam.toString())) {
+                String message = String.format("terminate task must have an %s parameter and must be set to COMPLETED or FAILED, taskName: %s", getTerminationStatusParameter(),  workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+            return valid;
+        }
+
+        private boolean isKafkaPublishTaskValid(WorkflowTask workflowTask, ConstraintValidatorContext context) {
+            boolean valid = true;
+            boolean isInputParameterSet = false;
+            boolean isInputTemplateSet = false;
+
+            //Either kafka_request in WorkflowTask inputParam should be set or in inputTemplate Taskdef should be set
+            if (workflowTask.getInputParameters() != null && workflowTask.getInputParameters().containsKey("kafka_request")) {
+                isInputParameterSet = true;
+            }
+
+            TaskDef taskDef = Optional.ofNullable(workflowTask.getTaskDefinition()).orElse(ValidationContext.getMetadataDAO().getTaskDef(workflowTask.getName()));
+
+            if (taskDef != null && taskDef.getInputTemplate() != null  && taskDef.getInputTemplate().containsKey("kafka_request")) {
+                isInputTemplateSet = true;
+            }
+
+            if (!(isInputParameterSet || isInputTemplateSet)) {
+                String message = String.format(PARAM_REQUIRED_STRING_FORMAT, "inputParameters.kafka_request", TaskType.KAFKA_PUBLISH, workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+
+            return valid;
+        }
+
+        private boolean isSubWorkflowTaskValid(WorkflowTask workflowTask, ConstraintValidatorContext context) {
+            boolean valid = true;
+            if (workflowTask.getSubWorkflowParam() == null){
+                String message = String.format(PARAM_REQUIRED_STRING_FORMAT, "subWorkflowParam", TaskType.SUB_WORKFLOW, workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
             return valid;
         }
     }

@@ -19,7 +19,7 @@ import com.google.common.base.Preconditions;
 import com.netflix.conductor.client.config.ConductorClientConfiguration;
 import com.netflix.conductor.client.config.DefaultConductorClientConfiguration;
 import com.netflix.conductor.client.exceptions.ConductorClientException;
-import com.netflix.conductor.client.task.WorkflowTaskMetrics;
+import com.netflix.conductor.client.telemetry.MetricsContainer;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
@@ -27,26 +27,26 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.ClientFilter;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author visingh
  * @author Viren
  * Client for conductor task management including polling for task, updating task status etc.
  */
-@SuppressWarnings("unchecked")
 public class TaskClient extends ClientBase {
 
     private static GenericType<List<Task>> taskList = new GenericType<List<Task>>() {
@@ -120,12 +120,12 @@ public class TaskClient extends ClientBase {
      */
     public Task pollTask(String taskType, String workerId, String domain) {
         Preconditions.checkArgument(StringUtils.isNotBlank(taskType), "Task type cannot be blank");
-        Preconditions.checkArgument(StringUtils.isNotBlank(domain), "Domain cannot be blank");
         Preconditions.checkArgument(StringUtils.isNotBlank(workerId), "Worker id cannot be blank");
 
         Object[] params = new Object[]{"workerid", workerId, "domain", domain};
-        Task task = getForEntity("tasks/poll/{taskType}", params, Task.class, taskType);
-        populateTaskInput(task);
+        Task task = Optional.ofNullable(getForEntity("tasks/poll/{taskType}", params, Task.class, taskType))
+            .orElse(new Task());
+        populateTaskPayloads(task);
         return task;
     }
 
@@ -145,7 +145,7 @@ public class TaskClient extends ClientBase {
 
         Object[] params = new Object[]{"workerid", workerId, "count", count, "timeout", timeoutInMillisecond};
         List<Task> tasks = getForEntity("tasks/poll/batch/{taskType}", params, taskList, taskType);
-        tasks.forEach(this::populateTaskInput);
+        tasks.forEach(this::populateTaskPayloads);
         return tasks;
     }
 
@@ -166,20 +166,25 @@ public class TaskClient extends ClientBase {
 
         Object[] params = new Object[]{"workerid", workerId, "count", count, "timeout", timeoutInMillisecond, "domain", domain};
         List<Task> tasks = getForEntity("tasks/poll/batch/{taskType}", params, taskList, taskType);
-        tasks.forEach(this::populateTaskInput);
+        tasks.forEach(this::populateTaskPayloads);
         return tasks;
     }
 
     /**
-     * Populates the task input from external payload storage if the external storage path is specified.
+     * Populates the task input/output from external payload storage if the external storage path is specified.
      *
      * @param task the task for which the input is to be populated.
      */
-    private void populateTaskInput(Task task) {
+    private void populateTaskPayloads(Task task) {
         if (StringUtils.isNotBlank(task.getExternalInputPayloadStoragePath())) {
-            WorkflowTaskMetrics.incrementExternalPayloadUsedCount(task.getTaskDefName(), ExternalPayloadStorage.Operation.READ.name(), ExternalPayloadStorage.PayloadType.TASK_INPUT.name());
+            MetricsContainer.incrementExternalPayloadUsedCount(task.getTaskDefName(), ExternalPayloadStorage.Operation.READ.name(), ExternalPayloadStorage.PayloadType.TASK_INPUT.name());
             task.setInputData(downloadFromExternalStorage(ExternalPayloadStorage.PayloadType.TASK_INPUT, task.getExternalInputPayloadStoragePath()));
             task.setExternalInputPayloadStoragePath(null);
+        }
+        if (StringUtils.isNotBlank(task.getExternalOutputPayloadStoragePath())) {
+            MetricsContainer.incrementExternalPayloadUsedCount(task.getTaskDefName(), ExternalPayloadStorage.Operation.READ.name(), PayloadType.TASK_OUTPUT.name());
+            task.setOutputData(downloadFromExternalStorage(ExternalPayloadStorage.PayloadType.TASK_OUTPUT, task.getExternalOutputPayloadStoragePath()));
+            task.setExternalOutputPayloadStoragePath(null);
         }
     }
 
@@ -218,9 +223,13 @@ public class TaskClient extends ClientBase {
      * it is uploaded to {@link ExternalPayloadStorage}, if enabled, else the task is marked as FAILED_WITH_TERMINAL_ERROR.
      *
      * @param taskResult the {@link TaskResult} of the executed task to be updated.
-     * @param taskType   the type of the task
      */
-    public void updateTask(TaskResult taskResult, String taskType) {
+    public void updateTask(TaskResult taskResult) {
+        Preconditions.checkNotNull(taskResult, "Task result cannot be null");
+        postForEntityWithRequestOnly("tasks", taskResult);
+    }
+
+    public void evaluateAndUploadLargePayload(TaskResult taskResult, String taskType) {
         Preconditions.checkNotNull(taskResult, "Task result cannot be null");
         Preconditions.checkArgument(StringUtils.isBlank(taskResult.getExternalOutputPayloadStoragePath()), "External Storage Path must not be set");
 
@@ -228,7 +237,7 @@ public class TaskClient extends ClientBase {
             objectMapper.writeValue(byteArrayOutputStream, taskResult.getOutputData());
             byte[] taskOutputBytes = byteArrayOutputStream.toByteArray();
             long taskResultSize = taskOutputBytes.length;
-            WorkflowTaskMetrics.recordTaskResultPayloadSize(taskType, taskResultSize);
+            MetricsContainer.recordTaskResultPayloadSize(taskType, taskResultSize);
 
             long payloadSizeThreshold = conductorClientConfiguration.getTaskOutputPayloadThresholdKB() * 1024;
             if (taskResultSize > payloadSizeThreshold) {
@@ -238,7 +247,7 @@ public class TaskClient extends ClientBase {
                     taskResult.setStatus(TaskResult.Status.FAILED_WITH_TERMINAL_ERROR);
                     taskResult.setOutputData(null);
                 } else {
-                    WorkflowTaskMetrics.incrementExternalPayloadUsedCount(taskType, ExternalPayloadStorage.Operation.WRITE.name(), ExternalPayloadStorage.PayloadType.TASK_OUTPUT.name());
+                    MetricsContainer.incrementExternalPayloadUsedCount(taskType, ExternalPayloadStorage.Operation.WRITE.name(), ExternalPayloadStorage.PayloadType.TASK_OUTPUT.name());
                     String externalStoragePath = uploadToExternalPayloadStorage(ExternalPayloadStorage.PayloadType.TASK_OUTPUT, taskOutputBytes, taskResultSize);
                     taskResult.setExternalOutputPayloadStoragePath(externalStoragePath);
                     taskResult.setOutputData(null);
@@ -249,7 +258,6 @@ public class TaskClient extends ClientBase {
             logger.error(errorMsg, e);
             throw new ConductorClientException(errorMsg, e);
         }
-        postForEntityWithRequestOnly("tasks", taskResult);
     }
 
     /**

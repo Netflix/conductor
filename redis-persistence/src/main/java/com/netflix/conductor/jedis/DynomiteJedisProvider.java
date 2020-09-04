@@ -1,3 +1,15 @@
+/*
+ * Copyright 2019 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.netflix.conductor.jedis;
 
 import java.util.ArrayList;
@@ -19,22 +31,20 @@ import com.netflix.dyno.connectionpool.TokenMapSupplier;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.connectionpool.impl.lb.HostToken;
 import com.netflix.dyno.jedis.DynoJedisClient;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import redis.clients.jedis.JedisCommands;
+import redis.clients.jedis.commands.JedisCommands;
 
 public class DynomiteJedisProvider implements Provider<JedisCommands> {
 
         private static Logger logger = LoggerFactory.getLogger(DynomiteJedisProvider.class);
-        
+
         private final HostSupplier hostSupplier;
         private final TokenMapSupplier tokenMapSupplier;
         private final DynomiteConfiguration configuration;
         private CustomGeminiClusterConfig geminiConfig;
         private final boolean isClusterConfig;
-        
+
         @Inject
         public DynomiteJedisProvider(DynomiteConfiguration configuration, HostSupplier hostSupplier,
                         TokenMapSupplier tokenMapSupplier) {
@@ -62,8 +72,8 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
                 .setMaxConnsPerHost(
                         configuration.getMaxConnectionsPerHost()
                 );
-        
-                
+
+
         return new DynoJedisClient.Builder()
                 .withHostSupplier(hostSupplier)
                 .withApplicationName(configuration.getAppId())
