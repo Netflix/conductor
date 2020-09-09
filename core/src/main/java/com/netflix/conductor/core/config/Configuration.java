@@ -120,7 +120,7 @@ public interface Configuration {
     int WORKFLOW_ARCHIVAL_DELAY_QUEUE_WORKER_THREAD_COUNT_DEFAULT_VALUE = 5;
 
     String OWNER_EMAIL_MANDATORY_NAME = "workflow.owner.email.mandatory";
-    boolean OWNER_EMAIL_MANDATORY_DEFAULT_VALUE = true;
+    boolean OWNER_EMAIL_MANDATORY_DEFAULT_VALUE = false;
 
     String ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_PROPERTY_NAME = "workflow.elasticsearch.auto.index.management.enabled";
     boolean ELASTIC_SEARCH_AUTO_INDEX_MANAGEMENT_ENABLED_DEFAULT_VALUE = true;
