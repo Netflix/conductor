@@ -375,7 +375,7 @@ public class WorkflowExecutor {
         Workflow workflow = new Workflow();
         workflow.setWorkflowId(workflowId);
         workflow.setCorrelationId(correlationId);
-        workflow.setPriority(priority);
+        workflow.setPriority(priority == null ? 0 : priority);
         workflow.setWorkflowDefinition(workflowDefinition);
         workflow.setStatus(WorkflowStatus.RUNNING);
         workflow.setParentWorkflowId(parentWorkflowId);
