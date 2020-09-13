@@ -389,6 +389,12 @@ public class DeciderService {
 		}
 
 		long timeout = 1000 * taskType.getTimeoutSeconds();
+
+		WorkflowTask workflowTask = task.getWorkflowTask();
+		if (workflowTask != null && workflowTask.getTimeoutSeconds() > 0) {
+			timeout = 1000 * workflowTask.getTimeoutSeconds();
+		}
+
 		long now = System.currentTimeMillis();
 		long elapsedTime = now - (task.getStartTime() + (task.getStartDelayInSeconds()*1000));
 		
