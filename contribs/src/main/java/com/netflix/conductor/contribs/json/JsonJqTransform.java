@@ -25,7 +25,10 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
+import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.JsonQuery;
+import net.thisptr.jackson.jq.Scope;
+import net.thisptr.jackson.jq.Versions;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +49,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
     private static final String OUTPUT_RESULT = "result";
     private static final String OUTPUT_RESULT_LIST = "resultList";
     private static final String OUTPUT_ERROR = "error";
-
+    private final Scope rootScope;
     private final ObjectMapper objectMapper;
     private final LoadingCache<String, JsonQuery> queryCache = createQueryCache();
 
@@ -54,6 +57,8 @@ public class JsonJqTransform extends WorkflowSystemTask {
     public JsonJqTransform(ObjectMapper objectMapper) {
         super(NAME);
         this.objectMapper = objectMapper;
+        this.rootScope = Scope.newEmptyScope();
+        BuiltinFunctionLoader.getInstance().loadFunctions(Versions.JQ_1_6, rootScope);
     }
 
     @Override
@@ -72,7 +77,11 @@ public class JsonJqTransform extends WorkflowSystemTask {
         try {
             final JsonNode input = objectMapper.valueToTree(taskInput);
             final JsonQuery query = queryCache.get(queryExpression);
-            final List<JsonNode> result = query.apply(input);
+
+            final Scope childScope = Scope.newChildScope(rootScope);
+
+            final List<JsonNode> result = new ArrayList<>();
+            query.apply(childScope, input, result::add);
 
             task.setStatus(Task.Status.COMPLETED);
             if (result == null) {
@@ -98,7 +107,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
         final CacheLoader<String, JsonQuery> loader = new CacheLoader<String, JsonQuery>() {
             @Override
             public JsonQuery load(@Nonnull String query) throws JsonQueryException {
-                return JsonQuery.compile(query);
+                return JsonQuery.compile(query, Versions.JQ_1_6);
             }
         };
         return CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(1000).build(loader);
