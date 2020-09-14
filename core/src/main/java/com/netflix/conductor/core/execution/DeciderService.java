@@ -440,6 +440,9 @@ public class DeciderService {
 			try {
 				taskToSchedule.setTimeoutSeconds(Long.parseLong((String) input.get("timeoutSecondsOverride")));
 			}catch(NumberFormatException nfe){}
+
+			taskToSchedule.getInputParameters().remove("timeoutSecondsOverride");
+			input.remove("timeoutSecondsOverride");
 		}
 
 		Type tt = Type.USER_DEFINED;
