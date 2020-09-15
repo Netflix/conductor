@@ -24,6 +24,7 @@ import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.ScriptEvaluator;
@@ -35,6 +36,7 @@ import com.netflix.conductor.core.execution.WorkflowStatusListener;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +52,8 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 @Singleton
 public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusListener {
 	private static final Logger logger = LoggerFactory.getLogger(StatusEventPublisher.class);
+	private static final String JOB_ID_URN_PREFIX = "urn:deluxe:one-orders:deliveryjob:";
+	private static final String SHRLK_JOB_ID_URN_PREFIX = "urn:deluxe:sherlock:jobid:";
 
 	public enum StartEndState {
 		start, end
@@ -126,7 +130,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 				return;
 			}
 
-			sendMessage(doc, workflow.getTraceId(), workflow.getWorkflowId());
+			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow));
 		} catch (Exception ex) {
 			logger.debug("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
@@ -159,7 +163,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			// Feed preProcessed map as defaults so that already processed for JQ engine
 			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
 			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, task.getTaskId(), null, null);
-			sendMessage(doc, workflow.getTraceId(), workflow.getWorkflowId());
+			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow));
 		} catch (Exception ex) {
 			logger.debug("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
@@ -216,4 +220,31 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 				" for queue uri=" + queue.getURI() + ", payload=" + msg.getPayload());
 		}
 	}
+
+	private String getJMSXGroupId(Workflow workflow){
+		String jmsxGroupId = workflow.getWorkflowId();
+		String correlationId = workflow.getCorrelationId();
+		if ( StringUtils.isNotEmpty(correlationId)){
+			String jobId = getJobId(correlationId);
+			if ( StringUtils.isNotEmpty(jobId)){
+				jmsxGroupId = jobId;
+			}
+		}
+		return jmsxGroupId;
+	}
+
+	private String getJobId(String correlationId) {
+		Correlator correlator = new Correlator(logger, correlationId);
+
+		String jobIdUrn = correlator.getContext().getUrn(JOB_ID_URN_PREFIX);
+		if (StringUtils.isNotEmpty(jobIdUrn))
+			return jobIdUrn.substring(JOB_ID_URN_PREFIX.length());
+
+		String shrlkJobIdUrn = correlator.getContext().getUrn(SHRLK_JOB_ID_URN_PREFIX);
+		if (StringUtils.isNotEmpty(shrlkJobIdUrn))
+			return shrlkJobIdUrn.substring(SHRLK_JOB_ID_URN_PREFIX.length());
+
+		return null;
+	}
+
 }
