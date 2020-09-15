@@ -389,6 +389,12 @@ public class DeciderService {
 		}
 
 		long timeout = 1000 * taskType.getTimeoutSeconds();
+
+		WorkflowTask workflowTask = task.getWorkflowTask();
+		if (workflowTask != null && workflowTask.getTimeoutSeconds() > 0) {
+			timeout = 1000 * workflowTask.getTimeoutSeconds();
+		}
+
 		long now = System.currentTimeMillis();
 		long elapsedTime = now - (task.getStartTime() + (task.getStartDelayInSeconds()*1000));
 		
@@ -429,6 +435,16 @@ public class DeciderService {
 		
 		Task task = null;
 		Map<String, Object> input = getTaskInput(taskToSchedule.getInputParameters(), workflow, null, null);
+
+		if ( input.get("timeoutSecondsOverride") != null){
+			try {
+				taskToSchedule.setTimeoutSeconds(Long.parseLong((String) input.get("timeoutSecondsOverride")));
+			}catch(NumberFormatException nfe){}
+
+			taskToSchedule.getInputParameters().remove("timeoutSecondsOverride");
+			input.remove("timeoutSecondsOverride");
+		}
+
 		Type tt = Type.USER_DEFINED;
 		String type = taskToSchedule.getType();
 		if(Type.is(type)) {
