@@ -108,10 +108,10 @@ public class WorkflowTask {
 
 	private SubWorkflowParams timeOutWorkflow;
 
+	private String terminationStatus;
+
 	private Long timeoutSeconds;
 
-	private String terminationStatus;
-	
 	/**
 	 * @return the name
 	 */
@@ -449,7 +449,6 @@ public class WorkflowTask {
 	public void setTimeoutSeconds(Long timeoutSeconds) {
 		this.timeoutSeconds = timeoutSeconds;
 	}
-
 
 	private Collection<List<WorkflowTask>> children(){
 		Collection<List<WorkflowTask>> v1 = new LinkedList<>();

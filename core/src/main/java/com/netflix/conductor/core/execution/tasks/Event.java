@@ -20,7 +20,6 @@ package com.netflix.conductor.core.execution.tasks;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Injector;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
@@ -31,7 +30,6 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.service.MetadataService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +53,7 @@ public class Event extends WorkflowSystemTask {
 
 	public static final String NAME = "EVENT";
 	private static final String JOB_ID_URN_PREFIX = "urn:deluxe:one-orders:deliveryjob:";
+	private static final String SHRLK_JOB_ID_URN_PREFIX = "urn:deluxe:sherlock:jobid:";
 
 	@Inject
 	public Event(Configuration config) {
@@ -77,7 +76,7 @@ public class Event extends WorkflowSystemTask {
 		message.setTraceId(workflow.getTraceId());
 		if (useGroupId) {
 			message.setHeaders(new HashMap<String, String>(){{
-				put("JMSXGroupID", getJMXGroupId(workflow));
+				put("JMSXGroupID", getJMSXGroupId(workflow));
 			}});
 		}
 
@@ -163,7 +162,7 @@ public class Event extends WorkflowSystemTask {
 		return false;
 	}
 
-	private String getJMXGroupId(Workflow workflow){
+	private String getJMSXGroupId(Workflow workflow){
 		String jmsxGroupId = workflow.getWorkflowId();
 		String correlationId = workflow.getCorrelationId();
 		if ( StringUtils.isNotEmpty(correlationId)){
@@ -177,9 +176,15 @@ public class Event extends WorkflowSystemTask {
 
 	private String getJobId(String correlationId) {
 		Correlator correlator = new Correlator(logger, correlationId);
+
 		String jobIdUrn = correlator.getContext().getUrn(JOB_ID_URN_PREFIX);
 		if (StringUtils.isNotEmpty(jobIdUrn))
 			return jobIdUrn.substring(JOB_ID_URN_PREFIX.length());
+
+		String shrlkJobIdUrn = correlator.getContext().getUrn(SHRLK_JOB_ID_URN_PREFIX);
+		if (StringUtils.isNotEmpty(shrlkJobIdUrn))
+			return shrlkJobIdUrn.substring(SHRLK_JOB_ID_URN_PREFIX.length());
+
 		return null;
 	}
 
