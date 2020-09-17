@@ -391,7 +391,7 @@ public class DeciderService {
 		long timeout = 1000 * taskType.getTimeoutSeconds();
 
 		WorkflowTask workflowTask = task.getWorkflowTask();
-		if (workflowTask != null && workflowTask.getTimeoutSeconds() > 0) {
+		if (workflowTask != null && workflowTask.getTimeoutSeconds() != null && workflowTask.getTimeoutSeconds() > 0) {
 			timeout = 1000 * workflowTask.getTimeoutSeconds();
 		}
 
