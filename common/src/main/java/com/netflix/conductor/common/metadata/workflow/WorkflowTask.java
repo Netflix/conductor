@@ -108,7 +108,7 @@ public class WorkflowTask {
 
 	private SubWorkflowParams timeOutWorkflow;
 
-	private Long timeoutSeconds;
+	private long timeoutSeconds;
 
 	private String terminationStatus;
 	
@@ -442,9 +442,13 @@ public class WorkflowTask {
 		this.defaults = defaults;
 	}
 
-	public Long getTimeoutSeconds() { return timeoutSeconds; }
+	public long getTimeoutSeconds() {
+		return timeoutSeconds;
+	}
 
-	public void setTimeoutSeconds(Long timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
+	public void setTimeoutSeconds(long timeoutSeconds) {
+		this.timeoutSeconds = timeoutSeconds;
+	}
 
 
 	private Collection<List<WorkflowTask>> children(){
