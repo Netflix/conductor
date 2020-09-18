@@ -438,7 +438,7 @@ public class DeciderService {
 
 		if ( input.get("timeoutSecondsOverride") != null){
 			try {
-				taskToSchedule.setTimeoutSeconds(Long.parseLong((String) input.get("timeoutSecondsOverride")));
+				taskToSchedule.setTimeoutSeconds(Long.parseLong(String.valueOf(input.get("timeoutSecondsOverride"))));
 			}catch(NumberFormatException nfe){}
 
 			taskToSchedule.getInputParameters().remove("timeoutSecondsOverride");
