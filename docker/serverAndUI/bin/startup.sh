@@ -28,4 +28,4 @@ if [ -z "$CONFIG_PROP" ];
     export config_file=/app/config/$CONFIG_PROP
 fi
 
-nohup java -jar conductor-server-*-all.jar $config_file 1>&2 > /app/logs/server.log
+nohup java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -jar conductor-server-*-all.jar $config_file 1>&2 > /app/logs/server.log
