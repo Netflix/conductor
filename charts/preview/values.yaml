@@ -29,7 +29,7 @@ netflix-conductor:
     loadSamples: true
 #    podAnnotations:
 #     iam.amazonaws.com/role: conductor-role
-    replicaCount: 2
+    replicaCount: 1
     ingress:
       annotations:
         fabric8.io/expose: "true"
