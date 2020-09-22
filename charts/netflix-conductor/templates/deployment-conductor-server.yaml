@@ -1,4 +1,8 @@
-apiVersion: apps/v1beta2
+{{- if .Capabilities.APIVersions.Has "apps/v1" }}
+apiVersion: apps/v1
+  {{- else }}
+apiVersion: apps/v1beta1
+  {{- end }}
 kind: Deployment
 metadata:
   name: {{ include "netflix-conductor.name" . }}-server
@@ -113,7 +117,7 @@ spec:
 {{- end }}
       volumes:
         - name: conductor-server-config
-          configMap: 
+          configMap:
             name: {{ template "netflix-conductor.name" . }}-config
             items:
             - key: conductor-config.properties
