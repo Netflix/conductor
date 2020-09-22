@@ -32,7 +32,8 @@ pipeline {
                     sh "cp -v server/src/main/resources/kitchensinkpreview.json server/src/main/resources/kitchensink.json"
                     sh "skaffold version && ./gradlew build -w -x test -x :conductor-client:findbugsMain "
                     sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-server.yaml && skaffold build -f skaffold-ui.yaml"
-                    sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-all.yaml"
+                    // Comment out skaffold build all
+                    // sh "export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold-all.yaml"
 
                     script {
                         def buildVersion = readFile "${env.WORKSPACE}/PREVIEW_VERSION"
