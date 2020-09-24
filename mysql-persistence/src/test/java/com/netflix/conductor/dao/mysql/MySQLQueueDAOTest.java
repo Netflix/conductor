@@ -309,6 +309,6 @@ public class MySQLQueueDAOTest {
 
 		Long size = dao.queuesDetail().get(queueName);
 		assertNotNull(size);
-		assertEquals(size.longValue(), 5);
+		assertEquals(size.longValue(), 6);
 	}
 }
