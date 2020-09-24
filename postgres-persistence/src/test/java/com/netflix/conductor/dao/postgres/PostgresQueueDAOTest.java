@@ -321,7 +321,6 @@ public class PostgresQueueDAOTest {
 
 		Long size = dao.queuesDetail().get(queueName);
 		assertNotNull(size);
-System.out.println("****************** size: " + size);		
 		assertEquals(size.longValue(), count - unackedCount);
 	}
 }
