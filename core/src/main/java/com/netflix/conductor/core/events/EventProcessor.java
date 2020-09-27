@@ -340,6 +340,7 @@ public class EventProcessor {
 			// if no tags for all handlers - ack message
 			if (retryEnabled && tagsNotMatchCounter > 0 && tagsMatchCounter == 0) {
 				logger.debug("No running workflows for the tags. Ack for " + msg.getReceipt());
+				logger.info("Message Trace 1 Acking Message " + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 				return;
 			}
@@ -358,19 +359,23 @@ public class EventProcessor {
 			// Ack for legacy mode or when no actions submitted (e.g. handler/actions did not match payload)
 			if (!retryEnabled || futures.isEmpty()) {
 				logger.debug("Ack for messageId=" + msg.getReceipt());
+				logger.info("Message Trace 2 Acking Message " + msg.getReceipt());
 				queue.ack(Collections.singletonList(msg));
 			} else {
 				// Any action succeeded
 				if (anySuccess) {
 					logger.debug("Processed. Ack for messageId=" + msg.getReceipt());
+					logger.info("Message Trace 3 Acking Message " + msg.getReceipt());
 					queue.ack(Collections.singletonList(msg));
 				} else {
 					logger.debug("Redelivery needed. Unack for messageId=" + msg.getReceipt());
+					logger.info("Message Trace 21 UNACK Message " + msg.getReceipt());
 					queue.unack(Collections.singletonList(msg));
 				}
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage() + " occurred for " + msg.getPayload(), e);
+			logger.info("Message Trace 22 UNACK Message " + msg.getReceipt());
 			queue.unack(Collections.singletonList(msg));
 		}
 	}
