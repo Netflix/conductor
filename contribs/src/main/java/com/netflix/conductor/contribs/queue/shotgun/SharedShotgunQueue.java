@@ -204,7 +204,7 @@ public class SharedShotgunQueue implements ObservableQueue {
             dstMsg.setReceived(System.currentTimeMillis());
             dstMsg.setTraceId(message.getTraceID());
 
-            logger.info(String.format("Message Trace Received message for %s/%s/%s %s=%s",
+            logger.info(String.format("ShotgunMsg: Received message for %s/%s/%s %s=%s",
                 subscription.getSubject(), subscription.getGroupID(), message.getTraceID(), dstMsg.getId(), payload));
 
             if (handler != null) {
@@ -212,11 +212,11 @@ public class SharedShotgunQueue implements ObservableQueue {
             } else {
                 ack(Collections.singletonList(dstMsg));
                 logger.debug("No handler - ack " + dstMsg.getReceipt());
-                logger.info("Message Trace 31 Acking Message " + dstMsg.getReceipt());
+                logger.info("ShotgunMsg:q: ACKing Message - No Handler " + dstMsg.getReceipt());
             }
         } catch (Exception ex) {
             logger.debug("onMessage failed " + ex.getMessage(), ex);
-            logger.info("Message Trace 31 UNACK Message " + ex.getMessage(), ex);
+            logger.info("ShotgunMsg:q: UNACK Message.. Exception" + ex.getMessage(), ex);
             unack(message.getID());
         } finally {
             NDC.remove();
