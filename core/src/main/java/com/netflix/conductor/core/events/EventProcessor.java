@@ -375,7 +375,7 @@ public class EventProcessor {
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage() + " occurred for " + msg.getPayload(), e);
-			logger.info("Message Trace 22 UNACK Message " + msg.getReceipt());
+			logger.info("Message Trace 22 UNACK Message " + msg.getReceipt(), e);
 			queue.unack(Collections.singletonList(msg));
 		}
 	}
