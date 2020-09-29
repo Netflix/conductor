@@ -21,22 +21,22 @@ public class DbLogJob extends AbstractJob {
 
 	@Override
 	public void cleanup() {
-		logger.debug("Starting db log job");
+		logger.info("Starting db log job");
 		try {
 			AppConfig config = AppConfig.getInstance();
 			int batchSize = config.batchSize();
 			Timestamp endTime = new Timestamp(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.keepDays()));
-			logger.debug("Deleting records earlier than " + endTime + ", batch size = " + batchSize);
+			logger.info("Deleting records earlier than " + endTime + ", batch size = " + batchSize);
 
 			int deleted = 0;
 			List<Integer> ids = fetchIds(QUERY, endTime, batchSize);
 			while (isNotEmpty(ids)) {
 				deleted += deleteByIds("log4j_logs", ids);
-				logger.debug("Db log job deleted " + deleted);
+				logger.info("Db log job deleted " + deleted);
 
 				ids = fetchIds(QUERY, endTime, batchSize);
 			}
-			logger.debug("Finished db log job");
+			logger.info("Finished db log job");
 		} catch (Exception ex) {
 			logger.error("DbLog job failed " + ex.getMessage(), ex);
 		}

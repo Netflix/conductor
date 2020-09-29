@@ -21,22 +21,22 @@ public class EventMesgsJob extends AbstractJob {
 
 	@Override
 	public void cleanup() {
-		logger.debug("Starting event message job");
+		logger.info("Starting event message job");
 		try {
 			AppConfig config = AppConfig.getInstance();
 			int batchSize = config.batchSize();
 			Timestamp endTime = new Timestamp(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.keepDays()));
-			logger.debug("Deleting records earlier than " + endTime + ", batch size = " + batchSize);
+			logger.info("Deleting records earlier than " + endTime + ", batch size = " + batchSize);
 
 			int deleted = 0;
 			List<Integer> ids = fetchIds(QUERY, endTime, batchSize);
 			while (isNotEmpty(ids)) {
 				deleted += deleteByIds("event_message", ids);
-				logger.debug("EventMesgs job deleted " + deleted);
+				logger.info("EventMesgs job deleted " + deleted);
 
 				ids = fetchIds(QUERY, endTime, batchSize);
 			}
-			logger.debug("Finished event message job");
+			logger.info("Finished event message job");
 		} catch (Exception ex) {
 			logger.error("EventMesgs job failed " + ex.getMessage(), ex);
 		}
