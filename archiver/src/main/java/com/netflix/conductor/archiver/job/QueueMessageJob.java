@@ -13,12 +13,6 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 public class QueueMessageJob extends AbstractJob {
     private static final Logger logger = LogManager.getLogger(QueueMessageJob.class);
-    private static final String QUERY = "select id from queue_message qm\n" +
-            "where qm.queue_name in ('_deciderqueue', '_sweeperqueue')\n" +
-            "and qm.message_id in (select wf.workflow_id from workflow wf\n" +
-            "where wf.workflow_type in ('deluxe.dependencygraph.sourcewait.process.1.0', 'deluxe.dependencygraph.sourcewait.process.1.1',\n" +
-            "'deluxe.dependencygraph.source_wait.sherlock.1.0', 'deluxe.dependencygraph.source_wait.sherlock.1.1')) LIMIT ?";
-
     public QueueMessageJob(HikariDataSource dataSource) {
         super(dataSource);
     }
@@ -28,6 +22,11 @@ public class QueueMessageJob extends AbstractJob {
         logger.info("Starting QueueMessageJob");
         try {
             AppConfig config = AppConfig.getInstance();
+            String cleanupWorkflows = config.cleanupMessageWorkflows();
+            String QUERY = "select id from queue_message qm\n" +
+                    "where qm.queue_name in ('_deciderqueue', '_sweeperqueue')\n" +
+                    "and qm.message_id in (select wf.workflow_id from workflow wf\n" +
+                    "where wf.workflow_type in ("+cleanupWorkflows+")) LIMIT ?";
             int batchSize = config.batchSize();
             logger.info("Deleting records with batch size = " + batchSize);
 

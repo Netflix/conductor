@@ -41,6 +41,10 @@ public class AppConfig {
 		return config.getInt("keep_days", 30);
 	}
 
+	public String cleanupMessageWorkflows() {
+		return config.getString("cleanup_message_workflows", "'deluxe.dependencygraph.sourcewait.process.1.0', 'deluxe.dependencygraph.sourcewait.process.1.1','deluxe.dependencygraph.source_wait.sherlock.1.0', 'deluxe.dependencygraph.source_wait.sherlock.1.1'");
+	}
+
 	public String auroraHost() {
 		return config.getString("aurora_host");
 	}
