@@ -12,14 +12,14 @@ import java.util.concurrent.TimeUnit;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 
 public class QueueMessageJob extends AbstractJob {
-    private static final Logger logger = LogManager.getLogger(DbLogJob.class);
+    private static final Logger logger = LogManager.getLogger(QueueMessageJob.class);
     private static final String QUERY = "select id from queue_message qm\n" +
             "where qm.queue_name in ('_deciderqueue', '_sweeperqueue')\n" +
             "and qm.message_id in (select wf.workflow_id from workflow wf\n" +
             "where wf.workflow_type in ('deluxe.dependencygraph.sourcewait.process.1.0', 'deluxe.dependencygraph.sourcewait.process.1.1',\n" +
             "'deluxe.dependencygraph.source_wait.sherlock.1.0', 'deluxe.dependencygraph.source_wait.sherlock.1.1')) LIMIT ?";
 
-    public DbLogJob(HikariDataSource dataSource) {
+    public QueueMessageJob(HikariDataSource dataSource) {
         super(dataSource);
     }
 
@@ -29,8 +29,7 @@ public class QueueMessageJob extends AbstractJob {
         try {
             AppConfig config = AppConfig.getInstance();
             int batchSize = config.batchSize();
-            Timestamp endTime = new Timestamp(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(config.keepDays()));
-            logger.info("Deleting records earlier than " + endTime + ", batch size = " + batchSize);
+            logger.info("Deleting records with batch size = " + batchSize);
 
             int deleted = 0;
             List<Integer> ids = fetchIds(QUERY, batchSize);
@@ -38,7 +37,7 @@ public class QueueMessageJob extends AbstractJob {
                 deleted += deleteByIds("queue_message", ids);
                 logger.info("QueueMessageJob deleted " + deleted);
 
-                ids = fetchIds(QUERY, endTime, batchSize);
+                ids = fetchIds(QUERY, batchSize);
             }
             logger.info("Finished QueueMessageJob");
         } catch (Exception ex) {
