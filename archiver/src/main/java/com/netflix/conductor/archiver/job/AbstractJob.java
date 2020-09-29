@@ -29,6 +29,20 @@ public abstract class AbstractJob {
         return result;
     }
 
+    List<Integer> fetchIds(String query, int limit) throws SQLException {
+        LinkedList<Integer> result = new LinkedList<>();
+        try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(query)) {
+            st.setInt(2, limit);
+
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getInt("id"));
+                }
+            }
+        }
+        return result;
+    }
+
     int deleteByIds(String table, List<Integer> ids) throws SQLException {
         String query = String.format(DELETE, table);
 
