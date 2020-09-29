@@ -32,7 +32,7 @@ public abstract class AbstractJob {
     List<Integer> fetchIds(String query, int limit) throws SQLException {
         LinkedList<Integer> result = new LinkedList<>();
         try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(query)) {
-            st.setInt(2, limit);
+            st.setInt(1, limit);
 
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
