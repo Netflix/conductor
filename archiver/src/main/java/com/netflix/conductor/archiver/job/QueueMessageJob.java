@@ -35,7 +35,7 @@ public class QueueMessageJob extends AbstractJob {
             List<Integer> ids = fetchIds(QUERY, batchSize);
             while (isNotEmpty(ids)) {
                 deleted += deleteByIds("queue_message", ids);
-                logger.info("QueueMessageJob deleted " + deleted);
+                logger.debug("QueueMessageJob deleted " + deleted);
 
                 ids = fetchIds(QUERY, batchSize);
             }
