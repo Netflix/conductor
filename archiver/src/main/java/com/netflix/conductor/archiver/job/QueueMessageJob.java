@@ -26,17 +26,17 @@ public class QueueMessageJob extends AbstractJob {
             String QUERY = "select id from queue_message qm\n" +
                     "where qm.queue_name in ('_deciderqueue', '_sweeperqueue')\n" +
                     "and qm.message_id in (select wf.workflow_id from workflow wf\n" +
-                    "where wf.workflow_type in ("+cleanupWorkflows+")) LIMIT ?";
+                    "where wf.workflow_type in (?)) LIMIT ?";
             int batchSize = config.batchSize();
             logger.info("Deleting records with batch size = " + batchSize);
 
             int deleted = 0;
-            List<Integer> ids = fetchIds(QUERY, batchSize);
+            List<Integer> ids = fetchIds(QUERY, cleanupWorkflows,batchSize);
             while (isNotEmpty(ids)) {
                 deleted += deleteByIds("queue_message", ids);
                 logger.debug("QueueMessageJob deleted " + deleted);
 
-                ids = fetchIds(QUERY, batchSize);
+                ids = fetchIds(QUERY, cleanupWorkflows, batchSize);
             }
             logger.info("Finished QueueMessageJob");
         } catch (Exception ex) {

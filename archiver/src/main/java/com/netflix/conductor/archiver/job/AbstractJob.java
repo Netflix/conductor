@@ -29,10 +29,11 @@ public abstract class AbstractJob {
         return result;
     }
 
-    List<Integer> fetchIds(String query, int limit) throws SQLException {
+    List<Integer> fetchIds(String query,String cleanupWorkflows, int limit) throws SQLException {
         LinkedList<Integer> result = new LinkedList<>();
         try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(query)) {
-            st.setInt(1, limit);
+            st.setString(1, cleanupWorkflows);
+            st.setInt(2, limit);
 
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
