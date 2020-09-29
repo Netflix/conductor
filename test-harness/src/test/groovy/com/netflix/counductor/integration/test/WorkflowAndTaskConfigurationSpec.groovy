@@ -24,6 +24,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask
 import com.netflix.conductor.common.run.Workflow
 import com.netflix.conductor.core.execution.WorkflowExecutor
+import com.netflix.conductor.core.execution.WorkflowRepairService
 import com.netflix.conductor.core.execution.WorkflowSweeper
 import com.netflix.conductor.dao.QueueDAO
 import com.netflix.conductor.service.ExecutionService
@@ -52,6 +53,9 @@ class WorkflowAndTaskConfigurationSpec extends Specification {
 
     @Inject
     WorkflowSweeper workflowSweeper
+
+    @Inject
+    WorkflowRepairService workflowRepairService
 
     @Inject
     WorkflowTestUtil workflowTestUtil
@@ -203,7 +207,7 @@ class WorkflowAndTaskConfigurationSpec extends Specification {
 
         when: "There is a delay of 3 seconds introduced and the workflow is sweeped to run the evaluation"
         Thread.sleep(3000)
-        workflowSweeper.sweep([workflowInstanceId], workflowExecutor)
+        workflowSweeper.sweep([workflowInstanceId], workflowExecutor, workflowRepairService)
 
         then: "Ensure that the first task has been TIMED OUT and the next task is SCHEDULED"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -226,7 +230,7 @@ class WorkflowAndTaskConfigurationSpec extends Specification {
 
         when: "There is a delay of 3 seconds introduced and the workflow is swept to run the evaluation"
         Thread.sleep(3000)
-        workflowSweeper.sweep([workflowInstanceId], workflowExecutor)
+        workflowSweeper.sweep([workflowInstanceId], workflowExecutor, workflowRepairService)
 
         then: "Ensure that the first task has been TIMED OUT and the next task is SCHEDULED"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -280,7 +284,7 @@ class WorkflowAndTaskConfigurationSpec extends Specification {
 
         when: "There is a delay of 6 seconds introduced and the workflow is swept to run the evaluation"
         Thread.sleep(6000)
-        workflowSweeper.sweep([workflowInstanceId], workflowExecutor)
+        workflowSweeper.sweep([workflowInstanceId], workflowExecutor, workflowRepairService)
 
         then: "Ensure that the workflow has timed out"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -288,6 +292,73 @@ class WorkflowAndTaskConfigurationSpec extends Specification {
             tasks.size() == 1
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.CANCELED
+        }
+
+        cleanup: "Ensure that the workflow configuration changes are reverted"
+        testWorkflowDefinition.timeoutPolicy = WorkflowDef.TimeoutPolicy.ALERT_ONLY
+        testWorkflowDefinition.timeoutSeconds = 0
+        metadataService.updateWorkflowDef(testWorkflowDefinition)
+    }
+
+    def "Test retrying a timed out workflow due to workflow timeout"() {
+        setup: "Get the workflow definition and change the workflow configuration"
+        def testWorkflowDefinition = metadataService.getWorkflowDef(TEST_WORKFLOW, 1)
+        testWorkflowDefinition.timeoutPolicy = WorkflowDef.TimeoutPolicy.TIME_OUT_WF
+        testWorkflowDefinition.timeoutSeconds = 5
+        metadataService.updateWorkflowDef(testWorkflowDefinition)
+
+        when: "A simple workflow is started that has a workflow timeout configured"
+        String correlationId = 'retry_timeout_wf'
+        def input = new HashMap()
+        String inputParam1 = 'p1 value'
+        input['param1'] = inputParam1
+        input['param2'] = 'p2 value'
+
+        def workflowInstanceId = workflowExecutor.startWorkflow(TEST_WORKFLOW, 1,
+                correlationId, input, null, null, null)
+
+        then: "Ensure that the workflow has started"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 1
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.SCHEDULED
+        }
+
+        when: "The the first task 'integration_task_1' is polled and acknowledged"
+        def task1Try1 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
+        def task1Try1Acknowledgment = workflowExecutionService.ackTaskReceived(task1Try1)
+
+        then: "Ensure that a task was polled"
+        task1Try1
+        task1Try1.workflowInstanceId == workflowInstanceId
+        task1Try1Acknowledgment
+
+        when: "There is a delay of 6 seconds introduced and the workflow is swept to run the evaluation"
+        Thread.sleep(6000)
+        workflowSweeper.sweep([workflowInstanceId], workflowExecutor, workflowRepairService)
+
+        then: "Ensure that the workflow has timed out"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.TIMED_OUT
+            lastRetriedTime == 0
+            tasks.size() == 1
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.CANCELED
+        }
+
+        when: "Retrying the workflow"
+        workflowExecutor.retry(workflowInstanceId)
+
+        then: "Ensure that the workflow is RUNNING and task is retried"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            lastRetriedTime != 0
+            tasks.size() == 2
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.CANCELED
+            tasks[1].taskType == 'integration_task_1'
+            tasks[1].status == Task.Status.SCHEDULED
         }
 
         cleanup: "Ensure that the workflow configuration changes are reverted"
