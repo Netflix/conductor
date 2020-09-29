@@ -25,21 +25,21 @@ public class QueueMessageJob extends AbstractJob {
 
     @Override
     public void cleanup() {
-        logger.info("Starting QueueMessageJob");
+        logger.debug("Starting QueueMessageJob");
         try {
             AppConfig config = AppConfig.getInstance();
             int batchSize = config.batchSize();
-            logger.info("Deleting records with batch size = " + batchSize);
+            logger.debug("Deleting records with batch size = " + batchSize);
 
             int deleted = 0;
             List<Integer> ids = fetchIds(QUERY, batchSize);
             while (isNotEmpty(ids)) {
                 deleted += deleteByIds("queue_message", ids);
-                logger.info("QueueMessageJob deleted " + deleted);
+                logger.debug("QueueMessageJob deleted " + deleted);
 
                 ids = fetchIds(QUERY, batchSize);
             }
-            logger.info("Finished QueueMessageJob");
+            logger.debug("Finished QueueMessageJob");
         } catch (Exception ex) {
             logger.error("QueueMessageJob failed " + ex.getMessage(), ex);
         }

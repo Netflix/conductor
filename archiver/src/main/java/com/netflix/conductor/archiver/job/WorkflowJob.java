@@ -31,7 +31,7 @@ public class WorkflowJob extends AbstractJob {
 	@Override
 	public void cleanup() {
 		endTime = System.currentTimeMillis() - Duration.ofDays(config.keepDays()).toMillis();
-		logger.info("Starting with keepDays " + config.keepDays() + ", endTime " + new Timestamp(endTime));
+		logger.debug("Starting with keepDays " + config.keepDays() + ", endTime " + new Timestamp(endTime));
 
 		// Start workers
 		startWorkers();
@@ -72,7 +72,7 @@ public class WorkflowJob extends AbstractJob {
 					}
 				}
 			}
-			logger.info("No workflows left to process. Finishing " + Thread.currentThread().getName());
+			logger.debug("No workflows left to process. Finishing " + Thread.currentThread().getName());
 			latch.countDown();
 		};
 
@@ -95,7 +95,7 @@ public class WorkflowJob extends AbstractJob {
 				workflowQueue.add(workflowId);
 				totalHits++;
 			}
-			logger.info("Found " + totalHits + " root level workflows to be deleted");
+			logger.debug("Found " + totalHits + " root level workflows to be deleted");
 		} catch (Exception ex) {
 			keepPooling.set(false);
 			logger.error("grabWorkflows failed with " + ex.getMessage(), ex);
@@ -106,7 +106,7 @@ public class WorkflowJob extends AbstractJob {
 	private void waitWorkflows() {
 		int size;
 		while ((size = workflowQueue.size()) > 0) {
-			logger.info("Waiting ... workflows left " + size);
+			logger.debug("Waiting ... workflows left " + size);
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
@@ -115,7 +115,7 @@ public class WorkflowJob extends AbstractJob {
 		}
 
 		keepPooling.set(false);
-		logger.info("Waiting for workers to complete");
+		logger.debug("Waiting for workers to complete");
 		try {
 			latch.await();
 		} catch (InterruptedException e) {
