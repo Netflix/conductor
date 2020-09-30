@@ -23,12 +23,14 @@ import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.dao.ExecutionDAO;
+import com.netflix.conductor.dao.SemaphoreDAO;
 import com.netflix.conductor.dyno.DynoProxy;
 import com.netflix.conductor.metrics.Monitors;
 import org.slf4j.Logger;
@@ -70,11 +72,25 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 
 	private final static String EVENT_EXECUTION = "EVENT_EXECUTION";
 
+	private boolean enableLocalTaskConcurrentExecLimit;
+	private boolean enableGlobalTaskConcurrentExecLimit;
+	private String executionLimitingSemaphoreName;
+
+	private SemaphoreDAO semaphoreDAO;
+
 	@Inject
-	public RedisExecutionDAO(DynoProxy dynoClient, ObjectMapper objectMapper, Configuration config) {
+	public RedisExecutionDAO(DynoProxy dynoClient, ObjectMapper objectMapper, Configuration config,
+			SemaphoreDAO semaphoreDAO) {
 		super(dynoClient, objectMapper, config);
+		this.semaphoreDAO = semaphoreDAO;
 
 		ttlEventExecutionSeconds = config.getEventExecutionPersistenceTTL();
+		enableGlobalTaskConcurrentExecLimit = Boolean.parseBoolean(config.getProperty(
+			"workflow.execution.enableGlobalTaskConcurrentExecLimit", "false"));
+		enableLocalTaskConcurrentExecLimit = Boolean.parseBoolean(config.getProperty(
+			"workflow.execution.enableLocalTaskConcurrentExecLimit", "false"));
+		executionLimitingSemaphoreName = config.getProperty(
+			"workflow.execution.executionLimitingSemaphoreName", "task_exec_semaphore_");
 	}
 
 	@Override
@@ -187,6 +203,15 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			dynoClient.srem(nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getTaskId());
 			logger.debug("Workflow Task removed from TASKS_IN_PROGRESS_STATUS with tasksInProgressKey: {}, workflowId: {}, taskId: {}, taskType: {}, taskStatus: {} during updateTask",
 					nsKey(IN_PROGRESS_TASKS, task.getTaskDefName()), task.getWorkflowInstanceId(), task.getTaskId(), task.getTaskType(), task.getStatus().name());
+			if(enableGlobalTaskConcurrentExecLimit || enableLocalTaskConcurrentExecLimit){
+				WorkflowTask wfTask = task.getWorkflowTask();
+				if(enableGlobalTaskConcurrentExecLimit && wfTask.getGlobalConcurrentExecutionLimit() > 0) {
+					semaphoreDAO.release(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId())
+				}
+				if(enableLocalTaskConcurrentExecLimit && wfTask.getLocalConcurrentExecutionLimit() > 0) {
+					semaphoreDAO.release(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId())
+				}
+			}
 		}
 
         Set<String> taskIds = dynoClient.smembers(nsKey(WORKFLOW_TO_TASKS, task.getWorkflowInstanceId()));
@@ -212,6 +237,16 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			logger.info("Task execution count limited. task - {}:{}, limit: {}, current: {}", task.getTaskId(), task.getTaskDefName(), limit, current);
 			Monitors.recordTaskConcurrentExecutionLimited(task.getTaskDefName(), limit);
 			return true;
+		}
+
+		if(enableGlobalTaskConcurrentExecLimit || enableLocalTaskConcurrentExecLimit) {
+			WorkflowTask wfTask = task.getWorkflowTask();
+			if(enableGlobalTaskConcurrentExecLimit && wfTask.getGlobalConcurrentExecutionLimit() > 0) {
+				return !semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId(), wfTask.getGlobalConcurrentExecutionLimit(), taskDefinition.orElseThrow().getTimeoutSeconds());
+			}
+			if(enableLocalTaskConcurrentExecLimit && wfTask.getLocalConcurrentExecutionLimit() > 0) {
+				return !semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId(), wfTask.getGlobalConcurrentExecutionLimit(), taskDefinition.orElseThrow().getTimeoutSeconds());
+			}
 		}
 
 		String rateLimitKey = nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName());
