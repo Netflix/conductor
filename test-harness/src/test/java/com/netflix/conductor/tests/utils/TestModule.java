@@ -29,11 +29,13 @@ import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.PollDataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.dao.RateLimitingDAO;
+import com.netflix.conductor.dao.SemaphoreDAO;
 import com.netflix.conductor.dao.dynomite.RedisEventHandlerDAO;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.RedisPollDataDAO;
 import com.netflix.conductor.dao.dynomite.RedisRateLimitingDAO;
+import com.netflix.conductor.dao.dynomite.RedisSemaphoreDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
 import com.netflix.conductor.dyno.RedisQueuesProvider;
 import com.netflix.conductor.dyno.RedisQueuesShardingStrategyProvider;
@@ -74,6 +76,7 @@ public class TestModule extends AbstractModule {
         bind(EventHandlerDAO.class).to(RedisEventHandlerDAO.class);
         bind(PollDataDAO.class).to(RedisPollDataDAO.class);
         bind(IndexDAO.class).to(MockIndexDAO.class);
+        bind(SemaphoreDAO.class).to(RedisSemaphoreDAO.class);
         configureQueueDAO();
 
         bind(WorkflowStatusListener.class).to(WorkflowStatusListenerStub.class);
