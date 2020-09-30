@@ -96,8 +96,10 @@ public class SubWorkflowParamsTest {
             "      \"defaultCase\" : [ ],\n" +
             "      \"defaultExclusiveJoinTask\" : [ ],\n" +
             "      \"forkTasks\" : [ ],\n" +
+            "      \"globalConcurrentExecutionLimit\" : 0,\n" +
             "      \"inputParameters\" : { },\n" +
             "      \"joinOn\" : [ ],\n" +
+            "      \"localConcurrentExecutionLimit\" : 0,\n" +
             "      \"loopOver\" : [ ],\n" +
             "      \"name\" : \"test_task\",\n" +
             "      \"optional\" : false,\n" +
