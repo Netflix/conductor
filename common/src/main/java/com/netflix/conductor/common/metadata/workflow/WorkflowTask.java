@@ -95,12 +95,6 @@ public class WorkflowTask {
 	@ProtoField(id = 22)
 	private String scriptExpression;
 
-	@ProtoField(id = 23)
-    private int limitConcurrentExecutionsGlobally;
-
-    @ProtoField(id = 24)
-    private int limitConcurrentExecutionsLocally;
-
 	@ProtoMessage(wrapper = true)
 	public static class WorkflowTaskList {
 		public List<WorkflowTask> getTasks() {
