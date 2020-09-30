@@ -39,8 +39,8 @@ public class PostgresDataSourceProvider implements Provider<DataSource> {
     public DataSource get() {
         HikariDataSource dataSource = null;
         try {
+            flywayMigrate();
             dataSource = new HikariDataSource(createConfiguration());
-            flywayMigrate(dataSource);
             return dataSource;
         } catch (final Throwable t) {
             if(null != dataSource && !dataSource.isClosed()){
@@ -74,7 +74,7 @@ public class PostgresDataSourceProvider implements Provider<DataSource> {
         return cfg;
     }
     // TODO Move this into a class that has complete lifecycle for the connection, i.e. startup and shutdown.
-    private void flywayMigrate(DataSource dataSource) {
+    private void flywayMigrate() {
         boolean enabled = configuration.isFlywayEnabled();
         if (!enabled) {
             logger.debug("Flyway migrations are disabled");
@@ -87,10 +87,12 @@ public class PostgresDataSourceProvider implements Provider<DataSource> {
             logger.debug("Using Flyway migration table '{}'", tableName);
             flyway.setTable(tableName);
         });
-
+        flyway.setBaselineOnMigrate(true);
         flyway.setLocations(Paths.get("db","migration_postgres").toString());
-        flyway.setDataSource(dataSource);
-        flyway.setPlaceholderReplacement(false);
+        flyway.setDataSource(configuration.getJdbcUrl(), configuration.getJdbcUserName(), configuration.getJdbcPassword());
+        flyway.setTable("schema_version");
+        flyway.setSchemas("conductor");
+        flyway.repair();
         flyway.migrate();
     }
 }
