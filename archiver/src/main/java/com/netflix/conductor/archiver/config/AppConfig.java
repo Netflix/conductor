@@ -42,7 +42,7 @@ public class AppConfig {
 	}
 
 	public String cleanupMessageWorkflows() {
-		return config.getString("cleanup_message_workflows");
+		return config.getString("cleanup_message_workflows","");
 	}
 
 	public String auroraHost() {
