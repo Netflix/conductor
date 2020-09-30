@@ -21,6 +21,7 @@ import com.netflix.conductor.config.TestConfiguration;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.ExecutionDAOTest;
+import com.netflix.conductor.dao.SemaphoreDAO;
 import com.netflix.conductor.dao.redis.JedisMock;
 import com.netflix.conductor.dyno.DynoProxy;
 import org.junit.Before;
@@ -52,8 +53,9 @@ public class RedisExecutionDAOTest extends ExecutionDAOTest {
         Configuration config = new TestConfiguration();
         JedisCommands jedisMock = new JedisMock();
         DynoProxy dynoClient = new DynoProxy(jedisMock);
+        SemaphoreDAO sem = new RedisSemaphoreDAO(dynoClient, objectMapper, config);
 
-        executionDAO = new RedisExecutionDAO(dynoClient, objectMapper, config);
+        executionDAO = new RedisExecutionDAO(dynoClient, objectMapper, config, sem);
     }
 
     @Test

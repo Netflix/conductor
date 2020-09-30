@@ -18,6 +18,7 @@ import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dao.dynomite.RedisMetadataDAO;
 import com.netflix.conductor.dao.dynomite.RedisPollDataDAO;
 import com.netflix.conductor.dao.dynomite.RedisRateLimitingDAO;
+import com.netflix.conductor.dao.dynomite.RedisSemaphoreDAO;
 import com.netflix.conductor.dao.dynomite.queue.DynoQueueDAO;
 import com.netflix.conductor.dyno.DynoProxy;
 import com.netflix.conductor.dyno.RedisQueuesProvider;
@@ -38,6 +39,7 @@ public class RedisWorkflowModule extends AbstractModule {
         bind(EventHandlerDAO.class).to(RedisEventHandlerDAO.class);
         bind(PollDataDAO.class).to(RedisPollDataDAO.class);
         bind(QueueDAO.class).to(DynoQueueDAO.class);
+        bind(SemaphoreDAO.class).to(RedisSemaphoreDAO.class);
 
         bind(ShardingStrategy.class).toProvider(RedisQueuesShardingStrategyProvider.class).asEagerSingleton();
         bind(RedisQueues.class).toProvider(RedisQueuesProvider.class).asEagerSingleton();
