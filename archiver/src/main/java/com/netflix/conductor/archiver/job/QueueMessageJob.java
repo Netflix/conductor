@@ -35,7 +35,7 @@ public class QueueMessageJob extends AbstractJob {
 
             int deleted = 0;
             List<String> workflowList = new ArrayList<>();
-            if (!cleanupWorkflows.isEmpty()) {
+            if (cleanupWorkflows != null && !cleanupWorkflows.isEmpty()) {
                 workflowList = Arrays.asList(cleanupWorkflows.split(","));
             } else {
                 workflowList.add("deluxe.dependencygraph.sourcewait.process.1.0");
