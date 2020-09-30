@@ -29,7 +29,7 @@ public class QueueMessageJob extends AbstractJob {
             String QUERY = "select id from queue_message qm\n" +
                     "where qm.queue_name in ('_deciderqueue', '_sweeperqueue')\n" +
                     "and qm.message_id in (select wf.workflow_id from workflow wf\n" +
-                    "where wf.workflow_type in (?)) LIMIT ?";
+                    "where wf.workflow_type = ANY (?)) LIMIT ?";
             int batchSize = config.batchSize();
             logger.info("Deleting records with batch size = " + batchSize);
 
