@@ -206,10 +206,10 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			if(enableGlobalTaskConcurrentExecLimit || enableLocalTaskConcurrentExecLimit){
 				WorkflowTask wfTask = task.getWorkflowTask();
 				if(enableGlobalTaskConcurrentExecLimit && wfTask.getGlobalConcurrentExecutionLimit() > 0) {
-					semaphoreDAO.release(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId())
+					semaphoreDAO.release(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId());
 				}
 				if(enableLocalTaskConcurrentExecLimit && wfTask.getLocalConcurrentExecutionLimit() > 0) {
-					semaphoreDAO.release(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId())
+					semaphoreDAO.release(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId());
 				}
 			}
 		}
@@ -242,10 +242,10 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		if(enableGlobalTaskConcurrentExecLimit || enableLocalTaskConcurrentExecLimit) {
 			WorkflowTask wfTask = task.getWorkflowTask();
 			if(enableGlobalTaskConcurrentExecLimit && wfTask.getGlobalConcurrentExecutionLimit() > 0) {
-				return !semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId(), wfTask.getGlobalConcurrentExecutionLimit(), taskDefinition.orElseThrow().getTimeoutSeconds());
+				return !semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId(), wfTask.getGlobalConcurrentExecutionLimit(), taskDefinition.get().getTimeoutSeconds());
 			}
 			if(enableLocalTaskConcurrentExecLimit && wfTask.getLocalConcurrentExecutionLimit() > 0) {
-				return !semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId(), wfTask.getGlobalConcurrentExecutionLimit(), taskDefinition.orElseThrow().getTimeoutSeconds());
+				return !semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId(), wfTask.getGlobalConcurrentExecutionLimit(), taskDefinition.get().getTimeoutSeconds());
 			}
 		}
 

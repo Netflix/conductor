@@ -167,10 +167,10 @@ public class WorkflowTask {
 	private Integer retryCount;
 
 	@ProtoField(id = 27)
-    private int limitConcurrentExecutionsGlobally;
+    private int globalConcurrentExecutionLimit;
 
     @ProtoField(id = 28)
-    private int limitConcurrentExecutionsLocally;
+    private int localConcurrentExecutionLimit;
 
 	/**
 	 * @return the name
@@ -540,28 +540,28 @@ public class WorkflowTask {
      * @return Global concurrent execution limit
      */
     public int getGlobalConcurrentExecutionLimit() {
-        return limitConcurrentExecutionsGlobally;
+        return globalConcurrentExecutionLimit;
     }
 
     /**
      * @param iteration Global concurrent execution limit
      */
     public void setGlobalConcurrentExecutionLimit(int limit) {
-        this.limitConcurrentExecutionsGlobally = limit;
+        this.globalConcurrentExecutionLimit = limit;
     }
 
     /**
      * @return Local concurrent execution limit
      */
     public int getLocalConcurrentExecutionLimit() {
-        return limitConcurrentExecutionsLocally;
+        return localConcurrentExecutionLimit;
     }
 
     /**
      * @param iteration Local concurrent execution limit
      */
     public void setLocalConcurrentExecutionLimit(int limit) {
-        this.limitConcurrentExecutionsLocally = limit;
+        this.localConcurrentExecutionLimit = limit;
     }
 
 	private Collection<List<WorkflowTask>> children() {

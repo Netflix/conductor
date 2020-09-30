@@ -39,4 +39,6 @@ message WorkflowTask {
     string loop_condition = 24;
     repeated WorkflowTask loop_over = 25;
     int32 retry_count = 26;
+    int32 global_concurrent_execution_limit = 27;
+    int32 local_concurrent_execution_limit = 28;
 }
