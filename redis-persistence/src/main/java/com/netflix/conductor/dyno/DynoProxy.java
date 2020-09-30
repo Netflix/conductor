@@ -95,6 +95,10 @@ public class DynoProxy {
         return dynoClient.zcard(key);
     }
 
+    public Long zrank(String key, String member) {
+        return dynoClient.zrank(key, member);
+    }
+
     public Long del(String key) {
         return dynoClient.del(key);
     }
