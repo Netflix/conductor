@@ -77,8 +77,9 @@ public interface DynomiteConfiguration extends Configuration {
 
     /**
      * WorkflowRepairService is enabled by default for DynoQueues, since this queue receipe supports getMessage feature.
-     * @return
+     * @return true
      */
+    @Override
     default boolean isWorkflowRepairServiceEnabled() {
         return true;
     }
