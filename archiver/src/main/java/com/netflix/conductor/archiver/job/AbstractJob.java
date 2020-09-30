@@ -3,6 +3,7 @@ package com.netflix.conductor.archiver.job;
 import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,10 +30,13 @@ public abstract class AbstractJob {
         return result;
     }
 
-    List<Integer> fetchIds(String query,String cleanupWorkflows, int limit) throws SQLException {
+    List<Integer> fetchIds(String query, List<String> cleanupWorkflows, int limit) throws SQLException {
         LinkedList<Integer> result = new LinkedList<>();
         try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(query)) {
-            st.setString(1, cleanupWorkflows);
+            String[] values = cleanupWorkflows.toArray(new String[0]);
+            Array arrayOfWorkflows = tx.createArrayOf("text", values);
+
+            st.setArray(1, arrayOfWorkflows);
             st.setInt(2, limit);
 
             try (ResultSet rs = st.executeQuery()) {
