@@ -67,6 +67,19 @@ public @interface WorkflowTaskValidConstraint {
                     String message = String.format("workflowTask: %s task definition is not defined", workflowTask.getName());
                     context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 }
+                else if (workflowTask.getGlobalConcurrentExecutionLimit() + workflowTask.getLocalConcurrentExecutionLimit() > 0
+                    && task.getTimeoutSeconds() < 1)
+                {
+                    valid = false;
+                    String message = String.format("workflowTask: %s task definition %s must have timeoutSeconds defined if *ConcurrentExecutionLimit is defined in the workflowTask", workflowTask.getName());
+                    context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                }
+                else if (workflowTask.getGlobalConcurrentExecutionLimit() * workflowTask.getLocalConcurrentExecutionLimit() != 0)
+                {
+                    valid = false;
+                    String message = String.format("workflowTask: %s you can't set both globalConcurrentExecutionLimit and localConcurrentExecutionLimit, choose one.", workflowTask.getName());
+                    context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                }
             }
             return valid;
         }
