@@ -1,0 +1,82 @@
+version: '2.3'
+
+services:
+  conductor-server:
+    environment:
+      - CONFIG_PROP=config-postgres.properties
+      - LOG4J_PROP=log4j-file-appender.properties
+    image: conductor:server
+    build:
+      context: ../
+      dockerfile: docker/server/Dockerfile
+    networks:
+      - internal
+    ports:
+      - 8080:8080
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    links:
+      - elasticsearch:es
+      - postgres:postgres
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  conductor-ui:
+    environment:
+      - WF_SERVER=http://conductor-server:8080/api/
+    image: conductor:ui
+    build:
+      context: ../
+      dockerfile: docker/ui/Dockerfile
+    networks:
+      - internal
+    ports:
+      - 5000:5000
+    links:
+      - conductor-server
+
+  # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.8
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - transport.host=0.0.0.0
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    networks:
+      - internal
+    ports:
+      - 9200:9200
+      - 9300:9300
+    healthcheck:
+      test: timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/9300'
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  postgres:
+    image: mdillon/postgis:11-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - "POSTGRES_USER=conductor"
+      - "POSTGRES_PASSWORD=password"
+      - "POSTGRES_DB=conductor"
+    networks:
+      - internal
+networks:
+  internal:

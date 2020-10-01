@@ -36,3 +36,10 @@ To ensure images are stopped do:
 In interactive mode the default startup script for the container do not run
  - `docker run -p 8080:8080 -t -i conductor:server -`
  - `docker run -p 5000:5000 -t -i conductor:ui -`
+ 
+## Build docker with postgres
+`docker-compose --file docker-compose-postgres.yaml build`
+
+## Running docker-compose with postgres
+`docker-compose --file docker-compose-postgres.yaml up`
+
