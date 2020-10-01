@@ -149,4 +149,16 @@ public class TestConfiguration implements Configuration {
 	public Map<String, Object> getAll() {
 		return null;
 	}
+
+	@Override
+    public boolean isGlobalTaskConcurrentExecLimitEnabled()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean isLocalTaskConcurrentExecLimitEnabled()
+    {
+        return true;
+    }
 }

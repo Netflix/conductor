@@ -498,4 +498,19 @@ public interface Configuration {
     enum LOCKING_SERVER {
         NOOP_LOCK, REDIS, ZOOKEEPER, LOCAL_ONLY
     }
+
+    default boolean isGlobalTaskConcurrentExecLimitEnabled()
+    {
+        return getBoolProperty("workflow.execution.enableGlobalTaskConcurrentExecLimit", false);
+    }
+
+    default boolean isLocalTaskConcurrentExecLimitEnabled()
+    {
+        return getBoolProperty("workflow.execution.enableLocalTaskConcurrentExecLimit", false);
+    }
+
+    default String getTaskConcurrentExecLimitSemaphoreName()
+    {
+        return getProperty("workflow.execution.executionLimitingSemaphoreName", "conductor.task_semaphore_");
+    }
 }

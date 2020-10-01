@@ -83,14 +83,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			SemaphoreDAO semaphoreDAO) {
 		super(dynoClient, objectMapper, config);
 		this.semaphoreDAO = semaphoreDAO;
-
+		
 		ttlEventExecutionSeconds = config.getEventExecutionPersistenceTTL();
-		enableGlobalTaskConcurrentExecLimit = Boolean.parseBoolean(config.getProperty(
-			"workflow.execution.enableGlobalTaskConcurrentExecLimit", "false"));
-		enableLocalTaskConcurrentExecLimit = Boolean.parseBoolean(config.getProperty(
-			"workflow.execution.enableLocalTaskConcurrentExecLimit", "false"));
-		executionLimitingSemaphoreName = config.getProperty(
-			"workflow.execution.executionLimitingSemaphoreName", "task_exec_semaphore_");
+		enableGlobalTaskConcurrentExecLimit = config.isGlobalTaskConcurrentExecLimitEnabled();
+		enableLocalTaskConcurrentExecLimit = config.isLocalTaskConcurrentExecLimitEnabled();
+		executionLimitingSemaphoreName = config.getTaskConcurrentExecLimitSemaphoreName();
 	}
 
 	@Override
@@ -206,11 +203,11 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			if(enableGlobalTaskConcurrentExecLimit || enableLocalTaskConcurrentExecLimit){
 				logger.debug("ExecLimit rel processing {} with id {}", task.getReferenceTaskName(), task.getTaskId());
 				WorkflowTask wfTask = task.getWorkflowTask();
-				if(enableGlobalTaskConcurrentExecLimit && wfTask.getGlobalConcurrentExecutionLimit() > 0) {
+				if(enableGlobalTaskConcurrentExecLimit && wfTask != null && wfTask.getGlobalConcurrentExecutionLimit() > 0) {
 					logger.debug("releasing semaphore " + executionLimitingSemaphoreName + task.getReferenceTaskName());
 					semaphoreDAO.release(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId());
 				}
-				if(enableLocalTaskConcurrentExecLimit && wfTask.getLocalConcurrentExecutionLimit() > 0) {
+				if(enableLocalTaskConcurrentExecLimit && wfTask != null && wfTask.getLocalConcurrentExecutionLimit() > 0) {
 					logger.debug("releasing semaphore " + executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName());
 					semaphoreDAO.release(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId());
 				}
@@ -244,14 +241,14 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 			WorkflowTask wfTask = task.getWorkflowTask();
 			if(enableGlobalTaskConcurrentExecLimit && wfTask.getGlobalConcurrentExecutionLimit() > 0) {
 				logger.debug("acquiring semaphore " + executionLimitingSemaphoreName + task.getReferenceTaskName());
-				if(!semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId(), wfTask.getGlobalConcurrentExecutionLimit(), taskDefinition.get().getTimeoutSeconds())){
+				if(!semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getReferenceTaskName(), task.getTaskId(), wfTask.getGlobalConcurrentExecutionLimit(), taskDefinition.get().getTimeoutSeconds() * 1000.0)){
 					logger.info("Task execution count limited. task - {}:{}, limit: {}", task.getReferenceTaskName(), task.getTaskId(), limit);
 					return true;
 				}
 			}
 			if(enableLocalTaskConcurrentExecLimit && wfTask.getLocalConcurrentExecutionLimit() > 0) {
 				logger.debug("acquiring semaphore " + executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId());
-				if(!semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId(), wfTask.getLocalConcurrentExecutionLimit(), taskDefinition.get().getTimeoutSeconds())) {
+				if(!semaphoreDAO.tryAcquire(executionLimitingSemaphoreName + task.getWorkflowType() + "_" + task.getReferenceTaskName(), task.getTaskId(), wfTask.getLocalConcurrentExecutionLimit(), taskDefinition.get().getTimeoutSeconds() * 1000.0)) {
 					logger.info("Task execution count limited. task - {}/{}:{}, limit: {}", task.getWorkflowType(), task.getReferenceTaskName(), task.getTaskId(), limit);
 					return true;
 				}

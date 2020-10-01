@@ -15,6 +15,7 @@ package com.netflix.conductor.dao.dynomite;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.config.TestConfiguration;
@@ -84,6 +85,82 @@ public class RedisExecutionDAOTest extends ExecutionDAOTest {
         assertNotNull(tasks);
         assertEquals(workflowId, tasks.get(0).getWorkflowInstanceId());
         assertEquals(taskId, tasks.get(0).getTaskId());
+    }
+
+    @Test
+    public void ExecLimitTest() {
+        // setup
+        TaskDef def = new TaskDef();
+        def.setTimeoutSeconds(3600);
+        WorkflowTask wfTask = new WorkflowTask();
+        wfTask.setTaskDefinition(def);
+        Task task = new Task();
+        task.setReferenceTaskName("referenceTaskName");
+        task.setWorkflowTask(wfTask);
+        
+        // global
+        task.setWorkflowType("gWorkflowType");
+        wfTask.setGlobalConcurrentExecutionLimit(3);
+        for (int i = 1; i < 4; i++) {
+            task.setTaskId(String.valueOf(i));
+            assertFalse(
+				String.format("Initial try acquire %d/3", i),
+				executionDAO.exceedsInProgressLimit(task)
+			);
+        }
+        task.setTaskId("4");
+        assertTrue(
+            "Don't allow more global concurrent executions than specified",
+            executionDAO.exceedsInProgressLimit(task)
+        );
+        task.setWorkflowType("gWorkflowType2");
+        assertTrue(
+            "Global setting actually works across different workflows",
+            executionDAO.exceedsInProgressLimit(task)
+        );
+        task.setWorkflowType("gWorkflowType");
+        task.setTaskId("2");
+        task.setStatus(Status.COMPLETED);
+        executionDAO.updateTask(task);
+        task.setTaskId("4");
+        task.setStatus(Status.IN_PROGRESS);
+        assertFalse(
+            "Completing task No1 lets task No4 run",
+            executionDAO.exceedsInProgressLimit(task)
+        );
+        wfTask.setGlobalConcurrentExecutionLimit(0);
+
+        task.setWorkflowType("workflowType");
+        // local
+        wfTask.setLocalConcurrentExecutionLimit(3);
+        for (int i = 1; i < 4; i++) {
+            task.setTaskId(String.valueOf(i));
+            assertFalse(
+				String.format("Initial try acquire %d/3", i),
+				executionDAO.exceedsInProgressLimit(task)
+			);
+        }
+        task.setTaskId("4");
+        assertTrue(
+            "Don't allow more local concurrent executions than specified",
+            executionDAO.exceedsInProgressLimit(task)
+        );
+        task.setWorkflowType("workflowType2");
+        assertFalse(
+            "Local setting is not global",
+            executionDAO.exceedsInProgressLimit(task)
+        );
+        task.setWorkflowType("workflowType");
+        task.setTaskId("2");
+        task.setStatus(Status.COMPLETED);
+        executionDAO.updateTask(task);
+        task.setTaskId("4");
+        task.setStatus(Status.IN_PROGRESS);
+        assertFalse(
+            "Completing task No1 lets task No4 run",
+            executionDAO.exceedsInProgressLimit(task)
+        );
+        wfTask.setLocalConcurrentExecutionLimit(0);
     }
 
     @Override
