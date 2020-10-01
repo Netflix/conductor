@@ -67,15 +67,17 @@ public class RedisSemaphoreDAOTest {
 	@Test
 	public void test() {
 		String semaphore_name = "test_semaphore";
+		double timeout = 10000.0;
+		int limit = 5;
 		for (int i = 1; i < 6; i++) {
 			assertTrue(
 				String.format("Initial try acquire %d/5", i),
-				semaphoreDAO.tryAcquire(semaphore_name, String.valueOf(i), 5, 5000)
+				semaphoreDAO.tryAcquire(semaphore_name, String.valueOf(i), limit, timeout)
 			);
 		}
 		assertFalse(
 			"Try to acquire over the allowed limit", 
-			semaphoreDAO.tryAcquire(semaphore_name, "identifier", 5, 5000)
+			semaphoreDAO.tryAcquire(semaphore_name, "identifier", limit, timeout)
 		);
 		assertTrue(
 			"Release No3", 
@@ -83,12 +85,12 @@ public class RedisSemaphoreDAOTest {
 		);
 		assertTrue(
 			"Acquire No6",
-			semaphoreDAO.tryAcquire(semaphore_name, "6", 5, 5000)
+			semaphoreDAO.tryAcquire(semaphore_name, "6", limit, timeout)
 		);
 		for (int i = 1; i < 7; i++) {
 			assertTrue(
 				String.format("Final release %d/6", i),
-				semaphoreDAO.tryAcquire(semaphore_name, String.valueOf(i), 5, 5000) || i == 3
+				semaphoreDAO.release(semaphore_name, String.valueOf(i)) || i == 3 
 			);
 		}
 	}
