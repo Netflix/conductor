@@ -519,7 +519,7 @@ public interface Configuration {
 
     /**
      *
-     * @return The prefix added to the name of all semaphores
+     * @return The prefix added to the name of semaphores for concurrent task limit
      */
     default String getTaskConcurrentExecLimitSemaphoreName()
     {
