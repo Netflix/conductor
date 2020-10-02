@@ -18,17 +18,27 @@ package com.netflix.conductor.dao;
 import com.netflix.conductor.common.metadata.tasks.Task;
 
 /**
- * An abstraction to enable different Rate Limiting implementations
+ * An abstraction for a non-blocking semaphore object
  */
 public interface SemaphoreDAO {
 
     /**
-     * Checks if the Task is rate limited or not based on the {@link Task#getRateLimitPerFrequency()} and {@link Task#getRateLimitFrequencyInSeconds()}
-     * @param task: which needs to be evaluated whether it is rateLimited or not
-     * @return true: If the {@link Task} is rateLimited
-     * 		false: If the {@link Task} is not rateLimited
+     * Try to acquire the semaphore
+     * @param semaphoreName: The name of the semaphore
+     * @param identifier: A unique identifier that identifies the holder
+     * @param limit: This semaphore's maximum number of holders limit. If changes between calls for the same semaphore name, behavior is undefined.
+     * @param timeoutMillis: A timeout for all the holders of the semaphore If changes between calls for the same semaphore name, behavior is undefined.
+     * @return true: If the semaphore was successfully acquired
+     * 		false: If the semaphore was successfully not acquired (e.g. Reached limit)
      */
     boolean tryAcquire(String semaphoreName, String identifier, int limit, double timeoutMillis);
 
+    /**
+     * Release the semaphore
+     * @param semaphoreName: The name of the semaphore
+     * @param identifier: A unique identifier that identifies the holder
+     * @return true: If the semaphore was successfully released
+     * 		false: If the semaphore was successfully not released (e.g. Never acquired in the first place)
+     */
     boolean release(String semaphoreName, String identifier);
 }

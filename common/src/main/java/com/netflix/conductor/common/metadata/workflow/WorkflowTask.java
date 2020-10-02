@@ -544,7 +544,7 @@ public class WorkflowTask {
     }
 
     /**
-     * @param iteration Global concurrent execution limit
+     * @param limit Global concurrent execution limit
      */
     public void setGlobalConcurrentExecutionLimit(int limit) {
         this.globalConcurrentExecutionLimit = limit;
@@ -558,7 +558,7 @@ public class WorkflowTask {
     }
 
     /**
-     * @param iteration Local concurrent execution limit
+     * @param limit Local concurrent execution limit
      */
     public void setLocalConcurrentExecutionLimit(int limit) {
         this.localConcurrentExecutionLimit = limit;

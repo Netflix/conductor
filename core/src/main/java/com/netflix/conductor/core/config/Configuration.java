@@ -499,16 +499,28 @@ public interface Configuration {
         NOOP_LOCK, REDIS, ZOOKEEPER, LOCAL_ONLY
     }
 
+    /**
+     *
+     * @return Whether global task concurrent execution is enabled
+     */
     default boolean isGlobalTaskConcurrentExecLimitEnabled()
     {
         return getBoolProperty("workflow.execution.enableGlobalTaskConcurrentExecLimit", false);
     }
 
+    /**
+     *
+     * @return Whether local task concurrent execution is enabled
+     */
     default boolean isLocalTaskConcurrentExecLimitEnabled()
     {
         return getBoolProperty("workflow.execution.enableLocalTaskConcurrentExecLimit", false);
     }
 
+    /**
+     *
+     * @return The prefix added to the name of all semaphores
+     */
     default String getTaskConcurrentExecLimitSemaphoreName()
     {
         return getProperty("workflow.execution.executionLimitingSemaphoreName", "conductor.task_semaphore_");
