@@ -42,6 +42,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_SIMPLE;
+
 public class WorkflowTaskTypeConstraintTest {
     private static Validator validator;
     private MetadataDAO mockMetadataDao;
@@ -533,6 +535,28 @@ public class WorkflowTaskTypeConstraintTest {
 
         Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
         assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testWorkflowTaskConcurrentExecLimiters() {
+		TaskDef def = new TaskDef();
+		def.setName("name");
+        def.setTimeoutSeconds(0);
+		WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setName("name");
+        workflowTask.setTaskDefinition(def);
+		workflowTask.setType(TASK_TYPE_SIMPLE);
+		workflowTask.setTaskReferenceName("taskReferenceName");
+		workflowTask.setLocalConcurrentExecutionLimit(3);
+		workflowTask.setGlobalConcurrentExecutionLimit(3);
+		List<String> validationErrors = new ArrayList<>();
+        validator.validate(workflowTask).forEach(e -> validationErrors.add(e.getMessage()));;
+        assertTrue(
+            String.format("Can't set both local and global limits, only one. Got: %s", String.join(",", validationErrors)),
+            validationErrors.get(0).contains("you can't set both globalConcurrentExecutionLimit and localConcurrentExecutionLimit, choose one"));
+        assertTrue(
+            String.format("Must have timeout defined in taskDef. Got: %s", String.join(",", validationErrors)),
+            validationErrors.get(1).contains("must have timeoutSeconds defined if *ConcurrentExecutionLimit is defined"));
     }
 
     private List<String> getErrorMessages(WorkflowTask workflowTask) {

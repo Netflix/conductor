@@ -98,8 +98,38 @@ public @interface WorkflowTaskTypeConstraint {
                 case TaskType.TASK_TYPE_JSON_JQ_TRANSFORM:
                     valid = isJSONJQTransformTaskValid(workflowTask, context);
                     break;
+                case TaskType.TASK_TYPE_SIMPLE:
+                    valid = isSimpleTaskValid(workflowTask, context);
+                    break;
             }
 
+            return valid;
+        }
+
+        private boolean isSimpleTaskValid(WorkflowTask workflowTask, ConstraintValidatorContext context) {
+            TaskDef task = workflowTask.getTaskDefinition();
+            if(task == null) {
+                task = ValidationContext.getMetadataDAO().getTaskDef(workflowTask.getName());
+            }
+            if (task == null) {   
+                String message = String.format("workflowTask: %s must have a task definition defined ", workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                return false;
+            }
+            boolean valid = true;
+            if (workflowTask.getGlobalConcurrentExecutionLimit() + workflowTask.getLocalConcurrentExecutionLimit() != 0
+                && task.getTimeoutSeconds() < 1)
+            {
+                valid = false;
+                String message = String.format("workflowTask: %s task definition %s must have timeoutSeconds defined if *ConcurrentExecutionLimit is defined in the workflowTask", workflowTask.getName(), workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+            }
+            if (workflowTask.getGlobalConcurrentExecutionLimit() * workflowTask.getLocalConcurrentExecutionLimit() != 0)
+            {
+                valid = false;
+                String message = String.format("workflowTask: %s you can't set both globalConcurrentExecutionLimit and localConcurrentExecutionLimit, choose one.", workflowTask.getName());
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+            }
             return valid;
         }
 
