@@ -501,7 +501,7 @@ public interface Configuration {
 
     /**
      *
-     * @return Whether global task concurrent execution is enabled
+     * @return True if  global task concurrent execution is enabled
      */
     default boolean isGlobalTaskConcurrentExecLimitEnabled()
     {
@@ -510,7 +510,7 @@ public interface Configuration {
 
     /**
      *
-     * @return Whether local task concurrent execution is enabled
+     * @return True if local task concurrent execution is enabled
      */
     default boolean isLocalTaskConcurrentExecLimitEnabled()
     {
