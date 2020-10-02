@@ -121,7 +121,7 @@ public @interface WorkflowTaskTypeConstraint {
                 && task.getTimeoutSeconds() < 1)
             {
                 valid = false;
-                String message = String.format("workflowTask: %s task definition %s must have timeoutSeconds defined if *ConcurrentExecutionLimit is defined in the workflowTask", workflowTask.getName(), workflowTask.getName());
+                String message = String.format("workflowTask: %s task definition %s must have timeoutSeconds defined if *ConcurrentExecutionLimit is defined in the workflowTask.", workflowTask.getName(), workflowTask.getName());
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
             }
             if (workflowTask.getGlobalConcurrentExecutionLimit() * workflowTask.getLocalConcurrentExecutionLimit() != 0)

@@ -552,11 +552,11 @@ public class WorkflowTaskTypeConstraintTest {
 		List<String> validationErrors = new ArrayList<>();
         validator.validate(workflowTask).forEach(e -> validationErrors.add(e.getMessage()));;
         assertTrue(
-            String.format("Can't set both local and global limits, only one. Got: %s", String.join(",", validationErrors)),
-            validationErrors.get(0).contains("you can't set both globalConcurrentExecutionLimit and localConcurrentExecutionLimit, choose one"));
-        assertTrue(
             String.format("Must have timeout defined in taskDef. Got: %s", String.join(",", validationErrors)),
-            validationErrors.get(1).contains("must have timeoutSeconds defined if *ConcurrentExecutionLimit is defined"));
+            validationErrors.contains("workflowTask: name task definition name must have timeoutSeconds defined if *ConcurrentExecutionLimit is defined in the workflowTask."));
+        assertTrue(
+            String.format("Can't set both local and global limits, only one. Got: %s", String.join(",", validationErrors)),
+            validationErrors.contains("workflowTask: name you can't set both globalConcurrentExecutionLimit and localConcurrentExecutionLimit, choose one."));
     }
 
     private List<String> getErrorMessages(WorkflowTask workflowTask) {
