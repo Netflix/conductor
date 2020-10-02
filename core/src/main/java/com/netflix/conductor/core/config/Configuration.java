@@ -510,7 +510,7 @@ public interface Configuration {
 
     /**
      *
-     * @return True if local task concurrent execution is enabled
+     * @return True if  local task concurrent execution is enabled
      */
     default boolean isLocalTaskConcurrentExecLimitEnabled()
     {
