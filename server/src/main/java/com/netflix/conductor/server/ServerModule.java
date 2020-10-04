@@ -28,6 +28,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
 import com.netflix.conductor.core.execution.TaskStatusListener;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
+import com.netflix.conductor.core.utils.PriorityLookup;
 import com.netflix.conductor.dao.*;
 import com.netflix.conductor.dao.dynomite.DynoProxy;
 import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
@@ -96,6 +97,7 @@ public class ServerModule extends AbstractModule {
 			bind(MetricsDAO.class).to(Elasticsearch6RestMetricsDAO.class);
 			bind(IndexDAO.class).to(Elasticsearch6RestIndexDAO.class);
 			bind(ErrorLookupDAO.class).to(Elasticsearch6ErrorLookupDAO.class);
+			bind(PriorityLookupDAO.class).to(ElasticSearch6PriorityLookupDAO.class);
 		} else if (ConductorServer.DB.aurora.equals(db)) {
 			install(new AuroraModule());
 
@@ -105,6 +107,7 @@ public class ServerModule extends AbstractModule {
 			bind(MetricsDAO.class).to(AuroraMetricsDAO.class);
 			bind(IndexDAO.class).to(AuroraIndexDAO.class);
 			bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class);
+			bind(PriorityLookupDAO.class).to(AuroraPriorityLookupDAO.class);
 		} else {
 			String localDC = localRack.replaceAll(region, "");
 			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
