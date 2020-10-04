@@ -5,6 +5,7 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.PriorityLookup;
 import com.netflix.conductor.dao.PriorityLookupDAO;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class PriorityLookupTask extends WorkflowSystemTask {
     private static final Logger logger = LoggerFactory.getLogger(GetConfig.class);
-    private static final int DEFAULT_PRIORITY = 5;
+    private static final String DEFAULT_PRIORITY = "5";
 
 
     PriorityLookupDAO priorityLookupDAO;
@@ -34,23 +35,26 @@ public class PriorityLookupTask extends WorkflowSystemTask {
 
     @Override
     public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-        String priorityStr = String.valueOf(task.getInputData().getOrDefault("jobPriority", DEFAULT_PRIORITY));
-        Map<String, String> priorityConfigurations = new HashMap<>();
+        String priorityStr = String.valueOf(task.getInputData().get("jobPriority"));
+        if (StringUtils.isEmpty(priorityStr)){
+            priorityStr = DEFAULT_PRIORITY;
+        }
+
         try{
+            Map<String, String> priorityConfigurations = new HashMap<>();
             int priority = Integer.parseInt(priorityStr);
             List<PriorityLookup> priorityLookups = priorityLookupDAO.getPriority(priority);
             if ( priorityLookups != null){
                 priorityConfigurations = priorityLookups.stream().collect(Collectors.toMap(PriorityLookup::getName, PriorityLookup::getValue));
             }
+            task.getOutputData().put("configs", priorityConfigurations);
+            task.setStatus(Task.Status.COMPLETED);
 
         }catch(Exception ex){
             task.setStatus(Task.Status.FAILED);
             task.setReasonForIncompletion(ex.getMessage());
             logger.debug(ex.getMessage(), ex);
         }
-        task.getOutputData().put("output", priorityConfigurations);
-        task.setStatus(Task.Status.COMPLETED);
-
     }
 
 }
