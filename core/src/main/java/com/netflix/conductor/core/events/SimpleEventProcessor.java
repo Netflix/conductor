@@ -182,7 +182,7 @@ public class SimpleEventProcessor implements EventProcessor {
      *
      * @return a list of {@link EventExecution} that failed due to transient failures.
      */
-    private EventProcessingFailures executeEvent(String event, Message msg) throws Exception {
+    protected EventProcessingFailures executeEvent(String event, Message msg) throws Exception {
         EventProcessingFailures allFailures = new EventProcessingFailures();
 
         List<EventHandler> eventHandlerList = metadataService.getEventHandlersForEvent(event, true);
