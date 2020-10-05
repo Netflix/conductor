@@ -23,6 +23,7 @@ import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.events.queue.EventProcessingFailures;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ApplicationException;
@@ -31,11 +32,6 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 import com.spotify.futures.CompletableFutures;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +46,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Viren
@@ -66,7 +66,7 @@ public class SimpleEventProcessor implements EventProcessor {
     private final ActionProcessor actionProcessor;
     private final EventQueues eventQueues;
 
-    private final ExecutorService executorService;
+    private ExecutorService executorService;
     private final Map<String, ObservableQueue> eventToQueueMap = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
     private final JsonUtils jsonUtils;
@@ -96,7 +96,6 @@ public class SimpleEventProcessor implements EventProcessor {
             logger.info("Event Processing is ENABLED. executorThreadCount set to {}", executorThreadCount);
         } else {
             logger.warn("Event processing is DISABLED. executorThreadCount set to {}", executorThreadCount);
-            executorService = null;
         }
     }
 
@@ -148,16 +147,16 @@ public class SimpleEventProcessor implements EventProcessor {
         queue.observe().subscribe((Message msg) -> handle(queue, msg));
     }
 
-    protected void handle(ObservableQueue queue, Message msg) {
+    private void handle(ObservableQueue queue, Message msg) {
         try {
             if (isEventMessageIndexingEnabled) {
                 executionService.addMessage(queue.getName(), msg);
             }
             String event = queue.getType() + ":" + queue.getName();
             logger.debug("Evaluating message: {} for event: {}", msg.getId(), event);
-            List<EventExecution> transientFailures = executeEvent(event, msg);
+            EventProcessingFailures allFailures = executeEvent(event, msg);
 
-            if (transientFailures.isEmpty()) {
+            if (allFailures.getTransientFailures().isEmpty()) {
                 queue.ack(Collections.singletonList(msg));
                 logger.debug("Message: {} acked on queue: {}", msg.getId(), queue.getName());
             } else if (queue.rePublishIfNoAck()) {
@@ -165,6 +164,9 @@ public class SimpleEventProcessor implements EventProcessor {
                 // This is needed for queues with no unack timeout, since messages are removed from the queue
                 queue.publish(Collections.singletonList(msg));
                 logger.debug("Message: {} published to queue: {}", msg.getId(), queue.getName());
+            }
+            if(!allFailures.isEmpty()) {
+            	queue.processFailures(Collections.singletonList(msg), allFailures);
             }
         } catch (Exception e) {
             logger.error("Error handling message: {} on queue:{}", msg, queue.getName(), e);
@@ -180,11 +182,12 @@ public class SimpleEventProcessor implements EventProcessor {
      *
      * @return a list of {@link EventExecution} that failed due to transient failures.
      */
-    protected List<EventExecution> executeEvent(String event, Message msg) throws Exception {
+    private EventProcessingFailures executeEvent(String event, Message msg) throws Exception {
+        EventProcessingFailures allFailures = new EventProcessingFailures();
+
         List<EventHandler> eventHandlerList = metadataService.getEventHandlersForEvent(event, true);
         Object payloadObject = getPayloadObject(msg.getPayload());
 
-        List<EventExecution> transientFailures = new ArrayList<>();
         for (EventHandler eventHandler : eventHandlerList) {
             String condition = eventHandler.getCondition();
             if (StringUtils.isNotEmpty(condition)) {
@@ -209,13 +212,16 @@ public class SimpleEventProcessor implements EventProcessor {
             future.whenComplete((result, error) -> result.forEach(eventExecution -> {
                 if (error != null || eventExecution.getStatus() == Status.IN_PROGRESS) {
                     executionService.removeEventExecution(eventExecution);
-                    transientFailures.add(eventExecution);
+                    allFailures.getTransientFailures().add(eventExecution);
                 } else {
                     executionService.updateEventExecution(eventExecution);
+                    if(eventExecution.getStatus() == Status.FAILED) {
+                    	allFailures.getFailures().add(eventExecution);
+                    }
                 }
             })).get();
         }
-        return transientFailures;
+        return allFailures;
     }
 
     /**
@@ -223,7 +229,7 @@ public class SimpleEventProcessor implements EventProcessor {
      * @param msg          the {@link Message} that triggered the event
      * @return a {@link CompletableFuture} holding a list of {@link EventExecution}s for the {@link Action}s executed in the event handler
      */
-    protected CompletableFuture<List<EventExecution>> executeActionsForEventHandler(EventHandler eventHandler, Message msg) {
+    private CompletableFuture<List<EventExecution>> executeActionsForEventHandler(EventHandler eventHandler, Message msg) {
         List<CompletableFuture<EventExecution>> futuresList = new ArrayList<>();
         int i = 0;
         for (Action action : eventHandler.getActions()) {
@@ -251,7 +257,7 @@ public class SimpleEventProcessor implements EventProcessor {
      * the input event execution, if the execution failed due to transient error
      */
     @VisibleForTesting
-    protected EventExecution execute(EventExecution eventExecution, Action action, Object payload) {
+    EventExecution execute(EventExecution eventExecution, Action action, Object payload) {
         try {
             String methodName = "executeEventAction";
             String description = String.format("Executing action: %s for event: %s with messageId: %s with payload: %s", action.getAction(), eventExecution.getId(), eventExecution.getMessageId(), payload);
@@ -284,7 +290,7 @@ public class SimpleEventProcessor implements EventProcessor {
      * @return true - if the exception is a transient failure
      * false - if the exception is non-transient
      */
-    protected boolean isTransientException(Throwable throwableException) {
+    private boolean isTransientException(Throwable throwableException) {
         if (throwableException != null) {
             return !((throwableException instanceof UnsupportedOperationException) ||
                     (throwableException instanceof ApplicationException && ((ApplicationException) throwableException).getCode() != ApplicationException.Code.BACKEND_ERROR));
