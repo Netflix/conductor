@@ -130,6 +130,9 @@ public interface Configuration {
 
     String EVENT_QUEUE_POLL_SCHEDULER_THREAD_COUNT_PROPERTY_NAME = "workflow.event.queue.scheduler.poll.thread.count";
 
+    String WORKFLOW_REPAIR_SERVICE_ENABLED = "workflow.repairservice.enabled";
+    boolean WORKFLOW_REPAIR_SERVICE_ENABLED_DEFAULT_VALUE = false;
+
     String KAFKA_EVENTS_BOOTSTRAP_SERVERS_PROPERTY_NAME = "kafka.events.bootstrap.servers";
     String KAFKA_DEFAULT_BOOTSTRAP_SERVERS_PROPERTY_NAME = "kafka.default.bootstrap.servers";
     String KAFKA_DEFAULT_BOOTSTRAP_SERVERS_DEFAULT_VALUE = "localhost:9092";
@@ -414,6 +417,17 @@ public interface Configuration {
         return getIntProperty(EVENT_QUEUE_POLL_SCHEDULER_THREAD_COUNT_PROPERTY_NAME, Runtime.getRuntime().availableProcessors());
     }
 
+   /**
+    * Configuration to enable {@link com.netflix.conductor.core.execution.WorkflowRepairService}, that tries to keep
+    * ExecutionDAO and QueueDAO in sync, based on the task or workflow state.
+    *
+    * This is disabled by default; To enable, the Queueing layer must implement QueueDAO.containsMessage method.
+    * @return
+    */
+    default boolean isWorkflowRepairServiceEnabled() {
+        return getBooleanProperty(WORKFLOW_REPAIR_SERVICE_ENABLED, WORKFLOW_REPAIR_SERVICE_ENABLED_DEFAULT_VALUE);
+    }
+   
     /**
      * There are several uses for Kafka topics. If all the topics are in the same Kafka cluster, this property can be used.
      * Otherwise, the bootstrap servers for each specific use should be used.

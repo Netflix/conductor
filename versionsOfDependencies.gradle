@@ -40,7 +40,7 @@ ext {
     revJettyServlet = '9.4.22.v20191022'
     revJUnit = '4.12'
     revJsr311Api = '1.1.1'
-    revJq = '0.0.11'
+    revJq = '0.0.12'
     revKafkaClient = '2.2.0'
     revLog4jApi = '2.9.1'
     revLog4jCore = '2.9.1'
