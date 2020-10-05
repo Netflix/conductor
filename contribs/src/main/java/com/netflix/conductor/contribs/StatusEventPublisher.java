@@ -130,7 +130,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 				return;
 			}
 
-			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow));
+			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow), getJobPriority(workflow));
 		} catch (Exception ex) {
 			logger.debug("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
