@@ -391,6 +391,17 @@ public interface Configuration {
     }
 
     /**
+     * Configuration to enable {@link com.netflix.conductor.core.execution.WorkflowRepairService}, that tries to keep
+     * ExecutionDAO and QueueDAO in sync, based on the task or workflow state.
+     *
+     * This is disabled by default; To enable, the Queueing layer must implement QueueDAO.containsMessage method.
+     * @return
+     */
+    default boolean isWorkflowRepairServiceEnabled() {
+        return getBooleanProperty(WORKFLOW_REPAIR_SERVICE_ENABLED, WORKFLOW_REPAIR_SERVICE_ENABLED_DEFAULT_VALUE);
+    }
+
+    /**
      * @param name         Name of the property
      * @param defaultValue Default value when not specified
      * @return User defined integer property.
@@ -461,7 +472,13 @@ public interface Configuration {
 	 */
 	Long getMaxWorkflowOutputPayloadSizeThresholdKB();
 
-	/**
+    /**
+     *
+     * @return The maximum threshold of the workflow variables payload size in KB beyond which the task changes will be rejected and the task will be marked as FAILED_WITH_TERMINAL_ERROR
+     */
+    Long getMaxWorkflowVariablesPayloadSizeThresholdKB();
+
+    /**
 	 *
 	 * @return The threshold of the task input payload size in KB beyond which the payload will be stored in {@link com.netflix.conductor.common.utils.ExternalPayloadStorage}
 	 */
@@ -484,7 +501,6 @@ public interface Configuration {
 	 * @return The maximum threshold of the task output payload size in KB beyond which the task input will be rejected and the task will be marked as FAILED_WITH_TERMINAL_ERROR
 	 */
 	Long getMaxTaskOutputPayloadSizeThresholdKB();
-
 
     enum DB {
         REDIS, DYNOMITE, MEMORY, REDIS_CLUSTER, MYSQL, POSTGRES, CASSANDRA, REDIS_SENTINEL

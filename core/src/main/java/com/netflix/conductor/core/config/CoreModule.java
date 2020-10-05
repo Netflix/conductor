@@ -23,15 +23,9 @@ import com.google.inject.multibindings.MultibindingsScanner;
 import com.google.inject.multibindings.ProvidesIntoMap;
 import com.google.inject.multibindings.StringMapKey;
 import com.google.inject.name.Named;
-import com.netflix.conductor.core.events.ActionProcessor;
-import com.netflix.conductor.core.events.EventProcessor;
-import com.netflix.conductor.core.events.EventQueueProvider;
-import com.netflix.conductor.core.events.SimpleActionProcessor;
-import com.netflix.conductor.core.events.SimpleEventProcessor;
-import com.netflix.conductor.core.events.queue.EventPollSchedulerProvider;
-import com.netflix.conductor.core.events.queue.dyno.DynoEventQueueProvider;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
+import com.netflix.conductor.core.execution.mapper.DoWhileTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ExclusiveJoinTaskMapper;
@@ -39,28 +33,29 @@ import com.netflix.conductor.core.execution.mapper.ForkJoinDynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.ForkJoinTaskMapper;
 import com.netflix.conductor.core.execution.mapper.HTTPTaskMapper;
 import com.netflix.conductor.core.execution.mapper.JoinTaskMapper;
+import com.netflix.conductor.core.execution.mapper.JsonJQTransformTaskMapper;
 import com.netflix.conductor.core.execution.mapper.KafkaPublishTaskMapper;
 import com.netflix.conductor.core.execution.mapper.LambdaTaskMapper;
+import com.netflix.conductor.core.execution.mapper.SetVariableTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SimpleTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SubWorkflowTaskMapper;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.execution.mapper.TerminateTaskMapper;
 import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
 import com.netflix.conductor.core.execution.mapper.WaitTaskMapper;
-import com.netflix.conductor.core.execution.mapper.DoWhileTaskMapper;
 import com.netflix.conductor.core.execution.tasks.Event;
 import com.netflix.conductor.core.execution.tasks.IsolatedTaskQueueProducer;
 import com.netflix.conductor.core.execution.tasks.Lambda;
+import com.netflix.conductor.core.execution.tasks.SetVariable;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.SystemTaskWorkerCoordinator;
 import com.netflix.conductor.core.execution.tasks.Terminate;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.dao.QueueDAO;
-import rx.Scheduler;
 
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DECISION;
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DO_WHILE;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DYNAMIC;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EVENT;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_EXCLUSIVE_JOIN;
@@ -68,21 +63,20 @@ import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_HTTP;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_JOIN;
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_JSON_JQ_TRANSFORM;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_KAFKA_PUBLISH;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_LAMBDA;
+import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_SET_VARIABLE;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_SIMPLE;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_SUB_WORKFLOW;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_TERMINATE;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_USER_DEFINED;
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_WAIT;
-import static com.netflix.conductor.common.metadata.workflow.TaskType.TASK_TYPE_DO_WHILE;
-import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDERS_QUALIFIER;
 /**
  * @author Viren
  */
 public class CoreModule extends AbstractModule {
 
-    private static final String CONDUCTOR_QUALIFIER = "conductor";
     private static final String TASK_MAPPERS_QUALIFIER = "TaskMappers";
 
     @Override
@@ -95,10 +89,7 @@ public class CoreModule extends AbstractModule {
         bind(Lambda.class).asEagerSingleton();
         bind(Terminate.class).asEagerSingleton();
         bind(IsolatedTaskQueueProducer.class).asEagerSingleton();
-        // start processing events when instance starts
-        bind(ActionProcessor.class).to(SimpleActionProcessor.class);
-        bind(EventProcessor.class).to(SimpleEventProcessor.class).asEagerSingleton();
-        bind(Scheduler.class).toProvider(EventPollSchedulerProvider.class).asEagerSingleton();
+        bind(SetVariable.class).asEagerSingleton();
     }
 
     @Provides
@@ -111,14 +102,6 @@ public class CoreModule extends AbstractModule {
     @Singleton
     public JsonUtils getJsonUtils() {
         return new JsonUtils();
-    }
-
-    @ProvidesIntoMap
-    @StringMapKey(CONDUCTOR_QUALIFIER)
-    @Singleton
-    @Named(EVENT_QUEUE_PROVIDERS_QUALIFIER)
-    public EventQueueProvider getDynoEventQueueProvider(QueueDAO queueDAO, Configuration configuration, Scheduler eventScheduler) {
-        return new DynoEventQueueProvider(queueDAO, configuration, eventScheduler);
     }
 
     @ProvidesIntoMap
@@ -250,4 +233,19 @@ public class CoreModule extends AbstractModule {
         return new KafkaPublishTaskMapper(parametersUtils, metadataDAO);
     }
 
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_JSON_JQ_TRANSFORM)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getJsonJQTransformTaskMapper(ParametersUtils parametersUtils, MetadataDAO metadataDAO) {
+        return new JsonJQTransformTaskMapper(parametersUtils, metadataDAO);
+    }
+
+    @ProvidesIntoMap
+    @StringMapKey(TASK_TYPE_SET_VARIABLE)
+    @Singleton
+    @Named(TASK_MAPPERS_QUALIFIER)
+    public TaskMapper getSetVariableTaskMapper() {
+        return new SetVariableTaskMapper();
+    }
 }

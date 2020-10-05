@@ -19,6 +19,7 @@ import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.config.EventModule;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
 import com.netflix.conductor.core.execution.WorkflowStatusListenerStub;
 import com.netflix.conductor.core.utils.LocalOnlyLockModule;
@@ -42,6 +43,7 @@ import com.netflix.conductor.service.MetadataService;
 import com.netflix.conductor.service.MetadataServiceImpl;
 import com.netflix.dyno.queues.redis.RedisQueues;
 import com.netflix.dyno.queues.redis.sharding.ShardingStrategy;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -73,14 +75,15 @@ public class TestModule extends AbstractModule {
         bind(RateLimitingDAO.class).to(RedisRateLimitingDAO.class);
         bind(EventHandlerDAO.class).to(RedisEventHandlerDAO.class);
         bind(PollDataDAO.class).to(RedisPollDataDAO.class);
-        bind(QueueDAO.class).to(DynoQueueDAO.class);
         bind(IndexDAO.class).to(MockIndexDAO.class);
+        configureQueueDAO();
 
         bind(WorkflowStatusListener.class).to(WorkflowStatusListenerStub.class);
 
         bind(MetadataService.class).to(MetadataServiceImpl.class);
 
         install(new CoreModule());
+        install(new EventModule());
         bind(UserTask.class).asEagerSingleton();
         bind(ObjectMapper.class).toProvider(JsonMapperProvider.class);
         bind(ExternalPayloadStorage.class).to(MockExternalPayloadStorage.class);
@@ -99,5 +102,9 @@ public class TestModule extends AbstractModule {
             workflowWorkerThread.setName(String.format("workflow-worker-%d", count.getAndIncrement()));
             return workflowWorkerThread;
         });
+    }
+
+    public void configureQueueDAO() {
+        bind(QueueDAO.class).to(DynoQueueDAO.class);
     }
 }

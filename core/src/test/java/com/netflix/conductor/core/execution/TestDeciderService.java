@@ -676,6 +676,59 @@ public class TestDeciderService {
     }
 
     @Test
+    public void testWorkflowTaskRetry() {
+        Workflow workflow = createDefaultWorkflow();
+
+        workflow.getWorkflowDefinition().setSchemaVersion(2);
+
+        Map<String, Object> inputParams = new HashMap<>();
+        inputParams.put("workflowInputParam", "${workflow.input.requestId}");
+        inputParams.put("taskOutputParam", "${task2.output.location}");
+        inputParams.put("constParam", "Some String value");
+        inputParams.put("nullValue", null);
+        inputParams.put("task2Status", "${task2.status}");
+        inputParams.put("null", null);
+        inputParams.put("task_id", "${CPEWF_TASK_ID}");
+
+        Map<String, Object> env = new HashMap<>();
+        env.put("env_task_id", "${CPEWF_TASK_ID}");
+        inputParams.put("env", env);
+
+        Map<String, Object> taskInput = parametersUtils.getTaskInput(inputParams, workflow, null, "t1");
+
+        // Create a first failed task
+        Task task = new Task();
+        task.getInputData().putAll(taskInput);
+        task.setStatus(Status.FAILED);
+        task.setTaskId("t1");
+
+        TaskDef taskDef = new TaskDef();
+        assertEquals(3, taskDef.getRetryCount());
+
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.getInputParameters().put("task_id", "${CPEWF_TASK_ID}");
+        workflowTask.getInputParameters().put("env", env);
+        workflowTask.setRetryCount(1);
+
+        // Retry the failed task and assert that a new one has been created
+        Optional<Task> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
+        assertEquals("t1", task.getInputData().get("task_id"));
+        assertEquals("t1", ((Map<String, Object>) task.getInputData().get("env")).get("env_task_id"));
+
+        assertNotSame(task.getTaskId(), task2.get().getTaskId());
+        assertEquals(task2.get().getTaskId(), task2.get().getInputData().get("task_id"));
+        assertEquals(task2.get().getTaskId(), ((Map<String, Object>) task2.get().getInputData().get("env")).get("env_task_id"));
+
+        // Set the retried task to FAILED, retry it again and assert that the workflow failed
+        task2.get().setStatus(Status.FAILED);
+        exception.expect(TerminateWorkflowException.class);
+        final Optional<Task> task3 = deciderService.retry(taskDef, workflowTask, task2.get(), workflow);
+
+        assertFalse(task3.isPresent());
+        assertEquals(WorkflowStatus.FAILED, workflow.getStatus());
+    }
+
+    @Test
     public void testExponentialBackoff() {
         Workflow workflow = createDefaultWorkflow();
 
@@ -983,7 +1036,8 @@ public class TestDeciderService {
         workflowDef.setName("test");
         Workflow workflow = new Workflow();
         workflow.setOwnerApp("junit");
-        workflow.setStartTime(System.currentTimeMillis() - 5_000);
+        workflow.setStartTime(System.currentTimeMillis() - 10_000);
+        workflow.setWorkflowId("workflow_id");
 
         // no-op
         workflow.setWorkflowDefinition(null);
@@ -1003,10 +1057,19 @@ public class TestDeciderService {
         // time out
         workflowDef.setTimeoutPolicy(WorkflowDef.TimeoutPolicy.TIME_OUT_WF);
         workflow.setWorkflowDefinition(workflowDef);
-        exception.expect(TerminateWorkflowException.class);
-        exception.expectMessage("Workflow timed out");
-        deciderService.checkWorkflowTimeout(workflow);
-        assertEquals(1, counter.count());
+        try {
+            deciderService.checkWorkflowTimeout(workflow);
+        } catch (TerminateWorkflowException twe) {
+            assertTrue(twe.getMessage().contains("Workflow 'workflow_id' timed out"));
+        }
+
+        // for a retried workflow
+        workflow.setLastRetriedTime(System.currentTimeMillis() - 5_000);
+        try {
+            deciderService.checkWorkflowTimeout(workflow);
+        } catch (TerminateWorkflowException twe) {
+            assertTrue(twe.getMessage().contains("Workflow 'workflow_id' timed out"));
+        }
     }
 
     private WorkflowDef createConditionalWF() {
