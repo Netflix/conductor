@@ -212,7 +212,6 @@ public class SimpleEventProcessor implements EventProcessor {
             CompletableFuture<List<EventExecution>> future = executeActionsForEventHandler(eventHandler, msg);
             future.whenComplete((result, error) -> result.forEach(eventExecution -> {
                 if (error != null || eventExecution.getStatus() == Status.IN_PROGRESS) {
-                    executionService.removeEventExecution(eventExecution);
                     allFailures.getTransientFailures().add(eventExecution);
                 } else {
                     executionService.updateEventExecution(eventExecution);
@@ -222,7 +221,19 @@ public class SimpleEventProcessor implements EventProcessor {
                 }
             })).get();
         }
+        allFailures.setTransientFailures(processTransientFailures(allFailures.getTransientFailures()));
         return allFailures;
+    }
+
+    /**
+     * Remove the event executions which failed temporarily.
+     *
+     * @param eventExecutions The event executions which failed with a transient error.
+     * @return The event executions which failed with a transient error.
+     */
+    protected List<EventExecution> processTransientFailures(List<EventExecution> eventExecutions) {
+        eventExecutions.forEach(executionService::removeEventExecution);
+        return eventExecutions;
     }
 
     /**
