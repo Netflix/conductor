@@ -156,7 +156,7 @@ public class SharedShotgunQueue implements ObservableQueue {
                 PublishOptions options = PublishOptions.newBuilder()
                     .withPriority(getShotgunPriority(message.getPriority()))
                     .withHeaders(message.getHeaders())
-                    .withTraceId(message.getTraceId())
+                    .withTraceId(message.getTraceId() != null ? message.getTraceId() : "")
                     .withDelays(publishRetryIn)
                     .withClientId(service)
                     .build();

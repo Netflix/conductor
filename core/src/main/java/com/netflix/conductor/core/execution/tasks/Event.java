@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Viren
@@ -176,7 +177,7 @@ public class Event extends WorkflowSystemTask {
 	}
 
 	private int getJobPriority(Workflow workflow){
-		String priority = String.valueOf(workflow.getInput().get("jobPriority"));
+		String priority = Objects.toString(workflow.getInput().get("jobPriority"), null);
 
 		if ( StringUtils.isNotEmpty(priority)){
 			return Integer.parseInt(priority);
