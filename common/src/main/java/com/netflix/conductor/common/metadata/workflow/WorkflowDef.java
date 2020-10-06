@@ -55,8 +55,10 @@ public class WorkflowDef extends Auditable {
 	private List<String> retryForbidden = new LinkedList<String>();
 
 	private String tags;
-	
-	/**
+
+    private int sweepFrequency = 0;
+
+    /**
 	 * @return the name
 	 */
 	public String getName() {
@@ -258,7 +260,21 @@ public class WorkflowDef extends Auditable {
 		this.tags = tags;
 	}
 
-	public WorkflowTask getNextTask(String taskReferenceName){
+    /**
+     * @return the sweepFrequency
+     */
+    public int getSweepFrequency() {
+        return sweepFrequency;
+    }
+
+    /**
+     * @param sweepFrequency the sweepFrequency to set
+     */
+    public void setSweepFrequency(int sweepFrequency) {
+        this.sweepFrequency = sweepFrequency;
+    }
+
+    public WorkflowTask getNextTask(String taskReferenceName){
 		Iterator<WorkflowTask> it = tasks.iterator();
 		while(it.hasNext()){
 			 WorkflowTask task = it.next();

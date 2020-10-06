@@ -33,6 +33,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
+import javafx.util.Pair;
+
 
 /**
  * @author Viren
@@ -106,8 +108,8 @@ public class WorkflowSweeper {
                         logger.debug("Running sweeper for workflow {}", workflowId);
                     }
                     queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0);
-                    boolean done = executor.decide(workflowId);
-                    if (!done) {
+                    Pair<Boolean, Integer> result = executor.decide(workflowId);
+                    if (!result.getKey()) {
                         if (logger.isDebugEnabled()) {
                             logger.debug("Setting unack timeout {} secs for workflow {}", config.getSweepFrequency(), workflowId);
                         }
