@@ -38,6 +38,8 @@ public class Message {
 
 	private String traceId;
 
+	private int priority;
+
 	private Map<String, String> headers;
 
 	public Message() {
@@ -137,6 +139,16 @@ public class Message {
 	public void setTraceId(String traceId) {
 		this.traceId = traceId;
 	}
+
+	/**
+	 * @return The message priority
+	 */
+	public int getPriority() { return priority; }
+
+	/**
+	 * @param priority  message priority
+	 */
+	public void setPriority(int priority) { this.priority = priority; }
 
 	/**
 	 * @return Additional message headers to be published with

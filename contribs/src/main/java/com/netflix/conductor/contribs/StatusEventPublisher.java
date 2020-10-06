@@ -130,7 +130,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 				return;
 			}
 
-			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow));
+			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow), getJobPriority(workflow));
 		} catch (Exception ex) {
 			logger.debug("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
@@ -163,14 +163,14 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			// Feed preProcessed map as defaults so that already processed for JQ engine
 			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
 			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, task.getTaskId(), null, null);
-			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow));
+			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow), getJobPriority(workflow));
 		} catch (Exception ex) {
 			logger.debug("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
 		}
 	}
 
-	private void sendMessage(Map<String, Object> actionMap, String traceId, String groupId) throws Exception {
+	private void sendMessage(Map<String, Object> actionMap, String traceId, String groupId, int priority) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 
 		Message msg = new Message();
@@ -179,6 +179,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 
 		String payload = mapper.writeValueAsString(actionMap.get("inputParameters"));
 		msg.setPayload(payload);
+		msg.setPriority(priority);
 		if (useGroupId) {
 			msg.setHeaders(new HashMap<String, String>(){{
 				put("JMSXGroupID", groupId);
@@ -231,6 +232,15 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			}
 		}
 		return jmsxGroupId;
+	}
+
+	private int getJobPriority(Workflow workflow){
+		String priority = String.valueOf(workflow.getInput().get("jobPriority"));
+
+		if ( StringUtils.isNotEmpty(priority)){
+			return Integer.parseInt(priority);
+		}
+		return 5;
 	}
 
 	private String getJobId(String correlationId) {
