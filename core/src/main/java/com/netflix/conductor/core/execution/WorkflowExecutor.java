@@ -1198,18 +1198,18 @@ public class WorkflowExecutor {
 	public Pair<Boolean, Integer> decide(String workflowId) throws Exception {
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
-			return Pair.of(false, 0);
+			return Pair.of(false, config.getSweepFrequency());
 		}
 
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow == null) {
 			logger.error("ONECOND-1106: getWorkflow() returned null for workflow: " + workflowId);
-			return Pair.of(false, 0);
+			return Pair.of(false, config.getSweepFrequency());
 		}
 
 		if (workflow.getStatus().isTerminal()) {
 			logger.debug("Invoked decide for finished workflow " + workflowId);
-			return Pair.of(true, 0);
+			return Pair.of(true, config.getSweepFrequency());
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());

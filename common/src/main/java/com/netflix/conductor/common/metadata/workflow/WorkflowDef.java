@@ -56,7 +56,7 @@ public class WorkflowDef extends Auditable {
 
 	private String tags;
 
-    private Integer sweepFrequency;
+	private Integer sweepFrequency;
 
     /**
 	 * @return the name

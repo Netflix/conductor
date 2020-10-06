@@ -108,11 +108,11 @@ public class WorkflowSweeper {
                     }
                     queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0);
                     Pair<Boolean, Integer> result = executor.decide(workflowId);
-                    if (!result.getKey()) {
+                    if (!result.getLeft()) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("Setting unack timeout {} secs for workflow {}", config.getSweepFrequency(), workflowId);
+                            logger.debug("Setting unack timeout {} secs for workflow {}", result.getRight(), workflowId);
                         }
-                        queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
+                        queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, result.getRight() * 1000);
                     } else {
                         if (logger.isDebugEnabled()) {
                             logger.debug("Marking workflow as completed {}", workflowId);
