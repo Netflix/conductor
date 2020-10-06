@@ -82,7 +82,7 @@ public class AuroraPriorityLookupDAO extends AuroraBaseDAO implements PriorityLo
 		public ArrayList<PriorityLookup> apply(ResultSet rs) throws SQLException {
 			ArrayList<PriorityLookup> priorityLookupList = new ArrayList<PriorityLookup>();
 
-			if( rs.next()){
+			while( rs.next()){
 				PriorityLookup priorityLookup = new PriorityLookup();
 				priorityLookup.setId( rs.getInt("id"));
 				priorityLookup.setMinPriority( rs.getInt("min_priority"));
