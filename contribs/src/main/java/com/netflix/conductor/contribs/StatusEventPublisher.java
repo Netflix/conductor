@@ -42,10 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -235,7 +232,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 	}
 
 	private int getJobPriority(Workflow workflow){
-		String priority = String.valueOf(workflow.getInput().get("jobPriority"));
+		String priority = Objects.toString(workflow.getInput().get("jobPriority"), null);
 
 		if ( StringUtils.isNotEmpty(priority)){
 			return Integer.parseInt(priority);
