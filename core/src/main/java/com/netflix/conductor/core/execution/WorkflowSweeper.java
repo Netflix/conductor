@@ -33,8 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
-import javafx.util.Pair;
-
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author Viren

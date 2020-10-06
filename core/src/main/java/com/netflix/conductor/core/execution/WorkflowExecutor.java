@@ -64,8 +64,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javafx.util.Pair;
-
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author Viren Workflow services provider interface
@@ -1197,29 +1196,29 @@ public class WorkflowExecutor {
 	 * @throws Exception If there was an error - caller should retry in this case.
 	 */
 	public Pair<Boolean, Integer> decide(String workflowId) throws Exception {
-		Workflow workflow = edao.getWorkflow(workflowId, true);
-		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
-		int sweepFrequency = def.getSweepFrequency() != 0 && def.getSweepFrequency() > 0 ? def.getSweepFrequency() : config.getSweepFrequency();
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
-			return (new Pair<>(false, sweepFrequency));
+			return Pair.of(false, 0);
 		}
 
+		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow == null) {
 			logger.error("ONECOND-1106: getWorkflow() returned null for workflow: " + workflowId);
-			return (new Pair<>(false, sweepFrequency));
+			return Pair.of(false, 0);
 		}
 
 		if (workflow.getStatus().isTerminal()) {
 			logger.debug("Invoked decide for finished workflow " + workflowId);
-			return new Pair<>(true, sweepFrequency);
+			return Pair.of(true, 0);
 		}
 
+		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+		int sweepFrequency = def.getSweepFrequency() != 0 && def.getSweepFrequency() > 0 ? def.getSweepFrequency() : config.getSweepFrequency();
 		try {
 			DeciderOutcome outcome = decider.decide(workflow, def);
 			if(outcome.isComplete) {
 				completeWorkflow(workflow);
-				return (new Pair<>(true, sweepFrequency));
+				return Pair.of(true, sweepFrequency);
 			}
 
 			List<Task> tasksToBeScheduled = outcome.tasksToBeScheduled;
@@ -1267,9 +1266,9 @@ public class WorkflowExecutor {
 				logger.debug(message, tw);
 			}
 			terminate(def, workflow, tw);
-			return (new Pair<>(true, sweepFrequency));
+			return Pair.of(true, sweepFrequency);
 		}
-		return (new Pair<>(false, sweepFrequency));
+		return Pair.of(false, sweepFrequency);
 	}
 
 	public void pauseWorkflow(String workflowId,String correlationId) throws Exception {

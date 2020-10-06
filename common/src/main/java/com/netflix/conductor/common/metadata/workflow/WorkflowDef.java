@@ -56,7 +56,7 @@ public class WorkflowDef extends Auditable {
 
 	private String tags;
 
-    private int sweepFrequency = 0;
+    private Integer sweepFrequency;
 
     /**
 	 * @return the name
@@ -260,19 +260,19 @@ public class WorkflowDef extends Auditable {
 		this.tags = tags;
 	}
 
-    /**
-     * @return the sweepFrequency
-     */
-    public int getSweepFrequency() {
-        return sweepFrequency;
-    }
+	/**
+	 * @return the sweepFrequency
+	 */
+	public Integer getSweepFrequency() {
+		return sweepFrequency;
+	}
 
-    /**
-     * @param sweepFrequency the sweepFrequency to set
-     */
-    public void setSweepFrequency(int sweepFrequency) {
-        this.sweepFrequency = sweepFrequency;
-    }
+	/**
+	 * @param sweepFrequency the sweepFrequency to set
+	 */
+	public void setSweepFrequency(Integer sweepFrequency) {
+		this.sweepFrequency = sweepFrequency;
+	}
 
     public WorkflowTask getNextTask(String taskReferenceName){
 		Iterator<WorkflowTask> it = tasks.iterator();
