@@ -140,6 +140,7 @@ public class SystemTask extends Task {
 	}	
 	
 	public static Task subWorkflowTask(Workflow workflow, String taskId, WorkflowTask taskToSchedule, Map<String, Object> input, String subWorkflowName, Integer subWorkflowVersion) {
+
 		SystemTask st = new SystemTask();
 		st.setTaskType(SubWorkflow.NAME);
 		st.setTaskDefName(taskToSchedule.getName());
@@ -151,6 +152,7 @@ public class SystemTask extends Task {
 		st.getInputData().put("subWorkflowName", subWorkflowName);
 		st.getInputData().put("subWorkflowVersion", subWorkflowVersion);
 		st.getInputData().put("workflowInput", input);
+		st.getInputData().putIfAbsent("jobPriority", workflow.getInput().getOrDefault("jobPriority", "5"));
 		st.setTaskId(taskId);
 		st.setStatus(Status.SCHEDULED);
 		st.setWorkflowTask(taskToSchedule);
