@@ -1213,7 +1213,7 @@ public class WorkflowExecutor {
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
-		int sweepFrequency = def.getSweepFrequency() != 0 && def.getSweepFrequency() > 0 ? def.getSweepFrequency() : config.getSweepFrequency();
+		int sweepFrequency = def.getSweepFrequency() != null && def.getSweepFrequency() > 0 ? def.getSweepFrequency() : config.getSweepFrequency();
 		try {
 			DeciderOutcome outcome = decider.decide(workflow, def);
 			if(outcome.isComplete) {
