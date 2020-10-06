@@ -48,26 +48,22 @@ public class AuroraPriorityLookupDAO extends AuroraBaseDAO implements PriorityLo
 
 	@Override
 	public ArrayList<PriorityLookup> getPriority(int priority) {
-		return getWithTransaction( tx->{
-			AuroraPriorityLookupDAO.PriorityLookupHandler handler = new AuroraPriorityLookupDAO.PriorityLookupHandler();
+		AuroraPriorityLookupDAO.PriorityLookupHandler handler = new AuroraPriorityLookupDAO.PriorityLookupHandler();
+		StringBuilder SQL = new StringBuilder("SELECT * FROM META_PRIORITY WHERE ? BETWEEN MIN_PRIORITY AND MAX_PRIORITY");
 
-			StringBuilder SQL = new StringBuilder("SELECT * FROM META_PRIORITY WHERE ? BETWEEN MIN_PRIORITY AND MAX_PRIORITY");
-
-			return query( tx, SQL.toString(), q-> q.addParameter(priority).executeAndFetch(handler));
-
-		});
+		return getWithTransaction( tx->
+			 query( tx, SQL.toString(), q-> q.addParameter(priority).executeAndFetch(handler))
+		);
 	}
 
 	@Override
 	public ArrayList<PriorityLookup> getAllPriorities() {
-		return getWithTransaction( tx->{
-			AuroraPriorityLookupDAO.PriorityLookupHandler handler = new AuroraPriorityLookupDAO.PriorityLookupHandler();
+		AuroraPriorityLookupDAO.PriorityLookupHandler handler = new AuroraPriorityLookupDAO.PriorityLookupHandler();
+		StringBuilder SQL = new StringBuilder("SELECT * FROM META_PRIORITY ORDER BY MIN_PRIORITY, MAX_PRIORITY");
 
-			StringBuilder SQL = new StringBuilder("SELECT * FROM META_PRIORITY ORDER BY MIN_PRIORITY, MAX_PRIORITY");
-
-			return query( tx, SQL.toString(), q->q.executeAndFetch(handler));
-
-		});
+		return getWithTransaction( tx->
+			 query( tx, SQL.toString(), q->q.executeAndFetch(handler))
+		);
 	}
 
 	@Override
