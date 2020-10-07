@@ -32,7 +32,7 @@ public class EventMesgsJob extends AbstractJob {
 			List<Integer> ids = fetchIds(QUERY, endTime, batchSize);
 			while (isNotEmpty(ids)) {
 				deleted += deleteByIds("event_message", ids);
-				logger.info("EventMesgs job deleted " + deleted);
+				logger.debug("EventMesgs job deleted " + deleted);
 
 				ids = fetchIds(QUERY, endTime, batchSize);
 			}
