@@ -678,7 +678,7 @@ public class WorkflowExecutor {
         }
         Monitors.recordWorkflowCompletion(workflow.getWorkflowName(), workflow.getEndTime() - workflow.getStartTime(), workflow.getOwnerApp());
         // notify workflow completion
-        LOGGER.info("Add workflow '{}' to publish.", workflow.getWorkflowId());
+        LOGGER.debug("Add workflow '{}' to publish.", workflow.getWorkflowId());
         workflowStatusListener.onWorkflowCompleted(workflow);
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
 
@@ -785,7 +785,7 @@ public class WorkflowExecutor {
 
             // Send to atlas
             Monitors.recordWorkflowTermination(workflow.getWorkflowName(), workflow.getStatus(), workflow.getOwnerApp());
-            LOGGER.info("Add workflow '{}' to publish.", workflow.getWorkflowId());
+            LOGGER.debug("Add workflow '{}' to publish.", workflow.getWorkflowId());
             workflowStatusListener.onWorkflowTerminated(workflow);
 
             //if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
@@ -1490,7 +1490,7 @@ public class WorkflowExecutor {
         for (Task task : tasks) {
             addTaskToQueue(task);
             // notify task
-            LOGGER.info("Add task '{}' to publish.", task.getTaskId());
+            LOGGER.debug("Add task '{}' to publish.", task.getTaskId());
             taskStatusListener.onTaskScheduled(task);
         }
     }

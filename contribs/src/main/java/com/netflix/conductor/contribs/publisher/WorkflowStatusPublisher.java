@@ -42,8 +42,8 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
                 try {
                     Workflow workflow = blockingQueue.take();
                     WorkflowNotification workflowNotification = new WorkflowNotification(workflow);
-                    String taskMsg = String.format("Publishing workflow '%s.",workflowNotification.getWorkflowId());
-                    LOGGER.info(taskMsg);
+                    String wfMsg = String.format("Publishing workflow '%s.",workflowNotification.getWorkflowId());
+                    LOGGER.debug(wfMsg);
                     if (workflowNotification.getAccountMoId().equals("")) {
                         LOGGER.info("Skip workflow '{}' notification. Account Id is empty.", workflowNotification.getWorkflowId());
                         continue;
@@ -53,12 +53,12 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
                         continue;
                     }
                     publishWorkflowNotification(workflowNotification);
-                    LOGGER.info("Workflow {} publish is successful.", workflowNotification.getWorkflowId());
+                    LOGGER.debug("Workflow {} publish is successful.", workflowNotification.getWorkflowId());
                     Thread.sleep(5);
                 }
                 catch (Exception e) {
                     LOGGER.error("Failed to publish workflow: {} to String. Exception: {}", this, e);
-                    LOGGER.info(e.getMessage());
+                    LOGGER.error(e.getMessage());
                 }
             }
         }
@@ -75,7 +75,7 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
             blockingQueue.put(workflow);
         } catch (Exception e){
             LOGGER.error("Failed to enqueue workflow: {} to String. Exception: {}", this, e);
-            LOGGER.info(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
     }
 
@@ -85,13 +85,12 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
             blockingQueue.put(workflow);
         } catch (Exception e){
             LOGGER.error("Failed to enqueue workflow: {} to String. Exception: {}", this, e);
-            LOGGER.info(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
     }
 
      private void publishWorkflowNotification(WorkflowNotification workflowNotification) {
         String jsonWorkflow = workflowNotification.toJsonString();
-        LOGGER.info("{}", jsonWorkflow);
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
         rc.post(url, jsonWorkflow, workflowNotification.getDomainGroupMoId(), workflowNotification.getAccountMoId());

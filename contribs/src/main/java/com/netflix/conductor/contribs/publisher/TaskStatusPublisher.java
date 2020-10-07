@@ -42,7 +42,7 @@ public class TaskStatusPublisher implements TaskStatusListener {
                     Task task = blockingQueue.take();
                     TaskNotification taskNotification = new TaskNotification(task);
                     String taskMsg = String.format("Publishing task '%s'. WorkflowId: '%s'.",taskNotification.getTaskId(), taskNotification.getWorkflowId());
-                    LOGGER.info(taskMsg);
+                    LOGGER.debug(taskMsg);
                     if (taskNotification.getAccountMoId().equals("")) {
                         LOGGER.info("Skip task '{}' notification. Account Id is empty.", taskNotification.getTaskId());
                         continue;
@@ -52,12 +52,12 @@ public class TaskStatusPublisher implements TaskStatusListener {
                         continue;
                     }
                     publishTaskNotification(taskNotification);
-                    LOGGER.info("Task {} publish is successful.", taskNotification.getTaskId());
+                    LOGGER.debug("Task {} publish is successful.", taskNotification.getTaskId());
                     Thread.sleep(5);
                 }
                 catch (Exception e) {
                     LOGGER.error("Failed to publish task: {} to String. Exception: {}", this, e);
-                    LOGGER.info(e.getMessage());
+                    LOGGER.error(e.getMessage());
                 }
             }
         }
@@ -74,13 +74,12 @@ public class TaskStatusPublisher implements TaskStatusListener {
             blockingQueue.put(task);
         } catch (Exception e){
             LOGGER.error("Failed to enqueue task: {} to String. Exception: {}", this, e);
-            LOGGER.info(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
     }
 
     private void publishTaskNotification(TaskNotification taskNotification) {
         String jsonTask = taskNotification.toJsonString();
-        LOGGER.info("{}", jsonTask);
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
         rc.post(url, jsonTask, taskNotification.getDomainGroupMoId(), taskNotification.getAccountMoId());

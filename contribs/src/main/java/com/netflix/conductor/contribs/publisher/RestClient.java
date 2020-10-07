@@ -10,14 +10,12 @@ import org.slf4j.LoggerFactory;
 public class RestClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RestClient.class);
-    //private static final String URL = "http://bullwinkle.default:7979/v1/workflow";
     private static final String URL = "http://bullwinkle.default.svc.cluster.local:7979/v1";
     private static final String HEADER_DOMAIN_GROUP = "X-Starship-DomainGroup";
     private static final String HEADER_ACCOUNT_COOKIE = "x-barracuda-account";
     private static final String HEADER_PREFER = "Prefer";
     private static final String HEADER_PREFER_VALUE = "respond-async";
     private Client client = Client.create();
-    // default timeout value for all requests
 
     public Client getClient(String notificationType) {
         return client;
@@ -28,9 +26,6 @@ public class RestClient {
     }
 
     public void post(String uri, String input, String domainGroupMoId, String accountMoId) {
-        //LOGGER.info("URL: " + uri);
-        //LOGGER.info("Input: " + input);
-        //LOGGER.info("domainGroupId: " + domainGroupMoId);
         int timeoutInSeconds = 10;
         client.setConnectTimeout(1000 * timeoutInSeconds);
         client.setReadTimeout(1000 * timeoutInSeconds );
@@ -42,16 +37,14 @@ public class RestClient {
                     .header(HEADER_ACCOUNT_COOKIE, accountMoId)
                     .header(HEADER_PREFER, HEADER_PREFER_VALUE)
                     .post(ClientResponse.class, input);
-            if (response.getStatus() != HttpStatus.SC_ACCEPTED) {
+            if ((response.getStatus() != HttpStatus.SC_ACCEPTED) || (response.getStatus() != HttpStatus.SC_OK)){
                 throw new RuntimeException("Failed : HTTP error code : "
                         + response.getStatus());
             }
             response.bufferEntity();
-            //LOGGER.info("Response" + response.getEntity(String.class));
-            //LOGGER.info("Task {} is published successfully.", )
         }
         catch (Exception e) {
-            LOGGER.info("#####3" + e.toString());
+            LOGGER.info(e.toString());
             e.printStackTrace();
         }
     }
