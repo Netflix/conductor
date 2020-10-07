@@ -153,6 +153,7 @@ public class SystemTask extends Task {
 		st.getInputData().put("subWorkflowVersion", subWorkflowVersion);
 		input.putIfAbsent("jobPriority", workflow.getInput().getOrDefault("jobPriority", "5"));
 		st.getInputData().put("workflowInput", input);
+		st.getInputData().putIfAbsent("jobPriority", workflow.getInput().getOrDefault("jobPriority", "5"));
 		st.setTaskId(taskId);
 		st.setStatus(Status.SCHEDULED);
 		st.setWorkflowTask(taskToSchedule);
