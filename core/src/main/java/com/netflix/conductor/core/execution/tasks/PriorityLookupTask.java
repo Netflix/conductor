@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class PriorityLookupTask extends WorkflowSystemTask {
 
     @Override
     public void start(Workflow workflow, Task task, WorkflowExecutor executor) throws Exception {
-        String priorityStr = String.valueOf(task.getInputData().get("jobPriority"));
+        String priorityStr = Objects.toString(task.getInputData().get("jobPriority"), null);
         if (StringUtils.isEmpty(priorityStr)){
             priorityStr = DEFAULT_PRIORITY;
         }
