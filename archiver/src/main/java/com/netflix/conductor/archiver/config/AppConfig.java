@@ -41,6 +41,10 @@ public class AppConfig {
 		return config.getInt("keep_days", 30);
 	}
 
+	public String cleanupMessageWorkflows() {
+		return config.getString("cleanup_message_workflows",null);
+	}
+
 	public String auroraHost() {
 		return config.getString("aurora_host");
 	}

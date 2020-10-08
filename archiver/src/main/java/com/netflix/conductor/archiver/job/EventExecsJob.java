@@ -34,7 +34,7 @@ public class EventExecsJob extends AbstractJob {
 			List<Integer> ids = fetchIds(QUERY, endTime, batchSize);
 			while (isNotEmpty(ids)) {
 				deleted += deleteByIds("event_execution", ids);
-				logger.info("EventExecs job deleted " + deleted);
+				logger.debug("EventExecs job deleted " + deleted);
 
 				ids = fetchIds(QUERY, endTime, batchSize);
 			}

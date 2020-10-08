@@ -32,7 +32,7 @@ public class EventPubsJob extends AbstractJob {
 			List<Integer> ids = fetchIds(QUERY, endTime, batchSize);
 			while (isNotEmpty(ids)) {
 				deleted += deleteByIds("event_published", ids);
-				logger.info("EventPubs job deleted " + deleted);
+				logger.debug("EventPubs job deleted " + deleted);
 
 				ids = fetchIds(QUERY, endTime, batchSize);
 			}
