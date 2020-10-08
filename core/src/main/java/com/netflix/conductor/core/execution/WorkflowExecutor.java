@@ -514,7 +514,23 @@ public class WorkflowExecutor {
         workflow.setStatus(WorkflowStatus.RUNNING);
         workflow.setOutput(null);
         workflow.setExternalOutputPayloadStoragePath(null);
-        executionDAOFacade.createWorkflow(workflow);
+
+        try {
+            executionDAOFacade.createWorkflow(workflow);
+        } catch (Exception e) {
+            Monitors.recordWorkflowStartError(workflowDef.getName(), WorkflowContext.get().getClientApp());
+            LOGGER.error("Unable to restart workflow: {}", workflowDef.getName(), e);
+
+            // It's possible the terminate workflow call hits an exception as well, in that case we want to log both
+            // errors to help diagnosis.
+            try {
+                terminateWorkflow(workflowId, "Error when restarting the workflow");
+            } catch (Exception rwe) {
+                LOGGER.error("Could not terminate the workflowId: " + workflowId, rwe);
+            }
+            throw e;
+        }
+
         decide(workflowId);
 
         if (StringUtils.isNotEmpty(workflow.getParentWorkflowId())) {
@@ -862,18 +878,11 @@ public class WorkflowExecutor {
             task.setEndTime(System.currentTimeMillis());
         }
 
-        // Fails the workflow if any of the below operations fail.
-        // This helps avoid workflow inconsistencies. For example, for the taskResult with status:COMPLETED,
-        // if update task to primary data store is successful, but remove from queue fails,
-        // The decide wouldn't run and next task will not be scheduled.
-        // TODO Try to recover the workflow.
+        // Try and ignore QueueDAO operations based on task status
         try {
             String updateTaskQueueDesc = "Updating Task queues for taskId: " + task.getTaskId();
             String taskQueueOperation = "updateTaskQueues";
-            String updateTaskDesc = "Updating Task with taskId: " + task.getTaskId();
-            String updateTaskOperation = "updateTask";
 
-            // Retry each operation twice before failing workflow.
             new RetryUtil<>().retryOnException(() -> {
                 switch (task.getStatus()) {
                     case COMPLETED:
@@ -896,6 +905,17 @@ public class WorkflowExecutor {
                 }
                 return null;
             }, null, null, 2, updateTaskQueueDesc, taskQueueOperation);
+        } catch (Exception e) {
+            String errorMsg = String.format("Error updating the queue for task: %s for workflow: %s", task.getTaskId(), workflowId);
+            LOGGER.warn(errorMsg, e);
+            Monitors.recordTaskQueueOpError(task.getTaskType(), workflowInstance.getWorkflowName());
+        }
+
+
+        // Throw an ApplicationException if below operations fail to avoid workflow inconsistencies.
+        try {
+            String updateTaskDesc = "Updating Task with taskId: " + task.getTaskId();
+            String updateTaskOperation = "updateTask";
 
             new RetryUtil<>().retryOnException(() -> {
                 executionDAOFacade.updateTask(task);
@@ -1040,15 +1060,6 @@ public class WorkflowExecutor {
                         deciderService.externalizeTaskData(task);
                         tasksToBeUpdated.add(task);
                         stateChanged = true;
-                    }
-                }
-            }
-
-            if (!outcome.tasksToBeUpdated.isEmpty()) {
-                for (Task task : tasksToBeUpdated) {
-                    if (task.getStatus() != null && (!task.getStatus().equals(Task.Status.IN_PROGRESS)
-                            || !task.getStatus().equals(Task.Status.SCHEDULED))) {
-                        queueDAO.remove(QueueUtils.getQueueName(task), task.getTaskId());
                     }
                 }
             }
@@ -1539,6 +1550,7 @@ public class WorkflowExecutor {
                 workflow.setInput(workflowInput);
             }
 
+            queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), workflow.getPriority(), config.getSweepFrequency());
             executionDAOFacade.updateWorkflow(workflow);
 
             decide(workflowId);
