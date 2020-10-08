@@ -29,7 +29,7 @@ public class DbLogJob extends AbstractJob {
 			logger.info("Deleting records earlier than " + endTime + ", batch size = " + batchSize);
 
 			int deleted = 0;
-			List<Integer> ids = fetchIds(QUERY, endTime, batchSize);
+			List<Long> ids = fetchIds(QUERY, endTime, batchSize);
 			while (isNotEmpty(ids)) {
 				deleted += deleteByIds("log4j_logs", ids);
 				logger.debug("Db log job deleted " + deleted);
