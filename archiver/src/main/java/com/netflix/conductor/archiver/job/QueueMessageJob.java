@@ -44,9 +44,9 @@ public class QueueMessageJob extends AbstractJob {
                 workflowList.add("deluxe.dependencygraph.source_wait.sherlock.1.1");
             }
 
-            List<Integer> ids = fetchIds(QUERY, workflowList, batchSize);
+            List<Long> ids = fetchIds(QUERY, workflowList, batchSize);
             while (isNotEmpty(ids)) {
-                deleted += deleteByIds("queue_message", ids);
+                deleted += deleteByIds(ids,"queue_message");
                 logger.debug("QueueMessageJob deleted " + deleted);
 
                 ids = fetchIds(QUERY, workflowList, batchSize);

@@ -30,8 +30,8 @@ public abstract class AbstractJob {
         return result;
     }
 
-    List<Integer> fetchIds(String query, List<String> cleanupWorkflows, int limit) throws SQLException {
-        LinkedList<Integer> result = new LinkedList<>();
+    List<Long> fetchIds(String query, List<String> cleanupWorkflows, int limit) throws SQLException {
+        LinkedList<Long> result = new LinkedList<>();
         try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(query)) {
             String[] values = cleanupWorkflows.toArray(new String[0]);
             Array arrayOfWorkflows = tx.createArrayOf("VARCHAR", values);
@@ -41,7 +41,7 @@ public abstract class AbstractJob {
 
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
-                    result.add(rs.getInt("id"));
+                    result.add(rs.getLong("id"));
                 }
             }
         }
@@ -53,6 +53,19 @@ public abstract class AbstractJob {
 
         try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(query)) {
             Integer[] values = ids.toArray(new Integer[0]);
+
+            Array arrayOf = tx.createArrayOf("bigint", values);
+            st.setArray(1, arrayOf);
+
+            return st.executeUpdate();
+        }
+    }
+
+    int deleteByIds(List<Long> ids,String table) throws SQLException {
+        String query = String.format(DELETE, table);
+
+        try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(query)) {
+            Long[] values = ids.toArray(new Long[0]);
 
             Array arrayOf = tx.createArrayOf("bigint", values);
             st.setArray(1, arrayOf);
