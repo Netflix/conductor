@@ -586,19 +586,19 @@ public class WorkflowTask {
 							return nextTask;
 						}
 						if (task.has(taskReferenceName)) {
-							if (TaskType.DO_WHILE.name().equals(task.getType())) {
-								// come here means task is DO_WHILE task and `taskReferenceName` is the last task in
-								// this DO_WHILE task, because DO_WHILE task need to be executed to decide whether to
-								// schedule next iteration, so we just return the DO_WHILE task, and then ignore
-								// generating this task again in deciderService.getNextTask()
-								return task;
-							}
 							break;
 						}
 					}
 					if (iterator.hasNext()) {
 						return iterator.next();
 					}
+				}
+				if (taskType == TaskType.DO_WHILE && this.has(taskReferenceName)) {
+					// come here means this is DO_WHILE task and `taskReferenceName` is the last task in
+					// this DO_WHILE task, because DO_WHILE task need to be executed to decide whether to
+					// schedule next iteration, so we just return the DO_WHILE task, and then ignore
+					// generating this task again in deciderService.getNextTask()
+					return this;
 				}
 				break;
 			case FORK_JOIN:
@@ -616,10 +616,6 @@ public class WorkflowTask {
 							return nextTask;
 						}
 						if (task.has(taskReferenceName)) {
-							if (TaskType.DO_WHILE.name().equals(task.getType())) {
-								// same reason as above
-								return task;
-							}
 							break;
 						}
 					}

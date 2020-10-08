@@ -168,7 +168,7 @@ public class TestWorkflowDef {
 		joinTask.setType(TaskType.JOIN.name());
 		joinTask.setName("join");
 		joinTask.setTaskReferenceName("join");
-		joinTask.setJoinOn(Arrays.asList(doWhileTask.getTaskReferenceName(), workflowTasks.get(4).getTaskReferenceName()));
+		joinTask.setJoinOn(Arrays.asList(workflowTasks.get(2).getTaskReferenceName(), workflowTasks.get(3).getTaskReferenceName()));
 
 		workflowDef.getTasks().add(forkTask);
 		workflowDef.getTasks().add(joinTask);

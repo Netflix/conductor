@@ -121,7 +121,7 @@ public class TestDeciderService {
         taskMappers.put("EVENT", new EventTaskMapper(parametersUtils));
         taskMappers.put("WAIT", new WaitTaskMapper(parametersUtils));
         taskMappers.put("HTTP", new HTTPTaskMapper(parametersUtils, metadataDAO));
-        taskMappers.put("LAMBDA", new LambdaTaskMapper(parametersUtils));
+        taskMappers.put("LAMBDA", new LambdaTaskMapper(parametersUtils, metadataDAO));
 
         deciderService = new DeciderService(parametersUtils, metadataDAO, externalPayloadStorageUtils, taskMappers, config);
     }
@@ -1117,7 +1117,7 @@ public class TestDeciderService {
         task2.setStatus(Status.COMPLETED);
         task2.setIteration(10);
 
-        // verify the next task of last task in DoWhile
+        // verify the next task of DoWhile
         List<Task> nextTask3 = deciderService.getNextTask(workflow, task2);
         assertEquals(1, nextTask3.size());
         assertEquals("junit_task_2", nextTask3.get(0).getReferenceTaskName());
@@ -1382,7 +1382,7 @@ public class TestDeciderService {
         joinTask.setType(TaskType.JOIN.name());
         joinTask.setName("join");
         joinTask.setTaskReferenceName("join");
-        joinTask.setJoinOn(Arrays.asList(doWhileTask.getTaskReferenceName(), workflowTasks.get(4).getTaskReferenceName()));
+        joinTask.setJoinOn(Arrays.asList(workflowTasks.get(2).getTaskReferenceName(), workflowTasks.get(3).getTaskReferenceName()));
 
         workflowDef.getTasks().add(forkTask);
         workflowDef.getTasks().add(joinTask);
