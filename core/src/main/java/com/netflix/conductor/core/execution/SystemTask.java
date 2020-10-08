@@ -152,10 +152,12 @@ public class SystemTask extends Task {
 		st.getInputData().put("subWorkflowName", subWorkflowName);
 		st.getInputData().put("subWorkflowVersion", subWorkflowVersion);
 		st.getInputData().put("workflowInput", input);
+		//Add Job Priority here?
 		st.setTaskId(taskId);
 		st.setStatus(Status.SCHEDULED);
 		st.setWorkflowTask(taskToSchedule);
 		return st;
+
 	}
 	
 	public static Task userDefined(Workflow workflow, String taskId, WorkflowTask taskToSchedule, Map<String, Object> input, TaskDef taskDef, int retryCount) {
