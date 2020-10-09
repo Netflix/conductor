@@ -6,7 +6,7 @@ MAINTAINER Netflix OSS <conductor@netflix.com>
 
 # Install the required packages for the node build
 # to run on alpine
-RUN aptitude update && aptitude install \
+RUN apt-get update && apt-get install \
   autoconf \
   automake \
   libtool \
