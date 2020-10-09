@@ -30,7 +30,6 @@ dependencies {
     compile project(':conductor-postgres-persistence')
     compile project(':conductor-cassandra-persistence')
     compile project(':conductor-contribs')
-    compile project(':conductor-es5-persistence')
     compile project(':conductor-es6-persistence')
     compile project(':conductor-grpc-server')
     compile project(':conductor-zookeeper-lock')
