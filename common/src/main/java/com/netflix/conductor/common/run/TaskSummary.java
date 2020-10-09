@@ -98,6 +98,13 @@ public class TaskSummary {
 	@ProtoField(id = 20)
 	private String taskDescription;
 
+	@ProtoField(id = 21)
+	private String referenceTaskName;
+
+	@ProtoField(id = 22)
+	private int retryCount;
+
+
 	public TaskSummary() {
     }
 
@@ -121,6 +128,8 @@ public class TaskSummary {
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
 		this.taskDescription = task.getTaskDescription();
+		this.referenceTaskName = task.getReferenceTaskName();
+		this.retryCount = task.getRetryCount();
 
 		if (task.getInputData() != null) {
 			ObjectMapper om = new ObjectMapper();
@@ -439,6 +448,34 @@ public class TaskSummary {
             this.taskDescription = taskDescription;
     }
 
+	/**
+	 * @return the referenceTaskName
+	 */
+	public String getReferenceTaskName() {
+		return referenceTaskName;
+	}
+
+	/**
+	 * @param referenceTaskName the referenceTaskName to set
+	 */
+	public void setReferenceTaskName(String referenceTaskName) {
+		this.referenceTaskName = referenceTaskName;
+	}
+
+	/**
+	 * @return the retryCount
+	 */
+	public int getRetryCount() {
+		return retryCount;
+	}
+
+	/**
+	 * @param retryCount the retryCount to set
+	 */
+	public void setRetryCount(int retryCount) {
+		this.retryCount = retryCount;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -463,6 +500,8 @@ public class TaskSummary {
 			Objects.equals(getTaskDefName(), that.getTaskDefName()) &&
 			getTaskType().equals(that.getTaskType()) &&
             getTaskDescription().equals(that.getTaskDescription()) &&
+			getReferenceTaskName().equals(that.getReferenceTaskName()) &&
+			getRetryCount() == that.getRetryCount() &&
 			getTaskId().equals(that.getTaskId());
 	}
 
@@ -471,6 +510,7 @@ public class TaskSummary {
 		return Objects.hash(getWorkflowId(), getWorkflowType(), getCorrelationId(), getScheduledTime(), getStartTime(),
 			getUpdateTime(), getEndTime(), getStatus(), getReasonForIncompletion(), getExecutionTime(),
 			getQueueWaitTime(),
-			getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority(), getTaskDescription());
+			getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority(), getTaskDescription(),
+			getReferenceTaskName(), getRetryCount());
 	}
 }

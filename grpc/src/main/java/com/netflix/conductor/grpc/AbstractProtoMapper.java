@@ -933,6 +933,10 @@ public abstract class AbstractProtoMapper {
         if (from.getTaskDescription() != null) {
             to.setTaskDescription( from.getTaskDescription() );
         }
+        if (from.getReferenceTaskName() != null) {
+            to.setReferenceTaskName( from.getReferenceTaskName() );
+        }
+        to.setRetryCount( from.getRetryCount() );
         return to.build();
     }
 

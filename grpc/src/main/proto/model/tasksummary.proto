@@ -28,4 +28,6 @@ message TaskSummary {
     string external_output_payload_storage_path = 18;
     int32 workflow_priority = 19;
     string task_description = 20;
+    string reference_task_name = 21;
+    int32 retry_count = 22;
 }
