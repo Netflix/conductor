@@ -1,12 +1,12 @@
 #
 # conductor:ui - Netflix conductor UI
 #
-FROM node:9
+FROM node:9-alpine
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
 # Install the required packages for the node build
 # to run on alpine
-RUN apt-get update && apt-get install \
+RUN apk update && apk add \
   autoconf \
   automake \
   libtool \
