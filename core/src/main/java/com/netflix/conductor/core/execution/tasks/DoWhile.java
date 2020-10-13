@@ -58,7 +58,6 @@ public class DoWhile extends WorkflowSystemTask {
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean execute(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {
-
 		boolean allDone = true;
 		boolean hasFailures = false;
 		StringBuilder failureReason = new StringBuilder();
