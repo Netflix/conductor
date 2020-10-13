@@ -520,14 +520,7 @@ public class WorkflowExecutor {
         } catch (Exception e) {
             Monitors.recordWorkflowStartError(workflowDef.getName(), WorkflowContext.get().getClientApp());
             LOGGER.error("Unable to restart workflow: {}", workflowDef.getName(), e);
-
-            // It's possible the terminate workflow call hits an exception as well, in that case we want to log both
-            // errors to help diagnosis.
-            try {
-                terminateWorkflow(workflowId, "Error when restarting the workflow");
-            } catch (Exception rwe) {
-                LOGGER.error("Could not terminate the workflowId: " + workflowId, rwe);
-            }
+            terminateWorkflow(workflowId, "Error when restarting the workflow");
             throw e;
         }
 
@@ -878,39 +871,47 @@ public class WorkflowExecutor {
             task.setEndTime(System.currentTimeMillis());
         }
 
-        // Try and ignore QueueDAO operations based on task status
-        try {
-            String updateTaskQueueDesc = "Updating Task queues for taskId: " + task.getTaskId();
-            String taskQueueOperation = "updateTaskQueues";
+        // Update message in Task queue based on Task status
+        switch (task.getStatus()) {
+            case COMPLETED:
+            case CANCELED:
+            case FAILED:
+            case FAILED_WITH_TERMINAL_ERROR:
+            case TIMED_OUT:
+                try {
+                    queueDAO.remove(taskQueueName, taskResult.getTaskId());
+                    LOGGER.debug("Task: {} removed from taskQueue: {} since the task status is {}", task, taskQueueName, task.getStatus().name());
+                } catch (Exception e) {
+                    // Ignore exceptions on queue remove as it wouldn't impact task and workflow execution, and will be cleaned up eventually
+                    String errorMsg = String.format("Error removing the message in queue for task: %s for workflow: %s", task.getTaskId(), workflowId);
+                    LOGGER.warn(errorMsg, e);
+                    Monitors.recordTaskQueueOpError(task.getTaskType(), workflowInstance.getWorkflowName());
+                }
+                break;
+            case IN_PROGRESS:
+            case SCHEDULED:
+                try {
+                    String postponeTaskMessageDesc = "Postponing Task message in queue for taskId: " + task.getTaskId();
+                    String postponeTaskMessageOperation = "postponeTaskMessage";
 
-            new RetryUtil<>().retryOnException(() -> {
-                switch (task.getStatus()) {
-                    case COMPLETED:
-                    case CANCELED:
-                    case FAILED:
-                    case FAILED_WITH_TERMINAL_ERROR:
-                    case TIMED_OUT:
-                        queueDAO.remove(taskQueueName, taskResult.getTaskId());
-                        LOGGER.debug("Task: {} removed from taskQueue: {} since the task status is {}", task, taskQueueName, task.getStatus().name());
-                        break;
-                    case IN_PROGRESS:
-                    case SCHEDULED:
+                    new RetryUtil<>().retryOnException(() -> {
                         // postpone based on callbackAfterSeconds
                         long callBack = taskResult.getCallbackAfterSeconds();
                         queueDAO.postpone(taskQueueName, task.getTaskId(), task.getWorkflowPriority(), callBack);
                         LOGGER.debug("Task: {} postponed in taskQueue: {} since the task status is {} with callbackAfterSeconds: {}", task, taskQueueName, task.getStatus().name(), callBack);
-                        break;
-                    default:
-                        break;
+                        return null;
+                    }, null, null, 2, postponeTaskMessageDesc, postponeTaskMessageOperation);
+                } catch (Exception e) {
+                    // Throw exceptions on queue postpone, this would impact task execution
+                    String errorMsg = String.format("Error postponing the message in queue for task: %s for workflow: %s", task.getTaskId(), workflowId);
+                    LOGGER.error(errorMsg, e);
+                    Monitors.recordTaskQueueOpError(task.getTaskType(), workflowInstance.getWorkflowName());
+                    throw new ApplicationException(Code.BACKEND_ERROR, e);
                 }
-                return null;
-            }, null, null, 2, updateTaskQueueDesc, taskQueueOperation);
-        } catch (Exception e) {
-            String errorMsg = String.format("Error updating the queue for task: %s for workflow: %s", task.getTaskId(), workflowId);
-            LOGGER.warn(errorMsg, e);
-            Monitors.recordTaskQueueOpError(task.getTaskType(), workflowInstance.getWorkflowName());
+                break;
+            default:
+                break;
         }
-
 
         // Throw an ApplicationException if below operations fail to avoid workflow inconsistencies.
         try {

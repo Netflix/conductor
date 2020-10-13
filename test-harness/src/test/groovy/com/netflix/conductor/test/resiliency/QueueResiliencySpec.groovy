@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.conductor.test.resiliency
 
 import com.netflix.conductor.common.metadata.tasks.Task
@@ -417,7 +432,7 @@ class QueueResiliencySpec extends Specification {
         pollResult == null
     }
 
-    def "Verify updateTask succeeds when QueueDAO is unavailable"() {
+    def "Verify updateTask with COMPLETE status succeeds when QueueDAO is unavailable"() {
         when: "Start a simple workflow"
         def workflowInstanceId = workflowResource.startWorkflow(new StartWorkflowRequest()
                 .withName(SIMPLE_TWO_TASK_WORKFLOW)
@@ -445,9 +460,42 @@ class QueueResiliencySpec extends Specification {
         def result = taskResource.updateTask(taskResult)
 
         then: "updateTask returns successfully without any exceptions"
-        queueDAO.remove(*_) >> { throw new IllegalStateException("Queue remove failed from Spy") }
+        1 * queueDAO.remove(*_) >> { throw new IllegalStateException("Queue remove failed from Spy") }
         result == task.getTaskId()
         notThrown(Exception)
+    }
+
+    def "Verify updateTask with IN_PROGRESS state fails when QueueDAO is unavailable"() {
+        when: "Start a simple workflow"
+        def workflowInstanceId = workflowResource.startWorkflow(new StartWorkflowRequest()
+                .withName(SIMPLE_TWO_TASK_WORKFLOW)
+                .withVersion(1))
+
+        then: "Verify workflow is started"
+        with(workflowResource.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 1
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.SCHEDULED
+        }
+
+        when: "The first task 'integration_task_1' is polled"
+        def task = taskResource.poll("integration_task_1", "test", null)
+
+        then: "Verify task is returned successfully"
+        task
+        task.status == Task.Status.IN_PROGRESS
+        task.taskType == 'integration_task_1'
+
+        when: "the above task is updated, while QueueDAO is unavailable"
+        def taskResult = new TaskResult(task)
+        taskResult.setStatus(TaskResult.Status.IN_PROGRESS)
+        taskResult.setCallbackAfterSeconds(120)
+        def result = taskResource.updateTask(taskResult)
+
+        then: "updateTask fails with an exception"
+        2 * queueDAO.postpone(*_) >> { throw new IllegalStateException("Queue postpone failed from Spy") }
+        thrown(Exception)
     }
 
     def "verify removeTaskFromQueue fail when QueueDAO is unavailable"() {
