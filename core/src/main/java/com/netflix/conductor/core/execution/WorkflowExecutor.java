@@ -64,6 +64,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author Viren Workflow services provider interface
@@ -1194,29 +1195,30 @@ public class WorkflowExecutor {
 	 * @return true if the workflow has completed (success or failed), false otherwise.
 	 * @throws Exception If there was an error - caller should retry in this case.
 	 */
-	public boolean decide(String workflowId) throws Exception {
+	public Pair<Boolean, Integer> decide(String workflowId) throws Exception {
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
-			return false;
+			return Pair.of(false, config.getSweepFrequency());
 		}
 
 		Workflow workflow = edao.getWorkflow(workflowId, true);
 		if (workflow == null) {
 			logger.error("ONECOND-1106: getWorkflow() returned null for workflow: " + workflowId);
-			return false;
+			return Pair.of(false, config.getSweepFrequency());
 		}
 
 		if (workflow.getStatus().isTerminal()) {
 			logger.debug("Invoked decide for finished workflow " + workflowId);
-			return true;
+			return Pair.of(true, config.getSweepFrequency());
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
+		int sweepFrequency = def.getSweepFrequency() != null && def.getSweepFrequency() > 0 ? def.getSweepFrequency() : config.getSweepFrequency();
 		try {
 			DeciderOutcome outcome = decider.decide(workflow, def);
 			if(outcome.isComplete) {
 				completeWorkflow(workflow);
-				return true;
+				return Pair.of(true, sweepFrequency);
 			}
 
 			List<Task> tasksToBeScheduled = outcome.tasksToBeScheduled;
@@ -1243,7 +1245,7 @@ public class WorkflowExecutor {
 			if(!outcome.tasksToBeUpdated.isEmpty() || !outcome.tasksToBeScheduled.isEmpty()) {
 				edao.updateTasks(tasksToBeUpdated);
 				edao.updateWorkflow(workflow);
-				queue.push(deciderQueue, workflow.getWorkflowId(), config.getSweepFrequency());
+				queue.push(deciderQueue, workflow.getWorkflowId(), sweepFrequency);
 			}
 
 			if(stateChanged) {
@@ -1264,9 +1266,9 @@ public class WorkflowExecutor {
 				logger.debug(message, tw);
 			}
 			terminate(def, workflow, tw);
-			return true;
+			return Pair.of(true, sweepFrequency);
 		}
-		return false;
+		return Pair.of(false, sweepFrequency);
 	}
 
 	public void pauseWorkflow(String workflowId,String correlationId) throws Exception {

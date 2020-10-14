@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author Viren
@@ -106,12 +107,12 @@ public class WorkflowSweeper {
                         logger.debug("Running sweeper for workflow {}", workflowId);
                     }
                     queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0);
-                    boolean done = executor.decide(workflowId);
-                    if (!done) {
+                    Pair<Boolean, Integer> result = executor.decide(workflowId);
+                    if (!result.getLeft()) {
                         if (logger.isDebugEnabled()) {
-                            logger.debug("Setting unack timeout {} secs for workflow {}", config.getSweepFrequency(), workflowId);
+                            logger.debug("Setting unack timeout {} secs for workflow {}", result.getRight(), workflowId);
                         }
-                        queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency() * 1000);
+                        queues.setUnackTimeout(WorkflowExecutor.deciderQueue, workflowId, result.getRight() * 1000);
                     } else {
                         if (logger.isDebugEnabled()) {
                             logger.debug("Marking workflow as completed {}", workflowId);
