@@ -157,7 +157,7 @@ public class SystemTask extends Task {
 		if ( MapUtils.isNotEmpty(input)){
 			input.putIfAbsent("jobPriority", jobPriority);
 		}else{
-			st.getInputData().put("jobPriority", jobPriority);
+			st.getInputData().putIfAbsent("jobPriority", jobPriority);
 		}
 		st.getInputData().put("workflowInput", input);
 		st.setTaskId(taskId);
