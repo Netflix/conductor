@@ -46,11 +46,11 @@ public class ApplicationException extends RuntimeException {
 		}
 	}
 	
-	private Code code;
+	protected Code code;
 
-    public boolean isRetryable() {
-        return this.code == Code.BACKEND_ERROR;
-    }
+	public boolean isRetryable() {
+		return this.code == Code.BACKEND_ERROR;
+    	}
 
 	public ApplicationException(String msg, Throwable t){
 		this(Code.INTERNAL_ERROR, msg, t);
