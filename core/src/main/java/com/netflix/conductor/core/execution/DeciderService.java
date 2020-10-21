@@ -344,7 +344,8 @@ public class DeciderService {
         return allCompletedSuccessfully && noPendingTasks && noPendingSchedule;
     }
 
-    private List<Task> getNextTask(Workflow workflow, Task task) {
+    @VisibleForTesting
+    List<Task> getNextTask(Workflow workflow, Task task) {
         final WorkflowDef workflowDef = workflow.getWorkflowDefinition();
 
         // Get the following task after the last completed task
@@ -358,6 +359,13 @@ public class DeciderService {
         WorkflowTask taskToSchedule = workflowDef.getNextTask(taskReferenceName);
         while (isTaskSkipped(taskToSchedule, workflow)) {
             taskToSchedule = workflowDef.getNextTask(taskToSchedule.getTaskReferenceName());
+        }
+        if (taskToSchedule != null && TaskType.DO_WHILE.name().equals(taskToSchedule.getType())) {
+            // check if already has this DO_WHILE task, ignore it if it already exists
+            String nextTaskReferenceName = taskToSchedule.getTaskReferenceName();
+            if (workflow.getTasks().stream().anyMatch(runningTask -> runningTask.getReferenceTaskName().equals(nextTaskReferenceName))) {
+                return Collections.emptyList();
+            }
         }
         if (taskToSchedule != null) {
             return getTasksToBeScheduled(workflow, taskToSchedule, 0);
@@ -391,7 +399,18 @@ public class DeciderService {
             if (workflowTask != null && workflowTask.isOptional()) {
                 return Optional.empty();
             }
-            WorkflowStatus status = task.getStatus().equals(TIMED_OUT) ? WorkflowStatus.TIMED_OUT : WorkflowStatus.FAILED;
+            WorkflowStatus status;
+            switch (task.getStatus()) {
+                case CANCELED:
+                    status = WorkflowStatus.TERMINATED;
+                    break;
+                case TIMED_OUT:
+                    status = WorkflowStatus.TIMED_OUT;
+                    break;
+                default:
+                    status = WorkflowStatus.FAILED;
+                    break;
+            }
             updateWorkflowOutput(workflow, task);
             throw new TerminateWorkflowException(task.getReasonForIncompletion(), status, task);
         }
