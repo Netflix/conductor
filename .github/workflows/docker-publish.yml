@@ -4,18 +4,18 @@ on:
   push:
     # Publish `master` as Docker `latest` image.
     branches:
-      - 2.28.3
+      - master
 
-    # Publish `v1.2.3` tags as releases.
+    # Publish `frinx-v1.2.3` tags as releases.
     tags:
-      - v*
+      - frinx-v*
 
   # Run tests for any PRs.
   pull_request:
 
 env:
   # TODO: Change variable to your image's name.
-  IMAGE_NAME: frinx/conductor-server
+  IMAGE_NAME: frinx/uniflow-conductor-server
 
 jobs:
   # Push image to GitHub Packages.
@@ -44,9 +44,6 @@ jobs:
 
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
