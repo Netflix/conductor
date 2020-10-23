@@ -160,13 +160,13 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
         logger.trace("processAllUnacks started");
 
 
-        final String PROCESS_ALL_UNACKS = "UPDATE queue_message SET popped = false WHERE popped = true AND TIMESTAMPADD(SECOND,60,CURRENT_TIMESTAMP) > deliver_on";
+        final String PROCESS_ALL_UNACKS = "UPDATE queue_message SET popped = false WHERE popped = true AND TIMESTAMPADD(SECOND,-60,CURRENT_TIMESTAMP) > deliver_on";
         executeWithTransaction(PROCESS_ALL_UNACKS, Query::executeUpdate);
     }
 
     @Override
     public void processUnacks(String queueName) {
-        final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND TIMESTAMPADD(SECOND,60,CURRENT_TIMESTAMP)  > deliver_on";
+        final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND TIMESTAMPADD(SECOND,-60,CURRENT_TIMESTAMP)  > deliver_on";
         executeWithTransaction(PROCESS_UNACKS, q -> q.addParameter(queueName).executeUpdate());
     }
 
@@ -267,5 +267,12 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
             final String CREATE_QUEUE = "INSERT IGNORE INTO queue (queue_name) VALUES (?)";
 	        execute(connection, CREATE_QUEUE, q -> q.addParameter(queueName).executeUpdate());
         }
+    }
+
+    @Override
+    public boolean containsMessage(String queueName, String messageId) {
+        final String EXISTS_QUEUE = "SELECT EXISTS(SELECT 1 FROM queue_message WHERE queue_name = ? AND message_id = ? )";
+        boolean exists = queryWithTransaction(EXISTS_QUEUE, q -> q.addParameter(queueName).addParameter(messageId).exists());
+        return exists;
     }
 }

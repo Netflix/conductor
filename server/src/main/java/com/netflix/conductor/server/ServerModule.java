@@ -19,6 +19,8 @@ import com.netflix.archaius.guice.ArchaiusModule;
 import com.netflix.conductor.annotations.Service;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.config.EventModule;
+import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import com.netflix.conductor.core.config.ValidationModule;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.dyno.SystemPropertiesDynomiteConfiguration;
@@ -44,9 +46,10 @@ public class ServerModule extends AbstractModule {
         install(new HealthModule());
         install(new JettyModule());
         install(new GRPCModule());
+        install(new EventModule());
 
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Service.class), new ServiceInterceptor(getProvider(Validator.class)));
-        bind(Configuration.class).to(SystemPropertiesDynomiteConfiguration.class);
+        bind(Configuration.class).to(SystemPropertiesConfiguration.class).in(Scopes.SINGLETON);
         bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Scopes.SINGLETON);
         bind(WorkflowSweeper.class).asEagerSingleton();
         bind(WorkflowMonitor.class).asEagerSingleton();
