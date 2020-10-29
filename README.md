@@ -1,5 +1,7 @@
 ![Conductor](docs/docs/img/conductor-vector-x.png)
 
+## FRINX
+This fork is based on upstream version v2.28.3 + FRINX commits
 
 ## Conductor
 Conductor is an _orchestration_ engine that runs in the cloud.
