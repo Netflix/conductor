@@ -128,6 +128,10 @@ public class TestTerminateTask {
     public void should_fail_workflow_on_terminate_task_success_with_resolved_output() {
         Workflow workflow = new Workflow();
         Terminate terminateTask = new Terminate();
+        WorkflowDef workflowDef = new WorkflowDef();
+        HashMap<String, Object> outputParameters = new HashMap<String, Object>() {{ put("test", "test"); }};
+        workflowDef.setOutputParameters(outputParameters);
+        workflow.setWorkflowDefinition(workflowDef);
 
         HashMap<String, Object> expectedOutput = new HashMap<String, Object>() {{ put("result", 1); }};
 
@@ -141,5 +145,6 @@ public class TestTerminateTask {
         assertEquals(Task.Status.COMPLETED, task.getStatus());
         assertEquals(Workflow.WorkflowStatus.FAILED, workflow.getStatus());
         assertEquals(expectedOutput, workflow.getOutput());
+        assertEquals(expectedOutput, workflow.getWorkflowDefinition().getOutputParameters());
     }
 }
