@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # startup.sh - startup script for the server docker image
 
 echo "Starting Conductor server"
