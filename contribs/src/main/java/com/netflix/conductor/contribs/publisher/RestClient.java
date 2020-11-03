@@ -37,7 +37,7 @@ public class RestClient {
                     .header(HEADER_ACCOUNT_COOKIE, accountMoId)
                     .header(HEADER_PREFER, HEADER_PREFER_VALUE)
                     .post(ClientResponse.class, input);
-            if ((response.getStatus() != HttpStatus.SC_ACCEPTED) || (response.getStatus() != HttpStatus.SC_OK)){
+            if ((response.getStatus() != HttpStatus.SC_ACCEPTED)){
                 throw new RuntimeException("Failed : HTTP error code : "
                         + response.getStatus());
             }

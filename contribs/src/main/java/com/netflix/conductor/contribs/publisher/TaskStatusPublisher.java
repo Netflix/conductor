@@ -80,6 +80,7 @@ public class TaskStatusPublisher implements TaskStatusListener {
 
     private void publishTaskNotification(TaskNotification taskNotification) {
         String jsonTask = taskNotification.toJsonString();
+        LOGGER.info("Publishing TaskNotification: {}", jsonTask);
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
         rc.post(url, jsonTask, taskNotification.getDomainGroupMoId(), taskNotification.getAccountMoId());
