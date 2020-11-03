@@ -1,6 +1,5 @@
 package com.netflix.conductor.common.validation;
 
-import com.netflix.conductor.common.validation.ErrorResponse;
 import java.util.StringJoiner;
 
 /**

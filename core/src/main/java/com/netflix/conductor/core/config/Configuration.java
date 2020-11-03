@@ -491,6 +491,34 @@ public interface Configuration {
 	 */
 	Long getMaxTaskOutputPayloadSizeThresholdKB();
 
+    /**
+     * @return when set to true, task inputs are validated before any scheduling. If failed, the workflow will be terminated
+     */
+    default boolean isInputTaskValidationEnabled() {
+        return getBooleanProperty("conductor.validator.input.task", false);
+    }
+
+    /**
+     * @return when set to true, workflow inputs are validated before to start it. If failed, the workflow will not be created
+     */
+    default boolean isInputWorkflowValidationEnabled() {
+        return getBooleanProperty("conductor.validator.input.workflow", false);
+    }
+
+    /**
+     * @return when set to true, task outputs are validated before any task update. If failed, the received task is refused and ignored
+     */
+    default boolean isOutputTaskValidationEnabled() {
+        return getBooleanProperty("conductor.validator.output.task", false);
+    }
+
+    /**
+     * @return when set to true, workflow outputs are validated at workflow completion. If failed, the workflow will be mark as failed
+     */
+    default boolean isOutputWorkflowValidationEnabled() {
+        return getBooleanProperty("conductor.validator.output.workflow", false);
+    }
+
     enum DB {
         REDIS, DYNOMITE, MEMORY, REDIS_CLUSTER, MYSQL, POSTGRES, CASSANDRA, REDIS_SENTINEL
     }

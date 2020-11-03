@@ -13,6 +13,8 @@ import com.netflix.conductor.service.WorkflowBulkService;
 import com.netflix.conductor.service.WorkflowBulkServiceImpl;
 import com.netflix.conductor.service.WorkflowService;
 import com.netflix.conductor.service.WorkflowServiceImpl;
+import com.netflix.conductor.service.WorkflowValidator;
+import com.netflix.conductor.service.WorkflowValidatorImpl;
 
 /**
  * Default implementation for the workflow status listener
@@ -30,5 +32,6 @@ public class WorkflowExecutorModule extends AbstractModule {
         bind(TaskService.class).to(TaskServiceImpl.class);
         bind(EventService.class).to(EventServiceImpl.class);
         bind(MetadataService.class).to(MetadataServiceImpl.class);
+        bind(WorkflowValidator.class).to(WorkflowValidatorImpl.class);
     }
 }

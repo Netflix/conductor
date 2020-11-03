@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import com.netflix.conductor.service.ExecutionLockService;
+import com.netflix.conductor.service.WorkflowValidator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +63,7 @@ public class DoWhileTest {
     WorkflowStatusListener workflowStatusListener ;
     ExecutionDAOFacade executionDAOFacade;
     ExecutionLockService executionLockService;
+    WorkflowValidator workflowValidator;
     Configuration config;
     ParametersUtils parametersUtils;
 
@@ -77,9 +79,10 @@ public class DoWhileTest {
         workflowStatusListener = Mockito.mock(WorkflowStatusListener.class);
         executionDAOFacade = Mockito.mock(ExecutionDAOFacade.class);
         executionLockService = Mockito.mock(ExecutionLockService.class);
+        workflowValidator = Mockito.mock(WorkflowValidator.class);
         config = Mockito.mock(Configuration.class);
         provider = spy(new WorkflowExecutor(deciderService, metadataDAO, queueDAO, metadataMapperService,
-                workflowStatusListener, executionDAOFacade, config, executionLockService, parametersUtils));
+                workflowStatusListener, executionDAOFacade, config, executionLockService, parametersUtils, workflowValidator));
         loopWorkflowTask1 = new WorkflowTask();
         loopWorkflowTask1.setTaskReferenceName("task1");
         loopWorkflowTask1.setName("task1");

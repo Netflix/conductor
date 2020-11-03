@@ -31,6 +31,8 @@ allprojects {
         maven {
             url "https://dl.bintray.com/netflixoss/oss-candidate"
         }
+
+        maven { url 'https://jitpack.io' }
     }
 }
 

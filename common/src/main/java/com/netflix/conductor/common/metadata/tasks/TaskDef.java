@@ -19,6 +19,7 @@ package com.netflix.conductor.common.metadata.tasks;
 import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
+import com.netflix.conductor.common.constraints.JsonSchemaValidityConstraint;
 import com.netflix.conductor.common.constraints.OwnerEmailMandatoryConstraint;
 import com.netflix.conductor.common.constraints.TaskTimeoutConstraint;
 import com.netflix.conductor.common.metadata.Auditable;
@@ -68,9 +69,11 @@ public class TaskDef extends Auditable {
 	@NotNull
 	private long timeoutSeconds;
 
+	@Deprecated
 	@ProtoField(id = 5)
 	private List<String> inputKeys = new ArrayList<String>();
 
+	@Deprecated
 	@ProtoField(id = 6)
 	private List<String> outputKeys = new ArrayList<String>();
 
@@ -117,6 +120,14 @@ public class TaskDef extends Auditable {
 	@ProtoField(id = 19)
 	@Min(value = 0, message = "TaskDef pollTimeoutSeconds: {value} must be >= 0")
 	private Integer pollTimeoutSeconds;
+
+	@ProtoField(id = 20)
+	@JsonSchemaValidityConstraint
+	private Map<String, Object> inputDefinition = new HashMap<>();;
+
+	@ProtoField(id = 21)
+	@JsonSchemaValidityConstraint
+	private Map<String, Object> outputDefinition = new HashMap<>();;
 
 	public TaskDef() {
 	}
@@ -207,6 +218,7 @@ public class TaskDef extends Auditable {
 	 *
 	 * @return Returns the input keys
 	 */
+	@Deprecated
 	public List<String> getInputKeys() {
 		return inputKeys;
 	}
@@ -214,6 +226,7 @@ public class TaskDef extends Auditable {
 	/**
 	 * @param inputKeys Set of keys that the task accepts in the input map
 	 */
+	@Deprecated
 	public void setInputKeys(List<String> inputKeys) {
 		this.inputKeys = inputKeys;
 	}
@@ -221,6 +234,7 @@ public class TaskDef extends Auditable {
 	/**
 	 * @return Returns the output keys for the task when executed
 	 */
+	@Deprecated
 	public List<String> getOutputKeys() {
 		return outputKeys;
 	}
@@ -228,6 +242,7 @@ public class TaskDef extends Auditable {
 	/**
 	 * @param outputKeys Sets the output keys
 	 */
+	@Deprecated
 	public void setOutputKeys(List<String> outputKeys) {
 		this.outputKeys = outputKeys;
 	}
@@ -405,6 +420,22 @@ public class TaskDef extends Auditable {
 	 */
 	public Integer getPollTimeoutSeconds() {
 		return pollTimeoutSeconds;
+	}
+
+	public Map<String, Object> getInputDefinition() {
+		return inputDefinition;
+	}
+
+	public void setInputDefinition(final Map<String, Object> inputDefinition) {
+		this.inputDefinition = inputDefinition;
+	}
+
+	public Map<String, Object> getOutputDefinition() {
+		return outputDefinition;
+	}
+
+	public void setOutputDefinition(final Map<String, Object> outputDefinition) {
+		this.outputDefinition = outputDefinition;
 	}
 
 	@Override

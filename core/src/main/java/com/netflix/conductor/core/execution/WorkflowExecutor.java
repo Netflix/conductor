@@ -68,6 +68,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+
+import com.netflix.conductor.service.WorkflowValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +90,7 @@ public class WorkflowExecutor {
     private final ExecutionDAOFacade executionDAOFacade;
     private final ParametersUtils parametersUtils;
     private final WorkflowStatusListener workflowStatusListener;
+    private final WorkflowValidator workflowValidator;
 
     private int activeWorkerLastPollInSecs;
     private final int queueTaskMessagePostponeSeconds;
@@ -97,15 +100,16 @@ public class WorkflowExecutor {
 
     @Inject
     public WorkflowExecutor(
-        DeciderService deciderService,
-        MetadataDAO metadataDAO,
-        QueueDAO queueDAO,
-        MetadataMapperService metadataMapperService,
-        WorkflowStatusListener workflowStatusListener,
-        ExecutionDAOFacade executionDAOFacade,
-        Configuration config,
-        ExecutionLockService executionLockService,
-        ParametersUtils parametersUtils
+        final DeciderService deciderService,
+        final MetadataDAO metadataDAO,
+        final QueueDAO queueDAO,
+        final MetadataMapperService metadataMapperService,
+        final WorkflowStatusListener workflowStatusListener,
+        final ExecutionDAOFacade executionDAOFacade,
+        final Configuration config,
+        final ExecutionLockService executionLockService,
+        final ParametersUtils parametersUtils,
+        final WorkflowValidator workflowValidator
     ) {
         this.deciderService = deciderService;
         this.metadataDAO = metadataDAO;
@@ -118,6 +122,7 @@ public class WorkflowExecutor {
         this.workflowStatusListener = workflowStatusListener;
         this.executionLockService = executionLockService;
         this.parametersUtils = parametersUtils;
+        this.workflowValidator = workflowValidator;
     }
 
     /**
@@ -365,9 +370,6 @@ public class WorkflowExecutor {
 
         workflowDefinition = metadataMapperService.populateTaskDefinitions(workflowDefinition);
 
-        // perform validations
-        validateWorkflow(workflowDefinition, workflowInput, externalInputPayloadStoragePath);
-
         //A random UUID is assigned to the work flow instance
         String workflowId = IDGenerator.generate();
 
@@ -396,6 +398,9 @@ public class WorkflowExecutor {
             workflow.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
         }
 
+        // perform validations
+        validateWorkflow(workflowDefinition, workflow);
+
         try {
             executionDAOFacade.createWorkflow(workflow);
             LOGGER.debug("A new instance of workflow: {} created with id: {}", workflow.getWorkflowName(), workflowId);
@@ -422,12 +427,17 @@ public class WorkflowExecutor {
      *
      * @throws ApplicationException if the validation fails
      */
-    private void validateWorkflow(WorkflowDef workflowDef, Map<String, Object> workflowInput, String externalStoragePath) {
+    private void validateWorkflow(final WorkflowDef workflowDef, final Workflow workflow) {
         try {
-            //Check if the input to the workflow is not null
-            if (workflowInput == null && StringUtils.isBlank(externalStoragePath)) {
+            if (workflow.getInput() == null && StringUtils.isBlank(workflow.getExternalInputPayloadStoragePath())) {
                 LOGGER.error("The input for the workflow '{}' cannot be NULL", workflowDef.getName());
                 throw new ApplicationException(INVALID_INPUT, "NULL input passed when starting workflow");
+            }
+
+            if (config.isInputWorkflowValidationEnabled()) {
+                final Workflow workflowToStart = Optional.of(workflow).filter(w -> w.getInput() != null)
+                        .orElse(deciderService.populateWorkflowAndTaskData(workflow));
+                workflowValidator.validate(workflowDef, workflowToStart);
             }
         } catch (Exception e) {
             Monitors.recordWorkflowStartError(workflowDef.getName(), WorkflowContext.get().getClientApp());

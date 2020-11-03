@@ -27,7 +27,10 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -124,5 +127,49 @@ public class TaskDefTest {
 
         Set<ConstraintViolation<Object>> result = validator.validate(taskDef);
         assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testTaskDefValidInputOutput() {
+        final Map<String, Object> name = new HashMap<>();
+		name.put("type", "string");
+		name.put("minLength", 1);
+		final Map<String, Object> properties = Collections.singletonMap("name", name);
+		final Map<String, Object> definition = Collections.singletonMap("properties", properties);
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("test-task");
+        taskDef.setRetryCount(1);
+        taskDef.setTimeoutSeconds(1000);
+        taskDef.setResponseTimeoutSeconds(1);
+        taskDef.setOwnerEmail("owner@test.com");
+		taskDef.setInputDefinition(definition);
+		taskDef.setOutputDefinition(definition);
+
+        Set<ConstraintViolation<Object>> result = validator.validate(taskDef);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testTaskDefInvalidInputOutput() {
+        final Map<String, Object> definition = new HashMap<>();
+		definition.put("title", "invalid");
+		definition.put("type", "unknown type");
+        TaskDef taskDef = new TaskDef();
+        taskDef.setName("test-task");
+        taskDef.setRetryCount(1);
+        taskDef.setTimeoutSeconds(1000);
+        taskDef.setResponseTimeoutSeconds(1);
+        taskDef.setOwnerEmail("owner@test.com");
+		taskDef.setInputDefinition(definition);
+		taskDef.setOutputDefinition(definition);
+
+        Set<ConstraintViolation<Object>> result = validator.validate(taskDef);
+        assertEquals(6, result.size());
+
+        final List<String> validationErrors = new ArrayList<>();
+        result.forEach(e -> validationErrors.add(e.getMessage()));
+        assertTrue(validationErrors.contains("#: expected type: Boolean, found: JSONObject"));
+        assertTrue(validationErrors.contains("#/type: unknown type is not a valid enum value"));
+        assertTrue(validationErrors.contains("#/type: expected type: JSONArray, found: String"));
     }
 }

@@ -85,8 +85,10 @@ public class SubWorkflowParamsTest {
             "  \"name\" : \"test_workflow\",\n" +
             "  \"version\" : 1,\n" +
             "  \"workflowDefinition\" : {\n" +
+            "    \"inputDefinition\" : { },\n" +
             "    \"inputParameters\" : [ ],\n" +
             "    \"name\" : \"test_workflow\",\n" +
+            "    \"outputDefinition\" : { },\n" +
             "    \"outputParameters\" : { },\n" +
             "    \"restartable\" : true,\n" +
             "    \"schemaVersion\" : 2,\n" +

@@ -20,6 +20,7 @@ dependencies {
     compile "org.apache.commons:commons-lang3:${revCommonsLang3}"
     // https://mvnrepository.com/artifact/org.glassfish/javax.el
     compile group: 'org.glassfish', name: 'javax.el', version: "${revJavaElApi}"
+    compile "com.github.everit-org.json-schema:org.everit.json.schema:${revJsonSchema}"
 }
 
 import com.github.vmg.protogen.ProtoGenTask;

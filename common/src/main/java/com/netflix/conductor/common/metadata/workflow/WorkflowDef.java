@@ -18,6 +18,7 @@ package com.netflix.conductor.common.metadata.workflow;
 import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
+import com.netflix.conductor.common.constraints.JsonSchemaValidityConstraint;
 import com.netflix.conductor.common.constraints.NoSemiColonConstraint;
 import com.netflix.conductor.common.constraints.OwnerEmailMandatoryConstraint;
 import com.netflix.conductor.common.constraints.TaskReferenceNameUniqueConstraint;
@@ -64,9 +65,11 @@ public class WorkflowDef extends Auditable {
 	private List<@Valid WorkflowTask> tasks = new LinkedList<>();
 
 	@ProtoField(id = 5)
+	@Deprecated
 	private List<String> inputParameters = new LinkedList<>();
 
 	@ProtoField(id = 6)
+	@Deprecated
 	private Map<String, Object> outputParameters = new HashMap<>();
 
 	@ProtoField(id = 7)
@@ -98,6 +101,14 @@ public class WorkflowDef extends Auditable {
 
 	@ProtoField(id = 14)
 	private Map<String, Object> variables = new HashMap<>();
+
+	@ProtoField(id = 15)
+	@JsonSchemaValidityConstraint
+	private Map<String, Object> inputDefinition = new HashMap<>();
+
+	@ProtoField(id = 16)
+	@JsonSchemaValidityConstraint
+	private Map<String, Object> outputDefinition = new HashMap<>();
 
 	/**
 	 * @return the name
@@ -144,6 +155,7 @@ public class WorkflowDef extends Auditable {
 	/**
 	 * @return the inputParameters
 	 */
+	@Deprecated
 	public List<String> getInputParameters() {
 		return inputParameters;
 	}
@@ -151,6 +163,7 @@ public class WorkflowDef extends Auditable {
 	/**
 	 * @param inputParameters the inputParameters to set
 	 */
+	@Deprecated
 	public void setInputParameters(List<String> inputParameters) {
 		this.inputParameters = inputParameters;
 	}
@@ -171,6 +184,7 @@ public class WorkflowDef extends Auditable {
 	/**
 	 * @return the outputParameters
 	 */
+	@Deprecated
 	public Map<String, Object> getOutputParameters() {
 		return outputParameters;
 	}
@@ -178,6 +192,7 @@ public class WorkflowDef extends Auditable {
 	/**
 	 * @param outputParameters the outputParameters to set
 	 */
+	@Deprecated
 	public void setOutputParameters(Map<String, Object> outputParameters) {
 		this.outputParameters = outputParameters;
 	}
@@ -349,6 +364,22 @@ public class WorkflowDef extends Auditable {
 			tasks.addAll(workflowTask.collectTasks());
 		}
 		return tasks;
+	}
+
+	public Map<String, Object> getInputDefinition() {
+		return inputDefinition;
+	}
+
+	public void setInputDefinition(final Map<String, Object> inputDefinition) {
+		this.inputDefinition = inputDefinition;
+	}
+
+	public Map<String, Object> getOutputDefinition() {
+		return outputDefinition;
+	}
+
+	public void setOutputDefinition(final Map<String, Object> outputDefinition) {
+		this.outputDefinition = outputDefinition;
 	}
 
 	@Override
