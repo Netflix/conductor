@@ -341,7 +341,7 @@ public class TestWorkflowExecutor {
         workflowExecutor.completeWorkflow(workflow);
         assertEquals(Workflow.WorkflowStatus.COMPLETED, workflow.getStatus());
         assertEquals(1, updateWorkflowCalledCounter.get());
-        assertEquals(1, updateTasksCalledCounter.get());
+        assertEquals(0, updateTasksCalledCounter.get());
         assertEquals(1, removeQueueEntryCalledCounter.get());
 
         verify(workflowStatusListener, times(0)).onWorkflowCompleted(any(Workflow.class));
@@ -1467,6 +1467,29 @@ public class TestWorkflowExecutor {
                 taskToDomain);
 
         verify(executionDAOFacade, times(1)).createWorkflow(any(Workflow.class));
+    }
+
+    @Test
+    public void testScheduleNextIteration() {
+        Workflow workflow = generateSampleWorkflow();
+        workflow.setTaskToDomain(new HashMap<String, String>() {{
+            put("TEST", "domain1");
+        }});
+        Task loopTask = mock(Task.class);
+        WorkflowTask loopWfTask = mock(WorkflowTask.class);
+        when(loopTask.getWorkflowTask()).thenReturn(loopWfTask);
+        List<WorkflowTask> loopOver = new ArrayList<WorkflowTask>(){{
+            WorkflowTask e = new WorkflowTask();
+            e.setType(TaskType.TASK_TYPE_SIMPLE);
+            e.setName("TEST");
+            e.setTaskDefinition(new TaskDef());
+            add(e);
+        }};
+        when(loopWfTask.getLoopOver()).thenReturn(loopOver);
+
+        workflowExecutor.scheduleNextIteration(loopTask, workflow);
+
+        verify(executionDAOFacade).getTaskPollDataByDomain("TEST", "domain1");
     }
 
     private Workflow generateSampleWorkflow() {

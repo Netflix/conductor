@@ -677,7 +677,6 @@ public class WorkflowExecutor {
         workflow.setOutput(wf.getOutput());
         workflow.setExternalOutputPayloadStoragePath(wf.getExternalOutputPayloadStoragePath());
         executionDAOFacade.updateWorkflow(workflow);
-        executionDAOFacade.updateTasks(workflow.getTasks());
         LOGGER.debug("Completed workflow execution for {}", workflow.getWorkflowId());
 
         if (StringUtils.isNotEmpty(workflow.getParentWorkflowId())) {
@@ -1638,6 +1637,7 @@ public class WorkflowExecutor {
     public void scheduleNextIteration(Task loopTask, Workflow workflow) {
         //Schedule only first loop over task. Rest will be taken care in Decider Service when this task will get completed.
         List<Task> scheduledLoopOverTasks = deciderService.getTasksToBeScheduled(workflow, loopTask.getWorkflowTask().getLoopOver().get(0), loopTask.getRetryCount(), null);
+        setTaskDomains(scheduledLoopOverTasks, workflow);
         scheduledLoopOverTasks.stream().forEach(t -> {
             t.setReferenceTaskName(TaskUtils.appendIteration(t.getReferenceTaskName(), loopTask.getIteration()));
             t.setIteration(loopTask.getIteration());
@@ -1686,15 +1686,7 @@ public class WorkflowExecutor {
             } else if (subWorkflowTask.getStatus().equals(IN_PROGRESS)) {
                 LOGGER.debug("Subworkflow: {} is {}, updating parent workflow: {}",
                         subWorkflow.getWorkflowId(), subWorkflow.getStatus().name(), parentWorkflow.getWorkflowId());
-                SubWorkflow subWorkflowSystemTask = new SubWorkflow();
-                subWorkflowSystemTask.execute(subWorkflow, subWorkflowTask, this);
-                // Keep Subworkflow task's data consistent with Subworkflow's.
-                if (subWorkflowTask.getStatus().isTerminal() && subWorkflowTask.getExternalOutputPayloadStoragePath() != null && !subWorkflowTask.getOutputData().isEmpty()) {
-                    Map<String, Object> parentWorkflowTaskOutputData = subWorkflowTask.getOutputData();
-                    deciderService.populateTaskData(subWorkflowTask);
-                    subWorkflowTask.getOutputData().putAll(parentWorkflowTaskOutputData);
-                    deciderService.externalizeTaskData(subWorkflowTask);
-                }
+                executeSubworkflowTaskAndSyncData(subWorkflow, subWorkflowTask);
                 return true;
             } else {
                 LOGGER.warn("Unable to evaluate parent workflow: {} in status: {}, and subworkflow: {} in status: {}",
@@ -1733,15 +1725,20 @@ public class WorkflowExecutor {
 
     @VisibleForTesting
     void updateParentWorkflowTask(Workflow subWorkflow) {
-        SubWorkflow subWorkflowSystemTask = new SubWorkflow();
         Task subWorkflowTask = executionDAOFacade.getTaskById(subWorkflow.getParentWorkflowTaskId());
+        executeSubworkflowTaskAndSyncData(subWorkflow, subWorkflowTask);
+        executionDAOFacade.updateTask(subWorkflowTask);
+    }
+
+    private void executeSubworkflowTaskAndSyncData(Workflow subWorkflow, Task subWorkflowTask) {
+        WorkflowSystemTask subWorkflowSystemTask = WorkflowSystemTask.get(SubWorkflow.NAME);
         subWorkflowSystemTask.execute(subWorkflow, subWorkflowTask, this);
+        // Keep Subworkflow task's data consistent with Subworkflow's.
         if (subWorkflowTask.getStatus().isTerminal() && subWorkflowTask.getExternalOutputPayloadStoragePath() != null && !subWorkflowTask.getOutputData().isEmpty()) {
             Map<String, Object> parentWorkflowTaskOutputData = subWorkflowTask.getOutputData();
             deciderService.populateTaskData(subWorkflowTask);
             subWorkflowTask.getOutputData().putAll(parentWorkflowTaskOutputData);
             deciderService.externalizeTaskData(subWorkflowTask);
         }
-        executionDAOFacade.updateTask(subWorkflowTask);
     }
 }
