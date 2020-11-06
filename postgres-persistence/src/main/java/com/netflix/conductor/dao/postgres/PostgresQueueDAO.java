@@ -191,7 +191,6 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
 
         getWithRetriedTransactions(tx -> {
             String LOCK_TASKS = "SELECT message_id FROM queue_message WHERE popped = true AND (deliver_on + (60 ||' seconds')::interval)  <  current_timestamp FOR UPDATE SKIP LOCKED";
-            query(tx, LOCK_TASKS, Query::executeQuery);
 
             List<String> messages = query(tx, LOCK_TASKS, p -> p.executeAndFetch(rs -> {
                 List<String> results = new ArrayList<>();
@@ -219,7 +218,6 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
     public void processUnacks(String queueName) {
         getWithRetriedTransactions(tx -> {
             String LOCK_TASKS = "SELECT message_id FROM queue_message WHERE queue_name = ? AND popped = true AND (deliver_on + (60 ||' seconds')::interval)  <  current_timestamp FOR UPDATE SKIP LOCKED";
-            query(tx, LOCK_TASKS, q -> q.addParameter(queueName).executeQuery());
 
             List<String> messages = query(tx, LOCK_TASKS, p -> p.addParameter(queueName)
                     .executeAndFetch(rs -> {
