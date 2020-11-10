@@ -22,9 +22,10 @@ import com.google.common.cache.LoadingCache;
 import com.netflix.servo.util.VisibleForTesting;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,13 +33,14 @@ public class LocalOnlyLock implements Lock {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalOnlyLock.class);
 
-    private static final CacheLoader<String, Semaphore> LOADER = new CacheLoader<String, Semaphore>() {
-        @Override
-        public Semaphore load(String key) {
-            return new Semaphore(1, true);
-        }
-    };
-    private static final LoadingCache<String, Semaphore> CACHE = CacheBuilder.newBuilder().build(LOADER);
+    private static final CacheLoader<String, java.util.concurrent.locks.Lock> LOADER =
+        new CacheLoader<String, java.util.concurrent.locks.Lock>() {
+            @Override
+            public java.util.concurrent.locks.Lock load(String key) {
+                return new ReentrantLock(true);
+            }
+        };
+    private static final LoadingCache<String, java.util.concurrent.locks.Lock> CACHE = CacheBuilder.newBuilder().build(LOADER);
     private static final ThreadGroup THREAD_GROUP = new ThreadGroup("LocalOnlyLock-scheduler");
     private static final ThreadFactory THREAD_FACTORY = runnable -> new Thread(THREAD_GROUP, runnable);
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1, THREAD_FACTORY);
@@ -46,14 +48,14 @@ public class LocalOnlyLock implements Lock {
     @Override
     public void acquireLock(String lockId) {
         logger.trace("Locking {}", lockId);
-        CACHE.getUnchecked(lockId).acquireUninterruptibly();
+        CACHE.getUnchecked(lockId).lock();
     }
 
     @Override
     public boolean acquireLock(String lockId, long timeToTry, TimeUnit unit) {
         try {
             logger.trace("Locking {} with timeout {} {}", lockId, timeToTry, unit);
-            return CACHE.getUnchecked(lockId).tryAcquire(timeToTry, unit);
+            return CACHE.getUnchecked(lockId).tryLock(timeToTry, unit);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
@@ -77,10 +79,8 @@ public class LocalOnlyLock implements Lock {
         // The check is here to prevent semaphore getting above 1
         // e.g. in case when lease runs out but release is also called
         synchronized (CACHE) {
-            if (CACHE.getUnchecked(lockId).availablePermits() == 0) {
-                logger.trace("Releasing {}", lockId);
-                CACHE.getUnchecked(lockId).release();
-            }
+            logger.trace("Releasing {}", lockId);
+            CACHE.getUnchecked(lockId).unlock();
         }
     }
 
@@ -91,7 +91,7 @@ public class LocalOnlyLock implements Lock {
     }
 
     @VisibleForTesting
-    LoadingCache<String, Semaphore> cache() {
+    LoadingCache<String, java.util.concurrent.locks.Lock> cache() {
         return CACHE;
     }
 }
