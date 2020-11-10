@@ -1601,6 +1601,8 @@ public class WorkflowExecutor {
                     rerunFromTask.setInputData(taskInput);
                 }
                 addTaskToQueue(rerunFromTask);
+                LOGGER.info("Rerun task '{}' to publish.", rerunFromTask.getTaskId());
+                taskStatusListener.onTaskScheduled(rerunFromTask);
             }
             rerunFromTask.setExecuted(false);
             executionDAOFacade.updateTask(rerunFromTask);
