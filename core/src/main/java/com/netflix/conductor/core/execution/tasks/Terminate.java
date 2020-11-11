@@ -81,9 +81,6 @@ public class Terminate extends WorkflowSystemTask {
     private void setWorkflowOutput(Map<String, Object> taskOutput, Workflow workflow) {
         if(!taskOutput.isEmpty()) {
             workflow.setOutput(taskOutput);
-			if (workflow.getWorkflowDefinition() != null && (workflow.getWorkflowDefinition().getOutputParameters() != null && !workflow.getWorkflowDefinition().getOutputParameters().isEmpty())) {
-                workflow.getWorkflowDefinition().setOutputParameters(taskOutput);
-            }
         }
     }
 
