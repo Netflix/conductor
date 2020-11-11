@@ -51,10 +51,7 @@
     "loopOver" : [ ]
   } ],
   "inputParameters" : [ ],
-  "outputParameters" : {
-  	"o1": "${lambda0.ouput}",
-  	"o2": "${t2.ouput}"
-   },
+  "outputParameters" : { },
   "failureWorkflow" : "failure_workflow",
   "schemaVersion" : 2,
   "restartable" : true,

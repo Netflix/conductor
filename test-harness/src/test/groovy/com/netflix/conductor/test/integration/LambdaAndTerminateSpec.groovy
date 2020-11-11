@@ -88,8 +88,6 @@ class LambdaAndTerminateSpec extends Specification {
             tasks[0].taskType == 'LAMBDA'
             tasks[1].status == Task.Status.COMPLETED
             tasks[1].taskType == 'TERMINATE'
-			output.size() == 1
-			output.containsKey("result")
         }
     }
 
