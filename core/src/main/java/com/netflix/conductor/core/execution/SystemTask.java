@@ -25,6 +25,7 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.tasks.Event;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.Wait;
+import org.apache.commons.collections.MapUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -141,6 +142,8 @@ public class SystemTask extends Task {
 	
 	public static Task subWorkflowTask(Workflow workflow, String taskId, WorkflowTask taskToSchedule, Map<String, Object> input, String subWorkflowName, Integer subWorkflowVersion) {
 
+		Object jobPriority = workflow.getInput().getOrDefault("jobPriority", "5");
+
 		SystemTask st = new SystemTask();
 		st.setTaskType(SubWorkflow.NAME);
 		st.setTaskDefName(taskToSchedule.getName());
@@ -151,8 +154,12 @@ public class SystemTask extends Task {
 		st.setEndTime(System.currentTimeMillis());
 		st.getInputData().put("subWorkflowName", subWorkflowName);
 		st.getInputData().put("subWorkflowVersion", subWorkflowVersion);
+		if ( MapUtils.isNotEmpty(input)){
+			input.putIfAbsent("jobPriority", jobPriority);
+		}else{
+			st.getInputData().putIfAbsent("jobPriority", jobPriority);
+		}
 		st.getInputData().put("workflowInput", input);
-		//Add Job Priority here?
 		st.setTaskId(taskId);
 		st.setStatus(Status.SCHEDULED);
 		st.setWorkflowTask(taskToSchedule);
