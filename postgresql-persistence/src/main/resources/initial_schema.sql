@@ -100,6 +100,36 @@ CREATE TABLE meta_error_registry
     UNIQUE (lookup, workflow_name)
 );
 
+CREATE sequence meta_priority_id_seq START WITH 1 increment BY 1 no maxvalue no minvalue cache 20 no cycle;
+
+CREATE TABLE meta_priority
+(
+    id BIGINT DEFAULT nextval('meta_priority_id_seq'::regclass) NOT NULL,
+    created_on timestamp not null default now(),
+    modified_on timestamp not null default now(),
+    min_priority INTEGER NOT NULL,
+    max_priority INTEGER NOT NULL,
+    name CHARACTER VARYING(255) NOT NULL,
+    value TEXT NOT NULL,
+    PRIMARY KEY (id)
+);
+
+INSERT INTO meta_priority (min_priority, max_priority, name, value)
+VALUES (1, 1, 'hybrik-transcode-server', 'transcode-hybrik-lightning');
+INSERT INTO meta_priority (min_priority, max_priority, name, value)
+VALUES (2, 2, 'hybrik-transcode-server', 'transcode-hybrik-urgent');
+INSERT INTO meta_priority (min_priority, max_priority, name, value)
+VALUES (3, 4, 'hybrik-transcode-server', 'transcode-hybrik-high');
+INSERT INTO meta_priority (min_priority, max_priority, name, value)
+VALUES (5, 6, 'hybrik-transcode-server', 'transcode-hybrik-medium');
+INSERT INTO meta_priority (min_priority, max_priority, name, value)
+VALUES (7, 8, 'hybrik-transcode-server', 'transcode-hybrik');
+INSERT INTO meta_priority (min_priority, max_priority, name, value)
+VALUES (9, 10, 'hybrik-transcode-server', 'transcode-hybrik-low');
+UPDATE meta_config set value = 'deluxe.deluxeone.combinedstreampackager.transcode.process.1.1' WHERE name = 'combined_watermark_transcode_process';
+UPDATE meta_config set value = 'deluxe.dependencygraph.action.transcode.hybrik.process.1.11' WHERE name = 'WORKFLOW_ACTION_TRANSCODE';
+UPDATE meta_config set value = 'deluxe.dependencygraph.action.transcode.hybrik.process.1.11' WHERE name = 'WORKFLOW_ACTION_TRANSCODE_HYBRIK';
+
 
 -- ----------------------------------------------------------------------------------------------------------------
 -- schema for execution dao
