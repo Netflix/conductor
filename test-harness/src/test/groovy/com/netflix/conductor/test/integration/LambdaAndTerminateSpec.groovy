@@ -80,7 +80,7 @@ class LambdaAndTerminateSpec extends Specification {
         def workflowInstanceId = workflowExecutor.startWorkflow(WORKFLOW_WITH_TERMINATE_TASK, 1,
                 '', workflowInput, null, null, null)
 
-        then: "Ensure that the workflow has started and the first task is in scheduled state and workflow output is terminate tasks output"
+        then: "Ensure that the workflow has started and the first task is in scheduled state and workflow output should be terminate tasks output"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 2
