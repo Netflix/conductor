@@ -400,7 +400,7 @@ public class WorkflowExecutor {
 
         try {
             executionDAOFacade.createWorkflow(workflow);
-            LOGGER.debug("A new instance of workflow: {} created with id: {}", workflow.getWorkflowName(), workflowId);
+            LOGGER.info("A new instance of workflow: {} created with id: {}", workflow.getWorkflowName(), workflowId);
             //then decide to see if anything needs to be done as part of the workflow
             decide(workflowId);
             return workflowId;

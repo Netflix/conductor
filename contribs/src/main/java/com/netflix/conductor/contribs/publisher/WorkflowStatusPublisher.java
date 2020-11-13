@@ -42,8 +42,8 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
                 try {
                     Workflow workflow = blockingQueue.take();
                     WorkflowNotification workflowNotification = new WorkflowNotification(workflow);
-                    String wfMsg = String.format("Publishing workflow '%s.",workflowNotification.getWorkflowId());
-                    LOGGER.debug(wfMsg);
+                    String jsonWorkflow = workflowNotification.toJsonString();
+                    LOGGER.info("Publishing WorkflowNotification: {}", jsonWorkflow);
                     if (workflowNotification.getAccountMoId().equals("")) {
                         LOGGER.info("Skip workflow '{}' notification. Account Id is empty.", workflowNotification.getWorkflowId());
                         continue;
@@ -91,7 +91,6 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
 
      private void publishWorkflowNotification(WorkflowNotification workflowNotification) {
         String jsonWorkflow = workflowNotification.toJsonString();
-         LOGGER.info("Publishing WorkflowNotification: {}", jsonWorkflow);
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
         rc.post(url, jsonWorkflow, workflowNotification.getDomainGroupMoId(), workflowNotification.getAccountMoId());

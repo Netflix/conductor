@@ -41,8 +41,12 @@ public class TaskStatusPublisher implements TaskStatusListener {
                 try {
                     Task task = blockingQueue.take();
                     TaskNotification taskNotification = new TaskNotification(task);
-                    String taskMsg = String.format("Publishing task '%s'. WorkflowId: '%s'.",taskNotification.getTaskId(), taskNotification.getWorkflowId());
-                    LOGGER.debug(taskMsg);
+                    String jsonTask = taskNotification.toJsonString();
+                    LOGGER.info("Start Publishing TaskNotification: {}", jsonTask);
+                    if (taskNotification.getTaskType().equals("SUB_WORKFLOW")) {
+                        LOGGER.info("Skip task '{}' notification. Task type is SUB_WORKFLOW.", taskNotification.getTaskId());
+                        continue;
+                    }
                     if (taskNotification.getAccountMoId().equals("")) {
                         LOGGER.info("Skip task '{}' notification. Account Id is empty.", taskNotification.getTaskId());
                         continue;
@@ -80,7 +84,6 @@ public class TaskStatusPublisher implements TaskStatusListener {
 
     private void publishTaskNotification(TaskNotification taskNotification) {
         String jsonTask = taskNotification.toJsonString();
-        LOGGER.info("Publishing TaskNotification: {}", jsonTask);
         RestClient rc = new RestClient();
         String url = rc.createUrl(NOTIFICATION_TYPE);
         rc.post(url, jsonTask, taskNotification.getDomainGroupMoId(), taskNotification.getAccountMoId());
