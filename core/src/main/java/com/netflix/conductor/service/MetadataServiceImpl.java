@@ -21,18 +21,27 @@ import com.netflix.conductor.annotations.Service;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.events.EventQueues;
+import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
+import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.validations.ValidationContext;
 
 import javax.inject.Inject;
+import java.util.Map;
 import javax.inject.Singleton;
+import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Optional;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.script.ScriptException;
 
 @Audit
 @Singleton
@@ -112,6 +121,7 @@ public class MetadataServiceImpl implements MetadataService {
      */
     @Service
     public void updateWorkflowDef(WorkflowDef def) {
+        validateScriptExpression(def);
         metadataDAO.update(def);
     }
 
@@ -122,10 +132,32 @@ public class MetadataServiceImpl implements MetadataService {
     @Service
     public void updateWorkflowDef(List<WorkflowDef> workflowDefList) {
         for (WorkflowDef workflowDef : workflowDefList) {
+            validateScriptExpression(workflowDef);
             metadataDAO.update(workflowDef);
         }
     }
 
+    /**
+    *This function is used to eval condition script before saving the workflow
+    *
+    */
+    private void validateScriptExpression(WorkflowDef workflowDef) {
+        List<WorkflowTask> tasks = workflowDef.getTasks().stream().filter(t -> t.getType().equalsIgnoreCase("decision")).collect(Collectors.toList());
+        for (WorkflowTask task: tasks) {
+            String taskType = task.getType();
+            String case0 = task.getCaseExpression();
+
+            Map<String, Object> map = task.getInputParameters();
+            if(task.getType().equalsIgnoreCase("decision")) {
+                try {
+                    Object returnValue = ScriptEvaluator.eval(task.getCaseExpression(), map);
+                } catch(ScriptException e) {
+                    throw new ApplicationException(Code.INVALID_INPUT,
+                        String.format("Decision task condition is not well formated: %s", e.getMessage()));
+                }
+            }
+        }
+    }
     /**
      * @param name    Name of the workflow to retrieve
      * @param version Optional.  Version.  If null, then retrieves the latest
