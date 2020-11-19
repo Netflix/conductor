@@ -193,11 +193,12 @@ func (c *ConductorHttpClient) PollForTask(taskType string, workerid string, doma
     params := map[string]string{
         "workerid": workerid,
     }
+    // only add the domain if requested, otherwise conductor will silently fail (https://github.com/Netflix/conductor/issues/1952)
     if domain != "" {
-        log.Println("Acking task with domain: ", domain, "taskType: ", taskType)
+        log.Println("Polling for task with domain: ", domain, "taskType: ", taskType)
         params["domain"] = domain
     } else {
-        log.Println("Acking task without domain, taskType: ", taskType)
+        log.Println("Polling for task without domain, taskType: ", taskType)
     }
     outputString, err := c.httpClient.Get(url, params, nil)
     if err != nil {
