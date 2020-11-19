@@ -12,7 +12,7 @@ COPY . /conductor
 WORKDIR /conductor
 
 # Build the server on run
-RUN ./gradlew build -x test
+RUN ./gradlew build -Dhttp.socketTimeout=60000 -Dhttp.connectionTimeout=60000 -x test
 
 # 1. Bin stage
 FROM openjdk:11-jre
