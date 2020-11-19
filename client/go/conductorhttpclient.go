@@ -207,7 +207,13 @@ func (c *ConductorHttpClient) AckTask(taskId, workerid, domain string) (string, 
     url := c.httpClient.MakeUrl("/tasks/{taskId}/ack", "{taskId}", taskId)
     params := map[string]string{
         "workerid": workerid,
-	"domain": domain,
+    }
+    // only add the domain if requested, otherwise conductor will silently fail (https://github.com/Netflix/conductor/issues/1952)
+    if domain != "" {
+        log.Println("Acking task with domain: ", domain, "taskid: ", taskId)
+        params["domain"] = domain
+    } else {
+        log.Println("Acking task without domain, taskid: ", taskId)
     }
     headers := map[string]string{"Accept": "application/json"}
     outputString, err := c.httpClient.Post(url, params, headers, "")
