@@ -192,7 +192,12 @@ func (c *ConductorHttpClient) PollForTask(taskType string, workerid string, doma
     url := c.httpClient.MakeUrl("/tasks/poll/{taskType}", "{taskType}", taskType)
     params := map[string]string{
         "workerid": workerid,
-        "domain":   domain,
+    }
+    if domain != "" {
+        log.Println("Acking task with domain: ", domain, "taskType: ", taskType)
+        params["domain"] = domain
+    } else {
+        log.Println("Acking task without domain, taskType: ", taskType)
     }
     outputString, err := c.httpClient.Get(url, params, nil)
     if err != nil {
