@@ -14,7 +14,7 @@ COPY . /conductor
 WORKDIR /conductor
 
 # Build the server on run
-RUN ./gradlew build -x test --stacktrace
+RUN ./gradlew build -Dhttp.socketTimeout=60000 -Dhttp.connectionTimeout=60000 -x test
 
 # ===========================================================================================================
 # 1. Bin stage
@@ -33,6 +33,9 @@ COPY --from=builder /conductor/server/build/libs/conductor-server-*-boot.jar /ap
 
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh
+
+EXPOSE 8080
+EXPOSE 8090
 
 HEALTHCHECK --interval=60s --timeout=30s --retries=10 CMD curl -I -XGET http://localhost:8080/health || exit 1
 
