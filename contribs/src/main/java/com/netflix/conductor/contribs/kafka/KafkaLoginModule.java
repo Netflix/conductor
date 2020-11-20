@@ -41,8 +41,8 @@ public class KafkaLoginModule implements LoginModule {
 
 	@Override
 	public boolean login() throws LoginException {
-		String userName = getProperty("workflow.elasticsearch.kafka.jaas.username", "svc-sioetdu");
-		String password = getProperty("workflow.elasticsearch.kafka.jaas.password",  "Gcjh6ugA");		
+		String userName = getProperty(getKafkaEventsJaasUsername(), null);
+		String password = getProperty(getKafkaEventsJaasPassword(), null);		
 		List<String> messages = new ArrayList<String>();
 		
 		if (StringUtils.isBlank(userName)) {
