@@ -19,6 +19,12 @@ import (
 
 type TaskResultStatus string
 
+type LogMessage struct {
+	Log    	       string    `json:"log"`
+	TaskID         string    `json:"taskId"`
+	CreatedTime    int       `json:"createdTime"`
+}
+
 type TaskResult struct {
 	Status TaskResultStatus				`json:"status"`
 	WorkflowInstanceId string			`json:"workflowInstanceId"`
@@ -27,6 +33,7 @@ type TaskResult struct {
 	CallbackAfterSeconds int64			`json:"callbackAfterSeconds"`
 	WorkerId string						`json:"workerId"`
 	OutputData map[string]interface{}	`json:"outputData"`
+	Logs       []LogMessage             `json:"logs"`
 }
 
 // "Constructor" to initialze non zero value defaults
