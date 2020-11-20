@@ -51,7 +51,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.events.EventExecution;
-import com.netflix.conductor.contribs.kafka.KafkaErrorEmailSender;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.EventProcessingFailures;
 import com.netflix.conductor.core.events.queue.Message;
@@ -81,12 +80,6 @@ import rx.Observable.OnSubscribe;
  * name as the topic but with a '-errors' suffix, the error (in the form of a serialized
  * com.netflix.conductor.core.events.queue.MessageEventFailure JSON will be written to that error topic. 
  * 
- * If the payload of the event contains an 'errorNotificationEmail' attribute, that email address will be sent an email
- * notifying them of the error. If a 'kafka_events_errorEmailsAddlRecipients' property is set, that email address will be
- * added as a recipient of all error emails. The 'kafka.events.minutesUntilErrorEmail' and 
- * 'kafka.events.errorsPerEmail' properties can be used to throttle the error emails either by
- * sending all emails that happen within a time interval or after a maximum number of errors has been reached.
- *  
  * The 'kafka.events.pollingInterval' property (or the kafka.default.pollingInterval property if all Kafka consumers use
  * the same value) can be used to specify how many milliseconds elapses before the next attempt at consuming events happens.
  * 
@@ -101,7 +94,6 @@ public class KafkaObservableQueue implements ObservableQueue {
 	private static final Logger logger = LoggerFactory.getLogger(KafkaObservableQueue.class);
 
 	private static final String QUEUE_TYPE = "kafka";
-	private static final String ERROR_NOTIFICATION_EMAIL_ATTRNAME = "errorNotificationEmail";
 
 	private final String queueName;
 
@@ -114,8 +106,6 @@ public class KafkaObservableQueue implements ObservableQueue {
 	private List<KafkaConsumer<String, String>> consumers;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
-	
-	private KafkaErrorEmailSender errorEmailSender;
 
 	@Inject
 	public KafkaObservableQueue(String queueName, Configuration config) {
@@ -204,12 +194,6 @@ public class KafkaObservableQueue implements ObservableQueue {
 			checkProducerProps(producerProperties);
 			producerProperties.put(ProducerConfig.CLIENT_ID_CONFIG, queueName + "_producer_" + config.getServerId());
 			this.producer = new KafkaProducer<String, String>(producerProperties);
-			
-			/**
-			 * This will send emails to recipients if there is an error processing an event and something is specified 
-			 * on the 'errorNotificationEmail' attribute of the event payload.
-			 */
-			this.errorEmailSender = new KafkaErrorEmailSender(config);
 		} catch (KafkaException e) {
 			e.printStackTrace();
 		}
@@ -430,7 +414,6 @@ public class KafkaObservableQueue implements ObservableQueue {
 			Optional<MessageEventFailure> messageEventFailure = getMessageEventFailure(failure, messages);
 			if(messageEventFailure.isPresent()) {
 				MessageEventFailure theFailure = messageEventFailure.get();
-				String notificationEmailAddress = getErrorNotificationEmailAddress(theFailure);
 				try {
 					String s = this.objectMapper.writeValueAsString(theFailure);
 					boolean validErrorTopic = true;
@@ -456,7 +439,7 @@ public class KafkaObservableQueue implements ObservableQueue {
 							throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, "Failed to publish the event");
 						}
 					}
-					this.errorEmailSender.newError(this.queueName, validErrorTopic ? errorQueueName : null, notificationEmailAddress, theFailure);
+					processFailure(this.queueName, validErrorTopic ? errorQueueName : null, theFailure);
 				} catch(Exception e) {
 					e.printStackTrace();
 				}
@@ -464,20 +447,13 @@ public class KafkaObservableQueue implements ObservableQueue {
 		});
 	}
 
-	private String getErrorNotificationEmailAddress(MessageEventFailure failure) {
-		String emailAddress = null;
-		String payload = failure.getMessage().getPayload();
-		try {
-			JsonNode payloadNode = this.objectMapper.readTree(payload);
-			if(payloadNode != null) {
-				JsonNode emailNode = payloadNode.get(ERROR_NOTIFICATION_EMAIL_ATTRNAME);
-				if(emailNode != null) {
-					emailAddress = emailNode.asText();
-				}
-			}
-		} catch(Exception e) {
-		}
-		return emailAddress;
+	/**
+	 * Meant to be overridden by derived classes if there is extra processing to be done on a message processing failure
+	 * @param topicName the name of the topic that contained the event
+	 * @param errorTopicName the name of the topic where the error was written
+	 * @param failure the failure information
+	 */
+	protected void processFailure(String topicName, String errorTopicName, MessageEventFailure failure) {
 	}
 	
 	private Optional<MessageEventFailure> getMessageEventFailure(EventExecution eventExecution, List<Message> messages) {

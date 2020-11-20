@@ -18,7 +18,6 @@ dependencies {
     compile "javax.validation:validation-api:${revValidationApi}"
     // https://mvnrepository.com/artifact/org.glassfish/javax.el
     compile group: 'org.glassfish', name: 'javax.el', version: "${revJavaElApi}"
-	compile "com.sun.mail:javax.mail:${revJavaMail}"
     
     testCompile "org.slf4j:slf4j-log4j12:${revSlf4jlog4j}"
 }
