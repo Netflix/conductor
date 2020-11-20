@@ -26,14 +26,14 @@ type LogMessage struct {
 }
 
 type TaskResult struct {
-	Status TaskResultStatus				`json:"status"`
-	WorkflowInstanceId string			`json:"workflowInstanceId"`
-	TaskId string						`json:"taskId"`
-	ReasonForIncompletion string		`json:"reasonForIncompletion"`
-	CallbackAfterSeconds int64			`json:"callbackAfterSeconds"`
-	WorkerId string						`json:"workerId"`
-	OutputData map[string]interface{}	`json:"outputData"`
-	Logs       []LogMessage             `json:"logs"`
+	Status 					TaskResultStatus			`json:"status"`
+	WorkflowInstanceId 		string						`json:"workflowInstanceId"`
+	TaskId 					string						`json:"taskId"`
+	ReasonForIncompletion 	string						`json:"reasonForIncompletion"`
+	CallbackAfterSeconds 	int64						`json:"callbackAfterSeconds"`
+	WorkerId 				string						`json:"workerId"`
+	OutputData 				map[string]interface{}		`json:"outputData"`
+	Logs       				[]LogMessage             	`json:"logs"`
 }
 
 // "Constructor" to initialze non zero value defaults
