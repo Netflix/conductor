@@ -19,12 +19,6 @@ import (
 
 type TaskResultStatus string
 
-type LogMessage struct {
-	Log    	       string    `json:"log"`
-	TaskID         string    `json:"taskId"`
-	CreatedTime    int       `json:"createdTime"`
-}
-
 type TaskResult struct {
 	Status 					TaskResultStatus			`json:"status"`
 	WorkflowInstanceId 		string						`json:"workflowInstanceId"`
@@ -34,6 +28,13 @@ type TaskResult struct {
 	WorkerId 				string						`json:"workerId"`
 	OutputData 				map[string]interface{}		`json:"outputData"`
 	Logs       				[]LogMessage             	`json:"logs"`
+}
+
+// LogMessage used to sent logs to conductor server
+type LogMessage struct {
+	Log    	       string    `json:"log"`
+	TaskID         string    `json:"taskId"`
+	CreatedTime    int       `json:"createdTime"`
 }
 
 // "Constructor" to initialze non zero value defaults
