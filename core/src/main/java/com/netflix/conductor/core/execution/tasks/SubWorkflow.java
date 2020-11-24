@@ -114,7 +114,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 			task.getOutputData().put(SUB_WORKFLOW_ID, subWorkflowId);
 
 			// Set task status based on current sub-workflow status, as the status can change in recursion by the time we update here.
-			Workflow subWorkflow = provider.getWorkflow(subWorkflowId, false);
+			Workflow subWorkflow = provider.getWorkflow(subWorkflowId, false);			
+			if (subWorkflow.getStatus() == WorkflowStatus.COMPLETED) {
+				task.getOutputData().putAll(subWorkflow.getOutput());
+			}
 			updateTaskStatus(subWorkflow, task);
 		} catch (Exception e) {
 			task.setStatus(Status.FAILED);
