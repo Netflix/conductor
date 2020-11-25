@@ -491,19 +491,26 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public void resetStartTime(Task task, boolean updateOutput) {
-		Map<String, Object> payload = new HashMap<>();
-		payload.put("startTime", task.getStartTime());
-		payload.put("endTime", task.getEndTime());
-		if (updateOutput) {
-			payload.put("outputData", task.getOutputData());
-		}
+		try {
+			Map<String, Object> payload = new HashMap<>();
+			payload.put("startTime", task.getStartTime());
+			payload.put("endTime", task.getEndTime());
+			logger.info("resetStartTime: Starttime " + task.getStartTime());
+			if (updateOutput) {
+				payload.put("outputData", task.getOutputData());
+			}
 
-		String SQL = "UPDATE task SET json_data = (json_data::jsonb || ?::jsonb)::text WHERE task_id = ? AND task_status = 'IN_PROGRESS'";
-		executeWithTransaction(SQL, q -> q
-			.addJsonParameter(payload)
-			.addParameter(task.getTaskId())
-			.executeUpdate());
-		logger.debug("Logger IN_PROGRESS was called for " + task.getStartTime() + "    " + task.getTaskId());
+			String SQL = "UPDATE task SET json_data = (json_data::jsonb || ?::jsonb)::text WHERE task_id = ? AND task_status = 'IN_PROGRESS'";
+			logger.info("resetStartTime: TaskID " + task.getTaskId());
+			executeWithTransaction(SQL, q -> q
+					.addJsonParameter(payload)
+					.addParameter(task.getTaskId())
+					.executeUpdate());
+			logger.info("resetStartTime: Logger IN_PROGRESS was called for " + task.getStartTime() + "    " + task.getTaskId());
+		}catch (Throwable ex){
+			logger.info("resetStartTime: Error Occured " + ex);
+			throw ex;
+		}
 	}
 
 	private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
