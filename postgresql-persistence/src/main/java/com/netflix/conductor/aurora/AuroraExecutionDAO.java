@@ -501,7 +501,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			}
 
 			String SQL = "UPDATE task SET json_data = (json_data::jsonb || ?::jsonb)::text WHERE task_id = ? AND task_status = 'IN_PROGRESS'";
-			logger.info("resetStartTime: TaskID " + task.getTaskId());
+			logger.info("resetStartTime: TaskID " + task.getTaskId() + "   Status:   " + task.getStatus());
 			executeWithTransaction(SQL, q -> q
 					.addJsonParameter(payload)
 					.addParameter(task.getTaskId())
