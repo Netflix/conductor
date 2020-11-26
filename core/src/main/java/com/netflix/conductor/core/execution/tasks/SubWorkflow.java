@@ -114,7 +114,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 			task.getOutputData().put(SUB_WORKFLOW_ID, subWorkflowId);
 
 			// Set task status based on current sub-workflow status, as the status can change in recursion by the time we update here.
-			updateSubWorkflowOutput(subWorkflowId, task, provider);
+			Workflow subWorkflow = provider.getWorkflow(subWorkflowId, false);
+			updateTaskStatus(subWorkflow, task);
 		} catch (Exception e) {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(e.getMessage());
@@ -128,20 +129,11 @@ public class SubWorkflow extends WorkflowSystemTask {
 		if(StringUtils.isEmpty(workflowId)) {
 			return false;
 		}
-		boolean status = updateSubWorkflowOutput(workflowId, task, provider);
-		return status;
-	}
 
-	private boolean updateSubWorkflowOutput(String workflowId,Task task, WorkflowExecutor provider) {
 		Workflow subWorkflow = provider.getWorkflow(workflowId, false);
 		WorkflowStatus subWorkflowStatus = subWorkflow.getStatus();
 		if(!subWorkflowStatus.isTerminal()){
 			return false;
-		}
-		if (subWorkflow.getExternalOutputPayloadStoragePath() != null) {
-			task.setExternalOutputPayloadStoragePath(subWorkflow.getExternalOutputPayloadStoragePath());
-		} else {
-			task.getOutputData().putAll(subWorkflow.getOutput());
 		}
 
 		updateTaskStatus(subWorkflow, task);
@@ -199,8 +191,15 @@ public class SubWorkflow extends WorkflowSystemTask {
 				throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, "Subworkflow status does not conform to relevant task status.");
 		}
 
-		if (status.isTerminal() && !status.isSuccessful()) {
-			task.setReasonForIncompletion(subworkflow.getReasonForIncompletion());
+		if (status.isTerminal()) {
+			if (subworkflow.getExternalOutputPayloadStoragePath() != null) {
+				task.setExternalOutputPayloadStoragePath(subworkflow.getExternalOutputPayloadStoragePath());
+			} else {
+				task.getOutputData().putAll(subworkflow.getOutput());
+			}
+			if(!status.isSuccessful()) {
+				task.setReasonForIncompletion(subworkflow.getReasonForIncompletion());
+			}
 		}
 	}
 }
