@@ -70,5 +70,6 @@ ext {
     revDockerCompose= '0.8.13'
     revGroovy = '2.4.15'
     revSpock = '1.3-groovy-2.4'
+    revHamcrestAllMatchers = '1.8'
     revKafkaClient = '2.2.0'
 }
