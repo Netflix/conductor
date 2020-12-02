@@ -92,6 +92,25 @@ public class InfoResource {
 	}
 
 	@GET
+	@Path("/stuckChecksums")
+	@ApiOperation(value = "Get the list of checksum jobs that are potentially stuck")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<String> stuckChecksums(){
+		try {
+			Calendar threeDaysAgo = Calendar.getInstance();
+			threeDaysAgo.add(Calendar.DATE, -3);
+
+			Calendar thirtyMinsAgo = Calendar.getInstance();
+			thirtyMinsAgo.add(Calendar.MINUTE, -30);
+
+			return metricsDAO.getStuckChecksums(threeDaysAgo.getTimeInMillis(), thirtyMinsAgo.getTimeInMillis());
+		} catch (Exception e) {
+			logger.error("Error while fetching checksum info " + e.getMessage(), e);
+			throw e;
+		}
+	}
+
+	@GET
 	@Path("/dependencies")
 	@ApiOperation(value = "Get the dependencies")
 	@Produces(MediaType.APPLICATION_JSON)
