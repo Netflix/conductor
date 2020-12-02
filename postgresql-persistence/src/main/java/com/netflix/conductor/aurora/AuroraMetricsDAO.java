@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -65,6 +66,8 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	private static ParametersUtils pu = new ParametersUtils();
 	private final List<String> WORKFLOWS;
 	private MetadataDAO metadataDAO;
+	private final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
 
 	@Inject
 	public AuroraMetricsDAO(DataSource dataSource, ObjectMapper mapper, MetadataDAO metadataDAO, Configuration config) {
@@ -887,4 +890,33 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 			}
 		});
 	}
+
+
+	@Override
+	public List<String> getStuckChecksums(Long startTime, Long endTime) {
+		String SQL = "SELECT t2.output::jsonb->'response'->'body'->>'DispatchedJobID' AS jobId, " +
+				"'http://conductor-ui.service.owf-int/#/workflow/id/' || w.workflow_id AS workflow, " +
+				"t2.created_on " +
+				"FROM workflow w, task t2 " +
+				"WHERE w.workflow_id = t2.workflow_id " +
+				"AND w.workflow_status = 'RUNNING' " +
+				"AND t2.created_on BETWEEN ? AND ? " +
+				"AND t2.task_refname = 'getChecksum' " +
+				"AND t2.task_status = 'COMPLETED'";
+
+		return queryWithTransaction(SQL, q -> q.addTimestampParameter(startTime)
+				.addTimestampParameter(endTime)
+				.executeAndFetch(resultSet -> {
+					List<String> result = new ArrayList<>();
+					while(resultSet.next()){
+						result.add("{" +
+								"'jobId':'" + resultSet.getString("jobId") + "'," +
+								"'workflow':'"  + resultSet.getString("workflow")  + "'," +
+								"'createdOn':'"  + resultSet.getString("created_on")  + "'" +
+								"}");
+					}
+					return result;
+				}));
+	}
+
 }
