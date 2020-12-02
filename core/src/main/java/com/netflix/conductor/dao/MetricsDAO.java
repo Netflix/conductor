@@ -18,6 +18,8 @@
  */
 package com.netflix.conductor.dao;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,4 +49,7 @@ public interface MetricsDAO {
 	Map<String, Object> getWorkflowCounters();
 
 	Map<String, Object> getWorkflowAverage();
+
+	default List<String> getStuckChecksums(Long startTime, Long endTime) {return new ArrayList<>();}
+
 }
