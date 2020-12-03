@@ -314,6 +314,35 @@ public class WorkflowExecutor {
     public String startWorkflow(
             String name,
             Integer version,
+            Integer priority,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            String parentWorkflowId,
+            String parentWorkflowTaskId,
+            String event,
+            Map<String, String> taskToDomain
+    ) {
+        return startWorkflow(
+                name,
+                version,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                parentWorkflowId,
+                parentWorkflowTaskId,
+                event,
+                taskToDomain
+        );
+    }
+
+    /**
+     * @throws ApplicationException
+     */
+    public String startWorkflow(
+            String name,
+            Integer version,
             Map<String, Object> workflowInput,
             String externalInputPayloadStoragePath,
             String correlationId,

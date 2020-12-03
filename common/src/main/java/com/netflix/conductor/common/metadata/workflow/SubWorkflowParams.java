@@ -47,6 +47,9 @@ public class SubWorkflowParams {
     @ProtoField(id = 4)
     private Object workflowDefinition;
 
+    @ProtoField(id = 5)
+    private Integer priority;
+
     /**
      * @return the name
      */
@@ -127,6 +130,22 @@ public class SubWorkflowParams {
     @JsonSetter("workflowDefinition")
     public void setWorkflowDef(WorkflowDef workflowDef) {
         this.workflowDefinition = workflowDef;
+    }
+
+    /**
+     *
+     * @return the priority
+     */
+    public Integer getPriority() {
+        return priority;
+    }
+
+    /**
+     * @param priority the priority to set
+     * @return
+     */
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 
     @Override
