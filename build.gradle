@@ -36,6 +36,7 @@ allprojects {
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'java-library'
     apply plugin: 'project-report'
+    apply plugin: 'checkstyle'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -89,6 +90,15 @@ allprojects {
     // processes additional configuration metadata json file as described here
     // https://docs.spring.io/spring-boot/docs/2.3.1.RELEASE/reference/html/appendix-configuration-metadata.html#configuration-metadata-additional-metadata
     compileJava.inputs.files(processResources)
+
+    checkstyle {
+        toolVersion = "8.27"
+        ignoreFailures = true
+    }
+
+    checkstyleMain {
+        source = fileTree("src/main/java")
+    }
 
     test {
         useJUnitPlatform()
