@@ -126,9 +126,6 @@ INSERT INTO meta_priority (min_priority, max_priority, name, value)
 VALUES (7, 8, 'hybrik-transcode-server', 'transcode-hybrik');
 INSERT INTO meta_priority (min_priority, max_priority, name, value)
 VALUES (9, 10, 'hybrik-transcode-server', 'transcode-hybrik-low');
-UPDATE meta_config set value = 'deluxe.deluxeone.combinedstreampackager.transcode.process.1.1' WHERE name = 'combined_watermark_transcode_process';
-UPDATE meta_config set value = 'deluxe.dependencygraph.action.transcode.hybrik.process.1.11' WHERE name = 'WORKFLOW_ACTION_TRANSCODE';
-UPDATE meta_config set value = 'deluxe.dependencygraph.action.transcode.hybrik.process.1.11' WHERE name = 'WORKFLOW_ACTION_TRANSCODE_HYBRIK';
 
 
 -- ----------------------------------------------------------------------------------------------------------------
