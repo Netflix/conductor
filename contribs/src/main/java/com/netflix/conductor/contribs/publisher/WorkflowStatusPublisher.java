@@ -24,9 +24,9 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
             LOGGER.info("An exception has been captured\n");
             LOGGER.info("Thread: {}\n", t.getName());
             LOGGER.info("Exception: {}: {}\n", e.getClass().getName(), e.getMessage());
-            LOGGER.info("Stack Trace: \n");
-            e.printStackTrace(System.out);
-            LOGGER.info("Thread status: {}\n", t.getState());
+//            LOGGER.info("Stack Trace: \n");
+//            e.printStackTrace(System.out);
+//            LOGGER.info("Thread status: {}\n", t.getState());
             new ConsumerThread().start();
         }
     }
