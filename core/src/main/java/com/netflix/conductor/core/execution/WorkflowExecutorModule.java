@@ -1,6 +1,8 @@
 package com.netflix.conductor.core.execution;
 
 import com.google.inject.AbstractModule;
+import com.netflix.conductor.core.eventbus.DecideAsyncEventBus;
+import com.netflix.conductor.core.eventbus.DecideEventListener;
 import com.netflix.conductor.service.AdminService;
 import com.netflix.conductor.service.AdminServiceImpl;
 import com.netflix.conductor.service.EventService;
@@ -30,5 +32,14 @@ public class WorkflowExecutorModule extends AbstractModule {
         bind(TaskService.class).to(TaskServiceImpl.class);
         bind(EventService.class).to(EventServiceImpl.class);
         bind(MetadataService.class).to(MetadataServiceImpl.class);
+
+        // events
+        bindEvents();
+    }
+
+    private void bindEvents(){
+        DecideEventListener decideEventListener = new DecideEventListener();
+        requestInjection(decideEventListener);
+        DecideAsyncEventBus.register(decideEventListener);
     }
 }

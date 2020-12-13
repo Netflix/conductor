@@ -44,6 +44,8 @@ import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.eventbus.DecideAsyncEventBus;
+import com.netflix.conductor.core.eventbus.DecideEvent;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -1061,7 +1063,8 @@ public class WorkflowExecutor {
             stateChanged = scheduleTask(workflow, tasksToBeScheduled) || stateChanged;
 
             if (stateChanged) {
-                decide(workflowId);
+                // async process
+                DecideAsyncEventBus.postEvent(new DecideEvent(workflowId));
             }
 
         } catch (TerminateWorkflowException twe) {
