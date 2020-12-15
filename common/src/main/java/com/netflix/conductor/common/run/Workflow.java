@@ -19,6 +19,8 @@ import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -33,7 +35,12 @@ public class Workflow extends Auditable{
 
     @ProtoEnum
 	public enum  WorkflowStatus {
-		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false), PAUSED(false, true);
+		RUNNING(false, false),
+		COMPLETED(true, true),
+		FAILED(true, false),
+		TIMED_OUT(true, false),
+		TERMINATED(true, false),
+		PAUSED(false, true);
 
 		private boolean terminal;
 
@@ -114,6 +121,11 @@ public class Workflow extends Auditable{
 
     @ProtoField(id = 21)
 	private String externalOutputPayloadStoragePath;
+
+	@ProtoField(id = 22)
+	@Min(value = 0, message = "workflow priority: ${validatedValue} should be minimum {value}")
+	@Max(value = 99, message = "workflow priority: ${validatedValue} should be maximum {value}")
+	private int priority;
 
 	public Workflow(){
 
@@ -387,7 +399,26 @@ public class Workflow extends Auditable{
 		return externalOutputPayloadStoragePath;
 	}
 
-    /**
+	/**
+	 *
+	 * @return the priority to define on tasks
+	 */
+	public int getPriority() {
+		return priority;
+	}
+
+	/**
+	 *
+	 * @param priority priority of tasks (between 0 and 99)
+	 */
+	public void setPriority(int priority) {
+		if (priority < 0 || priority > 99) {
+			throw new IllegalArgumentException("priority MUST be between 0 and 99 (inclusive)");
+		}
+		this.priority = priority;
+	}
+
+	/**
      * Convenience method for accessing the workflow definition name.
      * @return the workflow definition name.
      */
@@ -457,9 +488,9 @@ public class Workflow extends Auditable{
 		copy.setEvent(event);
 		copy.setReasonForIncompletion(reasonForIncompletion);
 		copy.setWorkflowDefinition(workflowDefinition);
-
+		copy.setPriority(priority);
 		copy.setTasks(tasks.stream()
-				.map(Task::copy)
+				.map(Task::deepCopy)
 				.collect(Collectors.toList()));
 		return copy;
 	}
@@ -493,6 +524,7 @@ public class Workflow extends Auditable{
                 Objects.equals(getFailedReferenceTaskNames(), workflow.getFailedReferenceTaskNames()) &&
                 Objects.equals(getExternalInputPayloadStoragePath(), workflow.getExternalInputPayloadStoragePath()) &&
                 Objects.equals(getExternalOutputPayloadStoragePath(), workflow.getExternalOutputPayloadStoragePath()) &&
+				Objects.equals(getPriority(), workflow.getPriority()) &&
                 Objects.equals(getWorkflowDefinition(), workflow.getWorkflowDefinition());
     }
 
@@ -518,7 +550,9 @@ public class Workflow extends Auditable{
                 getFailedReferenceTaskNames(),
                 getWorkflowDefinition(),
                 getExternalInputPayloadStoragePath(),
-                getExternalOutputPayloadStoragePath()
+                getExternalOutputPayloadStoragePath(),
+				getPriority()
         );
     }
+
 }

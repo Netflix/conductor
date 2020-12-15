@@ -3,6 +3,7 @@ import dagreD3 from 'dagre-d3'
 import d3 from 'd3'
 import {Tabs, Tab, Table} from 'react-bootstrap';
 import Clipboard from 'clipboard';
+import { Link } from 'react-router';
 
 new Clipboard('.btn');
 
@@ -159,9 +160,9 @@ class Grapher extends Component {
             .on("click", function (v) {
                 if (innerGraph[v] != null) {
                     let data = vertices[v].data;
-
-                    let n = innerGraph[v].edges;
-                    let vx = innerGraph[v].vertices;
+                    let renderedInnerGraph = innerGraph[v]();
+                    let n = renderedInnerGraph.edges;
+                    let vx = renderedInnerGraph.vertices;
                     let subg = {n: n, vx: vx, layout: layout};
 
                     p.propsDivElem.style.left = (window.innerWidth/2 + 100) + 'px';
@@ -176,7 +177,7 @@ class Grapher extends Component {
                         showSubGraph: true,
                         showSideBar: true,
                         subGraph: subg,
-                        subGraphId: innerGraph[v].id
+                        subGraphId: renderedInnerGraph.id
                     });
                     p.setState({showSubGraph: true});
 
@@ -190,7 +191,9 @@ class Grapher extends Component {
                     p.propsDivElem.style.display = "block"
                     p.setState({selectedTask: data.task, showSideBar: true, subGraph: null, showSubGraph: false});
                 }
-            });
+            })
+            .append("svg:title")
+            .text(function(v) { return vertices[v].description; });
 
         return (
             <div className="graph-ui-content" id="graph-ui-content">
@@ -200,6 +203,15 @@ class Grapher extends Component {
                         <i className="fa fa-close fa-1x close-btn" onClick={hideProps}/>
                         {this.state.selectedTask.taskType} ({this.state.selectedTask.status})
                     </h4>
+                    {this.state.selectedTask.taskType == 'SUB_WORKFLOW' &&
+                        <div>
+                            <p>
+                            <Link onClick={hideProps} to={'/workflow/id/' + this.state.selectedTask.subWorkflowId}>
+                                <u>View Subworkflow</u>
+                            </Link>
+                            </p>
+                        </div>
+                    }
                     <div style={{
                         color: '#ff0000',
                         display: this.state.selectedTask.status === 'FAILED' ? '' : 'none'

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * 
- */
 package com.netflix.conductor.common.run;
 
+import com.github.vmg.protogen.annotations.ProtoField;
+import com.github.vmg.protogen.annotations.ProtoMessage;
+import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.github.vmg.protogen.annotations.*;
-import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 
 /**
  * Captures workflow summary info to be indexed in Elastic Search.
@@ -81,18 +80,28 @@ public class WorkflowSummary {
 
 	@ProtoField(id = 14)
 	private String failedReferenceTaskNames = "";
-	
+
+	@ProtoField(id = 15)
+	private String externalInputPayloadStoragePath;
+
+	@ProtoField(id = 16)
+	private String externalOutputPayloadStoragePath;
+
+	@ProtoField(id = 17)
+	private int priority;
+
 	public WorkflowSummary() {
-		
+
 	}
 	public WorkflowSummary(Workflow workflow) {
-		
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     	sdf.setTimeZone(gmt);
-    	
+
 		this.workflowType = workflow.getWorkflowName();
 		this.version = workflow.getWorkflowVersion();
 		this.workflowId = workflow.getWorkflowId();
+		this.priority = workflow.getPriority();
 		this.correlationId = workflow.getCorrelationId();
 		if(workflow.getCreateTime() != null){
 			this.startTime = sdf.format(new Date(workflow.getCreateTime()));
@@ -121,6 +130,12 @@ public class WorkflowSummary {
 		}
 		this.event = workflow.getEvent();
 		this.failedReferenceTaskNames = workflow.getFailedReferenceTaskNames().stream().collect(Collectors.joining(","));
+		if (StringUtils.isNotBlank(workflow.getExternalInputPayloadStoragePath())) {
+			this.externalInputPayloadStoragePath = workflow.getExternalInputPayloadStoragePath();
+		}
+		if (StringUtils.isNotBlank(workflow.getExternalOutputPayloadStoragePath())) {
+			this.externalOutputPayloadStoragePath = workflow.getExternalOutputPayloadStoragePath();
+		}
 	}
 
 	/**
@@ -184,7 +199,7 @@ public class WorkflowSummary {
     }
 
     /**
-	 * 
+	 *
 	 * @return the output
 	 */
 	public String getOutput() {
@@ -203,7 +218,7 @@ public class WorkflowSummary {
 	}
 
 	/**
-	 * 
+	 *
 	 * @return the executionTime
 	 */
 	public long getExecutionTime(){
@@ -216,17 +231,17 @@ public class WorkflowSummary {
 	public String getUpdateTime() {
 		return updateTime;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return The event
 	 */
 	public String getEvent() {
 		return event;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param event The event
 	 */
 	public void setEvent(String event) {
@@ -287,5 +302,77 @@ public class WorkflowSummary {
 
 	public void setExecutionTime(long executionTime) {
 		this.executionTime = executionTime;
+	}
+
+	/**
+	 * @return the external storage path of the workflow input payload
+	 */
+	public String getExternalInputPayloadStoragePath() {
+		return externalInputPayloadStoragePath;
+	}
+
+	/**
+	 * @param externalInputPayloadStoragePath the external storage path where the workflow input payload is stored
+	 */
+	public void setExternalInputPayloadStoragePath(String externalInputPayloadStoragePath) {
+		this.externalInputPayloadStoragePath = externalInputPayloadStoragePath;
+	}
+
+	/**
+	 * @return the external storage path of the workflow output payload
+	 */
+	public String getExternalOutputPayloadStoragePath() {
+		return externalOutputPayloadStoragePath;
+	}
+
+	/**
+	 * @param externalOutputPayloadStoragePath the external storage path where the workflow output payload is stored
+	 */
+	public void setExternalOutputPayloadStoragePath(String externalOutputPayloadStoragePath) {
+		this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
+	}
+
+	/**
+	 * @return the priority to define on tasks
+	 */
+	public int getPriority() {
+		return priority;
+	}
+
+	/**
+	 * @param priority priority of tasks (between 0 and 99)
+	 */
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		WorkflowSummary that = (WorkflowSummary) o;
+		return getVersion() == that.getVersion() &&
+			getExecutionTime() == that.getExecutionTime() &&
+			getPriority() == that.getPriority() &&
+			getWorkflowType().equals(that.getWorkflowType()) &&
+			getWorkflowId().equals(that.getWorkflowId()) &&
+			Objects.equals(getCorrelationId(), that.getCorrelationId()) &&
+			getStartTime().equals(that.getStartTime()) &&
+			getUpdateTime().equals(that.getUpdateTime()) &&
+			getEndTime().equals(that.getEndTime()) &&
+			getStatus() == that.getStatus() &&
+			Objects.equals(getReasonForIncompletion(), that.getReasonForIncompletion()) &&
+			Objects.equals(getEvent(), that.getEvent());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects
+			.hash(getWorkflowType(), getVersion(), getWorkflowId(), getCorrelationId(), getStartTime(), getUpdateTime(),
+				getEndTime(), getStatus(), getReasonForIncompletion(), getExecutionTime(), getEvent(), getPriority());
 	}
 }

@@ -18,10 +18,6 @@ package com.netflix.conductor.common.metadata.workflow;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.PositiveOrZero;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,12 +28,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.PositiveOrZero;
 
 /**
  * @author Viren
  *
  * This is the task definition definied as part of the {@link WorkflowDef}. The tasks definied in the Workflow definition are saved
- * as part of {@link WorkflowDef#tasks}
+ * as part of {@link WorkflowDef#getTasks}
  */
 @ProtoMessage
 public class WorkflowTask {
@@ -78,8 +77,6 @@ public class WorkflowTask {
 	@ProtoField(id = 3)
 	private String description;
 
-	//Key: Name of the input parameter.  MUST be one of the keys defined in TaskDef (e.g. fileName)
-	//Value: mapping of the parameter from another task (e.g. task1.someOutputParameterAsFileName)
 	@ProtoField(id = 4)
 	private Map<String, Object> inputParameters = new HashMap<>();
 
@@ -94,6 +91,9 @@ public class WorkflowTask {
 
 	@ProtoField(id = 8)
 	private String caseExpression;
+
+	@ProtoField(id = 22)
+	private String scriptExpression;
 
 	@ProtoMessage(wrapper = true)
 	public static class WorkflowTaskList {
@@ -150,6 +150,21 @@ public class WorkflowTask {
 
 	@ProtoField(id = 20)
 	private Boolean rateLimited;
+	
+	@ProtoField(id = 21)
+	private List<String> defaultExclusiveJoinTask = new LinkedList<>();
+
+	@ProtoField(id = 23)
+	private Boolean asyncComplete = false;
+
+	@ProtoField(id = 24)
+	private String loopCondition;
+
+	@ProtoField(id = 25)
+	private List<WorkflowTask> loopOver = new LinkedList<>();
+
+	@ProtoField(id = 26)
+	private Integer retryCount;
 
 	/**
 	 * @return the name
@@ -281,7 +296,22 @@ public class WorkflowTask {
 		this.startDelay = startDelay;
 	}
 
-	
+	/**
+	 *
+	 * @return the retryCount
+	 */
+	public Integer getRetryCount() {
+		return retryCount;
+	}
+
+	/**
+	 *
+	 * @param retryCount the retryCount to set
+	 */
+	public void setRetryCount(final Integer retryCount) {
+		this.retryCount = retryCount;
+	}
+
 	/**
 	 * @return the dynamicTaskNameParam
 	 */
@@ -354,6 +384,15 @@ public class WorkflowTask {
 		this.caseExpression = caseExpression;
 	}
 
+
+	public String getScriptExpression() {
+		return scriptExpression;
+	}
+
+	public void setScriptExpression(String expression) {
+		this.scriptExpression = expression;
+	}
+
 	
 	/**
 	 * @return the subWorkflow
@@ -384,6 +423,34 @@ public class WorkflowTask {
 	}
 
 	/**
+	 * @return the loopCondition
+	 */
+	public String getLoopCondition() {
+		return loopCondition;
+	}
+
+	/**
+	 * @param loopCondition the expression to set
+	 */
+	public void setLoopCondition(String loopCondition) {
+		this.loopCondition = loopCondition;
+	}
+
+	/**
+	 * @return the loopOver
+	 */
+	public List<WorkflowTask> getLoopOver() {
+		return loopOver;
+	}
+
+	/**
+	 * @param loopOver the loopOver to set
+	 */
+	public void setLoopOver(List<WorkflowTask> loopOver) {
+		this.loopOver = loopOver;
+	}
+
+	/**
 	 * 
 	 * @return Sink value for the EVENT type of task
 	 */
@@ -398,7 +465,19 @@ public class WorkflowTask {
 	public void setSink(String sink) {
 		this.sink = sink;
 	}
-	
+
+	/**
+	 *
+	 * @return whether wait for an external event to complete the task, for EVENT and HTTP tasks
+	 */
+	public Boolean isAsyncComplete() {
+		return asyncComplete;
+	}
+
+	public void setAsyncComplete(Boolean asyncComplete) {
+		this.asyncComplete = asyncComplete;
+	}
+
 	/**
 	 *
 	 * @return If the task is optional.  When set to true, the workflow execution continues even when the task is in failed status.
@@ -423,7 +502,7 @@ public class WorkflowTask {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param optional when set to true, the task is marked as optional
 	 */
 	public void setOptional(boolean optional) {
@@ -442,6 +521,14 @@ public class WorkflowTask {
 		return rateLimited != null && rateLimited;
 	}
 
+	public List<String> getDefaultExclusiveJoinTask() {
+		return defaultExclusiveJoinTask;
+	}
+
+	public void setDefaultExclusiveJoinTask(List<String> defaultExclusiveJoinTask) {
+		this.defaultExclusiveJoinTask = defaultExclusiveJoinTask;
+	}
+
 	private Collection<List<WorkflowTask>> children() {
 		Collection<List<WorkflowTask>> workflowTaskLists = new LinkedList<>();
 		TaskType taskType = TaskType.USER_DEFINED;
@@ -456,6 +543,9 @@ public class WorkflowTask {
 				break;
 			case FORK_JOIN:
 				workflowTaskLists.addAll(forkTasks);
+				break;
+			case DO_WHILE:
+				workflowTaskLists.add(loopOver);
 				break;
 			default:
 				break;
@@ -482,11 +572,12 @@ public class WorkflowTask {
 		}
 
 		switch (taskType) {
+			case DO_WHILE:
 			case DECISION:
-				for (List<WorkflowTask> wfts : children()) {
-					Iterator<WorkflowTask> it = wfts.iterator();
-					while (it.hasNext()) {
-						WorkflowTask task = it.next();
+				for (List<WorkflowTask> workflowTasks : children()) {
+					Iterator<WorkflowTask> iterator = workflowTasks.iterator();
+					while (iterator.hasNext()) {
+						WorkflowTask task = iterator.next();
 						if (task.getTaskReferenceName().equals(taskReferenceName)) {
 							break;
 						}
@@ -498,17 +589,17 @@ public class WorkflowTask {
 							break;
 						}
 					}
-					if (it.hasNext()) {
-						return it.next();
+					if (iterator.hasNext()) {
+						return iterator.next();
 					}
 				}
 				break;
 			case FORK_JOIN:
 				boolean found = false;
-				for (List<WorkflowTask> wfts : children()) {
-					Iterator<WorkflowTask> it = wfts.iterator();
-					while (it.hasNext()) {
-						WorkflowTask task = it.next();
+				for (List<WorkflowTask> workflowTasks : children()) {
+					Iterator<WorkflowTask> iterator = workflowTasks.iterator();
+					while (iterator.hasNext()) {
+						WorkflowTask task = iterator.next();
 						if (task.getTaskReferenceName().equals(taskReferenceName)) {
 							found = true;
 							break;
@@ -517,9 +608,12 @@ public class WorkflowTask {
 						if (nextTask != null) {
 							return nextTask;
 						}
+						if (task.has(taskReferenceName)) {
+							break;
+						}
 					}
-					if (it.hasNext()) {
-						return it.next();
+					if (iterator.hasNext()) {
+						return iterator.next();
 					}
 					if (found && parent != null) {
 						return parent.next(this.taskReferenceName, parent);        //we need to return join task... -- get my sibling from my parent..
@@ -534,36 +628,33 @@ public class WorkflowTask {
 		}
 		return null;
 	}
-	
-	public boolean has(String taskReferenceName){
 
-		if(this.getTaskReferenceName().equals(taskReferenceName)){
+	public boolean has(String taskReferenceName) {
+		if (this.getTaskReferenceName().equals(taskReferenceName)) {
 			return true;
 		}
-		
-		TaskType tt = TaskType.USER_DEFINED;
-		if(TaskType.isSystemTask(type)) {
-			tt = TaskType.valueOf(type);
+
+		TaskType taskType = TaskType.USER_DEFINED;
+		if (TaskType.isSystemTask(type)) {
+			taskType = TaskType.valueOf(type);
 		}
-		
-		switch(tt){
-			
+
+		switch (taskType) {
 			case DECISION:
-			case FORK_JOIN:	
-				for(List<WorkflowTask> childx : children()){
-					for(WorkflowTask child : childx){
-						if(child.has(taskReferenceName)){
+			case DO_WHILE:
+			case FORK_JOIN:
+				for (List<WorkflowTask> childx : children()) {
+					for (WorkflowTask child : childx) {
+						if (child.has(taskReferenceName)) {
 							return true;
-						}	
+						}
 					}
 				}
 				break;
 			default:
 				break;
 		}
-		
 		return false;
-		
 	}
 	
 	public WorkflowTask get(String taskReferenceName){
@@ -611,7 +702,10 @@ public class WorkflowTask {
                 Objects.equals(getForkTasks(), that.getForkTasks()) &&
                 Objects.equals(getSubWorkflowParam(), that.getSubWorkflowParam()) &&
                 Objects.equals(getJoinOn(), that.getJoinOn()) &&
-                Objects.equals(getSink(), that.getSink());
+                Objects.equals(getSink(), that.getSink()) &&
+								Objects.equals(isAsyncComplete(), that.isAsyncComplete()) &&
+                Objects.equals(getDefaultExclusiveJoinTask(), that.getDefaultExclusiveJoinTask()) &&
+		            Objects.equals(getRetryCount(), that.getRetryCount());
     }
 
     @Override
@@ -636,7 +730,10 @@ public class WorkflowTask {
                 getSubWorkflowParam(),
                 getJoinOn(),
                 getSink(),
-                isOptional()
+                isAsyncComplete(),
+                isOptional(),
+                getDefaultExclusiveJoinTask(),
+                getRetryCount()
         );
     }
 }

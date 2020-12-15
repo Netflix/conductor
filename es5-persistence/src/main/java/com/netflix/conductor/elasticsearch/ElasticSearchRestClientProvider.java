@@ -1,27 +1,34 @@
+/*
+ * Copyright 2020 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package com.netflix.conductor.elasticsearch;
 
-import org.apache.http.HttpHost;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
 import java.net.URI;
 import java.util.List;
-import com.google.common.base.Supplier;
 import java.util.stream.Collectors;
-
+import javax.inject.Inject;
+import javax.inject.Provider;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import com.google.common.base.Supplier;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.elasticsearch.client.RestClientBuilder;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import vc.inreach.aws.request.AWSSigner;
 import vc.inreach.aws.request.AWSSigningRequestInterceptor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class ElasticSearchRestClientProvider implements Provider<RestClient> {
     private static Logger logger = LoggerFactory.getLogger(ElasticSearchRestClientProvider.class);
@@ -56,7 +63,7 @@ public class ElasticSearchRestClientProvider implements Provider<RestClient> {
                                  return httpClientBuilder.addInterceptorLast(requestInterceptor);
                           }
               });
-             
+
               return lowLevelRestClientBuilder.build();
         }
 

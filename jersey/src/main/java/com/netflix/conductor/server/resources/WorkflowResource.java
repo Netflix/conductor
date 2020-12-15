@@ -77,8 +77,9 @@ public class WorkflowResource {
     public String startWorkflow(@PathParam("name") String name,
                                 @QueryParam("version") Integer version,
                                 @QueryParam("correlationId") String correlationId,
+                                @QueryParam("priority") @DefaultValue("0") Integer priority,
                                 Map<String, Object> input) {
-        return workflowService.startWorkflow(name, version, correlationId, input);
+        return workflowService.startWorkflow(name, version, correlationId, priority, input);
     }
 
     @GET
@@ -203,7 +204,7 @@ public class WorkflowResource {
 
     @POST
     @Path("/{workflowId}/resetcallbacks")
-    @ApiOperation("Resets callback times of all in_progress tasks to 0")
+    @ApiOperation("Resets callback times of all non-terminal SIMPLE tasks to 0")
     @Consumes(MediaType.WILDCARD)
     public void resetWorkflow(@PathParam("workflowId") String workflowId) {
         workflowService.resetWorkflow(workflowId);
@@ -249,10 +250,10 @@ public class WorkflowResource {
     }
 
     @GET
-    @ApiOperation("Get the uri and path of the external storage where the workflow input payload is to be stored")
+    @ApiOperation("Get the uri and path of the external storage where the workflow payload is to be stored")
     @Consumes(MediaType.WILDCARD)
     @Path("/externalstoragelocation")
-    public ExternalStorageLocation getExternalStorageLocation(@QueryParam("path") String path) {
-        return workflowService.getExternalStorageLocation(path);
+    public ExternalStorageLocation getExternalStorageLocation(@QueryParam("path") String path, @QueryParam("operation") String operation, @QueryParam("payloadType") String payloadType) {
+        return workflowService.getExternalStorageLocation(path, operation, payloadType);
     }
 }

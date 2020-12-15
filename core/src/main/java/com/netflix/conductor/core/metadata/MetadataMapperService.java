@@ -29,25 +29,22 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.TerminateWorkflowException;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.metrics.Monitors;
-import com.netflix.conductor.service.utils.ServiceUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.validation.constraints.NotEmpty;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * Populates metadata definitions within workflow objects.
  * Benefits of loading and populating metadata definitions upfront could be:
- * - Immutable definitions within a workflow execution with the added benefit of guaranteeing consistency at runtime.
- * - Stress is reduced on the storage layer
+ * <ul>
+ *  <li> Immutable definitions within a workflow execution with the added benefit of guaranteeing consistency at runtime.</li>
+ *  <li> Stress is reduced on the storage layer</li>
+ * </ul>
  */
 @Singleton
 public class MetadataMapperService {
@@ -81,13 +78,13 @@ public class MetadataMapperService {
     @VisibleForTesting
     Optional<WorkflowDef> lookupWorkflowDefinition(String workflowName, int workflowVersion) {
         Preconditions.checkArgument(StringUtils.isNotBlank(workflowName), "Workflow name must be specified when searching for a definition");
-        return metadataDAO.get(workflowName, workflowVersion);
+        return metadataDAO.getWorkflowDef(workflowName, workflowVersion);
     }
 
     @VisibleForTesting
     Optional<WorkflowDef> lookupLatestWorkflowDefinition(String workflowName) {
         Preconditions.checkArgument(StringUtils.isNotBlank(workflowName), "Workflow name must be specified when searching for a definition");
-        return metadataDAO.getLatest(workflowName);
+        return metadataDAO.getLatestWorkflowDef(workflowName);
     }
 
     public Workflow populateWorkflowWithDefinitions(Workflow workflow) {
@@ -99,16 +96,7 @@ public class MetadataMapperService {
                     return wd;
                 });
 
-        workflowDefinition.collectTasks().forEach(
-                workflowTask -> {
-                    if (shouldPopulateDefinition(workflowTask)) {
-                        workflowTask.setTaskDefinition(metadataDAO.getTaskDef(workflowTask.getName()));
-                    } else if (workflowTask.getType().equals(TaskType.SUB_WORKFLOW.name())) {
-                        populateVersionForSubWorkflow(workflowTask);
-                    }
-                }
-        );
-
+        workflowDefinition.collectTasks().forEach(this::populateWorkflowTaskWithDefinition);
         checkNotEmptyDefinitions(workflowDefinition);
 
         return workflow;
@@ -123,14 +111,14 @@ public class MetadataMapperService {
         return workflowDefinition;
     }
 
-    private WorkflowTask populateWorkflowTaskWithDefinition(WorkflowTask workflowTask) {
+    private void populateWorkflowTaskWithDefinition(WorkflowTask workflowTask) {
         Preconditions.checkNotNull(workflowTask, "WorkflowTask cannot be null");
-        if (shouldPopulateDefinition(workflowTask)) {
+        if (shouldPopulateTaskDefinition(workflowTask)) {
             workflowTask.setTaskDefinition(metadataDAO.getTaskDef(workflowTask.getName()));
-        } else if (workflowTask.getType().equals(TaskType.SUB_WORKFLOW.name())) {
+        }
+        if (workflowTask.getType().equals(TaskType.SUB_WORKFLOW.name())) {
             populateVersionForSubWorkflow(workflowTask);
         }
-        return workflowTask;
     }
 
     private void populateVersionForSubWorkflow(WorkflowTask workflowTask) {
@@ -139,7 +127,7 @@ public class MetadataMapperService {
         if (subworkflowParams.getVersion() == null) {
             String subWorkflowName = subworkflowParams.getName();
             Integer subWorkflowVersion =
-                    metadataDAO.getLatest(subWorkflowName)
+                    metadataDAO.getLatestWorkflowDef(subWorkflowName)
                             .map(WorkflowDef::getVersion)
                             .orElseThrow(
                                     () -> {
@@ -157,7 +145,8 @@ public class MetadataMapperService {
 
         // Obtain the names of the tasks with missing definitions
         Set<String> missingTaskDefinitionNames = workflowDefinition.collectTasks().stream()
-                .filter(MetadataMapperService::shouldPopulateDefinition)
+                .filter(workflowTask -> workflowTask.getType().equals(TaskType.SIMPLE.name()))
+                .filter(this::shouldPopulateTaskDefinition)
                 .map(WorkflowTask::getName)
                 .collect(Collectors.toSet());
 
@@ -174,11 +163,10 @@ public class MetadataMapperService {
         return task;
     }
 
-    public static boolean shouldPopulateDefinition(WorkflowTask workflowTask) {
+    @VisibleForTesting
+    boolean shouldPopulateTaskDefinition(WorkflowTask workflowTask) {
         Preconditions.checkNotNull(workflowTask, "WorkflowTask cannot be null");
         Preconditions.checkNotNull(workflowTask.getType(), "WorkflowTask type cannot be null");
-        return workflowTask.getType().equals(TaskType.SIMPLE.name()) &&
-                workflowTask.getTaskDefinition() == null;
+        return workflowTask.getTaskDefinition() == null && StringUtils.isNotBlank(workflowTask.getName());
     }
-
 }
