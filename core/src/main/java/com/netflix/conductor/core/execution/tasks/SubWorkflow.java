@@ -21,6 +21,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
@@ -33,6 +34,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Map;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * @author Viren
@@ -66,6 +69,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 		Map<String, Object> input = task.getInputData();
 		String name = input.get("subWorkflowName").toString();
 		int version = (int) input.get("subWorkflowVersion");
+		int priority = ofNullable(input.get("subWorkflowPriority"))
+				.map(Object::toString)
+				.map(Integer::new)
+				.orElse(0);
 
 		WorkflowDef workflowDefinition = null;
 		if (input.get("subWorkflowDefinition") != null) {
@@ -91,7 +98,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 						wfInput,
 						null,
 						correlationId,
-						0,
+						priority,
 						workflow.getWorkflowId(),
 						task.getTaskId(),
 						null,
@@ -100,6 +107,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 				subWorkflowId = provider.startWorkflow(
 						name,
 						version,
+						priority,
 						wfInput,
 						null,
 						correlationId,

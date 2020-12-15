@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Optional.ofNullable;
+
 public class SubWorkflowTaskMapper implements TaskMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(SubWorkflowTaskMapper.class);
@@ -57,6 +59,8 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         Map<String, Object> resolvedParams = getSubWorkflowInputParameters(workflowInstance, subWorkflowParams);
 
         String subWorkflowName = resolvedParams.get("name").toString();
+        Integer subWorkflowPriority = ofNullable(subWorkflowParams.getPriority())
+                .orElse(workflowInstance.getPriority());
         Integer subWorkflowVersion = getSubWorkflowVersion(resolvedParams, subWorkflowName);
 
         Object subWorkflowDefinition = resolvedParams.get("workflowDefinition");
@@ -77,13 +81,14 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         subWorkflowTask.setScheduledTime(System.currentTimeMillis());
         subWorkflowTask.getInputData().put("subWorkflowName", subWorkflowName);
         subWorkflowTask.getInputData().put("subWorkflowVersion", subWorkflowVersion);
+        subWorkflowTask.getInputData().put("subWorkflowPriority", subWorkflowPriority);
         subWorkflowTask.getInputData().put("subWorkflowTaskToDomain", subWorkflowTaskToDomain);
         subWorkflowTask.getInputData().put("subWorkflowDefinition", subWorkflowDefinition);
         subWorkflowTask.getInputData().put("workflowInput", taskMapperContext.getTaskInput());
         subWorkflowTask.setTaskId(taskId);
         subWorkflowTask.setStatus(Task.Status.SCHEDULED);
         subWorkflowTask.setWorkflowTask(taskToSchedule);
-        subWorkflowTask.setWorkflowPriority(workflowInstance.getPriority());
+        subWorkflowTask.setWorkflowPriority(subWorkflowPriority);
         logger.debug("SubWorkflowTask {} created to be Scheduled", subWorkflowTask);
         return Collections.singletonList(subWorkflowTask);
     }
