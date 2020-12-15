@@ -14,7 +14,7 @@ public class WorkflowStatusPublisher implements WorkflowStatusListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowStatusPublisher.class);
     private static final String NOTIFICATION_TYPE = "workflow/WorkflowNotifications";
-    private static final Integer QDEPTH = Integer.parseInt(System.getenv("ENV_WORKFLOW_NOTIFICATION_QUEUE_SIZE"));
+    private static final Integer QDEPTH = Integer.parseInt(System.getenv().getOrDefault("ENV_WORKFLOW_NOTIFICATION_QUEUE_SIZE", "50"));
     private BlockingQueue<Workflow> blockingQueue = new LinkedBlockingDeque<>(QDEPTH);
 
     class ExceptionHandler implements Thread.UncaughtExceptionHandler
