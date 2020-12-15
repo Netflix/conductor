@@ -38,6 +38,16 @@ public class TestConfiguration implements CassandraConfiguration {
     }
 
     @Override
+    public boolean isEventMessageIndexingEnabled() {
+        return true;
+    }
+
+    @Override
+    public boolean isEventExecutionIndexingEnabled() {
+        return true;
+    }
+
+    @Override
     public String getServerId() {
         return "server_id";
     }
@@ -74,7 +84,7 @@ public class TestConfiguration implements CassandraConfiguration {
 
     @Override
     public int getIntProperty(String name, int defaultValue) {
-        return 0;
+        return 10;
     }
 
     @Override
@@ -110,6 +120,11 @@ public class TestConfiguration implements CassandraConfiguration {
     @Override
     public Long getMaxWorkflowOutputPayloadSizeThresholdKB() {
         return 10240L;
+    }
+
+    @Override
+    public Long getMaxWorkflowVariablesPayloadSizeThresholdKB() {
+        return 256L;
     }
 
     @Override
@@ -170,5 +185,10 @@ public class TestConfiguration implements CassandraConfiguration {
     @Override
     public ConsistencyLevel getWriteConsistencyLevel() {
         return ConsistencyLevel.LOCAL_ONE;
+    }
+
+    @Override
+    public int getEventExecutionPersistenceTTL() {
+        return 5;
     }
 }

@@ -19,6 +19,8 @@ import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -31,9 +33,14 @@ import java.util.stream.Collectors;
 @ProtoMessage
 public class Workflow extends Auditable{
 
-    @ProtoEnum
+	@ProtoEnum
 	public enum  WorkflowStatus {
-		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false), PAUSED(false, true);
+		RUNNING(false, false),
+		COMPLETED(true, true),
+		FAILED(true, false),
+		TIMED_OUT(true, false),
+		TERMINATED(true, false),
+		PAUSED(false, true);
 
 		private boolean terminal;
 
@@ -115,9 +122,20 @@ public class Workflow extends Auditable{
     @ProtoField(id = 21)
 	private String externalOutputPayloadStoragePath;
 
-	public Workflow(){
+	@ProtoField(id = 22)
+	@Min(value = 0, message = "workflow priority: ${validatedValue} should be minimum {value}")
+	@Max(value = 99, message = "workflow priority: ${validatedValue} should be maximum {value}")
+	private int priority;
 
+	@ProtoField(id = 23)
+	private Map<String, Object> variables = new HashMap<>();
+
+	@ProtoField(id = 24)
+	private long lastRetriedTime;
+
+	public Workflow(){
 	}
+
 	/**
 	 * @return the status
 	 */
@@ -196,6 +214,18 @@ public class Workflow extends Auditable{
 	 */
 	public void setInput(Map<String, Object> input) {
 		this.input = input;
+	}
+	/**
+	 * @return the global workflow variables
+	 */
+	public Map<String, Object> getVariables() {
+		return variables;
+	}
+	/**
+	 * @param vars the set of global workflow variables to set
+	 */
+	public void setVariables(Map<String, Object> vars) {
+		this.variables = vars;
 	}
 	/**
 	 * @return the task to domain map
@@ -387,7 +417,26 @@ public class Workflow extends Auditable{
 		return externalOutputPayloadStoragePath;
 	}
 
-    /**
+	/**
+	 *
+	 * @return the priority to define on tasks
+	 */
+	public int getPriority() {
+		return priority;
+	}
+
+	/**
+	 *
+	 * @param priority priority of tasks (between 0 and 99)
+	 */
+	public void setPriority(int priority) {
+		if (priority < 0 || priority > 99) {
+			throw new IllegalArgumentException("priority MUST be between 0 and 99 (inclusive)");
+		}
+		this.priority = priority;
+	}
+
+	/**
      * Convenience method for accessing the workflow definition name.
      * @return the workflow definition name.
      */
@@ -414,6 +463,21 @@ public class Workflow extends Auditable{
 		this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
 	}
 
+	/**
+	 * Captures the last time the workflow was retried
+	 * @return the last retried time of the workflow
+	 */
+	public long getLastRetriedTime() {
+		return lastRetriedTime;
+	}
+
+	/**
+	 * @param lastRetriedTime time in milliseconds when the workflow is retried
+	 */
+	public void setLastRetriedTime(long lastRetriedTime) {
+		this.lastRetriedTime = lastRetriedTime;
+	}
+
 	public Task getTaskByRefName(String refName) {
 		if (refName == null) {
 			throw new RuntimeException("refName passed is null.  Check the workflow execution.  For dynamic tasks, make sure referenceTaskName is set to a not null value");
@@ -435,14 +499,6 @@ public class Workflow extends Auditable{
 
 	/**
 	 * @return a deep copy of the workflow instance
-	 * Note: This does not copy the following fields:
-	 * <ul>
-	 * <li>endTime</li>
-	 * <li>taskToDomain</li>
-	 * <li>failedReferenceTaskNames</li>
-	 * <li>externalInputPayloadStoragePath</li>
-	 * <li>externalOutputPayloadStoragePath</li>
-	 * </ul>
 	 */
 	public Workflow copy() {
 		Workflow copy = new Workflow();
@@ -457,10 +513,17 @@ public class Workflow extends Auditable{
 		copy.setEvent(event);
 		copy.setReasonForIncompletion(reasonForIncompletion);
 		copy.setWorkflowDefinition(workflowDefinition);
-
+		copy.setPriority(priority);
 		copy.setTasks(tasks.stream()
-				.map(Task::copy)
+				.map(Task::deepCopy)
 				.collect(Collectors.toList()));
+		copy.setVariables(variables);
+		copy.setEndTime(endTime);
+		copy.setLastRetriedTime(lastRetriedTime);
+		copy.setTaskToDomain(taskToDomain);
+		copy.setFailedReferenceTaskNames(failedReferenceTaskNames);
+		copy.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
+		copy.setExternalOutputPayloadStoragePath(externalOutputPayloadStoragePath);
 		return copy;
 	}
 
@@ -493,7 +556,10 @@ public class Workflow extends Auditable{
                 Objects.equals(getFailedReferenceTaskNames(), workflow.getFailedReferenceTaskNames()) &&
                 Objects.equals(getExternalInputPayloadStoragePath(), workflow.getExternalInputPayloadStoragePath()) &&
                 Objects.equals(getExternalOutputPayloadStoragePath(), workflow.getExternalOutputPayloadStoragePath()) &&
-                Objects.equals(getWorkflowDefinition(), workflow.getWorkflowDefinition());
+				Objects.equals(getPriority(), workflow.getPriority()) &&
+                Objects.equals(getWorkflowDefinition(), workflow.getWorkflowDefinition()) &&
+				Objects.equals(getVariables(), workflow.getVariables()) &&
+				Objects.equals(getLastRetriedTime(), workflow.getLastRetriedTime());
     }
 
     @Override
@@ -518,7 +584,11 @@ public class Workflow extends Auditable{
                 getFailedReferenceTaskNames(),
                 getWorkflowDefinition(),
                 getExternalInputPayloadStoragePath(),
-                getExternalOutputPayloadStoragePath()
+                getExternalOutputPayloadStoragePath(),
+				getPriority(),
+				getVariables(),
+				getLastRetriedTime()
         );
     }
+
 }

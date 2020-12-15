@@ -47,12 +47,15 @@ public class ExternalPayloadStorageUtils {
     private final ExternalPayloadStorage externalPayloadStorage;
     private final Configuration configuration;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
 
     @Inject
-    public ExternalPayloadStorageUtils(ExternalPayloadStorage externalPayloadStorage, Configuration configuration) {
+    public ExternalPayloadStorageUtils(ExternalPayloadStorage externalPayloadStorage,
+                                       Configuration configuration,
+                                       ObjectMapper objectMapper) {
         this.externalPayloadStorage = externalPayloadStorage;
         this.configuration = configuration;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -120,10 +123,10 @@ public class ExternalPayloadStorageUtils {
 
             if (payloadSize > maxThreshold * 1024) {
                 if (entity instanceof Task) {
-                    String errorMsg = String.format("The payload size: %dKB of task: %s in workflow: %s  is greater than the permissible limit: %dKB", payloadSize, ((Task) entity).getTaskId(), ((Task) entity).getWorkflowInstanceId(), maxThreshold);
+                    String errorMsg = String.format("The payload size: %dB of task: %s in workflow: %s  is greater than the permissible limit: %dKB", payloadSize, ((Task) entity).getTaskId(), ((Task) entity).getWorkflowInstanceId(), maxThreshold);
                     failTask(((Task) entity), payloadType, errorMsg);
                 } else {
-                    String errorMsg = String.format("The output payload size: %dKB of workflow: %s is greater than the permissible limit: %dKB", payloadSize, ((Workflow) entity).getWorkflowId(), maxThreshold);
+                    String errorMsg = String.format("The output payload size: %dB of workflow: %s is greater than the permissible limit: %dKB", payloadSize, ((Workflow) entity).getWorkflowId(), maxThreshold);
                     failWorkflow(errorMsg);
                 }
             } else if (payloadSize > threshold * 1024) {

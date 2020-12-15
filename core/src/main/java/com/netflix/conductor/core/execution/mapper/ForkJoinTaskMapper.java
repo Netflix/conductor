@@ -39,7 +39,7 @@ public class ForkJoinTaskMapper implements TaskMapper {
     public static final Logger logger = LoggerFactory.getLogger(ForkJoinTaskMapper.class);
 
     /**
-     * This method gets the list of tasks that need to scheduled when the the task to scheduled is of type {@link TaskType#FORK_JOIN}.
+     * This method gets the list of tasks that need to scheduled when the task to scheduled is of type {@link TaskType#FORK_JOIN}.
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link WorkflowDef}, {@link Workflow} and a string representation of the TaskId
      * @return List of tasks in the following order:
@@ -74,10 +74,11 @@ public class ForkJoinTaskMapper implements TaskMapper {
         forkTask.setWorkflowType(workflowInstance.getWorkflowName());
         forkTask.setCorrelationId(workflowInstance.getCorrelationId());
         forkTask.setScheduledTime(System.currentTimeMillis());
-        forkTask.setEndTime(System.currentTimeMillis());
+        forkTask.setStartTime(System.currentTimeMillis());
         forkTask.setInputData(taskInput);
         forkTask.setTaskId(taskId);
         forkTask.setStatus(Task.Status.COMPLETED);
+        forkTask.setWorkflowPriority(workflowInstance.getPriority());
         forkTask.setWorkflowTask(taskToSchedule);
 
         tasksToBeScheduled.add(forkTask);
@@ -94,7 +95,7 @@ public class ForkJoinTaskMapper implements TaskMapper {
                 .getNextTask(taskToSchedule.getTaskReferenceName());
 
         if (joinWorkflowTask == null || !joinWorkflowTask.getType().equals(TaskType.JOIN.name())) {
-            throw new TerminateWorkflowException("Dynamic join definition is not followed by a join task.  Check the blueprint");
+            throw new TerminateWorkflowException("Fork task definition is not followed by a join task.  Check the blueprint");
         }
         return tasksToBeScheduled;
     }

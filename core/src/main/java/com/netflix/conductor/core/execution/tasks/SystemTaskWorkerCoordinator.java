@@ -1,5 +1,5 @@
-/**
- * Copyright 2017 Netflix, Inc.
+/*
+ * Copyright 2020 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,146 +13,118 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- *
- */
 package com.netflix.conductor.core.execution.tasks;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.service.ExecutionService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-/**
- * @author Viren
- *
- */
 @Singleton
 public class SystemTaskWorkerCoordinator {
 
-	private static Logger logger = LoggerFactory.getLogger(SystemTaskWorkerCoordinator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SystemTaskWorkerCoordinator.class);
 
-	private QueueDAO queueDAO;
+    private SystemTaskExecutor systemTaskExecutor;
+    private final Configuration config;
 
-	private WorkflowExecutor workflowExecutor;
+    private final int pollInterval;
+    private final String executionNameSpace;
 
-	private ExecutorService executorService;
+    static BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+    private static Set<String> listeningTaskQueues = new HashSet<>();
+    public static Map<String, WorkflowSystemTask> taskNameWorkflowTaskMapping = new ConcurrentHashMap<>();
 
-	private int workerQueueSize;
+    private static final String CLASS_NAME = SystemTaskWorkerCoordinator.class.getName();
 
-	//Number of items to poll for
-	private int pollCount;
+    @Inject
+    public SystemTaskWorkerCoordinator(QueueDAO queueDAO, WorkflowExecutor workflowExecutor, Configuration config, ExecutionService executionService) {
+        this.config = config;
 
-	//Interval in ms at which the polling is done
-	private int pollInterval;
+        this.executionNameSpace = config.getSystemTaskWorkerExecutionNamespace();
+        this.pollInterval = config.getSystemTaskWorkerPollInterval();
+        int threadCount = config.getSystemTaskWorkerThreadCount();
+        if (threadCount > 0) {
+            this.systemTaskExecutor = new SystemTaskExecutor(queueDAO, workflowExecutor, config, executionService);
+            new Thread(this::listen).start();
+            LOGGER.info("System Task Worker Coordinator initialized with poll interval: {}", pollInterval);
+        } else {
+            LOGGER.info("System Task Worker DISABLED");
+        }
+    }
 
-	private LinkedBlockingQueue<Runnable> workerQueue;
+    static synchronized void add(WorkflowSystemTask systemTask) {
+        LOGGER.info("Adding the queue for system task: {}", systemTask.getName());
+        taskNameWorkflowTaskMapping.put(systemTask.getName(), systemTask);
+        queue.add(systemTask.getName());
+    }
 
-	private int unackTimeout;
+    private void listen() {
+        try {
+            for (; ; ) {
+                String workflowSystemTaskQueueName = queue.poll(60, TimeUnit.SECONDS);
+                if (workflowSystemTaskQueueName != null && !listeningTaskQueues.contains(workflowSystemTaskQueueName)
+                    && shouldListen(workflowSystemTaskQueueName)) {
+                    listen(workflowSystemTaskQueueName);
+                    listeningTaskQueues.add(workflowSystemTaskQueueName);
+                }
+            }
+        } catch (InterruptedException ie) {
+            Monitors.error(CLASS_NAME, "listen");
+            LOGGER.warn("Error listening for workflow system tasks", ie);
+        }
+    }
 
-	private Configuration config;
+    private void listen(String queueName) {
+        Executors.newSingleThreadScheduledExecutor()
+            .scheduleWithFixedDelay(() -> pollAndExecute(queueName), 1000, pollInterval, TimeUnit.MILLISECONDS);
+        LOGGER.info("Started listening for queue: {}", queueName);
+    }
 
-	private static BlockingQueue<WorkflowSystemTask> queue = new LinkedBlockingQueue<>();
+    private void pollAndExecute(String queueName) {
+        if (config.disableAsyncWorkers()) {
+            LOGGER.warn("System Task Worker is DISABLED.  Not polling for system task in queue : {}", queueName);
+            return;
+        }
+        systemTaskExecutor.pollAndExecute(queueName);
+    }
 
-	private static Set<WorkflowSystemTask> listeningTasks = new HashSet<>();
+    @VisibleForTesting
+    boolean isFromCoordinatorExecutionNameSpace(String queueName) {
+        String queueExecutionNameSpace = QueueUtils.getExecutionNameSpace(queueName);
+        return StringUtils.equals(queueExecutionNameSpace, executionNameSpace);
+    }
 
-	private static final String className = SystemTaskWorkerCoordinator.class.getName();
+    private boolean shouldListen(String workflowSystemTaskQueueName) {
+        return isFromCoordinatorExecutionNameSpace(workflowSystemTaskQueueName)
+            && isAsyncSystemTask(workflowSystemTaskQueueName);
+    }
 
-	@Inject
-	public SystemTaskWorkerCoordinator(QueueDAO queueDAO, WorkflowExecutor workflowExecutor, Configuration config) {
-		this.queueDAO = queueDAO;
-		this.workflowExecutor = workflowExecutor;
-		this.config = config;
-		this.unackTimeout = config.getIntProperty("workflow.system.task.worker.callback.seconds", 30);
-		int threadCount = config.getIntProperty("workflow.system.task.worker.thread.count", 10);
-		this.pollCount = config.getIntProperty("workflow.system.task.worker.poll.count", 10);
-		this.pollInterval = config.getIntProperty("workflow.system.task.worker.poll.interval", 50);
-		this.workerQueueSize = config.getIntProperty("workflow.system.task.worker.queue.size", 100);
-		this.workerQueue = new LinkedBlockingQueue<>(workerQueueSize);
-		if(threadCount > 0) {
-			ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("system-task-worker-%d").build();
-			this.executorService = new ThreadPoolExecutor(threadCount, threadCount,
-	                0L, TimeUnit.MILLISECONDS,
-	                workerQueue,
-	                threadFactory);
-			new Thread(this::listen).start();
-			logger.info("System Task Worker initialized with {} threads and a callback time of {} seconds and queue size: {} with pollCount: {} and poll interval: {}", threadCount, unackTimeout, workerQueueSize, pollCount, pollInterval);
-		} else {
-			logger.info("System Task Worker DISABLED");
-		}
-	}
-
-	static synchronized void add(WorkflowSystemTask systemTask) {
-		logger.info("Adding the queue for system task: {}", systemTask.getName());
-		queue.add(systemTask);
-	}
-
-	private void listen() {
-		try {
-			//noinspection InfiniteLoopStatement
-			for(;;) {
-				WorkflowSystemTask workflowSystemTask = queue.poll(60, TimeUnit.SECONDS);
-				if(workflowSystemTask != null && workflowSystemTask.isAsync() && !listeningTasks.contains(workflowSystemTask)) {
-					listen(workflowSystemTask);
-					listeningTasks.add(workflowSystemTask);
-				}
-			}
-		}catch(InterruptedException ie) {
-			Monitors.error(className, "listen");
-			logger.warn("Error listening for workflow system tasks", ie);
-		}
-	}
-
-	private void listen(WorkflowSystemTask systemTask) {
-		Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> pollAndExecute(systemTask), 1000, pollInterval, TimeUnit.MILLISECONDS);
-		logger.info("Started listening for system task: {}", systemTask.getName());
-	}
-
-	private void pollAndExecute(WorkflowSystemTask systemTask) {
-		String taskName = systemTask.getName();
-		try {
-			if(config.disableAsyncWorkers()) {
-				logger.warn("System Task Worker is DISABLED.  Not polling for system task: {}", taskName);
-				return;
-			}
-			// get the remaining capacity of worker queue to prevent queue full exception
-			int realPollCount = Math.min(workerQueue.remainingCapacity(), pollCount);
-			if (realPollCount <= 0) {
-                logger.warn("All workers are busy, not polling. queue size: {}, max: {}, task:{}", workerQueue.size(), workerQueueSize, taskName);
-                return;
-			}
-
-			List<String> polledTaskIds = queueDAO.pop(taskName, realPollCount, 200);
-			Monitors.recordTaskPoll(taskName);
-			logger.debug("Polling for {}, got {} tasks", taskName, polledTaskIds.size());
-			for(String taskId : polledTaskIds) {
-				logger.debug("Task: {} of type: {} being sent to the workflow executor", taskId, taskName);
-				try {
-					executorService.submit(()-> workflowExecutor.executeSystemTask(systemTask, taskId, unackTimeout));
-				} catch(RejectedExecutionException ree) {
-					logger.warn("Queue full for workers. Size: {}, task:{}", workerQueue.size(), taskName);
-				}
-			}
-		} catch (Exception e) {
-			Monitors.error(className, "pollAndExecute");
-			logger.error("Error executing system task:{}", taskName, e);
-		}
-	}
+    @VisibleForTesting
+    boolean isAsyncSystemTask(String queue) {
+        String taskType = QueueUtils.getTaskType(queue);
+        if (StringUtils.isNotBlank(taskType)) {
+            WorkflowSystemTask task = taskNameWorkflowTaskMapping.get(taskType);
+            return Objects.nonNull(task) && task.isAsync();
+        }
+        return false;
+    }
 }	

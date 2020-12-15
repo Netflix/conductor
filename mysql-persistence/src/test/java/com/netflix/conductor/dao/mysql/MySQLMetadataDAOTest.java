@@ -9,6 +9,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -20,6 +21,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.netflix.conductor.core.execution.ApplicationException.Code.CONFLICT;
+import static com.netflix.conductor.core.execution.ApplicationException.Code.NOT_FOUND;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -35,6 +40,9 @@ public class MySQLMetadataDAOTest {
     @Rule
     public TestName name = new TestName();
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Before
     public void setup() throws Exception {
         testUtil = new MySQLDAOTestUtil(name.getMethodName());
@@ -47,14 +55,29 @@ public class MySQLMetadataDAOTest {
         testUtil.getDataSource().close();
     }
 
-    @Test(expected=ApplicationException.class)
-    public void testDuplicate() throws Exception {
+    @Test
+    public void testDuplicateWorkflowDef() throws Exception {
+
+        thrown.expect(ApplicationException.class);
+        thrown.expectMessage("Workflow with testDuplicate.1 already exists!");
+        thrown.expect(hasProperty("code", is(CONFLICT)));
+
         WorkflowDef def = new WorkflowDef();
         def.setName("testDuplicate");
         def.setVersion(1);
 
-        dao.create(def);
-        dao.create(def);
+        dao.createWorkflowDef(def);
+        dao.createWorkflowDef(def);
+    }
+
+    @Test
+    public void testRemoveNotExistingWorkflowDef() throws Exception {
+
+        thrown.expect(ApplicationException.class);
+        thrown.expectMessage("No such workflow definition: test version: 1");
+        thrown.expect(hasProperty("code", is(NOT_FOUND)));
+
+        dao.removeWorkflowDef("test", 1);
     }
 
     @Test
@@ -69,36 +92,36 @@ public class MySQLMetadataDAOTest {
         def.setUpdatedBy("unit_test2");
         def.setUpdateTime(2L);
 
-        dao.create(def);
+        dao.createWorkflowDef(def);
 
-        List<WorkflowDef> all = dao.getAll();
+        List<WorkflowDef> all = dao.getAllWorkflowDefs();
         assertNotNull(all);
         assertEquals(1, all.size());
         assertEquals("test", all.get(0).getName());
         assertEquals(1, all.get(0).getVersion());
 
-        WorkflowDef found = dao.get("test", 1).get();
+        WorkflowDef found = dao.getWorkflowDef("test", 1).get();
         assertTrue(EqualsBuilder.reflectionEquals(def, found));
 
-        def.setVersion(2);
-        dao.create(def);
+        def.setVersion(3);
+        dao.createWorkflowDef(def);
 
-        all = dao.getAll();
+        all = dao.getAllWorkflowDefs();
         assertNotNull(all);
         assertEquals(2, all.size());
         assertEquals("test", all.get(0).getName());
         assertEquals(1, all.get(0).getVersion());
 
-        found = dao.getLatest(def.getName()).get();
+        found = dao.getLatestWorkflowDef(def.getName()).get();
         assertEquals(def.getName(), found.getName());
         assertEquals(def.getVersion(), found.getVersion());
-        assertEquals(2, found.getVersion());
+        assertEquals(3, found.getVersion());
 
         all = dao.getAllLatest();
         assertNotNull(all);
         assertEquals(1, all.size());
         assertEquals("test", all.get(0).getName());
-        assertEquals(2, all.get(0).getVersion());
+        assertEquals(3, all.get(0).getVersion());
 
         all = dao.getAllVersions(def.getName());
         assertNotNull(all);
@@ -106,11 +129,11 @@ public class MySQLMetadataDAOTest {
         assertEquals("test", all.get(0).getName());
         assertEquals("test", all.get(1).getName());
         assertEquals(1, all.get(0).getVersion());
-        assertEquals(2, all.get(1).getVersion());
+        assertEquals(3, all.get(1).getVersion());
 
         def.setDescription("updated");
-        dao.update(def);
-        found = dao.get(def.getName(), def.getVersion()).get();
+        dao.updateWorkflowDef(def);
+        found = dao.getWorkflowDef(def.getName(), def.getVersion()).get();
         assertEquals(def.getDescription(), found.getDescription());
 
         List<String> allnames = dao.findAll();
@@ -118,9 +141,28 @@ public class MySQLMetadataDAOTest {
         assertEquals(1, allnames.size());
         assertEquals(def.getName(), allnames.get(0));
 
-        dao.removeWorkflowDef("test", 1);
-        Optional<WorkflowDef> deleted = dao.get("test", 1);
+        def.setVersion(2);
+        dao.createWorkflowDef(def);
+
+        found = dao.getLatestWorkflowDef(def.getName()).get();
+        assertEquals(def.getName(), found.getName());
+        assertEquals(3, found.getVersion());
+
+        dao.removeWorkflowDef("test", 3);
+        Optional<WorkflowDef> deleted = dao.getWorkflowDef("test", 3);
         assertFalse(deleted.isPresent());
+
+        found = dao.getLatestWorkflowDef(def.getName()).get();
+        assertEquals(def.getName(), found.getName());
+        assertEquals(2, found.getVersion());
+
+        dao.removeWorkflowDef("test", 1);
+        deleted = dao.getWorkflowDef("test", 1);
+        assertFalse(deleted.isPresent());
+
+        found = dao.getLatestWorkflowDef(def.getName()).get();
+        assertEquals(def.getName(), found.getName());
+        assertEquals(2, found.getVersion());
     }
 
     @Test
@@ -176,8 +218,13 @@ public class MySQLMetadataDAOTest {
         assertEquals(def.getName(), all.get(0).getName());
     }
 
-    @Test(expected=ApplicationException.class)
-    public void testRemoveTaskDef() throws Exception {
+    @Test
+    public void testRemoveNotExistingTaskDef() {
+
+        thrown.expect(ApplicationException.class);
+        thrown.expectMessage("No such task definition");
+        thrown.expect(hasProperty("code", is(NOT_FOUND)));
+
         dao.removeTaskDef("test" + UUID.randomUUID().toString());
     }
 
@@ -197,7 +244,7 @@ public class MySQLMetadataDAOTest {
         eh.setEvent(event1);
 
         dao.addEventHandler(eh);
-        List<EventHandler> all = dao.getEventHandlers();
+        List<EventHandler> all = dao.getAllEventHandlers();
         assertNotNull(all);
         assertEquals(1, all.size());
         assertEquals(eh.getName(), all.get(0).getName());
@@ -211,7 +258,7 @@ public class MySQLMetadataDAOTest {
         eh.setEvent(event2);
         dao.updateEventHandler(eh);
 
-        all = dao.getEventHandlers();
+        all = dao.getAllEventHandlers();
         assertNotNull(all);
         assertEquals(1, all.size());
 

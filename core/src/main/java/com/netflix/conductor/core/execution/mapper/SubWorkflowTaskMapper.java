@@ -59,6 +59,14 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         String subWorkflowName = resolvedParams.get("name").toString();
         Integer subWorkflowVersion = getSubWorkflowVersion(resolvedParams, subWorkflowName);
 
+        Object subWorkflowDefinition = resolvedParams.get("workflowDefinition");
+
+        Map subWorkflowTaskToDomain = null;
+        Object uncheckedTaskToDomain = resolvedParams.get("taskToDomain");
+        if (uncheckedTaskToDomain instanceof Map) {
+            subWorkflowTaskToDomain = (Map) uncheckedTaskToDomain;
+        }
+
         Task subWorkflowTask = new Task();
         subWorkflowTask.setTaskType(SubWorkflow.NAME);
         subWorkflowTask.setTaskDefName(taskToSchedule.getName());
@@ -69,10 +77,13 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         subWorkflowTask.setScheduledTime(System.currentTimeMillis());
         subWorkflowTask.getInputData().put("subWorkflowName", subWorkflowName);
         subWorkflowTask.getInputData().put("subWorkflowVersion", subWorkflowVersion);
+        subWorkflowTask.getInputData().put("subWorkflowTaskToDomain", subWorkflowTaskToDomain);
+        subWorkflowTask.getInputData().put("subWorkflowDefinition", subWorkflowDefinition);
         subWorkflowTask.getInputData().put("workflowInput", taskMapperContext.getTaskInput());
         subWorkflowTask.setTaskId(taskId);
         subWorkflowTask.setStatus(Task.Status.SCHEDULED);
         subWorkflowTask.setWorkflowTask(taskToSchedule);
+        subWorkflowTask.setWorkflowPriority(workflowInstance.getPriority());
         logger.debug("SubWorkflowTask {} created to be Scheduled", subWorkflowTask);
         return Collections.singletonList(subWorkflowTask);
     }
@@ -96,7 +107,20 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         if (version != null) {
             params.put("version", version);
         }
-        return parametersUtils.getTaskInputV2(params, workflowInstance, null, null);
+        Map<String, String> taskToDomain = subWorkflowParams.getTaskToDomain();
+        if (taskToDomain != null) {
+            params.put("taskToDomain", taskToDomain);
+        }
+
+        params = parametersUtils.getTaskInputV2(params, workflowInstance, null, null);
+
+        // do not resolve params inside subworkflow definition
+        Object subWorkflowDefinition = subWorkflowParams.getWorkflowDefinition();
+        if (subWorkflowDefinition != null) {
+            params.put("workflowDefinition", subWorkflowDefinition);
+        }
+
+        return params;
     }
 
     private Integer getSubWorkflowVersion(Map<String, Object> resolvedParams, String subWorkflowName) {
@@ -104,7 +128,7 @@ public class SubWorkflowTaskMapper implements TaskMapper {
                 .map(Object::toString)
                 .map(Integer::parseInt)
                 .orElseGet(
-                        () -> metadataDAO.getLatest(subWorkflowName)
+                        () -> metadataDAO.getLatestWorkflowDef(subWorkflowName)
                                 .map(WorkflowDef::getVersion)
                                 .orElseThrow(() -> {
                                     String reason = String.format("The Task %s defined as a sub-workflow has no workflow definition available ", subWorkflowName);

@@ -1,5 +1,5 @@
  /*
-  * Copyright 2018 Netflix, Inc.
+  * Copyright 2020 Netflix, Inc.
   * <p>
   * Licensed under the Apache License, Version 2.0 (the "License");
   * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@
  import java.util.Collections;
  import java.util.List;
  import java.util.Map;
+ import java.util.Objects;
  import java.util.Optional;
 
  /**
@@ -62,18 +63,17 @@
          logger.debug("TaskMapperContext {} in HTTPTaskMapper", taskMapperContext);
 
          WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
+         taskToSchedule.getInputParameters().put("asyncComplete", taskToSchedule.isAsyncComplete());
          Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
          String taskId = taskMapperContext.getTaskId();
          int retryCount = taskMapperContext.getRetryCount();
 
          TaskDef taskDefinition = Optional.ofNullable(taskMapperContext.getTaskDefinition())
                  .orElseGet(() -> Optional.ofNullable(metadataDAO.getTaskDef(taskToSchedule.getName()))
-                         .orElseThrow(() -> {
-                             String reason = String.format("Invalid task specified. Cannot find task by name %s in the task definitions", taskToSchedule.getName());
-                             return new TerminateWorkflowException(reason);
-                         }));
+                         .orElse(null));
 
          Map<String, Object> input = parametersUtils.getTaskInputV2(taskToSchedule.getInputParameters(), workflowInstance, taskId, taskDefinition);
+         Boolean asynComplete = (Boolean)input.get("asyncComplete");
 
          Task httpTask = new Task();
          httpTask.setTaskType(taskToSchedule.getType());
@@ -85,12 +85,18 @@
          httpTask.setScheduledTime(System.currentTimeMillis());
          httpTask.setTaskId(taskId);
          httpTask.setInputData(input);
+         httpTask.getInputData().put("asyncComplete", asynComplete);
          httpTask.setStatus(Task.Status.SCHEDULED);
          httpTask.setRetryCount(retryCount);
          httpTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
          httpTask.setWorkflowTask(taskToSchedule);
-         httpTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
-         httpTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+         httpTask.setWorkflowPriority(workflowInstance.getPriority());
+         if (Objects.nonNull(taskDefinition)) {
+             httpTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
+             httpTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+             httpTask.setIsolationGroupId(taskDefinition.getIsolationGroupId());
+             httpTask.setExecutionNameSpace(taskDefinition.getExecutionNameSpace());
+         }
          return Collections.singletonList(httpTask);
      }
  }

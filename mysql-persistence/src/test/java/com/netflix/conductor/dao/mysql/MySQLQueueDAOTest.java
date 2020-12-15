@@ -104,6 +104,7 @@ public class MySQLQueueDAOTest {
 
 		for(int i = 0; i < 10; i++) {
 			String messageId = "msg" + i;
+			assertTrue(dao.containsMessage(queueName, messageId));
 			dao.remove(queueName, messageId);
 		}
 
@@ -120,6 +121,33 @@ public class MySQLQueueDAOTest {
 	}
 
 	/**
+	 * Test fix for https://github.com/Netflix/conductor/issues/1892
+	 *
+	 * */
+	@Test
+	public void containsMessageTest() {
+		String queueName = "TestQueue";
+		long offsetTimeInSecond = 0;
+
+		for(int i = 0; i < 10; i++) {
+			String messageId = "msg" + i;
+			dao.push(queueName, messageId, offsetTimeInSecond);
+		}
+		int size = dao.getSize(queueName);
+		assertEquals(10, size);
+
+		for(int i = 0; i < 10; i++) {
+			String messageId = "msg" + i;
+			assertTrue(dao.containsMessage(queueName, messageId));
+			dao.remove(queueName, messageId);
+		}
+		for(int i = 0; i < 10; i++) {
+			String messageId = "msg" + i;
+			assertFalse(dao.containsMessage(queueName, messageId));
+		}
+	}
+
+	/**
 	 * Test fix for https://github.com/Netflix/conductor/issues/399
 	 * @since 1.8.2-rc5
 	 */
@@ -131,7 +159,12 @@ public class MySQLQueueDAOTest {
 
 		for(int i = 0; i < totalSize; i++) {
 			String payload = "{\"id\": " + i + ", \"msg\":\"test " + i + "\"}";
-			messages.add(new Message("testmsg-" + i, payload, ""));
+			Message m = new Message("testmsg-" + i, payload, "");
+			if (i % 2 == 0) {
+				// Set priority on message with pair id
+				m.setPriority(99-i);
+			}
+			messages.add(m);
 		}
 
 		// Populate the queue with our test message batch
@@ -296,14 +329,14 @@ public class MySQLQueueDAOTest {
 		Map<String, Map<String, Map<String, Long>>> details = dao.queuesDetailVerbose();
 		uacked = details.get(queueName).get("a").get("uacked");
 		assertNotNull(uacked);
-		assertEquals("There should be no unacked messages", uacked.longValue(), 0);
+		assertEquals("The messages that were polled should be unacked still", uacked.longValue(), unackedCount - 1);
 
 		Long otherUacked = details.get(otherQueueName).get("a").get("uacked");
 		assertNotNull(otherUacked);
-		assertEquals("Other queue should have unacked messages", otherUacked.longValue(), count);
+		assertEquals("Other queue should have all unacked messages", otherUacked.longValue(), count);
 
 		Long size = dao.queuesDetail().get(queueName);
 		assertNotNull(size);
-		assertEquals(size.longValue(), count - 1);
+		assertEquals(size.longValue(), count - unackedCount);
 	}
 }

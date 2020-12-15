@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * 
- */
 package com.netflix.conductor.common.run;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-
-import com.github.vmg.protogen.annotations.*;
+import com.github.vmg.protogen.annotations.ProtoField;
+import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Objects;
+import java.util.TimeZone;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -93,6 +91,9 @@ public class TaskSummary {
 	@ProtoField(id = 18)
 	private String externalOutputPayloadStoragePath;
 
+	@ProtoField(id = 19)
+	private int workflowPriority;
+
     public TaskSummary() {
     }
 
@@ -106,6 +107,7 @@ public class TaskSummary {
     	this.taskType = task.getTaskType();
 		this.workflowId = task.getWorkflowInstanceId();
 		this.workflowType = task.getWorkflowType();
+		this.workflowPriority = task.getWorkflowPriority();
 		this.correlationId = task.getCorrelationId();
 		this.scheduledTime = sdf.format(new Date(task.getScheduledTime()));
 		this.startTime = sdf.format(new Date(task.getStartTime()));
@@ -389,5 +391,53 @@ public class TaskSummary {
 	 */
 	public void setExternalOutputPayloadStoragePath(String externalOutputPayloadStoragePath) {
 		this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
+	}
+
+	/**
+	 * @return the priority defined on workflow
+	 */
+	public int getWorkflowPriority() {
+		return workflowPriority;
+	}
+
+	/**
+	 * @param workflowPriority Priority defined for workflow
+	 */
+	public void setWorkflowPriority(int workflowPriority) {
+		this.workflowPriority = workflowPriority;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		TaskSummary that = (TaskSummary) o;
+		return getExecutionTime() == that.getExecutionTime() &&
+			getQueueWaitTime() == that.getQueueWaitTime() &&
+			getWorkflowPriority() == that.getWorkflowPriority() &&
+			getWorkflowId().equals(that.getWorkflowId()) &&
+			getWorkflowType().equals(that.getWorkflowType()) &&
+			Objects.equals(getCorrelationId(), that.getCorrelationId()) &&
+			getScheduledTime().equals(that.getScheduledTime()) &&
+			Objects.equals(getStartTime(), that.getStartTime()) &&
+			Objects.equals(getUpdateTime(), that.getUpdateTime()) &&
+			Objects.equals(getEndTime(), that.getEndTime()) &&
+			getStatus() == that.getStatus() &&
+			Objects.equals(getReasonForIncompletion(), that.getReasonForIncompletion()) &&
+			Objects.equals(getTaskDefName(), that.getTaskDefName()) &&
+			getTaskType().equals(that.getTaskType()) &&
+			getTaskId().equals(that.getTaskId());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getWorkflowId(), getWorkflowType(), getCorrelationId(), getScheduledTime(), getStartTime(),
+			getUpdateTime(), getEndTime(), getStatus(), getReasonForIncompletion(), getExecutionTime(),
+			getQueueWaitTime(),
+			getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority());
 	}
 }

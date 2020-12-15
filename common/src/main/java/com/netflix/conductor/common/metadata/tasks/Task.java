@@ -15,17 +15,19 @@
  */
 package com.netflix.conductor.common.metadata.tasks;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.google.protobuf.Any;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 @ProtoMessage
 public class Task {
@@ -41,7 +43,6 @@ public class Task {
         COMPLETED_WITH_ERRORS(true, true, true),
         SCHEDULED(false, true, true),
         TIMED_OUT(true, false, true),
-        READY_FOR_RERUN(false, true, true),
         SKIPPED(true, true, false);
 
         private boolean terminal;
@@ -186,6 +187,21 @@ public class Task {
 
     @ProtoField(id = 35)
     private String externalOutputPayloadStoragePath;
+
+    @ProtoField(id = 36)
+    private int workflowPriority;
+
+    @ProtoField(id = 37)
+    private String  executionNameSpace;
+
+    @ProtoField(id = 38)
+    private String isolationGroupId;
+
+    @ProtoField(id = 40)
+    private int iteration;
+
+    @ProtoField(id = 41)
+    private String subWorkflowId;
 
     public Task() {
     }
@@ -382,7 +398,12 @@ public class Task {
      */
     public long getQueueWaitTime() {
         if (this.startTime > 0 && this.scheduledTime > 0) {
-            return this.startTime - scheduledTime - (getCallbackAfterSeconds() * 1000);
+            if (this.updateTime > 0 && getCallbackAfterSeconds() > 0) {
+                long waitTime = System.currentTimeMillis() - (this.updateTime + (getCallbackAfterSeconds() * 1000));
+                return waitTime > 0 ? waitTime : 0;
+            } else {
+                return this.startTime - this.scheduledTime;
+            }
         }
         return 0L;
     }
@@ -525,7 +546,7 @@ public class Task {
      * @param reasonForIncompletion the reasonForIncompletion to set
      */
     public void setReasonForIncompletion(String reasonForIncompletion) {
-        this.reasonForIncompletion = reasonForIncompletion;
+        this.reasonForIncompletion = StringUtils.substring(reasonForIncompletion, 0, 500);
     }
 
     /**
@@ -666,6 +687,75 @@ public class Task {
         this.externalOutputPayloadStoragePath = externalOutputPayloadStoragePath;
     }
 
+
+    public void setIsolationGroupId(String isolationGroupId) {
+        this.isolationGroupId = isolationGroupId;
+    }
+
+    public String getIsolationGroupId() {
+        return isolationGroupId;
+    }
+
+    public String getExecutionNameSpace() {
+        return executionNameSpace;
+    }
+
+    public void setExecutionNameSpace(String executionNameSpace) {
+        this.executionNameSpace = executionNameSpace;
+    }
+
+    /**
+     * @return the iteration
+     */
+    public int getIteration() {
+        return iteration;
+    }
+
+    /**
+     * @param iteration iteration
+     */
+    public void setIteration(int iteration) {
+        this.iteration = iteration;
+    }
+
+    public boolean isLoopOverTask() {
+        return iteration > 0;
+    }
+
+    /**
+     * * @return the priority defined on workflow
+     */
+    public int getWorkflowPriority() {
+        return workflowPriority;
+    }
+
+    /**
+     * @param workflowPriority Priority defined for workflow
+     */
+    public void setWorkflowPriority(int workflowPriority) {
+        this.workflowPriority = workflowPriority;
+    }
+
+    public String getSubWorkflowId() {
+        // For backwards compatibility
+        if (StringUtils.isNotBlank(subWorkflowId)) {
+            return subWorkflowId;
+        } else {
+            return 
+               	this.getOutputData() != null && (String) this.getOutputData().get("subWorkflowId") != null ? (String) this.getOutputData().get("subWorkflowId") : 
+               	this.getInputData() != null ? (String) this.getInputData().get("subWorkflowId") : null;
+        }
+    }
+
+    public void setSubWorkflowId(String subWorkflowId) {
+        this.subWorkflowId = subWorkflowId;
+        // For backwards compatibility
+        if (this.getOutputData() != null && this.getOutputData().containsKey("subWorkflowId")) {
+            this.getOutputData().put("subWorkflowId", subWorkflowId);
+        }
+    }
+
+
     public Task copy() {
         Task copy = new Task();
         copy.setCallbackAfterSeconds(callbackAfterSeconds);
@@ -692,9 +782,37 @@ public class Task {
         copy.setRateLimitFrequencyInSeconds(rateLimitFrequencyInSeconds);
         copy.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
         copy.setExternalOutputPayloadStoragePath(externalOutputPayloadStoragePath);
+        copy.setWorkflowPriority(workflowPriority);
+        copy.setIteration(iteration);
+        copy.setExecutionNameSpace(executionNameSpace);
+        copy.setIsolationGroupId(isolationGroupId);
+        copy.setSubWorkflowId(getSubWorkflowId());
 
         return copy;
     }
+
+  /**
+   * @return a deep copy of the task instance
+   * To be used inside copy Workflow method to provide
+   * a valid deep copied object.
+   * Note: This does not copy the following fields:
+   * <ul>
+   * <li>retried</li>
+   * <li>updateTime</li>
+   * <li>retriedTaskId</li>
+   * </ul>
+   */
+  public Task deepCopy() {
+    Task deepCopy = copy();
+    deepCopy.setStartTime(startTime);
+    deepCopy.setScheduledTime(scheduledTime);
+    deepCopy.setEndTime(endTime);
+    deepCopy.setWorkerId(workerId);
+    deepCopy.setReasonForIncompletion(reasonForIncompletion);
+    deepCopy.setSeq(seq);
+
+    return deepCopy;
+  }
 
 
     @Override
@@ -732,8 +850,11 @@ public class Task {
                 ", outputMessage='" + outputMessage + '\'' +
                 ", rateLimitPerFrequency=" + rateLimitPerFrequency +
                 ", rateLimitFrequencyInSeconds=" + rateLimitFrequencyInSeconds +
+                ", workflowPriority=" + workflowPriority +
                 ", externalInputPayloadStoragePath='" + externalInputPayloadStoragePath + '\'' +
                 ", externalOutputPayloadStoragePath='" + externalOutputPayloadStoragePath + '\'' +
+                ", isolationGroupId='" + isolationGroupId + '\'' +
+                ", executionNameSpace='" + executionNameSpace + '\'' +
                 '}';
     }
 
@@ -759,6 +880,8 @@ public class Task {
                 getRateLimitFrequencyInSeconds() == task.getRateLimitFrequencyInSeconds() &&
                 Objects.equals(getTaskType(), task.getTaskType()) &&
                 getStatus() == task.getStatus() &&
+                getIteration() == task.getIteration() &&
+                getWorkflowPriority() == task.getWorkflowPriority() &&
                 Objects.equals(getInputData(), task.getInputData()) &&
                 Objects.equals(getReferenceTaskName(), task.getReferenceTaskName()) &&
                 Objects.equals(getCorrelationId(), task.getCorrelationId()) &&
@@ -775,11 +898,13 @@ public class Task {
                 Objects.equals(getInputMessage(), task.getInputMessage()) &&
                 Objects.equals(getOutputMessage(), task.getOutputMessage()) &&
                 Objects.equals(getExternalInputPayloadStoragePath(), task.getExternalInputPayloadStoragePath()) &&
-                Objects.equals(getExternalOutputPayloadStoragePath(), task.getExternalOutputPayloadStoragePath());
+                Objects.equals(getExternalOutputPayloadStoragePath(), task.getExternalOutputPayloadStoragePath()) &&
+                Objects.equals(getIsolationGroupId(), task.getIsolationGroupId()) &&
+                Objects.equals(getExecutionNameSpace(), task.getExecutionNameSpace());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTaskType(), getStatus(), getInputData(), getReferenceTaskName(), getRetryCount(), getSeq(), getCorrelationId(), getPollCount(), getTaskDefName(), getScheduledTime(), getStartTime(), getEndTime(), getUpdateTime(), getStartDelayInSeconds(), getRetriedTaskId(), isRetried(), isExecuted(), isCallbackFromWorker(), getResponseTimeoutSeconds(), getWorkflowInstanceId(), getWorkflowType(), getTaskId(), getReasonForIncompletion(), getCallbackAfterSeconds(), getWorkerId(), getOutputData(), getWorkflowTask(), getDomain(), getInputMessage(), getOutputMessage(), getRateLimitPerFrequency(), getRateLimitFrequencyInSeconds(), getExternalInputPayloadStoragePath(), getExternalOutputPayloadStoragePath());
+        return Objects.hash(getTaskType(), getStatus(), getInputData(), getReferenceTaskName(), getWorkflowPriority(), getRetryCount(), getSeq(), getCorrelationId(), getPollCount(), getTaskDefName(), getScheduledTime(), getStartTime(), getEndTime(), getUpdateTime(), getStartDelayInSeconds(), getRetriedTaskId(), isRetried(), isExecuted(), isCallbackFromWorker(), getResponseTimeoutSeconds(), getWorkflowInstanceId(), getWorkflowType(), getTaskId(), getReasonForIncompletion(), getCallbackAfterSeconds(), getWorkerId(), getOutputData(), getWorkflowTask(), getDomain(), getInputMessage(), getOutputMessage(), getRateLimitPerFrequency(), getRateLimitFrequencyInSeconds(), getExternalInputPayloadStoragePath(), getExternalOutputPayloadStoragePath(), getIsolationGroupId(), getExecutionNameSpace());
     }
 }

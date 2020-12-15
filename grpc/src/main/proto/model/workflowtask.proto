@@ -35,4 +35,8 @@ message WorkflowTask {
     TaskDef task_definition = 19;
     bool rate_limited = 20;
     repeated string default_exclusive_join_task = 21;
+    bool async_complete = 23;
+    string loop_condition = 24;
+    repeated WorkflowTask loop_over = 25;
+    int32 retry_count = 26;
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2018 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.SystemTaskType;
 import com.netflix.conductor.core.execution.TerminateWorkflowException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,10 +43,10 @@ import java.util.Map;
  */
 public class DecisionTaskMapper implements TaskMapper {
 
-    Logger logger = LoggerFactory.getLogger(DecisionTaskMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(DecisionTaskMapper.class);
 
     /**
-     * This method gets the list of tasks that need to scheduled when the the task to scheduled is of type {@link TaskType#DECISION}.
+     * This method gets the list of tasks that need to scheduled when the task to scheduled is of type {@link TaskType#DECISION}.
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link WorkflowDef}, {@link Workflow} and a string representation of the TaskId
      * @return List of tasks in the following order:
@@ -87,8 +88,10 @@ public class DecisionTaskMapper implements TaskMapper {
         decisionTask.getInputData().put("case", caseValue);
         decisionTask.getOutputData().put("caseOutput", Collections.singletonList(caseValue));
         decisionTask.setTaskId(taskId);
+        decisionTask.setStartTime(System.currentTimeMillis());
         decisionTask.setStatus(Task.Status.IN_PROGRESS);
         decisionTask.setWorkflowTask(taskToSchedule);
+        decisionTask.setWorkflowPriority(workflowInstance.getPriority());
         tasksToBeScheduled.add(decisionTask);
 
         //get the list of tasks based on the decision
@@ -120,7 +123,7 @@ public class DecisionTaskMapper implements TaskMapper {
     String getEvaluatedCaseValue(WorkflowTask taskToSchedule, Map<String, Object> taskInput) {
         String expression = taskToSchedule.getCaseExpression();
         String caseValue;
-        if (expression != null) {
+        if (StringUtils.isNotBlank(expression)) {
             logger.debug("Case being evaluated using decision expression: {}", expression);
             try {
                 //Evaluate the expression by using the Nashhorn based script evaluator

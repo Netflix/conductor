@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 package com.netflix.conductor.config;
-/**
- * 
- */
-
 
 import com.netflix.conductor.core.config.Configuration;
 
@@ -43,7 +39,17 @@ public class TestConfiguration implements Configuration {
 	public boolean disableAsyncWorkers() {
 		return false;
 	}
-	
+
+	@Override
+	public boolean isEventMessageIndexingEnabled() {
+		return true;
+	}
+
+	@Override
+	public boolean isEventExecutionIndexingEnabled() {
+		return true;
+	}
+
 	@Override
 	public String getServerId() {
 		return "server_id";
@@ -78,12 +84,12 @@ public class TestConfiguration implements Configuration {
 	public String getAvailabilityZone() {
 		return "us-east-1a";
 	}
-	
+
 	@Override
 	public int getIntProperty(String string, int def) {
 		return 100;
 	}
-	
+
 	@Override
 	public String getRegion() {
 		return "us-east-1";
@@ -110,6 +116,11 @@ public class TestConfiguration implements Configuration {
 	}
 
 	@Override
+	public Long getMaxWorkflowVariablesPayloadSizeThresholdKB() {
+		return 256L;
+	}
+
+	@Override
 	public Long getTaskInputPayloadSizeThresholdKB() {
 		return 3072L;
 	}
@@ -131,7 +142,7 @@ public class TestConfiguration implements Configuration {
 
 	@Override
 	public long getLongProperty(String name, long defaultValue) {
-		return 1000000l;
+		return 1000000L;
 	}
 
 	@Override

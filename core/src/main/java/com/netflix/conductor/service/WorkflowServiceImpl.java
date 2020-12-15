@@ -73,8 +73,9 @@ public class WorkflowServiceImpl implements WorkflowService {
      */
     @Service
     public String startWorkflow(StartWorkflowRequest startWorkflowRequest) {
-        return startWorkflow(startWorkflowRequest.getName(), startWorkflowRequest.getVersion(), startWorkflowRequest.getCorrelationId(), startWorkflowRequest.getInput(),
-                startWorkflowRequest.getExternalInputPayloadStoragePath(), startWorkflowRequest.getTaskToDomain(), startWorkflowRequest.getWorkflowDef());
+        return startWorkflow(startWorkflowRequest.getName(), startWorkflowRequest.getVersion(), startWorkflowRequest.getCorrelationId(),
+            startWorkflowRequest.getPriority(), startWorkflowRequest.getInput(), startWorkflowRequest.getExternalInputPayloadStoragePath(),
+            startWorkflowRequest.getTaskToDomain(), startWorkflowRequest.getWorkflowDef());
     }
 
     /**
@@ -92,6 +93,26 @@ public class WorkflowServiceImpl implements WorkflowService {
     @Service
     public String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> input,
                                 String externalInputPayloadStoragePath, Map<String, String> taskToDomain, WorkflowDef workflowDef) {
+        return startWorkflow(name, version, correlationId, 0, input, externalInputPayloadStoragePath,
+                taskToDomain, workflowDef);
+    }
+
+    /**
+     * Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain.
+     *
+     * @param name                            Name of the workflow you want to start.
+     * @param version                         Version of the workflow you want to start.
+     * @param correlationId                   CorrelationID of the workflow you want to start.
+     * @param priority                        Priority of the workflow you want to start.
+     * @param input                           Input to the workflow you want to start.
+     * @param externalInputPayloadStoragePath
+     * @param taskToDomain
+     * @param workflowDef                      - workflow definition
+     * @return the id of the workflow instance that can be use for tracking.
+     */
+    @Service
+    public String startWorkflow(String name, Integer version, String correlationId, Integer priority, Map<String, Object> input,
+                                String externalInputPayloadStoragePath, Map<String, String> taskToDomain, WorkflowDef workflowDef) {
 
         if (workflowDef == null) {
             workflowDef = metadataService.getWorkflowDef(name, version);
@@ -105,6 +126,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                     name,
                     version,
                     correlationId,
+                    priority,
                     input,
                     externalInputPayloadStoragePath,
                     null,
@@ -116,6 +138,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                     input,
                     externalInputPayloadStoragePath,
                     correlationId,
+                    priority,
                     null,
                     taskToDomain
             );
@@ -134,10 +157,27 @@ public class WorkflowServiceImpl implements WorkflowService {
     @Service
     public String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> input) {
         WorkflowDef workflowDef = metadataService.getWorkflowDef(name, version);
+        return startWorkflow(name, version, correlationId, 0, input);
+    }
+
+    /**
+     * Start a new workflow.  Returns the ID of the workflow instance that can be later used for tracking.
+     *
+     * @param name          Name of the workflow you want to start.
+     * @param version       Version of the workflow you want to start.
+     * @param correlationId CorrelationID of the workflow you want to start.
+     * @param priority      Priority of the workflow you want to start.
+     * @param input         Input to the workflow you want to start.
+     * @return the id of the workflow instance that can be use for tracking.
+     */
+    @Service
+    public String startWorkflow(String name, Integer version, String correlationId, Integer priority,
+                                Map<String, Object> input) {
+        WorkflowDef workflowDef = metadataService.getWorkflowDef( name, version );
         if (workflowDef == null) {
             throw new ApplicationException(ApplicationException.Code.NOT_FOUND, String.format("No such workflow found by name: %s, version: %d", name, version));
         }
-        return workflowExecutor.startWorkflow(workflowDef.getName(), workflowDef.getVersion(), correlationId, input, null);
+        return workflowExecutor.startWorkflow(workflowDef.getName(), workflowDef.getVersion(), correlationId, priority, input, null);
     }
 
     /**
@@ -219,10 +259,15 @@ public class WorkflowServiceImpl implements WorkflowService {
     @Service
     public List<String> getRunningWorkflows(String workflowName, Integer version,
                                             Long startTime, Long endTime) {
-        if (Optional.ofNullable(startTime).orElse(0l) != 0 && Optional.ofNullable(endTime).orElse(0l) != 0) {
+        if (Optional.ofNullable(startTime).orElse(0L) != 0 && Optional.ofNullable(endTime).orElse(0L) != 0) {
             return workflowExecutor.getWorkflows(workflowName, version, startTime, endTime);
         } else {
-            return workflowExecutor.getRunningWorkflowIds(workflowName);
+            version = Optional.ofNullable(version)
+                    .orElseGet(() -> {
+                        WorkflowDef workflowDef = metadataService.getWorkflowDef(workflowName, null);
+                        return workflowDef.getVersion();
+                    });
+            return workflowExecutor.getRunningWorkflowIds(workflowName, version);
         }
     }
 
@@ -304,13 +349,13 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     /**
-     * Resets callback times of all in_progress tasks to 0.
+     * Resets callback times of all non-terminal SIMPLE tasks to 0.
      *
      * @param workflowId WorkflowId of the workflow.
      */
     @Service
     public void resetWorkflow(String workflowId) {
-        workflowExecutor.resetCallbacksForInProgressTasks(workflowId);
+        workflowExecutor.resetCallbacksForWorkflow(workflowId);
     }
 
     /**

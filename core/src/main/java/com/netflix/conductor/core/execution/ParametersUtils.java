@@ -34,14 +34,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 
+import com.netflix.conductor.common.utils.JsonMapperProvider;
+import com.netflix.conductor.common.utils.TaskUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Used to parse and resolve the JSONPath bindings in the workflow and task definitions.
  */
 public class ParametersUtils {
+    private static Logger logger = LoggerFactory.getLogger(ParametersUtils.class);
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper = new JsonMapperProvider().get();
 
     private TypeReference<Map<String, Object>> map = new TypeReference<Map<String, Object>>() {
     };
@@ -67,7 +71,7 @@ public class ParametersUtils {
             inputParams = new HashMap<>();
         }
         if (taskDefinition != null && taskDefinition.getInputTemplate() != null) {
-            inputParams.putAll(clone(taskDefinition.getInputTemplate()));
+            clone(taskDefinition.getInputTemplate()).forEach(inputParams::putIfAbsent);
         }
 
         Map<String, Map<String, Object>> inputMap = new HashMap<>();
@@ -84,6 +88,7 @@ public class ParametersUtils {
         workflowParams.put("correlationId", workflow.getCorrelationId());
         workflowParams.put("reasonForIncompletion", workflow.getReasonForIncompletion());
         workflowParams.put("schemaVersion", workflow.getSchemaVersion());
+        workflowParams.put("variables", workflow.getVariables());
 
         inputMap.put("workflow", workflowParams);
 
@@ -112,13 +117,18 @@ public class ParametersUtils {
                     taskParams.put("reasonForIncompletion", task.getReasonForIncompletion());
                     taskParams.put("callbackAfterSeconds", task.getCallbackAfterSeconds());
                     taskParams.put("workerId", task.getWorkerId());
-                    inputMap.put(task.getReferenceTaskName(), taskParams);
+                    inputMap.put(task.isLoopOverTask() ? TaskUtils.removeIterationFromTaskRefName(task.getReferenceTaskName()) :  task.getReferenceTaskName(), taskParams);
                 });
 
         Configuration option = Configuration.defaultConfiguration()
                 .addOptions(Option.SUPPRESS_EXCEPTIONS);
         DocumentContext documentContext = JsonPath.parse(inputMap, option);
-        return replace(inputParams, documentContext, taskId);
+        Map<String, Object> replacedTaskInput = replace(inputParams, documentContext, taskId);
+        if (taskDefinition != null && taskDefinition.getInputTemplate() != null) {
+            // If input for a given key resolves to null, try replacing it with one from inputTemplate, if it exists.
+            replacedTaskInput.replaceAll((key, value) -> (value == null) ? taskDefinition.getInputTemplate().get(key) : value);
+        }
+        return replacedTaskInput;
     }
 
     //deep clone using json - POJO
@@ -152,23 +162,23 @@ public class ParametersUtils {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> replace(Map<String, Object> input, DocumentContext documentContext, String taskId) {
+        Map<String, Object> result = new HashMap<>();
         for (Entry<String, Object> e : input.entrySet()) {
+            Object newValue;
             Object value = e.getValue();
             if (value instanceof String) {
-                Object replaced = replaceVariables(value.toString(), documentContext, taskId);
-                e.setValue(replaced);
+                newValue = replaceVariables(value.toString(), documentContext, taskId);
             } else if (value instanceof Map) {
                 //recursive call
-                Object replaced = replace((Map<String, Object>) value, documentContext, taskId);
-                e.setValue(replaced);
+                newValue = replace((Map<String, Object>) value, documentContext, taskId);
             } else if (value instanceof List) {
-                Object replaced = replaceList((List<?>) value, taskId, documentContext);
-                e.setValue(replaced);
+                newValue = replaceList((List<?>) value, taskId, documentContext);
             } else {
-                e.setValue(value);
+                newValue = value;
             }
+            result.put(e.getKey(), newValue);
         }
-        return input;
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -196,7 +206,7 @@ public class ParametersUtils {
         Object[] convertedValues = new Object[values.length];
         for (int i = 0; i < values.length; i++) {
             convertedValues[i] = values[i];
-            if (values[i].startsWith("${") && values[i].endsWith("}")) {
+            if (values !=null && values[i].startsWith("${") && values[i].endsWith("}")) {
                 String paramPath = values[i].substring(2, values[i].length() - 1);
                 if (EnvUtils.isEnvironmentVariable(paramPath)) {
                     String sysValue = EnvUtils.getSystemParametersValue(paramPath, taskId);
@@ -205,7 +215,12 @@ public class ParametersUtils {
                     }
 
                 } else {
-                    convertedValues[i] = documentContext.read(paramPath);
+                    try {
+                        convertedValues[i] = documentContext.read(paramPath);
+                    }catch (Exception e) {
+                        logger.warn("Error reading documentContext for paramPath: {}. Exception: {}", paramPath, e);
+                        convertedValues[i] = null;
+                    }
                 }
 
             }

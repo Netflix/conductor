@@ -1,17 +1,14 @@
-/**
+/*
  * Copyright 2017 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
- */
-/**
- *
  */
 package com.netflix.conductor.core.config;
 
@@ -55,6 +52,16 @@ public class SystemPropertiesConfiguration implements Configuration {
     }
 
     @Override
+    public boolean isEventMessageIndexingEnabled() {
+        return getBooleanProperty(EVENT_MESSAGE_INDEXING_ENABLED_PROPERTY_NAME, EVENT_MESSAGE_INDEXING_ENABLED_DEFAULT_VALUE);
+    }
+
+    @Override
+    public boolean isEventExecutionIndexingEnabled() {
+        return getBooleanProperty(EVENT_EXECUTION_INDEXING_ENABLED_PROPERTY_NAME, EVENT_EXECUTION_INDEXING_ENABLED_DEFAULT_VALUE);
+    }
+
+    @Override
     public String getServerId() {
         try {
             return InetAddress.getLocalHost().getHostName();
@@ -93,7 +100,7 @@ public class SystemPropertiesConfiguration implements Configuration {
         String val = getProperty(key, Integer.toString(defaultValue));
         try {
             defaultValue = Integer.parseInt(val);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
         }
         return defaultValue;
     }
@@ -103,11 +110,10 @@ public class SystemPropertiesConfiguration implements Configuration {
         String val = getProperty(key, Long.toString(defaultValue));
         try {
             defaultValue = Integer.parseInt(val);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
         }
         return defaultValue;
     }
-
 
     @Override
     public Long getWorkflowInputPayloadSizeThresholdKB() {
@@ -127,6 +133,11 @@ public class SystemPropertiesConfiguration implements Configuration {
     @Override
     public Long getMaxWorkflowOutputPayloadSizeThresholdKB() {
         return getLongProperty("conductor.max.workflow.output.payload.threshold.kb", 10240L);
+    }
+
+    @Override
+    public Long getMaxWorkflowVariablesPayloadSizeThresholdKB() {
+        return getLongProperty("conductor.max.workflow.variables.payload.threshold.kb", 256L);
     }
 
     @Override
@@ -150,15 +161,11 @@ public class SystemPropertiesConfiguration implements Configuration {
 
     @Override
     public String getProperty(String key, String defaultValue) {
-
-        String val = null;
-        try {
-            val = System.getenv(key.replace('.', '_'));
-            if (val == null || val.isEmpty()) {
-                val = Optional.ofNullable(System.getProperty(key)).orElse(defaultValue);
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+        String val;
+        val = System.getenv(key.replace('.', '_'));
+        if (val == null || val.isEmpty()) {
+            val = Optional.ofNullable(System.getProperty(key))
+                    .orElse(defaultValue);
         }
         return val;
     }
@@ -178,7 +185,7 @@ public class SystemPropertiesConfiguration implements Configuration {
     public Map<String, Object> getAll() {
         Map<String, Object> map = new HashMap<>();
         Properties props = System.getProperties();
-        props.entrySet().forEach(entry -> map.put(entry.getKey().toString(), entry.getValue()));
+        props.forEach((key, value) -> map.put(key.toString(), value));
         return map;
     }
 
@@ -202,7 +209,7 @@ public class SystemPropertiesConfiguration implements Configuration {
                     }
                 }
             } catch (Exception e) {
-                logger.warn(e.getMessage(), e);
+                logger.warn("Error adding additional modules", e);
             }
         }
 

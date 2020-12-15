@@ -12,21 +12,22 @@
  */
 package com.netflix.conductor.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.matcher.Matchers;
 import com.netflix.archaius.guice.ArchaiusModule;
 import com.netflix.conductor.annotations.Service;
-import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
+import com.netflix.conductor.core.config.EventModule;
+import com.netflix.conductor.core.config.SystemPropertiesConfiguration;
 import com.netflix.conductor.core.config.ValidationModule;
 import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.dyno.SystemPropertiesDynomiteConfiguration;
 import com.netflix.conductor.grpc.server.GRPCModule;
 import com.netflix.conductor.interceptors.ServiceInterceptor;
 import com.netflix.conductor.jetty.server.JettyModule;
+import com.netflix.conductor.service.WorkflowMonitor;
 import com.netflix.runtime.health.guice.HealthModule;
 
 import javax.validation.Validator;
@@ -45,11 +46,12 @@ public class ServerModule extends AbstractModule {
         install(new HealthModule());
         install(new JettyModule());
         install(new GRPCModule());
+        install(new EventModule());
 
         bindInterceptor(Matchers.any(), Matchers.annotatedWith(Service.class), new ServiceInterceptor(getProvider(Validator.class)));
-        bind(ObjectMapper.class).toProvider(JsonMapperProvider.class);
-        bind(Configuration.class).to(SystemPropertiesDynomiteConfiguration.class);
+        bind(Configuration.class).to(SystemPropertiesConfiguration.class).in(Scopes.SINGLETON);
         bind(ExecutorService.class).toProvider(ExecutorServiceProvider.class).in(Scopes.SINGLETON);
         bind(WorkflowSweeper.class).asEagerSingleton();
+        bind(WorkflowMonitor.class).asEagerSingleton();
     }
 }
