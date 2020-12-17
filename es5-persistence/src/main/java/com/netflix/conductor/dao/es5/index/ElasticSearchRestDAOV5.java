@@ -218,8 +218,10 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
         try {
             initIndex();
-            updateIndexName();
-            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexName, 0, 1, TimeUnit.HOURS);
+            if (config.isTaskExecLogIndexingEnabled()) {
+                updateIndexName();
+                Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexName, 0, 1, TimeUnit.HOURS);
+            }
         } catch (Exception e) {
             logger.error("Error creating index templates", e);
         }

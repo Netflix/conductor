@@ -25,15 +25,15 @@ dependencies {
     compile project(':conductor-core')
     compile project(':conductor-jersey')
     compile project(':conductor-redis-persistence')
-    compile project(':conductor-mysql-persistence')
-    compile project(':conductor-postgres-persistence')
-    compile project(':conductor-cassandra-persistence')
+    compileOnly project(':conductor-mysql-persistence')
+    compileOnly project(':conductor-postgres-persistence')
+    compileOnly project(':conductor-cassandra-persistence')
     compile project(':conductor-contribs')
     compile project(':conductor-es5-persistence')
-    compile project(':conductor-es6-persistence')
+    compileOnly project(':conductor-es6-persistence')
     compile project(':conductor-grpc-server')
-    compile project(':conductor-zookeeper-lock')
-    compile project(':conductor-redis-lock')
+    compileOnly project(':conductor-zookeeper-lock')
+    compileOnly project(':conductor-redis-lock')
 
     compile "com.netflix.runtime:health-guice:${revHealth}"
 
