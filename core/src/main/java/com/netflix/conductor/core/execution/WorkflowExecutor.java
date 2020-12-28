@@ -13,6 +13,7 @@
 package com.netflix.conductor.core.execution;
 
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.CANCELED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.TIMED_OUT;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED_WITH_TERMINAL_ERROR;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
@@ -547,7 +548,8 @@ public class WorkflowExecutor {
         if (workflow.getTasks().isEmpty()) {
             throw new ApplicationException(CONFLICT, "Workflow has not started yet");
         }
-
+        Optional<Task> lTask = workflow.getTasks().stream().filter(this::findLastFailedOrTimeOutTask).findFirst();
+        workflow = findLastFailedSubWorkflow(lTask.get(),workflow);
         // Get all FAILED or CANCELED tasks that are not COMPLETED (or reach other terminal states) on further executions.
         // // Eg: for Seq of tasks task1.CANCELED, task1.COMPLETED, task1 shouldn't be retried.
         // Throw an exception if there are no FAILED tasks.
@@ -580,6 +582,7 @@ public class WorkflowExecutor {
                     "There are no retriable tasks! Use restart if you want to attempt entire workflow execution again.");
         }
 
+
         // Update Workflow with new status.
         // This should load Workflow from archive, if archived.
         workflow.setStatus(WorkflowStatus.RUNNING);
@@ -588,11 +591,14 @@ public class WorkflowExecutor {
         queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), workflow.getPriority(), config.getSweepFrequency());
         executionDAOFacade.updateWorkflow(workflow);
 
+
         // taskToBeRescheduled would set task `retried` to true, and hence it's important to updateTasks after obtaining task copy from taskToBeRescheduled.
+        final Workflow finalWorkflow = workflow;
         List<Task> retriableTasks = retriableMap.values().stream()
                 .sorted(Comparator.comparingInt(Task::getSeq))
-                .map(task -> taskToBeRescheduled(workflow, task))
+                .map(task -> taskToBeRescheduled(finalWorkflow, task))
                 .collect(Collectors.toList());
+
 
         dedupAndAddTasks(workflow, retriableTasks);
         // Note: updateTasks before updateWorkflow might fail when Workflow is archived and doesn't exist in primary store.
@@ -601,9 +607,29 @@ public class WorkflowExecutor {
 
         decide(workflowId);
 
+        updateParentWorkflowRecursively(workflow);
+    }
+
+    private Workflow findLastFailedSubWorkflow(Task task, Workflow parentWorkflow) {
+        if (SUB_WORKFLOW.name().equals(task.getTaskType()) && findLastFailedOrTimeOutTask(task)) {
+            Workflow subWorkflow = executionDAOFacade.getWorkflowById(task.getSubWorkflowId(), true);
+            Optional<Task> lTask = subWorkflow.getTasks().stream().filter(this::findLastFailedOrTimeOutTask).findFirst();
+            return findLastFailedSubWorkflow(lTask.get(), subWorkflow);
+        }
+        return parentWorkflow;
+    }
+
+
+    private boolean findLastFailedOrTimeOutTask(Task task) {
+        return task.getStatus().equals(FAILED) || task.getStatus().equals(FAILED_WITH_TERMINAL_ERROR) || task.getStatus().equals(TIMED_OUT);
+    }
+
+    private void updateParentWorkflowRecursively(Workflow workflow) {
         if (StringUtils.isNotEmpty(workflow.getParentWorkflowId())) {
             updateParentWorkflow(workflow);
             decide(workflow.getParentWorkflowId());
+            Workflow parentWorkflow = executionDAOFacade.getWorkflowById(workflow.getParentWorkflowId(), true);
+            updateParentWorkflowRecursively(parentWorkflow);
         }
     }
 
