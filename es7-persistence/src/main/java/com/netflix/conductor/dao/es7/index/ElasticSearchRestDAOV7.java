@@ -303,11 +303,6 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
         } catch (IOException e) {
             logger.error("Failed to initialize index '{}'", indexName, e);
         }
-//        try {
-//            addMappingToIndex(indexName, WORKFLOW_DOC_TYPE, "/mappings_docType_workflow.json");
-//        } catch (IOException e) {
-//            logger.error("Failed to add {} mapping", WORKFLOW_DOC_TYPE);
-//        }
     }
 
     private void createTaskIndex() {
@@ -317,11 +312,6 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
         } catch (IOException e) {
             logger.error("Failed to initialize index '{}'", indexName, e);
         }
-//        try {
-//            addMappingToIndex(indexName, TASK_DOC_TYPE, "/mappings_docType_task.json");
-//        } catch (IOException e) {
-//            logger.error("Failed to add {} mapping", TASK_DOC_TYPE);
-//        }
     }
 
     /**

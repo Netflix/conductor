@@ -51,13 +51,7 @@ public class EmbeddedElasticSearchV7 implements EmbeddedElasticSearch {
     private class PluginConfigurableNode extends Node {
         public PluginConfigurableNode(Settings preparedSettings, Collection<Class<? extends Plugin>> classpathPlugins) {
             super(InternalSettingsPreparer.prepareEnvironment(preparedSettings, EMPTY_MAP,null,() -> "default_node_name"), classpathPlugins, false);
-            //super(InternalSettingsPreparer.prepareEnvironment(preparedSettings, null,null,() -> "default_node_name"), classpathPlugins, false);
         }
-
-//        @Override
-//        protected void registerDerivedNodeNameWithLogger(String nodeName) {
-//            logger.info("Registered derived node name {} with logger", nodeName);
-//        }
     }
 
     @Override
