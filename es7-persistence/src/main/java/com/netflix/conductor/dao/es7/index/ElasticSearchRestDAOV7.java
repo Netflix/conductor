@@ -131,7 +131,6 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
     private String messageIndexName;
     private String logIndexName;
     private final String logIndexPrefix;
-    private final String docTypeOverride;
 
     private final String clusterHealthColor;
     private final ObjectMapper objectMapper;
@@ -162,12 +161,6 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
         this.config = config;
 
         this.indexPrefix = config.getIndexName();
-        if (!config.isElasticSearchAutoIndexManagementEnabled() &&
-            StringUtils.isNotBlank(config.getElasticSearchDocumentTypeOverride())) {
-            docTypeOverride = config.getElasticSearchDocumentTypeOverride();
-        } else {
-            docTypeOverride = "";
-        }
 
         this.workflowIndexName = getIndexName(WORKFLOW_DOC_TYPE);
         this.taskIndexName = getIndexName(TASK_DOC_TYPE);
@@ -514,9 +507,8 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
             long startTime = Instant.now().toEpochMilli();
             String taskId = task.getTaskId();
             TaskSummary summary = new TaskSummary(task);
-            String docType = StringUtils.isBlank(docTypeOverride) ? TASK_DOC_TYPE : docTypeOverride;
 
-            indexObject(taskIndexName, docType, taskId, summary);
+            indexObject(taskIndexName, TASK_DOC_TYPE, taskId, summary);
             long endTime = Instant.now().toEpochMilli();
             logger.debug("Time taken {} for  indexing task:{} in workflow: {}", endTime - startTime, taskId,
                 task.getWorkflowInstanceId());
@@ -662,7 +654,6 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
             searchSourceBuilder.sort(new FieldSortBuilder("created").order(SortOrder.ASC));
 
             // Generate the actual request to send to ES.
-            String docType = StringUtils.isBlank(docTypeOverride) ? EVENT_DOC_TYPE : docTypeOverride;
             SearchRequest searchRequest = new SearchRequest(eventIndexPrefix + "*");
             searchRequest.source(searchSourceBuilder);
 
@@ -696,8 +687,7 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
             doc.put("queue", queue);
             doc.put("created", System.currentTimeMillis());
 
-            String docType = StringUtils.isBlank(docTypeOverride) ? MSG_DOC_TYPE : docTypeOverride;
-            indexObject(messageIndexName, docType, doc);
+            indexObject(messageIndexName, MSG_DOC_TYPE, doc);
             long endTime = Instant.now().toEpochMilli();
             logger.debug("Time taken {} for  indexing message: {}", endTime - startTime, message.getId());
             Monitors.recordESIndexTime("add_message", MSG_DOC_TYPE, endTime - startTime);
@@ -719,8 +709,7 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
                 eventExecution.getName() + "." + eventExecution.getEvent() + "." + eventExecution.getMessageId() + "."
                     + eventExecution.getId();
 
-            String docType = StringUtils.isBlank(docTypeOverride) ? EVENT_DOC_TYPE : docTypeOverride;
-            indexObject(eventIndexName, docType, id, eventExecution);
+            indexObject(eventIndexName, EVENT_DOC_TYPE, id, eventExecution);
             long endTime = Instant.now().toEpochMilli();
             logger.debug("Time taken {} for indexing event execution: {}", endTime - startTime, eventExecution.getId());
             Monitors.recordESIndexTime("add_event_execution", EVENT_DOC_TYPE, endTime - startTime);
@@ -883,7 +872,6 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
         }
 
         // Generate the actual request to send to ES.
-        docType = StringUtils.isBlank(docTypeOverride) ? docType : docTypeOverride;
         SearchRequest searchRequest = new SearchRequest(indexName);
         searchRequest.source(searchSourceBuilder);
 
