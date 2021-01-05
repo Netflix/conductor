@@ -546,7 +546,7 @@ public class Task {
      * @param reasonForIncompletion the reasonForIncompletion to set
      */
     public void setReasonForIncompletion(String reasonForIncompletion) {
-        this.reasonForIncompletion = StringUtils.substring(reasonForIncompletion, 0, 500);
+        this.reasonForIncompletion = StringUtils.substring(reasonForIncompletion, 0, 1000);
     }
 
     /**
