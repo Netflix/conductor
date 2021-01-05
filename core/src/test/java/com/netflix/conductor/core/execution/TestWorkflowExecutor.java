@@ -38,6 +38,8 @@ import com.netflix.conductor.core.execution.mapper.SubWorkflowTaskMapper;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
 import com.netflix.conductor.core.execution.mapper.WaitTaskMapper;
+import com.netflix.conductor.core.execution.tasks.Lambda;
+import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.Terminate;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -127,6 +129,9 @@ public class TestWorkflowExecutor {
         taskMappers.put("WAIT", new WaitTaskMapper(parametersUtils));
         taskMappers.put("HTTP", new HTTPTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put("LAMBDA", new LambdaTaskMapper(parametersUtils, metadataDAO));
+
+        new SubWorkflow(new JsonMapperProvider().get());
+        new Lambda();
 
         DeciderService deciderService = new DeciderService(parametersUtils, metadataDAO, externalPayloadStorageUtils, taskMappers, config);
         MetadataMapperService metadataMapperService = new MetadataMapperService(metadataDAO);
@@ -341,7 +346,7 @@ public class TestWorkflowExecutor {
         workflowExecutor.completeWorkflow(workflow);
         assertEquals(Workflow.WorkflowStatus.COMPLETED, workflow.getStatus());
         assertEquals(1, updateWorkflowCalledCounter.get());
-        assertEquals(1, updateTasksCalledCounter.get());
+        assertEquals(0, updateTasksCalledCounter.get());
         assertEquals(1, removeQueueEntryCalledCounter.get());
 
         verify(workflowStatusListener, times(0)).onWorkflowCompleted(any(Workflow.class));
@@ -1467,6 +1472,61 @@ public class TestWorkflowExecutor {
                 taskToDomain);
 
         verify(executionDAOFacade, times(1)).createWorkflow(any(Workflow.class));
+    }
+
+    @Test
+    public void testScheduleNextIteration() {
+        Workflow workflow = generateSampleWorkflow();
+        workflow.setTaskToDomain(new HashMap<String, String>() {{
+            put("TEST", "domain1");
+        }});
+        Task loopTask = mock(Task.class);
+        WorkflowTask loopWfTask = mock(WorkflowTask.class);
+        when(loopTask.getWorkflowTask()).thenReturn(loopWfTask);
+        List<WorkflowTask> loopOver = new ArrayList<WorkflowTask>(){{
+            WorkflowTask e = new WorkflowTask();
+            e.setType(TaskType.TASK_TYPE_SIMPLE);
+            e.setName("TEST");
+            e.setTaskDefinition(new TaskDef());
+            add(e);
+        }};
+        when(loopWfTask.getLoopOver()).thenReturn(loopOver);
+
+        workflowExecutor.scheduleNextIteration(loopTask, workflow);
+
+        verify(executionDAOFacade).getTaskPollDataByDomain("TEST", "domain1");
+    }
+
+    @Test
+    public void testCancelNonTerminalTasks() {
+        Workflow workflow = generateSampleWorkflow();
+
+        Task subWorkflowTask = new Task();
+        subWorkflowTask.setTaskId(UUID.randomUUID().toString());
+        subWorkflowTask.setTaskType(TaskType.SUB_WORKFLOW.name());
+        subWorkflowTask.setStatus(Status.IN_PROGRESS);
+
+        Task lambdaTask = new Task();
+        lambdaTask.setTaskId(UUID.randomUUID().toString());
+        lambdaTask.setTaskType(TaskType.LAMBDA.name());
+        lambdaTask.setStatus(Status.SCHEDULED);
+
+        Task simpleTask = new Task();
+        simpleTask.setTaskId(UUID.randomUUID().toString());
+        simpleTask.setTaskType(TaskType.SIMPLE.name());
+        simpleTask.setStatus(Status.COMPLETED);
+
+        workflow.getTasks().addAll(Arrays.asList(subWorkflowTask, lambdaTask, simpleTask));
+
+        List<String> erroredTasks = workflowExecutor.cancelNonTerminalTasks(workflow);
+        assertTrue(erroredTasks.isEmpty());
+        ArgumentCaptor<Task> argumentCaptor = ArgumentCaptor.forClass(Task.class);
+        verify(executionDAOFacade, times(2)).updateTask(argumentCaptor.capture());
+        assertEquals(2, argumentCaptor.getAllValues().size());
+        assertEquals(TaskType.SUB_WORKFLOW.name(), argumentCaptor.getAllValues().get(0).getTaskType());
+        assertEquals(Status.CANCELED, argumentCaptor.getAllValues().get(0).getStatus());
+        assertEquals(TaskType.LAMBDA.name(), argumentCaptor.getAllValues().get(1).getTaskType());
+        assertEquals(Status.CANCELED, argumentCaptor.getAllValues().get(1).getStatus());
     }
 
     private Workflow generateSampleWorkflow() {
