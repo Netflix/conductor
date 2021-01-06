@@ -217,7 +217,7 @@ public class WorkflowServiceImpl extends WorkflowServiceGrpc.WorkflowServiceImpl
     @Override
     public void retryWorkflow(WorkflowServicePb.RetryWorkflowRequest req, StreamObserver<WorkflowServicePb.RetryWorkflowResponse> response) {
         try {
-            workflowService.retryWorkflow(req.getWorkflowId());
+            workflowService.retryWorkflow(req.getWorkflowId(), req.getRetryFromLastFailedTask());
             response.onNext(WorkflowServicePb.RetryWorkflowResponse.getDefaultInstance());
             response.onCompleted();
         } catch (Exception e) {

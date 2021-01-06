@@ -144,6 +144,7 @@ message RestartWorkflowResponse {}
 
 message RetryWorkflowRequest {
     string workflow_id = 1;
+    bool retry_from_last_failed_task = 2;
 }
 
 message RetryWorkflowResponse {}

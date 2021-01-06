@@ -23,7 +23,11 @@ class WorkflowAction extends React.Component {
   }
 
   retry = () => {
-    this.props.dispatch(retryWorfklow(this.props.workflowId));
+    this.props.dispatch(retryWorfklow(this.props.workflowId, false));
+  };
+
+  retryWithLastFailedTask = () => {
+    this.props.dispatch(retryWorfklow(this.props.workflowId, true));
   };
 
   pause = () => {
@@ -63,6 +67,12 @@ class WorkflowAction extends React.Component {
       <Popover id="popover-trigger-hover-focus" title="Retry Last Failed Task">
         Retry the last failed task and put workflow in running state
       </Popover>
+    );
+
+    const ttRetryLastFailedSub = (
+        <Popover id="popover-trigger-hover-focus" title="Retry Last Failed Task from Subworkflow">
+          Retry the last failed task in the subworkflow and put every parent workflow in running state
+        </Popover>
     );
 
     const ttPause = (
@@ -119,6 +129,11 @@ class WorkflowAction extends React.Component {
               {retrying ? <i className="fa fa-spinner fa-spin" /> : 'Retry'}
             </Button>
           </OverlayTrigger>
+          <OverlayTrigger placement="bottom" overlay={ttRetryLastFailedSub}>
+            <Button bsStyle="default" bsSize="xsmall" disabled={retrying} onClick={!retrying ? this.retryWithLastFailedTask : null}>
+              {retrying ? <i className="fa fa-spinner fa-spin" /> : 'Retry Last Task'}
+            </Button>
+          </OverlayTrigger>
         </ButtonGroup>
       );
     } else if (this.props.workflowStatus === 'FAILED') {
@@ -133,6 +148,11 @@ class WorkflowAction extends React.Component {
           <OverlayTrigger placement="bottom" overlay={ttRetry}>
             <Button bsStyle="default" bsSize="xsmall" disabled={retrying} onClick={!retrying ? this.retry : null}>
               {retrying ? <i className="fa fa-spinner fa-spin" /> : 'Retry'}
+            </Button>
+          </OverlayTrigger>
+          <OverlayTrigger placement="bottom" overlay={ttRetryLastFailedSub}>
+            <Button bsStyle="default" bsSize="xsmall" disabled={retrying} onClick={!retrying ? this.retryWithLastFailedTask : null}>
+              {retrying ? <i className="fa fa-spinner fa-spin" /> : 'Retry Last Task'}
             </Button>
           </OverlayTrigger>
         </ButtonGroup>
@@ -154,6 +174,11 @@ class WorkflowAction extends React.Component {
             <OverlayTrigger placement="bottom" overlay={ttRetry}>
               <Button bsStyle="default" bsSize="xsmall" disabled={retrying} onClick={!retrying ? this.retry : null}>
                 {retrying ? <i className="fa fa-spinner fa-spin" /> : 'Retry'}
+              </Button>
+            </OverlayTrigger>
+            <OverlayTrigger placement="bottom" overlay={ttRetryLastFailedSub}>
+              <Button bsStyle="default" bsSize="xsmall" disabled={retrying} onClick={!retrying ? this.retryWithLastFailedTask : null}>
+                {retrying ? <i className="fa fa-spinner fa-spin" /> : 'Retry Last Task'}
               </Button>
             </OverlayTrigger>
           </ButtonGroup>
