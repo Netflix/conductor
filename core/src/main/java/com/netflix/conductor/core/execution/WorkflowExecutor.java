@@ -1170,10 +1170,6 @@ public class WorkflowExecutor {
 		return edao.getPendingTasksByTags(taskType, tags);
 	}
 
-	public List<Task> getPendingTasksByAnyTags(String taskType, Set<String> tags) throws Exception {
-		return edao.getPendingTasksByAnyTags(taskType, tags);
-	}
-
 	public List<Workflow> getRunningWorkflows(String workflowName) throws Exception {
 		List<Workflow> allwf = edao.getPendingWorkflowsByType(workflowName);
 		return allwf;

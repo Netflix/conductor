@@ -73,7 +73,7 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 		String ndcValue = NDC.peek();
 
 		Set<String> tags = generateTags(atlasId, versionId);
-		List<Task> tasks = executor.getPendingTasksByAnyTags(Wait.NAME, tags);
+		List<Task> tasks = executor.getPendingTasksByTags(Wait.NAME, tags);
 
 		boolean taskNamesDefined = CollectionUtils.isNotEmpty(params.taskRefNames);
 		tasks.parallelStream().forEach(task -> {
