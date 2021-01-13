@@ -556,37 +556,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		removeTaskData(tx, task);
 	}
 
-	private void addTask(Connection tx, Task task) {
-		String SQL = "INSERT INTO task (task_id, task_type, task_refname, task_status, json_data, workflow_id, " +
-			"start_time, end_time, input, output) " +
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT task_task_id DO NOTHING";
-		execute(tx, SQL, q -> q
-			.addParameter(task.getTaskId())
-			.addParameter(task.getTaskType())
-			.addParameter(task.getReferenceTaskName())
-			.addParameter(task.getStatus().name())
-			.addJsonParameter(task)
-			.addParameter(task.getWorkflowInstanceId())
-			.addTimestampParameter(task.getStartTime())
-			.addTimestampParameter(task.getEndTime())
-			.addJsonParameter(task.getInputData())
-			.addJsonParameter(task.getOutputData())
-			.executeUpdate());
-	}
-
-	private void updateTask(Connection tx, Task task) {
-		String SQL = "UPDATE task SET modified_on = now(), task_status = ?, json_data = ?, input = ?, output = ?, start_time = ?, end_time = ? WHERE task_id = ?";
-		execute(tx, SQL, q -> q
-			.addParameter(task.getStatus().name())
-			.addJsonParameter(task)
-			.addJsonParameter(task.getInputData())
-			.addJsonParameter(task.getOutputData())
-			.addTimestampParameter(task.getStartTime())
-			.addTimestampParameter(task.getEndTime())
-			.addParameter(task.getTaskId())
-			.executeUpdate());
-	}
-
 	private void insertOrUpdateTask(Connection tx, Task task, boolean update) {
 		task.setUpdateTime(System.currentTimeMillis());
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
@@ -599,9 +568,32 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		}
 
 		if (update) {
-			updateTask(tx, task);
+			String SQL = "UPDATE task SET modified_on = now(), task_status = ?, json_data = ?, input = ?, output = ?, start_time = ?, end_time = ? WHERE task_id = ?";
+			execute(tx, SQL, q -> q
+				.addParameter(task.getStatus().name())
+				.addJsonParameter(task)
+				.addJsonParameter(task.getInputData())
+				.addJsonParameter(task.getOutputData())
+				.addTimestampParameter(task.getStartTime())
+				.addTimestampParameter(task.getEndTime())
+				.addParameter(task.getTaskId())
+				.executeUpdate());
 		} else {
-			addTask(tx, task);
+			String SQL = "INSERT INTO task (task_id, task_type, task_refname, task_status, json_data, workflow_id, " +
+				"start_time, end_time, input, output) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT task_task_id DO NOTHING";
+			execute(tx, SQL, q -> q
+				.addParameter(task.getTaskId())
+				.addParameter(task.getTaskType())
+				.addParameter(task.getReferenceTaskName())
+				.addParameter(task.getStatus().name())
+				.addJsonParameter(task)
+				.addParameter(task.getWorkflowInstanceId())
+				.addTimestampParameter(task.getStartTime())
+				.addTimestampParameter(task.getEndTime())
+				.addJsonParameter(task.getInputData())
+				.addJsonParameter(task.getOutputData())
+				.executeUpdate());
 		}
 
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
