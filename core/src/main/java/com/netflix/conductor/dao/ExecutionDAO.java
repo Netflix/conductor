@@ -299,17 +299,6 @@ public interface ExecutionDAO {
 		return Collections.emptyList();
 	}
 
-	/**
-	 * Returns list of the in progress tasks associated with any tags
-
-	 * @param taskType The task type currently in progress for associated workflows
-	 * @param tags The set of tags to search workflows
-	 * @return List of in progress tasks for workflows associated with any tags
-	 */
-	public default List<Task> getPendingTasksByAnyTags(String taskType, Set<String> tags) {
-		return Collections.emptyList();
-	}
-
 	public default boolean anyRunningWorkflowsByTags(Set<String> tags) {
 		return false;
 	}
