@@ -96,7 +96,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testStartWorkflowNull() {
-        try {
+        try{
             workflowService.startWorkflow(null);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -108,7 +108,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testStartWorkflowName() {
-        try {
+        try{
             Map<String, Object> input = new HashMap<>();
             input.put("1", "abc");
             workflowService.startWorkflow(null, 1, "abc", input);
@@ -160,7 +160,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ApplicationException.class)
     public void testApplicationExceptionStartWorkflowMessageParam() {
-        try {
+        try{
             when(mockMetadata.getWorkflowDef(anyString(), anyInt())).thenReturn(null);
 
             Map<String, Object> input = new HashMap<>();
@@ -177,7 +177,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testGetWorkflowsNoName() {
-        try {
+        try{
             workflowService.getWorkflows("", "c123", true, true);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -235,7 +235,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testGetExecutionStatusNoWorkflowId() {
-        try {
+        try{
             workflowService.getExecutionStatus("", true);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -247,7 +247,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ApplicationException.class)
     public void testApplicationExceptionGetExecutionStatus() {
-        try {
+        try{
             when(mockExecutionService.getExecutionStatus(anyString(), anyBoolean())).thenReturn(null);
             workflowService.getExecutionStatus("w123", true);
         } catch (ApplicationException ex) {
@@ -266,7 +266,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testInvalidDeleteWorkflow() {
-        try {
+        try{
             workflowService.deleteWorkflow(null, true);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -278,7 +278,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testInvalidPauseWorkflow() {
-        try {
+        try{
             workflowService.pauseWorkflow(null);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -290,7 +290,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testInvalidResumeWorkflow() {
-        try {
+        try{
             workflowService.resumeWorkflow(null);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -302,7 +302,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testInvalidSkipTaskFromWorkflow() {
-        try {
+        try{
             SkipTaskRequest skipTaskRequest = new SkipTaskRequest();
             workflowService.skipTaskFromWorkflow(null, null, skipTaskRequest);
         } catch (ConstraintViolationException ex) {
@@ -316,7 +316,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testInvalidWorkflowNameGetRunningWorkflows() {
-        try {
+        try{
             workflowService.getRunningWorkflows(null, 123, null, null);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -371,7 +371,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testRerunWorkflowNull() {
-        try {
+        try{
             workflowService.rerunWorkflow(null, null);
         } catch (ConstraintViolationException ex) {
             assertEquals(2, ex.getConstraintViolations().size());
@@ -384,7 +384,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testRestartWorkflowNull() {
-        try {
+        try{
             workflowService.restartWorkflow(null, false);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -396,7 +396,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testRetryWorkflowNull() {
-        try {
+        try{
             workflowService.retryWorkflow(null, false);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -408,7 +408,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testResetWorkflowNull() {
-        try {
+        try{
             workflowService.resetWorkflow(null);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -421,7 +421,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testTerminateWorkflowNull() {
-        try {
+        try{
             workflowService.terminateWorkflow(null, null);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
@@ -480,7 +480,7 @@ public class WorkflowServiceTest {
 
     @Test(expected = ConstraintViolationException.class)
     public void testInvalidSizeSearchWorkflows() {
-        try {
+        try{
             workflowService.searchWorkflows(0, 6000, "asc", "*", "*");
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
