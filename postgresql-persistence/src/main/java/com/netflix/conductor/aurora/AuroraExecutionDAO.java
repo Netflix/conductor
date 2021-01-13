@@ -110,7 +110,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				//The flag is boolean object, setting it to false so workflow executor can properly determine the state
 				task.setStarted(false);
 				addTaskInProgress(tx, task);
-				updateTask(tx, task);
+				insertOrUpdateTask(tx, task, false);
 
 				created.add(task);
 			}
@@ -121,7 +121,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 	@Override
 	public void updateTask(Task task) {
-		withTransaction(tx -> updateTask(tx, task));
+		withTransaction(tx -> insertOrUpdateTask(tx, task, true));
 	}
 
 	@Override
@@ -213,7 +213,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	public void updateTasks(List<Task> tasks) {
 		withTransaction(tx -> {
 			for (Task task : tasks) {
-				updateTask(tx, task);
+				insertOrUpdateTask(tx, task, true);
 			}
 		});
 	}
@@ -533,33 +533,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		removeTaskData(tx, task);
 	}
 
-	private void insertOrUpdateTask(Connection tx, Task task) {
-		// Warning! Constraint name is also unique index name
-		String SQL = "INSERT INTO task (task_id, task_type, task_refname, task_status, json_data, workflow_id, " +
-			"start_time, end_time, input, output) " +
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT task_task_id DO " +
-			"UPDATE SET modified_on=now(), task_status=?, json_data=?, input = ?, output = ?, start_time = ?, end_time = ?";
-		execute(tx, SQL, q -> q
-			.addParameter(task.getTaskId())
-			.addParameter(task.getTaskType())
-			.addParameter(task.getReferenceTaskName())
-			.addParameter(task.getStatus().name())
-			.addJsonParameter(task)
-			.addParameter(task.getWorkflowInstanceId())
-			.addTimestampParameter(task.getStartTime())
-			.addTimestampParameter(task.getEndTime())
-			.addJsonParameter(task.getInputData())
-			.addJsonParameter(task.getOutputData())
-			.addParameter(task.getStatus().name())
-			.addJsonParameter(task)
-			.addJsonParameter(task.getInputData())
-			.addJsonParameter(task.getOutputData())
-			.addTimestampParameter(task.getStartTime())
-			.addTimestampParameter(task.getEndTime())
-			.executeUpdate());
-	}
-
-	private void updateTask(Connection tx, Task task) {
+	private void insertOrUpdateTask(Connection tx, Task task, boolean update) {
 		task.setUpdateTime(System.currentTimeMillis());
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			task.setEndTime(System.currentTimeMillis());
@@ -570,7 +544,34 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			updateInProgressStatus(tx, task);
 		}
 
-		insertOrUpdateTask(tx, task);
+		if (update) {
+			String SQL = "UPDATE task SET modified_on = now(), task_status = ?, json_data = ?, input = ?, output = ?, start_time = ?, end_time = ? WHERE task_id = ?";
+			execute(tx, SQL, q -> q
+				.addParameter(task.getStatus().name())
+				.addJsonParameter(task)
+				.addJsonParameter(task.getInputData())
+				.addJsonParameter(task.getOutputData())
+				.addTimestampParameter(task.getStartTime())
+				.addTimestampParameter(task.getEndTime())
+				.addParameter(task.getTaskId())
+				.executeUpdate());
+		} else {
+			String SQL = "INSERT INTO task (task_id, task_type, task_refname, task_status, json_data, workflow_id, " +
+				"start_time, end_time, input, output) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT task_task_id DO NOTHING";
+			execute(tx, SQL, q -> q
+				.addParameter(task.getTaskId())
+				.addParameter(task.getTaskType())
+				.addParameter(task.getReferenceTaskName())
+				.addParameter(task.getStatus().name())
+				.addJsonParameter(task)
+				.addParameter(task.getWorkflowInstanceId())
+				.addTimestampParameter(task.getStartTime())
+				.addTimestampParameter(task.getEndTime())
+				.addJsonParameter(task.getInputData())
+				.addJsonParameter(task.getOutputData())
+				.executeUpdate());
+		}
 
 		if (task.getStatus() != null && task.getStatus().isTerminal()) {
 			removeTaskInProgress(tx, task);
