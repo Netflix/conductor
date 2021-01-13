@@ -56,7 +56,6 @@ import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionLockService;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -70,7 +69,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -452,8 +450,8 @@ public class WorkflowExecutor {
         // Get SIMPLE tasks in SCHEDULED state that have callbackAfterSeconds > 0 and set the callbackAfterSeconds to 0
         workflow.getTasks().stream()
             .filter(task -> !isSystemTask.test(task)
-                    && SCHEDULED.equals(task.getStatus())
-                    && task.getCallbackAfterSeconds() > 0)
+                && SCHEDULED.equals(task.getStatus())
+                && task.getCallbackAfterSeconds() > 0)
             .forEach(task -> {
                 if (queueDAO.resetOffsetTime(QueueUtils.getQueueName(task), task.getTaskId())) {
                     task.setCallbackAfterSeconds(0);
@@ -571,7 +569,7 @@ public class WorkflowExecutor {
                     break;
                 case CANCELED:
                     if (task.getTaskType().equalsIgnoreCase(TaskType.JOIN.toString()) ||
-                            task.getTaskType().equalsIgnoreCase(TaskType.DO_WHILE.toString())) {
+                        task.getTaskType().equalsIgnoreCase(TaskType.DO_WHILE.toString())) {
                         task.setStatus(IN_PROGRESS);
                         // Task doesn't have to be updated yet. Will be updated along with other Workflow tasks downstream.
                     } else {
@@ -589,7 +587,6 @@ public class WorkflowExecutor {
                     "There are no retriable tasks! Use restart if you want to attempt entire workflow execution again.");
         }
 
-
         // Update Workflow with new status.
         // This should load Workflow from archive, if archived.
         workflow.setStatus(WorkflowStatus.RUNNING);
@@ -597,7 +594,6 @@ public class WorkflowExecutor {
         // Add to decider queue
         queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), workflow.getPriority(), config.getSweepFrequency());
         executionDAOFacade.updateWorkflow(workflow);
-
 
         // taskToBeRescheduled would set task `retried` to true, and hence it's important to updateTasks after obtaining task copy from taskToBeRescheduled.
         final Workflow finalWorkflow = workflow;
@@ -1061,7 +1057,7 @@ public class WorkflowExecutor {
                              */
                             for(Task workflowTask : workflow.getTasks()) {
                               if(workflowTask != task && !workflowTask.getStatus().isTerminal()) {
-                                      workflowTask.setStatus(SKIPPED);
+                            		  workflowTask.setStatus(SKIPPED);
                                       terminateTasksToBeUpdated.add(workflowTask);
                               }
                             }
