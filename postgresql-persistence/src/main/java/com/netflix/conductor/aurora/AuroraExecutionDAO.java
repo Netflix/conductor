@@ -575,7 +575,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	private void updateTask(Connection tx, Task task) {
-		String SQL = "UPDATE SET modified_on=now(), task_status=?, json_data=?, input = ?, output = ?, start_time = ?, end_time = ?";
+		String SQL = "UPDATE task SET modified_on=now(), task_status=?, json_data=?, input = ?, output = ?, start_time = ?, end_time = ? WHERE task_id = ?";
 		execute(tx, SQL, q -> q
 			.addParameter(task.getStatus().name())
 			.addJsonParameter(task)
@@ -583,6 +583,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.addJsonParameter(task.getOutputData())
 			.addTimestampParameter(task.getStartTime())
 			.addTimestampParameter(task.getEndTime())
+			.addParameter(task.getTaskId())
 			.executeUpdate());
 	}
 
