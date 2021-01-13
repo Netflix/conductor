@@ -5218,13 +5218,11 @@ public abstract class AbstractWorkflowServiceTest {
         taskDef.setRetryCount(0);
         metadataService.updateTaskDef(taskDef);
 
-        // create a workflow with sub-workflow
         createSubWorkflow();
         WorkflowDef found = metadataService.getWorkflowDef(WF_WITH_SUB_WF, 1);
 
         WorkflowTask workflowTask = found.getTasks().stream().filter(t -> t.getType().equals(SUB_WORKFLOW.name())).findAny().orElse(null);
 
-        // Set subworkflow task retry count to 1.
         TaskDef subWorkflowTaskDef = new TaskDef();
         subWorkflowTaskDef.setRetryCount(0);
         subWorkflowTaskDef.setName("test_subworkflow_task");
@@ -5233,7 +5231,6 @@ public abstract class AbstractWorkflowServiceTest {
 
         metadataService.updateWorkflowDef(found);
 
-        // start the workflow
         Map<String, Object> workflowInputParams = new HashMap<>();
         workflowInputParams.put("param1", "param 1");
         workflowInputParams.put("param3", "param 2");
@@ -5244,7 +5241,6 @@ public abstract class AbstractWorkflowServiceTest {
         Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
 
-        // poll and complete first task
         Task task = workflowExecutionService.poll("junit_task_5", "test");
         assertNotNull(task);
         task.setStatus(COMPLETED);
@@ -5252,7 +5248,6 @@ public abstract class AbstractWorkflowServiceTest {
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
 
-        // Simulating SystemTaskWorkerCoordinator to execute async system tasks
         String subWorkflowTaskId = workflow.getTaskByRefName("a2").getTaskId();
         workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
 
@@ -5273,14 +5268,12 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(workflowId, workflow.getParentWorkflowId());
         assertEquals(RUNNING, workflow.getStatus());
 
-        // poll and fail the first task in sub-workflow
         task = workflowExecutionService.poll("junit_task_1", "test");
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
         Workflow subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
 
-        // poll and fail the first task in sub-workflow
         task = workflowExecutionService.poll("junit_task_2", "test");
         task.setStatus(FAILED);
         workflowExecutionService.updateTask(task);
@@ -5289,8 +5282,6 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(subWorkflow);
         assertEquals(WorkflowStatus.FAILED, subWorkflow.getStatus());
 
-
-        // Get the latest workflow and task, and then acquire latest subWorkflowId
         subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
         assertNotNull(subWorkflow);
 
@@ -5309,9 +5300,7 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(workflow);
         assertEquals(WorkflowStatus.FAILED, workflow.getStatus());
 
-        // Retry the failed sub workflow
         workflowExecutor.retry(workflowId,true);
-
 
         subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
         assertNotNull(subWorkflow);
@@ -5333,7 +5322,6 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals("sub workflow input param1", subWorkflow.getOutput().get("o1"));
         assertEquals(uuid, subWorkflow.getOutput().get("o2"));
 
-        // Simulating SystemTaskWorkerCoordinator
         workflowExecutor.executeSystemTask(subworkflow, subWorkflow.getParentWorkflowTaskId(), 1);
 
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
@@ -5349,7 +5337,6 @@ public abstract class AbstractWorkflowServiceTest {
         assertNotNull(workflow);
         assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
 
-        // reset retry count
         taskDef = notFoundSafeGetTaskDef(taskName);
         taskDef.setRetryCount(retryCount);
         metadataService.updateTaskDef(taskDef);

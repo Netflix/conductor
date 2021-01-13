@@ -14,7 +14,7 @@ import org.mockito.MockitoAnnotations;
 public class WorkflowServiceImplTest {
 
     private static final String WORKFLOW_ID = "anyWorkflowId";
-    private static final Boolean RETRY_FROM_LAST_FAILED_TASK = true;
+    private static final Boolean RESUME_SUBWORKFLOW_TASKS = true;
 
     @Mock
     private WorkflowService workflowService;
@@ -37,11 +37,11 @@ public class WorkflowServiceImplTest {
         WorkflowServicePb.RetryWorkflowRequest req = WorkflowServicePb.RetryWorkflowRequest
                 .newBuilder()
                 .setWorkflowId(WORKFLOW_ID)
-                .setRetryFromLastFailedTask(true)
+                .setResumeSubworkflowTasks(true)
                 .build();
         // When
         workflowServiceImpl.retryWorkflow(req, Mockito.mock(StreamObserver.class));
         // Then
-        Mockito.verify(workflowService).retryWorkflow(WORKFLOW_ID, RETRY_FROM_LAST_FAILED_TASK);
+        Mockito.verify(workflowService).retryWorkflow(WORKFLOW_ID, RESUME_SUBWORKFLOW_TASKS);
     }
 }
