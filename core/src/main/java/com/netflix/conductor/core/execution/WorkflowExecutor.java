@@ -1048,33 +1048,33 @@ public class WorkflowExecutor {
                     if (!workflowSystemTask.isAsync() && workflowSystemTask.execute(workflowInstance, task, this)) {
                         // FIXME: temporary hack to workaround TERMINATE task
                         if (TERMINATE.name().equals(task.getTaskType())) {
-                              deciderService.externalizeTaskData(task);
-                              executionDAOFacade.updateTask(task);
+                            deciderService.externalizeTaskData(task);
+                            executionDAOFacade.updateTask(task);
                             workflow.setOutput(workflowInstance.getOutput());
                             List<Task> terminateTasksToBeUpdated = new ArrayList<Task>();
                             /*
                              * The TERMINATE task completes the workflow but does not do anything with SCHEDULED or IN_PROGRESS tasks to complete them
                              */
                             for(Task workflowTask : workflow.getTasks()) {
-                              if(workflowTask != task && !workflowTask.getStatus().isTerminal()) {
-                            		  workflowTask.setStatus(SKIPPED);
-                                      terminateTasksToBeUpdated.add(workflowTask);
-                              }
+                                if(workflowTask != task && !workflowTask.getStatus().isTerminal()) {
+                                    workflowTask.setStatus(SKIPPED);
+                                    terminateTasksToBeUpdated.add(workflowTask);
+                                }
                             }
                             /*
                              * Now find nested subworkflows that also need to have their tasks skipped
                              */
                             for(Task workflowTask : workflow.getTasks()) {
-                              if(TaskType.SUB_WORKFLOW.name().equals(workflowTask.getTaskType()) && StringUtils.isNotBlank(workflowTask.getSubWorkflowId())) {
-                                              Workflow subWorkflow = executionDAOFacade.getWorkflowById(workflowTask.getSubWorkflowId(), true);
-                                      if(subWorkflow != null) {
-                                              skipTasksAffectedByTerminateTask(subWorkflow);
-                                      }
-                              }
+                                if(TaskType.SUB_WORKFLOW.name().equals(workflowTask.getTaskType()) && StringUtils.isNotBlank(workflowTask.getSubWorkflowId())) {
+                                    Workflow subWorkflow = executionDAOFacade.getWorkflowById(workflowTask.getSubWorkflowId(), true);
+                                    if(subWorkflow != null) {
+                                        skipTasksAffectedByTerminateTask(subWorkflow);
+                                    }
+                                }
                             }
                             executionDAOFacade.updateTasks(terminateTasksToBeUpdated);
                             if(workflowInstance.getStatus().equals(WorkflowStatus.COMPLETED)) {
-                              completeWorkflow(workflow);
+                                completeWorkflow(workflow);
                             } else {
                                 workflow.setStatus(workflowInstance.getStatus());
                                 terminate(workflow, new TerminateWorkflowException("Workflow is FAILED by TERMINATE task: " + task.getTaskId()));
@@ -1111,7 +1111,6 @@ public class WorkflowExecutor {
         }
         return false;
     }
-
     /**
      * When a TERMINATE task runs, it only affects the workflow in which it runs; it does not do anything with
      * in-progress tasks and subworkflows that are still running. This recursive method will ensure that all tasks within
@@ -1119,19 +1118,19 @@ public class WorkflowExecutor {
      * @param workflow a subworkflow within the hierarchy of the original workflow containing the TERMINATE task
      */
     private void skipTasksAffectedByTerminateTask(Workflow workflow) {
-      if(!workflow.getStatus().isTerminal()) {
-              List<Task> tasksToBeUpdated = new ArrayList<>();
-              for(Task workflowTask : workflow.getTasks()) {
-              if(!workflowTask.getStatus().isTerminal()) {
-                      workflowTask.setStatus(SKIPPED);
-                      tasksToBeUpdated.add(workflowTask);
-              }
-                      if(TaskType.SUB_WORKFLOW.name().equals(workflowTask.getTaskType()) && StringUtils.isNotBlank(workflowTask.getSubWorkflowId())) {
-                              Workflow subWorkflow = executionDAOFacade.getWorkflowById(workflowTask.getSubWorkflowId(), true);
-                              if(subWorkflow != null) {
-                                      skipTasksAffectedByTerminateTask(subWorkflow);
-                              }
-                      }
+        if(!workflow.getStatus().isTerminal()) {
+            List<Task> tasksToBeUpdated = new ArrayList<>();
+            for(Task workflowTask : workflow.getTasks()) {
+                if(!workflowTask.getStatus().isTerminal()) {
+                    workflowTask.setStatus(SKIPPED);
+                    tasksToBeUpdated.add(workflowTask);
+                }
+                if(TaskType.SUB_WORKFLOW.name().equals(workflowTask.getTaskType()) && StringUtils.isNotBlank(workflowTask.getSubWorkflowId())) {
+                    Workflow subWorkflow = executionDAOFacade.getWorkflowById(workflowTask.getSubWorkflowId(), true);
+                    if(subWorkflow != null) {
+                        skipTasksAffectedByTerminateTask(subWorkflow);
+                    }
+                }
             }
             if (!tasksToBeUpdated.isEmpty()) {
                 executionDAOFacade.updateTasks(tasksToBeUpdated);
@@ -1627,7 +1626,7 @@ public class WorkflowExecutor {
 
         // If not found look into sub workflows
         if(rerunFromTask == null) {
-              for (Task task : workflow.getTasks()) {
+            for (Task task : workflow.getTasks()) {
                 if (task.getTaskType().equalsIgnoreCase(SubWorkflow.NAME)) {
                     String subWorkflowId = task.getSubWorkflowId();
                     if (rerunWF(subWorkflowId, taskId, taskInput, null, null)) {
