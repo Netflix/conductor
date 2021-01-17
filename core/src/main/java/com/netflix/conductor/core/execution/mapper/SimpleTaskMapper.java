@@ -74,7 +74,7 @@ public class SimpleTaskMapper implements TaskMapper {
         simpleTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         simpleTask.setWorkflowType(workflowInstance.getWorkflowName());
         simpleTask.setStatus(Task.Status.SCHEDULED);
-        simpleTask.setTaskType(taskToSchedule.getName());
+        simpleTask.setTaskType(taskToSchedule.getType());
         simpleTask.setTaskDefName(taskToSchedule.getName());
         simpleTask.setCorrelationId(workflowInstance.getCorrelationId());
         simpleTask.setScheduledTime(System.currentTimeMillis());
