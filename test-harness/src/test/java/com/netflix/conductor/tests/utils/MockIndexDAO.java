@@ -148,4 +148,8 @@ public class MockIndexDAO implements IndexDAO {
 	public List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo) {
 		return null;
 	}
+
+	@Override
+	public void groomWorkflowsAndTasks(String indexName) {
+	}
 }

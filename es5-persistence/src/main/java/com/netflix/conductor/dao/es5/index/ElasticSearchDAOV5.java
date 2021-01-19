@@ -240,6 +240,11 @@ public class ElasticSearchDAOV5 implements IndexDAO {
             logger.error("Failed to add {} mapping", TASK_DOC_TYPE);
         }
 
+        try {
+            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::groomWorkflowsAndTasks, 0, 1, TimeUnit.DAYS);
+        } catch (Exception e) {
+            logger.error("Error during grooming of workflows and tasks in index", e);
+        }
     }
 
     private void addIndex(String indexName) {
@@ -747,6 +752,47 @@ public class ElasticSearchDAOV5 implements IndexDAO {
         return Arrays.stream(hits.getHits())
             .map(SearchHit::getId)
             .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    @Override
+    public void groomWorkflowsAndTasks() {
+        // Groom oldest archived workflows by batch size
+        QueryBuilder wfQuery = QueryBuilders.existsQuery("archived");
+        long workflowsGroomed = groomDocs(indexName, wfQuery, WORKFLOW_DOC_TYPE, "endTime");
+
+        // Groom obsolete tasks that are staying for more than a day
+        int daysToKeepTasks = 1;
+        DateTime dateTime = new DateTime();
+        QueryBuilder taskQuery = QueryBuilders.rangeQuery("updateTime").lt(dateTime.minusDays(daysToKeepTasks));
+
+        long tasksGroomed = groomDocs(indexName, taskQuery, TASK_DOC_TYPE, "updateTime");
+
+        logger.info("Groomed {} workflows and {} tasks", workflowsGroomed, tasksGroomed);
+    }
+
+    public long groomDocs(String indexName, QueryBuilder q, String docType, String sortField) {
+        int batchSize = config.getElasticSearchGroomingBatchSize();
+        SearchRequestBuilder s = elasticSearchClient.prepareSearch(indexName)
+                .setTypes(docType)
+                .setQuery(q)
+                .setSize(batchSize)
+                .addSort(sortField, SortOrder.ASC);
+
+        SearchResponse response = s.execute().actionGet();
+        List<String> docIds = StreamSupport.stream(response.getHits().spliterator(), false)
+                .map(SearchHit::getId)
+                .collect(Collectors.toCollection(LinkedList::new));
+
+        for (String docId : docIds) {
+            DeleteRequest request = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, docId);
+            try {
+                DeleteResponse delResponse = elasticSearchClient.delete(request).actionGet();
+            } catch (Exception e) {
+                logger.error("Failed to groom {} {} from index", docType, docId, e);
+            }
+        }
+
+        return docIds.size();
     }
 
     @Override

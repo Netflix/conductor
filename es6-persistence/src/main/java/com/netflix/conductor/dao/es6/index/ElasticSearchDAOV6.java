@@ -275,6 +275,12 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
     private void createWorkflowIndex() {
         createIndex(workflowIndexName);
         addTypeMapping(workflowIndexName, WORKFLOW_DOC_TYPE, "/mappings_docType_workflow.json");
+
+        try {
+            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::groomWorkflowsAndTasks, 0, 1, TimeUnit.DAYS);
+        } catch (Exception e) {
+            LOGGER.error("Error during grooming of workflows and tasks in index", e);
+        }
     }
 
     private void createTaskIndex() {
@@ -738,6 +744,44 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
                 .setQuery(q)
                 .setSize(1000);
         return extractSearchIds(s);
+    }
+
+    @Override
+    public void groomWorkflowsAndTasks() {
+        // Groom oldest archived workflows by batch size
+        QueryBuilder wfQuery = QueryBuilders.existsQuery("archived");
+        long workflowsGroomed = groomDocs(workflowIndexName, wfQuery, WORKFLOW_DOC_TYPE, "endTime");
+
+        // Groom obsolete tasks that are staying for more than a day
+        int daysToKeepTasks = 1;
+        DateTime dateTime = new DateTime();
+        QueryBuilder taskQuery = QueryBuilders.rangeQuery("updateTime").lt(dateTime.minusDays(daysToKeepTasks));
+
+        long tasksGroomed = groomDocs(taskIndexName, taskQuery, TASK_DOC_TYPE, "updateTime");
+
+        LOGGER.info("Groomed {} workflows and {} tasks", workflowsGroomed, tasksGroomed);
+    }
+
+    public long groomDocs(String indexName, QueryBuilder q, String docType, String sortField) {
+        int batchSize = config.getElasticSearchGroomingBatchSize();
+        SearchRequestBuilder s = elasticSearchClient.prepareSearch(indexName)
+                .setTypes(docType)
+                .setQuery(q)
+                .setSize(batchSize)
+                .addSort(sortField, SortOrder.ASC);
+
+        List<String> docIds = extractSearchIds(s);
+
+        for (String docId : docIds) {
+            DeleteRequest request = new DeleteRequest(indexName, WORKFLOW_DOC_TYPE, docId);
+            try {
+                DeleteResponse delResponse = elasticSearchClient.delete(request).actionGet();
+            } catch (Exception e) {
+                LOGGER.error("Failed to groom {} {} from index", docType, docId, e);
+            }
+        }
+
+        return docIds.size();
     }
 
     public List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo) {
