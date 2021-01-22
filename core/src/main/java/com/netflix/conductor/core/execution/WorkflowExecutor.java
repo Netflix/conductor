@@ -1814,6 +1814,10 @@ public class WorkflowExecutor {
     }
 
     private void executeSubworkflowTaskAndSyncData(Workflow subWorkflow, Task subWorkflowTask) {
+        if(null == subWorkflow || null == subWorkflowTask){
+            return;
+        }
+
         WorkflowSystemTask subWorkflowSystemTask = WorkflowSystemTask.get(SubWorkflow.NAME);
         subWorkflowSystemTask.execute(subWorkflow, subWorkflowTask, this);
         // Keep Subworkflow task's data consistent with Subworkflow's.

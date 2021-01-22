@@ -110,6 +110,10 @@ public class SubWorkflow extends WorkflowSystemTask {
 
     @Override
     public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) {
+        if(null == task){
+            return false;
+        }
+
         String workflowId = task.getSubWorkflowId();
         if (StringUtils.isEmpty(workflowId)) {
             return false;
