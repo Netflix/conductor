@@ -22,4 +22,6 @@ public interface WorkflowStatusListener {
     void onWorkflowCompleted(Workflow workflow);
 
     void onWorkflowTerminated(Workflow workflow);
+
+    void onWorkflowFailed(Workflow workflow);
 }

@@ -90,6 +90,11 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
         }
     }
 
+    @Override
+    public void onWorkflowFailed(Workflow workflow) {
+
+    }
+
     private class DelayArchiveWorkflow implements Runnable {
 
         private final String workflowId;

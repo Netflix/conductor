@@ -842,6 +842,13 @@ public class WorkflowExecutor {
             return;
         }
 
+        //if task is failed in a workflow, trigger the onWorkflowFailed from listener
+        if(!isSystemTask.test(task) && taskResult.getStatus() == Status.FAILED){
+            if (workflowInstance.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
+                workflowStatusListener.onWorkflowFailed(workflowInstance);
+            }
+        }
+
         if (workflowInstance.getStatus().isTerminal()) {
             // Workflow is in terminal state
             queueDAO.remove(taskQueueName, taskResult.getTaskId());

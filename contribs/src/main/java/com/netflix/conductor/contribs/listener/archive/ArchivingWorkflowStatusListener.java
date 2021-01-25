@@ -46,5 +46,10 @@ public class ArchivingWorkflowStatusListener implements WorkflowStatusListener {
         this.executionDAOFacade.removeWorkflow(workflow.getWorkflowId(), true);
         Monitors.recordWorkflowArchived(workflow.getWorkflowName(), workflow.getStatus());
     }
+
+    @Override
+    public void onWorkflowFailed(Workflow workflow) {
+
+    }
 }
 

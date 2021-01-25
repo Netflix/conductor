@@ -56,6 +56,11 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
         queueDAO.push(failureStatusQueue, Collections.singletonList(workflowToMessage(workflow)));
     }
 
+    @Override
+    public void onWorkflowFailed(Workflow workflow) {
+
+    }
+
     private Message workflowToMessage(Workflow workflow) {
         String jsonWfSummary;
         WorkflowSummary summary = new WorkflowSummary(workflow);
