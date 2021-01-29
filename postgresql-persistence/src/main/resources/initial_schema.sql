@@ -156,7 +156,6 @@ create index workflow_type_status_date on workflow (workflow_type, workflow_stat
 create index workflow_parent_workflow_id on workflow (parent_workflow_id);
 create index workflow_start_time on workflow (start_time);
 create index workflow_end_time on workflow (end_time);
-create index workflow_type_time on workflow (workflow_type, start_time);
 
 create table task_in_progress
 (
@@ -171,7 +170,6 @@ create table task_in_progress
 create unique index task_in_progress_fields on task_in_progress (task_def_name, task_id);
 alter table task_in_progress
     add constraint task_in_progress_fields unique using index task_in_progress_fields;
-create index task_in_progress_wfid on task_in_progress (workflow_id);
 
 create table task_rate_limit
 (
@@ -317,4 +315,3 @@ alter table queue_message
     add constraint queue_name_msg unique using index queue_name_msg;
 create index queue_message_deliver_on on queue_message (deliver_on);
 create index queue_message_unack_on on queue_message (unack_on);
-create index queue_message_message_id on queue_message (message_id);
