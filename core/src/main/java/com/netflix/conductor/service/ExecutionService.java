@@ -135,7 +135,7 @@ public class ExecutionService {
 			taskStatusListener.onTaskStarted(task);
 			tasks.add(task);
 		}
-		edao.updateLastPoll(taskType, domain, workerId);
+		//edao.updateLastPoll(taskType, domain, workerId);
 		Monitors.recordTaskPoll(queueName);
 		return tasks;
 	}

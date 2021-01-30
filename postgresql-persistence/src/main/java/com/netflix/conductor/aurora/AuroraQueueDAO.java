@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private static final Set<String> queues = ConcurrentHashMap.newKeySet();
-	private static final Long UNACK_SCHEDULE_MS = 30_000L;
+	private static final Long UNACK_SCHEDULE_MS = 300_000L;
 	private static final Long UNACK_TIME_MS = 60_000L;
 	private final Configuration config;
 
