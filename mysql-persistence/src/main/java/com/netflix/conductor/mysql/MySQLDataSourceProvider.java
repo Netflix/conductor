@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,14 +70,16 @@ public class MySQLDataSourceProvider implements Provider<DataSource> {
         }
 
 
-        Flyway flyway = new Flyway();
+        FluentConfiguration flywayConfiguration = Flyway.configure()
+                .dataSource(dataSource)
+                .placeholderReplacement(false);
+
         configuration.getFlywayTable().ifPresent(tableName -> {
             logger.debug("Using Flyway migration table '{}'", tableName);
-            flyway.setTable(tableName);
+            flywayConfiguration.table(tableName);
         });
 
-        flyway.setDataSource(dataSource);
-        flyway.setPlaceholderReplacement(false);
+        Flyway flyway = flywayConfiguration.load();
         flyway.migrate();
     }
 }

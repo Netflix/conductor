@@ -537,7 +537,7 @@
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "4.0.3"
+            "locked": "7.5.2"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -1118,7 +1118,7 @@
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "4.0.3"
+            "locked": "7.5.2"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -1699,7 +1699,7 @@
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "4.0.3"
+            "locked": "7.5.2"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
@@ -2280,7 +2280,7 @@
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "4.0.3"
+            "locked": "7.5.2"
         },
         "org.glassfish:javax.el": {
             "firstLevelTransitive": [
