@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Map;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.Node;
@@ -120,5 +121,14 @@ public class EmbeddedElasticSearchV7 implements EmbeddedElasticSearch {
             instance = null;
             logger.info("Elastic Search on port {} stopped", port);
         }
+    }
+
+    @Override
+    public void waitForGreenCluster() {
+        long startTime = System.currentTimeMillis();
+        ClusterHealthRequest healthRequest = new ClusterHealthRequest();
+        healthRequest.waitForGreenStatus().timeout("30s");
+        instance.client().admin().cluster().health(healthRequest);
+        logger.info("Elasticsearch Cluster ready in {} ms", System.currentTimeMillis() - startTime);
     }
 }
