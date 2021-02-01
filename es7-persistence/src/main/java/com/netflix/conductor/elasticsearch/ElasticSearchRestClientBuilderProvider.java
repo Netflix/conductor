@@ -38,7 +38,19 @@ public class ElasticSearchRestClientBuilderProvider implements Provider<RestClie
 
     @Override
     public RestClientBuilder get() {
-        return RestClient.builder(convertToHttpHosts(configuration.getURIs()));
+
+        RestClientBuilder builder = RestClient.builder(convertToHttpHosts(configuration.getURIs()));
+
+        if (configuration.getElasticSearchBasicAuthUsername() != null && configuration.getElasticSearchBasicAuthPassword() != null) {
+            logger.info("Configure ElasticSearch with BASIC authentication. User:{}",configuration.getElasticSearchBasicAuthUsername());
+            final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY,
+                    new UsernamePasswordCredentials(configuration.getElasticSearchBasicAuthUsername(), configuration.getElasticSearchBasicAuthPassword()));
+            builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+        } else {
+            logger.info("Configure ElasticSearch with no authentication.");
+        }
+        return builder;
     }
 
     private HttpHost[] convertToHttpHosts(List<URI> hosts) {
