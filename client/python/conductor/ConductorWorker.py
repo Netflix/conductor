@@ -78,7 +78,7 @@ class ConductorWorker:
                 task['reasonForIncompletion'] = resp['reasonForIncompletion']
             self.taskClient.updateTask(task)
         except Exception as err:
-            print('Error executing task: ' + str(err))
+            print(f'Error executing task: {exec_function.__name__} with error: {str(err)}')
             task['status'] = 'FAILED'
             self.taskClient.updateTask(task)
 
@@ -129,7 +129,7 @@ class ConductorWorker:
 
 def exc(taskType, inputData, startTime, retryCount, status, callbackAfterSeconds, pollCount):
     print('Executing the function')
-    return {'status': 'COMPLETED', 'output': {}}
+    return {'status': 'COMPLETED', 'output': {}, 'logs': []}
 
 
 def main():

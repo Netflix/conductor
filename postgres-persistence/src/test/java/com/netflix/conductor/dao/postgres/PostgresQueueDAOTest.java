@@ -116,6 +116,7 @@ public class PostgresQueueDAOTest {
 
 		for(int i = 0; i < 10; i++) {
 			String messageId = "msg" + i;
+			assertTrue(dao.containsMessage(queueName, messageId));
 			dao.remove(queueName, messageId);
 		}
 
@@ -158,6 +159,9 @@ public class PostgresQueueDAOTest {
 		// Assert that all messages were persisted and no extras are in there
 		assertEquals("Queue size mismatch", totalSize, dao.getSize(queueName));
 
+		List<Message> zeroPoll = dao.pollMessages(queueName, 0, 10_000);
+		assertTrue("Zero poll should be empty", zeroPoll.isEmpty());
+
 		final int firstPollSize = 3;
 		List<Message> firstPoll = dao.pollMessages(queueName, firstPollSize, 10_000);
 		assertNotNull("First poll was null", firstPoll);
@@ -186,6 +190,33 @@ public class PostgresQueueDAOTest {
 		}
 	}
 
+
+	/**
+	 * Test fix for https://github.com/Netflix/conductor/issues/1892
+	 *
+	 * */
+	@Test
+	public void containsMessageTest() {
+		String queueName = "TestQueue";
+		long offsetTimeInSecond = 0;
+
+		for(int i = 0; i < 10; i++) {
+			String messageId = "msg" + i;
+			dao.push(queueName, messageId, offsetTimeInSecond);
+		}
+		int size = dao.getSize(queueName);
+		assertEquals(10, size);
+
+		for(int i = 0; i < 10; i++) {
+			String messageId = "msg" + i;
+			assertTrue(dao.containsMessage(queueName, messageId));
+			dao.remove(queueName, messageId);
+		}
+		for(int i = 0; i < 10; i++) {
+			String messageId = "msg" + i;
+			assertFalse(dao.containsMessage(queueName, messageId));
+		}
+	}
 	/**
 	 * Test fix for https://github.com/Netflix/conductor/issues/448
 	 * @since 1.8.2-rc5
@@ -267,7 +298,21 @@ public class PostgresQueueDAOTest {
 
 	@Test
 	public void processUnacksTest() {
-		final String queueName = "process_unacks_test";
+		processUnacks(() -> {
+			// Process unacks
+			dao.processUnacks("process_unacks_test");
+		}, "process_unacks_test");
+	}
+
+	@Test
+	public void processAllUnacksTest() {
+		processUnacks(() -> {
+			// Process all unacks
+			dao.processAllUnacks();
+		}, "process_unacks_test");
+	}
+
+	private void processUnacks(Runnable unack, String queueName) {
 		// Count of messages in the queue(s)
 		final int count = 10;
 		// Number of messages to process acks for
@@ -305,22 +350,20 @@ public class PostgresQueueDAOTest {
 		assertNotNull(uacked);
 		assertEquals(uacked.longValue(), unackedCount - 1);
 
-
-		// Process unacks
-		dao.processUnacks(queueName);
+		unack.run();
 
 		// Check uacks for both queues after processing
 		Map<String, Map<String, Map<String, Long>>> details = dao.queuesDetailVerbose();
 		uacked = details.get(queueName).get("a").get("uacked");
 		assertNotNull(uacked);
-		assertEquals("There should be no unacked messages", uacked.longValue(), 0);
+		assertEquals("The messages that were polled should be unacked still", uacked.longValue(), unackedCount - 1);
 
 		Long otherUacked = details.get(otherQueueName).get("a").get("uacked");
 		assertNotNull(otherUacked);
-		assertEquals("Other queue should have unacked messages", otherUacked.longValue(), count);
+		assertEquals("Other queue should have all unacked messages", otherUacked.longValue(), count);
 
 		Long size = dao.queuesDetail().get(queueName);
 		assertNotNull(size);
-		assertEquals(size.longValue(), count - 1);
+		assertEquals(size.longValue(), count - unackedCount);
 	}
 }

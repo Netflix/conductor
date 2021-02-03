@@ -160,13 +160,13 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
         logger.trace("processAllUnacks started");
 
 
-        final String PROCESS_ALL_UNACKS = "UPDATE queue_message SET popped = false WHERE popped = true AND TIMESTAMPADD(SECOND,60,CURRENT_TIMESTAMP) > deliver_on";
+        final String PROCESS_ALL_UNACKS = "UPDATE queue_message SET popped = false WHERE popped = true AND TIMESTAMPADD(SECOND,-60,CURRENT_TIMESTAMP) > deliver_on";
         executeWithTransaction(PROCESS_ALL_UNACKS, Query::executeUpdate);
     }
 
     @Override
     public void processUnacks(String queueName) {
-        final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND TIMESTAMPADD(SECOND,60,CURRENT_TIMESTAMP)  > deliver_on";
+        final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND TIMESTAMPADD(SECOND,-60,CURRENT_TIMESTAMP)  > deliver_on";
         executeWithTransaction(PROCESS_UNACKS, q -> q.addParameter(queueName).executeUpdate());
     }
 
@@ -243,19 +243,16 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
             return messages;
         }
 
-        final String POP_MESSAGES = "UPDATE queue_message SET popped = true WHERE queue_name = ? AND message_id IN (%s) AND popped = false";
+        List<Message> poppedMessages = new ArrayList<>();
+        for (Message message: messages) {
+            final String POP_MESSAGE = "UPDATE queue_message SET popped = true WHERE queue_name = ? AND message_id = ? AND popped = false";
+            int result = query(connection, POP_MESSAGE, q -> q.addParameter(queueName).addParameter(message.getId()).executeUpdate());
 
-        final List<String> Ids = messages.stream().map(Message::getId).collect(Collectors.toList());
-        final String query = String.format(POP_MESSAGES, Query.generateInBindings(messages.size()));
-
-        int result = query(connection, query, q -> q.addParameter(queueName).addParameters(Ids).executeUpdate());
-
-        if (result != messages.size()) {
-            String message = String.format("Could not pop all messages for given ids: %s (%d messages were popped)",
-                    Ids, result);
-            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, message);
+            if (result == 1) {
+                poppedMessages.add(message);
+            }
         }
-        return messages;
+        return poppedMessages;
     }
 
 
@@ -267,5 +264,12 @@ public class MySQLQueueDAO extends MySQLBaseDAO implements QueueDAO {
             final String CREATE_QUEUE = "INSERT IGNORE INTO queue (queue_name) VALUES (?)";
 	        execute(connection, CREATE_QUEUE, q -> q.addParameter(queueName).executeUpdate());
         }
+    }
+
+    @Override
+    public boolean containsMessage(String queueName, String messageId) {
+        final String EXISTS_QUEUE = "SELECT EXISTS(SELECT 1 FROM queue_message WHERE queue_name = ? AND message_id = ? )";
+        boolean exists = queryWithTransaction(EXISTS_QUEUE, q -> q.addParameter(queueName).addParameter(messageId).exists());
+        return exists;
     }
 }

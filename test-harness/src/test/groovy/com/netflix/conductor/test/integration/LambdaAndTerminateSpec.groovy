@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.netflix.counductor.integration.test
+package com.netflix.conductor.test.integration
 
 import com.netflix.conductor.common.metadata.tasks.Task
 import com.netflix.conductor.common.metadata.tasks.TaskResult
@@ -30,7 +30,7 @@ import spock.lang.Specification
 import javax.inject.Inject
 
 @ModulesForTesting([TestModule.class])
-class LambdaAndTerminalTaskSpec extends Specification {
+class LambdaAndTerminateSpec extends Specification {
 
     @Inject
     ExecutionService workflowExecutionService
@@ -80,7 +80,7 @@ class LambdaAndTerminalTaskSpec extends Specification {
         def workflowInstanceId = workflowExecutor.startWorkflow(WORKFLOW_WITH_TERMINATE_TASK, 1,
                 '', workflowInput, null, null, null)
 
-        then: "Ensure that the workflow has started and the first task is in scheduled state"
+        then: "Ensure that the workflow has started and the first task is in scheduled state and workflow output should be terminate tasks output"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 2
@@ -88,6 +88,8 @@ class LambdaAndTerminalTaskSpec extends Specification {
             tasks[0].taskType == 'LAMBDA'
             tasks[1].status == Task.Status.COMPLETED
             tasks[1].taskType == 'TERMINATE'
+			output.size() == 1
+			output as String == "[result:[testvalue:true]]"
         }
     }
 
