@@ -1,0 +1,3 @@
+GO
+CREATE DATABASE Conductor;
+GO
