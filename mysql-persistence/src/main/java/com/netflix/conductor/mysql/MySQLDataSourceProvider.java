@@ -68,16 +68,13 @@ public class MySQLDataSourceProvider implements Provider<DataSource> {
             logger.debug("Flyway migrations are disabled");
             return;
         }
-
+        String flywayTable = configuration.getFlywayTable();
+        logger.debug("Using Flyway migration table '{}'", flywayTable);
 
         FluentConfiguration flywayConfiguration = Flyway.configure()
+                .table(flywayTable)
                 .dataSource(dataSource)
                 .placeholderReplacement(false);
-
-        configuration.getFlywayTable().ifPresent(tableName -> {
-            logger.debug("Using Flyway migration table '{}'", tableName);
-            flywayConfiguration.table(tableName);
-        });
 
         Flyway flyway = flywayConfiguration.load();
         flyway.migrate();

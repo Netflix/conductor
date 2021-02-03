@@ -450,6 +450,7 @@ public class PerformanceTest {
     private void flywayMigrate(DataSource dataSource) {
 
         FluentConfiguration flywayConfiguration = Flyway.configure()
+                .table(configuration.getFlywayTable())
                 .locations(Paths.get("db","migration_postgres").toString())
                 .dataSource(dataSource)
                 .placeholderReplacement(false);

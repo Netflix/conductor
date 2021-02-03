@@ -74,6 +74,7 @@ public class MySQLDAOTestUtil {
 
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
+                .table("schema_version")
                 .placeholderReplacement(false)
                 .load();
 
