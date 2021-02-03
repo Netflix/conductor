@@ -158,7 +158,8 @@ public class InfoResource {
 	@ApiOperation(value = "Get the metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
-		return new TreeMap<>(metricsDAO.getMetrics());
+		return Collections.emptyMap();
+//		return new TreeMap<>(metricsDAO.getMetrics());
 	}
 
 	@GET

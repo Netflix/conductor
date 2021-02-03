@@ -224,8 +224,8 @@ job "conductor" {
         check {
           type     = "http"
           path     = "/v1/health"
-          interval = "10s"
-          timeout  = "3s"
+          interval = "30s"
+          timeout  = "10s"
           check_restart {
             limit           = 3
             grace           = "180s"
@@ -251,7 +251,7 @@ job "conductor" {
         memory = 2048 # MB
 
         network {
-          mbits = 100
+          mbits = 1000
           port  "http"{}
         }
       }
