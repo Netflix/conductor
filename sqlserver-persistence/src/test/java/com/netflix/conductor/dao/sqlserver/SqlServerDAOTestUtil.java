@@ -28,7 +28,7 @@ public class SqlServerDAOTestUtil {
 
     SqlServerDAOTestUtil(String dbName) throws Exception {
         //String normalizedDbName = dbName.toLowerCase();
-        testConfiguration.setProperty("jdbc.url", "jdbc:sqlserver://sqlserver:1433;database="+dbName+";encrypt=false;trustServerCertificate=true;");
+        testConfiguration.setProperty("jdbc.url", "jdbc:sqlserver://localhost:1433;database="+dbName+";encrypt=false;trustServerCertificate=true;");
         testConfiguration.setProperty("jdbc.username", "sa");
         testConfiguration.setProperty("jdbc.password", "Password1");
         createDatabase(dbName);
@@ -37,7 +37,7 @@ public class SqlServerDAOTestUtil {
 
     private void createDatabase(String dbName) {
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:sqlserver://sqlserver:1433;database=master;encrypt=false;trustServerCertificate=true;");
+        dataSource.setJdbcUrl("jdbc:sqlserver://localhost:1433;database=master;encrypt=false;trustServerCertificate=true;");
         dataSource.setUsername("sa");
         dataSource.setPassword("Password1");
         dataSource.setAutoCommit(false);
@@ -68,7 +68,7 @@ public class SqlServerDAOTestUtil {
     private HikariDataSource getDataSource(Configuration config) {
 
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(config.getProperty("jdbc.url", "jdbc:sqlserver://sqlserver:1433;database=Conductor;encrypt=false;trustServerCertificate=true;"));
+        dataSource.setJdbcUrl(config.getProperty("jdbc.url", "jdbc:sqlserver://localhost:1433;database=Conductor;encrypt=false;trustServerCertificate=true;"));
         dataSource.setUsername(config.getProperty("jdbc.username", "conductor"));
         dataSource.setPassword(config.getProperty("jdbc.password", "password"));
         dataSource.setAutoCommit(false);
