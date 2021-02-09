@@ -49,11 +49,13 @@ public class InfoResource {
 	private MetricsDAO metricsDAO;
 	private Configuration config;
 	private String fullVersion;
+	private Boolean metricsEnabled;
 
 	@Inject
 	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
 		this.config = config;
 		this.metricsDAO = metricsDAO;
+		this.metricsEnabled = Boolean.parseBoolean(config.getProperty("conductor.metrics.enabled", "true"));
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
@@ -158,8 +160,10 @@ public class InfoResource {
 	@ApiOperation(value = "Get the metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
-		return Collections.emptyMap();
-//		return new TreeMap<>(metricsDAO.getMetrics());
+		if (!metricsEnabled) {
+			return Collections.emptyMap();
+		}
+		return new TreeMap<>(metricsDAO.getMetrics());
 	}
 
 	@GET
