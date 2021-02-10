@@ -98,3 +98,14 @@ workflow.elasticsearch.url=http://localhost:9300
 workflow.elasticsearch.instanceType=EXTERNAL
 workflow.elasticsearch.url=http://127.0.0.1:9200
 ```
+
+### BASIC Authentication
+If you need to pass user/password to connect to ES, add the following properties to your config file
+* workflow.elasticsearch.basic.auth.username
+* workflow.elasticsearch.basic.auth.password
+
+Example
+```
+workflow.elasticsearch.basic.auth.username=someusername
+workflow.elasticsearch.basic.auth.password=somepassword
+```
