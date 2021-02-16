@@ -87,7 +87,9 @@ pipeline {
                     sh "./gradlew build -x test -x :conductor-client:findbugsMain "
                     sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-server.yaml"
                     sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-ui.yaml"
-                    sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-all.yaml"
+                    // skaffold-all.yaml builds standalone ui + server image, only be used locally or dev
+                    // commenting it out for the moment because there's a checksum ERROR
+                    //sh "export VERSION=`cat VERSION` && skaffold build -f skaffold-all.yaml"
                     script {
                         def buildVersion = readFile "${env.WORKSPACE}/VERSION"
                         currentBuild.description = "$buildVersion"
