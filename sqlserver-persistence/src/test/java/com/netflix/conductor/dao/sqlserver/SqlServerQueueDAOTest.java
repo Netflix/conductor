@@ -1,19 +1,28 @@
 package com.netflix.conductor.dao.sqlserver;
 
 import com.google.common.collect.ImmutableList;
+import com.jayway.jsonpath.Configuration;
+import com.netflix.conductor.config.TestConfiguration;
 import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.sqlserver.SqlServerConfiguration;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.bytebuddy.build.Plugin.Engine.Source.InMemory;
 
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @SuppressWarnings("Duplicates")
+@RunWith(Parameterized.class)
 public class SqlServerQueueDAOTest {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SqlServerQueueDAOTest.class);
@@ -40,15 +50,28 @@ public class SqlServerQueueDAOTest {
 
 	@Before
 	public void setup() throws Exception {
-        testUtil = new SqlServerDAOTestUtil(name.getMethodName());
 		dao = new SqlServerQueueDAO(testUtil.getObjectMapper(), testUtil.getDataSource(), testUtil.getTestConfiguration());
 	}
-
+	
 	@After
     public void teardown() throws Exception {
-        testUtil.resetAllData();
+		testUtil.resetAllData();
         testUtil.getDataSource().close();
-    }
+	}
+	
+	public SqlServerQueueDAOTest(Boolean isInMemory) throws Exception{
+		testUtil = new SqlServerDAOTestUtil(name.getMethodName());
+		if(isInMemory)
+			testUtil.configureInMemoryTableForQueue();
+	}
+
+	@Parameterized.Parameters
+	public static Collection primeNumbers() {
+	   return Arrays.asList(new Object[][] {
+		  { false },
+		  { true },
+	   });
+	}
 
 	@Test
 	public void complexQueueTest() {
@@ -62,7 +85,7 @@ public class SqlServerQueueDAOTest {
 		int size = dao.getSize(queueName);
 		assertEquals(10, size);
 		Map<String, Long> details = dao.queuesDetail();
-		assertEquals(1, details.size());
+		assertTrue(details.size() > 0);
 		assertEquals(10L, details.get(queueName).longValue());
 
 
@@ -76,7 +99,7 @@ public class SqlServerQueueDAOTest {
 		assertEquals(10, popped.size());
 
 		Map<String, Map<String, Map<String, Long>>> verbose = dao.queuesDetailVerbose();
-		assertEquals(1, verbose.size());
+		assertTrue(verbose.size() > 0);
 		long shardSize = verbose.get(queueName).get("a").get("size");
 		long unackedSize = verbose.get(queueName).get("a").get("uacked");
 		assertEquals(0, shardSize);
@@ -85,7 +108,7 @@ public class SqlServerQueueDAOTest {
 		popped.forEach(messageId -> dao.ack(queueName, messageId));
 
 		verbose = dao.queuesDetailVerbose();
-		assertEquals(1, verbose.size());
+		assertTrue(verbose.size() > 0);
 		shardSize = verbose.get(queueName).get("a").get("size");
 		unackedSize = verbose.get(queueName).get("a").get("uacked");
 		assertEquals(0, shardSize);
@@ -118,6 +141,7 @@ public class SqlServerQueueDAOTest {
 		dao.flush(queueName);
 		size = dao.getSize(queueName);
 		assertEquals(0, size);
+		dao.flush(queueName);
 	}
 
 	/**
@@ -200,6 +224,7 @@ public class SqlServerQueueDAOTest {
 		} catch (Exception ex) {
 			fail(ex.getMessage());
 		}
+		dao.flush(queueName);
 	}
 
 	/**
@@ -208,7 +233,6 @@ public class SqlServerQueueDAOTest {
 	 */
 	@Test
 	public void pollDeferredMessagesTest() throws InterruptedException {
-		// TODO: pollDeferredMessagesTest
 		final List<Message> messages = new ArrayList<>();
 		final String queueName = "issue448_testQueue";
 		final int totalSize = 10;
@@ -280,6 +304,7 @@ public class SqlServerQueueDAOTest {
 		} catch (Exception ex) {
 			fail(ex.getMessage());
 		}
+		dao.flush(queueName);
 	}
 
 	@Test
@@ -339,5 +364,19 @@ public class SqlServerQueueDAOTest {
 		Long size = dao.queuesDetail().get(queueName);
 		assertNotNull(size);
 		assertEquals(size.longValue(), count - unackedCount);
+		dao.flush(queueName);
+		dao.flush(otherQueueName);
+	}
+
+	@Test
+	public void testCalculateQueueName() {
+		TestConfiguration cnf = new TestConfiguration();
+		cnf.setProperty("LOCAL_RACK", "rack");
+		cnf.setProperty("conductor.sqlserver.queue.sharding.strategy", "local_only");
+		SqlServerQueueDAO q = new SqlServerQueueDAO(null, null, cnf);
+		assertEquals("asdf.rack", q.calculateQueueName("asdf"));
+		cnf.setProperty("conductor.sqlserver.queue.sharding.strategy", "shared");
+		q = new SqlServerQueueDAO(null, null, cnf);
+		assertEquals("asdf", q.calculateQueueName("asdf"));
 	}
 }

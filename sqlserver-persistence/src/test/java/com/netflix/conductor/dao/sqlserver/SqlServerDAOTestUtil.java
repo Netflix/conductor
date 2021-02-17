@@ -27,8 +27,7 @@ public class SqlServerDAOTestUtil {
     private final ObjectMapper objectMapper = new JsonMapperProvider().get();
 
     SqlServerDAOTestUtil(String dbName) throws Exception {
-        //String normalizedDbName = dbName.toLowerCase();
-        testConfiguration.setProperty("jdbc.url", "jdbc:sqlserver://sqlserver:1433;database="+dbName+";encrypt=false;trustServerCertificate=true;");
+        testConfiguration.setProperty("jdbc.url", "jdbc:sqlserver://localhost:1433;database="+dbName+";encrypt=false;trustServerCertificate=true;");
         testConfiguration.setProperty("jdbc.username", "sa");
         testConfiguration.setProperty("jdbc.password", "Password1");
         createDatabase(dbName);
@@ -37,7 +36,7 @@ public class SqlServerDAOTestUtil {
 
     private void createDatabase(String dbName) {
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl("jdbc:sqlserver://sqlserver:1433;database=master;encrypt=false;trustServerCertificate=true;");
+        dataSource.setJdbcUrl("jdbc:sqlserver://localhost:1433;database=master;encrypt=false;trustServerCertificate=true;");
         dataSource.setUsername("sa");
         dataSource.setPassword("Password1");
         dataSource.setAutoCommit(false);
@@ -68,7 +67,7 @@ public class SqlServerDAOTestUtil {
     private HikariDataSource getDataSource(Configuration config) {
 
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(config.getProperty("jdbc.url", "jdbc:sqlserver://sqlserver:1433;database=Conductor;encrypt=false;trustServerCertificate=true;"));
+        dataSource.setJdbcUrl(config.getProperty("jdbc.url", "jdbc:sqlserver://localhost:1433;database=Conductor;encrypt=false;trustServerCertificate=true;"));
         dataSource.setUsername(config.getProperty("jdbc.username", "conductor"));
         dataSource.setPassword(config.getProperty("jdbc.password", "password"));
         dataSource.setAutoCommit(false);
@@ -102,7 +101,7 @@ public class SqlServerDAOTestUtil {
         return objectMapper;
     }
 
-    public void resetAllData() { // wait for script CR
+    public void resetAllData() {
         String TRUNCATE_ALL_TABLES = String.join("\r\n", 
             " declare @ObjName nvarchar(200)",
             " declare @StrSQL nvarchar(1000)",
@@ -138,5 +137,47 @@ public class SqlServerDAOTestUtil {
             logger.error(ex.getMessage(), ex);
             throw new RuntimeException(ex);
         }
+    }
+
+    public void configureInMemoryTableForLock() throws SQLException{
+        final String CREATE_AS_MEMORY = String.join("\n", 
+            "DROP TABLE [dbo].[reentrant_lock]",
+            "CREATE TABLE [dbo].[reentrant_lock] (",
+            "lock_id VARCHAR(255) PRIMARY KEY NONCLUSTERED,",
+            "holder_id VARCHAR(255) NOT NULL,",
+            "expire_time DATETIME2 DEFAULT SYSDATETIME() NOT NULL",
+            ")",
+            "with ( memory_optimized=on,",
+            "durability=schema_and_data",
+            ")"
+        );
+
+        Connection conn = dataSource.getConnection();
+        conn.prepareStatement(CREATE_AS_MEMORY).execute();
+    }
+
+    public void configureInMemoryTableForQueue() throws SQLException{
+        final String CREATE_AS_MEMORY = String.join("\n", 
+            "DROP TABLE [dbo].[queue_message]",
+            "CREATE TABLE [dbo].[queue_message] (",
+            "   id INT PRIMARY KEY NONCLUSTERED IDENTITY(1, 1),",
+            "   created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,",
+            "   deliver_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,",
+            "   queue_name VARCHAR(255) NOT NULL,",
+            "   message_id VARCHAR(255) NOT NULL,",
+            "   priority TINYINT DEFAULT 0,",
+            "   popped BIT DEFAULT 0,",
+            "   offset_time_seconds VARCHAR(64),",
+            "   payload NVARCHAR(4000),",
+            "   UNIQUE (queue_name, message_id),",
+            "   UNIQUE (queue_name, popped, deliver_on, created_on, priority)",
+            ")",
+            "with ( memory_optimized=on,",
+            "durability=schema_and_data",
+            ")"
+        );
+
+        Connection conn = dataSource.getConnection();
+        conn.prepareStatement(CREATE_AS_MEMORY).execute();
     }
 }

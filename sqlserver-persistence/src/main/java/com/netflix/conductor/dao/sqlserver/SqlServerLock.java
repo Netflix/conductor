@@ -107,14 +107,14 @@ public class SqlServerLock extends SqlServerBaseDAO implements Lock {
         execute(conn, SQL, q -> q.addParameter(lockId).executeDelete());
     }
 
-    private String getHolderId()
+    public String getHolderId()
     {
         return String.format("%s%c%d", INSTANCE_IDENTIFIER, '-', Thread.currentThread().getId());
     }
 
-    private String getLockId(String lockId)
+    public String getLockId(String lockId)
     {
-        if (lockId.isEmpty()) {
+        if (LOCK_NAMESPACE.isEmpty()) {
             return lockId;
         }
         return String.format("%s%c%s", LOCK_NAMESPACE, '.', lockId);

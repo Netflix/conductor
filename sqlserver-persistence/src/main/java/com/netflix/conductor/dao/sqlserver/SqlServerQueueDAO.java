@@ -258,7 +258,7 @@ public class SqlServerQueueDAO extends SqlServerBaseDAO implements QueueDAO {
             "   SELECT TOP %d id",
             "   FROM dbo.queue_message WITH(index(combo_queue_message), UpdLock, RowLock)",
             "   WHERE queue_name = '%s' AND popped = 0 AND deliver_on <= DATEADD(microsecond, 1000, SYSDATETIME())",
-            "   ORDER BY priority DESC, deliver_on ASC, created_on ASC",
+            "   ORDER BY priority DESC, deliver_on ASC, id ASC", // Using id instead of created_on is more reliable
             "   ) source",
             "ON target.id = source.id",
             "WHEN MATCHED THEN",
@@ -310,7 +310,7 @@ public class SqlServerQueueDAO extends SqlServerBaseDAO implements QueueDAO {
         return exists;
     }
 
-    private String calculateQueueName(String queueName) {
+    public String calculateQueueName(String queueName) {
         switch (queueStrategy) {
             case SHARED:
                 return queueName;
