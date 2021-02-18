@@ -175,19 +175,19 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		}
 
 		// Cleanup locked expired messages
+		String lockQueueName = queueName.toLowerCase() + ".lock";
 		try {
 			long deliver_on = System.currentTimeMillis() - UNACK_TIME_MS;
 
 			final String SQL = "DELETE FROM queue_message " +
 				"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND deliver_on < ? FOR UPDATE SKIP LOCKED)";
 
-			String lockQueueName = queueName.toLowerCase() + ".lock";
 			executeWithTransaction(SQL, q -> q
 				.addParameter(lockQueueName)
 				.addTimestampParameter(deliver_on)
 				.executeDelete());
 		} catch (Exception ex) {
-			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
+			logger.error("processUnacks: failed for {} with {}", lockQueueName, ex.getMessage(), ex);
 		}
 	}
 
@@ -365,7 +365,8 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	private void processAllUnacks() {
-		queues.forEach(this::processUnacks);
+		// Exclude '.lock' queues as they are handled separately in the processUnacks function
+		queues.stream().filter(q -> !q.endsWith(".lock")).forEach(this::processUnacks);
 	}
 
 	private static class QueueMessage {

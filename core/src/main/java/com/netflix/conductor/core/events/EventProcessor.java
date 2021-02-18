@@ -109,7 +109,7 @@ public class EventProcessor {
 				}).collect(Collectors.toList());
 
 			List<ObservableQueue> created = new LinkedList<>();
-			activeHandlers.forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
+			activeHandlers.parallelStream().forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
 				ObservableQueue queue = EventQueues.getQueue(handler.getEvent(), false,
 					handler.isRetryEnabled(), handler.getPrefetchSize(), this::handle);
 				if (queue == null) {
@@ -150,7 +150,7 @@ public class EventProcessor {
 			// - close/open executor
 			// - open subscription
 			List<ObservableQueue> changed = new LinkedList<>();
-			activeHandlers.forEach(handler -> queuesMap.computeIfPresent(handler.getEvent(), (s, entry) -> {
+			activeHandlers.parallelStream().forEach(handler -> queuesMap.computeIfPresent(handler.getEvent(), (s, entry) -> {
 				if (handler.getThreadCount() != entry.getRight().getCorePoolSize() ||
 					handler.getPrefetchSize() != entry.getLeft().getPrefetchSize()) {
 					logger.debug("Re-creating queue/executor for " + handler.getName());
