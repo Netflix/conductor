@@ -86,6 +86,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getMetrics() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -98,44 +99,44 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 			List<Future<?>> futures = new LinkedList<>();
 
 			// today + overall
-			for (boolean today : Arrays.asList(true, false)) {
-
-				// then per each short name
-				for (String shortName : WORKFLOWS) {
-					// Filter workflow definitions to have current short related only
-					Set<String> filtered = fullNames.stream().filter(type -> type.startsWith(shortName)).collect(Collectors.toSet());
-
-					// Workflow counter per short name
-					futures.add(pool.submit(() -> workflowCounters(metrics, today, shortName, filtered)));
-
-					// Workflow average per short name
-					futures.add(pool.submit(() -> workflowAverage(metrics, today, shortName, filtered)));
-				}
-
+//			for (boolean today : Arrays.asList(true, false)) {
+//
+//				// then per each short name
+//				for (String shortName : WORKFLOWS) {
+//					// Filter workflow definitions to have current short related only
+//					Set<String> filtered = fullNames.stream().filter(type -> type.startsWith(shortName)).collect(Collectors.toSet());
+//
+//					// Workflow counter per short name
+//					futures.add(pool.submit(() -> workflowCounters(metrics, today, shortName, filtered)));
+//
+//					// Workflow average per short name
+//					futures.add(pool.submit(() -> workflowAverage(metrics, today, shortName, filtered)));
+//				}
+//
 //				// Task type/refName/status counter
 //				futures.add(pool.submit(() -> taskTypeRefNameCounters(metrics, today)));
 //
 //				// Task type/refName average
 //				futures.add(pool.submit(() -> taskTypeRefNameAverage(metrics, today)));
 //
-				// Task type counter
-				futures.add(pool.submit(() -> taskTypeCounters(metrics, today)));
-
-				// Event received
-				futures.add(pool.submit(() -> eventReceived(metrics, today)));
-
-				// Event published
+//				// Task type counter
+//				futures.add(pool.submit(() -> taskTypeCounters(metrics, today)));
+//
+//				// Event received
+//				futures.add(pool.submit(() -> eventReceived(metrics, today)));
+//
+//				// Event published
 //				futures.add(pool.submit(() -> eventPublished(metrics, today)));
-
-				// Event execution
-				//futures.add(pool.submit(() -> eventExecAverage(metrics, today)));
-
-				// Event wait
+//
+//				// Event execution
+//				//futures.add(pool.submit(() -> eventExecAverage(metrics, today)));
+//
+//				// Event wait
 //				futures.add(pool.submit(() -> eventWaitAverage(metrics, today)));
-			}
-
-			// Get the average execution time for execute event workflow based on each action
-			futures.add(pool.submit(() -> execWorkflowActionAverage(metrics)));
+//			}
+//
+//			// Get the average execution time for execute event workflow based on each action
+//			futures.add(pool.submit(() -> execWorkflowActionAverage(metrics)));
 
 			// Admin counters
 			futures.add(pool.submit(() -> adminCounters(metrics)));
@@ -151,6 +152,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getAdminCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 		adminCounters(metrics);
@@ -158,6 +160,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getEventReceived() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -182,6 +185,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getEventPublished() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -206,6 +210,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getEventExecAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -230,6 +235,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getEventWaitAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -254,6 +260,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getTaskCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -278,6 +285,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getTaskRefNameCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -302,6 +310,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getTaskAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -326,6 +335,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getWorkflowCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -360,6 +370,7 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
+	@Deprecated
 	public Map<String, Object> getWorkflowAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -448,9 +459,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	private void adminCounters(Map<String, AtomicLong> map) {
-		Set<EventHandler> handlers = getHandlers();
-		initMetric(map, String.format("%s.admin.active_handlers", PREFIX)).set(handlers.size());
-
 		String SQL = "select count(*) from queue_message where queue_name = ?";
 		long count = queryWithTransaction(SQL, q -> q.addParameter("_deciderqueue").executeScalar(Long.class));
 

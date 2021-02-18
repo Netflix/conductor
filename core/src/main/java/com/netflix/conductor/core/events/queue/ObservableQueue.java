@@ -96,4 +96,12 @@ public interface ObservableQueue {
 	default int getPrefetchSize() {
 		return -1;
 	}
+
+	/**
+	 *
+	 * @return Subject name
+	 */
+	default String getSubject() {
+		return null;
+	}
 }

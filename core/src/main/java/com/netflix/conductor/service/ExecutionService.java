@@ -137,6 +137,7 @@ public class ExecutionService {
 		}
 		//edao.updateLastPoll(taskType, domain, workerId);
 		Monitors.recordTaskPoll(queueName);
+		MetricService.getInstance().taskPoll(taskType, workerId);
 		return tasks;
 	}
 	

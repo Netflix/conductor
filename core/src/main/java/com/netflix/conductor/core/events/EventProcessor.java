@@ -27,27 +27,23 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ParametersUtils;
-import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
+import com.netflix.conductor.service.MetricService;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.reverse;
 
 /**
  * @author Viren
@@ -257,6 +253,7 @@ public class EventProcessor {
 						ee.getOutput().put("msg", payload);
 						ee.setSubject(subject);
 						es.addEventExecution(ee);
+						MetricService.getInstance().eventExecutionSkipped(handler.getName(), queue.getSubject());
 						continue;
 					}
 				}
@@ -274,6 +271,7 @@ public class EventProcessor {
 						boolean anyRunning = es.anyRunningWorkflowsByTags(tags);
 						if (!anyRunning) {
 							logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
+							MetricService.getInstance().eventTagsMiss(handler.getName(), queue.getSubject());
 							EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 							ee.setAccepted(msg.getAccepted());
 							ee.setCreated(System.currentTimeMillis());
@@ -297,6 +295,7 @@ public class EventProcessor {
 				int i = 0;
 				List<Action> actions = handler.getActions();
 				for (Action action : actions) {
+					String actionName = action.getAction().name() + "_" + i;
 					String id = msg.getId() + "_" + i++;
 
 					condition = action.getCondition();
@@ -317,6 +316,7 @@ public class EventProcessor {
 							ee.setSubject(subject);
 							ee.setTags(tags);
 							es.addEventExecution(ee);
+							MetricService.getInstance().eventActionSkipped(handler.getName(), queue.getSubject(), actionName);
 							continue;
 						}
 					}
@@ -426,6 +426,8 @@ public class EventProcessor {
 					", waitTime=" + waitTime + ", prepTime=" + prepTime +
 					", execTime=" + execTime + ", overallTime=" + overallTime +
 					", output=" + output);
+
+				MetricService.getInstance().eventActionExecuted(ee.getName(), ee.getSubject(), ee.getAction().name(), execTime);
 				return success;
 			} catch (Exception e) {
 				logger.debug("Execute failed handler=" + ee.getName() + ", action=" + action + ", reason=" + e.getMessage(), e);
@@ -433,7 +435,7 @@ public class EventProcessor {
 				ee.getOutput().put("exception", e.getMessage());
 				ee.setProcessed(System.currentTimeMillis());
 				es.updateEventExecution(ee);
-
+				MetricService.getInstance().eventActionFailed(ee.getName(), ee.getSubject(), ee.getAction().name());
 				return success;
 			} finally {
 				NDC.remove();
