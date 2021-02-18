@@ -262,8 +262,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		String GET_TASKS = "SELECT json_data FROM task WHERE task_id = ANY(?)";
 		return queryWithTransaction(GET_TASKS, q -> q
-				.addParameter(taskIds)
-				.executeAndFetch(Task.class));
+			.addParameter(taskIds)
+			.executeAndFetch(Task.class));
 	}
 
 	@Override
@@ -738,14 +738,20 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	private void insertOrUpdatePollData(Connection tx, PollData pollData, String domain) {
-		// Warning! Constraint name is also unique index name
-		String SQL = "INSERT INTO poll_data (queue_name, domain, json_data) VALUES (?, ?, ?) " +
-			"ON CONFLICT ON CONSTRAINT poll_data_fields DO UPDATE SET json_data=?, modified_on=now()";
-		execute(tx, SQL, q -> q.addParameter(pollData.getQueueName())
+		String SQL = "UPDATE poll_data SET json_data=?, modified_on=now() WHERE queue_name=? AND domain=?";
+		int count = query(tx, SQL, q -> q.addJsonParameter(pollData)
+			.addParameter(pollData.getQueueName())
 			.addParameter(domain)
-			.addJsonParameter(pollData)
-			.addJsonParameter(pollData)
 			.executeUpdate());
+		if (count == 0) {
+			// Warning! Constraint name is also unique index name
+			SQL = "INSERT INTO poll_data (queue_name, domain, json_data) VALUES (?, ?, ?) " +
+				"ON CONFLICT ON CONSTRAINT poll_data_fields DO NOTHING";
+			execute(tx, SQL, q -> q.addParameter(pollData.getQueueName())
+				.addParameter(domain)
+				.addJsonParameter(pollData)
+				.executeUpdate());
+		}
 	}
 
 	private PollData readPollData(Connection tx, String queueName, String domain) {
