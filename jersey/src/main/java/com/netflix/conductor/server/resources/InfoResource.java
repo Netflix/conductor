@@ -45,11 +45,11 @@ import java.util.*;
 @Api(value = "/v1", produces = MediaType.APPLICATION_JSON, tags = "Status Info")
 @Produces({MediaType.APPLICATION_JSON})
 public class InfoResource {
-	private static Logger logger = LoggerFactory.getLogger(InfoResource.class);
-	private MetricsDAO metricsDAO;
-	private Configuration config;
+	private static final Logger logger = LoggerFactory.getLogger(InfoResource.class);
+	private final MetricsDAO metricsDAO;
+	private final Configuration config;
+	private final Boolean metricsEnabled;
 	private String fullVersion;
-	private Boolean metricsEnabled;
 
 	@Inject
 	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
