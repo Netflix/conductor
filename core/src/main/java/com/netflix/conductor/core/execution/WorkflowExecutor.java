@@ -71,8 +71,9 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 @Trace
 public class WorkflowExecutor {
+	private static final int MAX_REJECT_SIZE = 5 * 1024 * 1024;
+	private static final int MAX_ALERT_SIZE = 600 * 1024;
 	private static final String BEARER = "Bearer";
-
 	private static Logger logger = LoggerFactory.getLogger(WorkflowExecutor.class);
 
 	private MetadataDAO metadata;
@@ -175,6 +176,20 @@ public class WorkflowExecutor {
 			if (exists == null) {
 				throw new ApplicationException(Code.NOT_FOUND, "No such workflow defined. name=" + name + ", version=" + version);
 			}
+			String clientId = null;
+			if(authorization != null && !authorization.isEmpty()) {
+				clientId = (String)authorization.get("clientId");
+			}
+
+			// Check payload size
+			String payload = om.writeValueAsString(input);
+			if (payload.length() >= MAX_REJECT_SIZE) {
+				throw new ApplicationException(Code.INVALID_INPUT, "Input is too long");
+			} else if (payload.length() >= MAX_ALERT_SIZE) {
+				logger.warn("Workflow payload size exceeds threshold. WorkflowId=" + workflowId
+					+ ",correlationId=" + correlationId + ",contextUser=" + contextUser
+					+ ",clientId=" + clientId + ",traceId=" + traceId);
+			}
 
 			// Input validation required
 			if (exists.getInputValidation() != null && !exists.getInputValidation().isEmpty()) {
@@ -200,10 +215,7 @@ public class WorkflowExecutor {
 			wf.setParentWorkflowId(parentWorkflowId);
 			wf.setContextToken(contextToken);
 			wf.setAuthorization(authorization);
-            if(authorization!=null && !authorization.isEmpty())
-			{
-				wf.setClientId((String)authorization.get("clientId"));
-			}
+			wf.setClientId(clientId);
 			wf.setContextUser(contextUser);
 			if (traceIdEnabled) {
 				wf.setTraceId(traceId);
