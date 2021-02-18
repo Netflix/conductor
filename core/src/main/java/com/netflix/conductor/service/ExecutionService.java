@@ -37,6 +37,7 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.impl.Log4JLogger;
@@ -135,8 +136,9 @@ public class ExecutionService {
 			taskStatusListener.onTaskStarted(task);
 			tasks.add(task);
 		}
-		//edao.updateLastPoll(taskType, domain, workerId);
-		Monitors.recordTaskPoll(queueName);
+		if (CollectionUtils.isNotEmpty(taskIds)) {
+			edao.updateLastPoll(taskType, domain, workerId);
+		}
 		MetricService.getInstance().taskPoll(taskType, workerId);
 		return tasks;
 	}

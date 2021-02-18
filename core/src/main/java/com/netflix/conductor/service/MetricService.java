@@ -124,6 +124,15 @@ public class MetricService {
 		statsd.incrementCounter(aspect, toArray(tags));
 	}
 
+	public void eventTagsHit(String handler, String subject) {
+		Set<String> tags = new HashSet<>();
+		tags.add("metric:deluxe.conductor.event.tags.hit");
+		tags.add("handler:" + handler);
+		tags.add("subject:" + subject);
+
+		statsd.incrementCounter(aspect, toArray(tags));
+	}
+
 	public void eventTagsMiss(String handler, String subject) {
 		Set<String> tags = new HashSet<>();
 		tags.add("metric:deluxe.conductor.event.tags.miss");

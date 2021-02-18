@@ -253,7 +253,8 @@ public class EventProcessor {
 						ee.getOutput().put("msg", payload);
 						ee.setSubject(subject);
 						es.addEventExecution(ee);
-						MetricService.getInstance().eventExecutionSkipped(handler.getName(), queue.getSubject());
+						MetricService.getInstance()
+							.eventExecutionSkipped(handler.getName(), queue.getSubject());
 						continue;
 					}
 				}
@@ -271,7 +272,8 @@ public class EventProcessor {
 						boolean anyRunning = es.anyRunningWorkflowsByTags(tags);
 						if (!anyRunning) {
 							logger.debug("Handler did not find running workflows with tags. Handler={}, tags={}", handler.getName(), tags);
-							MetricService.getInstance().eventTagsMiss(handler.getName(), queue.getSubject());
+							MetricService.getInstance()
+								.eventTagsMiss(handler.getName(), queue.getSubject());
 							EventExecution ee = new EventExecution(msg.getId() + "_0", msg.getId());
 							ee.setAccepted(msg.getAccepted());
 							ee.setCreated(System.currentTimeMillis());
@@ -286,6 +288,8 @@ public class EventProcessor {
 							tagsNotMatchCounter++;
 							continue;
 						} else {
+							MetricService.getInstance()
+								.eventTagsHit(handler.getName(), queue.getSubject());
 							tagsMatchCounter++;
 						}
 					}
@@ -316,7 +320,8 @@ public class EventProcessor {
 							ee.setSubject(subject);
 							ee.setTags(tags);
 							es.addEventExecution(ee);
-							MetricService.getInstance().eventActionSkipped(handler.getName(), queue.getSubject(), actionName);
+							MetricService.getInstance()
+								.eventActionSkipped(handler.getName(), queue.getSubject(), actionName);
 							continue;
 						}
 					}
@@ -427,7 +432,8 @@ public class EventProcessor {
 					", execTime=" + execTime + ", overallTime=" + overallTime +
 					", output=" + output);
 
-				MetricService.getInstance().eventActionExecuted(ee.getName(), ee.getSubject(), ee.getAction().name(), execTime);
+				MetricService.getInstance()
+					.eventActionExecuted(ee.getName(), ee.getSubject(), ee.getAction().name(), execTime);
 				return success;
 			} catch (Exception e) {
 				logger.debug("Execute failed handler=" + ee.getName() + ", action=" + action + ", reason=" + e.getMessage(), e);
@@ -435,7 +441,8 @@ public class EventProcessor {
 				ee.getOutput().put("exception", e.getMessage());
 				ee.setProcessed(System.currentTimeMillis());
 				es.updateEventExecution(ee);
-				MetricService.getInstance().eventActionFailed(ee.getName(), ee.getSubject(), ee.getAction().name());
+				MetricService.getInstance()
+					.eventActionFailed(ee.getName(), ee.getSubject(), ee.getAction().name());
 				return success;
 			} finally {
 				NDC.remove();
