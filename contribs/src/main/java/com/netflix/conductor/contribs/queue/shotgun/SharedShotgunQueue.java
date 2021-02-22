@@ -27,6 +27,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.events.queue.OnMessageHandler;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.service.MetricService;
 import d3sw.shotgun.shotgunpb.ShotgunOuterClass;
 import io.nats.client.NUID;
 import org.apache.commons.lang.StringUtils;
@@ -48,13 +49,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class SharedShotgunQueue implements ObservableQueue {
     protected Logger logger = LoggerFactory.getLogger(getClass());
-    private Duration[] publishRetryIn;
     protected OnMessageHandler handler;
     protected final String service;
     protected final String subject;
+    private final Duration[] publishRetryIn;
+    private final boolean manualAck;
+    private final int prefetchSize;
     private final String groupId;
-    private boolean manualAck;
-    private int prefetchSize;
     final String queueURI;
     OneMQClient conn;
     Subscription subs;
@@ -164,6 +165,7 @@ public class SharedShotgunQueue implements ObservableQueue {
                 logger.debug(String.format("Publishing to %s: %s", subject, payload));
                 conn.publishWithOptions(subject, payload.getBytes(), options);
                 logger.info(String.format("Published to %s: %s", subject, payload));
+                MetricService.getInstance().eventPublished(subject);
             } catch (Exception eo) {
                 logger.debug(String.format("Publish failed for %s: %s", subject, payload), eo);
             }
@@ -180,6 +182,11 @@ public class SharedShotgunQueue implements ObservableQueue {
             subs = null;
         }
         logger.debug("Closed for " + queueURI);
+    }
+
+    @Override
+    public String getSubject() {
+        return subject;
     }
 
     private void unack(String msgId) {
@@ -207,6 +214,7 @@ public class SharedShotgunQueue implements ObservableQueue {
             dstMsg.setReceived(System.currentTimeMillis());
             dstMsg.setTraceId(traceId);
 
+            MetricService.getInstance().eventReceived(subscription.getSubject());
             logger.info(String.format("Received message for %s/%s/%s %s=%s",
                 subscription.getSubject(), subscription.getGroupID(), traceId, dstMsg.getId(), payload));
 

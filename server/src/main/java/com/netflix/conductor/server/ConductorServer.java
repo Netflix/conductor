@@ -24,6 +24,7 @@ import com.google.inject.servlet.GuiceFilter;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.dao.es6rest.Elasticsearch6Embedded;
 import com.netflix.conductor.redis.utils.JedisMock;
+import com.netflix.conductor.service.MetricService;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.Host.Status;
 import com.netflix.dyno.connectionpool.HostSupplier;
@@ -247,6 +248,7 @@ public class ConductorServer {
 
 		server.start();
 		logger.info("Started server on http://localhost:" + port + "/");
+		MetricService.getInstance().serverStarted();
 		try {
 			boolean create = Boolean.parseBoolean(cc.getProperty("loadSample", "false"));
 			if (create) {

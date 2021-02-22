@@ -51,6 +51,7 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -258,7 +259,7 @@ public class WorkflowExecutor {
 			edao.createWorkflow(wf);
 
 			// metrics
-			Monitors.recordWorkflowStart(wf);
+			MetricService.getInstance().workflowStart(name);
 
 			// send wf start message
 			workflowStatusListener.onWorkflowStarted(wf);
@@ -276,7 +277,7 @@ public class WorkflowExecutor {
 
 		}catch (Exception e) {
 			removeQuietly(workflowId);
-			Monitors.recordWorkflowStartError(name);
+			MetricService.getInstance().workflowStartFailed(name);
 			throw e;
 		}
 	}
@@ -317,7 +318,7 @@ public class WorkflowExecutor {
 			edao.updateWorkflow(workflow);
 
 			// metrics
-			Monitors.recordWorkflowRerun(workflow);
+			MetricService.getInstance().workflowRerun(workflow.getWorkflowType());
 
 			// send wf start message
 			workflowStatusListener.onWorkflowStarted(workflow);
@@ -470,7 +471,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		// metrics
-		Monitors.recordWorkflowRestart(workflow);
+		MetricService.getInstance().workflowRestart(workflow.getWorkflowType());
 
 		// send wf start message
 		workflowStatusListener.onWorkflowStarted(workflow);
@@ -589,7 +590,7 @@ public class WorkflowExecutor {
 		edao.updateWorkflow(workflow);
 
 		// metrics
-		Monitors.recordWorkflowRetry(workflow);
+		MetricService.getInstance().workflowRetry(workflow.getWorkflowType());
 
 		decide(workflowId);
 		logger.debug("Workflow retry. Current status=" + workflow.getStatus() + ",workflowId=" + workflow.getWorkflowId()
@@ -651,7 +652,7 @@ public class WorkflowExecutor {
 		if (workflow.getParentWorkflowId() != null) {
 			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
-		Monitors.recordWorkflowCompletion(workflow);
+		MetricService.getInstance().workflowComplete(workflow.getWorkflowType(), workflow.getStartTime());
 
 		// send wf end message
 		workflowStatusListener.onWorkflowCompleted(workflow);
@@ -688,7 +689,7 @@ public class WorkflowExecutor {
 		queue.remove(deciderQueue, workflowId);
 
 		// metrics
-		Monitors.recordWorkflowCancel(workflow);
+		MetricService.getInstance().workflowForceComplete(workflow.getWorkflowType());
 
 		// send wf end message
 		workflowStatusListener.onWorkflowCompleted(workflow);
@@ -784,7 +785,7 @@ public class WorkflowExecutor {
 		queue.remove(deciderQueue, workflowId);
 
 		// metrics
-		Monitors.recordWorkflowCancel(workflow);
+		MetricService.getInstance().workflowCancel(workflow.getWorkflowType());
 
 		// send wf end message
 		workflowStatusListener.onWorkflowTerminated(workflow);
@@ -825,7 +826,7 @@ public class WorkflowExecutor {
 		queue.remove(deciderQueue, workflow.getWorkflowId());
 
 		// metrics
-		Monitors.recordWorkflowReset(workflow);
+		MetricService.getInstance().workflowReset(workflow.getWorkflowType());
 
 		// send wf end message
 		workflowStatusListener.onWorkflowTerminated(workflow);
@@ -1006,7 +1007,7 @@ public class WorkflowExecutor {
 		workflowStatusListener.onWorkflowTerminated(workflow);
 
 		// Send to atlas
-		Monitors.recordWorkflowTermination(workflow);
+		MetricService.getInstance().workflowFailure(workflow.getWorkflowType(), workflow.getStatus().name());
 	}
 
 	public QueueDAO getQueueDao() {

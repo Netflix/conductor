@@ -45,17 +45,17 @@ import java.util.*;
 @Api(value = "/v1", produces = MediaType.APPLICATION_JSON, tags = "Status Info")
 @Produces({MediaType.APPLICATION_JSON})
 public class InfoResource {
-	private static Logger logger = LoggerFactory.getLogger(InfoResource.class);
-	private MetricsDAO metricsDAO;
-	private Configuration config;
+	private static final Logger logger = LoggerFactory.getLogger(InfoResource.class);
+	private final MetricsDAO metricsDAO;
+	private final Configuration config;
+	private final Boolean dbMetricsEnabled;
 	private String fullVersion;
-	private Boolean metricsEnabled;
 
 	@Inject
 	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
 		this.config = config;
 		this.metricsDAO = metricsDAO;
-		this.metricsEnabled = Boolean.parseBoolean(config.getProperty("conductor.metrics.enabled", "true"));
+		this.dbMetricsEnabled = Boolean.parseBoolean(config.getProperty("conductor.dbmetrics.enabled", "false"));
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
@@ -160,89 +160,9 @@ public class InfoResource {
 	@ApiOperation(value = "Get the metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
-		if (!metricsEnabled) {
+		if (!dbMetricsEnabled) {
 			return Collections.emptyMap();
 		}
 		return new TreeMap<>(metricsDAO.getMetrics());
-	}
-
-	@GET
-	@Path("/metrics/admin")
-	@ApiOperation(value = "Get the admin metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> admin() {
-		return new TreeMap<>(metricsDAO.getAdminCounters());
-	}
-
-	@GET
-	@Path("/metrics/task/counters")
-	@ApiOperation(value = "Get the task counter metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> taskCounters() {
-		return new TreeMap<>(metricsDAO.getTaskCounters());
-	}
-
-	@GET
-	@Path("/metrics/task/refName/counters")
-	@ApiOperation(value = "Get the task counter metrics by RefName")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> taskRefNameCounters() {
-		return new TreeMap<>(metricsDAO.getTaskRefNameCounters());
-	}
-
-	@GET
-	@Path("/metrics/task/average")
-	@ApiOperation(value = "Get the task average metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> taskAverage() {
-		return new TreeMap<>(metricsDAO.getTaskAverage());
-	}
-
-	@GET
-	@Path("/metrics/event/received")
-	@ApiOperation(value = "Get the event received metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> eventReceived() {
-		return new TreeMap<>(metricsDAO.getEventReceived());
-	}
-
-	@GET
-	@Path("/metrics/event/published")
-	@ApiOperation(value = "Get the event published metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> eventPublished() {
-		return new TreeMap<>(metricsDAO.getEventPublished());
-	}
-
-	@GET
-	@Path("/metrics/event/exec")
-	@ApiOperation(value = "Get the event executions average metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> eventExec() {
-		return new TreeMap<>(metricsDAO.getEventExecAverage());
-	}
-
-	@GET
-	@Path("/metrics/event/wait")
-	@ApiOperation(value = "Get the event wait average metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> eventWait() {
-		return new TreeMap<>(metricsDAO.getEventWaitAverage());
-	}
-
-	@GET
-	@Path("/metrics/workflow/counters")
-	@ApiOperation(value = "Get the workflow counter metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> workflowCounters() {
-		return new TreeMap<>(metricsDAO.getWorkflowCounters());
-	}
-
-	@GET
-	@Path("/metrics/workflow/average")
-	@ApiOperation(value = "Get the workflow average metrics")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String, Object> workflowAverage() {
-		return new TreeMap<>(metricsDAO.getWorkflowAverage());
 	}
 }
