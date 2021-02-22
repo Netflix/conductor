@@ -86,7 +86,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getMetrics() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -99,44 +98,44 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 			List<Future<?>> futures = new LinkedList<>();
 
 			// today + overall
-//			for (boolean today : Arrays.asList(true, false)) {
-//
-//				// then per each short name
-//				for (String shortName : WORKFLOWS) {
-//					// Filter workflow definitions to have current short related only
-//					Set<String> filtered = fullNames.stream().filter(type -> type.startsWith(shortName)).collect(Collectors.toSet());
-//
-//					// Workflow counter per short name
-//					futures.add(pool.submit(() -> workflowCounters(metrics, today, shortName, filtered)));
-//
-//					// Workflow average per short name
-//					futures.add(pool.submit(() -> workflowAverage(metrics, today, shortName, filtered)));
-//				}
-//
+			for (boolean today : Arrays.asList(true, false)) {
+
+				// then per each short name
+				for (String shortName : WORKFLOWS) {
+					// Filter workflow definitions to have current short related only
+					Set<String> filtered = fullNames.stream().filter(type -> type.startsWith(shortName)).collect(Collectors.toSet());
+
+					// Workflow counter per short name
+					futures.add(pool.submit(() -> workflowCounters(metrics, today, shortName, filtered)));
+
+					// Workflow average per short name
+					futures.add(pool.submit(() -> workflowAverage(metrics, today, shortName, filtered)));
+				}
+
 //				// Task type/refName/status counter
 //				futures.add(pool.submit(() -> taskTypeRefNameCounters(metrics, today)));
 //
 //				// Task type/refName average
 //				futures.add(pool.submit(() -> taskTypeRefNameAverage(metrics, today)));
 //
-//				// Task type counter
-//				futures.add(pool.submit(() -> taskTypeCounters(metrics, today)));
-//
-//				// Event received
-//				futures.add(pool.submit(() -> eventReceived(metrics, today)));
-//
-//				// Event published
+				// Task type counter
+				futures.add(pool.submit(() -> taskTypeCounters(metrics, today)));
+
+				// Event received
+				futures.add(pool.submit(() -> eventReceived(metrics, today)));
+
+				// Event published
 //				futures.add(pool.submit(() -> eventPublished(metrics, today)));
-//
-//				// Event execution
-//				//futures.add(pool.submit(() -> eventExecAverage(metrics, today)));
-//
-//				// Event wait
+
+				// Event execution
+				//futures.add(pool.submit(() -> eventExecAverage(metrics, today)));
+
+				// Event wait
 //				futures.add(pool.submit(() -> eventWaitAverage(metrics, today)));
-//			}
-//
-//			// Get the average execution time for execute event workflow based on each action
-//			futures.add(pool.submit(() -> execWorkflowActionAverage(metrics)));
+			}
+
+			// Get the average execution time for execute event workflow based on each action
+			futures.add(pool.submit(() -> execWorkflowActionAverage(metrics)));
 
 			// Admin counters
 			futures.add(pool.submit(() -> adminCounters(metrics)));
@@ -152,7 +151,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getAdminCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 		adminCounters(metrics);
@@ -160,7 +158,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getEventReceived() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -185,7 +182,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getEventPublished() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -210,7 +206,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getEventExecAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -235,7 +230,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getEventWaitAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -260,7 +254,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getTaskCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -285,7 +278,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getTaskRefNameCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -310,7 +302,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getTaskAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -335,7 +326,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getWorkflowCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -370,7 +360,6 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	@Override
-	@Deprecated
 	public Map<String, Object> getWorkflowAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -459,6 +448,9 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	}
 
 	private void adminCounters(Map<String, AtomicLong> map) {
+		Set<EventHandler> handlers = getHandlers();
+		initMetric(map, String.format("%s.admin.active_handlers", PREFIX)).set(handlers.size());
+
 		String SQL = "select count(*) from queue_message where queue_name = ?";
 		long count = queryWithTransaction(SQL, q -> q.addParameter("_deciderqueue").executeScalar(Long.class));
 
@@ -738,52 +730,52 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 		});
 	}
 
-    private void taskTypeCounters(Map<String, AtomicLong> map, boolean today) {
-        withTransaction(tx -> {
-            ResultSetHandler<Object> handler = rs -> {
-                while (rs.next()) {
-                    String typeName = rs.getString("task_type").toLowerCase();
-                    String status = rs.getString("task_status").toLowerCase();
-                    long count = rs.getLong("count");
+	private void taskTypeCounters(Map<String, AtomicLong> map, boolean today) {
+		withTransaction(tx -> {
+			ResultSetHandler<Object> handler = rs -> {
+				while (rs.next()) {
+					String typeName = rs.getString("task_type").toLowerCase();
+					String status = rs.getString("task_status").toLowerCase();
+					long count = rs.getLong("count");
 
-                    // Init counters. Total per typeName + today/non-today
-                    initMetric(map, String.format("%s.task_%s", PREFIX, typeName));
-                    initMetric(map, String.format("%s.task_%s_today", PREFIX, typeName));
+					// Init counters. Total per typeName + today/non-today
+					initMetric(map, String.format("%s.task_%s", PREFIX, typeName));
+					initMetric(map, String.format("%s.task_%s_today", PREFIX, typeName));
 
-                    // Init counters. Per typeName/status + today/non-today
-                    for (String statusName : TASK_STATUSES) {
-                        initMetric(map, String.format("%s.task_%s_%s", PREFIX, typeName, statusName.toLowerCase()));
-                        initMetric(map, String.format("%s.task_%s_%s_today", PREFIX, typeName, statusName.toLowerCase()));
-                    }
+					// Init counters. Per typeName/status + today/non-today
+					for (String statusName : TASK_STATUSES) {
+						initMetric(map, String.format("%s.task_%s_%s", PREFIX, typeName, statusName.toLowerCase()));
+						initMetric(map, String.format("%s.task_%s_%s_today", PREFIX, typeName, statusName.toLowerCase()));
+					}
 
-                    // Parent typeName
-                    String metricName = String.format("%s.task_%s%s", PREFIX, typeName, toLabel(today));
-                    map.get(metricName).addAndGet(count);
+					// Parent typeName
+					String metricName = String.format("%s.task_%s%s", PREFIX, typeName, toLabel(today));
+					map.get(metricName).addAndGet(count);
 
-                    // typeName + status
-                    metricName = String.format("%s.task_%s_%s%s", PREFIX, typeName, status, toLabel(today));
-                    map.get(metricName).addAndGet(count);
-                }
-                return null;
-            };
+					// typeName + status
+					metricName = String.format("%s.task_%s_%s%s", PREFIX, typeName, status, toLabel(today));
+					map.get(metricName).addAndGet(count);
+				}
+				return null;
+			};
 
-            StringBuilder SQL = new StringBuilder("SELECT task_type, task_status, count(*) as count ");
-            SQL.append("FROM task WHERE task_type = ANY(?) AND task_status = ANY(?) ");
-            if (today) {
-                SQL.append("AND start_time >= ? ");
-                SQL.append("GROUP BY task_type, task_status");
+			StringBuilder SQL = new StringBuilder("SELECT task_type, task_status, count(*) as count ");
+			SQL.append("FROM task WHERE task_type = ANY(?) AND task_status = ANY(?) ");
+			if (today) {
+				SQL.append("AND start_time >= ? ");
+				SQL.append("GROUP BY task_type, task_status");
 
-                query(tx, SQL.toString(), q -> q.addParameter(TASK_TYPES).addParameter(TASK_STATUSES)
-                        .addTimestampParameter(getStartTime())
-                        .executeAndFetch(handler));
-            } else {
-                SQL.append("GROUP BY task_type, task_status");
+				query(tx, SQL.toString(), q -> q.addParameter(TASK_TYPES).addParameter(TASK_STATUSES)
+					.addTimestampParameter(getStartTime())
+					.executeAndFetch(handler));
+			} else {
+				SQL.append("GROUP BY task_type, task_status");
 
-                query(tx, SQL.toString(), q -> q.addParameter(TASK_TYPES).addParameter(TASK_STATUSES)
-                        .executeAndFetch(handler));
-            }
-        });
-    }
+				query(tx, SQL.toString(), q -> q.addParameter(TASK_TYPES).addParameter(TASK_STATUSES)
+					.executeAndFetch(handler));
+			}
+		});
+	}
 
 	private void workflowAverage(Map<String, AtomicLong> map, boolean today, String shortName, Set<String> filtered) {
 		withTransaction(tx -> {
@@ -825,8 +817,8 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 				return null;
 			};
 
-            StringBuilder SQL = new StringBuilder("SELECT input::json->>'action' as action_type, avg(extract('epoch' from end_time) - extract('epoch' from start_time)) as avg_time_taken ");
-            SQL.append("FROM workflow WHERE start_time IS NOT NULL AND end_time IS NOT NULL ");
+			StringBuilder SQL = new StringBuilder("SELECT input::json->>'action' as action_type, avg(extract('epoch' from end_time) - extract('epoch' from start_time)) as avg_time_taken ");
+			SQL.append("FROM workflow WHERE start_time IS NOT NULL AND end_time IS NOT NULL ");
 			SQL.append("AND workflow_type like 'deluxe.dependencygraph.execute.process%' AND workflow_status = 'COMPLETED' ");
 			SQL.append("AND start_time >= ? ");
 			SQL.append("group by input::json->>'action' ");
@@ -903,28 +895,28 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 	@Override
 	public List<String> getStuckChecksums(Long startTime, Long endTime) {
 		String SQL = "SELECT t2.output::jsonb->'response'->'body'->>'DispatchedJobID' AS jobId, " +
-				"'http://conductor-ui.service.owf-int/#/workflow/id/' || w.workflow_id AS workflow, " +
-				"t2.created_on " +
-				"FROM workflow w, task t2 " +
-				"WHERE w.workflow_id = t2.workflow_id " +
-				"AND w.workflow_status = 'RUNNING' " +
-				"AND t2.created_on BETWEEN ? AND ? " +
-				"AND t2.task_refname = 'getChecksum' " +
-				"AND t2.task_status = 'COMPLETED'";
+			"'http://conductor-ui.service.owf-int/#/workflow/id/' || w.workflow_id AS workflow, " +
+			"t2.created_on " +
+			"FROM workflow w, task t2 " +
+			"WHERE w.workflow_id = t2.workflow_id " +
+			"AND w.workflow_status = 'RUNNING' " +
+			"AND t2.created_on BETWEEN ? AND ? " +
+			"AND t2.task_refname = 'getChecksum' " +
+			"AND t2.task_status = 'COMPLETED'";
 
 		return queryWithTransaction(SQL, q -> q.addTimestampParameter(startTime)
-				.addTimestampParameter(endTime)
-				.executeAndFetch(resultSet -> {
-					List<String> result = new ArrayList<>();
-					while(resultSet.next()){
-						result.add("{" +
-								"'jobId':'" + resultSet.getString("jobId") + "'," +
-								"'workflow':'"  + resultSet.getString("workflow")  + "'," +
-								"'createdOn':'"  + resultSet.getString("created_on")  + "'" +
-								"}");
-					}
-					return result;
-				}));
+			.addTimestampParameter(endTime)
+			.executeAndFetch(resultSet -> {
+				List<String> result = new ArrayList<>();
+				while(resultSet.next()){
+					result.add("{" +
+						"'jobId':'" + resultSet.getString("jobId") + "'," +
+						"'workflow':'"  + resultSet.getString("workflow")  + "'," +
+						"'createdOn':'"  + resultSet.getString("created_on")  + "'" +
+						"}");
+				}
+				return result;
+			}));
 	}
 
 }
