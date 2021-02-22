@@ -10,8 +10,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class MetricService {
+	private static volatile MetricService instance = null;
 	private final String aspect = "service.metric";
-	private static MetricService instance = null;
 	private final StatsDClient statsd;
 
 	public static MetricService getInstance() {
