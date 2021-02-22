@@ -55,7 +55,7 @@ public class InfoResource {
 	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
 		this.config = config;
 		this.metricsDAO = metricsDAO;
-		this.metricsEnabled = Boolean.parseBoolean(config.getProperty("conductor.metrics.enabled", "true"));
+		this.metricsEnabled = Boolean.parseBoolean(config.getProperty("conductor.metrics.enabled", "false"));
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
