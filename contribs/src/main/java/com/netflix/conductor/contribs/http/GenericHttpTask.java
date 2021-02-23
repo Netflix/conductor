@@ -240,7 +240,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 			}
 
 		} catch (IOException jpe) {
-			logger.error("Extract body failed " + jpe.getMessage() + " for " + json, jpe);
+			logger.debug("Extract body failed " + jpe.getMessage() + " for " + json, jpe);
 			return json;
 		}
 	}

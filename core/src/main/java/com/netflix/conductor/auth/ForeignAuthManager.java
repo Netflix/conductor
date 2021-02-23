@@ -61,24 +61,25 @@ public class ForeignAuthManager {
 		try (CloseableHttpClient client = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).build()) {
 			HttpPost httpPost = new HttpPost(url);
 			httpPost.setEntity(new UrlEncodedFormEntity(params));
-			CloseableHttpResponse response = client.execute(httpPost);
 
-			HttpEntity httpEntity = response.getEntity();
-			if (response.getStatusLine().getStatusCode() == 200) {
-				return mapper.readValue(httpEntity.getContent(), AuthResponse.class);
-			} else {
-				String entity = EntityUtils.toString(httpEntity);
-				if (StringUtils.isEmpty(entity)) {
-					return new AuthResponse("no content", "server did not return body");
-				}
-				String reason = response.getStatusLine().getReasonPhrase();
-
-				// Workaround to handle response like this:
-				// Bad request: { ... json here ... }
-				if (entity.startsWith(reason)) {
-					return mapper.readValue(entity.substring(entity.indexOf(":") + 1), AuthResponse.class);
+			try (CloseableHttpResponse response = client.execute(httpPost)) {
+				HttpEntity httpEntity = response.getEntity();
+				if (response.getStatusLine().getStatusCode() == 200) {
+					return mapper.readValue(httpEntity.getContent(), AuthResponse.class);
 				} else {
-					return mapper.readValue(entity, AuthResponse.class);
+					String entity = EntityUtils.toString(httpEntity);
+					if (StringUtils.isEmpty(entity)) {
+						return new AuthResponse("no content", "server did not return body");
+					}
+					String reason = response.getStatusLine().getReasonPhrase();
+
+					// Workaround to handle response like this:
+					// Bad request: { ... json here ... }
+					if (entity.startsWith(reason)) {
+						return mapper.readValue(entity.substring(entity.indexOf(":") + 1), AuthResponse.class);
+					} else {
+						return mapper.readValue(entity, AuthResponse.class);
+					}
 				}
 			}
 		}
