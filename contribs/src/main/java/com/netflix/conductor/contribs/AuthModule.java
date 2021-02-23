@@ -20,6 +20,7 @@ package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
 import com.netflix.conductor.auth.AuthManager;
+import com.netflix.conductor.auth.ForeignAuthManager;
 import com.netflix.conductor.contribs.auth.AuthTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +30,11 @@ import org.slf4j.LoggerFactory;
  * @author Oleksiy Lysak
  */
 public class AuthModule extends AbstractModule {
-	private static Logger logger = LoggerFactory.getLogger(AuthModule.class);
+	private static final Logger logger = LoggerFactory.getLogger(AuthModule.class);
 
 	@Override
 	protected void configure() {
+		bind(ForeignAuthManager.class).asEagerSingleton();
 		bind(AuthManager.class).asEagerSingleton();
 		bind(AuthTask.class).asEagerSingleton();
 		logger.debug("Auth Module configured ...");

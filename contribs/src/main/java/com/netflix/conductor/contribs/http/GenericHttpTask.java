@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.auth.AuthManager;
 import com.netflix.conductor.auth.AuthResponse;
+import com.netflix.conductor.auth.ForeignAuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.CommonParams;
@@ -49,23 +50,25 @@ class GenericHttpTask extends WorkflowSystemTask {
 	static final String RESET_START_TIME_PARAMETER_NAME = "reset_startTime";
 	protected Configuration config;
 	protected ObjectMapper om;
-	private AuthManager auth;
-	private RestClientManager rcm;
-	private boolean traceIdEnabled;
-	private boolean authContextEnabled;
+	private final AuthManager authManager;
+	private final RestClientManager rcm;
+	private final boolean traceIdEnabled;
+	private final boolean authContextEnabled;
+	private final ForeignAuthManager foreignAuthManager;
 
-	private TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
+	private final TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
 	};
 
-	private TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>() {
+	private final TypeReference<List<Object>> listOfObj = new TypeReference<List<Object>>() {
 	};
 
-	GenericHttpTask(String name, Configuration config, RestClientManager rcm, ObjectMapper om, AuthManager auth) {
+	GenericHttpTask(String name, Configuration config, RestClientManager rcm, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager) {
 		super(name);
 		this.config = config;
 		this.rcm = rcm;
 		this.om = om;
-		this.auth = auth;
+		this.authManager = authManager;
+		this.foreignAuthManager = foreignAuthManager;
 		this.traceIdEnabled = Boolean.parseBoolean(config.getProperty("workflow.traceid.enabled", "false"));
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 	}
@@ -250,14 +253,27 @@ class GenericHttpTask extends WorkflowSystemTask {
 	}
 
 	private void setAuthToken(Input input, Workflow workflow) throws Exception {
-		AuthResponse response = auth.authorize(workflow);
+		Map<String, String> authorizeHeaders = input.getAuthorizeHeaders();
+		String authorizeParty = input.getAuthorizeParty();
+
+		AuthResponse response = null;
+		if (StringUtils.isNotEmpty(authorizeParty)) {
+			response = foreignAuthManager.authorize(authorizeParty, authorizeHeaders);
+		} else {
+			response = authManager.authorize(workflow);
+		}
+
 		if (!response.hasAccessToken()) {
 			// Just log first time
 			String error = String.format(GET_ACCESS_TOKEN_FAILED, response.getError(), response.getErrorDescription());
 			logger.error(error);
 
 			// Repeat authorize
-			response = auth.authorize(workflow);
+			if (StringUtils.isNotEmpty(authorizeParty)) {
+				response = foreignAuthManager.authorize(authorizeParty, authorizeHeaders);
+			} else {
+				response = authManager.authorize(workflow);
+			}
 
 			// This time need to throw exception
 			if (!response.hasAccessToken()) {

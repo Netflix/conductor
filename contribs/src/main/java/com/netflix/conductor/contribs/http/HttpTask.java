@@ -20,6 +20,7 @@ package com.netflix.conductor.contribs.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.auth.AuthManager;
+import com.netflix.conductor.auth.ForeignAuthManager;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
@@ -52,11 +53,11 @@ public class HttpTask extends GenericHttpTask {
 			+ "' key wiht HttpTask.Input as value. See documentation for HttpTask for required input parameters";
 	public static final String NAME = "HTTP";
 	private static final String CONDITIONS_PARAMETER = "conditions";
-	private int unackTimeout;
+	private final int unackTimeout;
 
 	@Inject
-	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager auth) {
-		super(NAME, config, rcm, om, auth);
+	public HttpTask(RestClientManager rcm, Configuration config, ObjectMapper om, AuthManager authManager, ForeignAuthManager foreignAuthManager) {
+		super(NAME, config, rcm, om, authManager, foreignAuthManager);
 		unackTimeout = config.getIntProperty("workflow.system.task.http.unack.timeout", 60);
 		logger.debug("HttpTask initialized...");
 	}

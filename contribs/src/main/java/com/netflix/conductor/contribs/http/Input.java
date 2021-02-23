@@ -37,6 +37,10 @@ public class Input {
 
 	private boolean authorize;
 
+	private String authorizeParty;
+
+	private Map<String, String> authorizeHeaders;
+
 	private boolean followRedirects = true;
 
 	private boolean traceId;
@@ -257,5 +261,33 @@ public class Input {
 	 */
 	public void setTraceId(boolean traceId) {
 		this.traceId = traceId;
+	}
+
+	/**
+	 * @return External authorize party
+	 */
+	public String getAuthorizeParty() {
+		return authorizeParty;
+	}
+
+	/**
+	 * @param authorizeParty External authorize party
+	 */
+	public void setAuthorizeParty(String authorizeParty) {
+		this.authorizeParty = authorizeParty;
+	}
+
+	/**
+	 * @return Additional authorize fields
+	 */
+	public Map<String, String> getAuthorizeHeaders() {
+		return authorizeHeaders;
+	}
+
+	/**
+	 * @param authorizeHeaders Additional authorize fields
+	 */
+	public void setAuthorizeHeaders(Map<String, String> authorizeHeaders) {
+		this.authorizeHeaders = authorizeHeaders;
 	}
 }
