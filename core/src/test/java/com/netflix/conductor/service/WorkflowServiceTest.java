@@ -469,10 +469,10 @@ public class WorkflowServiceTest {
         }};
         SearchResult<WorkflowSummary> searchResult = new SearchResult<WorkflowSummary>(100, listOfWorkflowSummary);
 
-        when(mockExecutionService.search(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
+        when(mockExecutionService.search("*", "*", 0, 100, Collections.singletonList("asc"))).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflows(0,100,"asc", "*", "*"));
 
-        when(mockExecutionService.search(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
+        when(mockExecutionService.search("*", "*", 0, 100, Collections.singletonList("asc"))).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflows(0,100,Collections.singletonList("asc"), "*", "*"));
     }
 
@@ -484,10 +484,10 @@ public class WorkflowServiceTest {
         List<Workflow> listOfWorkflow = Collections.singletonList(workflow);
         SearchResult<Workflow> searchResult = new SearchResult<>(1, listOfWorkflow);
 
-        when(mockExecutionService.searchV2(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
+        when(mockExecutionService.searchV2("*", "*", 0, 100, Collections.singletonList("asc"))).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflowsV2(0,100,"asc", "*", "*"));
 
-        when(mockExecutionService.searchV2(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
+        when(mockExecutionService.searchV2("*", "*", 0, 100, Collections.singletonList("asc"))).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflowsV2(0,100,Collections.singletonList("asc"), "*", "*"));
     }
 
@@ -526,10 +526,10 @@ public class WorkflowServiceTest {
         }};
         SearchResult<WorkflowSummary> searchResult = new SearchResult<>(100, listOfWorkflowSummary);
 
-        when(mockExecutionService.searchWorkflowByTasks(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
+        when(mockExecutionService.searchWorkflowByTasks("*", "*", 0, 100, Collections.singletonList("asc"))).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflowsByTasks(0,100,"asc", "*", "*"));
 
-        when(mockExecutionService.searchWorkflowByTasks(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
+        when(mockExecutionService.searchWorkflowByTasks("*", "*", 0, 100, Collections.singletonList("asc"))).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflowsByTasks(0,100,Collections.singletonList("asc"), "*", "*"));
 
     }
@@ -542,10 +542,10 @@ public class WorkflowServiceTest {
         List<Workflow> listOfWorkflow = Collections.singletonList(workflow);
         SearchResult<Workflow> searchResult = new SearchResult<>(1, listOfWorkflow);
 
-        when(mockExecutionService.searchWorkflowByTasksV2(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
+        when(mockExecutionService.searchWorkflowByTasksV2("*", "*", 0, 100, Collections.singletonList("asc"))).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflowsByTasksV2(0,100,"asc", "*", "*"));
 
-        when(mockExecutionService.searchWorkflowByTasksV2(anyString(), anyString(), anyInt(), anyInt(), anyList())).thenReturn(searchResult);
+        when(mockExecutionService.searchWorkflowByTasksV2("*", "*", 0, 100, Collections.singletonList("asc"))).thenReturn(searchResult);
         assertEquals(searchResult, workflowService.searchWorkflowsByTasksV2(0,100,Collections.singletonList("asc"), "*", "*"));
     }
 
