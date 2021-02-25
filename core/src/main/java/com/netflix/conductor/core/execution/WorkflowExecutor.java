@@ -1884,7 +1884,7 @@ public class WorkflowExecutor {
 			if (task.getEndTime() > 0) {
 				task.setEndTime(System.currentTimeMillis());
 			}
-			edao.updateTask(task);
+			edao.resetStartTime(task, false);
 		}
 	}
 
