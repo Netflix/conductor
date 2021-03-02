@@ -22,17 +22,12 @@ import com.netflix.conductor.service.WorkflowBulkService;
 import com.netflix.conductor.service.common.BulkResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
@@ -48,6 +43,7 @@ import java.util.List;
 public class WorkflowBulkResource {
 
     private WorkflowBulkService workflowBulkService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowBulkService.class);
 
     @Inject
     public WorkflowBulkResource(WorkflowBulkService workflowBulkService) {
@@ -115,5 +111,20 @@ public class WorkflowBulkResource {
     @ApiOperation("Terminate workflows execution")
     public BulkResponse terminate(List<String> workflowIds, @QueryParam("reason") String reason) {
         return workflowBulkService.terminate(workflowIds, reason);
+    }
+
+    /**
+     * Remove workflows for a given correlation id.
+     * @param correlationId - correlationId of the workflows
+     * @param archiveWorkflow - flag to specify whether to archive a workflow, by default true
+     * @return bulk response object containing a list of succeeded workflows and a list of failed ones with errors
+     */
+    @DELETE
+    @Path("/correlationId/{correlationId}")
+    @ApiOperation("Remove workflows for a given correlation id")
+    @Consumes(MediaType.WILDCARD)
+    public BulkResponse removeCorrelatedWorkflows(@PathParam("correlationId") String correlationId,
+                               @QueryParam("archiveWorkflow") @DefaultValue("true") boolean archiveWorkflow) {
+        return workflowBulkService.removeCorrelatedWorkflows(correlationId, archiveWorkflow);
     }
 }
