@@ -28,6 +28,7 @@ import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -132,6 +133,7 @@ public class BatchSweeper {
 
     private List<TaskGroup> poll(String queueName, String workerId, int count, int timeout, int unackTimeout, int rateLimit) {
         List<String> taskIds = queues.pop(queueName, count, timeout);
+        MetricService.getInstance().taskPoll(queueName, workerId);
 
         Map<String, List<Task>> groups = taskIds.parallelStream()
             .map(taskId -> {

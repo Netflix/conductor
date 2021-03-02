@@ -1463,7 +1463,7 @@ public class WorkflowExecutor {
 			task.setStarted(true);
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());
-				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
+				MetricService.getInstance().taskWait(task.getTaskDefName(), task.getQueueWaitTime());
 			}
 			task.setPollCount(task.getPollCount() + 1);
 			edao.updateTask(task);

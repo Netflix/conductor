@@ -30,26 +30,6 @@ public interface MetricsDAO {
 
 	Map<String, Object> getMetrics();
 
-	Map<String, Object> getAdminCounters();
-
-	Map<String, Object> getEventReceived();
-
-	Map<String, Object> getEventPublished();
-
-	Map<String, Object> getEventExecAverage();
-
-	Map<String, Object> getEventWaitAverage();
-
-	Map<String, Object> getTaskCounters();
-
-	Map<String, Object> getTaskRefNameCounters();
-
-	Map<String, Object> getTaskAverage();
-
-	Map<String, Object> getWorkflowCounters();
-
-	Map<String, Object> getWorkflowAverage();
-
 	default List<String> getStuckChecksums(Long startTime, Long endTime) {return new ArrayList<>();}
 
 }

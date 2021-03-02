@@ -68,6 +68,14 @@ public class MetricService {
 		statsd.incrementCounter(aspect, toArray(tags));
 	}
 
+	public void taskWait(String taskType, Long waitTime) {
+		Set<String> tags = new HashSet<>();
+		tags.add("metric:deluxe.conductor.task.queue.wait");
+		tags.add("task_type:" + taskType);
+
+		statsd.recordExecutionTime(aspect, waitTime, toArray(tags));
+	}
+
 	public void eventReceived(String subject) {
 		Set<String> tags = new HashSet<>();
 		tags.add("metric:deluxe.conductor.event.received");
@@ -225,5 +233,21 @@ public class MetricService {
 		statsd.recordExecutionTime(aspect, execTime, toArray(tags));
 	}
 
+	public void queueGauge(String queue, Long count) {
+		Set<String> tags = new HashSet<>();
+		tags.add("metric:deluxe.conductor.queue.count");
+		tags.add("queue:" + queue);
 
+		statsd.incrementCounter(aspect, toArray(tags));
+		statsd.recordGaugeValue(aspect, count, toArray(tags));
+	}
+
+	public void workflowGauge(String workflow, Long count) {
+		Set<String> tags = new HashSet<>();
+		tags.add("metric:deluxe.conductor.workflow.running.count");
+		tags.add("workflow:" + workflow);
+
+		statsd.incrementCounter(aspect, toArray(tags));
+		statsd.recordGaugeValue(aspect, count, toArray(tags));
+	}
 }

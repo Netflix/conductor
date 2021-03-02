@@ -193,7 +193,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getAdminCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -202,7 +202,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getEventReceived() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -226,7 +226,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getEventPublished() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -250,7 +250,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getEventExecAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -274,7 +274,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getEventWaitAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -298,7 +298,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getTaskRefNameCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -321,7 +321,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 
 		return new HashMap<>(metrics);	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getTaskCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -345,7 +345,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getTaskAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -369,7 +369,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getWorkflowCounters() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
@@ -403,7 +403,7 @@ public class Elasticsearch6RestMetricsDAO extends Elasticsearch6RestAbstractDAO 
 		return new HashMap<>(metrics);
 	}
 
-	@Override
+	@Deprecated
 	public Map<String, Object> getWorkflowAverage() {
 		Map<String, AtomicLong> metrics = new ConcurrentHashMap<>();
 
