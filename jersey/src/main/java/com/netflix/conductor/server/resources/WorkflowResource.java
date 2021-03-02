@@ -198,13 +198,14 @@ public class WorkflowResource {
 		@ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
 	public Response startWorkflow(@Context HttpHeaders headers,
-								  @PathParam("name") String name, @QueryParam("version") Integer version,
+								  @PathParam("name") String name, @QueryParam("version") Integer version, @QueryParam("jobPriority") Integer jobPriority,
 								  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
 
 		StartWorkflowRequest request = new StartWorkflowRequest();
 		request.setName(name);
 		request.setVersion(version);
 		request.setCorrelationId(correlationId);
+		request.setJobPriority(jobPriority);
 		request.setInput(input);
 
 		return startWorkflow(request, headers);
