@@ -176,15 +176,6 @@ public class Event extends WorkflowSystemTask {
 		return jmsxGroupId;
 	}
 
-	private int getJobPriority(Workflow workflow){
-		String priority = Objects.toString(workflow.getInput().get("jobPriority"), null);
-
-		if ( StringUtils.isNotEmpty(priority)){
-			return Integer.parseInt(priority);
-		}
-		return 5;
-	}
-
 	private String getJobId(String correlationId) {
 		Correlator correlator = new Correlator(logger, correlationId);
 
