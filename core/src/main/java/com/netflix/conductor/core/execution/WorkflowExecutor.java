@@ -170,7 +170,7 @@ public class WorkflowExecutor {
 								String correlationId, String parentWorkflowId, String parentWorkflowTaskId,
 								String event, Map<String, String> taskToDomain, List<String> workflowIds,
 								Map<String, Object> authorization, String contextToken, String contextUser,
-								String traceId, boolean deciderInSweeper,Integer jobPriority) throws Exception {
+								String traceId, boolean deciderInSweeper, Integer jobPriority) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();

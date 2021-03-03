@@ -75,7 +75,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 				workflow.getWorkflowId(), task.getTaskId(), null,
 				workflow.getTaskToDomain(), workflow.getWorkflowIds(),
 				workflow.getAuthorization(), workflow.getContextToken(),
-				workflow.getContextUser(), workflow.getTraceId(), async, workflow.getJobPriority());
+				workflow.getContextUser(), workflow.getTraceId(), async,
+				workflow.getJobPriority());
 
 			task.getOutputData().put("subWorkflowId", subWorkflowId);
 			task.getInputData().put("subWorkflowId", subWorkflowId);
@@ -334,7 +335,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 				workflow.getWorkflowId(), task.getTaskId(), null,
 				workflow.getTaskToDomain(), workflow.getWorkflowIds(),
 				workflow.getAuthorization(), workflow.getContextToken(),
-				workflow.getContextUser(), workflow.getTraceId(), true, workflow.getJobPriority());
+				workflow.getContextUser(), workflow.getTraceId(), true,
+				workflow.getJobPriority());
 
 			task.getOutputData().put("rerunWorkflowId", rerunWorkflowId);
 
