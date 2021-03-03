@@ -137,21 +137,12 @@ public class WorkflowExecutor {
 		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null, null, null, false,null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean asyncStart) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser, traceId, asyncStart,null);
-	}
-
 	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean asyncStart, Integer jobPriority) throws Exception {
 		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser, traceId, asyncStart, jobPriority);
 	}
 
-
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
 		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null, null, null, false,null);
-	}
-
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, String traceId) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null, traceId, false,null);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, String traceId, Integer jobPriority) throws Exception {
