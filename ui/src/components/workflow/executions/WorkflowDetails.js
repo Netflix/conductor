@@ -98,12 +98,11 @@ class WorkflowDetails extends Component {
       return (<OverlayTrigger trigger="click" rootClose placement="left" overlay={
 
         <Popover id={row.taskId} key={row.taskId} title="Task Details" style={{ width: '800px'}}>
-          <Panel header={<span><span>Task Input</span> <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#input"></i></span>}>
-
-            <span className="small"><pre id="input">{JSON.stringify(row.inputData, null, 2)}</pre></span>
+          <Panel header={<span><span>Task Input</span> <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#input"/></span>}>
+            <span className="small"><pre style={{width: '100%'}} id="input">{JSON.stringify(row.inputData, null, 2)}</pre></span>
           </Panel>
-          <Panel header={<span><span>Task Output</span> <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#output"></i></span>}>
-            <span className="small"><pre id="output">{JSON.stringify(row.outputData, null, 2)}</pre></span>
+          <Panel header={<span><span>Task Output</span> <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#output"/></span>}>
+            <span className="small"><pre style={{width: '100%'}} id="output">{JSON.stringify(row.outputData, null, 2)}</pre></span>
           </Panel>
           <Panel header="Task Failure Reason (if any)">
             <span className="small">{JSON.stringify(row.reasonForIncompletion, null, 2)}</span>
@@ -171,7 +170,7 @@ class WorkflowDetails extends Component {
             <td>{wf.correlationId}</td>
             <td>{wf.contextUser}</td>
           </tr>
-          <tr style={{display:showFailure()}}><td style={{color:'#ff0000'}} colSpan={5}>{getFailureReason()}</td></tr>
+          <tr style={{display:showFailure()}}><td style={{color:'#ff0000'}} colSpan={6}>{getFailureReason()}</td></tr>
         </thead>
       </Table>
 
@@ -201,15 +200,33 @@ class WorkflowDetails extends Component {
           </Tab>
           <Tab eventKey={3} title="Input/Output">
           <div>
-            <strong>Workflow Input <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#wfinput"></i></strong>
-            <pre style={{height:'200px'}} id="wfinput">{JSON.stringify(wf.input, null, 3)}</pre>
-            <strong>Workflow Output <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#wfoutput"></i></strong>
-            <pre style={{height:'200px'}} id="wfoutput">{JSON.stringify(wf.output==null?{}:wf.output, null, 3)}</pre>
-            {wf.status == 'FAILED' || wf.status == 'RESET' || wf.status == 'FAILED_NO_RETRY'?<div><strong>Workflow Failure Reason (if any)</strong><pre>{wf.reasonForIncompletion?JSON.stringify(wf.reasonForIncompletion, null, 3):''}</pre></div>:''}
+            <Tabs defaultActiveKey={311}>
+              <Tab eventKey={311} title="Workflow Input">
+                <div>
+                  <strong>Copy to clipboard <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#wfinput"/></strong>
+                  <pre style={{height: '100%', width: '100%'}} id="wfinput">{JSON.stringify(wf.input, null, 3)}</pre>
+                </div>
+              </Tab>
+              <Tab eventKey={312} title="Workflow Output">
+                <div>
+                  <strong>Copy to clipboard <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#wfoutput"/></strong>
+                  <pre style={{height: '100%', width: '100%'}} id="wfoutput">{JSON.stringify(wf.output == null ? {} : wf.output, null, 3)}</pre>
+                </div>
+              </Tab>
+              {wf.status === 'FAILED' || wf.status === 'RESET' || wf.status === 'FAILED_NO_RETRY' ?
+                  <Tab eventKey={313} title="Failure Reason">
+                    <div>
+                      <strong>Copy to clipboard <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#wfreason"/></strong>
+                      <pre style={{height: '100%', width: '100%', whiteSpace:'normal'}} id="wfreason">
+                        {wf.reasonForIncompletion ? wf.reasonForIncompletion : ''}
+                      </pre>
+                    </div>
+                  </Tab> : ''}
+            </Tabs>
           </div>
           </Tab>
           <Tab eventKey={4} title="JSON">
-            <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#fulljson"></i>
+            <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#fulljson"/>
             <pre style={{height:'80%'}} id="fulljson">{JSON.stringify(wf, null, 3)}</pre>
           </Tab>
 
