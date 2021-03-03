@@ -154,6 +154,10 @@ public class WorkflowExecutor {
 		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null, traceId, false,null);
 	}
 
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, String traceId, Integer jobPriority) throws Exception {
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null, traceId, false, jobPriority);
+	}
+
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean deciderInSweeper) throws Exception {
 		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, authorization, contextToken, contextUser, traceId, deciderInSweeper,null);
 	}
@@ -785,7 +789,7 @@ public class WorkflowExecutor {
 				WorkflowDef latestCancelWorkflow = metadata.getLatest(cancelWorkflow);
 				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input,
 					workflow.getCorrelationId(), workflow.getWorkflowId(), null, null, null,
-					workflow.getWorkflowIds(), workflow.getTraceId());
+					workflow.getWorkflowIds(), workflow.getTraceId(), workflow.getJobPriority());
 
 				workflow.getOutput().put("conductor.cancel_workflow", cancelWFId);
 
@@ -961,7 +965,7 @@ public class WorkflowExecutor {
 				try {
 					startWorkflow(workflowName, workflowVersion, input, workflow.getCorrelationId(),
 						workflow.getWorkflowId(), null, null, null,
-						workflow.getWorkflowIds(), workflow.getTraceId());
+						workflow.getWorkflowIds(), workflow.getTraceId(), workflow.getJobPriority());
 				} catch (Exception e) {
 					logger.info("Error workflow " + workflowName + " failed to start. reason: " + e.getMessage(), e);
 					Monitors.recordWorkflowStartError(workflowName);
@@ -1008,7 +1012,7 @@ public class WorkflowExecutor {
 				WorkflowDef latestFailureWorkflow = metadata.getLatest(failureWorkflow);
 				String failureWFId = startWorkflow(failureWorkflow, latestFailureWorkflow.getVersion(), input,
 					workflow.getCorrelationId(), workflow.getWorkflowId(), null, null,null,
-					workflow.getWorkflowIds(), workflow.getTraceId());
+					workflow.getWorkflowIds(), workflow.getTraceId(), workflow.getJobPriority());
 				workflow.getOutput().put("conductor.failure_workflow", failureWFId);
 
 			} catch (Exception e) {
