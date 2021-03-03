@@ -106,7 +106,7 @@ public class WorkflowSweeper {
                     if (logger.isDebugEnabled()) {
                         logger.debug("Running sweeper for workflow {}", workflowId);
                     }
-                    queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0);
+                    queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0, 0);
                     Pair<Boolean, Integer> result = executor.decide(workflowId);
                     if (!result.getLeft()) {
                         if (logger.isDebugEnabled()) {

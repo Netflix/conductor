@@ -209,10 +209,10 @@ public class AdminResource {
             if (!primarRole.endsWith("admin")) {
                 throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
             }
-            boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
+            boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency(), 0);
             return pushed + "." + workflowId;
         } else {
-            boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
+            boolean pushed = queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency(), 0);
             return pushed + "." + workflowId;
         }
     }

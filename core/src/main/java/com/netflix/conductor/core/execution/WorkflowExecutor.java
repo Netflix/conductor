@@ -281,7 +281,7 @@ public class WorkflowExecutor {
 
 			// Who calls decider ? Sweeper or current thread?
 			if (deciderInSweeper) {
-				wakeUpSweeper(workflowId);
+				wakeUpSweeper(workflowId, wf.getJobPriority());
 			} else {
 				decide(workflowId);
 			}
@@ -431,7 +431,7 @@ public class WorkflowExecutor {
 						theTask.setReasonForIncompletion(null);
 						edao.updateTask(theTask);
 
-						addTaskToQueue(theTask);
+						addTaskToQueue(theTask, workflow.getJobPriority());
 					} else {
 						theTask.setScheduledTime(System.currentTimeMillis());
 						theTask.setStartTime(System.currentTimeMillis());
@@ -665,7 +665,7 @@ public class WorkflowExecutor {
 		// If the following task, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			wakeUpSweeper(workflow.getParentWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 		MetricService.getInstance().workflowComplete(workflow.getWorkflowType(), workflow.getStartTime());
 
@@ -1130,7 +1130,7 @@ public class WorkflowExecutor {
 				// put it back in queue based in callbackAfterSeconds
 				long callBack = result.getCallbackAfterSeconds();
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
-				queue.push(QueueUtils.getQueueName(task), task.getTaskId(), callBack); // Milliseconds
+				queue.push(QueueUtils.getQueueName(task), task.getTaskId(), callBack, wf.getJobPriority()); // Milliseconds
 				break;
 			default:
 				break;
@@ -1143,7 +1143,7 @@ public class WorkflowExecutor {
 
 		// Who calls decider ? Sweeper or current thread?
 		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
+			wakeUpSweeper(workflowId, wf.getJobPriority());
 		} else {
 			decide(workflowId);
 		}
@@ -1162,7 +1162,7 @@ public class WorkflowExecutor {
 		}
 	}
 
-	private void wakeUpSweeper(String workflowId) {
+	private void wakeUpSweeper(String workflowId, int priority) {
 		boolean active = queue.exists(WorkflowExecutor.sweeperQueue, workflowId);
 		if (active) {
 			logger.debug("wakeUpSweeper. Sweeper in progress for " + workflowId);
@@ -1182,7 +1182,7 @@ public class WorkflowExecutor {
 		}
 
 		// Otherwise wake it up by unacking message via queue
-		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
+		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId, priority);
 		logger.debug("wakeUpSweeper " + result + " for " + workflowId);
 	}
 
@@ -1269,7 +1269,7 @@ public class WorkflowExecutor {
 			if(!outcome.tasksToBeUpdated.isEmpty() || !outcome.tasksToBeScheduled.isEmpty()) {
 				edao.updateTasks(tasksToBeUpdated);
 				edao.updateWorkflow(workflow);
-				queue.push(deciderQueue, workflow.getWorkflowId(), sweepFrequency);
+				queue.push(deciderQueue, workflow.getWorkflowId(), sweepFrequency, workflow.getJobPriority());
 			}
 
 			if(stateChanged) {
@@ -1389,17 +1389,17 @@ public class WorkflowExecutor {
 		return edao.getTask(workflowId, taskRefName);
 	}
 
-	public void addTaskToQueue(Task task) throws Exception {
+	public void addTaskToQueue(Task task, int priority) throws Exception {
 		// put in queue
 		queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
-		pushTaskToQueue(task);
+		pushTaskToQueue(task, priority);
 	}
 
-	public void pushTaskToQueue(Task task) throws Exception {
+	public void pushTaskToQueue(Task task, int priority) throws Exception {
 		if (task.getCallbackAfterSeconds() > 0) {
-			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), task.getCallbackAfterSeconds());
+			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), task.getCallbackAfterSeconds(), priority);
 		} else {
-			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), 0);
+			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), 0, priority);
 		}
 	}
 
@@ -1467,7 +1467,7 @@ public class WorkflowExecutor {
 			boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
 			if (!exists) {
 				// If not exists then need place back
-				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
+				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency(), workflow.getJobPriority());
 			}
 
 			logger.debug("Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
@@ -1611,7 +1611,7 @@ public class WorkflowExecutor {
 
 			// This prevents another containers executing the same action
 			// true means this session added the record to lock queue and can start the task
-			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600); // 10 minutes
+			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600, workflow.getJobPriority()); // 10 minutes
 
 			// This session couldn't lock the task (cluster pooling)
 			if (!locked) {
@@ -1629,7 +1629,7 @@ public class WorkflowExecutor {
 						logger.debug("queueing stuck task " + task +
 							".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
 							",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
-						pushTaskToQueue(task);
+						pushTaskToQueue(task, workflow.getJobPriority());
 					}
 				} else {
 					logger.debug("starting stuck task " + task +
@@ -1657,7 +1657,7 @@ public class WorkflowExecutor {
 				toBeQueued.add(task);
 			}
 		}
-		addTaskToQueue(toBeQueued);
+		addTaskToQueue(toBeQueued, workflow.getJobPriority());
 		return startedSystemTasks;
 	}
 
@@ -1674,9 +1674,9 @@ public class WorkflowExecutor {
 		}
 	}
 
-	private void addTaskToQueue(final List<Task> tasks) throws Exception {
+	private void addTaskToQueue(final List<Task> tasks, int priority) throws Exception {
 		for (Task t : tasks) {
-			pushTaskToQueue(t);
+			pushTaskToQueue(t, priority);
 		}
 	}
 
