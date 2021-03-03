@@ -75,7 +75,7 @@ public class Event extends WorkflowSystemTask {
 		String payloadJson = om.writeValueAsString(payload);
 		Message message = new Message(task.getTaskId(), payloadJson, task.getTaskId());
 		message.setTraceId(workflow.getTraceId());
-		message.setPriority(getJobPriority(workflow));
+		message.setPriority(workflow.getJobPriority());
 		if (useGroupId) {
 			message.setHeaders(new HashMap<String, String>(){{
 				put("JMSXGroupID", getJMSXGroupId(workflow));
