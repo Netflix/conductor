@@ -251,10 +251,10 @@ class Grapher extends Component {
                 <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}><tbody>
                   <tr><th>Task Ref. Name</th><td colSpan="3" style={{colSpan:3}}>{this.state.selectedTask.referenceTaskName}</td></tr>
                   <tr><th>Poll Count</th><td>{this.state.selectedTask.pollCount}</td><th>Callback After</th><td>{this.state.selectedTask.callbackAfterSeconds?this.state.selectedTask.callbackAfterSeconds:0} (second)</td></tr>
-                  <tr><th colSpan="4">Input <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#t_input"></i></th></tr>
-                  <tr><td colSpan="4"><pre id="t_input">{JSON.stringify(this.state.selectedTask.inputData, null, 3)}</pre></td></tr>
-                  <tr><th colSpan="4">Output <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#t_output"></i></th></tr>
-                  <tr><td colSpan="4"><pre id="t_output">{JSON.stringify(this.state.selectedTask.outputData, null, 3)}</pre></td></tr>
+                  <tr><th colSpan="4">Input <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#t_input"/></th></tr>
+                  <tr><td colSpan="4"><pre style={{width: '100%'}} id="t_input">{JSON.stringify(this.state.selectedTask.inputData, null, 3)}</pre></td></tr>
+                  <tr><th colSpan="4">Output <i title="copy to clipboard" className="btn fa fa-clipboard" data-clipboard-target="#t_output"/></th></tr>
+                  <tr><td colSpan="4"><pre style={{width: '100%'}} id="t_output">{JSON.stringify(this.state.selectedTask.outputData, null, 3)}</pre></td></tr>
                 </tbody></Table>
               </Tab>
               <Tab eventKey={2} title="JSON"><br/>
