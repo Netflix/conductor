@@ -108,12 +108,12 @@ task codeCoverageReport(type: JacocoReport, group: "Coverage reports") {
     }
     afterEvaluate {
         // Exclude generated files from top-level coverage report
-        getClassDirectories().from( files(
+        classDirectories.setFrom(files(
                 classDirectories.files.collect {
                     fileTree(
                             dir: it,
                             // Exclude es modules from code coverage reports
-                            exclude: 'com/netflix/conductor/elasticsearch'
+                            exclude: 'com/netflix/conductor/elasticsearch/**'
                     )
                 }
         ))
