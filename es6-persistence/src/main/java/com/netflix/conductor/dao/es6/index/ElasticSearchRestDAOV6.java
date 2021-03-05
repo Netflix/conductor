@@ -307,12 +307,13 @@ public class ElasticSearchRestDAOV6 extends ElasticSearchBaseDAO implements Inde
         } catch (IOException e) {
             logger.error("Failed to add {} mapping", WORKFLOW_DOC_TYPE);
         }
-
+    /*
         try {
-            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::groomWorkflowsAndTasks, 0, 1, TimeUnit.DAYS);
+            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::groomWorkflowsAndTasks, 0, 1, TimeUnit.DAYS);
         } catch (Exception e) {
             logger.error("Error during grooming of workflows and tasks in index", e);
         }
+    */
     }
 
     private void createTaskIndex() {

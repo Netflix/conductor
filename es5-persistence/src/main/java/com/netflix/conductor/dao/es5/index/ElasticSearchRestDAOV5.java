@@ -48,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -246,12 +247,13 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         } catch (IOException e) {
             logger.error("Failed to add {} mapping", TASK_DOC_TYPE);
         }
-
+/*
         try {
-            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::groomWorkflowsAndTasks, 0, 1, TimeUnit.DAYS);
+            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::groomWorkflowsAndTasks, 0, 1, TimeUnit.MINUTES);
         } catch (Exception e) {
             logger.error("Error during grooming of workflows and tasks in index", e);
         }
+*/
     }
 
     /**
@@ -784,7 +786,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
         long tasksGroomed = groomDocs(indexName, taskQuery, TASK_DOC_TYPE, Collections.singletonList("updateTime:ASC"));
 
-        logger.info("Groomed {} workflows and {} tasks", workflowsGroomed, tasksGroomed);
+        logger.info("Groomed {} workflows and {} tasks on thread {}", workflowsGroomed, tasksGroomed, Thread.currentThread().getName());
     }
 
     private long groomDocs(String indexName, QueryBuilder q, String docType, List<String> sortOptions) {
