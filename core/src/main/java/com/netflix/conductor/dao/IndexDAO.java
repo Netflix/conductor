@@ -184,11 +184,6 @@ public interface IndexDAO {
     List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays);
 
     /**
-     * Groom archived Workflows and Tasks by batch size
-     */
-    void groomWorkflowsAndTasks();
-
-    /**
      * Search for RUNNING workflows changed in the last lastModifiedHoursAgoFrom to lastModifiedHoursAgoTo hours
      * @param lastModifiedHoursAgoFrom - last updated date should be lastModifiedHoursAgoFrom hours ago or later
      * @param lastModifiedHoursAgoTo - last updated date should be lastModifiedHoursAgoTo hours ago or earlier

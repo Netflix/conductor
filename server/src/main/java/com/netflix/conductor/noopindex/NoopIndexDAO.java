@@ -145,10 +145,6 @@ public class NoopIndexDAO implements IndexDAO {
 	}
 
 	@Override
-	public void groomWorkflowsAndTasks() {
-	}
-
-	@Override
 	public List<String> searchRecentRunningWorkflows(int lastModifiedHoursAgoFrom, int lastModifiedHoursAgoTo) {
 		return Collections.emptyList();
 	}
