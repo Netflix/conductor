@@ -16,6 +16,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.ProvisionException;
 import com.google.inject.util.Modules;
 import com.netflix.conductor.cassandra.CassandraModule;
+import com.netflix.conductor.common.run.TaskSummary;
+import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
 import com.netflix.conductor.contribs.http.HttpTask;
@@ -171,6 +173,14 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
         } else {
             modules.add(new NoopLockModule());
             logger.warn("Starting locking module using Noop Lock.");
+        }
+
+        if (configuration.isSummaryInputOutputJSONSerializationEnabled() == true) {
+            logger.info("\r\n\r\nJSON SERIALIZATION ENABLED\r\n\r\n");
+            WorkflowSummary.setInputOutputSerializationEnabled(true);
+            TaskSummary.setInputOutputSerializationEnabled(true);
+        } else {
+            logger.info("\r\n\r\nJSON SERIALIZATION DISABLED\r\n\r\n");
         }
 
         ExternalPayloadStorageType externalPayloadStorageType = null;

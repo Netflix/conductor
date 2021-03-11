@@ -15,15 +15,19 @@
  */
 package com.netflix.conductor.common.run;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Viren
@@ -36,6 +40,9 @@ public class TaskSummary {
 	 * The time should be stored as GMT
 	 */
 	private static final TimeZone gmt = TimeZone.getTimeZone("GMT");
+	private static final Logger logger = LoggerFactory.getLogger(TaskSummary.class);
+	private static final ObjectMapper objectMapper = new ObjectMapper();
+	private static boolean isInputOutputJSONSerializationEnabled = false;
 
 	@ProtoField(id = 1)
 	private String workflowId;
@@ -94,17 +101,17 @@ public class TaskSummary {
 	@ProtoField(id = 19)
 	private int workflowPriority;
 
-    public TaskSummary() {
-    }
+	public TaskSummary() {
+	}
 
 	public TaskSummary(Task task) {
 
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     	sdf.setTimeZone(gmt);
     	
-    	this.taskId = task.getTaskId();
-    	this.taskDefName = task.getTaskDefName();
-    	this.taskType = task.getTaskType();
+    this.taskId = task.getTaskId();
+    this.taskDefName = task.getTaskDefName();
+    this.taskType = task.getTaskType();
 		this.workflowId = task.getWorkflowInstanceId();
 		this.workflowType = task.getWorkflowType();
 		this.workflowPriority = task.getWorkflowPriority();
@@ -117,11 +124,11 @@ public class TaskSummary {
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
 		if (task.getInputData() != null) {
-			this.input = task.getInputData().toString();
+			this.input = this.serializeInputOutput(task.getInputData(), "input");
 		}
 		
 		if (task.getOutputData() != null) {
-			this.output = task.getOutputData().toString();
+			this.output = this.serializeInputOutput(task.getOutputData(), "output");
 		}
 		
 		
@@ -134,6 +141,21 @@ public class TaskSummary {
 		}
 		if (StringUtils.isNotBlank(task.getExternalOutputPayloadStoragePath())) {
 			this.externalOutputPayloadStoragePath = task.getExternalOutputPayloadStoragePath();
+		}
+	}
+
+	private String serializeInputOutput(Map<String, Object> object, String inputOutput) {
+		logger.info("isEnabled {0}", isInputOutputJSONSerializationEnabled);
+		if (isInputOutputJSONSerializationEnabled == false) {
+			// Using default configuration (false), simply use Java's toString
+			return object.toString();
+		}
+
+		try {
+			return objectMapper.writeValueAsString(object);
+		} catch (Exception e) {
+			logger.error("The {0} value could not be serialized as JSON", inputOutput, e);
+			return ""; // what to do here
 		}
 	}
 
@@ -405,6 +427,10 @@ public class TaskSummary {
 	 */
 	public void setWorkflowPriority(int workflowPriority) {
 		this.workflowPriority = workflowPriority;
+	}
+
+	public static void setInputOutputSerializationEnabled(boolean isEnabled) {
+		isInputOutputJSONSerializationEnabled = isEnabled;
 	}
 
 	@Override
