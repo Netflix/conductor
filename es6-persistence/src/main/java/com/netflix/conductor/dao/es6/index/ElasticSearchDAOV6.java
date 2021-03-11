@@ -275,6 +275,7 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
     private void createWorkflowIndex() {
         createIndex(workflowIndexName);
         addTypeMapping(workflowIndexName, WORKFLOW_DOC_TYPE, "/mappings_docType_workflow.json");
+
     }
 
     private void createTaskIndex() {

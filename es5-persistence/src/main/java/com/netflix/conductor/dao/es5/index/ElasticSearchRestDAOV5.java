@@ -48,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -218,8 +219,10 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
 
         try {
             initIndex();
-            updateIndexName();
-            Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexName, 0, 1, TimeUnit.HOURS);
+            if (config.isTaskExecLogIndexingEnabled()) {
+                updateIndexName();
+                Executors.newScheduledThreadPool(1).scheduleAtFixedRate(this::updateIndexName, 0, 1, TimeUnit.HOURS);
+            }
         } catch (Exception e) {
             logger.error("Error creating index templates", e);
         }
@@ -732,6 +735,7 @@ public class ElasticSearchRestDAOV5 implements IndexDAO {
         searchRequest.types(docType);
         searchRequest.source(searchSourceBuilder);
 
+        //logger.error("grooming search request: {}",searchRequest.toString());
         SearchResponse response = elasticSearchClient.search(searchRequest);
 
         List<String> result = new LinkedList<>();
