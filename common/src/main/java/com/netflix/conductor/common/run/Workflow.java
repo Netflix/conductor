@@ -18,6 +18,7 @@ import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -483,6 +484,10 @@ public class Workflow extends Auditable {
      */
     public void setLastRetriedTime(long lastRetriedTime) {
         this.lastRetriedTime = lastRetriedTime;
+    }
+
+    public boolean hasParent() {
+        return StringUtils.isNotEmpty(parentWorkflowId);
     }
 
     public Task getTaskByRefName(String refName) {
