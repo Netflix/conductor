@@ -16,10 +16,13 @@ import com.netflix.conductor.common.metadata.tasks.Task
 import com.netflix.conductor.common.metadata.tasks.TaskDef
 import com.netflix.conductor.common.metadata.tasks.TaskType
 import com.netflix.conductor.common.run.Workflow
+import com.netflix.conductor.core.execution.WorkflowRepairService
+import com.netflix.conductor.core.execution.WorkflowSweeper
 import com.netflix.conductor.core.execution.tasks.SubWorkflow
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask
 import com.netflix.conductor.test.base.AbstractSpecification
 import com.netflix.conductor.test.utils.UserTask
+import org.springframework.beans.factory.annotation.Autowired
 import spock.lang.Shared
 
 import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedLargePayloadTask
@@ -45,6 +48,12 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
 
     @Shared
     def WORKFLOW_WITH_DECISION_AND_TERMINATE = 'ConditionalTerminateWorkflow'
+
+    @Autowired
+    WorkflowSweeper workflowSweeper
+
+    @Autowired
+    WorkflowRepairService workflowRepairService
 
     def setup() {
         workflowTestUtil.registerWorkflows('simple_workflow_1_integration_test.json',
@@ -470,6 +479,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         }
 
         and: "the subworkflow task is completed and the workflow is in running state"
+        workflowSweeper.sweep([workflowInstanceId], workflowExecutor, workflowRepairService)
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
             input.isEmpty()

@@ -118,6 +118,8 @@ public class WorkflowExecutor {
 
     private static final Predicate<Task> NON_TERMINAL_TASK = task -> !task.getStatus().isTerminal();
 
+    private static final Predicate<Task> UNSUCCESSFUL_TERMINAL_TASK = task -> task.getStatus().equals(FAILED) || task.getStatus().equals(FAILED_WITH_TERMINAL_ERROR) || task.getStatus().equals(TIMED_OUT);
+
     @Autowired
     public WorkflowExecutor(DeciderService deciderService, MetadataDAO metadataDAO, QueueDAO queueDAO,
                             MetadataMapperService metadataMapperService, WorkflowStatusListener workflowStatusListener,
@@ -545,6 +547,8 @@ public class WorkflowExecutor {
         }
 
         decide(workflowId);
+
+        updateAndScheduleParents(workflow);
     }
 
     /**
@@ -563,62 +567,44 @@ public class WorkflowExecutor {
         }
 
         if (resumeSubworkflowTasks) {
-            // find failed sub workflow task
-            // retry the corresponding subworkflow
-            Optional<Task> lTask = workflow.getTasks().stream().filter(this::findLastFailedOrTimeOutTask).findFirst();
-            if (lTask.isPresent()) {
-                workflow = findLastFailedSubWorkflow(lTask.get(), workflow);
-                _retry(workflow);
-                while (workflow.hasParent()) {
-                    workflow = updateParent(workflow);
-                }
+            Optional<Task> taskToRetry = workflow.getTasks().stream().filter(UNSUCCESSFUL_TERMINAL_TASK).findFirst();
+            if (taskToRetry.isPresent()) {
+                workflow = findLastFailedSubWorkflow(taskToRetry.get(), workflow);
+                retry(workflow);
+                updateAndScheduleParents(workflow);
             }
         } else {
-            _retry(workflow);
-            while (workflow.hasParent()) {
-                workflow = updateParent(workflow);
-            }
+            retry(workflow);
+            updateAndScheduleParents(workflow);
         }
     }
 
-    private Workflow updateParent(Workflow subWorkflow) {
-        // update parent's sub workflow task
-        Task subWorkflowTask = executionDAOFacade.getTaskById(subWorkflow.getParentWorkflowTaskId());
-        subWorkflowTask.setSubworkflowChanged(true);
-        subWorkflowTask.setStatus(IN_PROGRESS);
-        executionDAOFacade.updateTask(subWorkflowTask);
+    private void updateAndScheduleParents(Workflow workflow) {
+        String workflowIdentifier = "";
+        while (workflow.hasParent()) {
+            // update parent's sub workflow task
+            Task subWorkflowTask = executionDAOFacade.getTaskById(workflow.getParentWorkflowTaskId());
+            subWorkflowTask.setSubworkflowChanged(true);
+            subWorkflowTask.setStatus(IN_PROGRESS);
+            executionDAOFacade.updateTask(subWorkflowTask);
 
-        TaskExecLog log = new TaskExecLog();
-        log.setTaskId(subWorkflowTask.getTaskId());
-        log.setLog("Workflow " + subWorkflow.getWorkflowId() + " retried.");
-        log.setCreatedTime(System.currentTimeMillis());
-        executionDAOFacade.addTaskExecLog(Collections.singletonList(log));
+            // add an execution log
+            String currentWorkflowIdentifier = String.format("%s.%s/%s", workflow.getWorkflowName(), workflow.getWorkflowVersion(), workflow.getWorkflowId());
+            workflowIdentifier = !workflowIdentifier.equals("") ? String.format("%s -> %s", currentWorkflowIdentifier, workflowIdentifier) : currentWorkflowIdentifier;
+            TaskExecLog log = new TaskExecLog(String.format("Workflow %s retried.", workflowIdentifier));
+            log.setTaskId(subWorkflowTask.getTaskId());
+            executionDAOFacade.addTaskExecLog(Collections.singletonList(log));
+            LOGGER.info("Task {} updated. {}", log.getTaskId(), log.getLog());
 
-        // update parent workflow
-        String parentWorkflowId = subWorkflow.getParentWorkflowId();
-        Workflow parentWorkflow = executionDAOFacade.getWorkflowById(parentWorkflowId, true);
-//
-//        // find all terminal and unsuccessful JOIN tasks and set them to IN_PROGRESS
-//        if (parentWorkflow.getWorkflowDefinition().containsType(TASK_TYPE_JOIN)) {
-//            parentWorkflow.getTasks()
-//                    .stream()
-//                    .filter(UNSUCCESSFUL_JOIN_TASK)
-//                    .forEach(t -> {
-//                        t.setStatus(Task.Status.IN_PROGRESS);
-//                        executionDAOFacade.updateTask(t);
-//                    });
-//        }
+            // push the parent workflow to decider queue for asynchronous 'decide'
+            String parentWorkflowId = workflow.getParentWorkflowId();
+            queueDAO.pushIfNotExists(DECIDER_QUEUE, parentWorkflowId, properties.getSweepFrequency().getSeconds());
 
-//        parentWorkflow.setStatus(WorkflowStatus.RUNNING);
-//        parentWorkflow.setLastRetriedTime(System.currentTimeMillis());
-//        executionDAOFacade.updateWorkflow(parentWorkflow);
-
-        // push it to decider queue for asynchronous 'decide'
-        queueDAO.pushIfNotExists(DECIDER_QUEUE, parentWorkflowId, properties.getSweepFrequency().getSeconds());
-        return parentWorkflow;
+            workflow = executionDAOFacade.getWorkflowById(parentWorkflowId, true);
+        }
     }
 
-    private void _retry(Workflow workflow) {
+    private void retry(Workflow workflow) {
         // Get all FAILED or CANCELED tasks that are not COMPLETED (or reach other terminal states) on further executions.
         // // Eg: for Seq of tasks task1.CANCELED, task1.COMPLETED, task1 shouldn't be retried.
         // Throw an exception if there are no FAILED tasks.
@@ -674,24 +660,14 @@ public class WorkflowExecutor {
     }
 
     private Workflow findLastFailedSubWorkflow(Task task, Workflow parentWorkflow) {
-        if (SUB_WORKFLOW.name().equals(task.getTaskType()) && findLastFailedOrTimeOutTask(task)) {
+        if (TASK_TYPE_SUB_WORKFLOW.equals(task.getTaskType()) && UNSUCCESSFUL_TERMINAL_TASK.test(task)) {
             Workflow subWorkflow = executionDAOFacade.getWorkflowById(task.getSubWorkflowId(), true);
-            Optional<Task> lTask = subWorkflow.getTasks().stream().filter(this::findLastFailedOrTimeOutTask).findFirst();
-            return findLastFailedSubWorkflow(lTask.get(), subWorkflow);
+            Optional<Task> taskToRetry = subWorkflow.getTasks().stream().filter(UNSUCCESSFUL_TERMINAL_TASK).findFirst();
+            if (taskToRetry.isPresent()) {
+                return findLastFailedSubWorkflow(taskToRetry.get(), subWorkflow);
+            }
         }
         return parentWorkflow;
-    }
-
-    private boolean findLastFailedOrTimeOutTask(Task task) {
-        return task.getStatus().equals(FAILED) || task.getStatus().equals(FAILED_WITH_TERMINAL_ERROR) || task.getStatus().equals(TIMED_OUT);
-    }
-
-    private void updateParentWorkflowRecursively(Workflow workflow) {
-        if (StringUtils.isNotEmpty(workflow.getParentWorkflowId())) {
-            setSubWorkflowChangeInParentWorkflowTask(workflow);
-            queueDAO.pushIfNotExists(DECIDER_QUEUE, workflow.getParentWorkflowId(), properties.getSweepFrequency().getSeconds());
-            updateParentWorkflowRecursively(executionDAOFacade.getWorkflowById(workflow.getParentWorkflowId(), true));
-        }
     }
 
     /**
@@ -1821,88 +1797,10 @@ public class WorkflowExecutor {
                         }));
     }
 
-    /**
-     * Update parent Workflow based on Subworkflow state. Updates the provided subWorkflowTask and/or parentWorkflow
-     * inplace, where applicable.
-     *
-     * @param subWorkflowTask
-     * @param subWorkflow
-     * @param parentWorkflow
-     * @return
-     */
-    @VisibleForTesting
-    protected boolean updateParentWorkflow(Task subWorkflowTask, Workflow subWorkflow, Workflow parentWorkflow) {
-        // TODO: Remove?? since the variable is unused
-        WorkflowDef parentDef = Optional.ofNullable(parentWorkflow.getWorkflowDefinition())
-                .orElseGet(
-                        () -> metadataDAO.getWorkflowDef(parentWorkflow.getWorkflowName(), parentWorkflow.getWorkflowVersion())
-                                .orElseThrow(() -> new ApplicationException(NOT_FOUND, String
-                                        .format("Unable to find parent workflow definition for %s", parentWorkflow.getWorkflowId())))
-                );
-        LOGGER.debug("Evaluating parent workflow: {} for sub-workflow: {}", subWorkflow.getParentWorkflowId(),
-                subWorkflow.getWorkflowId());
-
-        // On Subworkflow complete or terminate..
-        if (subWorkflow.getStatus().isTerminal()) {
-            if (parentWorkflow.getStatus().equals(WorkflowStatus.FAILED)) {
-                String warningMsg = String
-                        .format("Not evaluating parent workflow: %s in FAILED state for subworkflow: %s in terminal state.",
-                                parentWorkflow.getWorkflowId(), subWorkflow.getWorkflowId());
-                LOGGER.warn(warningMsg);
-                return false;
-            } else if (subWorkflowTask.getStatus().equals(IN_PROGRESS)) {
-                LOGGER.debug("Subworkflow: {} is {}, updating parent workflow: {}",
-                        subWorkflow.getWorkflowId(), subWorkflow.getStatus().name(), parentWorkflow.getWorkflowId());
-                executeSubworkflowTaskAndSyncData(subWorkflow, subWorkflowTask);
-                return true;
-            } else {
-                LOGGER.warn("Unable to evaluate parent workflow: {} in status: {}, and subworkflow: {} in status: {}",
-                        parentWorkflow.getWorkflowId(), parentWorkflow.getStatus().name(),
-                        subWorkflow.getWorkflowId(), subWorkflow.getStatus().name());
-            }
-        } else {
-            // On workflow retry or restart..
-            if (parentWorkflow.getStatus().isTerminal() && subWorkflowTask.getStatus().isTerminal()) {
-                LOGGER.debug(
-                        "Subworkflow: {} is {}, resetting failed parent workflow: {}, and Subworkflow task: {} status to IN_PROGRESS",
-                        subWorkflow.getWorkflowId(), subWorkflow.getStatus().name(), parentWorkflow.getWorkflowId(),
-                        subWorkflow.getParentWorkflowTaskId());
-                subWorkflowTask.setStatus(IN_PROGRESS);
-                executionDAOFacade.updateTask(subWorkflowTask);
-                parentWorkflow.setStatus(WorkflowStatus.RUNNING);
-                parentWorkflow.setLastRetriedTime(System.currentTimeMillis());
-                executionDAOFacade.updateWorkflow(parentWorkflow);
-                return true;
-            } else if (parentWorkflow.getStatus().equals(WorkflowStatus.RUNNING)) {
-                if (subWorkflowTask.getStatus().isTerminal()) {
-                    String errorMsg = String.format(
-                            "Subworkflow: %s is in RUNNING state, but Subworkflow task: %s in parent workflow: %s is in FAILED state.",
-                            subWorkflow.getWorkflowId(), subWorkflowTask.getTaskId(), parentWorkflow.getWorkflowId());
-                    LOGGER.warn(errorMsg);
-                    throw new IllegalStateException(errorMsg);
-                } else {
-                    // parentWorkflow, subWorkflowTask and subWorkflow are in non-terminal state
-                    return false;
-                }
-            } else {
-                LOGGER.warn("Unable to evaluate parent workflow: {} in status: {}, and subworkflow: {} in status: {}",
-                        parentWorkflow.getWorkflowId(), parentWorkflow.getStatus().name(),
-                        subWorkflow.getWorkflowId(), subWorkflow.getStatus().name());
-            }
-        }
-        return false;
-    }
-
     @VisibleForTesting
     void updateParentWorkflowTask(Workflow subWorkflow) {
         Task subWorkflowTask = executionDAOFacade.getTaskById(subWorkflow.getParentWorkflowTaskId());
         executeSubworkflowTaskAndSyncData(subWorkflow, subWorkflowTask);
-        executionDAOFacade.updateTask(subWorkflowTask);
-    }
-
-    private void setSubWorkflowChangeInParentWorkflowTask(Workflow subWorkflow) {
-        Task subWorkflowTask = executionDAOFacade.getTaskById(subWorkflow.getParentWorkflowTaskId());
-        subWorkflowTask.setSubworkflowChanged(true);
         executionDAOFacade.updateTask(subWorkflowTask);
     }
 
