@@ -250,6 +250,7 @@ public class ExecutionDAOFacade {
      * @param archiveWorkflow if true, the workflow will be archived in the {@link IndexDAO} after removal from  {@link ExecutionDAO}
      */
     public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
+        LOGGER.info("remove workflow {}", workflowId);
         try {
             Workflow workflow = getWorkflowById(workflowId, true);
 
@@ -264,6 +265,7 @@ public class ExecutionDAOFacade {
         } catch (ApplicationException ae) {
             throw ae;
         } catch (Exception e) {
+            LOGGER.info("Error removing workflow: {}", workflowId);
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, "Error removing workflow: " + workflowId, e);
         }
     }

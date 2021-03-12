@@ -642,7 +642,7 @@ public class WorkflowExecutor {
      */
     @VisibleForTesting
     void completeWorkflow(Workflow wf) {
-        LOGGER.debug("Completing workflow execution for {}", wf.getWorkflowId());
+        LOGGER.info("Completing workflow execution for {}", wf.getWorkflowId());
         Workflow workflow = executionDAOFacade.getWorkflowById(wf.getWorkflowId(), false);
 
         if (workflow.getStatus().equals(WorkflowStatus.COMPLETED)) {
@@ -670,7 +670,7 @@ public class WorkflowExecutor {
         workflow.setExternalOutputPayloadStoragePath(wf.getExternalOutputPayloadStoragePath());
         executionDAOFacade.updateWorkflow(workflow);
         executionDAOFacade.updateTasks(workflow.getTasks());
-        LOGGER.debug("Completed workflow execution for {}", workflow.getWorkflowId());
+        LOGGER.info("Completed workflow execution for {}", workflow.getWorkflowId());
 
         if (StringUtils.isNotEmpty(workflow.getParentWorkflowId())) {
             updateParentWorkflowTask(workflow);
@@ -678,7 +678,7 @@ public class WorkflowExecutor {
         }
         Monitors.recordWorkflowCompletion(workflow.getWorkflowName(), workflow.getEndTime() - workflow.getStartTime(), workflow.getOwnerApp());
         // notify workflow completion
-        LOGGER.debug("Add workflow '{}' to publish.", workflow.getWorkflowId());
+        LOGGER.info("Add workflow '{}' to publish.", workflow.getWorkflowId());
         workflowStatusListener.onWorkflowCompleted(workflow);
         queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
 
