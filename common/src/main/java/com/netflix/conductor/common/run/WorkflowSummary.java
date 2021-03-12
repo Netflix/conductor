@@ -115,11 +115,11 @@ public class WorkflowSummary {
 		}
 		this.status = workflow.getStatus();
 		if(workflow.getInput() != null){
-                        this.input = SummaryUtil.serializeInputOutput(workflow.getInput());
+			this.input = SummaryUtil.serializeInputOutput(workflow.getInput());
 		}
-                if(workflow.getOutput() != null){
-                        this.output = SummaryUtil.serializeInputOutput(workflow.getOutput());
-                }
+		if(workflow.getOutput() != null){
+			this.output = SummaryUtil.serializeInputOutput(workflow.getOutput());
+		}
 		this.reasonForIncompletion = workflow.getReasonForIncompletion();
 		if(workflow.getEndTime() > 0){
 			this.executionTime = workflow.getEndTime() - workflow.getStartTime();
