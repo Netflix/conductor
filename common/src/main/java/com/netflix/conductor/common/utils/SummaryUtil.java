@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SummaryUtil {
-  private static final Logger logger = LoggerFactory.getLogger(SummaryUtil.class);
-  private static final ObjectMapper objectMapper = new JsonMapperProvider().get();
+	private static final Logger logger = LoggerFactory.getLogger(SummaryUtil.class);
+	private static final ObjectMapper objectMapper = new JsonMapperProvider().get();
 	private static boolean isSummaryInputOutputJsonSerializationEnabled = false;
   
   /**
