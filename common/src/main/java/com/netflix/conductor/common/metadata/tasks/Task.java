@@ -199,6 +199,10 @@ public class Task {
     @ProtoField(id = 41)
     private String subWorkflowId;
 
+    /**
+     * Use to note that a sub workflow associated with SUB_WORKFLOW task
+     * has an action performed on it directly.
+     */
     @ProtoField(id = 42)
     private boolean subworkflowChanged;
 
