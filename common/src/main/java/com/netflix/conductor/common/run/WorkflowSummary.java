@@ -15,19 +15,17 @@
  */
 package com.netflix.conductor.common.run;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.common.utils.SummaryUtil;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Captures workflow summary info to be indexed in Elastic Search.
@@ -41,9 +39,6 @@ public class WorkflowSummary {
 	 * The time should be stored as GMT
 	 */
 	private static final TimeZone gmt = TimeZone.getTimeZone("GMT");
-	private static final Logger logger = LoggerFactory.getLogger(WorkflowSummary.class);
-	private static final ObjectMapper objectMapper = new ObjectMapper();
-	private static boolean isInputOutputJSONSerializationEnabled = false;
 
 	@ProtoField(id = 1)
 	private String workflowType;
@@ -120,10 +115,10 @@ public class WorkflowSummary {
 		}
 		this.status = workflow.getStatus();
 		if(workflow.getInput() != null){
-      this.input = this.serializeInputOutput(workflow.getInput(), "input");
+      this.input = SummaryUtil.serializeInputOutput(workflow.getInput());
 		}
     if(workflow.getOutput() != null){
-      this.output = this.serializeInputOutput(workflow.getOutput(), "output");
+      this.output = SummaryUtil.serializeInputOutput(workflow.getOutput());
     }
 		this.reasonForIncompletion = workflow.getReasonForIncompletion();
 		if(workflow.getEndTime() > 0){
@@ -136,21 +131,6 @@ public class WorkflowSummary {
 		}
 		if (StringUtils.isNotBlank(workflow.getExternalOutputPayloadStoragePath())) {
 			this.externalOutputPayloadStoragePath = workflow.getExternalOutputPayloadStoragePath();
-		}
-	}
-
-	private String serializeInputOutput(Map<String, Object> object, String inputOutput) {
-		logger.info("isEnabled {0}", isInputOutputJSONSerializationEnabled);
-		if (isInputOutputJSONSerializationEnabled == false) {
-			// Using default configuration (false), simply use Java's toString
-			return object.toString();
-		}
-
-		try {
-			return objectMapper.writeValueAsString(object);
-		} catch (Exception e) {
-			logger.error("The {0} value could not be serialized", inputOutput, e);
-			return ""; // what to do here
 		}
 	}
 
@@ -360,10 +340,6 @@ public class WorkflowSummary {
 	 */
 	public void setPriority(int priority) {
 		this.priority = priority;
-	}
-
-	public static void setInputOutputSerializationEnabled(boolean isEnabled) {
-		isInputOutputJSONSerializationEnabled = isEnabled;
 	}
 
 	@Override
