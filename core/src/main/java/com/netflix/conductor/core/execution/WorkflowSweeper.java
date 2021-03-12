@@ -102,11 +102,11 @@ public class WorkflowSweeper {
                     }
 
                     boolean done = workflowExecutor.decide(workflowId);
-                    if (!done) {
+                    if (done) {
+                        queueDAO.remove(WorkflowExecutor.DECIDER_QUEUE, workflowId);
+                    } else {
                         queueDAO.setUnackTimeout(WorkflowExecutor.DECIDER_QUEUE, workflowId,
                             properties.getSweepFrequency().toMillis());
-                    } else {
-                        queueDAO.remove(WorkflowExecutor.DECIDER_QUEUE, workflowId);
                     }
 
                 } catch (ApplicationException e) {
