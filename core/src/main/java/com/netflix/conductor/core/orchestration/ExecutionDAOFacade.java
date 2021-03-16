@@ -250,10 +250,8 @@ public class ExecutionDAOFacade {
      * @param archiveWorkflow if true, the workflow will be archived in the {@link IndexDAO} after removal from  {@link ExecutionDAO}
      */
     public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
-        LOGGER.info("remove workflow {}", workflowId);
         try {
             Workflow workflow = getWorkflowById(workflowId, true);
-
             removeWorkflowIndex(workflow, archiveWorkflow);
             // remove workflow from DAO
             try {
