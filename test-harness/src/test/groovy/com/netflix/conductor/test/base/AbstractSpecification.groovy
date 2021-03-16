@@ -13,6 +13,8 @@
 package com.netflix.conductor.test.base
 
 import com.netflix.conductor.core.execution.WorkflowExecutor
+import com.netflix.conductor.core.execution.WorkflowRepairService
+import com.netflix.conductor.core.execution.WorkflowSweeper
 import com.netflix.conductor.service.ExecutionService
 import com.netflix.conductor.service.MetadataService
 import com.netflix.conductor.test.util.WorkflowTestUtil
@@ -37,7 +39,17 @@ abstract class AbstractSpecification extends Specification {
     @Autowired
     WorkflowTestUtil workflowTestUtil
 
+    @Autowired
+    WorkflowSweeper workflowSweeper
+
+    @Autowired
+    WorkflowRepairService workflowRepairService
+
     def cleanup() {
         workflowTestUtil.clearWorkflows()
+    }
+
+    void sweep(String workflowId) {
+        workflowSweeper.sweep([workflowId], workflowExecutor, workflowRepairService)
     }
 }
