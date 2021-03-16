@@ -20,7 +20,6 @@ package com.netflix.conductor.server.resources;
 
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.metrics.Monitors;
 import com.sun.jersey.api.core.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +60,6 @@ public class ApplicationExceptionMapper implements ExceptionMapper<ApplicationEx
 	@Override
 	public Response toResponse(ApplicationException e) {
 		logger.warn(e.getMessage(), e);
-		if(e.getHttpStatusCode() == 500) {
-			Monitors.error("error", "error");
-		}
 		MediaType mediaType = context.getRequest().selectVariant(supportedMediaTypes).getMediaType();
 		if(mediaType == null){
 			mediaType = MediaType.APPLICATION_JSON_TYPE;

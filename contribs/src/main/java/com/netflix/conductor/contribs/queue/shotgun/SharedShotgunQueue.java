@@ -26,11 +26,8 @@ import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.events.queue.OnMessageHandler;
-import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.MetricService;
 import d3sw.shotgun.shotgunpb.ShotgunOuterClass;
-import io.nats.client.NUID;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +35,8 @@ import rx.Observable;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Oleksiy Lysak

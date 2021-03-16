@@ -374,12 +374,16 @@ public class EventProcessor {
 					//logger.info("ShotgunMsg:ep: ACKing Message. Processed " + msg.getReceipt());
 					queue.ack(Collections.singletonList(msg));
 				} else {
+					MetricService.getInstance()
+						.eventRedeliveryRequested(queue.getName(), queue.getSubject());
 					logger.debug("Redelivery needed. Unack for messageId=" + msg.getReceipt());
 					//logger.info("ShotgunMsg:ep: UNACK Message. Need redelivery " + msg.getReceipt());
 					queue.unack(Collections.singletonList(msg));
 				}
 			}
 		} catch (Exception e) {
+			MetricService.getInstance()
+				.eventExecutionFailed(queue.getName(), queue.getSubject());
 			logger.error(e.getMessage() + " occurred for " + msg.getPayload(), e);
 			//logger.info("ShotgunMsg:ep: UNACK Message.. Exception " + msg.getReceipt(), e);
 			queue.unack(Collections.singletonList(msg));

@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 
 import javax.inject.Inject;
@@ -79,6 +80,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			"SET popped = true, unack_on = ?, version = version + 1 " +
 			"WHERE id = ANY(?) RETURNING message_id";
 
+		MetricService.getInstance().queuePop(queueName);
 		try {
 			long start = System.currentTimeMillis();
 

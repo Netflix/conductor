@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.NDC;
@@ -147,7 +146,9 @@ public class SystemTaskWorkerCoordinator {
 			String name = systemTask.getName();
 			String lockQueue = name.toLowerCase() + ".lock";
 			List<String> polled = taskQueues.pop(name, pollCount, pollTimeout);
-			MetricService.getInstance().taskPoll(systemTask.getName(), workerId);
+			if (CollectionUtils.isNotEmpty(polled)) {
+				MetricService.getInstance().taskPoll(name, workerId, polled.size());
+			}
 			logger.debug("Polling for {}, got {}", name, polled.size());
 			for(String task : polled) {
 				try {
@@ -156,10 +157,11 @@ public class SystemTaskWorkerCoordinator {
 
 						// This prevents another containers executing the same action
 						// true means this session added the record to lock queue and can start the task
-						long expireTime = systemTask.getRetryTimeInSecond() * 2; // 2 times longer than task retry time
+						long expireTime = systemTask.getRetryTimeInSecond() * 2L; // 2 times longer than task retry time
 						boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime);
 						if (!locked) {
 							logger.warn("Cannot lock the task " + task);
+							MetricService.getInstance().taskLockFailed(name);
 							return;
 						}
 
@@ -172,11 +174,11 @@ public class SystemTaskWorkerCoordinator {
 					});
 				}catch(RejectedExecutionException ree) {
 					logger.warn("Queue full for workers {}, taskId {}", workerQueue.size(), task);
+					MetricService.getInstance().systemWorkersQueueFull(name);
 				}
 			}
 			
 		} catch (Exception e) {
-			Monitors.error(className, "pollAndExecute");
 			logger.error(e.getMessage(), e);
 		}
 	}

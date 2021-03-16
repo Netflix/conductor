@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.core.execution.ApplicationException.Code;
-import com.netflix.conductor.metrics.Monitors;
 import com.sun.jersey.api.core.HttpContext;
 
 /**
@@ -64,7 +63,6 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 	@Override
 	public Response toResponse(Throwable t) {
 		logger.error(t.getMessage(), t);
-		Monitors.error("error", "error");
 		ApplicationException e = new ApplicationException(Code.INTERNAL_ERROR, t.getMessage(), t);
 		MediaType mediaType = context.getRequest().selectVariant(supportedMediaTypes).getMediaType();
 		if(mediaType == null){

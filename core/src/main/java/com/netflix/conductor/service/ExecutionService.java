@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Netflix, Inc.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,6 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.LogFactory;
@@ -52,7 +51,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 
+ *
  * @author visingh
  * @author Viren
  *
@@ -66,13 +65,13 @@ public class ExecutionService {
 	private WorkflowExecutor executor;
 
 	private ExecutionDAO edao;
-	
+
 	private IndexDAO indexer;
 
 	private QueueDAO queue;
 
 	private MetadataDAO metadata;
-	
+
 	private int taskRequeueTimeout;
 	private TaskStatusListener taskStatusListener;
 
@@ -95,32 +94,39 @@ public class ExecutionService {
 	public Task poll(String taskType, String workerId) throws Exception {
 		return poll(taskType, workerId, null);
 	}
+
 	public Task poll(String taskType, String workerId, String domain) throws Exception {
-		
+
 		List<Task> tasks = poll(taskType, workerId, domain, 1, 100);
-		if(tasks.isEmpty()) { 
+		if (tasks.isEmpty()) {
 			return null;
 		}
 		return tasks.get(0);
 	}
-	
+
 	public List<Task> poll(String taskType, String workerId, int count, int timeoutInMilliSecond) throws Exception {
 		return poll(taskType, workerId, null, count, timeoutInMilliSecond);
 	}
+
 	public List<Task> poll(String taskType, String workerId, String domain, int count, int timeoutInMilliSecond) throws Exception {
-		
+
 		String queueName = QueueUtils.getQueueName(taskType, domain);
 
 		List<String> taskIds = queue.pop(queueName, count, timeoutInMilliSecond);
+		if (CollectionUtils.isNotEmpty(taskIds)) {
+			edao.updateLastPoll(taskType, domain, workerId);
+			MetricService.getInstance().taskPoll(taskType, workerId, taskIds.size());
+		}
 		List<Task> tasks = new LinkedList<>();
-		for(String taskId : taskIds) {
+		for (String taskId : taskIds) {
 			Task task = getTask(taskId);
-			if(task == null) {
+			if (task == null) {
 				queue.remove(queueName, taskId); // We should remove the entry if no task found
 				continue;
 			}
 
-			if(edao.exceedsInProgressLimit(task)) {
+			if (edao.exceedsInProgressLimit(task)) {
+				MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
 				continue;
 			}
 
@@ -128,31 +134,32 @@ public class ExecutionService {
 			task.setStatus(Status.IN_PROGRESS);
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());
-				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
 			}
 			task.setWorkerId(workerId);
 			task.setPollCount(task.getPollCount() + 1);
+
+			// Metrics
+			MetricService.getInstance().taskWait(task.getTaskType(),
+				task.getReferenceTaskName(),
+				task.getQueueWaitTime());
+
 			edao.updateTask(task);
 			taskStatusListener.onTaskStarted(task);
 			tasks.add(task);
 		}
-		if (CollectionUtils.isNotEmpty(taskIds)) {
-			edao.updateLastPoll(taskType, domain, workerId);
-		}
-		MetricService.getInstance().taskPoll(taskType, workerId);
 		return tasks;
 	}
-	
-	public List<PollData> getPollData(String taskType) throws Exception{
+
+	public List<PollData> getPollData(String taskType) throws Exception {
 		return edao.getPollData(taskType);
 	}
 
-	public List<PollData> getAllPollData() throws Exception{
+	public List<PollData> getAllPollData() throws Exception {
 		Map<String, Long> queueSizes = queue.queuesDetail();
 		List<PollData> allPollData = new ArrayList<PollData>();
 		queueSizes.keySet().forEach(k -> {
 			try {
-				if(k.indexOf(QueueUtils.DOMAIN_SEPARATOR) == -1){
+				if (k.indexOf(QueueUtils.DOMAIN_SEPARATOR) == -1) {
 					allPollData.addAll(getPollData(QueueUtils.getQueueNameWithoutDomain(k)));
 				}
 			} catch (Exception e) {
@@ -167,7 +174,7 @@ public class ExecutionService {
 	public void updateTask(Task task) throws Exception {
 		updateTask(new TaskResult(task));
 	}
-	
+
 	public void updateTask(TaskResult task) throws Exception {
 		executor.updateTask(task);
 	}
@@ -189,10 +196,10 @@ public class ExecutionService {
 		String queueName = QueueUtils.getQueueName(task);
 
 		if (task != null) {
-			if(task.getResponseTimeoutSeconds() > 0) {
+			if (task.getResponseTimeoutSeconds() > 0) {
 				logger.debug("Adding task " + queueName + "/" + taskId + " to be requeued if no response received " + task.getResponseTimeoutSeconds());
-				return queue.setUnackTimeout(queueName, task.getTaskId(), 1000 * task.getResponseTimeoutSeconds());		//Value is in millisecond
-			}else {
+				return queue.setUnackTimeout(queueName, task.getTaskId(), 1000 * task.getResponseTimeoutSeconds());        //Value is in millisecond
+			} else {
 				return queue.ack(queueName, taskId);
 			}
 		}
@@ -239,7 +246,7 @@ public class ExecutionService {
 			}
 			if (pending.getUpdateTime() < threshold) {
 				logger.debug("Requeuing Task: workflowId=" + workflow.getWorkflowId() + ", taskType=" + pending.getTaskType() + ", taskId="
-						+ pending.getTaskId());
+					+ pending.getTaskId());
 				long callback = pending.getCallbackAfterSeconds();
 				if (callback < 0) {
 					callback = 0;
@@ -252,14 +259,14 @@ public class ExecutionService {
 		}
 		return count;
 	}
-	
+
 	public int requeuePendingTasks(String taskType) throws Exception {
 
 		int count = 0;
 		List<Task> tasks = getPendingTasksForTaskType(taskType);
 
 		for (Task pending : tasks) {
-			
+
 			if (SystemTaskType.is(pending.getTaskType())) {
 				continue;
 			}
@@ -276,7 +283,7 @@ public class ExecutionService {
 		}
 		return count;
 	}
-	
+
 	private boolean requeue(Task pending) throws Exception {
 		long callback = pending.getCallbackAfterSeconds();
 		if (callback < 0) {
@@ -284,15 +291,15 @@ public class ExecutionService {
 		}
 		queue.remove(QueueUtils.getQueueName(pending), pending.getTaskId());
 		long now = System.currentTimeMillis();
-		callback = callback - ((now - pending.getUpdateTime())/1000);
-		if(callback < 0) {
+		callback = callback - ((now - pending.getUpdateTime()) / 1000);
+		if (callback < 0) {
 			callback = 0;
 		}
 		return queue.pushIfNotExists(QueueUtils.getQueueName(pending), pending.getTaskId(), callback);
 	}
 
 	public List<Workflow> getWorkflowInstances(String workflowName, String correlationId, boolean includeClosed, boolean includeTasks)
-			throws Exception {
+		throws Exception {
 		List<Workflow> workflows = executor.getStatusByCorrelationId(workflowName, correlationId, includeClosed);
 		if (includeTasks) {
 			workflows.forEach(wf -> {
@@ -321,7 +328,7 @@ public class ExecutionService {
 	}
 
 	public SearchResult<WorkflowSummary> search(String query, String freeText, int start, int size, List<String> sortOptions, String from, String end) {
-		
+
 		SearchResult<String> result = indexer.searchWorkflows(query, freeText, start, size, sortOptions, from, end);
 		List<WorkflowSummary> workflows = result.getResults().stream().parallel().map(workflowId -> {
 			try {
@@ -330,7 +337,7 @@ public class ExecutionService {
 					return null;
 
 				return new WorkflowSummary(workflow);
-			} catch(Exception e) {
+			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
 				return null;
 			}
@@ -344,22 +351,22 @@ public class ExecutionService {
 	public List<Task> getPendingTasksForTaskType(String taskType) throws Exception {
 		return edao.getPendingTasksForTaskType(taskType);
 	}
-	
+
 	public boolean addEventExecution(EventExecution ee) {
 		return edao.addEventExecution(ee);
 	}
-	
+
 
 	public void updateEventExecution(EventExecution ee) {
 		edao.updateEventExecution(ee);
 	}
 
 	/**
-	 * 
+	 *
 	 * @param queue Name of the registered queue
 	 * @param msg Message
 	 */
-	public void addMessage(String queue, Message msg) {	
+	public void addMessage(String queue, Message msg) {
 		edao.addMessage(queue, msg);
 	}
 
@@ -375,14 +382,14 @@ public class ExecutionService {
 		executionLog.setCreatedTime(System.currentTimeMillis());
 		edao.addTaskExecLog(Arrays.asList(executionLog));
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param taskId Id of the task for which to retrieve logs
 	 * @return Execution Logs (logged by the worker)
 	 */
 	public List<TaskExecLog> getTaskLogs(String taskId) {
-		return indexer.getTaskLogs(taskId);		
+		return indexer.getTaskLogs(taskId);
 	}
 
 	public void reloadConfig() {
@@ -409,11 +416,11 @@ public class ExecutionService {
 		field.setAccessible(true);
 
 		// Ge actual log4j logger
-		org.apache.log4j.Logger target = (org.apache.log4j.Logger)field.get(slfLogger);
+		org.apache.log4j.Logger target = (org.apache.log4j.Logger) field.get(slfLogger);
 		target.setLevel(level);
 
 		// Apache common logging to log4j logger
-		Log4JLogger commLogger = (Log4JLogger)LogFactory.getLog(name);
+		Log4JLogger commLogger = (Log4JLogger) LogFactory.getLog(name);
 		commLogger.getLogger().setLevel(level);
 	}
 
