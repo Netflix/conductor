@@ -738,7 +738,6 @@ public class WorkflowExecutor {
     @VisibleForTesting
     Workflow completeWorkflow(Workflow workflow) {
         LOGGER.debug("Completing workflow execution for {}", workflow.getWorkflowId());
-//        Workflow workflow = executionDAOFacade.getWorkflowById(workflow.getWorkflowId(), false);
 
         if (workflow.getStatus().equals(WorkflowStatus.COMPLETED)) {
             queueDAO.remove(DECIDER_QUEUE, workflow.getWorkflowId());    //remove from the sweep queue
@@ -1086,19 +1085,21 @@ public class WorkflowExecutor {
             }
             // if we are here, Workflow is in an unsuccessful terminal state
             // we verify if there are any sub workflow tasks that have changed since the workflow reached a terminal state
-            Optional<Task> subworkflowTasksHaveChanged = verifyIfSubworkflowTasksHaveChanged(workflow);
-            if (subworkflowTasksHaveChanged.isPresent()) {
+            Optional<Task> changedSubWorkflowTask = findChangedSubWorkflowTask(workflow);
+            if (changedSubWorkflowTask.isPresent()) {
                 workflow.setStatus(WorkflowStatus.RUNNING);
                 workflow.setLastRetriedTime(System.currentTimeMillis());
                 executionDAOFacade.updateWorkflow(workflow);
 
                 // reset the flag
-                Task subWorkflowTask = subworkflowTasksHaveChanged.get();
+                Task subWorkflowTask = changedSubWorkflowTask.get();
                 subWorkflowTask.setSubworkflowChanged(false);
                 executionDAOFacade.updateTask(subWorkflowTask);
 
                 // find all terminal and unsuccessful JOIN tasks and set them to IN_PROGRESS
                 if (workflow.getWorkflowDefinition().containsType(TASK_TYPE_JOIN)) {
+                    // if we are here, then the SUB_WORKFLOW task is part of a FORK_JOIN
+                    // and the JOIN task(s) needs to be evaluated again, set it to IN_PROGRESS
                     workflow.getTasks().stream()
                             .filter(UNSUCCESSFUL_JOIN_TASK)
                             .peek(t -> t.setStatus(Task.Status.IN_PROGRESS))
@@ -1161,7 +1162,7 @@ public class WorkflowExecutor {
         return false;
     }
 
-    private Optional<Task> verifyIfSubworkflowTasksHaveChanged(Workflow workflow) {
+    private Optional<Task> findChangedSubWorkflowTask(Workflow workflow) {
         WorkflowDef workflowDef = Optional.ofNullable(workflow.getWorkflowDefinition())
                 .orElseGet(() -> metadataDAO.getWorkflowDef(workflow.getWorkflowName(), workflow.getWorkflowVersion())
                         .orElseThrow(() -> new ApplicationException(BACKEND_ERROR, "Workflow Definition is not found")));
