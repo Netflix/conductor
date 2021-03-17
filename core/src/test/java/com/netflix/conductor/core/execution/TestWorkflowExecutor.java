@@ -513,7 +513,7 @@ public class TestWorkflowExecutor {
         when(metadataDAO.getTaskDef(workflowTask.getName())).thenReturn(new TaskDef());
         when(executionDAOFacade.updateWorkflow(any())).thenReturn("");
 
-        workflowExecutor.rewind(workflow.getWorkflowId(), false);
+        workflowExecutor.restart(workflow.getWorkflowId(), false);
         assertEquals(Workflow.WorkflowStatus.RUNNING, workflow.getStatus());
         assertEquals(0, workflow.getEndTime());
         assertEquals(0, workflow.getLastRetriedTime());
@@ -535,7 +535,7 @@ public class TestWorkflowExecutor {
         workflowDef.getTasks().addAll(Collections.singletonList(workflowTask));
 
         when(metadataDAO.getLatestWorkflowDef(workflow.getWorkflowName())).thenReturn(Optional.of(workflowDef));
-        workflowExecutor.rewind(workflow.getWorkflowId(), true);
+        workflowExecutor.restart(workflow.getWorkflowId(), true);
         assertEquals(Workflow.WorkflowStatus.RUNNING, workflow.getStatus());
         assertEquals(0, workflow.getEndTime());
         assertEquals(0, workflow.getLastRetriedTime());

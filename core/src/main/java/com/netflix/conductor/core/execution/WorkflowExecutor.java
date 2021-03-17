@@ -73,7 +73,6 @@ import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED_WIT
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.SCHEDULED;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.SKIPPED;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.TIMED_OUT;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.valueOf;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
@@ -118,7 +117,7 @@ public class WorkflowExecutor {
 
     private static final Predicate<Task> NON_TERMINAL_TASK = task -> !task.getStatus().isTerminal();
 
-    private static final Predicate<Task> UNSUCCESSFUL_TERMINAL_TASK = task -> task.getStatus().equals(FAILED) || task.getStatus().equals(FAILED_WITH_TERMINAL_ERROR) || task.getStatus().equals(TIMED_OUT);
+    private static final Predicate<Task> UNSUCCESSFUL_TERMINAL_TASK = task -> !task.getStatus().isSuccessful() && task.getStatus().isTerminal();
 
     @Autowired
     public WorkflowExecutor(DeciderService deciderService, MetadataDAO metadataDAO, QueueDAO queueDAO,
@@ -495,7 +494,7 @@ public class WorkflowExecutor {
      *                              <li>Workflow is deemed non-restartable as per workflow definition</li>
      *                              </ul>
      */
-    public void rewind(String workflowId, boolean useLatestDefinitions) {
+    public void restart(String workflowId, boolean useLatestDefinitions) {
         Workflow workflow = executionDAOFacade.getWorkflowById(workflowId, true);
         if (!workflow.getStatus().isTerminal()) {
             String errorMsg = String.format("Workflow: %s is not in terminal state, unable to restart.", workflow);
@@ -548,7 +547,7 @@ public class WorkflowExecutor {
 
         decide(workflowId);
 
-        updateAndScheduleParents(workflow);
+        updateAndPushParents(workflow);
     }
 
     /**
@@ -571,15 +570,15 @@ public class WorkflowExecutor {
             if (taskToRetry.isPresent()) {
                 workflow = findLastFailedSubWorkflow(taskToRetry.get(), workflow);
                 retry(workflow);
-                updateAndScheduleParents(workflow);
+                updateAndPushParents(workflow);
             }
         } else {
             retry(workflow);
-            updateAndScheduleParents(workflow);
+            updateAndPushParents(workflow);
         }
     }
 
-    private void updateAndScheduleParents(Workflow workflow) {
+    private void updateAndPushParents(Workflow workflow) {
         String workflowIdentifier = "";
         while (workflow.hasParent()) {
             // update parent's sub workflow task
