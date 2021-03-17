@@ -37,6 +37,7 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageBatchResult;
 import com.amazonaws.services.sqs.model.SetQueueAttributesResult;
 import com.google.common.annotations.VisibleForTesting;
+import com.netflix.conductor.core.LifecycleAwareComponent;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
@@ -55,7 +56,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class SQSObservableQueue implements ObservableQueue {
+public class SQSObservableQueue extends LifecycleAwareComponent implements ObservableQueue {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SQSObservableQueue.class);
     private static final String QUEUE_TYPE = "sqs";
@@ -296,8 +297,12 @@ public class SQSObservableQueue implements ObservableQueue {
         return subscriber -> {
             Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
             interval.flatMap((Long x) -> {
-                List<Message> msgs = receiveMessages();
-                return Observable.from(msgs);
+                if (!isRunning()) {
+                    LOGGER.debug("Component stopped, skip listening for messages from SQS");
+                    return Observable.from(Collections.emptyList());
+                }
+                List<Message> messages = receiveMessages();
+                return Observable.from(messages);
             }).subscribe(subscriber::onNext, subscriber::onError);
         };
     }

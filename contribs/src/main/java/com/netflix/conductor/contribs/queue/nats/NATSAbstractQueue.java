@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.contribs.queue.nats;
 
+import com.netflix.conductor.core.LifecycleAwareComponent;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import io.nats.client.NUID;
@@ -34,7 +35,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Oleksiy Lysak
  */
-public abstract class NATSAbstractQueue implements ObservableQueue {
+public abstract class NATSAbstractQueue extends LifecycleAwareComponent implements ObservableQueue {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NATSAbstractQueue.class);
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
@@ -93,25 +94,29 @@ public abstract class NATSAbstractQueue implements ObservableQueue {
         Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
             Observable<Long> interval = Observable.interval(100, TimeUnit.MILLISECONDS, scheduler);
             interval.flatMap((Long x) -> {
-                List<Message> available = new LinkedList<>();
-                messages.drainTo(available);
+                if (!isRunning()) {
+                    LOGGER.debug("Component stopped, skip listening for messages from NATS Queue");
+                    return Observable.from(Collections.emptyList());
+                } else {
+                    List<Message> available = new LinkedList<>();
+                    messages.drainTo(available);
 
-                if (!available.isEmpty()) {
-                    AtomicInteger count = new AtomicInteger(0);
-                    StringBuilder buffer = new StringBuilder();
-                    available.forEach(msg -> {
-                        buffer.append(msg.getId()).append("=").append(msg.getPayload());
-                        count.incrementAndGet();
+                    if (!available.isEmpty()) {
+                        AtomicInteger count = new AtomicInteger(0);
+                        StringBuilder buffer = new StringBuilder();
+                        available.forEach(msg -> {
+                            buffer.append(msg.getId()).append("=").append(msg.getPayload());
+                            count.incrementAndGet();
 
-                        if (count.get() < available.size()) {
-                            buffer.append(",");
-                        }
-                    });
+                            if (count.get() < available.size()) {
+                                buffer.append(",");
+                            }
+                        });
+                        LOGGER.info(String.format("Batch from %s to conductor is %s", subject, buffer.toString()));
+                    }
 
-                    LOGGER.info(String.format("Batch from %s to conductor is %s", subject, buffer.toString()));
+                    return Observable.from(available);
                 }
-
-                return Observable.from(available);
             }).subscribe(subscriber::onNext, subscriber::onError);
         };
         return Observable.create(onSubscribe);

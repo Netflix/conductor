@@ -39,7 +39,7 @@ public interface ObservableQueue {
     String getURI();
 
     /**
-     * @param messages messages to be ack'ed
+     * @param messages to be ack'ed
      * @return the id of the ones which could not be ack'ed
      */
     List<String> ack(List<Message> messages);

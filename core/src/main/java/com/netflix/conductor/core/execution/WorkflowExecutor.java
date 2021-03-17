@@ -1751,6 +1751,8 @@ public class WorkflowExecutor {
             rerunFromTask.setUpdateTime(0);
             rerunFromTask.setEndTime(0);
             rerunFromTask.setOutputData(null);
+            rerunFromTask.setRetried(false);
+            rerunFromTask.setExecuted(false);
             rerunFromTask.setExternalOutputPayloadStoragePath(null);
             if (rerunFromTask.getTaskType().equalsIgnoreCase(SubWorkflow.NAME)) {
                 // if task is sub workflow set task as IN_PROGRESS and reset start time
@@ -1764,7 +1766,6 @@ public class WorkflowExecutor {
                 }
                 addTaskToQueue(rerunFromTask);
             }
-            rerunFromTask.setExecuted(false);
             executionDAOFacade.updateTask(rerunFromTask);
 
             decide(workflowId);

@@ -21,7 +21,6 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.service.WorkflowService;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.netflix.conductor.rest.config.RequestMappingConstants.WORKFLOW;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 @RestController
@@ -81,7 +79,7 @@ public class WorkflowResource {
     public Map<String, List<Workflow>> getWorkflows(@PathVariable("name") String name,
         @RequestParam(value = "includeClosed", defaultValue = "false", required = false) boolean includeClosed,
         @RequestParam(value = "includeTasks", defaultValue = "false", required = false) boolean includeTasks,
-        List<String> correlationIds) {
+        @RequestBody List<String> correlationIds) {
         return workflowService.getWorkflows(name, includeClosed, includeTasks, correlationIds);
     }
 
@@ -137,7 +135,7 @@ public class WorkflowResource {
     @PostMapping(value = "/{workflowId}/rerun", produces = TEXT_PLAIN_VALUE)
     @Operation(summary = "Reruns the workflow from a specific task")
     public String rerun(@PathVariable("workflowId") String workflowId,
-        RerunWorkflowRequest request) {
+        @RequestBody RerunWorkflowRequest request) {
         return workflowService.rerunWorkflow(workflowId, request);
     }
 

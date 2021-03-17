@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.core.events.queue;
 
+import com.netflix.conductor.core.LifecycleAwareComponent;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
@@ -22,6 +23,7 @@ import rx.Observable.OnSubscribe;
 import rx.Scheduler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -29,7 +31,7 @@ import java.util.stream.Collectors;
 /**
  * An {@link ObservableQueue} implementation using the underlying {@link QueueDAO} implementation.
  */
-public class ConductorObservableQueue implements ObservableQueue {
+public class ConductorObservableQueue extends LifecycleAwareComponent implements ObservableQueue {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConductorObservableQueue.class);
 
@@ -111,8 +113,12 @@ public class ConductorObservableQueue implements ObservableQueue {
         return subscriber -> {
             Observable<Long> interval = Observable.interval(pollTimeMS, TimeUnit.MILLISECONDS, scheduler);
             interval.flatMap((Long x) -> {
-                List<Message> msgs = receiveMessages();
-                return Observable.from(msgs);
+                if (!isRunning()) {
+                    LOGGER.debug("Component stopped, skip listening for messages from Conductor Queue");
+                    return Observable.from(Collections.emptyList());
+                }
+                List<Message> messages = receiveMessages();
+                return Observable.from(messages);
             }).subscribe(subscriber::onNext, subscriber::onError);
         };
     }

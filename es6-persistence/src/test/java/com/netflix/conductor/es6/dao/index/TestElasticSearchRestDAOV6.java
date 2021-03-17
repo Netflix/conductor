@@ -22,7 +22,6 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.es6.utils.TestUtils;
-import org.joda.time.DateTime;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -280,32 +279,6 @@ public class TestElasticSearchRestDAOV6 extends ElasticSearchRestDaoBaseTest {
         String content = indexDAO.loadTypeMappingSource("/template_task_log.json");
 
         assertEquals(json, content);
-    }
-
-    @Test
-    public void shouldSearchRecentRunningWorkflows() throws Exception {
-        Workflow oldWorkflow = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow");
-        oldWorkflow.setStatus(Workflow.WorkflowStatus.RUNNING);
-        oldWorkflow.setUpdateTime(new DateTime().minusHours(2).toDate().getTime());
-
-        Workflow recentWorkflow = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow");
-        recentWorkflow.setStatus(Workflow.WorkflowStatus.RUNNING);
-        recentWorkflow.setUpdateTime(new DateTime().minusHours(1).toDate().getTime());
-
-        Workflow tooRecentWorkflow = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow");
-        tooRecentWorkflow.setStatus(Workflow.WorkflowStatus.RUNNING);
-        tooRecentWorkflow.setUpdateTime(new DateTime().toDate().getTime());
-
-        indexDAO.indexWorkflow(oldWorkflow);
-        indexDAO.indexWorkflow(recentWorkflow);
-        indexDAO.indexWorkflow(tooRecentWorkflow);
-
-        Thread.sleep(1000);
-
-        List<String> ids = indexDAO.searchRecentRunningWorkflows(2, 1);
-
-        assertEquals(1, ids.size());
-        assertEquals(recentWorkflow.getWorkflowId(), ids.get(0));
     }
 
     private void assertWorkflowSummary(String workflowId, WorkflowSummary summary) {

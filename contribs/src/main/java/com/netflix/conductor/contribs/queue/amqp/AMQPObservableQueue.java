@@ -16,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.netflix.conductor.contribs.queue.amqp.config.AMQPEventQueueProperties;
 import com.netflix.conductor.contribs.queue.amqp.util.AMQPConstants;
 import com.netflix.conductor.contribs.queue.amqp.util.AMQPSettings;
+import com.netflix.conductor.core.LifecycleAwareComponent;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
@@ -28,9 +29,15 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import rx.Observable;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,15 +47,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import rx.Observable;
 
 /**
  * @author Ritu Parathody
  */
-public class AMQPObservableQueue implements ObservableQueue {
+public class AMQPObservableQueue extends LifecycleAwareComponent implements ObservableQueue {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AMQPObservableQueue.class);
 
@@ -128,24 +131,29 @@ public class AMQPObservableQueue implements ObservableQueue {
         Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
             Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
             interval.flatMap((Long x) -> {
-                List<Message> available = new LinkedList<>();
-                messages.drainTo(available);
+                if (!isRunning()) {
+                    LOGGER.debug("Component stopped, skip listening for messages from RabbitMQ");
+                    return Observable.from(Collections.emptyList());
+                } else {
+                    List<Message> available = new LinkedList<>();
+                    messages.drainTo(available);
 
-                if (!available.isEmpty()) {
-                    AtomicInteger count = new AtomicInteger(0);
-                    StringBuilder buffer = new StringBuilder();
-                    available.forEach(msg -> {
-                        buffer.append(msg.getId()).append("=").append(msg.getPayload());
-                        count.incrementAndGet();
+                    if (!available.isEmpty()) {
+                        AtomicInteger count = new AtomicInteger(0);
+                        StringBuilder buffer = new StringBuilder();
+                        available.forEach(msg -> {
+                            buffer.append(msg.getId()).append("=").append(msg.getPayload());
+                            count.incrementAndGet();
 
-                        if (count.get() < available.size()) {
-                            buffer.append(",");
-                        }
-                    });
-                    LOGGER.info(String.format("Batch from %s to conductor is %s", settings.getQueueOrExchangeName(),
-                        buffer.toString()));
+                            if (count.get() < available.size()) {
+                                buffer.append(",");
+                            }
+                        });
+                        LOGGER.info(String.format("Batch from %s to conductor is %s", settings.getQueueOrExchangeName(),
+                            buffer.toString()));
+                    }
+                    return Observable.from(available);
                 }
-                return Observable.from(available);
             }).subscribe(subscriber::onNext, subscriber::onError);
         };
         return Observable.create(onSubscribe);
