@@ -12,13 +12,18 @@
  */
 package com.netflix.conductor.jedis;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.netflix.conductor.dyno.DynomiteConfiguration;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
 import com.netflix.dyno.jedis.DynoJedisClient;
-import javax.inject.Inject;
-import javax.inject.Provider;
+
 import redis.clients.jedis.commands.JedisCommands;
 
 public class DynomiteJedisProvider implements Provider<JedisCommands> {
@@ -26,7 +31,7 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
     private final HostSupplier hostSupplier;
     private final TokenMapSupplier tokenMapSupplier;
     private final DynomiteConfiguration configuration;
-
+    public static final Logger logger = LoggerFactory.getLogger(DynomiteJedisProvider.class);
     @Inject
     public DynomiteJedisProvider(
             DynomiteConfiguration configuration,
@@ -40,6 +45,7 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
 
     @Override
     public JedisCommands get() {
+    	logger.info("New values maxTimeoutWhenExhausted={} maxRetryPolicy={}",configuration.getMaxTimeoutWhenExhausted(),configuration.getConnectionRetryPolicy());
         ConnectionPoolConfigurationImpl connectionPoolConfiguration =
                 new ConnectionPoolConfigurationImpl(configuration.getClusterName())
                 .withTokenSupplier(tokenMapSupplier)
@@ -49,7 +55,9 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
                 .setConnectTimeout(0)
                 .setMaxConnsPerHost(
                         configuration.getMaxConnectionsPerHost()
-                );
+                )
+                .setMaxTimeoutWhenExhausted(configuration.getMaxTimeoutWhenExhausted())
+                .setRetryPolicyFactory(configuration.getConnectionRetryPolicy());
 
         return new DynoJedisClient.Builder()
                 .withHostSupplier(hostSupplier)
