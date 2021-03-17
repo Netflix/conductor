@@ -12,16 +12,17 @@
  */
 package com.netflix.conductor.core.config;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DataSizeUnit;
 import org.springframework.boot.convert.DurationUnit;
 import org.springframework.util.unit.DataSize;
 import org.springframework.util.unit.DataUnit;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 @ConfigurationProperties("conductor.app")
 public class ConductorProperties {
