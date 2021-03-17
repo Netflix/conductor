@@ -162,6 +162,15 @@ class NestedForkJoinSubworkflowRetrySpec extends AbstractSpecification {
         metadataService.updateTaskDef(persistedTask2Definition)
     }
 
+    /**
+     * On a 3-level workflow where all workflows reach FAILED state because of a FAILED task
+     * in the leaf workflow.
+     *
+     * A retry is executed on the root workflow.
+     *
+     * Expectation: The root workflow spawns a NEW mid-level workflow, which in turn spawns a NEW leaf workflow.
+     * When the leaf workflow completes successfully, both the NEW mid-level and root workflows also complete successfully.
+     */
     def "Test retry on the root in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the root workflow"
@@ -248,6 +257,15 @@ class NestedForkJoinSubworkflowRetrySpec extends AbstractSpecification {
         //endregion
     }
 
+    /**
+     * On a 3-level workflow where all workflows reach FAILED state because of a FAILED task
+     * in the leaf workflow.
+     *
+     * A retry is executed with resume flag on the root workflow.
+     *
+     * Expectation: The leaf workflow is retried and both its parent (mid-level) and grand parent (root) workflows are also retried.
+     * When the leaf workflow completes successfully, both the mid-level and root workflows also complete successfully.
+     */
     def "Test retry on the mid-level in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the mid level workflow"
@@ -316,6 +334,15 @@ class NestedForkJoinSubworkflowRetrySpec extends AbstractSpecification {
         //endregion
     }
 
+    /**
+     * On a 3-level workflow where all workflows reach FAILED state because of a FAILED task
+     * in the leaf workflow.
+     *
+     * A retry is executed on the mid-level workflow.
+     *
+     * Expectation: The mid-level workflow spawns a NEW leaf workflow and also updates its parent (root workflow).
+     * When the NEW leaf workflow completes successfully, both the mid-level and root workflows also complete successfully.
+     */
     def "Test retry on the leaf in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the leaf workflow"
@@ -392,6 +419,15 @@ class NestedForkJoinSubworkflowRetrySpec extends AbstractSpecification {
         //endregion
     }
 
+    /**
+     * On a 3-level workflow where all workflows reach FAILED state because of a FAILED task
+     * in the leaf workflow.
+     *
+     * A retry is executed with resume flag on the mid-level workflow.
+     *
+     * Expectation: The leaf workflow is retried and both its parent (mid-level) and grand parent (root) workflows are also retried.
+     * When the leaf workflow completes successfully, both the mid-level and root workflows also complete successfully.
+     */
     def "Test retry on the root with resume flag in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the root workflow"
@@ -498,6 +534,15 @@ class NestedForkJoinSubworkflowRetrySpec extends AbstractSpecification {
         //endregion
     }
 
+    /**
+     * On a 3-level workflow where all workflows reach FAILED state because of a FAILED task
+     * in the leaf workflow.
+     *
+     * A retry is executed on the leaf workflow.
+     *
+     * Expectation: The leaf workflow resumes its FAILED task and updates both its parent (mid-level) and grandparent (root).
+     * When the leaf workflow completes successfully, both the mid-level and root workflows also complete successfully.
+     */
     def "Test retry on the mid-level with resume flag in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the root workflow"
@@ -605,6 +650,15 @@ class NestedForkJoinSubworkflowRetrySpec extends AbstractSpecification {
         //endregion
     }
 
+    /**
+     * On a 3-level workflow where all workflows reach FAILED state because of a FAILED task
+     * in the leaf workflow.
+     *
+     * A retry is executed with resume flag on the leaf workflow.
+     *
+     * Expectation: The leaf workflow resumes its FAILED task and updates both its parent (mid-level) and grandparent (root).
+     * When the leaf workflow completes successfully, both the mid-level and root workflows also complete successfully.
+     */
     def "Test retry on the leaf with resume flag in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the leaf workflow"

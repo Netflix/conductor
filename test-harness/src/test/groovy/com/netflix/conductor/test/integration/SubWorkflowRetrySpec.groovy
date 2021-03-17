@@ -208,6 +208,9 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         newMidLevelWorkflowId != midLevelWorkflowId
         with(workflowExecutionService.getExecutionStatus(newMidLevelWorkflowId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 1
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.SCHEDULED
         }
 
         when: "poll and complete the integration_task_1 task in the mid-level workflow"
@@ -222,6 +225,9 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         newLeafWorkflowId != leafWorkflowId
         with(workflowExecutionService.getExecutionStatus(newLeafWorkflowId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 1
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.SCHEDULED
         }
 
         when: "poll and complete the two tasks in the leaf workflow"
@@ -229,22 +235,41 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         workflowTestUtil.pollAndCompleteTask('integration_task_2', 'task2.integration.worker', ['op': 'task2.done'])
 
         then: "the new leaf workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(newLeafWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(newLeafWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 2
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == 'integration_task_2'
+            tasks[1].status == Task.Status.COMPLETED
         }
 
         when: "the new mid level and root workflows are 'decided'"
-        workflowSweeper.sweep([newMidLevelWorkflowId], workflowExecutor, workflowRepairService)
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(newMidLevelWorkflowId)
+        sweep(rootWorkflowId)
 
         then: "the new mid level workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(newMidLevelWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(newMidLevelWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 2
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.FAILED
         }
 
         then: "the root workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(rootWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 3
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].retried
+            tasks[2].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].retriedTaskId == tasks[1].taskId
         }
         //endregion
     }
@@ -290,11 +315,12 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[1].retried
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.SCHEDULED
+            tasks[2].retriedTaskId == tasks[1].taskId
         }
 
         when: "the mid level and root workflows are 'decided'"
-        workflowSweeper.sweep([midLevelWorkflowId], workflowExecutor, workflowRepairService)
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(midLevelWorkflowId)
+        sweep(rootWorkflowId)
 
         then: "the mid level workflow is in RUNNING state"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
@@ -317,22 +343,39 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         workflowTestUtil.pollAndCompleteTask('integration_task_2', 'task1.integration.worker', ['op': 'task1.done'])
 
         then: "verify that the leaf workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(leafWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(leafWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 3
+            tasks[1].taskType == 'integration_task_2'
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].retried
+            tasks[2].taskType == 'integration_task_2'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].retriedTaskId == tasks[1].taskId
         }
 
         when: "the mid level and root workflows are 'decided'"
-        workflowSweeper.sweep([midLevelWorkflowId], workflowExecutor, workflowRepairService)
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(midLevelWorkflowId)
+        sweep(rootWorkflowId)
 
         then: "the new mid level workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 2
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.COMPLETED
         }
 
         and: "the root workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(rootWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 2
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.COMPLETED
         }
         //endregion
     }
@@ -381,8 +424,11 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
 
         then: "verify that a new leaf workflow is created and is in RUNNING state"
         newLeafWorkflowId != leafWorkflowId
-        with(workflowExecutionService.getExecutionStatus(newLeafWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(newLeafWorkflowId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 1
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.SCHEDULED
         }
 
         when: "poll and complete the 2 tasks in the leaf workflow"
@@ -390,21 +436,38 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         workflowTestUtil.pollAndCompleteTask('integration_task_2', 'task1.integration.worker', ['op': 'task1.done'])
 
         then: "verify that the new leaf workflow reached COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(newLeafWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(newLeafWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 2
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == 'integration_task_2'
+            tasks[1].status == Task.Status.COMPLETED
         }
 
         when: "the mid level and root workflows are 'decided'"
-        workflowSweeper.sweep([midLevelWorkflowId], workflowExecutor, workflowRepairService)
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(midLevelWorkflowId)
+        sweep(rootWorkflowId)
 
         then: "verify that the mid level and root workflows reach COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 3
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].retried
+            tasks[2].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].retriedTaskId == tasks[1].taskId
         }
+
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 2
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.COMPLETED
             (!tasks[1].subworkflowChanged) // flag is reset after decide
@@ -453,11 +516,12 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[1].retried
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.SCHEDULED
+            tasks[2].retriedTaskId == tasks[1].taskId
         }
 
         when: "the mid level and root workflows are 'decided'"
-        workflowSweeper.sweep([midLevelWorkflowId], workflowExecutor, workflowRepairService)
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(midLevelWorkflowId)
+        sweep(rootWorkflowId)
 
         then: "the mid level workflow is in RUNNING state"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
@@ -480,22 +544,36 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         workflowTestUtil.pollAndCompleteTask('integration_task_2', 'task1.integration.worker', ['op': 'task1.done'])
 
         then: "verify that the leaf workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(leafWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(leafWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 3
+            tasks[1].taskType == 'integration_task_2'
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].retried
+            tasks[2].taskType == 'integration_task_2'
+            tasks[2].status == Task.Status.COMPLETED
         }
 
         when: "the mid level and root workflows are 'decided'"
-        workflowSweeper.sweep([midLevelWorkflowId], workflowExecutor, workflowRepairService)
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(midLevelWorkflowId)
+        sweep(rootWorkflowId)
 
-        then: "the new mid level workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, false)) {
+        then: "the mid level workflow is in COMPLETED state"
+        with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 2
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.COMPLETED
+            !tasks[1].subworkflowChanged // flag is reset after decide
         }
 
         and: "the root workflow is in COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(rootWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 2
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.COMPLETED
+            !tasks[1].subworkflowChanged // flag is reset after decide
         }
         //endregion
     }
@@ -548,26 +626,24 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[1].subworkflowChanged
         }
 
-        and: "verify the SUB_WORKFLOW task in root workflow is IN_PROGRESS state"
-        with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
-            tasks.size() == 2
-            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
-            tasks[1].status == Task.Status.IN_PROGRESS
-            tasks[1].subworkflowChanged
-        }
-
         when: "poll and complete the scheduled task in the leaf workflow"
         workflowTestUtil.pollAndCompleteTask('integration_task_2', 'task1.integration.worker', ['op': 'task1.done'])
 
         then: "verify that the leaf workflow reached COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(leafWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(leafWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 3
+            tasks[1].taskType == 'integration_task_2'
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].retried
+            tasks[2].taskType == 'integration_task_2'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].retriedTaskId == tasks[1].taskId
         }
 
         when: "the mid level and root workflows are 'decided'"
-        workflowSweeper.sweep([midLevelWorkflowId], workflowExecutor, workflowRepairService)
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(midLevelWorkflowId)
+        sweep(rootWorkflowId)
 
         then: "verify that the mid level and root workflows reach COMPLETED state"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
@@ -635,15 +711,6 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[1].subworkflowChanged
         }
 
-        and: "verify the SUB_WORKFLOW task in root workflow is IN_PROGRESS state"
-        with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
-            tasks.size() == 2
-            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
-            tasks[1].status == Task.Status.IN_PROGRESS
-            tasks[1].subworkflowChanged
-        }
-
         when: "poll and complete the scheduled task in the leaf workflow"
         workflowTestUtil.pollAndCompleteTask('integration_task_2', 'task1.integration.worker', ['op': 'task1.done'])
 
@@ -653,8 +720,8 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         }
 
         when: "the mid level and root workflows are 'decided'"
-        workflowSweeper.sweep([midLevelWorkflowId], workflowExecutor, workflowRepairService)
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(midLevelWorkflowId)
+        sweep(rootWorkflowId)
 
         then: "verify that the mid level and root workflows reach COMPLETED state"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
