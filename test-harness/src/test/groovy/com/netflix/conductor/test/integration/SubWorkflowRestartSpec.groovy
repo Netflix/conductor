@@ -180,7 +180,7 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
     def "Test restart on the root in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the root workflow"
-        workflowExecutor.rewind(rootWorkflowId, false)
+        workflowExecutor.restart(rootWorkflowId, false)
 
         then: "poll and complete the 'integration_task_1' task"
         workflowTestUtil.pollAndCompleteTask('integration_task_1', 'task1.integration.worker', ['op1': 'task1.done'])
@@ -278,7 +278,7 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
     def "Test restart on the mid-level in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the mid level workflow"
-        workflowExecutor.rewind(midLevelWorkflowId, false)
+        workflowExecutor.restart(midLevelWorkflowId, false)
 
         then: "verify that the mid workflow created a new execution"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
@@ -366,7 +366,7 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
     def "Test restart on the leaf in a 3-level subworkflow"() {
         //region Test case
         when: "do a retry on the leaf workflow"
-        workflowExecutor.rewind(leafWorkflowId, false)
+        workflowExecutor.restart(leafWorkflowId, false)
 
         then: "verify that the leaf workflow creates a new execution"
         with(workflowExecutionService.getExecutionStatus(leafWorkflowId, true)) {
