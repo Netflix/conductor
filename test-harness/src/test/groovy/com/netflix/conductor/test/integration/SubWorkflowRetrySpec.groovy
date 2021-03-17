@@ -247,7 +247,7 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
-            tasks[1].status == Task.Status.FAILED
+            tasks[1].status == Task.Status.COMPLETED
         }
 
         then: "the root workflow is in COMPLETED state"
