@@ -3,8 +3,6 @@ package com.netflix.conductor.test.integration
 import com.netflix.conductor.common.metadata.tasks.Task
 import com.netflix.conductor.common.metadata.tasks.TaskDef
 import com.netflix.conductor.common.run.Workflow
-import com.netflix.conductor.core.execution.WorkflowRepairService
-import com.netflix.conductor.core.execution.WorkflowSweeper
 import com.netflix.conductor.core.execution.tasks.SubWorkflow
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask
 import com.netflix.conductor.dao.QueueDAO
@@ -19,12 +17,6 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
 
     @Autowired
     QueueDAO queueDAO
-
-    @Autowired
-    WorkflowSweeper workflowSweeper
-
-    @Autowired
-    WorkflowRepairService workflowRepairService
 
     @Shared
     def WORKFLOW_WITH_SUBWORKFLOW = 'integration_test_wf_with_sub_wf'
