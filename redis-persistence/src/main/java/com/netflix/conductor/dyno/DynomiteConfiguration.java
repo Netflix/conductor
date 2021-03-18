@@ -39,10 +39,10 @@ public interface DynomiteConfiguration extends Configuration {
     int NON_QUORUM_PORT_DEFAULT_VALUE = 22122;
     
     //If attempt is set to 2, it will try for 2 + 1 = 3 times
-    String MAX_RETRY_ATTEMPT = "worfklow.dynomite.connection.max.retry.attempt";    
+    String MAX_RETRY_ATTEMPT = "workflow.dynomite.connection.max.retry.attempt";    
     int MAX_RETRY_ATTEMPT_VALUE = 0;
         
-	String MAX_TIMEOUT_WHEN_EXHASUTED = "worfklow.dynomite.connection.max.timeout.exhausted.ms";
+	String MAX_TIMEOUT_WHEN_EXHASUTED = "workflow.dynomite.connection.max.timeout.exhausted.ms";
     int MAX_TIMEOUT_WHEN_EXHAUSTED_VALUE = 800;
 
     default String getCluster() {
