@@ -1,3 +1,16 @@
+/*
+ * Copyright 2021 Netflix, Inc.
+ *  <p>
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ *   the License. You may obtain a copy of the License at
+ *   <p>
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   <p>
+ *   Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ *   an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations under the License.
+ */
+
 package com.netflix.conductor.test.integration
 
 import com.netflix.conductor.common.metadata.tasks.Task
@@ -171,7 +184,7 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
      */
     def "Test restart on the root in a 3-level subworkflow"() {
         //region Test case
-        when: "do a retry on the root workflow"
+        when: "do a restart on the root workflow"
         workflowExecutor.restart(rootWorkflowId, false)
 
         then: "poll and complete the 'integration_task_1' task"
@@ -269,7 +282,7 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
      */
     def "Test restart on the mid-level in a 3-level subworkflow"() {
         //region Test case
-        when: "do a retry on the mid level workflow"
+        when: "do a restart on the mid level workflow"
         workflowExecutor.restart(midLevelWorkflowId, false)
 
         then: "verify that the mid workflow created a new execution"
@@ -357,7 +370,7 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
      */
     def "Test restart on the leaf in a 3-level subworkflow"() {
         //region Test case
-        when: "do a retry on the leaf workflow"
+        when: "do a restart on the leaf workflow"
         workflowExecutor.restart(leafWorkflowId, false)
 
         then: "verify that the leaf workflow creates a new execution"
