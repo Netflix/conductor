@@ -13,6 +13,7 @@
 package com.netflix.conductor.dyno;
 
 import com.netflix.conductor.core.config.Configuration;
+import com.netflix.dyno.connectionpool.RetryPolicy;
 import com.netflix.dyno.connectionpool.RetryPolicy.RetryPolicyFactory;
 import com.netflix.dyno.connectionpool.impl.RetryNTimes;
 import com.netflix.dyno.connectionpool.impl.RunOnce;
@@ -103,14 +104,30 @@ public interface DynomiteConfiguration extends Configuration {
     default RetryPolicyFactory getConnectionRetryPolicy() {
     	int maxRetryAttempt = getIntProperty(
     							MAX_RETRY_ATTEMPT, 
-    							MAX_RETRY_ATTEMPT_VALUE);
-    	
+    							MAX_RETRY_ATTEMPT_VALUE);    	
     	if (maxRetryAttempt == 0) {
-    		return () -> new RunOnce();    		
+    		return getRunOnce();    				
     	}else {
-    		return () -> new RetryNTimes(maxRetryAttempt,false);    				
-    	}
-    	
+    		return getRunNTimes(maxRetryAttempt);    				
+    	}    	
     }
+
+	default RetryPolicyFactory getRunOnce() {
+		return new RetryPolicyFactory() {			
+			@Override
+			public RetryPolicy getRetryPolicy() {					
+				return new RunOnce();
+			}
+		};
+	}
+	
+	default RetryPolicyFactory getRunNTimes(int count) {
+		return new RetryPolicyFactory() {			
+			@Override
+			public RetryPolicy getRetryPolicy() {					
+				return new RetryNTimes(count, false);
+			}
+		};
+	}
     
 }
