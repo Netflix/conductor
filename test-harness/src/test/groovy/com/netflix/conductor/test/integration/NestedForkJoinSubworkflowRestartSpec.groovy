@@ -1,3 +1,16 @@
+/*
+ * Copyright 2021 Netflix, Inc.
+ *  <p>
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ *   the License. You may obtain a copy of the License at
+ *   <p>
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   <p>
+ *   Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ *   an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations under the License.
+ */
+
 package com.netflix.conductor.test.integration
 
 import com.netflix.conductor.common.metadata.tasks.Task
@@ -18,7 +31,7 @@ import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAc
 class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
 
     @Shared
-    def FORK_JOIN_NESTED_SUB_WF = 'nested_fork_join_swf'
+    def FORK_JOIN_HIERARCHICAL_SUB_WF = 'hierarchical_fork_join_swf'
 
     @Shared
     def SIMPLE_WORKFLOW = "integration_test_wf"
@@ -31,7 +44,7 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
     def persistedTask2Definition
 
     def setup() {
-        workflowTestUtil.registerWorkflows('nested_fork_join_swf.json',
+        workflowTestUtil.registerWorkflows('hierarchical_fork_join_swf.json',
                 'simple_workflow_1_integration_test.json'
         )
 
@@ -45,18 +58,18 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
 
         and: "an existing workflow with subworkflow and registered definitions"
         metadataService.getWorkflowDef(SIMPLE_WORKFLOW, 1)
-        metadataService.getWorkflowDef(FORK_JOIN_NESTED_SUB_WF, 1)
+        metadataService.getWorkflowDef(FORK_JOIN_HIERARCHICAL_SUB_WF, 1)
 
         and: "input required to start the workflow execution"
         String correlationId = 'retry_on_root_in_3level_wf'
         def input = [
                 'param1'   : 'p1 value',
                 'param2'   : 'p2 value',
-                'subwf'    : FORK_JOIN_NESTED_SUB_WF,
+                'subwf'    : FORK_JOIN_HIERARCHICAL_SUB_WF,
                 'nextSubwf': SIMPLE_WORKFLOW]
 
         when: "the workflow is started"
-        rootWorkflowId = workflowExecutor.startWorkflow(FORK_JOIN_NESTED_SUB_WF, 1,
+        rootWorkflowId = workflowExecutor.startWorkflow(FORK_JOIN_HIERARCHICAL_SUB_WF, 1,
                 correlationId, input, null, null, null)
 
         then: "verify that the workflow is in a RUNNING state"
@@ -88,6 +101,14 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
         with(rootWorkflowInstance) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 4
+            tasks[0].taskType == Fork.NAME
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.IN_PROGRESS
+            tasks[2].taskType == 'integration_task_2'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[3].taskType == TASK_TYPE_JOIN
+            tasks[3].status == Task.Status.IN_PROGRESS
         }
 
         and: "verify that the mid-level workflow is RUNNING, and first task is in SCHEDULED state"
@@ -95,6 +116,14 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 4
+            tasks[0].taskType == Fork.NAME
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.SCHEDULED
+            tasks[2].taskType == 'integration_task_2'
+            tasks[2].status == Task.Status.SCHEDULED
+            tasks[3].taskType == TASK_TYPE_JOIN
+            tasks[3].status == Task.Status.IN_PROGRESS
         }
 
         and: "poll and complete the integration_task_1 task in the mid-level workflow"
