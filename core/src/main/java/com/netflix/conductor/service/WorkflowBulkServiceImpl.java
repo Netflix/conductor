@@ -15,11 +15,15 @@
  */
 package com.netflix.conductor.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Singleton;
 import com.netflix.conductor.annotations.Audit;
 import com.netflix.conductor.annotations.Service;
 import com.netflix.conductor.annotations.Trace;
+import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+
+import com.netflix.conductor.core.orchestration.ExecutionDAOFacade;
 import com.netflix.conductor.service.common.BulkResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +35,15 @@ import java.util.List;
 @Singleton
 @Trace
 public class WorkflowBulkServiceImpl implements WorkflowBulkService {
+    private final ExecutionDAOFacade executionDAOFacade;
     private final WorkflowExecutor workflowExecutor;
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowBulkService.class);
 
     @Inject
-    public WorkflowBulkServiceImpl(WorkflowExecutor workflowExecutor) {
+    public WorkflowBulkServiceImpl(WorkflowExecutor workflowExecutor,
+                                   ExecutionDAOFacade executionDAOFacade) {
         this.workflowExecutor = workflowExecutor;
+        this.executionDAOFacade = executionDAOFacade;
     }
 
     /**
@@ -143,4 +150,43 @@ public class WorkflowBulkServiceImpl implements WorkflowBulkService {
         }
         return bulkResponse;
     }
+
+    /**
+     * Terminate workflows execution.
+     * @param workflowIds - list of workflow Ids  to perform terminate operation on
+     * @param archiveWorkflow Archives the workflow
+     * @return bulk response object containing a list of succeeded workflows and a list of failed ones with errors
+     */
+    @Service
+    public BulkResponse delete(List<String> workflowIds, boolean archiveWorkflow) {
+        BulkResponse bulkResponse = new BulkResponse();
+        for (String workflowId : workflowIds) {
+            try {
+                executionDAOFacade.removeWorkflow(workflowId, archiveWorkflow);;
+                bulkResponse.appendSuccessResponse(workflowId);
+            } catch (Exception e) {
+                LOGGER.error("bulk terminate exception, workflowId {}, message: {} ",workflowId, e.getMessage(), e);
+                bulkResponse.appendFailedResponse(workflowId, e.getMessage());
+            }
+        }
+        return bulkResponse;
+    }
+
+    @Service
+    public BulkResponse removeCorrelatedWorkflows(String correlationId, boolean archiveWorkflow) {
+        BulkResponse bulkResponse = new BulkResponse();
+        String query = String.format("correlationId=\"%s\"", correlationId);
+        SearchResult<String> result = executionDAOFacade.searchWorkflows(query, "*", 0, 5000, null);
+        result.getResults().stream().parallel().forEach(workflowId -> {
+            try {
+                executionDAOFacade.removeWorkflow(workflowId, archiveWorkflow);;
+                bulkResponse.appendSuccessResponse(workflowId);
+            } catch (Exception e) {
+                LOGGER.error("bulk terminate exception, workflowId {}, message: {} ", workflowId, e.getMessage(), e);
+                bulkResponse.appendFailedResponse(workflowId, e.getMessage());
+            }
+        });
+        return bulkResponse;
+    }
 }
+
