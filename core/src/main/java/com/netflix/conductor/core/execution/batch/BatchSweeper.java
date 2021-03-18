@@ -27,7 +27,8 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.service.MetricService;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -132,6 +133,9 @@ public class BatchSweeper {
 
     private List<TaskGroup> poll(String queueName, String workerId, int count, int timeout, int unackTimeout, int rateLimit) {
         List<String> taskIds = queues.pop(queueName, count, timeout);
+        if (CollectionUtils.isNotEmpty(taskIds)) {
+            MetricService.getInstance().taskPoll(queueName, workerId, taskIds.size());
+        }
 
         Map<String, List<Task>> groups = taskIds.parallelStream()
             .map(taskId -> {
@@ -190,8 +194,13 @@ public class BatchSweeper {
                 task.setStatus(Task.Status.IN_PROGRESS);
                 if (task.getStartTime() == 0) {
                     task.setStartTime(System.currentTimeMillis());
-                    Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
                 }
+
+                // Metrics
+                MetricService.getInstance().taskWait(task.getTaskType(),
+                    task.getReferenceTaskName(),
+                    task.getQueueWaitTime());
+
                 task.setWorkerId(workerId);
                 task.setPollCount(task.getPollCount() + 1);
                 workflowExecutor.updateTask(task);
@@ -215,7 +224,7 @@ public class BatchSweeper {
     private boolean ackTaskReceived(String queueName, String taskId, int responseTimeoutSeconds) {
         if (responseTimeoutSeconds > 0) {
             logger.debug("Adding task " + queueName + "/" + taskId + " to be requeued if no response received " + responseTimeoutSeconds);
-            return queues.setUnackTimeout(queueName, taskId, 1000 * responseTimeoutSeconds); //Value is in millisecond
+            return queues.setUnackTimeout(queueName, taskId, 1000L * responseTimeoutSeconds); //Value is in millisecond
         } else {
             return queues.ack(queueName, taskId);
         }

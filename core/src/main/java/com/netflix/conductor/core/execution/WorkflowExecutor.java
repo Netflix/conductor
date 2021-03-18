@@ -50,7 +50,6 @@ import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -377,7 +376,7 @@ public class WorkflowExecutor {
 			edao.updateWorkflow(workflow);
 
 			// metrics
-			Monitors.recordWorkflowRerun(workflow);
+			MetricService.getInstance().workflowRerun(workflow.getWorkflowType());
 
 			// send wf start message
 			workflowStatusListener.onWorkflowStarted(workflow);
@@ -787,7 +786,7 @@ public class WorkflowExecutor {
 			} catch (Exception e) {
 				logger.info("Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
 				workflow.getOutput().put("conductor.cancel_workflow", "Error workflow " + cancelWorkflow + " failed to start.  reason: " + e.getMessage());
-				Monitors.recordWorkflowStartError(cancelWorkflow);
+				MetricService.getInstance().workflowStartFailed(cancelWorkflow);
 			}
 		}
 
@@ -959,7 +958,7 @@ public class WorkflowExecutor {
 						workflow.getWorkflowIds(), workflow.getTraceId(), workflow.getJobPriority());
 				} catch (Exception e) {
 					logger.info("Error workflow " + workflowName + " failed to start. reason: " + e.getMessage(), e);
-					Monitors.recordWorkflowStartError(workflowName);
+					MetricService.getInstance().workflowStartFailed(workflowName);
 				}
 			}
 		}
@@ -1009,15 +1008,17 @@ public class WorkflowExecutor {
 			} catch (Exception e) {
 				logger.info("Error workflow " + failureWorkflow + " failed to start.  reason: " + e.getMessage());
 				workflow.getOutput().put("conductor.failure_workflow", "Error workflow " + failureWorkflow + " failed to start.  reason: " + e.getMessage());
-				Monitors.recordWorkflowStartError(failureWorkflow);
+				MetricService.getInstance().workflowStartFailed(failureWorkflow);
 			}
 		}
 
 		// send wf end message
 		workflowStatusListener.onWorkflowTerminated(workflow);
 
-		// Send to atlas
-		MetricService.getInstance().workflowFailure(workflow.getWorkflowType(), workflow.getStatus().name());
+		// Send to data dog
+		MetricService.getInstance().workflowFailure(workflow.getWorkflowType(),
+			workflow.getStatus().name(),
+			workflow.getStartTime());
 	}
 
 	public QueueDAO getQueueDao() {
@@ -1059,7 +1060,7 @@ public class WorkflowExecutor {
 			}
 			String msg = "Workflow " + wf.getWorkflowId() + " is already completed as " + wf.getStatus() + ", task=" + task.getTaskType() + ",reason=" + wf.getReasonForIncompletion()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser()+ ",clientId=" + wf.getClientId();
 			logger.debug(msg);
-			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
+			//Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), wf.getStatus());
 			return;
 		}
 
@@ -1068,7 +1069,7 @@ public class WorkflowExecutor {
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			String msg = "Task is already completed as " + task.getStatus() + "@" + task.getEndTime() + ", workflow status=" + wf.getStatus() + ",workflowId=" + wf.getWorkflowId() + ",taskId=" + task.getTaskId()+",correlationId="+wf.getCorrelationId() + ",contextUser=" + wf.getContextUser()+ ",clientId=" + wf.getClientId();
 			logger.debug(msg);
-			Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), task.getStatus());
+			//Monitors.recordUpdateConflict(task.getTaskType(), wf.getWorkflowType(), task.getStatus());
 			return;
 		}
 
@@ -1097,6 +1098,12 @@ public class WorkflowExecutor {
 			edao.resetStartTime(task, result.isUpdateOutput());
 		} else {
 			edao.updateTask(task);
+		}
+		if (task.isTerminal()) {
+			MetricService.getInstance().taskComplete(task.getTaskType(),
+				task.getReferenceTaskName(),
+				task.getStatus().name(),
+				task.getStartTime());
 		}
 
 		result.getLogs().forEach(tl -> tl.setTaskId(task.getTaskId()));
@@ -1141,19 +1148,6 @@ public class WorkflowExecutor {
 			wakeUpSweeper(workflowId, wf.getJobPriority());
 		} else {
 			decide(workflowId);
-		}
-
-		if (task.getStatus().isTerminal()) {
-			long duration = getTaskDuration(0, task);
-			long lastDuration = task.getEndTime() - task.getStartTime();
-			Monitors.recordTaskExecutionTime(task, duration, true);
-			Monitors.recordTaskExecutionTime(task, lastDuration, false);
-			if(task.getStatus().equals(Status.COMPLETED)) {
-				Monitors.recordTasksCompleted(task);
-			}
-			if(task.getStatus().equals(Status.FAILED)) {
-				Monitors.recordTasksFailed(task);
-			}
 		}
 	}
 
@@ -1309,7 +1303,7 @@ public class WorkflowExecutor {
 
 		edao.updateWorkflow(workflow);
 		// metrics
-		Monitors.recordWorkflowPause(workflow);
+		MetricService.getInstance().workflowPause(workflow.getWorkflowType());
 	}
 
 	public void resumeWorkflow(String workflowId,String correlationId) throws Exception{
@@ -1330,7 +1324,7 @@ public class WorkflowExecutor {
 		}
 		edao.updateWorkflow(workflow);
 		// metrics
-		Monitors.recordWorkflowResume(workflow);
+		MetricService.getInstance().workflowResume(workflow.getWorkflowType());
 		decide(workflowId);
 	}
 
@@ -1404,7 +1398,7 @@ public class WorkflowExecutor {
 			throw new ApplicationException(Code.NOT_FOUND, "No workflow found with id " + workflowId);
 		edao.removeWorkflow(workflowId);
 		// metrics
-		Monitors.recordWorkflowRemove(workflow);
+		MetricService.getInstance().workflowRemove(workflow.getWorkflowType());
 	}
 
 	public void removeWorkflowNotImplemented(String workflowId) {
@@ -1446,14 +1440,16 @@ public class WorkflowExecutor {
 			if (task.getStatus().equals(Status.SCHEDULED)) {
 
 				if (edao.exceedsInProgressLimit(task)) {
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
 					logger.debug("Concurrent Execution limited for {}:{}", taskId, task.getTaskDefName());
-					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
 					return;
 				}
 
 				if (edao.exceedsRateLimitPerFrequency(task)) {
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
 					logger.debug("RateLimit Execution limited for {}:{}", taskId, task.getTaskDefName());
-					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
 					return;
 				}
 			}
@@ -1469,13 +1465,18 @@ public class WorkflowExecutor {
 				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(),
 				workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
-			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000);
+			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
 			task.setStarted(true);
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());
-				Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
 			}
 			task.setPollCount(task.getPollCount() + 1);
+
+			// Metrics
+			MetricService.getInstance().taskWait(task.getTaskType(),
+				task.getReferenceTaskName(),
+				task.getQueueWaitTime());
+
 			edao.updateTask(task);
 
 			switch (task.getStatus()) {

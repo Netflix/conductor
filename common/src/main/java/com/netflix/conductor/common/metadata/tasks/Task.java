@@ -545,6 +545,10 @@ public class Task {
 		this.started = started;
 	}
 
+	public boolean isTerminal() {
+		return status != null && status.isTerminal();
+	}
+
 	public Task copy() {
 		
 		Task copy = new Task();

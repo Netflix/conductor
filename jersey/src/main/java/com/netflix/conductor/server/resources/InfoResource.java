@@ -48,14 +48,12 @@ public class InfoResource {
 	private static final Logger logger = LoggerFactory.getLogger(InfoResource.class);
 	private final MetricsDAO metricsDAO;
 	private final Configuration config;
-	private final Boolean dbMetricsEnabled;
 	private String fullVersion;
 
 	@Inject
 	public InfoResource(Configuration config, MetricsDAO metricsDAO) {
 		this.config = config;
 		this.metricsDAO = metricsDAO;
-		this.dbMetricsEnabled = Boolean.parseBoolean(config.getProperty("conductor.dbmetrics.enabled", "false"));
 		try {
 			InputStream propertiesIs = this.getClass().getClassLoader().getResourceAsStream("META-INF/conductor-core.properties");
 			Properties prop = new Properties();
@@ -160,9 +158,6 @@ public class InfoResource {
 	@ApiOperation(value = "Get the metrics")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String, Object> metrics() {
-		if (!dbMetricsEnabled) {
-			return Collections.emptyMap();
-		}
-		return new TreeMap<>(metricsDAO.getMetrics());
+		return metricsDAO.getMetrics();
 	}
 }

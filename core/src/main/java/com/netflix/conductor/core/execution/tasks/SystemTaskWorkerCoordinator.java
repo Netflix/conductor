@@ -22,13 +22,16 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.service.MetricService;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,7 +72,9 @@ public class SystemTaskWorkerCoordinator {
 	private static Set<WorkflowSystemTask> listeningTasks = new HashSet<>();
 	
 	private static final String className = SystemTaskWorkerCoordinator.class.getName();
-		
+
+	private String workerId;
+
 	@Inject
 	public SystemTaskWorkerCoordinator(QueueDAO taskQueues, WorkflowExecutor executor, Configuration config) {
 		this.taskQueues = taskQueues;
@@ -93,6 +98,11 @@ public class SystemTaskWorkerCoordinator {
 			logger.debug("System Task Worker Initialized with {} threads and a callback time of {} second and queue size {} with pollCount {}", threadCount, unackTimeout, workerQueueSize, pollCount);
 		} else {
 			logger.warn("System Task Worker DISABLED");
+		}
+		try {
+			this.workerId = InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			this.workerId = "unknown";
 		}
 	}
 
@@ -136,7 +146,9 @@ public class SystemTaskWorkerCoordinator {
 			String name = systemTask.getName();
 			String lockQueue = name.toLowerCase() + ".lock";
 			List<String> polled = taskQueues.pop(name, pollCount, pollTimeout);
-			Monitors.recordTaskPoll(name);
+			if (CollectionUtils.isNotEmpty(polled)) {
+				MetricService.getInstance().taskPoll(name, workerId, polled.size());
+			}
 			logger.debug("Polling for {}, got {}", name, polled.size());
 			for(String task : polled) {
 				try {
@@ -145,10 +157,11 @@ public class SystemTaskWorkerCoordinator {
 
 						// This prevents another containers executing the same action
 						// true means this session added the record to lock queue and can start the task
-						long expireTime = systemTask.getRetryTimeInSecond() * 2; // 2 times longer than task retry time
-						boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime, 0); // We do not care priority in this case
+						long expireTime = systemTask.getRetryTimeInSecond() * 2L; // 2 times longer than task retry time
+						boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime);
 						if (!locked) {
 							logger.warn("Cannot lock the task " + task);
+							MetricService.getInstance().taskLockFailed(name);
 							return;
 						}
 
@@ -161,11 +174,11 @@ public class SystemTaskWorkerCoordinator {
 					});
 				}catch(RejectedExecutionException ree) {
 					logger.warn("Queue full for workers {}, taskId {}", workerQueue.size(), task);
+					MetricService.getInstance().systemWorkersQueueFull(name);
 				}
 			}
 			
 		} catch (Exception e) {
-			Monitors.error(className, "pollAndExecute");
 			logger.error(e.getMessage(), e);
 		}
 	}

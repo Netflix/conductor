@@ -64,7 +64,8 @@ const App = React.createClass({
               width: document.body.clientWidth - 180,
               marginLeft: marginLeft,
               marginTop: '10px',
-              paddingRight: '20px'
+              paddingRight: '20px',
+              paddingBottom: '20px'
             }}>
               {this.props.children}
             </div>

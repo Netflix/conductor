@@ -33,7 +33,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -396,14 +396,14 @@ public class DeciderService {
 		}
 
 		long now = System.currentTimeMillis();
-		long elapsedTime = now - (task.getStartTime() + (task.getStartDelayInSeconds()*1000));
+		long elapsedTime = now - (task.getStartTime() + (task.getStartDelayInSeconds()* 1000L));
 		
 		if (elapsedTime < timeout) {
 			return;
 		}
 
 		String reason = "Task timed out after " + elapsedTime + " millisecond.  Timeout configured as " + timeout;
-		Monitors.recordTaskTimeout(task.getTaskDefName());
+		MetricService.getInstance().taskTimeout(task.getTaskType(), task.getReferenceTaskName());
 		
 		switch (taskType.getTimeoutPolicy()) {
 		case ALERT_ONLY:
@@ -421,7 +421,7 @@ public class DeciderService {
 			logger.error(message);
 			throw new TerminateWorkflow(reason, WorkflowStatus.TIMED_OUT, task);
 		}
-		
+
 		return;
 	}
 
