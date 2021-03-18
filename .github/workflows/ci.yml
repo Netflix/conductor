@@ -34,9 +34,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Build with Gradle
         run: |
           echo "Running build for commit ${{ github.sha }} in ${{ github.head_ref }}"
-          ./gradlew build -x javadoc
+          ./gradlew build
