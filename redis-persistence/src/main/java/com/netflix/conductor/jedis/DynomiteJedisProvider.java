@@ -31,7 +31,7 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
     private final HostSupplier hostSupplier;
     private final TokenMapSupplier tokenMapSupplier;
     private final DynomiteConfiguration configuration;
-    public static final Logger logger = LoggerFactory.getLogger(DynomiteJedisProvider.class);
+    
     @Inject
     public DynomiteJedisProvider(
             DynomiteConfiguration configuration,
@@ -44,8 +44,7 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
     }
 
     @Override
-    public JedisCommands get() {
-    	logger.info("New values maxTimeoutWhenExhausted={} maxRetryPolicy={}",configuration.getMaxTimeoutWhenExhausted(),configuration.getConnectionRetryPolicy());
+    public JedisCommands get() {    	
         ConnectionPoolConfigurationImpl connectionPoolConfiguration =
                 new ConnectionPoolConfigurationImpl(configuration.getClusterName())
                 .withTokenSupplier(tokenMapSupplier)
