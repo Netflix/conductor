@@ -106,28 +106,10 @@ public interface DynomiteConfiguration extends Configuration {
     							MAX_RETRY_ATTEMPT, 
     							MAX_RETRY_ATTEMPT_VALUE);    	
     	if (maxRetryAttempt == 0) {
-    		return getRunOnce();    				
+    		return () -> new RunOnce();  				
     	}else {
-    		return getRunNTimes(maxRetryAttempt);    				
+    		return () -> new RetryNTimes(maxRetryAttempt,false);    				
     	}    	
     }
-
-	default RetryPolicyFactory getRunOnce() {
-		return new RetryPolicyFactory() {			
-			@Override
-			public RetryPolicy getRetryPolicy() {					
-				return new RunOnce();
-			}
-		};
-	}
-	
-	default RetryPolicyFactory getRunNTimes(int count) {
-		return new RetryPolicyFactory() {			
-			@Override
-			public RetryPolicy getRetryPolicy() {					
-				return new RetryNTimes(count, false);
-			}
-		};
-	}
     
 }

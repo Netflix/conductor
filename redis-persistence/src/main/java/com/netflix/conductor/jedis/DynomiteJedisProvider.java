@@ -18,15 +18,19 @@ import javax.inject.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.netflix.conductor.dao.dynomite.RedisExecutionDAO;
 import com.netflix.conductor.dyno.DynomiteConfiguration;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
 import com.netflix.dyno.connectionpool.impl.ConnectionPoolConfigurationImpl;
+import com.netflix.dyno.connectionpool.impl.RetryNTimes;
 import com.netflix.dyno.jedis.DynoJedisClient;
 
 import redis.clients.jedis.commands.JedisCommands;
 
 public class DynomiteJedisProvider implements Provider<JedisCommands> {
+	
+	public static final Logger logger = LoggerFactory.getLogger(DynomiteJedisProvider.class);
 
     private final HostSupplier hostSupplier;
     private final TokenMapSupplier tokenMapSupplier;
@@ -45,6 +49,7 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
 
     @Override
     public JedisCommands get() {    	
+    	    	
         ConnectionPoolConfigurationImpl connectionPoolConfiguration =
                 new ConnectionPoolConfigurationImpl(configuration.getClusterName())
                 .withTokenSupplier(tokenMapSupplier)
@@ -57,6 +62,7 @@ public class DynomiteJedisProvider implements Provider<JedisCommands> {
                 )
                 .setMaxTimeoutWhenExhausted(configuration.getMaxTimeoutWhenExhausted())
                 .setRetryPolicyFactory(configuration.getConnectionRetryPolicy());
+        
 
         return new DynoJedisClient.Builder()
                 .withHostSupplier(hostSupplier)
