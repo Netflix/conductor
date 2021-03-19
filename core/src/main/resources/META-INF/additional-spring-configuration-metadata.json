@@ -6,7 +6,7 @@
       "description": "Enables the workflow sweeper."
     },
     {
-      "name": "conductor.app.workflow-repair-service-enabled",
+      "name": "conductor.workflow-repair-service.enabled",
       "type": "java.lang.Boolean",
       "description": "Configuration to enable WorkflowRepairService, that tries to keep ExecutionDAO and QueueDAO in sync, based on the task or workflow state. This is disabled by default; To enable, the Queueing layer must implement QueueDAO.containsMessage method."
     },
