@@ -33,7 +33,7 @@ import java.util.function.Predicate;
  * A helper service that tries to keep ExecutionDAO and QueueDAO in sync, based on the task or workflow state.
  * <p>
  * This service expects that the underlying Queueing layer implements QueueDAO.containsMessage method. This can be
- * controlled with <code>conductor.app.workflow-repair-service-enabled</code>
+ * controlled with <code>conductor.workflow-repair-service.enabled</code>
  * property.
  */
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
