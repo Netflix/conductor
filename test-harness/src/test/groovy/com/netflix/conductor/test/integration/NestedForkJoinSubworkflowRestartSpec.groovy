@@ -159,7 +159,7 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
         }
 
         when: "the mid level workflow is 'decided'"
-        workflowSweeper.sweep([midLevelWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(midLevelWorkflowId)
 
         then: "the mid level subworkflow is in FAILED state"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
@@ -168,7 +168,7 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
         }
 
         when: "the root level workflow is 'decided'"
-        workflowSweeper.sweep([rootWorkflowId], workflowExecutor, workflowRepairService)
+        sweep(rootWorkflowId)
 
         then: "the root level workflow is in FAILED state"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
