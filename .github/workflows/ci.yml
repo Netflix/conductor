@@ -39,4 +39,4 @@ jobs:
       - name: Build with Gradle
         run: |
           echo "Running build for commit ${{ github.sha }} in ${{ github.head_ref }}"
-          ./gradlew build
+          ./gradlew build --info --stacktrace
