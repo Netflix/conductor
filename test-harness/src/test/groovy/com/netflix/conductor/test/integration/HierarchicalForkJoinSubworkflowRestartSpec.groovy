@@ -28,7 +28,7 @@ import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOI
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW
 import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedTask
 
-class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
+class HierarchicalForkJoinSubworkflowRestartSpec extends AbstractSpecification {
 
     @Shared
     def FORK_JOIN_HIERARCHICAL_SUB_WF = 'hierarchical_fork_join_swf'
