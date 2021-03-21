@@ -1,14 +1,14 @@
 /*
- * Copyright 2020 Netflix, Inc.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Copyright 2021 Netflix, Inc.
+ *  <p>
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ *   the License. You may obtain a copy of the License at
+ *   <p>
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   <p>
+ *   Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ *   an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations under the License.
  */
 package com.netflix.conductor.core.execution;
 
@@ -568,7 +568,7 @@ public class WorkflowExecutor {
         if (resumeSubworkflowTasks) {
             Optional<Task> taskToRetry = workflow.getTasks().stream().filter(UNSUCCESSFUL_TERMINAL_TASK).findFirst();
             if (taskToRetry.isPresent()) {
-                workflow = findLastFailedSubWorkflow(taskToRetry.get(), workflow);
+                workflow = findLastFailedSubWorkflowIfAny(taskToRetry.get(), workflow);
                 retry(workflow);
                 updateAndPushParents(workflow);
             }
@@ -597,9 +597,13 @@ public class WorkflowExecutor {
 
             // push the parent workflow to decider queue for asynchronous 'decide'
             String parentWorkflowId = workflow.getParentWorkflowId();
+            Workflow parentWorkflow = executionDAOFacade.getWorkflowById(parentWorkflowId, true);
+            parentWorkflow.setStatus(WorkflowStatus.RUNNING);
+            parentWorkflow.setLastRetriedTime(System.currentTimeMillis());
+            executionDAOFacade.updateWorkflow(parentWorkflow);
             queueDAO.pushIfNotExists(DECIDER_QUEUE, parentWorkflowId, properties.getSweepFrequency().getSeconds());
 
-            workflow = executionDAOFacade.getWorkflowById(parentWorkflowId, true);
+            workflow = parentWorkflow;
         }
     }
 
@@ -658,12 +662,12 @@ public class WorkflowExecutor {
         scheduleTask(workflow, retriableTasks);
     }
 
-    private Workflow findLastFailedSubWorkflow(Task task, Workflow parentWorkflow) {
+    private Workflow findLastFailedSubWorkflowIfAny(Task task, Workflow parentWorkflow) {
         if (TASK_TYPE_SUB_WORKFLOW.equals(task.getTaskType()) && UNSUCCESSFUL_TERMINAL_TASK.test(task)) {
             Workflow subWorkflow = executionDAOFacade.getWorkflowById(task.getSubWorkflowId(), true);
             Optional<Task> taskToRetry = subWorkflow.getTasks().stream().filter(UNSUCCESSFUL_TERMINAL_TASK).findFirst();
             if (taskToRetry.isPresent()) {
-                return findLastFailedSubWorkflow(taskToRetry.get(), subWorkflow);
+                return findLastFailedSubWorkflowIfAny(taskToRetry.get(), subWorkflow);
             }
         }
         return parentWorkflow;
@@ -1079,36 +1083,15 @@ public class WorkflowExecutor {
         workflow = metadataMapperService.populateWorkflowWithDefinitions(workflow);
 
         if (workflow.getStatus().isTerminal()) {
-            if (workflow.getStatus().isSuccessful()) {
-                return true;
-            }
-            // if we are here, Workflow is in an unsuccessful terminal state
-            // we verify if there are any sub workflow tasks that have changed since the workflow reached a terminal state
-            Optional<Task> changedSubWorkflowTask = findChangedSubWorkflowTask(workflow);
-            if (changedSubWorkflowTask.isPresent()) {
-                workflow.setStatus(WorkflowStatus.RUNNING);
-                workflow.setLastRetriedTime(System.currentTimeMillis());
-                executionDAOFacade.updateWorkflow(workflow);
-
-                // reset the flag
-                Task subWorkflowTask = changedSubWorkflowTask.get();
-                subWorkflowTask.setSubworkflowChanged(false);
-                executionDAOFacade.updateTask(subWorkflowTask);
-
-                // find all terminal and unsuccessful JOIN tasks and set them to IN_PROGRESS
-                if (workflow.getWorkflowDefinition().containsType(TASK_TYPE_JOIN)) {
-                    // if we are here, then the SUB_WORKFLOW task is part of a FORK_JOIN
-                    // and the JOIN task(s) needs to be evaluated again, set it to IN_PROGRESS
-                    workflow.getTasks().stream()
-                            .filter(UNSUCCESSFUL_JOIN_TASK)
-                            .peek(t -> t.setStatus(Task.Status.IN_PROGRESS))
-                            .forEach(executionDAOFacade::updateTask);
-                }
-            } else {
+            if (!workflow.getStatus().isSuccessful()) {
                 cancelNonTerminalTasks(workflow);
-                return true;
             }
+            return true;
         }
+
+        // we find any sub workflow tasks that have changed
+        // and change the workflow/task state accordingly
+        adjustStateIfSubWorkflowChanged(workflow);
 
         try {
             DeciderService.DeciderOutcome outcome = deciderService.decide(workflow);
@@ -1159,6 +1142,26 @@ public class WorkflowExecutor {
             executionLockService.releaseLock(workflowId);
         }
         return false;
+    }
+
+    private void adjustStateIfSubWorkflowChanged(Workflow workflow) {
+        Optional<Task> changedSubWorkflowTask = findChangedSubWorkflowTask(workflow);
+        if (changedSubWorkflowTask.isPresent()) {
+            // reset the flag
+            Task subWorkflowTask = changedSubWorkflowTask.get();
+            subWorkflowTask.setSubworkflowChanged(false);
+            executionDAOFacade.updateTask(subWorkflowTask);
+
+            // find all terminal and unsuccessful JOIN tasks and set them to IN_PROGRESS
+            if (workflow.getWorkflowDefinition().containsType(TASK_TYPE_JOIN)) {
+                // if we are here, then the SUB_WORKFLOW task is part of a FORK_JOIN
+                // and the JOIN task(s) needs to be evaluated again, set it to IN_PROGRESS
+                workflow.getTasks().stream()
+                        .filter(UNSUCCESSFUL_JOIN_TASK)
+                        .peek(t -> t.setStatus(Task.Status.IN_PROGRESS))
+                        .forEach(executionDAOFacade::updateTask);
+            }
+        }
     }
 
     private Optional<Task> findChangedSubWorkflowTask(Workflow workflow) {

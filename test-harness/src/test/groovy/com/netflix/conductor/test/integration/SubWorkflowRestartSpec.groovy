@@ -39,7 +39,7 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
 
     String rootWorkflowId, midLevelWorkflowId, leafWorkflowId
 
-    def persistedTask2Definition
+    TaskDef persistedTask2Definition
 
     def setup() {
         workflowTestUtil.registerWorkflows('simple_one_task_sub_workflow_integration_test.json',
@@ -293,9 +293,9 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
             tasks[0].status == Task.Status.SCHEDULED
         }
 
-        and: "verify the SUB_WORKFLOW task in root workflow is IN_PROGRESS state"
+        and: "verify the SUB_WORKFLOW task in root workflow is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.IN_PROGRESS
@@ -345,8 +345,8 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
             tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.COMPLETED
-            !tasks[1].subworkflowChanged // flag is reset after decide
         }
+
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 2
@@ -381,9 +381,9 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
             tasks[0].status == Task.Status.SCHEDULED
         }
 
-        then: "verify that the mid-level workflow's SUB_WORKFLOW task is updated"
+        then: "verify that the mid-level workflow is updated"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
@@ -392,9 +392,9 @@ class SubWorkflowRestartSpec extends AbstractSpecification {
             tasks[1].subworkflowChanged
         }
 
-        and: "verify that the root workflow's SUB_WORKFLOW task is updated"
+        and: "verify that the root workflow's SUB_WORKFLOW is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED

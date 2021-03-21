@@ -41,7 +41,7 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
 
     String rootWorkflowId, midLevelWorkflowId, leafWorkflowId
 
-    def persistedTask2Definition
+    TaskDef persistedTask2Definition
 
     def setup() {
         workflowTestUtil.registerWorkflows('hierarchical_fork_join_swf.json',
@@ -101,14 +101,6 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
         with(rootWorkflowInstance) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 4
-            tasks[0].taskType == Fork.NAME
-            tasks[0].status == Task.Status.COMPLETED
-            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
-            tasks[1].status == Task.Status.IN_PROGRESS
-            tasks[2].taskType == 'integration_task_2'
-            tasks[2].status == Task.Status.COMPLETED
-            tasks[3].taskType == TASK_TYPE_JOIN
-            tasks[3].status == Task.Status.IN_PROGRESS
         }
 
         and: "verify that the mid-level workflow is RUNNING, and first task is in SCHEDULED state"
@@ -161,10 +153,18 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
         when: "the mid level workflow is 'decided'"
         sweep(midLevelWorkflowId)
 
-        then: "the mid level subworkflow is in FAILED state"
+        then: "the mid level workflow is in FAILED state"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
             status == Workflow.WorkflowStatus.FAILED
             tasks.size() == 4
+            tasks[0].taskType == Fork.NAME
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
+            tasks[1].status == Task.Status.FAILED
+            tasks[2].taskType == 'integration_task_2'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[3].taskType == TASK_TYPE_JOIN
+            tasks[3].status == Task.Status.CANCELED
         }
 
         when: "the root level workflow is 'decided'"
@@ -173,7 +173,6 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
         then: "the root level workflow is in FAILED state"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
             status == Workflow.WorkflowStatus.FAILED
-            tasks.size() == 4
             tasks.size() == 4
             tasks[0].taskType == Fork.NAME
             tasks[0].status == Task.Status.COMPLETED
@@ -313,9 +312,9 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
             tasks[3].status == Task.Status.IN_PROGRESS
         }
 
-        and: "verify the SUB_WORKFLOW task in root workflow is IN_PROGRESS state"
+        and: "verify the root workflow is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 4
             tasks[0].taskType == Fork.NAME
             tasks[0].status == Task.Status.COMPLETED
@@ -380,7 +379,7 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
      */
     def "Test restart on the leaf in a 3-level subworkflow"() {
         //region Test case
-        when: "do a retry on the leaf workflow"
+        when: "do a restart on the leaf workflow"
         workflowExecutor.restart(leafWorkflowId, false)
 
         then: "verify that the leaf workflow created a new execution"
@@ -391,9 +390,9 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
             tasks[0].status == Task.Status.SCHEDULED
         }
 
-        then: "verify that the mid-level workflow's SUB_WORKFLOW task is updated"
+        then: "verify that the mid-level workflow is updated"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 4
             tasks[0].taskType == Fork.NAME
             tasks[0].status == Task.Status.COMPLETED
@@ -406,9 +405,9 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
             tasks[3].status == Task.Status.CANCELED
         }
 
-        and: "verify that the root workflow's SUB_WORKFLOW task is updated"
+        and: "verify that the root workflow is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 4
             tasks[0].taskType == Fork.NAME
             tasks[0].status == Task.Status.COMPLETED
@@ -425,7 +424,7 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
         sweep(midLevelWorkflowId)
         sweep(rootWorkflowId)
 
-        then: "verify that the mid level workflow is in RUNNING state"
+        then: "verify that the mid level workflow's JOIN is updated"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 4
@@ -440,7 +439,7 @@ class NestedForkJoinSubworkflowRestartSpec extends AbstractSpecification {
             tasks[3].status == Task.Status.IN_PROGRESS
         }
 
-        and: "verify that the root workflow is in RUNNING state"
+        and: "verify that the root workflow's JOIN is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 4

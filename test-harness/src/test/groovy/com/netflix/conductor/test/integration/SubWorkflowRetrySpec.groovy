@@ -1,3 +1,16 @@
+/*
+ * Copyright 2021 Netflix, Inc.
+ *  <p>
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ *   the License. You may obtain a copy of the License at
+ *   <p>
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *   <p>
+ *   Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ *   an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ *   specific language governing permissions and limitations under the License.
+ */
+
 package com.netflix.conductor.test.integration
 
 import com.netflix.conductor.common.metadata.tasks.Task
@@ -26,7 +39,7 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
 
     String rootWorkflowId, midLevelWorkflowId, leafWorkflowId
 
-    def persistedTask2Definition
+    TaskDef persistedTask2Definition
 
     def setup() {
         workflowTestUtil.registerWorkflows('simple_one_task_sub_workflow_integration_test.json',
@@ -155,11 +168,6 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         //endregion
     }
 
-    def cleanup() {
-        // Ensure that changes to the task def are reverted
-        metadataService.updateTaskDef(persistedTask2Definition)
-    }
-
     /**
      * On a 3-level workflow where all workflows reach FAILED state because of a FAILED task
      * in the leaf workflow.
@@ -280,18 +288,18 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         when: "do a retry on the root workflow"
         workflowExecutor.retry(rootWorkflowId, true)
 
-        then: "verify that the sub workflow task in root workflow is IN_PROGRESS state"
+        then: "verify that the sub workflow task in root workflow is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.IN_PROGRESS
             tasks[1].subworkflowChanged
         }
 
-        and: "verify that the sub workflow task in mid level workflow is IN_PROGRESS state"
+        and: "verify that the sub workflow task in mid level workflow is updated"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.IN_PROGRESS
@@ -400,9 +408,9 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[2].retriedTaskId == tasks[1].taskId
         }
 
-        and: "verify the SUB_WORKFLOW task in root workflow is IN_PROGRESS state"
+        and: "verify the SUB_WORKFLOW task in root workflow is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.IN_PROGRESS
@@ -481,18 +489,18 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         when: "do a retry on the root workflow"
         workflowExecutor.retry(midLevelWorkflowId, true)
 
-        then: "verify that the sub workflow task in root workflow is IN_PROGRESS state"
+        then: "verify that the sub workflow task in root workflow is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.IN_PROGRESS
             tasks[1].subworkflowChanged
         }
 
-        and: "verify that the sub workflow task in mid level workflow is IN_PROGRESS state"
+        and: "verify that the sub workflow task in mid level workflow is updated"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.IN_PROGRESS
@@ -596,9 +604,9 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[2].retriedTaskId == tasks[1].taskId
         }
 
-        then: "verify that the mid-level workflow's SUB_WORKFLOW task is updated"
+        then: "verify that the mid-level workflow is updated"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
@@ -607,9 +615,9 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[1].subworkflowChanged
         }
 
-        and: "verify that the root workflow's SUB_WORKFLOW task is updated"
+        and: "verify that the root workflow' is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
@@ -681,9 +689,9 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[2].retriedTaskId == tasks[1].taskId
         }
 
-        then: "verify that the mid-level workflow's SUB_WORKFLOW task is updated"
+        then: "verify that the mid-level workflow is updated"
         with(workflowExecutionService.getExecutionStatus(midLevelWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
@@ -692,9 +700,9 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
             tasks[1].subworkflowChanged
         }
 
-        and: "verify that the root workflow's SUB_WORKFLOW task is updated"
+        and: "verify that the root workflow is updated"
         with(workflowExecutionService.getExecutionStatus(rootWorkflowId, true)) {
-            status == Workflow.WorkflowStatus.FAILED
+            status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
@@ -707,8 +715,14 @@ class SubWorkflowRetrySpec extends AbstractSpecification {
         workflowTestUtil.pollAndCompleteTask('integration_task_2', 'task1.integration.worker', ['op': 'task1.done'])
 
         then: "verify that the leaf workflow reached COMPLETED state"
-        with(workflowExecutionService.getExecutionStatus(leafWorkflowId, false)) {
+        with(workflowExecutionService.getExecutionStatus(leafWorkflowId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
+            tasks[1].taskType == 'integration_task_2'
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].retried
+            tasks[2].taskType == 'integration_task_2'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].retriedTaskId == tasks[1].taskId
         }
 
         when: "the mid level and root workflows are 'decided'"
