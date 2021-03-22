@@ -4,38 +4,71 @@
   "version": 1,
   "tasks": [
     {
-      "name": "fork",
-      "taskReferenceName": "fanouttask",
+      "name": "outer_fork",
+      "taskReferenceName": "outer_fork",
       "inputParameters": {
         "param1": "${workflow.input.param1}",
         "param2": "${workflow.input.param2}",
         "subwf": "${workflow.input.nextSubwf}"
       },
       "type": "FORK_JOIN",
-      "decisionCases": {},
-      "defaultCase": [],
       "forkTasks": [
         [
           {
-            "name": "sub_workflow_task",
-            "taskReferenceName": "st1",
+            "name": "inner_fork",
+            "taskReferenceName": "inner_fork",
             "inputParameters": {
               "param1": "${workflow.input.param1}",
               "param2": "${workflow.input.param2}",
               "subwf": "${workflow.input.nextSubwf}"
             },
-            "type": "SUB_WORKFLOW",
-            "subWorkflowParam": {
-              "name": "${workflow.input.subwf}",
-              "version": 1
-            },
-            "retryCount": 0
+            "type": "FORK_JOIN",
+            "forkTasks": [
+              [
+                {
+                  "name": "sub_workflow_task",
+                  "taskReferenceName": "st1",
+                  "inputParameters": {
+                    "param1": "${workflow.input.param1}",
+                    "param2": "${workflow.input.param2}",
+                    "subwf": "${workflow.input.nextSubwf}"
+                  },
+                  "type": "SUB_WORKFLOW",
+                  "subWorkflowParam": {
+                    "name": "${workflow.input.subwf}",
+                    "version": 1
+                  },
+                  "retryCount": 0
+                }
+              ],
+              [
+                {
+                  "name": "integration_task_2",
+                  "taskReferenceName": "t2",
+                  "inputParameters": {
+                    "p1": "${workflow.input.param1}",
+                    "p2": "${workflow.input.param2}"
+                  },
+                  "type": "SIMPLE",
+                  "retryCount": 0
+                }
+              ]
+            ]
+          },
+          {
+            "name": "inner_join",
+            "taskReferenceName": "inner_join",
+            "type": "JOIN",
+            "joinOn": [
+              "st1",
+              "t2"
+            ]
           }
         ],
         [
           {
             "name": "integration_task_2",
-            "taskReferenceName": "t2",
+            "taskReferenceName": "t3",
             "inputParameters": {
               "p1": "${workflow.input.param1}",
               "p2": "${workflow.input.param2}"
@@ -48,12 +81,12 @@
     },
     {
       "name": "join",
-      "taskReferenceName": "fanouttask_join",
+      "taskReferenceName": "outer_join",
       "inputParameters": {},
       "type": "JOIN",
       "joinOn": [
-        "st1",
-        "t2"
+        "outer_fork",
+        "t3"
       ]
     }
   ],
