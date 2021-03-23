@@ -200,6 +200,7 @@ class SubWorkflowSpec extends AbstractSpecification {
             tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == TaskType.SUB_WORKFLOW.name()
             tasks[1].status == Task.Status.COMPLETED
+            !tasks[1].subworkflowChanged
             output['op'] == 'simple_task_in_sub_wf.done'
         }
 
@@ -436,7 +437,6 @@ class SubWorkflowSpec extends AbstractSpecification {
         }
 
         and: "the workflow is in a RUNNING state"
-        sweep(workflowInstanceId)
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
@@ -444,6 +444,7 @@ class SubWorkflowSpec extends AbstractSpecification {
             tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.IN_PROGRESS
+            tasks[1].subworkflowChanged
         }
 
         when: "poll and complete the integration_task_2 task"
@@ -475,6 +476,7 @@ class SubWorkflowSpec extends AbstractSpecification {
             tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == TASK_TYPE_SUB_WORKFLOW
             tasks[1].status == Task.Status.COMPLETED
+            !tasks[1].subworkflowChanged
         }
 
         cleanup: "Ensure that changes to the task def are reverted"
