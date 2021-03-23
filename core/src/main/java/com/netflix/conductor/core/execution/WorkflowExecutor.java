@@ -588,9 +588,9 @@ public class WorkflowExecutor {
             executionDAOFacade.updateTask(subWorkflowTask);
 
             // add an execution log
-            String currentWorkflowIdentifier = String.format("%s.%s/%s", workflow.getWorkflowName(), workflow.getWorkflowVersion(), workflow.getWorkflowId());
+            String currentWorkflowIdentifier = workflow.identifierString();
             workflowIdentifier = !workflowIdentifier.equals("") ? String.format("%s -> %s", currentWorkflowIdentifier, workflowIdentifier) : currentWorkflowIdentifier;
-            TaskExecLog log = new TaskExecLog(String.format("Workflow %s retried.", workflowIdentifier));
+            TaskExecLog log = new TaskExecLog(String.format("Workflow %s changed.", workflowIdentifier));
             log.setTaskId(subWorkflowTask.getTaskId());
             executionDAOFacade.addTaskExecLog(Collections.singletonList(log));
             LOGGER.info("Task {} updated. {}", log.getTaskId(), log.getLog());
@@ -774,6 +774,7 @@ public class WorkflowExecutor {
 
         if (workflow.hasParent()) {
             updateParentWorkflowTask(workflow);
+            LOGGER.info("{} updated parent {} task {}", workflow.identifierString(), workflow.getParentWorkflowId(), workflow.getParentWorkflowTaskId());
             queueDAO.pushIfNotExists(DECIDER_QUEUE, workflow.getParentWorkflowId(), properties.getSweepFrequency().getSeconds());
         }
 
@@ -827,6 +828,7 @@ public class WorkflowExecutor {
 
             if (workflow.hasParent()) {
                 updateParentWorkflowTask(workflow);
+                LOGGER.info("{} updated parent {} task {}", workflow.identifierString(), workflow.getParentWorkflowId(), workflow.getParentWorkflowTaskId());
                 queueDAO.pushIfNotExists(DECIDER_QUEUE, workflow.getParentWorkflowId(), properties.getSweepFrequency().getSeconds());
             }
 
