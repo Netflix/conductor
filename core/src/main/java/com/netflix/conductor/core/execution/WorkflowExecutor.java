@@ -108,7 +108,9 @@ public class WorkflowExecutor {
     private static final String CLASS_NAME = WorkflowExecutor.class.getSimpleName();
     private final ExecutionLockService executionLockService;
 
-    private static final Predicate<Task> UNSUCCESSFUL_JOIN_TASK = t -> !t.getStatus().isSuccessful() && t.getStatus().isTerminal() && t.getTaskType().equals(TASK_TYPE_JOIN);
+    private static final Predicate<Task> UNSUCCESSFUL_TERMINAL_TASK = task -> !task.getStatus().isSuccessful() && task.getStatus().isTerminal();
+
+    private static final Predicate<Task> UNSUCCESSFUL_JOIN_TASK = UNSUCCESSFUL_TERMINAL_TASK.and(t -> TASK_TYPE_JOIN.equals(t.getTaskType()));
 
     private final Predicate<PollData> validateLastPolledTime = pollData ->
             pollData.getLastPollTime() > System.currentTimeMillis() - activeWorkerLastPollMs;
@@ -116,8 +118,6 @@ public class WorkflowExecutor {
     private static final Predicate<Task> SYSTEM_TASK = task -> SystemTaskType.is(task.getTaskType());
 
     private static final Predicate<Task> NON_TERMINAL_TASK = task -> !task.getStatus().isTerminal();
-
-    private static final Predicate<Task> UNSUCCESSFUL_TERMINAL_TASK = task -> !task.getStatus().isSuccessful() && task.getStatus().isTerminal();
 
     @Autowired
     public WorkflowExecutor(DeciderService deciderService, MetadataDAO metadataDAO, QueueDAO queueDAO,
@@ -1157,7 +1157,7 @@ public class WorkflowExecutor {
             // find all terminal and unsuccessful JOIN tasks and set them to IN_PROGRESS
             if (workflow.getWorkflowDefinition().containsType(TASK_TYPE_JOIN)) {
                 // if we are here, then the SUB_WORKFLOW task is part of a FORK_JOIN
-                // and the JOIN task(s) needs to be evaluated again, set it to IN_PROGRESS
+                // and the JOIN task(s) needs to be evaluated again, set them to IN_PROGRESS
                 workflow.getTasks().stream()
                         .filter(UNSUCCESSFUL_JOIN_TASK)
                         .peek(t -> t.setStatus(Task.Status.IN_PROGRESS))
