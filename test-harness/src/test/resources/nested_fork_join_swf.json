@@ -85,7 +85,7 @@
       "inputParameters": {},
       "type": "JOIN",
       "joinOn": [
-        "outer_fork",
+        "inner_join",
         "t3"
       ]
     }

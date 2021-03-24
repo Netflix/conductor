@@ -114,7 +114,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
@@ -159,7 +159,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.CANCELED
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.CANCELED
         }
@@ -207,7 +207,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.CANCELED
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.CANCELED
         }
@@ -231,7 +231,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
@@ -266,7 +266,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
@@ -333,7 +333,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
@@ -378,7 +378,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
@@ -419,7 +419,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
             tasks[7].taskType == TASK_TYPE_SUB_WORKFLOW
@@ -448,7 +448,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
             tasks[7].taskType == TASK_TYPE_SUB_WORKFLOW
@@ -496,7 +496,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
             tasks[7].taskType == TASK_TYPE_SUB_WORKFLOW
@@ -575,7 +575,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.CANCELED
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.CANCELED
         }
@@ -599,7 +599,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
@@ -636,7 +636,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
@@ -691,7 +691,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.CANCELED
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.CANCELED
         }
@@ -715,7 +715,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
@@ -752,7 +752,7 @@ class NestedForkJoinSubWorkflowSpec extends AbstractSpecification {
             tasks[4].taskType == 'integration_task_2'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == TASK_TYPE_JOIN
-            tasks[5].status == Task.Status.COMPLETED
+            tasks[5].status == Task.Status.IN_PROGRESS
             tasks[6].taskType == TASK_TYPE_JOIN
             tasks[6].status == Task.Status.IN_PROGRESS
         }
