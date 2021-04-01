@@ -14,4 +14,4 @@ jobs:
         with:
           java-version: 1.8
       - name: Run SonarScanner
-        run: ./gradlew sonarqube -x test -Dsonar.verbose=true -Dsonar.projectKey=conductor -Dsonar.host.url=https://sonarqube.dmlib.de -Dsonar.login=${{ secrets.DELUXE_ORG_SONAR_TOKEN }}
+        run: ./gradlew build sonarqube -x test -Dsonar.verbose=true -Dsonar.projectKey=conductor -Dsonar.host.url=https://sonarqube.dmlib.de -Dsonar.login=${{ secrets.DELUXE_ORG_SONAR_TOKEN }}
