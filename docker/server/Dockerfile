@@ -1,11 +1,7 @@
 FROM java:8-jdk as builder
 WORKDIR /stage
 ADD . /stage
-
-ARG SONAR_ENABLED=0
-
 RUN ./gradlew build -x test
-RUN if [ "${SONAR_ENABLED}" -eq "1" ]; then ./gradlew sonarqube -x test -Dsonar.verbose=true -Dsonar.projectKey=conductor -Dsonar.branch.name="${SONAR_BRANCH}" -Dsonar.host.url="${SONAR_HOST}" -Dsonar.login="${SONAR_LOGIN}"; else echo "SONAR_ENABLED ${SONAR_ENABLED}. Analysis skipped"; fi
 
 #
 # conductor:server - Netflix conductor server

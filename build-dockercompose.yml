@@ -21,7 +21,3 @@ services:
       dockerfile: docker/server/Dockerfile
       args:
         APP_VERSION: ${APP_VERSION:-latest}
-        SONAR_HOST: https://sonarqube.dmlib.de
-        SONAR_LOGIN: ${SONAR_LOGIN}
-        SONAR_BRANCH: ${SONAR_BRANCH:-master}
-        SONAR_ENABLED: 0
