@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+  ui:
+    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-ui
+    build:
+      context: .
+      dockerfile: docker/ui/Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-latest}
+  archiver:
+    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-archiver
+    build:
+      context: .
+      dockerfile: docker/archiver/Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-latest}
+  server:
+    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-server
+    build:
+      context: .
+      dockerfile: docker/server/Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-latest}
+        SONAR_HOST: https://sonarqube.dmlib.de
+        SONAR_LOGIN: ${SONAR_LOGIN}
+        SONAR_BRANCH: ${SONAR_BRANCH:-master}
+        SONAR_ENABLED: 0
