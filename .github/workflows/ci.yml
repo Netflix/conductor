@@ -4,22 +4,11 @@ name: CI
 
 on:
   push:
-    branches:
-      - '3.0'
-    tags:
-      - v3.*
-  pull_request:
-    branches:
-      - '3.0'
-
-  # Allow running this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
         with:
@@ -33,9 +22,12 @@ jobs:
       - name: Cache Gradle packages
         uses: actions/cache@v2
         with:
-          path: ~/.gradle/caches
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: ${{ runner.os }}-gradle
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - name: Build with Gradle
         run: |
           echo "Running build for commit ${{ github.sha }} in ${{ github.head_ref }}"
