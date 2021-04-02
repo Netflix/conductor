@@ -1,20 +1,21 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ *  Copyright 2021 Netflix, Inc.
  *  <p>
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- *   the License. You may obtain a copy of the License at
- *   <p>
- *   http://www.apache.org/licenses/LICENSE-2.0
- *   <p>
- *   Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- *   an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- *   specific language governing permissions and limitations under the License.
+ *  the License. You may obtain a copy of the License at
+ *  <p>
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *  <p>
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ *  an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations under the License.
  */
 package com.netflix.conductor.common.run;
 
 import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
+import com.google.common.base.Preconditions;
 import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -85,14 +86,6 @@ public class Workflow extends Auditable {
     @ProtoField(id = 9)
     private Map<String, Object> output = new HashMap<>();
 
-    @ProtoField(id = 10)
-    @Deprecated
-    private String workflowType;
-
-    @ProtoField(id = 11)
-    @Deprecated
-    private int version;
-
     @ProtoField(id = 12)
     private String correlationId;
 
@@ -101,10 +94,6 @@ public class Workflow extends Auditable {
 
     @ProtoField(id = 14)
     private String reasonForIncompletion;
-
-    @ProtoField(id = 15)
-    @Deprecated
-    private int schemaVersion;
 
     @ProtoField(id = 16)
     private String event;
@@ -265,38 +254,6 @@ public class Workflow extends Auditable {
         this.correlationId = correlationId;
     }
 
-    /**
-     * @return Workflow Type / Definition
-     */
-    @Deprecated
-    public String getWorkflowType() {
-        return getWorkflowName();
-    }
-
-    /**
-     * @param workflowType Workflow type
-     */
-    @Deprecated
-    public void setWorkflowType(String workflowType) {
-        this.workflowType = workflowType;
-    }
-
-    /**
-     * @return the version
-     */
-    @Deprecated
-    public int getVersion() {
-        return getWorkflowVersion();
-    }
-
-    /**
-     * @param version the version to set
-     */
-    @Deprecated
-    public void setVersion(int version) {
-        this.version = version;
-    }
-
     public String getReRunFromWorkflowId() {
         return reRunFromWorkflowId;
     }
@@ -339,23 +296,6 @@ public class Workflow extends Auditable {
      */
     public void setParentWorkflowTaskId(String parentWorkflowTaskId) {
         this.parentWorkflowTaskId = parentWorkflowTaskId;
-    }
-
-    /**
-     * @return the schemaVersion Version of the schema for the workflow definition
-     */
-    public int getSchemaVersion() {
-        return getWorkflowDefinition() != null ?
-            getWorkflowDefinition().getSchemaVersion() :
-            schemaVersion;
-    }
-
-    /**
-     * @param schemaVersion the schemaVersion to set
-     */
-    @Deprecated
-    public void setSchemaVersion(int schemaVersion) {
-        this.schemaVersion = schemaVersion;
     }
 
     /**
@@ -433,9 +373,8 @@ public class Workflow extends Auditable {
      * @return the workflow definition name.
      */
     public String getWorkflowName() {
-        return getWorkflowDefinition() != null ?
-            getWorkflowDefinition().getName() :
-            workflowType;
+        Preconditions.checkNotNull(workflowDefinition, "Workflow definition is null");
+        return workflowDefinition.getName();
     }
 
     /**
@@ -444,9 +383,8 @@ public class Workflow extends Auditable {
      * @return the workflow definition version.
      */
     public int getWorkflowVersion() {
-        return getWorkflowDefinition() != null ?
-            getWorkflowDefinition().getVersion() :
-            version;
+        Preconditions.checkNotNull(workflowDefinition, "Workflow definition is null");
+        return getWorkflowDefinition().getVersion();
     }
 
     /**
@@ -565,7 +503,6 @@ public class Workflow extends Auditable {
         Workflow workflow = (Workflow) o;
         return getEndTime() == workflow.getEndTime() &&
             getWorkflowVersion() == workflow.getWorkflowVersion() &&
-            getSchemaVersion() == workflow.getSchemaVersion() &&
             getStatus() == workflow.getStatus() &&
             Objects.equals(getWorkflowId(), workflow.getWorkflowId()) &&
             Objects.equals(getParentWorkflowId(), workflow.getParentWorkflowId()) &&
@@ -604,7 +541,6 @@ public class Workflow extends Auditable {
             getCorrelationId(),
             getReRunFromWorkflowId(),
             getReasonForIncompletion(),
-            getSchemaVersion(),
             getEvent(),
             getTaskToDomain(),
             getFailedReferenceTaskNames(),
