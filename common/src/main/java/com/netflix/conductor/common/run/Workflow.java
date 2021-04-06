@@ -86,6 +86,8 @@ public class Workflow extends Auditable {
     @ProtoField(id = 9)
     private Map<String, Object> output = new HashMap<>();
 
+    // ids 10,11 are reserved
+
     @ProtoField(id = 12)
     private String correlationId;
 
@@ -94,6 +96,8 @@ public class Workflow extends Auditable {
 
     @ProtoField(id = 14)
     private String reasonForIncompletion;
+
+    // id 15 is reserved
 
     @ProtoField(id = 16)
     private String event;
@@ -328,7 +332,6 @@ public class Workflow extends Auditable {
         this.workflowDefinition = workflowDefinition;
     }
 
-
     /**
      * @return the external storage path of the workflow input payload
      */
@@ -384,7 +387,7 @@ public class Workflow extends Auditable {
      */
     public int getWorkflowVersion() {
         Preconditions.checkNotNull(workflowDefinition, "Workflow definition is null");
-        return getWorkflowDefinition().getVersion();
+        return workflowDefinition.getVersion();
     }
 
     /**

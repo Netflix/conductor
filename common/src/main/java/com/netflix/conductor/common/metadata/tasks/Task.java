@@ -168,9 +168,7 @@ public class Task {
     @ProtoField(id = 30)
     private Any outputMessage;
 
-    // This field is deprecated, do not reuse id 31.
-//    @ProtoField(id = 31)
-//    private int rateLimitPerSecond;
+    // id 31 is reserved
 
     @ProtoField(id = 32)
     private int rateLimitPerFrequency;
