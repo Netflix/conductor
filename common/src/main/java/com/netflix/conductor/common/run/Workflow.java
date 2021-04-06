@@ -484,7 +484,9 @@ public class Workflow extends Auditable {
 
     @Override
     public String toString() {
-        return getWorkflowName() + "." + getWorkflowVersion() + "/" + workflowId + "." + status;
+        String name = workflowDefinition != null ? workflowDefinition.getName() : null;
+        Integer version = workflowDefinition != null ? workflowDefinition.getVersion() : null;
+        return String.format("%s.%s/%s.%s", name, version, workflowId, status);
     }
 
     /**
@@ -492,7 +494,9 @@ public class Workflow extends Auditable {
      * Intended for use in log and other system generated messages.
      */
     public String toShortString() {
-        return String.format("%s.%s/%s", getWorkflowName(), getWorkflowVersion(), workflowId);
+        String name = workflowDefinition != null ? workflowDefinition.getName() : null;
+        Integer version = workflowDefinition != null ? workflowDefinition.getVersion() : null;
+        return String.format("%s.%s/%s", name, version, workflowId);
     }
 
     @Override
