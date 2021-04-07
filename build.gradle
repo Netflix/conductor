@@ -8,6 +8,7 @@ buildscript {
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:5.0.3'
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.3.1.RELEASE'
+        classpath 'com.diffplug.spotless:spotless-plugin-gradle:5.11.1'
     }
 }
 
@@ -37,6 +38,7 @@ allprojects {
     apply plugin: 'java-library'
     apply plugin: 'project-report'
     apply plugin: 'checkstyle'
+    apply plugin: 'com.diffplug.spotless'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -91,13 +93,22 @@ allprojects {
     // https://docs.spring.io/spring-boot/docs/2.3.1.RELEASE/reference/html/appendix-configuration-metadata.html#configuration-metadata-additional-metadata
     compileJava.inputs.files(processResources)
 
+    spotless {
+        java {
+            target files('src/main/java', 'src/integTest/java', 'src/test/java')
+            removeUnusedImports()
+            googleJavaFormat('1.8').aosp()
+        }
+    }
+
     checkstyle {
-        toolVersion = "8.27"
+        toolVersion = "8.35"
         ignoreFailures = true
     }
 
     checkstyleMain {
-        source = fileTree("src/main/java")
+        dependsOn spotlessCheck
+        source = fileTree('src/main/java')
     }
 
     test {
