@@ -2,7 +2,6 @@ from __future__ import print_function
 from conductor.ConductorWorker import ConductorWorker,TaskStatus
 
 def execute(task):
-    # return {'status': 'COMPLETED', 'output': {'mod': 5, 'taskToExecute': 'task_1', 'oddEven': 0}, 'logs': ['one','two']}
     return ConductorWorker.task_result(
         status=TaskStatus.COMPLETED,
         output= {'mod': 5, 'taskToExecute': 'task_1', 'oddEven': 0},
