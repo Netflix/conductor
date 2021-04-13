@@ -15,6 +15,7 @@
  */
 package com.netflix.conductor.client.http;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.client.config.ConductorClientConfiguration;
 import com.netflix.conductor.client.config.DefaultConductorClientConfiguration;
@@ -26,6 +27,7 @@ import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.service.common.BulkResponse;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -45,8 +47,9 @@ import java.util.List;
  */
 public class WorkflowClient extends ClientBase {
 
-    private static GenericType<SearchResult<WorkflowSummary>> searchResultWorkflowSummary = new GenericType<SearchResult<WorkflowSummary>>() {
-    };
+    private static GenericType<SearchResult<WorkflowSummary>> searchResultWorkflowSummary =
+            new GenericType<SearchResult<WorkflowSummary>>() {
+            };
 
     private static final Logger logger = LoggerFactory.getLogger(WorkflowClient.class);
 
@@ -87,7 +90,8 @@ public class WorkflowClient extends ClientBase {
      * @param handler             Jersey client handler. Useful when plugging in various http client interaction modules (e.g. ribbon)
      * @param filters             Chain of client side filters to be applied per request
      */
-    public WorkflowClient(ClientConfig config, ConductorClientConfiguration clientConfiguration, ClientHandler handler, ClientFilter... filters) {
+    public WorkflowClient(ClientConfig config, ConductorClientConfiguration clientConfiguration, ClientHandler handler,
+                          ClientFilter... filters) {
         super(config, clientConfiguration, handler);
         for (ClientFilter filter : filters) {
             super.client.addFilter(filter);
@@ -106,7 +110,8 @@ public class WorkflowClient extends ClientBase {
     public String startWorkflow(StartWorkflowRequest startWorkflowRequest) {
         Preconditions.checkNotNull(startWorkflowRequest, "StartWorkflowRequest cannot be null");
         Preconditions.checkArgument(StringUtils.isNotBlank(startWorkflowRequest.getName()), "Workflow name cannot be null or empty");
-        Preconditions.checkArgument(StringUtils.isBlank(startWorkflowRequest.getExternalInputPayloadStoragePath()), "External Storage Path must not be set");
+        Preconditions.checkArgument(StringUtils.isBlank(startWorkflowRequest.getExternalInputPayloadStoragePath()),
+                "External Storage Path must not be set");
 
         String version = startWorkflowRequest.getVersion() != null ? startWorkflowRequest.getVersion().toString() : "latest";
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
@@ -117,12 +122,17 @@ public class WorkflowClient extends ClientBase {
             if (workflowInputSize > conductorClientConfiguration.getWorkflowInputPayloadThresholdKB() * 1024) {
                 if (!conductorClientConfiguration.isExternalPayloadStorageEnabled() ||
                         (workflowInputSize > conductorClientConfiguration.getWorkflowInputMaxPayloadThresholdKB() * 1024)) {
-                    String errorMsg = String.format("Input payload larger than the allowed threshold of: %d KB", conductorClientConfiguration.getWorkflowInputPayloadThresholdKB());
+                    String errorMsg = String.format("Input payload larger than the allowed threshold of: %d KB",
+                            conductorClientConfiguration.getWorkflowInputPayloadThresholdKB());
                     throw new ConductorClientException(errorMsg);
                 } else {
                     MetricsContainer
-                        .incrementExternalPayloadUsedCount(startWorkflowRequest.getName(), ExternalPayloadStorage.Operation.WRITE.name(), ExternalPayloadStorage.PayloadType.WORKFLOW_INPUT.name());
-                    String externalStoragePath = uploadToExternalPayloadStorage(ExternalPayloadStorage.PayloadType.WORKFLOW_INPUT, workflowInputBytes, workflowInputSize);
+                            .incrementExternalPayloadUsedCount(startWorkflowRequest.getName(),
+                                    ExternalPayloadStorage.Operation.WRITE.name(),
+                                    ExternalPayloadStorage.PayloadType.WORKFLOW_INPUT.name());
+                    String externalStoragePath =
+                            uploadToExternalPayloadStorage(ExternalPayloadStorage.PayloadType.WORKFLOW_INPUT, workflowInputBytes,
+                                    workflowInputSize);
                     startWorkflowRequest.setExternalInputPayloadStoragePath(externalStoragePath);
                     startWorkflowRequest.setInput(null);
                 }
@@ -136,7 +146,8 @@ public class WorkflowClient extends ClientBase {
         try {
             return postForEntity("workflow", startWorkflowRequest, null, String.class, startWorkflowRequest.getName());
         } catch (ConductorClientException e) {
-            String errorMsg = String.format("Unable to send start workflow request:%s, version:%s", startWorkflowRequest.getName(), version);
+            String errorMsg =
+                    String.format("Unable to send start workflow request:%s, version:%s", startWorkflowRequest.getName(), version);
             logger.error(errorMsg, e);
             MetricsContainer.incrementWorkflowStartErrorCount(startWorkflowRequest.getName(), e);
             throw e;
@@ -184,8 +195,10 @@ public class WorkflowClient extends ClientBase {
      */
     private void populateWorkflowOutput(Workflow workflow) {
         if (StringUtils.isNotBlank(workflow.getExternalOutputPayloadStoragePath())) {
-            MetricsContainer.incrementExternalPayloadUsedCount(workflow.getWorkflowName(), ExternalPayloadStorage.Operation.READ.name(), ExternalPayloadStorage.PayloadType.WORKFLOW_OUTPUT.name());
-            workflow.setOutput(downloadFromExternalStorage(ExternalPayloadStorage.PayloadType.WORKFLOW_OUTPUT, workflow.getExternalOutputPayloadStoragePath()));
+            MetricsContainer.incrementExternalPayloadUsedCount(workflow.getWorkflowName(), ExternalPayloadStorage.Operation.READ.name(),
+                    ExternalPayloadStorage.PayloadType.WORKFLOW_OUTPUT.name());
+            workflow.setOutput(downloadFromExternalStorage(ExternalPayloadStorage.PayloadType.WORKFLOW_OUTPUT,
+                    workflow.getExternalOutputPayloadStoragePath()));
         }
     }
 
@@ -199,7 +212,7 @@ public class WorkflowClient extends ClientBase {
         Preconditions.checkArgument(StringUtils.isNotBlank(workflowId), "Workflow id cannot be blank");
 
         Object[] params = new Object[]{"archiveWorkflow", archiveWorkflow};
-        delete(params, "workflow/{workflowId}/remove", workflowId);
+        deleteWithUriVariables(params, "workflow/{workflowId}/remove", workflowId);
     }
 
     /**
@@ -341,7 +354,20 @@ public class WorkflowClient extends ClientBase {
      */
     public void terminateWorkflow(String workflowId, String reason) {
         Preconditions.checkArgument(StringUtils.isNotBlank(workflowId), "workflow id cannot be blank");
-        delete(new Object[]{"reason", reason}, "workflow/{workflowId}", workflowId);
+        deleteWithUriVariables(new Object[]{"reason", reason}, "workflow/{workflowId}", workflowId);
+    }
+
+    /**
+     * Terminates the execution of all given workflows instances
+     *
+     * @param workflowIds the ids of the workflows to be terminated
+     * @param reason      the reason to be logged and displayed
+     * @return the {@link BulkResponse} contains bulkErrorResults and bulkSuccessfulResults
+     */
+    public BulkResponse terminateWorkflows(List<String> workflowIds, String reason) throws JsonProcessingException {
+        Preconditions.checkArgument(!workflowIds.isEmpty(), "workflow id cannot be blank");
+        return deleteWithRequestBody(new Object[]{"reason", reason}, "workflow/bulk/terminate",
+                objectMapper.writeValueAsString(workflowIds));
     }
 
     /**

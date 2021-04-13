@@ -8,6 +8,7 @@ configurations.all {
 dependencies {
 
     compile project(':conductor-common')
+    compile project(':conductor-core')
     compile "com.sun.jersey:jersey-client:${revJerseyClient}"
     compile "com.netflix.spectator:spectator-api:${revSpectator}"
     compile "com.netflix.eureka:eureka-client:${revEurekaClient}"
