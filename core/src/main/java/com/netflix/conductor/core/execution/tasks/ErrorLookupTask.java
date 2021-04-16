@@ -41,14 +41,18 @@ public class ErrorLookupTask extends WorkflowSystemTask {
         }
 
         String error = NO_MAPPING;
+        String errorCode = "COND-999";
         try{
-            Optional<ErrorLookup> errorLookup  = errorLookupDAO.getErrorMatching(workflow_name, lookupMessage).stream().findFirst();
-            if (errorLookup.isPresent()){
-                error = getFormattedError(errorLookup.get());
+            Optional<ErrorLookup> errorLookupOpt  = errorLookupDAO.getErrorMatching(workflow_name, lookupMessage).stream().findFirst();
+            if (errorLookupOpt.isPresent()){
+                ErrorLookup errorLookup = errorLookupOpt.get();
+                errorCode = errorLookup.getErrorCode();
+                error = getFormattedError(errorLookup);
             }
         }catch(Exception ex){
             error = "Error occured when trying to lookup the detailed message. " + ex.getMessage();
         }
+        task.getOutputData().put("errorCode", errorCode);
         task.getOutputData().put("error", error);
         task.setStatus(Task.Status.COMPLETED);
     }
