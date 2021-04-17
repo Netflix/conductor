@@ -22,7 +22,7 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-    implementation group: 'com.netflix.spectator', name: 'spectator-reg-micrometer', version: '0.80.0'
+    runtimeOnly 'com.netflix.spectator:spectator-reg-micrometer'
 }
 
 jar {

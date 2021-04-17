@@ -1,14 +1,14 @@
 /*
- * Copyright 2020 Netflix, Inc.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ *  Copyright 2021 Netflix, Inc.
+ *  <p>
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ *  the License. You may obtain a copy of the License at
+ *  <p>
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *  <p>
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ *  an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations under the License.
  */
 package com.netflix.conductor.core.execution;
 
@@ -37,6 +37,8 @@ import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
 import com.netflix.conductor.core.execution.mapper.WaitTaskMapper;
 import com.netflix.conductor.core.execution.tasks.Decision;
 import com.netflix.conductor.core.execution.tasks.Join;
+import com.netflix.conductor.core.execution.tasks.SystemTaskRegistry;
+import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -44,6 +46,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -57,6 +61,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.DECISION;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.DYNAMIC;
@@ -67,6 +72,9 @@ import static com.netflix.conductor.common.metadata.tasks.TaskType.HTTP;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.JOIN;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.SIMPLE;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DECISION;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_FORK;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.USER_DEFINED;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.WAIT;
 import static org.junit.Assert.assertEquals;
@@ -78,7 +86,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {ObjectMapperConfiguration.class})
+@ContextConfiguration(classes = {ObjectMapperConfiguration.class, TestDeciderOutcomes.TestConfiguration.class})
 @RunWith(SpringRunner.class)
 public class TestDeciderOutcomes {
 
@@ -86,6 +94,29 @@ public class TestDeciderOutcomes {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private SystemTaskRegistry systemTaskRegistry;
+
+    @Configuration
+    public static class TestConfiguration {
+
+        @Bean(TASK_TYPE_DECISION)
+        public Decision decision() {
+            return new Decision();
+        }
+
+        @Bean(TASK_TYPE_JOIN)
+        public Join join() {
+            return new Join();
+        }
+
+        @Bean
+        public SystemTaskRegistry systemTaskRegistry(Set<WorkflowSystemTask> tasks) {
+            return new SystemTaskRegistry(tasks);
+        }
+
+    }
 
     @Before
     public void init() {
@@ -95,9 +126,6 @@ public class TestDeciderOutcomes {
         ConductorProperties properties = mock(ConductorProperties.class);
         when(properties.getTaskInputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10L));
         when(properties.getMaxTaskInputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10240L));
-
-        new Decision();
-        new Join();
 
         TaskDef taskDef = new TaskDef();
         taskDef.setRetryCount(1);
@@ -118,7 +146,7 @@ public class TestDeciderOutcomes {
         taskMappers.put(WAIT, new WaitTaskMapper(parametersUtils));
         taskMappers.put(HTTP, new HTTPTaskMapper(parametersUtils, metadataDAO));
 
-        this.deciderService = new DeciderService(parametersUtils, metadataDAO, externalPayloadStorageUtils, taskMappers,
+        this.deciderService = new DeciderService(parametersUtils, metadataDAO, externalPayloadStorageUtils, systemTaskRegistry, taskMappers,
             Duration.ofMinutes(60));
     }
 
@@ -385,7 +413,7 @@ public class TestDeciderOutcomes {
         assertNotNull(outcome);
         assertEquals(5, outcome.tasksToBeScheduled.size());
         assertEquals(0, outcome.tasksToBeUpdated.size());
-        assertEquals(SystemTaskType.FORK.name(), outcome.tasksToBeScheduled.get(0).getTaskType());
+        assertEquals(TASK_TYPE_FORK, outcome.tasksToBeScheduled.get(0).getTaskType());
         assertEquals(Task.Status.COMPLETED, outcome.tasksToBeScheduled.get(0).getStatus());
 
         for (int retryCount = 0; retryCount < 4; retryCount++) {
@@ -404,7 +432,7 @@ public class TestDeciderOutcomes {
             outcome = deciderService.decide(workflow);
             assertNotNull(outcome);
         }
-        assertEquals(SystemTaskType.JOIN.name(), outcome.tasksToBeScheduled.get(0).getTaskType());
+        assertEquals(TASK_TYPE_JOIN, outcome.tasksToBeScheduled.get(0).getTaskType());
 
         for (int i = 0; i < 3; i++) {
             assertEquals(Task.Status.COMPLETED_WITH_ERRORS, outcome.tasksToBeUpdated.get(i).getStatus());

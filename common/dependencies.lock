@@ -85,7 +85,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4"
+            "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.10"
@@ -276,7 +276,7 @@
             "locked": "3.13.0"
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4"
+            "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.10"
@@ -423,7 +423,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4"
+            "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.10"
@@ -863,7 +863,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4"
+            "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.10"

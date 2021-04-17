@@ -397,6 +397,18 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
+        "com.sun.activation:jakarta.activation": {
+            "locked": "1.2.2",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.11",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
         "commons-io:commons-io": {
             "locked": "2.7",
             "transitive": [
@@ -459,6 +471,30 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
+        "jakarta.xml.bind:jakarta.xml.bind-api": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "javax.activation:activation": {
+            "locked": "1.1.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "net.minidev:accessors-smart": {
             "locked": "1.2",
             "transitive": [
@@ -472,7 +508,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
@@ -500,6 +536,18 @@
         },
         "org.apache.logging.log4j:log4j-web": {
             "locked": "2.13.3"
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
         },
         "org.ow2.asm:asm": {
             "locked": "5.0.4",
@@ -1584,6 +1632,18 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
+        "com.sun.activation:jakarta.activation": {
+            "locked": "1.2.2",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.11",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
         "com.thinkaurelius.thrift:thrift-server": {
             "locked": "0.3.7",
             "transitive": [
@@ -1713,13 +1773,32 @@
         "jakarta.xml.bind:jakarta.xml.bind-api": {
             "locked": "2.3.3",
             "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime",
                 "org.springframework.boot:spring-boot-starter-test"
+            ]
+        },
+        "javax.activation:activation": {
+            "locked": "1.1.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
             ]
         },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
                 "io.airlift:airline"
+            ]
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
@@ -1804,7 +1883,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
@@ -1953,6 +2032,18 @@
             "locked": "1.6.4",
             "transitive": [
                 "org.apache.cassandra:cassandra-all"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.hamcrest:hamcrest": {

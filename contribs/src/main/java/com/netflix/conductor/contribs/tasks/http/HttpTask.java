@@ -1,14 +1,14 @@
 /*
- * Copyright 2020 Netflix, Inc.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ *  Copyright 2021 Netflix, Inc.
+ *  <p>
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ *  the License. You may obtain a copy of the License at
+ *  <p>
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *  <p>
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ *  an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ *  specific language governing permissions and limitations under the License.
  */
 package com.netflix.conductor.contribs.tasks.http;
 
@@ -40,10 +40,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_HTTP;
+
 /**
  * Task that enables calling another HTTP endpoint as part of its execution
  */
-@Component(HttpTask.NAME)
+@Component(TASK_TYPE_HTTP)
 public class HttpTask extends WorkflowSystemTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpTask.class);
@@ -52,8 +54,6 @@ public class HttpTask extends WorkflowSystemTask {
 
     static final String MISSING_REQUEST = "Missing HTTP request. Task input MUST have a '" + REQUEST_PARAMETER_NAME
         + "' key with HttpTask.Input as value. See documentation for HttpTask for required input parameters";
-
-    public static final String NAME = "HTTP";
 
     private final TypeReference<Map<String, Object>> mapOfObj = new TypeReference<Map<String, Object>>() {
     };
@@ -66,7 +66,7 @@ public class HttpTask extends WorkflowSystemTask {
     @Autowired
     public HttpTask(RestTemplateProvider restTemplateProvider,
                     ObjectMapper objectMapper) {
-        this(NAME, restTemplateProvider, objectMapper);
+        this(TASK_TYPE_HTTP, restTemplateProvider, objectMapper);
     }
 
     public HttpTask(String name,
@@ -76,7 +76,7 @@ public class HttpTask extends WorkflowSystemTask {
         this.restTemplateProvider = restTemplateProvider;
         this.objectMapper = objectMapper;
         this.requestParameter = REQUEST_PARAMETER_NAME;
-        LOGGER.info("{} initialized...", getName());
+        LOGGER.info("{} initialized...", getTaskType());
     }
 
     @Override
@@ -127,10 +127,10 @@ public class HttpTask extends WorkflowSystemTask {
             }
 
         } catch (Exception e) {
-            LOGGER.error("Failed to invoke {} task: {} - uri: {}, vipAddress: {} in workflow: {}", getName(), task.getTaskId(),
+            LOGGER.error("Failed to invoke {} task: {} - uri: {}, vipAddress: {} in workflow: {}", getTaskType(), task.getTaskId(),
                 input.getUri(), input.getVipAddress(), task.getWorkflowInstanceId(), e);
             task.setStatus(Status.FAILED);
-            task.setReasonForIncompletion("Failed to invoke " + getName() + " task due to: " + e.toString());
+            task.setReasonForIncompletion("Failed to invoke " + getTaskType() + " task due to: " + e);
             task.getOutputData().put("response", e.toString());
         }
     }
@@ -204,11 +204,6 @@ public class HttpTask extends WorkflowSystemTask {
     @Override
     public boolean isAsync() {
         return true;
-    }
-
-    @Override
-    public int getRetryTimeInSecond() {
-        return 60;
     }
 
     public static class HttpResponse {

@@ -452,6 +452,18 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
+        "com.sun.activation:jakarta.activation": {
+            "locked": "1.2.2",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.11",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
         "commons-io:commons-io": {
             "locked": "2.7",
             "transitive": [
@@ -519,7 +531,26 @@
         "jakarta.xml.bind:jakarta.xml.bind-api": {
             "locked": "2.3.3",
             "transitive": [
-                "io.swagger.core.v3:swagger-core"
+                "io.swagger.core.v3:swagger-core",
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "javax.activation:activation": {
+            "locked": "1.1.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "net.minidev:accessors-smart": {
@@ -535,7 +566,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
@@ -561,6 +592,18 @@
             "locked": "9.0.36",
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-tomcat"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.glassfish:jakarta.el": {
@@ -1416,6 +1459,18 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
+        "com.sun.activation:jakarta.activation": {
+            "locked": "1.2.2",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.11",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
         "com.vaadin.external.google:android-json": {
             "locked": "0.0.20131108.vaadin1",
             "transitive": [
@@ -1490,7 +1545,26 @@
             "locked": "2.3.3",
             "transitive": [
                 "io.swagger.core.v3:swagger-core",
+                "org.glassfish.jaxb:jaxb-runtime",
                 "org.springframework.boot:spring-boot-starter-test"
+            ]
+        },
+        "javax.activation:activation": {
+            "locked": "1.1.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "junit:junit": {
@@ -1524,7 +1598,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
@@ -1593,6 +1667,18 @@
             "locked": "3.16.1",
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-test"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.glassfish:jakarta.el": {

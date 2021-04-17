@@ -43,6 +43,7 @@ import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
 import com.netflix.conductor.core.execution.mapper.WaitTaskMapper;
 import com.netflix.conductor.core.execution.tasks.Lambda;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
+import com.netflix.conductor.core.execution.tasks.SystemTaskRegistry;
 import com.netflix.conductor.core.execution.tasks.Terminate;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -61,6 +62,9 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -74,9 +78,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -90,6 +94,9 @@ import static com.netflix.conductor.common.metadata.tasks.TaskType.JOIN;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.LAMBDA;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.SIMPLE;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_LAMBDA;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.USER_DEFINED;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.WAIT;
 import static java.util.Comparator.comparingInt;
@@ -115,7 +122,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {ObjectMapperConfiguration.class})
+@ContextConfiguration(classes = {ObjectMapperConfiguration.class, TestWorkflowExecutor.TestConfiguration.class})
 @RunWith(SpringRunner.class)
 public class TestWorkflowExecutor {
 
@@ -125,8 +132,53 @@ public class TestWorkflowExecutor {
     private QueueDAO queueDAO;
     private WorkflowStatusListener workflowStatusListener;
 
+    @Configuration
+    public static class TestConfiguration {
+
+        @Bean(TASK_TYPE_SUB_WORKFLOW)
+        public SubWorkflow subWorkflow(ObjectMapper objectMapper) {
+            return new SubWorkflow(objectMapper);
+        }
+
+        @Bean(TASK_TYPE_LAMBDA)
+        public Lambda lambda() {
+            return new Lambda();
+        }
+
+        @Bean(TASK_TYPE_WAIT)
+        public Wait waitBean() {
+            return new Wait();
+        }
+
+        @Bean("HTTP")
+        public WorkflowSystemTask http() {
+            return new WorkflowSystemTaskStub("HTTP") {
+                @Override
+                public boolean isAsync() {
+                    return true;
+                }
+            };
+        }
+
+        @Bean("HTTP2")
+        public WorkflowSystemTask http2() {
+            return new WorkflowSystemTaskStub("HTTP2");
+        }
+
+        @Bean
+        public SystemTaskRegistry systemTaskRegistry(Set<WorkflowSystemTask> tasks) {
+            return new SystemTaskRegistry(tasks);
+        }
+    }
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private SystemTaskRegistry systemTaskRegistry;
+
+    @Autowired
+    private DefaultListableBeanFactory beanFactory;
 
     @Before
     public void init() {
@@ -151,11 +203,8 @@ public class TestWorkflowExecutor {
         taskMappers.put(HTTP, new HTTPTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put(LAMBDA, new LambdaTaskMapper(parametersUtils, metadataDAO));
 
-        new SubWorkflow(objectMapper);
-        new Lambda();
-
         DeciderService deciderService = new DeciderService(parametersUtils, metadataDAO, externalPayloadStorageUtils,
-            taskMappers, Duration.ofMinutes(60));
+            systemTaskRegistry, taskMappers, Duration.ofMinutes(60));
         MetadataMapperService metadataMapperService = new MetadataMapperService(metadataDAO);
 
         ConductorProperties properties = mock(ConductorProperties.class);
@@ -164,40 +213,14 @@ public class TestWorkflowExecutor {
         when(properties.getWorkflowOffsetTimeout()).thenReturn(Duration.ofSeconds(30));
 
         workflowExecutor = new WorkflowExecutor(deciderService, metadataDAO, queueDAO, metadataMapperService,
-            workflowStatusListener, executionDAOFacade, properties, executionLockService,
+            workflowStatusListener, executionDAOFacade, properties, executionLockService, systemTaskRegistry,
             parametersUtils);
     }
 
     @Test
     public void testScheduleTask() {
-
-        AtomicBoolean httpTaskExecuted = new AtomicBoolean(false);
-        AtomicBoolean http2TaskExecuted = new AtomicBoolean(false);
-
-        new Wait();
-        new WorkflowSystemTask("HTTP") {
-            @Override
-            public boolean isAsync() {
-                return true;
-            }
-
-            @Override
-            public void start(Workflow workflow, Task task, WorkflowExecutor executor) {
-                httpTaskExecuted.set(true);
-                task.setStatus(Status.COMPLETED);
-                super.start(workflow, task, executor);
-            }
-        };
-
-        new WorkflowSystemTask("HTTP2") {
-
-            @Override
-            public void start(Workflow workflow, Task task, WorkflowExecutor executor) {
-                http2TaskExecuted.set(true);
-                task.setStatus(Status.COMPLETED);
-                super.start(workflow, task, executor);
-            }
-        };
+        WorkflowSystemTaskStub httpTask = beanFactory.getBean("HTTP", WorkflowSystemTaskStub.class);
+        WorkflowSystemTaskStub http2Task = beanFactory.getBean("HTTP2", WorkflowSystemTaskStub.class);
 
         Workflow workflow = new Workflow();
         workflow.setWorkflowId("1");
@@ -235,7 +258,7 @@ public class TestWorkflowExecutor {
         task1.setWorkflowTask(taskToSchedule);
 
         Task task2 = new Task();
-        task2.setTaskType(Wait.NAME);
+        task2.setTaskType(TASK_TYPE_WAIT);
         task2.setTaskDefName(taskToSchedule.getName());
         task2.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         task2.setWorkflowInstanceId(workflow.getWorkflowId());
@@ -285,8 +308,8 @@ public class TestWorkflowExecutor {
         assertEquals(2, startedTaskCount.get());
         assertEquals(1, queuedTaskCount.get());
         assertTrue(stateChanged);
-        assertFalse(httpTaskExecuted.get());
-        assertTrue(http2TaskExecuted.get());
+        assertFalse(httpTask.isStarted());
+        assertTrue(http2Task.isStarted());
     }
 
     @Test(expected = TerminateWorkflowException.class)
@@ -985,7 +1008,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         subWorkflow.setWorkflowDefinition(workflowDef);
         subWorkflow.setStatus(Workflow.WorkflowStatus.FAILED);
-        subWorkflow.getTasks().addAll(Arrays.asList(task,task1));
+        subWorkflow.getTasks().addAll(Arrays.asList(task, task1));
         subWorkflow.setParentWorkflowId("testRunWorkflowId");
 
         Task task2 = new Task();
@@ -1017,9 +1040,9 @@ public class TestWorkflowExecutor {
 
         //then
         assertEquals(task.getStatus(), Status.COMPLETED);
-        assertEquals(task1.getStatus(),Status.IN_PROGRESS);
-        assertEquals(workflow.getStatus(),WorkflowStatus.RUNNING);
-        assertEquals(subWorkflow.getStatus(),WorkflowStatus.RUNNING);
+        assertEquals(task1.getStatus(), Status.IN_PROGRESS);
+        assertEquals(workflow.getStatus(), WorkflowStatus.RUNNING);
+        assertEquals(subWorkflow.getStatus(), WorkflowStatus.RUNNING);
     }
 
     @Test

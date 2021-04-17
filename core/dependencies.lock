@@ -53,6 +53,18 @@
         "com.spotify:completable-futures": {
             "locked": "0.3.3"
         },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.5",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
+        },
+        "com.sun.xml.fastinfoset:FastInfoset": {
+            "locked": "1.2.13",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
         "commons-io:commons-io": {
             "locked": "2.7"
         },
@@ -71,6 +83,15 @@
                 "org.hibernate.validator:hibernate-validator"
             ]
         },
+        "javax.activation:activation": {
+            "locked": "1.1.1"
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.0",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
+        },
         "net.minidev:accessors-smart": {
             "locked": "1.2",
             "transitive": [
@@ -84,10 +105,25 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4"
+            "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.10"
+        },
+        "org.glassfish.jaxb:jaxb-core": {
+            "locked": "2.3.0",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.0"
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
         },
         "org.glassfish:jakarta.el": {
             "locked": "3.0.3",
@@ -105,6 +141,12 @@
             "locked": "3.4.1.Final",
             "transitive": [
                 "org.hibernate.validator:hibernate-validator"
+            ]
+        },
+        "org.jvnet.staxex:stax-ex": {
+            "locked": "1.7.8",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.ow2.asm:asm": {
@@ -283,11 +325,32 @@
         "com.spotify:completable-futures": {
             "locked": "0.3.3"
         },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.5",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
+        },
+        "com.sun.xml.fastinfoset:FastInfoset": {
+            "locked": "1.2.13",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
         "commons-io:commons-io": {
             "locked": "2.7"
         },
         "io.reactivex:rxjava": {
             "locked": "1.2.2"
+        },
+        "javax.activation:activation": {
+            "locked": "1.1.1"
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.0",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
         },
         "net.minidev:accessors-smart": {
             "locked": "1.2",
@@ -302,7 +365,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
             ]
@@ -311,6 +374,27 @@
             "locked": "3.10",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-core": {
+            "locked": "2.3.0",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.0"
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
+        },
+        "org.jvnet.staxex:stax-ex": {
+            "locked": "1.7.8",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.ow2.asm:asm": {
@@ -380,6 +464,18 @@
         "com.spotify:completable-futures": {
             "locked": "0.3.3"
         },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.5",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
+        },
+        "com.sun.xml.fastinfoset:FastInfoset": {
+            "locked": "1.2.13",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
         "com.vaadin.external.google:android-json": {
             "locked": "0.0.20131108.vaadin1",
             "transitive": [
@@ -416,6 +512,15 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
+        "javax.activation:activation": {
+            "locked": "1.1.1"
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.0",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
+        },
         "junit:junit": {
             "locked": "4.13",
             "transitive": [
@@ -447,7 +552,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4"
+            "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.10"
@@ -491,6 +596,21 @@
             "locked": "3.16.1",
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-test"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-core": {
+            "locked": "2.3.0",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.0"
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
             ]
         },
         "org.glassfish:jakarta.el": {
@@ -564,6 +684,12 @@
                 "org.junit.platform:junit-platform-commons",
                 "org.junit.platform:junit-platform-engine",
                 "org.junit.vintage:junit-vintage-engine"
+            ]
+        },
+        "org.jvnet.staxex:stax-ex": {
+            "locked": "1.7.8",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.mockito:mockito-core": {
@@ -826,6 +952,18 @@
         "com.spotify:completable-futures": {
             "locked": "0.3.3"
         },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.5",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
+        },
+        "com.sun.xml.fastinfoset:FastInfoset": {
+            "locked": "1.2.13",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
         "com.vaadin.external.google:android-json": {
             "locked": "0.0.20131108.vaadin1",
             "transitive": [
@@ -862,6 +1000,15 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
+        "javax.activation:activation": {
+            "locked": "1.1.1"
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.0",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
+            ]
+        },
         "junit:junit": {
             "locked": "4.13",
             "transitive": [
@@ -893,7 +1040,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
             ]
@@ -945,6 +1092,21 @@
             "locked": "3.16.1",
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-test"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-core": {
+            "locked": "2.3.0",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.0"
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-core"
             ]
         },
         "org.glassfish:jakarta.el": {
@@ -1027,6 +1189,12 @@
                 "org.junit.platform:junit-platform-commons",
                 "org.junit.platform:junit-platform-engine",
                 "org.junit.vintage:junit-vintage-engine"
+            ]
+        },
+        "org.jvnet.staxex:stax-ex": {
+            "locked": "1.7.8",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.mockito:mockito-core": {
