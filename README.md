@@ -63,6 +63,7 @@ Below are the various artifacts published:
 ## Other Requirements
 * JDK 11+
 
+## OAuth2.0 Security Configuration
 [OAuth2.0 Role Based Security!](/SECURITY.md) - Spring Security with easy configuration to secure the Conductor server APIs.
 
 ## Get Support
