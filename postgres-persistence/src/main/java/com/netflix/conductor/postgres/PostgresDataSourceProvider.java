@@ -16,6 +16,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,6 +91,7 @@ public class PostgresDataSourceProvider implements Provider<DataSource> {
 
         flyway.setLocations(Paths.get("db","migration_postgres").toString());
         flyway.setDataSource(dataSource);
+        flyway.setBaselineVersion(MigrationVersion.fromVersion("0"));
         flyway.setPlaceholderReplacement(false);
         flyway.migrate();
     }
