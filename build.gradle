@@ -90,6 +90,7 @@ allprojects {
     dependencyManagement {
         imports {
             mavenBom("org.springframework.boot:spring-boot-dependencies:2.3.1.RELEASE")
+            mavenBom("org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR10")
         }
     }
 

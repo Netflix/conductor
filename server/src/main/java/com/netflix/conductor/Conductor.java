@@ -18,11 +18,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
-
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import java.io.IOException;
 import java.util.Properties;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class})
 public class Conductor {
 
     private static final Logger log = LoggerFactory.getLogger(Conductor.class);
