@@ -1,7 +1,9 @@
 ## Conductor Server Authentication & Authorization - Roles
 
 All the roles mentioned below are generic and can be overridden as per the need, from conductor-server application.properties --> security.oauth2.resource.mapping
+
 Depending on the OAuth2.0 provider, the UserInfoUrl needs to be configued, in conductor-server application.properties --> security.oauth2.resource.userInfoUri
+
 Finally the path from which to extract roles, from the response json of UserInfoUrl needs to be configured, in conductor-server application.properties --> security.oauth2.resource.userInfoUriParserPath
 
 ##### Category of APIs available at Conductor level.
