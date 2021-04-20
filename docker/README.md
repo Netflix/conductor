@@ -23,7 +23,8 @@ Running the images:
  - `docker run -p 5000:5000 -d -t conductor:ui` (requires elasticsearch running locally)
 
 Using compose:
-`docker-compose up`
+ - `docker-compose up`
+ - `docker-compose -f docker-compose-secure.yaml up` -- for secure startup using default OAuth2.0 provider Keycloak
 
 ## Exiting Compose
 `ctrl+c` will exit docker compose.

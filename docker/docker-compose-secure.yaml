@@ -1,9 +1,53 @@
 version: '2.3'
 
 services:
+  postgres:
+    image: docker.io/library/postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: Keycloak@1234
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+    networks:
+      - internal
+  keycloak:
+    image: docker.io/jboss/keycloak:latest
+    links:
+      - postgres:postgres
+    healthcheck:
+      test: ["CMD", "curl", "-I", "-XGET", "http://localhost:8080/auth/realms/master"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      mysql_dataBASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      DB_PASSWORD: Keycloak@1234
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: Admin@1234
+      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "ssl=true"
+    ports:
+      - 9990:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
   conductor-server:
     environment:
-      - CONFIG_PROP=config.properties
+      - CONFIG_PROP=config-secure.properties
     image: conductor:server
     build:
       context: ../
@@ -20,6 +64,7 @@ services:
     links:
       - elasticsearch:es
       - dynomite:dyno1
+      - keycloak:keycloak
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -86,3 +131,6 @@ services:
 
 networks:
   internal:
+
+volumes:
+  postgres_data:
