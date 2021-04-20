@@ -95,7 +95,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@Trace
 public class ElasticSearchRestDAOV6 extends ElasticSearchBaseDAO implements IndexDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchRestDAOV6.class);

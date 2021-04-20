@@ -12,6 +12,11 @@ services:
       - internal
     ports:
       - 8080:8080
+    healthcheck:
+        test: ["CMD", "curl","-I" ,"-XGET", "http://localhost:8080/health"]
+        interval: 60s
+        timeout: 30s
+        retries: 5
     links:
       - elasticsearch:es
       - dynomite:dyno1
@@ -59,7 +64,7 @@ services:
 
   # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.8
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.15
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - transport.host=0.0.0.0

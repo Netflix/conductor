@@ -12,19 +12,6 @@
  */
 package com.netflix.conductor.rest.controllers;
 
-import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
-import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.service.WorkflowService;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -39,6 +26,21 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+
+import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
+import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.service.WorkflowService;
+
+@SuppressWarnings("serial")
 public class WorkflowResourceTest {
 
     @Mock
@@ -78,7 +80,7 @@ public class WorkflowResourceTest {
     public void getWorkflows() {
         Workflow workflow = new Workflow();
         workflow.setCorrelationId("123");
-        ArrayList<Workflow> listOfWorkflows = new ArrayList<Workflow>() {{
+		ArrayList<Workflow> listOfWorkflows = new ArrayList<Workflow>() {{
             add(workflow);
         }};
         when(mockWorkflowService.getWorkflows(anyString(), anyString(), anyBoolean(), anyBoolean()))
