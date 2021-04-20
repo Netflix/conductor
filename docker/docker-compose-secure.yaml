@@ -27,6 +27,15 @@ services:
       interval: 60s
       timeout: 30s
       retries: 5
+    volumes:
+      - keycloak_realm_data:/tmp/migration
+    command:
+      - "-b 0.0.0.0"
+      - "-Dkeycloak.migration.action=import"
+      - "-Dkeycloak.migration.provider=dir"
+      - "-Dkeycloak.migration.dir=/tmp/migration"
+      - "-Dkeycloak.migration.strategy=OVERWRITE_EXISTING"
+      - "-Dkeycloak.profile.feature.upload_scripts=enabled"
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: postgres
@@ -133,4 +142,15 @@ networks:
   internal:
 
 volumes:
+  keycloak_realm_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: docker/server/config/keycloak/migration
+      o: bind
   postgres_data:
+    #driver: local
+    #driver_opts:
+    #  type: none
+    #  device: persistence/postgres ## Path on host machine for persistence of keycloak realm data
+    #  o: bind
