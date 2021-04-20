@@ -619,7 +619,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
             ]
@@ -1670,7 +1670,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common"
             ]

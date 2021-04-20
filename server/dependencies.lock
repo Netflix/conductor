@@ -686,7 +686,6 @@
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-es6-persistence",
-                "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-server",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest"
@@ -834,6 +833,18 @@
             "locked": "0.3.3",
             "transitive": [
                 "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "com.sun.activation:jakarta.activation": {
+            "locked": "1.2.2",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.11",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "com.sun.jersey.contribs:jersey-apache-client4": {
@@ -1171,7 +1182,26 @@
         "jakarta.xml.bind:jakarta.xml.bind-api": {
             "locked": "2.3.3",
             "transitive": [
-                "io.swagger.core.v3:swagger-core"
+                "io.swagger.core.v3:swagger-core",
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "javax.activation:activation": {
+            "locked": "1.1.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.annotation:javax.annotation-api": {
+            "locked": "1.3.2",
+            "transitive": [
+                "com.netflix.conductor:conductor-grpc"
             ]
         },
         "javax.inject:javax.inject": {
@@ -1192,6 +1222,12 @@
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-core"
+            ]
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
@@ -1245,7 +1281,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
@@ -1591,6 +1627,18 @@
             "locked": "5.5.0",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.glassfish:jakarta.el": {
@@ -2329,7 +2377,6 @@
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-es6-persistence",
-                "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-server",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest"
@@ -2477,6 +2524,18 @@
             "locked": "0.3.3",
             "transitive": [
                 "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "com.sun.activation:jakarta.activation": {
+            "locked": "1.2.2",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.11",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "com.sun.jersey.contribs:jersey-apache-client4": {
@@ -2814,7 +2873,26 @@
         "jakarta.xml.bind:jakarta.xml.bind-api": {
             "locked": "2.3.3",
             "transitive": [
-                "io.swagger.core.v3:swagger-core"
+                "io.swagger.core.v3:swagger-core",
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "javax.activation:activation": {
+            "locked": "1.1.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.annotation:javax.annotation-api": {
+            "locked": "1.3.2",
+            "transitive": [
+                "com.netflix.conductor:conductor-grpc"
             ]
         },
         "javax.inject:javax.inject": {
@@ -2835,6 +2913,12 @@
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-core"
+            ]
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
@@ -2888,7 +2972,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
@@ -3234,6 +3318,18 @@
             "locked": "5.5.0",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.glassfish:jakarta.el": {
@@ -4463,7 +4559,6 @@
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-es6-persistence",
-                "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-server",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest"
@@ -4611,6 +4706,18 @@
             "locked": "0.3.3",
             "transitive": [
                 "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "com.sun.activation:jakarta.activation": {
+            "locked": "1.2.2",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
+            ]
+        },
+        "com.sun.istack:istack-commons-runtime": {
+            "locked": "3.0.11",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "com.sun.jersey.contribs:jersey-apache-client4": {
@@ -4955,7 +5062,26 @@
             "locked": "2.3.3",
             "transitive": [
                 "io.swagger.core.v3:swagger-core",
+                "org.glassfish.jaxb:jaxb-runtime",
                 "org.springframework.boot:spring-boot-starter-test"
+            ]
+        },
+        "javax.activation:activation": {
+            "locked": "1.1.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "javax.activation:javax.activation-api": {
+            "locked": "1.2.0",
+            "transitive": [
+                "javax.xml.bind:jaxb-api"
+            ]
+        },
+        "javax.annotation:javax.annotation-api": {
+            "locked": "1.3.2",
+            "transitive": [
+                "com.netflix.conductor:conductor-grpc"
             ]
         },
         "javax.inject:javax.inject": {
@@ -4976,6 +5102,12 @@
                 "com.netflix.conductor:conductor-contribs",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-core"
+            ]
+        },
+        "javax.xml.bind:jaxb-api": {
+            "locked": "2.3.1",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "joda-time:joda-time": {
@@ -5047,7 +5179,7 @@
             ]
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.4",
+            "locked": "2.0.5",
             "transitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
@@ -5410,6 +5542,18 @@
             "locked": "5.5.0",
             "transitive": [
                 "org.elasticsearch:elasticsearch"
+            ]
+        },
+        "org.glassfish.jaxb:jaxb-runtime": {
+            "locked": "2.3.3",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "org.glassfish.jaxb:txw2": {
+            "locked": "2.3.3",
+            "transitive": [
+                "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
         "org.glassfish:jakarta.el": {
