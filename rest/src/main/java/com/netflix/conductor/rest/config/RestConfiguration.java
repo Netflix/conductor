@@ -12,12 +12,12 @@
  */
 package com.netflix.conductor.rest.config;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.TEXT_PLAIN;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.http.MediaType.TEXT_PLAIN;
 
 @Configuration
 public class RestConfiguration implements WebMvcConfigurer {
@@ -32,7 +32,8 @@ public class RestConfiguration implements WebMvcConfigurer {
      * </p>More details on Spring MVC content negotiation can be found at
      * <a href="https://spring.io/blog/2013/05/11/content-negotiation-using-spring-mvc">https://spring.io/blog/2013/05/11/content-negotiation-using-spring-mvc</a></p><br>
      */
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
         configurer.favorParameter(false)
                 .favorPathExtension(false)

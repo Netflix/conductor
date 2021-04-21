@@ -4,6 +4,9 @@ dependencies {
     implementation project(':conductor-core')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation "org.springframework.cloud:spring-cloud-starter-oauth2"
+    implementation "org.springframework.cloud:spring-cloud-starter-security"
+    implementation "com.google.code.gson:gson:${revGson}"
 
     implementation "com.netflix.runtime:health-api:${revHealth}"
 

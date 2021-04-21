@@ -12,10 +12,10 @@
  */
 package com.netflix.conductor.rest.controllers;
 
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.service.MetadataService;
-import io.swagger.v3.oas.annotations.Operation;
+import static com.netflix.conductor.rest.config.RequestMappingConstants.METADATA;
+
+import java.util.List;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,10 +26,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.service.MetadataService;
 
-import static com.netflix.conductor.rest.config.RequestMappingConstants.METADATA;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @RequestMapping(value = METADATA)

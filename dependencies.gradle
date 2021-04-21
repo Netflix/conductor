@@ -60,4 +60,5 @@ ext {
     revSpock = '1.3-groovy-2.5'
     revSpotifyCompletableFutures = '0.3.3'
     revTestContainer = '1.15.1'
+    revGson = '2.8.6'
 }

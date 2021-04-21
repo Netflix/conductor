@@ -18,17 +18,19 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
-
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import java.io.IOException;
 import java.util.Properties;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class})
 public class Conductor {
 
     private static final Logger log = LoggerFactory.getLogger(Conductor.class);
 
     public static void main(String[] args) throws IOException {
         loadExternalConfig();
+        loadExternalConfigFromArgs(args);
 
         SpringApplication.run(Conductor.class, args);
     }
@@ -56,4 +58,24 @@ public class Conductor {
             }
         }
     }
+    
+    private static void loadExternalConfigFromArgs(String[] args) throws IOException {
+    	if(null!=args && args.length>0) {
+    		for(String configFile: args)
+    		{
+    			if (!StringUtils.isEmpty(configFile)) {
+    	            FileSystemResource resource = new FileSystemResource(configFile);
+    	            if (resource.exists()) {
+    	                Properties properties = new Properties();
+    	                properties.load(resource.getInputStream());
+    	                properties.forEach((key, value) -> System.setProperty((String) key, (String) value));
+    	                log.info("Loaded {} properties from {}", properties.size(), configFile);
+    	            }else {
+    	                log.warn("Ignoring {} since it does not exist", configFile);
+    	            }
+    	        }
+    		}
+    	}
+    }
+
 }

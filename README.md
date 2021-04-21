@@ -63,6 +63,9 @@ Below are the various artifacts published:
 ## Other Requirements
 * JDK 11+
 
+## OAuth2.0 Security Configuration
+[OAuth2.0 Role Based Security!](/SECURITY.md) - Spring Security with easy configuration to secure the Conductor server APIs.
+
 ## Get Support
 Conductor is maintained by Media Workflow Infrastructure team at Netflix.  Use github issue tracking for filing issues and [Discussion Forum](https://github.com/Netflix/conductor/discussions) for any other questions, ideas or support requests. 
 
