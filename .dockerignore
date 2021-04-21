@@ -1,0 +1,29 @@
+### Conductor custom ###
+server/build/libs
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
+
+### Mac Developers ###
+.DS_Store
+
+### GitHub Actions ###
+.github/
+
+### CI Actions ###
+.circleci/
