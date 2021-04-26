@@ -3,7 +3,7 @@
 #
 
 # 0. Builder stage
-FROM openjdk:8-jdk AS builder
+FROM openjdk:11-jdk AS builder
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
@@ -15,7 +15,7 @@ WORKDIR /conductor
 RUN ./gradlew build -x test
 
 # 1. Bin stage
-FROM openjdk:8-jre-alpine
+FROM openjdk:11-jre
 
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
