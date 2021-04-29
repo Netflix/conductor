@@ -27,18 +27,5 @@ setup(
   license = 'Apache 2.0',
   install_requires = [
     'requests',
-  ],
-  classifiers = [
-    'Development Status :: 4 - Beta',
-    'Intended Audience :: Developers',
-    'Intended Audience :: System Administrators',
-    'License :: OSI Approved :: Apache Software License',
-    'Programming Language :: Python :: 2.7',
-    'Topic :: Workflow',
-    'Topic :: Microservices',
-    'Topic :: Orchestration',
-    'Topic :: Internet',
-    'Topic :: Software Development :: Libraries :: Python Modules',
-    'Topic :: System :: Networking'
-  ],
+  ]
 )
