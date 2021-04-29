@@ -52,7 +52,7 @@ class ConductorWorker:
     script can run multiple workers using the wait argument. For more
     details, view the start method
     """
-    def __init__(self, server_url, thread_count, polling_interval, worker_id=None):
+    def __init__(self, server_url, thread_count, polling_interval, worker_id=None, headers=None):
         """
         Parameters
         ----------
@@ -70,7 +70,7 @@ class ConductorWorker:
             task. For further details, refer to the documentation
             By default, it is set to hostname of the machine
         """
-        wfcMgr = WFClientMgr(server_url)
+        wfcMgr = WFClientMgr(server_url, headers=headers)
         self.workflowClient = wfcMgr.workflowClient
         self.taskClient = wfcMgr.taskClient
         self.thread_count = thread_count
