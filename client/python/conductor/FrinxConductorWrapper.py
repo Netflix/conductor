@@ -55,15 +55,15 @@ class FrinxConductorWrapper(ConductorWorker):
                 time.sleep(float(self.polling_interval))
                 self.lock.acquire()
                 queuesTemp = self.taskClient.getTasksInQueue("all")
-                log.debug(f'Queues polled: {queuesTemp}')
+                log.debug('Queues polled: %s', queuesTemp)
                 self.queues = queuesTemp
                 failCount = 0
             except Exception as err:
-                log.exception(f'Unable to read queue info. Error count: {failCount}', err)
+                log.exception('Unable to read queue info. Error count: %s', failCount, err)
                 self.queues = {}
                 failCount =+ 1
                 if (failCount > 10):
-                    log.exception(f'Exiting, unable to read queue info')
+                    log.exception('Exiting, unable to read queue info')
                     exit(1)
             finally:
                 self.lock.release()
@@ -105,7 +105,7 @@ class FrinxConductorWrapper(ConductorWorker):
 
     # Check if latest local copy of queues contains >0 number of tasks for current queue
     def tasksInQueue(self, taskType, domain=None):
-        log.debug(f'Checking tasks in queue {taskType}')
+        log.debug('Checking tasks in queue %s', taskType)
         self.lock.acquire()
 
         try:
@@ -116,13 +116,13 @@ class FrinxConductorWrapper(ConductorWorker):
             else:
                 numberOfTasksInQueue = 0
 
-            log.debug(f'Tasks in queue: {taskType} : {numberOfTasksInQueue}')
+            log.debug('Tasks in queue: %s : %s', taskType, numberOfTasksInQueue)
 
             if numberOfTasksInQueue > 0:
                 return True
 
         except Exception as err:
-            log.exception(f'Unable to check queue info. Polling', err)
+            log.exception('Unable to check queue info. Polling', err)
             return True
 
         finally:
