@@ -28,13 +28,15 @@ class BaseClient(object):
     printUrl = False
     headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 
-    def __init__(self, baseURL, baseResource):
+    def __init__(self, baseURL, baseResource, headers=None):
         self.baseURL = baseURL
         self.baseResource = baseResource
+        if (headers != None):
+            self.headers = self.mergeTwoDicts(self.headers, headers)
 
     def get(self, resPath, queryParams=None):
         theUrl = "{}/{}".format(self.baseURL, resPath)
-        resp = requests.get(theUrl, params=queryParams)
+        resp = requests.get(theUrl, params=queryParams, headers=self.headers)
         self.__checkForSuccess(resp)
         if(resp.content == b''):
             return None
@@ -72,7 +74,7 @@ class BaseClient(object):
 
     def delete(self, resPath, queryParams):
         theUrl = "{}/{}".format(self.baseURL, resPath)
-        resp = requests.delete(theUrl, params=queryParams)
+        resp = requests.delete(theUrl, params=queryParams, headers=self.headers)
         self.__print(resp)
         self.__checkForSuccess(resp)
 
@@ -116,8 +118,8 @@ class BaseClient(object):
 class MetadataClient(BaseClient):
     BASE_RESOURCE = 'metadata'
 
-    def __init__(self, baseURL):
-        BaseClient.__init__(self, baseURL, self.BASE_RESOURCE)
+    def __init__(self, baseURL, headers=None):
+        BaseClient.__init__(self, baseURL, self.BASE_RESOURCE, headers)
 
     def getWorkflowDef(self, wfname, version=None):
         url = self.makeUrl('workflow/{}', wfname)
@@ -149,7 +151,7 @@ class MetadataClient(BaseClient):
 
     def registerTaskDef(self, taskDefObj):
         """registerTaskDef is deprecated since PUT /metadata/taskdefs does not
-        register but updates a task definition. Use updateTaskDef function 
+        register but updates a task definition. Use updateTaskDef function
         instead.
         """
         warnings.warn(self.registerTaskDef.__doc__, DeprecationWarning)
@@ -172,8 +174,8 @@ class MetadataClient(BaseClient):
 class TaskClient(BaseClient):
     BASE_RESOURCE = 'tasks'
 
-    def __init__(self, baseURL):
-        BaseClient.__init__(self, baseURL, self.BASE_RESOURCE)
+    def __init__(self, baseURL, headers=None):
+        BaseClient.__init__(self, baseURL, self.BASE_RESOURCE, headers)
 
     def getTask(self, taskId):
         url = self.makeUrl('{}', taskId)
@@ -239,8 +241,8 @@ class TaskClient(BaseClient):
 class WorkflowClient(BaseClient):
     BASE_RESOURCE = 'workflow'
 
-    def __init__(self, baseURL):
-        BaseClient.__init__(self, baseURL, self.BASE_RESOURCE)
+    def __init__(self, baseURL, headers=None):
+        BaseClient.__init__(self, baseURL, self.BASE_RESOURCE, headers)
 
     def getWorkflow(self, wfId, includeTasks=True):
         url = self.makeUrl('{}', wfId)
@@ -299,8 +301,8 @@ class WorkflowClient(BaseClient):
 class EventServicesClient(BaseClient):
     BASE_RESOURCE = 'event'
 
-    def __init__(self, baseURL):
-        BaseClient.__init__(self, baseURL, self.BASE_RESOURCE)
+    def __init__(self, baseURL, headers=None):
+        BaseClient.__init__(self, baseURL, self.BASE_RESOURCE, headers)
 
     def getEventHandlerDef(self, event, activeOnly=True):
         url = self.makeUrl('{}', event)
@@ -333,10 +335,10 @@ class EventServicesClient(BaseClient):
         return self.get(url)
 
 class WFClientMgr:
-    def __init__(self, server_url='http://localhost:8080/api/'):
-        self.workflowClient = WorkflowClient(server_url)
-        self.taskClient = TaskClient(server_url)
-        self.metadataClient = MetadataClient(server_url)
+    def __init__(self, server_url='http://localhost:8080/api/', headers=None):
+        self.workflowClient = WorkflowClient(server_url, headers)
+        self.taskClient = TaskClient(server_url, headers)
+        self.metadataClient = MetadataClient(server_url, headers)
 
 
 def main():
