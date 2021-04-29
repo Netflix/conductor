@@ -16,14 +16,13 @@
 from setuptools import setup
 
 setup(
-  name = 'conductor',
-  packages = ['conductor'], # this must be the same as the name above
+  name = 'frinx_conductor_client',
+  packages = ['conductor'],
   version = '1.0.0',
   description = 'Conductor python client',
-  author = 'Viren Baraiya',
-  author_email = 'vbaraiya@netflix.com',
-  url = 'https://github.com/netflix/conductor',
-  download_url = 'https://github.com/Netflix/conductor/releases',
+  author = 'Frinx',
+  author_email = 'info@frinx.io',
+  url = 'https://github.com/FRINXio/conductor',
   keywords = ['conductor'],
   license = 'Apache 2.0',
   install_requires = [
