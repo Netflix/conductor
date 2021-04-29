@@ -3,11 +3,14 @@ import json
 import threading
 import time
 import traceback
+import logging
 from datetime import datetime
 from threading import Thread
 
 import requests
 from conductor.ConductorWorker import ConductorWorker
+
+log = logging.getLogger(__name__)
 
 DEFAULT_TASK_DEFINITION = {
     "name": "",
@@ -39,28 +42,28 @@ class FrinxConductorWrapper(ConductorWorker):
         super().__init__(server_url, thread_count, polling_interval, worker_id, headers)
 
     def start_queue_polling(self):
-        print("Starting queue polling thread")
+        log.debug("Starting queue polling thread")
         thread = Thread(target=self.read_queues)
         thread.daemon = True
         thread.start()
 
     def read_queues(self):
         failCount = 0
-        print("Queue polling thread started")
+        log.debug("Queue polling thread started")
         while True:
             try:
                 time.sleep(float(self.polling_interval))
                 self.lock.acquire()
                 queuesTemp = self.taskClient.getTasksInQueue("all")
-                print(f'Queues polled: {queuesTemp}')
+                log.debug(f'Queues polled: {queuesTemp}')
                 self.queues = queuesTemp
                 failCount = 0
             except Exception as err:
-                print(f'Unable to read queue info. Error count: {failCount}', err)
+                log.exception(f'Unable to read queue info. Error count: {failCount}', err)
                 self.queues = {}
                 failCount =+ 1
                 if (failCount > 10):
-                    print(f'Exiting, unable to read queue info')
+                    log.exception(f'Exiting, unable to read queue info')
                     exit(1)
             finally:
                 self.lock.release()
@@ -70,7 +73,7 @@ class FrinxConductorWrapper(ConductorWorker):
         if task_definition is None:
             task_definition = DEFAULT_TASK_DEFINITION
 
-        print('Registering task ' + task_type + ' : ' + str(task_definition))
+        log.debug('Registering task ' + task_type + ' : ' + str(task_definition))
         task_meta = copy.deepcopy(task_definition)
         task_meta["name"] = task_type
         try:
@@ -79,7 +82,7 @@ class FrinxConductorWrapper(ConductorWorker):
                               headers=self.headers)
             # response_code = r.status_code
         except Exception as err:
-            print('Error while registering task ' + traceback.format_exc())
+            log.exception('Error while registering task ' + traceback.format_exc())
             raise err
 
     def poll_and_execute(self, taskType, exec_function, domain=None):
@@ -91,18 +94,18 @@ class FrinxConductorWrapper(ConductorWorker):
             if (not self.tasksInQueue(taskType, domain)):
                 continue
 
-            print(self.timestamp() + ' Polling for task: ' + taskType + ' with wait ' + str(poll_wait))
+            log.debug(self.timestamp() + ' Polling for task: ' + taskType + ' with wait ' + str(poll_wait))
             polled = self.taskClient.pollForBatch(taskType, 1, poll_wait, self.worker_id, domain)
             if polled is not None:
-                print(self.timestamp() + ' Polled batch for ' + taskType + ':' + str(len(polled)))
+                log.debug(self.timestamp() + ' Polled batch for ' + taskType + ':' + str(len(polled)))
                 for task in polled:
-                    print(self.timestamp() + ' Polled ' + taskType + ': ' + task['taskId'])
+                    log.debug(self.timestamp() + ' Polled ' + taskType + ': ' + task['taskId'])
                     if self.taskClient.ackTask(task['taskId'], self.worker_id):
                         self.execute(task, exec_function)
 
     # Check if latest local copy of queues contains >0 number of tasks for current queue
     def tasksInQueue(self, taskType, domain=None):
-        print(f'Checking tasks in queue {taskType}')
+        log.debug(f'Checking tasks in queue {taskType}')
         self.lock.acquire()
 
         try:
@@ -113,13 +116,13 @@ class FrinxConductorWrapper(ConductorWorker):
             else:
                 numberOfTasksInQueue = 0
 
-            print(f'Tasks in queue: {taskType} : {numberOfTasksInQueue}')
+            log.debug(f'Tasks in queue: {taskType} : {numberOfTasksInQueue}')
 
             if numberOfTasksInQueue > 0:
                 return True
 
         except Exception as err:
-            print(f'Unable to check queue info. Polling', err)
+            log.exception(f'Unable to check queue info. Polling', err)
             return True
 
         finally:
@@ -132,7 +135,7 @@ class FrinxConductorWrapper(ConductorWorker):
 
     def execute(self, task, exec_function):
         try:
-            print(self.timestamp() + ' Executing task: ' + task['taskId'])
+            log.debug(self.timestamp() + ' Executing task: ' + task['taskId'])
             resp = exec_function(task)
             if resp is None:
                 raise Exception(
@@ -142,7 +145,7 @@ class FrinxConductorWrapper(ConductorWorker):
             task['logs'] = resp.get('logs', "")
             self.taskClient.updateTask(task)
         except Exception as err:
-            print('Error executing task: ' + traceback.format_exc())
+            log.exception('Error executing task: ' + traceback.format_exc())
             task['status'] = 'FAILED'
             task['outputData'] = {'Error executing task:': str(task),
                                   'exec_function': str(exec_function), }
@@ -152,7 +155,7 @@ class FrinxConductorWrapper(ConductorWorker):
                 self.taskClient.updateTask(task)
             except Exception as err2:
                 # Can happen when task timed out
-                print('Unable to update task: ' + task['taskId'] + ': ' + traceback.format_exc())
+                log.exception('Unable to update task: ' + task['taskId'] + ': ' + traceback.format_exc())
 
 
 if __name__ == '__main__':
