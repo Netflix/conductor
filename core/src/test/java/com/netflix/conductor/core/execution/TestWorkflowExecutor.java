@@ -14,7 +14,7 @@ package com.netflix.conductor.core.execution;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.netflix.conductor.common.config.ObjectMapperConfiguration;
+import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
@@ -122,7 +122,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {ObjectMapperConfiguration.class, TestWorkflowExecutor.TestConfiguration.class})
+@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, TestWorkflowExecutor.TestConfiguration.class})
 @RunWith(SpringRunner.class)
 public class TestWorkflowExecutor {
 
