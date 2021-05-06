@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+
+            <PatternLayout
+                    pattern="[%-5p] %d %c %x - %m%n">
+                <replace regex = "password=(.*?[},\s])" replacement="**mask**"/>
+            </PatternLayout>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- LOG everything at INFO level -->
+        <Root level="debug">
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+</Configuration>

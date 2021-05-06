@@ -18,7 +18,6 @@ dependencies {
     compile project(':conductor-common')
     compile project(':conductor-core')
 
-    protobuf 'io.chaossystems.grpc:grpc-healthcheck:1.0.+:protos'
     compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
     compile "io.grpc:grpc-protobuf:${revGrpc}"
     compile "io.grpc:grpc-stub:${revGrpc}"

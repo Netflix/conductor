@@ -24,10 +24,10 @@ fi
 
 if [ -z "$LOG4J_PROP" ];
   then
-    export log4j_file=/app/config/log4j.properties
+    export log4j_file=/app/config/log4j2.xml
   else
     echo "Using '$LOG4J_PROP'";
     export log4j_file=/app/config/$LOG4J_PROP
 fi
 
-java -jar conductor-server-*-all.jar $config_file $log4j_file
+java -jar -Dlog4j.configurationFile=$log4j_file conductor-server-*-all.jar $config_file
