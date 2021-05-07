@@ -163,7 +163,7 @@ public class MetadataAtlasMatchAction implements JavaEventAction {
 		if (StringUtils.isNotBlank(versionId)) {
 			tags.addAll(Arrays.asList("featureVersionId" + versionId, "episodeVersionId" + versionId));
 		}
-		tags.addAll(Arrays.asList("featureVersionId" + atlasId, "episodeVersionId" + atlasId));
+		tags.addAll(Arrays.asList("featureVersionId" + atlasId, "episodeVersionId" + atlasId, "seriesId" + atlasId, "seasonId" + atlasId, "episodeId" + atlasId, "featureId" + atlasId));
 		return tags;
 	}
 
