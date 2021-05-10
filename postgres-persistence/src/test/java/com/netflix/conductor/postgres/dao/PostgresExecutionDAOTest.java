@@ -54,19 +54,17 @@ public class PostgresExecutionDAOTest extends ExecutionDAOTest {
     @Before
     public void setup() {
         postgreSQLContainer =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
+                new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
-        testPostgres = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper, name.getMethodName().toLowerCase());
+        testPostgres = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper);
         executionDAO = new PostgresExecutionDAO(
-            testPostgres.getObjectMapper(),
-            testPostgres.getDataSource()
+                testPostgres.getObjectMapper(),
+                testPostgres.getDataSource()
         );
-        testPostgres.resetAllData();
     }
 
     @After
     public void teardown() {
-        testPostgres.resetAllData();
         testPostgres.getDataSource().close();
     }
 
@@ -82,7 +80,7 @@ public class PostgresExecutionDAOTest extends ExecutionDAOTest {
         generateWorkflows(workflow, 10);
 
         List<Workflow> bycorrelationId = getExecutionDAO()
-            .getWorkflowsByCorrelationId("pending_count_correlation_jtest", "corr001", true);
+                .getWorkflowsByCorrelationId("pending_count_correlation_jtest", "corr001", true);
         assertNotNull(bycorrelationId);
         assertEquals(10, bycorrelationId.size());
     }

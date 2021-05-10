@@ -69,15 +69,14 @@ public class PostgresQueueDAOTest {
     @Before
     public void setup() {
         postgreSQLContainer =
-            new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
+                new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName(name.getMethodName().toLowerCase());
         postgreSQLContainer.start();
-        testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper, name.getMethodName().toLowerCase());
+        testUtil = new PostgresDAOTestUtil(postgreSQLContainer, objectMapper);
         queueDAO = new PostgresQueueDAO(testUtil.getObjectMapper(), testUtil.getDataSource());
     }
 
     @After
     public void teardown() {
-        testUtil.resetAllData();
         testUtil.getDataSource().close();
     }
 
@@ -276,7 +275,7 @@ public class PostgresQueueDAOTest {
         assertEquals("First poll size mismatch", firstPollSize, firstPoll.size());
 
         List<String> firstPollMessageIds = messages.stream().map(Message::getId).collect(Collectors.toList())
-            .subList(0, firstPollSize + 1);
+                .subList(0, firstPollSize + 1);
 
         for (int i = 0; i < firstPollSize; i++) {
             String actual = firstPoll.get(i).getId();

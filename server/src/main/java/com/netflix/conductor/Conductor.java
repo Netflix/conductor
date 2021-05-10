@@ -16,13 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Properties;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class Conductor {
 
     private static final Logger log = LoggerFactory.getLogger(Conductor.class);
