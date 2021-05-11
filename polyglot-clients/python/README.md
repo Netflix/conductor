@@ -66,3 +66,15 @@ def main():
 if __name__ == '__main__':
     main()
 ```
+### Build pip package
+
+```sh
+cd conductor/client/python
+python3 -m pip install --upgrade build
+python3 -m build
+# to test pypi
+python3 -m twine upload -u '<name>' -p '<password>' --repository testpypi dist/*
+# to main pypi
+python3 -m twine upload -u '<name>' -p '<password>' dist/*
+
+```
