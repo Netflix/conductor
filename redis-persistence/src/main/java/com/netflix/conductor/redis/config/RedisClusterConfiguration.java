@@ -17,6 +17,8 @@ import com.netflix.conductor.redis.jedis.JedisCluster;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.HostSupplier;
 import com.netflix.dyno.connectionpool.TokenMapSupplier;
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
@@ -32,9 +34,10 @@ public class RedisClusterConfiguration extends JedisCommandsConfigurer {
         HostSupplier hostSupplier, TokenMapSupplier tokenMapSupplier) {
         GenericObjectPoolConfig genericObjectPoolConfig = new GenericObjectPoolConfig();
         genericObjectPoolConfig.setMaxTotal(properties.getMaxConnectionsPerHost());
-        Host host = hostSupplier.getHosts().get(0);
-        return new JedisCluster(
-            new redis.clients.jedis.JedisCluster(new HostAndPort(host.getHostName(), host.getPort()),
-                genericObjectPoolConfig));
+        Set hosts = new HashSet<>();
+        for(Host h : hostSupplier.getHosts()){
+            hosts.add(new HostAndPort(h.getHostName(), h.getPort()));
+        }
+        return new JedisCluster(new redis.clients.jedis.JedisCluster(hosts, genericObjectPoolConfig));
     }
 }
