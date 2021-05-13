@@ -1,4 +1,4 @@
-name: Docker
+name: PyPi Conductor-client update
 
 on:
   push:
@@ -15,7 +15,7 @@ on:
 jobs:
   build-n-publish:
     name: Build and publish frinx conductor client
-    runs-on: ubuntu-18.10
+    runs-on: ubuntu-18.04
     defaults:
       run:
         working-directory: ./client/python
@@ -32,7 +32,7 @@ jobs:
     - name: Build and publish
       env:
         TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN_TEST }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
       run: |
         python setup.py sdist bdist_wheel
-        twine upload --repository testpypi dist/*
+        twine upload dist/*
