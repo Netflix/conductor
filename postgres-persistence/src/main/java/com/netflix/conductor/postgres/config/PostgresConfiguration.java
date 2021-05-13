@@ -33,6 +33,8 @@ import org.springframework.context.annotation.Import;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PostgresProperties.class)
 @ConditionalOnProperty(name = "conductor.db.type", havingValue = "postgres")
+// Import the DataSourceAutoConfiguration when postgres database is selected.
+// By default the datasource configuration is excluded in the main module.
 @Import(DataSourceAutoConfiguration.class)
 public class PostgresConfiguration {
 

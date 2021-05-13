@@ -23,6 +23,8 @@ import org.springframework.util.StringUtils;
 import java.io.IOException;
 import java.util.Properties;
 
+// Prevents from the datasource beans to be loaded, AS they are needed only for specific databases.
+// In case that SQL database is selected this class will be imported back in the appropriate database persistence module.
 @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class Conductor {
 
