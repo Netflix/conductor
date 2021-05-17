@@ -1,0 +1,96 @@
+version: '2.3'
+
+services:
+  mysql:
+    image: mysql:5.7
+    restart: on-failure
+    networks:
+      - internal
+    ports:
+      - 3306:3306
+      - 33060:33060
+    environment:
+      MYSQL_ROOT_PASSWORD: Root@1234
+      MYSQL_DATABASE: conductor
+      MYSQL_USER: conductor
+      MYSQL_PASSWORD: conductor
+      MYSQL_INITDB_SKIP_TZINFO: NONE
+    healthcheck:
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-pRoot@1234' ]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+    mem_limit: "512000000"
+    #volumes:
+     # - mysql_data:/var/lib/mysql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+      
+  conductor-server:
+    environment:
+      - CONFIG_PROP=config-mysql.properties
+    image: conductor:server
+    build:
+      context: ../
+      dockerfile: docker/server/Dockerfile
+    networks:
+      - internal
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl","-I" ,"-XGET", "http://localhost:8080/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 12
+    links:
+      - elasticsearch:es
+      - mysql:mysql
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  elasticsearch:
+    image: elasticsearch:6.8.15
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - transport.host=0.0.0.0
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    networks:
+      - internal
+    ports:
+      - 9200:9200
+      - 9300:9300
+    healthcheck:
+      test: timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/9300'
+      interval: 15s
+      timeout: 10s
+      retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  conductor-ng-ui:
+    environment:
+      - WF_SERVER=http://localhost:8080
+    image: zzzmahesh/conductor-ng-ui:version-4.0.3
+    networks:
+      - internal
+    ports:
+      - 80:80
+
+networks:
+  internal:
+
