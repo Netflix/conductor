@@ -23,7 +23,7 @@ import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServic
 import java.io.IOException;
 import java.util.Properties;
 
-@SpringBootApplication(exclude = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class})
+@SpringBootApplication
 public class Conductor {
 
     private static final Logger log = LoggerFactory.getLogger(Conductor.class);
