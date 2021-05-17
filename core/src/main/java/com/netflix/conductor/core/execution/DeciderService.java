@@ -38,15 +38,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.*;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.COMPLETED_WITH_ERRORS;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.SCHEDULED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.SKIPPED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.TIMED_OUT;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TERMINATE;
 
 /**
@@ -59,11 +70,15 @@ public class DeciderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeciderService.class);
 
+    @VisibleForTesting
+    static final String MAX_TASK_LIMIT = "conductor.app.max-task-limit";
+
     private final ParametersUtils parametersUtils;
     private final ExternalPayloadStorageUtils externalPayloadStorageUtils;
     private final MetadataDAO metadataDAO;
     private final SystemTaskRegistry systemTaskRegistry;
     private final long taskPendingTimeThresholdMins;
+    private final Environment environment;
 
     private final Map<TaskType, TaskMapper> taskMappers;
 
@@ -78,13 +93,15 @@ public class DeciderService {
         ExternalPayloadStorageUtils externalPayloadStorageUtils,
         SystemTaskRegistry systemTaskRegistry,
         @Qualifier("taskProcessorsMap") Map<TaskType, TaskMapper> taskMappers,
-        @Value("${conductor.app.taskPendingTimeThreshold:60m}") Duration taskPendingTimeThreshold) {
+        @Value("${conductor.app.taskPendingTimeThreshold:60m}") Duration taskPendingTimeThreshold,
+                          Environment environment) {
         this.metadataDAO = metadataDAO;
         this.parametersUtils = parametersUtils;
         this.taskMappers = taskMappers;
         this.externalPayloadStorageUtils = externalPayloadStorageUtils;
         this.taskPendingTimeThresholdMins = taskPendingTimeThreshold.toMinutes();
         this.systemTaskRegistry = systemTaskRegistry;
+        this.environment = environment;
     }
 
     public DeciderOutcome decide(Workflow workflow) throws TerminateWorkflowException {
@@ -158,7 +175,7 @@ public class DeciderService {
             }
 
             Optional<TaskDef> taskDefinition = pendingTask.getTaskDefinition();
-            if (!taskDefinition.isPresent()) {
+            if (taskDefinition.isEmpty()) {
                 taskDefinition = Optional
                     .ofNullable(workflow.getWorkflowDefinition().getTaskByRefName(pendingTask.getReferenceTaskName()))
                     .map(WorkflowTask::getTaskDefinition);
@@ -223,6 +240,20 @@ public class DeciderService {
             && checkForWorkflowCompletion(workflow))) {
             LOGGER.debug("Marking workflow: {} as complete.", workflow);
             outcome.isComplete = true;
+        }
+
+        // terminate workflows that exceed the threshold
+        if (environment.containsProperty(MAX_TASK_LIMIT)) {
+            //noinspection ConstantConditions
+            int maxTasksThreshold = environment.getProperty(MAX_TASK_LIMIT, int.class);
+            int currentTasks = workflow.getTasks().size();
+            if (currentTasks + tasksToBeScheduled.size() > maxTasksThreshold) {
+                String terminationReason = String.format("Sum of the tasks in the workflow %s " +
+                                "and tasks to be scheduled %s exceed threshold %s", currentTasks,
+                        tasksToBeScheduled.size(), maxTasksThreshold);
+                LOGGER.warn("{}, terminating {}", terminationReason, workflow.toShortString());
+                throw new TerminateWorkflowException(terminationReason, WorkflowStatus.TERMINATED);
+            }
         }
 
         return outcome;
@@ -725,11 +756,8 @@ public class DeciderService {
         Map<String, Object> input = parametersUtils.getTaskInput(taskToSchedule.getInputParameters(),
             workflow, null, null);
 
-        TaskType taskType = TaskType.USER_DEFINED;
         String type = taskToSchedule.getType();
-        if (TaskType.isSystemTask(type)) {
-            taskType = TaskType.valueOf(type);
-        }
+        TaskType taskType = TaskType.of(type);
 
         // get tasks already scheduled (in progress/terminal) for  this workflow instance
         List<String> tasksInWorkflow = workflow.getTasks().stream()
