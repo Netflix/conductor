@@ -1,0 +1,188 @@
+version: '2.3'
+
+services:
+  postgres:
+    image: postgres
+    #volumes:
+    #  - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=Keycloak@1234
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 30s
+      timeout: 15s
+      retries: 10
+    networks:
+      - internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  keycloak:
+    image: jboss/keycloak:latest
+    healthcheck:
+      test: ["CMD", "curl", "-I", "-XGET", "http://localhost:8080/auth/realms/master"]
+      interval: 30s
+      timeout: 30s
+      retries: 15
+    links:
+      - postgres:postgres
+    environment:
+      - DB_VENDOR=POSTGRES
+      - DB_ADDR=postgres
+      - DB_DATABASE=keycloak
+      - DB_USER=keycloak
+      - DB_SCHEMA=public
+      - DB_PASSWORD=Keycloak@1234
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=Admin@1234
+      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "ssl=true"
+    volumes:
+      - keycloak_realm_data:/tmp/migration
+    command:
+      - "-b 0.0.0.0"
+      - "-Dkeycloak.migration.action=import"
+      - "-Dkeycloak.migration.provider=dir"
+      - "-Dkeycloak.migration.dir=/tmp/migration"
+      - "-Dkeycloak.migration.strategy=IGNORE_EXISTING"
+      - "-Dkeycloak.profile.feature.upload_scripts=enabled"
+    ports:
+      - 9990:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  mysql:
+    image: mysql:5.7
+    restart: on-failure
+    networks:
+      - internal
+    ports:
+      - 3306:3306
+      - 33060:33060
+    environment:
+      MYSQL_ROOT_PASSWORD: Root@1234
+      MYSQL_DATABASE: conductor
+      MYSQL_USER: conductor
+      MYSQL_PASSWORD: conductor
+      MYSQL_INITDB_SKIP_TZINFO: NONE
+    healthcheck:
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-pRoot@1234' ]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+    mem_limit: "512000000"
+    #volumes:
+     # - mysql_data:/var/lib/mysql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  conductor-server:
+    environment:
+      - CONFIG_PROP=config-mysql-secure.properties
+    image: conductor:server
+    build:
+      context: ../
+      dockerfile: docker/server/Dockerfile
+    networks:
+      - internal
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl","-I" ,"-XGET", "http://localhost:8080/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 12
+    links:
+      - elasticsearch:es
+      - mysql:mysql
+      - keycloak:keycloak
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  elasticsearch:
+    image: elasticsearch:6.8.15
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - transport.host=0.0.0.0
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - cluster.name=conductor
+    networks:
+      - internal
+    ports:
+      - 9200:9200
+      - 9300:9300
+    healthcheck:
+      test: timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/9300'
+      interval: 15s
+      timeout: 10s
+      retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  conductor-ng-ui:
+    environment:
+      - WF_SERVER=http://localhost:8080
+      - OAUTH_ENABLED=Y
+      - OAUTH_TOKEN_URL=http://localhost:9990/auth/realms/conductor/protocol/openid-connect/token
+      - OAUTH_USER_INFO_URL=http://localhost:8080/api/user/userinfo
+      - OAUTH_LOGOUT_URL=http://localhost:9990/auth/realms/conductor/protocol/openid-connect/logout
+      - OAUTH_CLIENT_ID=conductor_user_client
+      - OAUTH_CLIENT_SECRET=205bf09a-7df8-4c4a-9a79-c27efae878ab
+    image: zzzmahesh/conductor-ng-ui:version-4.0.3
+    networks:
+      - internal
+    depends_on:
+      conductor-server:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    ports:
+      - 80:80
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+volumes:
+  keycloak_realm_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: $PWD/docker/security/keycloak/migration
+      o: bind
+
+networks:
+  internal:
