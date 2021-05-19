@@ -437,6 +437,27 @@ public class ExecutionService {
         return searchTasks(query, freeText, start, size, Utils.convertStringToList(sortString));
     }
 
+    public SearchResult<Task> getSearchTasksV2(String query, String freeText, int start,
+        int size, String sortString) {
+        SearchResult<String> result = executionDAOFacade.searchTasks(query, freeText, start, size,
+                Utils.convertStringToList(sortString));
+        List<Task> tasks = result.getResults().stream()
+                .parallel()
+                .map(task -> {
+                    try {
+                        return executionDAOFacade.getTaskById(task);
+                    } catch (Exception e) {
+                        LOGGER.error("Error fetching task by id: {}", task, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        int missing = result.getResults().size() - tasks.size();
+        long totalHits = result.getTotalHits() - missing;
+        return new SearchResult<>(totalHits, tasks);
+    }
+
     public List<Task> getPendingTasksForTaskType(String taskType) {
         return executionDAOFacade.getPendingTasksForTaskType(taskType);
     }
