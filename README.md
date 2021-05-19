@@ -77,6 +77,11 @@ Below are the various artifacts published:
 ## Get Support
 Conductor is maintained by Media Workflow Infrastructure team at Netflix.  Use github issue tracking for filing issues and [Discussion Forum](https://github.com/Netflix/conductor/discussions) for any other questions, ideas or support requests. 
 
+## OAuth2.0 Security Configuration
+Forked Repository - [Conductor (Secure)](https://github.com/maheshyaddanapudi/conductor)
+
+[OAuth2.0 Role Based Security!](/SECURITY.md) - Spring Security with easy configuration to secure the Conductor server APIs.
+
 ## Contributions
 Whether it is a small documentation correction, bug fix or new features, contributions are highly appreciated. We just ask to follow standard oss guidelines. [Discussion Forum](https://github.com/Netflix/conductor/discussions) is a good place to ask questions, discuss new features and explore ideas. Please check with us before spending too much time, only to find later that someone else is already working on a similar feature.
 
