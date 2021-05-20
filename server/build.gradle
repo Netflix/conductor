@@ -25,6 +25,7 @@ dependencies {
     implementation project(':conductor-cassandra-persistence')
     implementation project(':conductor-postgres-persistence')
     implementation project(':conductor-mysql-persistence')
+    implementation project(':conductor-oracle-persistence')
     implementation project(':conductor-es6-persistence')
     implementation project(':conductor-grpc-server')
 
