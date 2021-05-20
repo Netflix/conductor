@@ -46,8 +46,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 abstract class Elasticsearch6RestAbstractDAO {
     private static final Logger logger = LoggerFactory.getLogger(Elasticsearch6RestAbstractDAO.class);
-    private static final TypeReference MAP_OBJECT_TYPE = new TypeReference<Map<String, Object>>() {};
-    private static final TypeReference MAP_ALL_TYPE = new TypeReference<Map<String, ?>>() {};
+    private static final TypeReference<Map<String, Object>> MAP_OBJECT_TYPE = new TypeReference<Map<String, Object>>() {};
+    private static final TypeReference<Map<String, ?>> MAP_ALL_TYPE = new TypeReference<Map<String, ?>>() {};
     private final static String DEFAULT = "_default_";
     private final static String NAMESPACE_SEP = ".";
     RestClientBuilder builder;
