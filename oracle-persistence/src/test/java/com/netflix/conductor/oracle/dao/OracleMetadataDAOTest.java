@@ -19,15 +19,22 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.oracle.util.OracleDAOTestUtil;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.OracleContainer;
@@ -39,6 +46,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.sql.DataSource;
 
 import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
 import static com.netflix.conductor.core.exception.ApplicationException.Code.NOT_FOUND;
@@ -65,11 +74,32 @@ public class OracleMetadataDAOTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    public OracleContainer oracleContainer;
+    @SuppressWarnings("deprecation")
+	@ClassRule
+    public static OracleContainer oracleContainer = new OracleContainer();
+
+    @BeforeAll
+    public static void startup() {
+        oracleContainer.start();
+    }
+
+    @TestConfiguration
+        static class OracleTestConfiguration {
+
+            @Bean
+            DataSource dataSource() {
+                HikariConfig hikariConfig = new HikariConfig();
+                hikariConfig.setJdbcUrl(oracleContainer.getJdbcUrl());
+                hikariConfig.setUsername(oracleContainer.getUsername());
+                hikariConfig.setPassword(oracleContainer.getPassword());
+
+                return new HikariDataSource(hikariConfig);
+            }
+      }
 
     @Before
     public void setup() {
-        oracleContainer = new OracleContainer(DockerImageName.parse("oracle")).withDatabaseName(name.getMethodName());
+        // oracleContainer = new OracleContainer(DockerImageName.parse("oracle")).withDatabaseName(name.getMethodName());
         oracleContainer.start();
         testUtil = new OracleDAOTestUtil(oracleContainer, objectMapper);
         metadataDAO = new OracleMetadataDAO(testUtil.getObjectMapper(), testUtil.getDataSource(),

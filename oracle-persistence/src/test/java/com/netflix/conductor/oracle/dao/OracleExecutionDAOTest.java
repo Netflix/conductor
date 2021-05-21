@@ -17,13 +17,19 @@ import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.OracleContainer;
@@ -36,6 +42,8 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.ExecutionDAOTest;
 import com.netflix.conductor.oracle.util.OracleDAOTestUtil;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
@@ -50,11 +58,32 @@ public class OracleExecutionDAOTest extends ExecutionDAOTest {
     @Rule
     public TestName name = new TestName();
 
-    public OracleContainer oracleContainer;
+    @SuppressWarnings("deprecation")
+	@ClassRule
+    public static OracleContainer oracleContainer = new OracleContainer();
+
+    @BeforeAll
+    public static void startup() {
+        oracleContainer.start();
+    }
+
+    @TestConfiguration
+        static class OracleTestConfiguration {
+
+            @Bean
+            DataSource dataSource() {
+                HikariConfig hikariConfig = new HikariConfig();
+                hikariConfig.setJdbcUrl(oracleContainer.getJdbcUrl());
+                hikariConfig.setUsername(oracleContainer.getUsername());
+                hikariConfig.setPassword(oracleContainer.getPassword());
+
+                return new HikariDataSource(hikariConfig);
+            }
+      }
 
     @Before
     public void setup() {
-        oracleContainer = new OracleContainer(DockerImageName.parse("oracle")).withDatabaseName(name.getMethodName());
+       // oracleContainer = new OracleContainer(DockerImageName.parse("oracle")).withDatabaseName(name.getMethodName());
         oracleContainer.start();
         testUtil = new OracleDAOTestUtil(oracleContainer, objectMapper);
         executionDAO = new OracleExecutionDAO(testUtil.getObjectMapper(), testUtil.getDataSource());
