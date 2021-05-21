@@ -78,29 +78,10 @@ public class OracleMetadataDAOTest {
 	@ClassRule
     public static OracleContainer oracleContainer = new OracleContainer();
 
-    @BeforeAll
-    public static void startup() {
-        oracleContainer.start();
-    }
-
-    @TestConfiguration
-        static class OracleTestConfiguration {
-
-            @Bean
-            DataSource dataSource() {
-                HikariConfig hikariConfig = new HikariConfig();
-                hikariConfig.setJdbcUrl(oracleContainer.getJdbcUrl());
-                hikariConfig.setUsername(oracleContainer.getUsername());
-                hikariConfig.setPassword(oracleContainer.getPassword());
-
-                return new HikariDataSource(hikariConfig);
-            }
-      }
-
     @Before
     public void setup() {
         // oracleContainer = new OracleContainer(DockerImageName.parse("oracle")).withDatabaseName(name.getMethodName());
-        oracleContainer.start();
+        oracleContainer.withDatabaseName(name.getMethodName()).start();
         testUtil = new OracleDAOTestUtil(oracleContainer, objectMapper);
         metadataDAO = new OracleMetadataDAO(testUtil.getObjectMapper(), testUtil.getDataSource(),
             testUtil.getTestProperties());
