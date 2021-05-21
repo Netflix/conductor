@@ -64,7 +64,7 @@ public class OracleQueueDAOTest {
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    public OracleContainer<?> oracleContainer;
+    public OracleContainer oracleContainer;
 
     @Before
     public void setup() {
