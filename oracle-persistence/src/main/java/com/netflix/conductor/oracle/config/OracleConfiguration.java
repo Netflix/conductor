@@ -38,11 +38,13 @@ import com.netflix.conductor.oracle.dao.OracleQueueDAO;
 // By default the datasource configuration is excluded in the main module.
 @Import(DataSourceAutoConfiguration.class)
 public class OracleConfiguration {
-	
+
 	@Bean
-    public FlywayConfigurationCustomizer flywayConfigurationCustomizer() {
-        // override the default location.
-        return configuration -> configuration.locations("classpath:db/migration_oracle");
+    public FlywayConfigurationCustomizer flywayConfigurationCustomizer(OracleProperties properties) {
+			if(properties.isFlywayBaselineOnMigrate())
+        return configuration -> configuration.locations("classpath:db/migration_oracle").baselineOnMigrate(properties.isFlywayBaselineOnMigrate()).baselineVersion(String.valueOf(properties.getFlywayBaselineVersion()));
+			else
+				return configuration -> configuration.locations("classpath:db/migration_oracle");
     }
 
     @Bean

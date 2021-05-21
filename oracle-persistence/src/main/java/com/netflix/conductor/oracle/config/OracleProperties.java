@@ -24,8 +24,10 @@ public class OracleProperties {
      * The time (in seconds) after which the in-memory task definitions cache will be refreshed
      */
     private Duration taskDefCacheRefreshInterval = Duration.ofSeconds(60);
-    
+
     private boolean flywayBaselineOnMigrate = false;
+
+    private int flywayBaselineVersion = 0;
 
 
     public Duration getTaskDefCacheRefreshInterval() {
@@ -34,6 +36,14 @@ public class OracleProperties {
 
     public void setTaskDefCacheRefreshInterval(Duration taskDefCacheRefreshInterval) {
         this.taskDefCacheRefreshInterval = taskDefCacheRefreshInterval;
+    }
+
+    public int getFlywayBaselineVersion() {
+        return flywayBaselineVersion;
+    }
+
+    public void setFlywayBaselineVersion(int flywayBaselineVersion) {
+        this.flywayBaselineVersion = flywayBaselineVersion;
     }
 
 	public boolean isFlywayBaselineOnMigrate() {

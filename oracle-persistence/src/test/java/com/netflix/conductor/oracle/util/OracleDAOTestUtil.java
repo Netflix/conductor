@@ -15,6 +15,7 @@ package com.netflix.conductor.oracle.util;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Paths;
 import java.time.Duration;
 
 import javax.sql.DataSource;
@@ -55,7 +56,8 @@ public class OracleDAOTestUtil {
         FluentConfiguration fluentConfiguration = Flyway.configure()
                 .table("schema_version")
                 .dataSource(dataSource)
-                .placeholderReplacement(false);
+                .placeholderReplacement(false)
+        		.locations(Paths.get("db", "migration_oracle").toString());
 
         Flyway flyway = fluentConfiguration.load();
         flyway.migrate();
