@@ -15,6 +15,7 @@ package com.netflix.conductor.oracle.config;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Paths;
 import java.time.Duration;
 
 import javax.sql.DataSource;
@@ -84,6 +85,7 @@ public class OracleTestConfiguration {
 	private void flywayMigrate(DataSource dataSource) {
 		
 		Flyway flyway = new Flyway();
+		flyway.setLocations(Paths.get("db", "migration_oracle").toString());
 		flyway.setDataSource(dataSource);
 		flyway.migrate();
 	
