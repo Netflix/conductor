@@ -35,14 +35,14 @@ services:
         max-file: "3"
 
   oracle:
-    image: conductorboot/oracle:19.3.0-ee-slim
-    volumes:
-      - oracle_startup_scripts:/opt/oracle/scripts/setup
-    environment:
-      - ORACLE_SID=CONDUCTR
-      - ORACLE_PDB=CONDUCTOR
-      - ORACLE_PWD=Conductor@1234
-      - ORACLE_EDITION=enterprise
+    #image: conductorboot/oracle:19.3.0-ee-slim
+    image: conductorboot/oracle:19.3.0-ee-slim-test
+    #volumes:
+    #  - oracle_startup_scripts:/opt/oracle/scripts/setup
+    #environment:
+    #  - ORACLE_PDB=CONDUCTOR
+    #  - ORACLE_PWD=Conductor@1234
+    #  - ORACLE_EDITION=enterprise
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -96,13 +96,13 @@ services:
         max-size: "1k"
         max-file: "3"
 
-volumes:
-  oracle_startup_scripts:
-    driver: local
-    driver_opts:
-      type: none
-      device: $PWD/docker/persistence/oracle
-      o: bind
+#volumes:
+#  oracle_startup_scripts:
+#    driver: local
+#    driver_opts:
+#      type: none
+#      device: $PWD/docker/persistence/oracle
+#      o: bind
 
 networks:
   internal:
