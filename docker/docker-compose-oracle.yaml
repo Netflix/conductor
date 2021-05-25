@@ -40,8 +40,8 @@ services:
     #volumes:
     #  - oracle_startup_scripts:/opt/oracle/scripts/setup
     #environment:
-    #  - ORACLE_PDB=CONDUCTOR
-    #  - ORACLE_PWD=Conductor@1234
+    #  - ORACLE_PDB=JUNIT
+    #  - ORACLE_PWD=Junit@1234
     #  - ORACLE_EDITION=enterprise
     healthcheck:
       interval: 60s
