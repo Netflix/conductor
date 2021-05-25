@@ -189,8 +189,8 @@ public class WorkflowResource {
     @Path("/{workflowId}/retry")
     @ApiOperation("Retries the last failed task")
     @Consumes(MediaType.WILDCARD)
-    public void retry(@PathParam("workflowId") String workflowId) {
-        workflowService.retryWorkflow(workflowId);
+    public void retry(@PathParam("workflowId") String workflowId,@QueryParam("resumeSubworkflowTasks") @DefaultValue("false") boolean resumeSubworkflowTasks) {
+        workflowService.retryWorkflow(workflowId, resumeSubworkflowTasks);
     }
 
     @POST
@@ -238,6 +238,36 @@ public class WorkflowResource {
                                                                 @QueryParam("freeText") @DefaultValue("*") String freeText,
                                                                 @QueryParam("query") String query) {
         return workflowService.searchWorkflowsByTasks(start, size, sort, freeText, query);
+    }
+
+    @ApiOperation(value = "Search for workflows based on payload and other parameters",
+            notes = "use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC." +
+                    " If order is not specified, defaults to ASC.")
+    @GET
+    @Consumes(MediaType.WILDCARD)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/search-v2")
+    public SearchResult<Workflow> searchV2(@QueryParam("start") @DefaultValue("0") int start,
+                                                @QueryParam("size") @DefaultValue("100") int size,
+                                                @QueryParam("sort") String sort,
+                                                @QueryParam("freeText") @DefaultValue("*") String freeText,
+                                                @QueryParam("query") String query) {
+        return workflowService.searchWorkflowsV2(start, size, sort, freeText, query);
+    }
+
+    @ApiOperation(value = "Search for workflows based on task parameters",
+            notes = "use sort options as sort=<field>:ASC|DESC e.g. sort=name&sort=workflowId:DESC." +
+                    " If order is not specified, defaults to ASC")
+    @GET
+    @Consumes(MediaType.WILDCARD)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/search-by-tasks-v2")
+    public SearchResult<Workflow> searchWorkflowsByTasksV2(@QueryParam("start") @DefaultValue("0") int start,
+                                                                @QueryParam("size") @DefaultValue("100") int size,
+                                                                @QueryParam("sort") String sort,
+                                                                @QueryParam("freeText") @DefaultValue("*") String freeText,
+                                                                @QueryParam("query") String query) {
+        return workflowService.searchWorkflowsByTasksV2(start, size, sort, freeText, query);
     }
 
     @GET

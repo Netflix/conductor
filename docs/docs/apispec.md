@@ -21,7 +21,7 @@ See [Start Workflow Request](../gettingstarted/startworkflow/#start-workflow-req
 Id of the workflow (GUID)
 
 ### With Input and Task Domains
-```
+```json
 POST /workflow
 {
    //JSON payload for Start workflow request
@@ -29,11 +29,11 @@ POST /workflow
 ```
 #### Start workflow request
 JSON for start workflow request
-```
+```json
 {
   "name": "myWorkflow", // Name of the workflow
   "version": 1, // Version
-  “correlationId”: “corr1”, // correlation Id
+  "correlationId": "corr1", // correlation Id
   "priority": 1, // Priority
   "input": {
 	// Input map. 
@@ -66,7 +66,7 @@ Conductor uses Elasticsearch for indexing workflow execution and is used by sear
 |---|---|
 |start|Page number.  Defaults to 0|
 |size|Number of results to return|
-|sort|Sorting.  Format is: `ASC:<fieldname>` or `DESC:<fieldname>` to sort in ascending or descending order by a field|
+|sort|Sorting.  Format is: `<fieldname>:ASC` or `<fieldname>:DESC` to sort in ascending or descending order by a field|
 |freeText|Elasticsearch supported query. e.g. workflowType:"name_of_workflow"|
 |query|SQL like where clause.  e.g. workflowType = 'name_of_workflow'.  Optional if freeText is provided.|
 
