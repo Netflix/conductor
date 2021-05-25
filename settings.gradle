@@ -40,6 +40,7 @@ include 'cassandra-persistence'
 include 'redis-persistence'
 include 'mysql-persistence'
 include 'postgres-persistence'
+include 'oracle-persistence'
 
 include 'es6-persistence'
 

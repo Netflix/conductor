@@ -9,6 +9,7 @@ dependencies {
     testImplementation project(':conductor-redis-persistence')
     testImplementation project(':conductor-mysql-persistence')
     testImplementation project(':conductor-postgres-persistence')
+    testImplementation project(':conductor-oracle-persistence')
     testImplementation project(':conductor-cassandra-persistence')
     testImplementation project(':conductor-es6-persistence')
     testImplementation project(':conductor-grpc-server')
