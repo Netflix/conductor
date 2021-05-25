@@ -31,7 +31,8 @@ Workflows are defined using a JSON based DSL.
   "failureWorkflow": "cleanup_encode_resources",
   "restartable": true,
   "workflowStatusListenerEnabled": true,
-  "schemaVersion": 2
+  "schemaVersion": 2,
+  "ownerEmail": "encode_admin@test.com"
 }
 ```
 
@@ -47,6 +48,14 @@ Workflows are defined using a JSON based DSL.
 |schemaVersion|Current Conductor Schema version. schemaVersion 1 is discontinued.|Must be 2|
 |restartable|Boolean flag to allow Workflow restarts|defaults to true|
 |workflowStatusListenerEnabled|If true, every workflow that gets terminated or completed will send a notification. See [below](#workflow-notifications)|optional (false by default)|
+|ownerEmail|A String that contains the workflow owner's email.|mandatory unless disabled|
+|timeoutSeconds|Time in seconds, after which the workflow is timed out|No timeouts if set to 0 (defaults to 0)|
+|timeoutPolicy|Workflow's timeout policy|see possible values below (defaults to ALERT_ONLY)|
+
+### Timeout Policy
+
+* TIME_OUT_WF : Workflow is marked as TIMED_OUT and terminated.
+* ALERT_ONLY : The timeout is logged but the workflow is not terminated.
 
 ### Tasks within Workflow
 ```tasks``` property in a workflow execution defines an array of tasks to be executed in that order.
@@ -83,6 +92,9 @@ __${SOURCE.input/output.JSONPath}__
 
 !!! note "JSON Path Support"
 	Conductor supports [JSONPath](http://goessner.net/articles/JsonPath/) specification and uses Java implementation from [here](https://github.com/jayway/JsonPath).
+
+!!! note "Escaping expressions"
+	To escape an expression, prefix it with an extra _$_ character (ex.: ```$${workflow.input...}```).
 
 **Example**
 

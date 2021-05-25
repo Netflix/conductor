@@ -172,8 +172,8 @@ public class WorkflowResourceTest {
 
     @Test
     public void testRetry() {
-        workflowResource.retry("w123");
-        verify(mockWorkflowService, times(1)).retryWorkflow(anyString());
+        workflowResource.retry("w123", false);
+        verify(mockWorkflowService, times(1)).retryWorkflow(anyString(), anyBoolean());
 
     }
 
@@ -201,5 +201,23 @@ public class WorkflowResourceTest {
         workflowResource.searchWorkflowsByTasks(0, 100, "asc", "*", "*");
         verify(mockWorkflowService, times(1)).searchWorkflowsByTasks(anyInt(), anyInt(),
                 anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void testSearchV2() {
+        workflowResource.searchV2(0, 100, "asc", "*", "*");
+        verify(mockWorkflowService).searchWorkflowsV2(0, 100, "asc", "*", "*");
+    }
+
+    @Test
+    public void testSearchWorkflowsByTasksV2() {
+        workflowResource.searchWorkflowsByTasksV2(0, 100, "asc", "*", "*");
+        verify(mockWorkflowService).searchWorkflowsByTasksV2(0, 100, "asc", "*", "*");
+    }
+
+    @Test
+    public void testGetExternalStorageLocation() {
+        workflowResource.getExternalStorageLocation("path", "operation", "payloadType");
+        verify(mockWorkflowService).getExternalStorageLocation("path", "operation", "payloadType");
     }
 }

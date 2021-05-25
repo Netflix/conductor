@@ -1,24 +1,19 @@
 buildscript {
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.15'
     }
 }
 
 plugins {
     id 'java'
     id 'idea'
-    id "com.google.protobuf" version "0.8.5"
-}
-
-repositories{
-    maven { url "https://dl.bintray.com/chaos-systems/mvn" }
+    id "com.google.protobuf" version "0.8.15"
 }
 
 dependencies {
     compile project(':conductor-common')
     compile project(':conductor-core')
 
-    protobuf 'io.chaossystems.grpc:grpc-healthcheck:1.0.+:protos'
     compile "com.google.api.grpc:proto-google-common-protos:1.0.0"
     compile "io.grpc:grpc-protobuf:${revGrpc}"
     compile "io.grpc:grpc-stub:${revGrpc}"
