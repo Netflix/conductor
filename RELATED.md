@@ -20,6 +20,12 @@
 
 * https://github.com/mohelsaka/conductor-prometheus-metrics - Conductor plugin for exposing Prometheus metrics over path '/metrics'
 
+## OAuth2.0 Security Configuration
+Forked Repository - [Conductor (Secure)](https://github.com/maheshyaddanapudi/conductor)
+
+[OAuth2.0 Role Based Security!](https://github.com/maheshyaddanapudi/conductor/blob/main/SECURITY.md) - Spring Security with easy configuration to secure the Conductor server APIs.
+
+Docker image published to [Docker Hub](https://hub.docker.com/repository/docker/conductorboot/server)
 
 ## Conductor Worker utilities
 
