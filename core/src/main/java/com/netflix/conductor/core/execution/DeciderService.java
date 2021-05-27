@@ -69,6 +69,9 @@ public class DeciderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeciderService.class);
 
+    @VisibleForTesting
+    static final String MAX_TASK_LIMIT = "conductor.app.max-task-limit";
+
     private final ParametersUtils parametersUtils;
     private final ExternalPayloadStorageUtils externalPayloadStorageUtils;
     private final MetadataDAO metadataDAO;
@@ -584,8 +587,8 @@ public class DeciderService {
             return;
         }
 
-        String reason = String.format("Workflow '%s' timed out after %d seconds. Timeout configured as %d. " +
-                "Timeout policy configured to %s", workflow.getWorkflowId(), elapsedTime / 1000L, timeout,
+        String reason = String.format("Workflow timed out after %d seconds. Timeout configured as %d seconds. " +
+                "Timeout policy configured to %s", elapsedTime / 1000L, workflowDef.getTimeoutSeconds(),
             workflowDef.getTimeoutPolicy().name());
 
         switch (workflowDef.getTimeoutPolicy()) {
@@ -620,7 +623,7 @@ public class DeciderService {
         }
 
         String reason = String.format("Task timed out after %d seconds. Timeout configured as %d seconds. "
-                + "Timeout policy configured to %s", elapsedTime / 1000L, timeout / 1000L,
+                + "Timeout policy configured to %s", elapsedTime / 1000L, taskDef.getTimeoutSeconds(),
             taskDef.getTimeoutPolicy().name());
         timeoutTaskWithTimeoutPolicy(reason, taskDef, task);
     }

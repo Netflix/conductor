@@ -12,6 +12,23 @@
  */
 package com.netflix.conductor.core.execution;
 
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.CANCELED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED_WITH_TERMINAL_ERROR;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.SCHEDULED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.SKIPPED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.TIMED_OUT;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.valueOf;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TERMINATE;
+import static com.netflix.conductor.core.exception.ApplicationException.Code.BACKEND_ERROR;
+import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
+import static com.netflix.conductor.core.exception.ApplicationException.Code.INVALID_INPUT;
+import static com.netflix.conductor.core.exception.ApplicationException.Code.NOT_FOUND;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
@@ -48,11 +65,6 @@ import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionLockService;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,24 +75,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.CANCELED;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED_WITH_TERMINAL_ERROR;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.SCHEDULED;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.SKIPPED;
-import static com.netflix.conductor.common.metadata.tasks.Task.Status.valueOf;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TERMINATE;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.BACKEND_ERROR;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.INVALID_INPUT;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.NOT_FOUND;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Workflow services provider interface
@@ -117,6 +118,7 @@ public class WorkflowExecutor {
 
     private static final Predicate<Task> NON_TERMINAL_TASK = task -> !task.getStatus().isTerminal();
 
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     public WorkflowExecutor(DeciderService deciderService, MetadataDAO metadataDAO, QueueDAO queueDAO,
                             MetadataMapperService metadataMapperService, WorkflowStatusListener workflowStatusListener,
                             ExecutionDAOFacade executionDAOFacade, ConductorProperties properties,
@@ -632,9 +634,11 @@ public class WorkflowExecutor {
             }
         }
 
-        if (retriableMap.values().size() == 0) {
+        // if workflow TIMED_OUT due to timeoutSeconds configured in the workflow definition,
+        // it may not have any unsuccessful tasks that can be retried
+        if (retriableMap.values().size() == 0 && workflow.getStatus() != WorkflowStatus.TIMED_OUT) {
             throw new ApplicationException(CONFLICT,
-                    "There are no retriable tasks! Use restart if you want to attempt entire workflow execution again.");
+                    "There are no retryable tasks! Use restart if you want to attempt entire workflow execution again.");
         }
 
         // Update Workflow with new status.
@@ -763,6 +767,13 @@ public class WorkflowExecutor {
         workflow.setOutput(workflow.getOutput());
         workflow.setReasonForIncompletion(workflow.getReasonForIncompletion());
         workflow.setExternalOutputPayloadStoragePath(workflow.getExternalOutputPayloadStoragePath());
+
+        // update the failed reference task names
+        workflow.getFailedReferenceTaskNames().addAll(workflow.getTasks().stream()
+            .filter(t -> FAILED.equals(t.getStatus()) || FAILED_WITH_TERMINAL_ERROR.equals(t.getStatus()))
+            .map(Task::getReferenceTaskName)
+            .collect(Collectors.toSet()));
+
         executionDAOFacade.updateWorkflow(workflow);
         LOGGER.debug("Completed workflow execution for {}", workflow.getWorkflowId());
         workflowStatusListener.onWorkflowCompletedIfEnabled(workflow);
@@ -808,6 +819,12 @@ public class WorkflowExecutor {
                 workflow = metadataMapperService.populateWorkflowWithDefinitions(workflow);
             }
             deciderService.updateWorkflowOutput(workflow, null);
+
+            // update the failed reference task names
+            workflow.getFailedReferenceTaskNames().addAll(workflow.getTasks().stream()
+                .filter(t -> FAILED.equals(t.getStatus()) || FAILED_WITH_TERMINAL_ERROR.equals(t.getStatus()))
+                .map(Task::getReferenceTaskName)
+                .collect(Collectors.toSet()));
 
             String workflowId = workflow.getWorkflowId();
             workflow.setReasonForIncompletion(reason);
@@ -1002,15 +1019,6 @@ public class WorkflowExecutor {
                 executionDAOFacade.updateTask(task);
                 return null;
             }, null, null, 2, updateTaskDesc, updateTaskOperation);
-
-            //If the task has failed update the failed task reference name in the workflow.
-            //This gives the ability to look at workflow and see what tasks have failed at a high level.
-            if (FAILED.equals(task.getStatus()) || FAILED_WITH_TERMINAL_ERROR.equals(task.getStatus())) {
-                workflowInstance.getFailedReferenceTaskNames().add(task.getReferenceTaskName());
-                executionDAOFacade.updateWorkflow(workflowInstance);
-                LOGGER.debug("Task: {} has a {} status and the Workflow has been updated with failed task reference",
-                        task, task.getStatus());
-            }
         } catch (Exception e) {
             String errorMsg = String.format("Error updating task: %s for workflow: %s", task.getTaskId(), workflowId);
             LOGGER.error(errorMsg, e);
@@ -1178,38 +1186,6 @@ public class WorkflowExecutor {
         return Optional.empty();
     }
 
-    /**
-     * When a TERMINATE task runs, it only affects the workflow in which it runs; it does not do anything with
-     * in-progress tasks and subworkflows that are still running. This recursive method will ensure that all tasks
-     * within all subworkflows are set to SKIPPED status so they can complete.
-     *
-     * @param workflow a subworkflow within the hierarchy of the original workflow containing the TERMINATE task
-     */
-    private void skipTasksAffectedByTerminateTask(Workflow workflow) {
-        if (!workflow.getStatus().isTerminal()) {
-            List<Task> tasksToBeUpdated = new ArrayList<>();
-            for (Task workflowTask : workflow.getTasks()) {
-                if (!workflowTask.getStatus().isTerminal()) {
-                    workflowTask.setStatus(SKIPPED);
-                    tasksToBeUpdated.add(workflowTask);
-                }
-                if (SUB_WORKFLOW.name().equals(workflowTask.getTaskType()) && StringUtils
-                        .isNotBlank(workflowTask.getSubWorkflowId())) {
-                    Workflow subWorkflow = executionDAOFacade.getWorkflowById(workflowTask.getSubWorkflowId(), true);
-                    if (subWorkflow != null) {
-                        skipTasksAffectedByTerminateTask(subWorkflow);
-                    }
-                }
-            }
-            if (!tasksToBeUpdated.isEmpty()) {
-                executionDAOFacade.updateTasks(tasksToBeUpdated);
-                workflow.setStatus(Workflow.WorkflowStatus.TERMINATED);
-                workflow.setReasonForIncompletion("Parent workflow was terminated with a TERMINATE task");
-                executionDAOFacade.updateWorkflow(workflow);
-            }
-        }
-    }
-
     @VisibleForTesting
     List<String> cancelNonTerminalTasks(Workflow workflow) {
         List<String> erroredTasks = new ArrayList<>();
@@ -1276,11 +1252,19 @@ public class WorkflowExecutor {
         } finally {
             executionLockService.releaseLock(workflowId);
         }
+
+        // remove from the sweep queue
+        // any exceptions can be ignored, as this is not critical to the pause operation
+        try {
+            queueDAO.remove(DECIDER_QUEUE, workflowId);
+        } catch (Exception e) {
+            LOGGER.info("Error removing workflow: {} from decider queue", workflowId, e);
+        }
     }
 
     /**
-     * @param workflowId
-     * @throws IllegalStateException
+     * @param workflowId the workflow to be resumed
+     * @throws IllegalStateException if the workflow is not in PAUSED state
      */
     public void resumeWorkflow(String workflowId) {
         Workflow workflow = executionDAOFacade.getWorkflowById(workflowId, false);
@@ -1289,6 +1273,10 @@ public class WorkflowExecutor {
                     "Current status is " + workflow.getStatus().name());
         }
         workflow.setStatus(WorkflowStatus.RUNNING);
+        workflow.setLastRetriedTime(System.currentTimeMillis());
+        // Add to decider queue
+        queueDAO.push(DECIDER_QUEUE, workflow.getWorkflowId(), workflow.getPriority(),
+            properties.getWorkflowOffsetTimeout().getSeconds());
         executionDAOFacade.updateWorkflow(workflow);
         decide(workflowId);
     }
@@ -1597,9 +1585,6 @@ public class WorkflowExecutor {
                     .format("Error scheduling tasks: %s, for workflow: %s", taskIds, workflow.getWorkflowId());
             LOGGER.error(errorMsg, e);
             Monitors.error(CLASS_NAME, "scheduleTask");
-            // TODO Provide a better implementation of rollbackTasks considering all the edge cases.
-            // Throwing exception to avoid workflow ending up in irrecoverable state.
-            // rollbackTasks(workflow.getWorkflowId(), createdTasks);
             throw new TerminateWorkflowException(errorMsg);
         }
 
@@ -1616,34 +1601,6 @@ public class WorkflowExecutor {
             Monitors.error(CLASS_NAME, "scheduleTask");
         }
         return startedSystemTasks;
-    }
-
-    /**
-     * Rolls back all newly created tasks in a workflow, essentially resetting the workflow state, in case of an
-     * exception during task creation or task enqueuing.
-     *
-     * @param createdTasks a {@link List} of newly created tasks in the workflow which are to be rolled back
-     */
-    @VisibleForTesting
-    void rollbackTasks(String workflowId, List<Task> createdTasks) {
-        String description = "rolling back task from DAO for " + workflowId;
-        String operation = "rollbackTasks";
-
-        try {
-            // rollback all newly created tasks in the workflow
-            createdTasks.forEach(task -> new RetryUtil<>().retryOnException(() ->
-            {
-                if (task.getTaskType().equals(SUB_WORKFLOW.name())) {
-                    executionDAOFacade.removeWorkflow(task.getSubWorkflowId(), false);
-                }
-                executionDAOFacade.removeTask(task.getTaskId());
-                return null;
-            }, null, null, 3, description, operation));
-        } catch (Exception e) {
-            String errorMsg = String.format("Error scheduling/rolling back tasks for workflow: %s", workflowId);
-            LOGGER.error(errorMsg, e);
-            throw new TerminateWorkflowException(errorMsg);
-        }
     }
 
     private void addTaskToQueue(final List<Task> tasks) {
