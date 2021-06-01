@@ -17,6 +17,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+
 
 @Singleton
 public class SimpleStatusHandler implements JavaEventAction {
@@ -44,13 +46,13 @@ public class SimpleStatusHandler implements JavaEventAction {
         String workflowId = ScriptEvaluator.evalJq(workflowJq, payload);
         if (StringUtils.isEmpty(workflowId)) {
             logger.debug("Skipping. No workflowId provided in urns");
-            return Collections.emptyList();
+            return Collections.singletonList(UUID.randomUUID().toString());//Random UUId is returned to handle the retryEnbaled=true case.This will prevent retrying
         }
 
         Workflow workflow = executor.getWorkflow(workflowId, false);
         if (workflow == null) {
             logger.debug("Skipping. No workflow found for given id " + workflowId);
-            return Collections.emptyList();
+            return Collections.singletonList(UUID.randomUUID().toString());
         }
 
         if (workflow.getStatus().isTerminal()) {
@@ -59,7 +61,7 @@ public class SimpleStatusHandler implements JavaEventAction {
                     + ", contextUser=" + workflow.getContextUser()
                     + ", correlationId=" + workflow.getCorrelationId()
                     + ", traceId=" + workflow.getTraceId());
-            return Collections.emptyList();
+            return Collections.singletonList(UUID.randomUUID().toString());
         }
 
         Task task = executor.getTask(workflowId, params.taskRefName);
@@ -69,7 +71,7 @@ public class SimpleStatusHandler implements JavaEventAction {
                     + ", contextUser=" + workflow.getContextUser()
                     + ", correlationId=" + workflow.getCorrelationId()
                     + ", traceId=" + workflow.getTraceId());
-            return Collections.emptyList();
+            return Collections.singletonList(UUID.randomUUID().toString());
         }
 
         if (task.getStatus().isTerminal()) {
@@ -78,29 +80,31 @@ public class SimpleStatusHandler implements JavaEventAction {
                     + ", contextUser=" + workflow.getContextUser()
                     + ", correlationId=" + workflow.getCorrelationId()
                     + ", traceId=" + workflow.getTraceId());
-            return Collections.emptyList();
+            return Collections.singletonList(UUID.randomUUID().toString());
         }
         TaskResult taskResult = new TaskResult(task);
 
-        if (statusName.equalsIgnoreCase("Complete")) {
-            task.setStatus(Task.Status.COMPLETED);
-        } else if (statusName.equalsIgnoreCase("Failed")) {
-            task.setStatus(Task.Status.FAILED);
+        if ("Complete".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.COMPLETED);
+        } else if ("Failed".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.FAILED);
             taskResult.setReasonForIncompletion(statusReason);
-        } else if (statusName.equalsIgnoreCase("Cancelled")) {
-            task.setStatus(Task.Status.CANCELED);
-        } else if (statusName.equalsIgnoreCase("In_Queue")) {
-            task.setStatus(Task.Status.IN_PROGRESS);
+        } else if ("Cancelled".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.CANCELED);
+        } else if ("In_Queue".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
             taskResult.setResetStartTime(true);
-        } else if (statusName.equalsIgnoreCase("Active")) {
-            task.setStatus(Task.Status.IN_PROGRESS);
+        } else if ("Active".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
             taskResult.setResetStartTime(true);
         }
 
 
         if (params.payloadToOutput) {
             taskResult.setUpdateOutput(true);
-            taskResult.getOutputData().put("payload", payload);
+            if (taskResult.getOutputData() != null) {
+                taskResult.getOutputData().put("payload", payload);
+            }
         }
 
         executor.updateTask(taskResult);

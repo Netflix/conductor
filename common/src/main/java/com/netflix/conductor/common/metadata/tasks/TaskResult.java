@@ -32,8 +32,10 @@ public class TaskResult {
 
 	public enum Status {
 
-		IN_PROGRESS, FAILED, FAILED_NO_RETRY, COMPLETED, SCHEDULED, RESET;		//SCHEDULED is added for the backward compatibility and should NOT be used when updating the task result
-	};
+		IN_PROGRESS, FAILED, FAILED_NO_RETRY, COMPLETED, SCHEDULED, RESET, CANCELED;        //SCHEDULED is added for the backward compatibility and should NOT be used when updating the task result
+	}
+
+	;
 
 	private String workflowInstanceId;
 	
