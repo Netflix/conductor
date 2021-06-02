@@ -25,8 +25,6 @@ import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
 import com.netflix.conductor.jetty.server.JettyServer;
 import com.netflix.conductor.tests.utils.TestEnvironment;
-import java.util.HashMap;
-import java.util.Map;
 import org.elasticsearch.client.RestClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

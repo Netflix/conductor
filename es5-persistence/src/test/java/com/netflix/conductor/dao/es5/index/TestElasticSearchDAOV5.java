@@ -35,7 +35,6 @@ import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfigur
 import com.netflix.conductor.elasticsearch.es5.EmbeddedElasticSearchV5;
 import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;

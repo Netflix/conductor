@@ -20,6 +20,7 @@ package com.netflix.conductor.tests.utils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+
 import org.junit.runners.BlockJUnit4ClassRunner;
 
 /**

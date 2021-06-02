@@ -23,8 +23,6 @@ import com.netflix.conductor.dao.es7.index.query.parser.Expression;
 import com.netflix.conductor.elasticsearch.query.parser.ParserException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;

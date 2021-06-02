@@ -12,6 +12,11 @@
  */
 package com.netflix.conductor.tests.utils;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.sql.DataSource;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -40,10 +45,6 @@ import com.netflix.conductor.service.MetadataServiceImpl;
 import com.netflix.conductor.sqlserver.SqlServerConfiguration;
 import com.netflix.conductor.sqlserver.SqlServerDataSourceProvider;
 import com.netflix.conductor.sqlserver.SystemPropertiesSqlServerConfiguration;
-
-import javax.sql.DataSource;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author jvemugunta

@@ -1,4 +1,36 @@
+/*
+ * Copyright 2016 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.conductor.dao.sqlserver;
+
+import static com.netflix.conductor.core.execution.ApplicationException.Code.BACKEND_ERROR;
+import static com.netflix.conductor.core.execution.ApplicationException.Code.CONFLICT;
+import static com.netflix.conductor.core.execution.ApplicationException.Code.INTERNAL_ERROR;
+import static java.lang.Integer.parseInt;
+import static java.lang.System.getProperty;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+
+import javax.sql.DataSource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -9,24 +41,9 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.sqlserver.sql.ExecuteFunction;
 import com.netflix.conductor.sqlserver.sql.QueryFunction;
 import com.netflix.conductor.sqlserver.sql.TransactionalFunction;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
-import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import static com.netflix.conductor.core.execution.ApplicationException.Code.BACKEND_ERROR;
-import static com.netflix.conductor.core.execution.ApplicationException.Code.CONFLICT;
-import static com.netflix.conductor.core.execution.ApplicationException.Code.INTERNAL_ERROR;
-import static java.lang.Integer.parseInt;
-import static java.lang.System.getProperty;
 
 public abstract class SqlServerBaseDAO {
     // TODO: Move to configuration
@@ -227,11 +244,13 @@ public abstract class SqlServerBaseDAO {
     }
 
         /**
-     * Execute a statement with no expected return value within a given transaction.
+     * Execute a statement with expected return value within a given transaction.
      *
      * @param tx       The transactional {@link Connection} to use.
      * @param query    The query string to prepare.
      * @param function The functional callback to pass a {@link Query} to.
+     * @param <R>      Data type of returned data from server
+     * @return         Returned data from server
      */
     protected <R> R executeWithReturn(Connection tx, String query, QueryFunction<R> function) {
         try (Query q = new Query(objectMapper, tx, query)) {

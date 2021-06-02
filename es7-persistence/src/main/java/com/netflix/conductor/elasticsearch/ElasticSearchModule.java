@@ -15,7 +15,6 @@ package com.netflix.conductor.elasticsearch;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.netflix.conductor.elasticsearch.es7.ElasticSearchV7Module;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 
