@@ -86,7 +86,6 @@ public class PostgresDataSourceProvider implements Provider<DataSource> {
 
         FluentConfiguration flywayConfiguration = Flyway.configure()
                 .table(flywayTable)
-                .locations(Paths.get("db","migration_postgres").toString())
                 .locations("db/migration_postgres")
                 .dataSource(dataSource)
                 .placeholderReplacement(false);

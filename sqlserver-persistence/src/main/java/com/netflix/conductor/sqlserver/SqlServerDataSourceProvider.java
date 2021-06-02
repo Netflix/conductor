@@ -72,14 +72,12 @@ public class SqlServerDataSourceProvider implements Provider<DataSource> {
             return;
         }
 
-
         String table = configuration.getFlywayTable().orElse("__migrations");
         FluentConfiguration flywayConfiguration = Flyway.configure()
                 .table(table)
                 .dataSource(dataSource)
                 .schemas("data")
                 .locations("db/migration_sqlserver")
-                // .locations(Paths.get("db","migration_sqlserver").toString())
                 .placeholderReplacement(false);
         Flyway flyway = flywayConfiguration.load();
         flyway.migrate();
