@@ -81,6 +81,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -750,11 +751,11 @@ public abstract class AbstractWorkflowServiceTest {
         metadataService.registerTaskDef(Arrays.asList(taskDef1));
 
         TaskDef taskDef3 = new TaskDef();
-        taskDef1.setName("http3");
-        taskDef1.setTimeoutSeconds(5);
-        taskDef1.setRetryCount(1);
-        taskDef1.setTimeoutPolicy(TimeoutPolicy.RETRY);
-        taskDef1.setRetryDelaySeconds(10);
+        taskDef3.setName("http3");
+        taskDef3.setTimeoutSeconds(5);
+        taskDef3.setRetryCount(1);
+        taskDef3.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef3.setRetryDelaySeconds(10);
         metadataService.registerTaskDef(Arrays.asList(taskDef3));
 
         Map<String, Object> input = new HashMap<>();
@@ -4035,7 +4036,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testRetryWithForkJoin() throws Exception {
         String workflowId = this.runAFailedForkJoinWF();
-        workflowExecutor.retry(workflowId);
+        workflowExecutor.retry(workflowId,false);
 
         Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -4092,7 +4093,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testRetryWithDoWhile() throws Exception {
         String workflowId = this.runAFailedDoWhileWF();
-        workflowExecutor.retry(workflowId);
+        workflowExecutor.retry(workflowId,false);
 
         Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
         assertNotNull(workflow);
@@ -4174,7 +4175,7 @@ public abstract class AbstractWorkflowServiceTest {
 
         printTaskStatuses(workflowId, "before retry");
 
-        workflowExecutor.retry(workflowId);
+        workflowExecutor.retry(workflowId,false);
 
         printTaskStatuses(workflowId, "after retry");
         workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
@@ -5158,7 +5159,7 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(WorkflowStatus.FAILED, workflow.getStatus());
 
         // Retry the failed sub workflow
-        workflowExecutor.retry(subWorkflowId);
+        workflowExecutor.retry(subWorkflowId,false);
         task = workflowExecutionService.poll("junit_task_1", "test");
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
@@ -5208,6 +5209,145 @@ public abstract class AbstractWorkflowServiceTest {
         workflowTask.setTaskDefinition(null);
         metadataService.updateWorkflowDef(found);
     }
+
+
+    @Test
+    public void testSubWorkflowRetryLastFailedTask() {
+        String taskName = "junit_task_2";
+        TaskDef taskDef = notFoundSafeGetTaskDef(taskName);
+        int retryCount = notFoundSafeGetTaskDef(taskName).getRetryCount();
+        taskDef.setRetryCount(0);
+        metadataService.updateTaskDef(taskDef);
+
+        createSubWorkflow();
+        WorkflowDef found = metadataService.getWorkflowDef(WF_WITH_SUB_WF, 1);
+
+        WorkflowTask workflowTask = found.getTasks().stream().filter(t -> t.getType().equals(SUB_WORKFLOW.name())).findAny().orElse(null);
+
+        TaskDef subWorkflowTaskDef = new TaskDef();
+        subWorkflowTaskDef.setRetryCount(0);
+        subWorkflowTaskDef.setName("test_subworkflow_task");
+        subWorkflowTaskDef.setOwnerEmail("test@qbc.com");
+        workflowTask.setTaskDefinition(subWorkflowTaskDef);
+
+        metadataService.updateWorkflowDef(found);
+
+        Map<String, Object> workflowInputParams = new HashMap<>();
+        workflowInputParams.put("param1", "param 1");
+        workflowInputParams.put("param3", "param 2");
+        workflowInputParams.put("wfName", LINEAR_WORKFLOW_T1_T2);
+        String workflowId = startOrLoadWorkflowExecution(WF_WITH_SUB_WF, 1, "test", workflowInputParams, null, null);
+        assertNotNull(workflowId);
+
+        Workflow workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+
+        Task task = workflowExecutionService.poll("junit_task_5", "test");
+        assertNotNull(task);
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+
+        String subWorkflowTaskId = workflow.getTaskByRefName("a2").getTaskId();
+        workflowExecutor.executeSystemTask(dummySubWorkflowSystemTask, subWorkflowTaskId, 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
+        assertEquals(2, workflow.getTasks().size());
+
+        task = workflow.getTasks().stream().filter(t -> t.getTaskType().equals(SUB_WORKFLOW.name())).findAny().orElse(null);
+        assertNotNull(task);
+        assertNotNull(task.getOutputData());
+        assertNotNull("Output: " + task.getOutputData().toString() + ", status: " + task.getStatus(), task.getSubWorkflowId());
+        String subWorkflowId = task.getSubWorkflowId();
+
+        workflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(workflow);
+        assertNotNull(workflow.getTasks());
+        assertEquals(workflowId, workflow.getParentWorkflowId());
+        assertEquals(RUNNING, workflow.getStatus());
+
+        task = workflowExecutionService.poll("junit_task_1", "test");
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        Workflow subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+
+        task = workflowExecutionService.poll("junit_task_2", "test");
+        task.setStatus(FAILED);
+        workflowExecutionService.updateTask(task);
+
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(WorkflowStatus.FAILED, subWorkflow.getStatus());
+
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+
+        task = subWorkflow.getTasks().stream()
+                .filter(t -> t.getTaskType().equals("junit_task_2"))
+                .findAny().orElse(null);
+        assertNotNull(task);
+        assertEquals(FAILED,task.getStatus());
+
+
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(WorkflowStatus.FAILED, subWorkflow.getStatus());
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals(WorkflowStatus.FAILED, workflow.getStatus());
+
+        workflowExecutor.retry(workflowId,true);
+
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(RUNNING, subWorkflow.getStatus());
+
+        task = workflowExecutionService.poll("junit_task_2", "test");
+        assertEquals(subWorkflowId, task.getWorkflowInstanceId());
+        String uuid = UUID.randomUUID().toString();
+        task.getOutputData().put("uuid", uuid);
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        subWorkflow = workflowExecutionService.getExecutionStatus(subWorkflowId, true);
+        assertNotNull(subWorkflow);
+        assertEquals(WorkflowStatus.COMPLETED, subWorkflow.getStatus());
+        assertNotNull(subWorkflow.getOutput());
+        assertTrue(subWorkflow.getOutput().containsKey("o1"));
+        assertTrue(subWorkflow.getOutput().containsKey("o2"));
+        assertEquals("sub workflow input param1", subWorkflow.getOutput().get("o1"));
+        assertEquals(uuid, subWorkflow.getOutput().get("o2"));
+
+        workflowExecutor.executeSystemTask(subworkflow, subWorkflow.getParentWorkflowTaskId(), 1);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals(RUNNING, workflow.getStatus());
+
+        task = workflowExecutionService.poll("junit_task_6", "test");
+        assertNotNull(task);
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        workflow = workflowExecutionService.getExecutionStatus(workflowId, true);
+        assertNotNull(workflow);
+        assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
+
+        taskDef = notFoundSafeGetTaskDef(taskName);
+        taskDef.setRetryCount(retryCount);
+        metadataService.updateTaskDef(taskDef);
+
+        workflowTask = found.getTasks().stream().filter(t -> t.getType().equals(SUB_WORKFLOW.name())).findAny().orElse(null);
+        workflowTask.setTaskDefinition(null);
+        metadataService.updateWorkflowDef(found);
+    }
+
+
 
     @Test
     public void testWait() {
@@ -5349,7 +5489,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testTerminateTaskWithCompletedStatus() {
         WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setName("test_terminate_task_wf");
+        workflowDef.setName("testTerminateTaskWithCompletedStatus");
         workflowDef.setSchemaVersion(2);
 
         Map<String, Object> lambdaTaskInputParams = new HashMap<>();
@@ -5398,14 +5538,14 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(TaskType.TASK_TYPE_TERMINATE, workflow.getTasks().get(1).getTaskType());
         assertEquals(workflow.getTasks().get(1).getOutputData(), workflow.getOutput());
 
-        metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
+        metadataService.unregisterWorkflowDef("testTerminateTaskWithCompletedStatus", 1);
     }
 
     @Test
     public void testTerminateTaskWithFailedStatus() {
         String failureWorkflowName = "failure_workflow";
         WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setName("test_terminate_task_wf");
+        workflowDef.setName("testTerminateTaskWithFailedStatus");
         workflowDef.setSchemaVersion(2);
 
         Map<String, Object> lambdaTaskInputParams = new HashMap<>();
@@ -5470,7 +5610,7 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(1, failureWorkflow.getTasks().size());
         assertEquals(TaskType.TASK_TYPE_LAMBDA, failureWorkflow.getTasks().get(0).getTaskType());
 
-        metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
+        metadataService.unregisterWorkflowDef("testTerminateTaskWithFailedStatus", 1);
         metadataService.unregisterWorkflowDef(failureWorkflowName, 1);
     }
 
@@ -6056,6 +6196,8 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
 
         workflow.getTasks().forEach(workflowTask -> {
+            System.out.println(new DateTime(workflowTask.getScheduledTime()).toString());
+            System.out.println(new DateTime(workflowTask.getStartTime()).toString());
             assertTrue(workflowTask.getScheduledTime() <= workflowTask.getStartTime());
             assertTrue("" + (workflowTask.getStartTime() - workflowTask.getEndTime()), workflowTask.getStartTime() <= workflowTask.getEndTime());
         });
@@ -6532,7 +6674,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testTerminateTaskInASubworkflow() {
         WorkflowDef subWorkflowDef = new WorkflowDef();
-        subWorkflowDef.setName("test_terminate_task_wf");
+        subWorkflowDef.setName("testTerminateTaskInASubworkflow");
         subWorkflowDef.setSchemaVersion(2);
         subWorkflowDef.setVersion(1);
 
@@ -6567,7 +6709,7 @@ public abstract class AbstractWorkflowServiceTest {
 
         // Create Parent workflow
         WorkflowDef parentWorkflowDef = new WorkflowDef();
-        parentWorkflowDef.setName("test_parent_wf_for_terminate_task_subwf");
+        parentWorkflowDef.setName("test_parent_testTerminateTaskInASubworkflow");
         parentWorkflowDef.setSchemaVersion(2);
 
         WorkflowTask subWorkflowTask = new WorkflowTask();

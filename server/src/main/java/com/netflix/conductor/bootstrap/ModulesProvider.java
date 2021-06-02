@@ -170,6 +170,7 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 case SQLSERVER:
                     modules.add(new SqlServerLockModule());
                     logger.info("Starting locking module using SqlServer cluster.");
+                    break;
                 case LOCAL_ONLY:
                     modules.add(new LocalOnlyLockModule());
                     logger.info("Starting locking module using local only JVM locking.");

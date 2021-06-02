@@ -1,4 +1,36 @@
+/*
+ * Copyright 2016 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.conductor.dao.sqlserver;
+
+import static com.netflix.conductor.core.execution.ApplicationException.Code.BACKEND_ERROR;
+import static com.netflix.conductor.core.execution.ApplicationException.Code.CONFLICT;
+import static com.netflix.conductor.core.execution.ApplicationException.Code.INTERNAL_ERROR;
+import static java.lang.Integer.parseInt;
+import static java.lang.System.getProperty;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+
+import javax.sql.DataSource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -9,28 +41,13 @@ import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.sqlserver.sql.ExecuteFunction;
 import com.netflix.conductor.sqlserver.sql.QueryFunction;
 import com.netflix.conductor.sqlserver.sql.TransactionalFunction;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
-import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import static com.netflix.conductor.core.execution.ApplicationException.Code.BACKEND_ERROR;
-import static com.netflix.conductor.core.execution.ApplicationException.Code.CONFLICT;
-import static com.netflix.conductor.core.execution.ApplicationException.Code.INTERNAL_ERROR;
-import static java.lang.Integer.parseInt;
-import static java.lang.System.getProperty;
-
 public abstract class SqlServerBaseDAO {
     // TODO: Move to configuration
-    private static final String MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME = "conductor.mysql.deadlock.retry.max";
+    private static final String MAX_RETRY_ON_DEADLOCK_PROPERTY_NAME = "conductor.sqlserver.deadlock.retry.max";
     private static final String MAX_RETRY_ON_DEADLOCK_PROPERTY_DEFAULT_VALUE = "3";
     private static final int MAX_RETRY_ON_DEADLOCK = getMaxRetriesOnDeadLock();
     private static final List<String> EXCLUDED_STACKTRACE_CLASS = ImmutableList.of(
@@ -103,8 +120,8 @@ public abstract class SqlServerBaseDAO {
         logger.trace("{} : starting transaction", callingMethod);
 
         try(Connection tx = dataSource.getConnection()) {
-            boolean previousAutoCommitMode = tx.getAutoCommit();
-            tx.setAutoCommit(false);
+            // boolean previousAutoCommitMode = tx.getAutoCommit();
+            // tx.setAutoCommit(false);
             try {
                 R result = function.apply(tx);
                 tx.commit();
@@ -113,7 +130,7 @@ public abstract class SqlServerBaseDAO {
                 tx.rollback();
                 throw new ApplicationException(BACKEND_ERROR, th.getMessage(), th);
             } finally {
-                tx.setAutoCommit(previousAutoCommitMode);
+                // tx.setAutoCommit(previousAutoCommitMode);
             }
         } catch (SQLException ex) {
             throw new ApplicationException(BACKEND_ERROR, ex.getMessage(), ex);
@@ -126,7 +143,7 @@ public abstract class SqlServerBaseDAO {
         try {
             return new RetryUtil<R>().retryOnException(
                     () -> getWithTransaction(function),
-                    this::isDeadLockError,
+                    this::isDeadLockOrTimeoutError,
                     null,
                     MAX_RETRY_ON_DEADLOCK,
                     "retry on deadlock",
@@ -143,8 +160,8 @@ public abstract class SqlServerBaseDAO {
         logger.trace("{} : starting transaction", callingMethod);
 
         try(Connection tx = dataSource.getConnection()) {
-            boolean previousAutoCommitMode = tx.getAutoCommit();
-            tx.setAutoCommit(false);
+            // boolean previousAutoCommitMode = tx.getAutoCommit();
+            // tx.setAutoCommit(false);
             try {
                 R result = function.apply(tx);
                 tx.commit();
@@ -154,7 +171,7 @@ public abstract class SqlServerBaseDAO {
                 logger.info(CONFLICT + " " +th.getMessage());
                 return null;
             } finally {
-                tx.setAutoCommit(previousAutoCommitMode);
+                // tx.setAutoCommit(previousAutoCommitMode);
             }
         } catch (SQLException ex) {
             throw new ApplicationException(BACKEND_ERROR, ex.getMessage(), ex);
@@ -226,6 +243,23 @@ public abstract class SqlServerBaseDAO {
         }
     }
 
+        /**
+     * Execute a statement with expected return value within a given transaction.
+     *
+     * @param tx       The transactional {@link Connection} to use.
+     * @param query    The query string to prepare.
+     * @param function The functional callback to pass a {@link Query} to.
+     * @param <R>      Data type of returned data from server
+     * @return         Returned data from server
+     */
+    protected <R> R executeWithReturn(Connection tx, String query, QueryFunction<R> function) {
+        try (Query q = new Query(objectMapper, tx, query)) {
+            return function.apply(q);
+        } catch (SQLException ex) {
+            throw new ApplicationException(BACKEND_ERROR, ex);
+        }
+    }
+
     /**
      * Instantiates a new transactional connection and invokes {@link #execute(Connection, String, ExecuteFunction)}
      *
@@ -236,13 +270,14 @@ public abstract class SqlServerBaseDAO {
         withTransaction(tx -> execute(tx, query, function));
     }
 
-    private boolean isDeadLockError(Throwable throwable){
+    private boolean isDeadLockOrTimeoutError(Throwable throwable){
         SQLException sqlException = findCauseSQLException(throwable);
         if (sqlException == null){
             return false;
         }
         // sqlserver deadlock https://docs.microsoft.com/en-us/sql/relational-databases/errors-events/mssqlserver-1205-database-engine-error?view=sql-server-ver15
-        return 1205 == sqlException.getErrorCode();
+        int[] errorCodes = new int[] {-2, 1205, 1222};
+        return Arrays.stream(errorCodes).anyMatch(i -> i == sqlException.getErrorCode());
     }
 
     private SQLException findCauseSQLException(Throwable throwable) {

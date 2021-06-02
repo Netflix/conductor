@@ -19,6 +19,8 @@ import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.utils.SummaryUtil;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
@@ -94,6 +96,9 @@ public class TaskSummary {
 	@ProtoField(id = 19)
 	private int workflowPriority;
 
+	@ProtoField(id = 20)
+	private String referenceTaskName;
+
     public TaskSummary() {
     }
 
@@ -102,9 +107,9 @@ public class TaskSummary {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     	sdf.setTimeZone(gmt);
     	
-    	this.taskId = task.getTaskId();
-    	this.taskDefName = task.getTaskDefName();
-    	this.taskType = task.getTaskType();
+		this.taskId = task.getTaskId();
+		this.taskDefName = task.getTaskDefName();
+		this.taskType = task.getTaskType();
 		this.workflowId = task.getWorkflowInstanceId();
 		this.workflowType = task.getWorkflowType();
 		this.workflowPriority = task.getWorkflowPriority();
@@ -116,12 +121,13 @@ public class TaskSummary {
 		this.status = task.getStatus();
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
+		this.referenceTaskName = task.getReferenceTaskName();
 		if (task.getInputData() != null) {
-			this.input = task.getInputData().toString();
+			this.input = SummaryUtil.serializeInputOutput(task.getInputData());
 		}
 		
 		if (task.getOutputData() != null) {
-			this.output = task.getOutputData().toString();
+			this.output = SummaryUtil.serializeInputOutput(task.getOutputData());
 		}
 		
 		
@@ -407,6 +413,17 @@ public class TaskSummary {
 		this.workflowPriority = workflowPriority;
 	}
 
+	public String getReferenceTaskName() {
+		return referenceTaskName;
+	}
+
+	/**
+	 * @param name Priority defined for workflow
+	 */
+	public void setReferenceTaskName(String name) {
+		this.referenceTaskName = name;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -430,7 +447,8 @@ public class TaskSummary {
 			Objects.equals(getReasonForIncompletion(), that.getReasonForIncompletion()) &&
 			Objects.equals(getTaskDefName(), that.getTaskDefName()) &&
 			getTaskType().equals(that.getTaskType()) &&
-			getTaskId().equals(that.getTaskId());
+			getTaskId().equals(that.getTaskId()) &&
+			getReferenceTaskName() == that.getReferenceTaskName();
 	}
 
 	@Override
@@ -438,6 +456,6 @@ public class TaskSummary {
 		return Objects.hash(getWorkflowId(), getWorkflowType(), getCorrelationId(), getScheduledTime(), getStartTime(),
 			getUpdateTime(), getEndTime(), getStatus(), getReasonForIncompletion(), getExecutionTime(),
 			getQueueWaitTime(),
-			getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority());
+			getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority(), getReferenceTaskName());
 	}
 }

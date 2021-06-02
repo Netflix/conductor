@@ -47,7 +47,7 @@ public class SqlServerTestRunner extends BlockJUnit4ClassRunner {
         
         // jdbc properties
 
-        System.setProperty("jdbc.url", "jdbc:sqlserver://sqlserver:1433;database=conductor;encrypt=false;trustServerCertificate=true;");
+        System.setProperty("jdbc.url", "jdbc:sqlserver://localhost:1433;database=conductor;encrypt=false;trustServerCertificate=true;");
         System.setProperty("jdbc.username", "SA");
         System.setProperty("jdbc.password", "Password1");
         System.setProperty("conductor.sqlserver.connection.pool.size.min", "8");

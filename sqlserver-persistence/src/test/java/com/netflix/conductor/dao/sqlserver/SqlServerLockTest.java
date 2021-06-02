@@ -1,4 +1,28 @@
+/*
+ * Copyright 2016 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.conductor.dao.sqlserver;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import com.netflix.conductor.config.TestConfiguration;
+import com.netflix.conductor.core.utils.Lock;
 
 import org.junit.After;
 import org.junit.Before;
@@ -8,27 +32,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.junit.runners.Parameterized;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
-
-import com.netflix.conductor.config.TestConfiguration;
-import com.netflix.conductor.core.utils.Lock;
-import com.netflix.conductor.sqlserver.SqlServerConfiguration;
-
-@RunWith(Parameterized.class)
+@RunWith(JUnit4.class)
 public class SqlServerLockTest {
 
     private SqlServerDAOTestUtil testUtil;
@@ -51,30 +56,19 @@ public class SqlServerLockTest {
         testUtil.getDataSource().close();
     }
 
-    public SqlServerLockTest(boolean isInMemory) throws Exception {
+    public SqlServerLockTest() throws Exception {
         testUtil = new SqlServerDAOTestUtil(name.getMethodName());
-		if (isInMemory) {
-            testUtil.configureInMemoryTableForLock();
-        }
     }
-
-    @Parameterized.Parameters
-	public static Collection primeNumbers() {
-	   return Arrays.asList(new Object[][] {
-		  { false },
-		  { true },
-	   });
-	}
 
     @Test
     public void testLocking() {
-        String lockId = "testLocking";
+        String lockId = UUID.randomUUID().toString();
         assertTrue(lock.acquireLock(lockId, 1000, 1, TimeUnit.MILLISECONDS));
     }
 
     @Test
     public void testLockExpiration() throws InterruptedException {
-        String lockId = "testLockExpiration";
+        String lockId = UUID.randomUUID().toString();
 
         boolean isLocked = lock.acquireLock(lockId, 1000, 1000, TimeUnit.MILLISECONDS);
         assertTrue("initial acquire", isLocked);
@@ -92,7 +86,7 @@ public class SqlServerLockTest {
 
     @Test
     public void testLockReentry() throws InterruptedException {
-        String lockId = "testLockReentry";
+        String lockId = UUID.randomUUID().toString();
         boolean isLocked = lock.acquireLock(lockId, 1000, 60000, TimeUnit.MILLISECONDS);
         assertTrue(isLocked);
 
@@ -106,7 +100,7 @@ public class SqlServerLockTest {
 
     @Test
     public void testReleaseLock() {
-        String lockId = "testReleaseLock";
+        String lockId = UUID.randomUUID().toString();
 
         boolean isLocked = lock.acquireLock(lockId, 1000, 10000, TimeUnit.MILLISECONDS);
         assertTrue(isLocked);
@@ -127,40 +121,4 @@ public class SqlServerLockTest {
     public void testDangerousApi() {
         lock.acquireLock("lockId");
     }
-
-    // Can't get static mocks to work
-    // @Test
-    // public void testGetHolderId() throws Exception {
-    //     TestConfiguration cnf = new TestConfiguration();
-    //     cnf.setProperty("LOCAL_RACK", "rack");
-    //     cnf.setProperty("conductor.jetty.server.port", "8080");
-        
-
-    //     InetAddress hostAddr = mock(InetAddress.class);
-    //     when(hostAddr.getHostName()).thenReturn("host");
-
-    //     InetAddress throwAddr = mock(InetAddress.class);
-    //     when(throwAddr.getHostName()).thenThrow(UnknownHostException.class);
-    //     when(throwAddr.getHostAddress()).thenReturn("1.1.1.1");
-
-    //     try(MockedStatic<InetAddress> theMock = Mockito.mockStatic(InetAddress.class)) {
-    //         theMock.when(() -> InetAddress.getLocalHost())
-    //             .thenReturn(hostAddr);
-    //         SqlServerLock lck = new SqlServerLock(null, null, cnf);
-    //         assertEquals(
-    //             String.format("%s%c%d", "host:8080:rack", '-', Thread.currentThread().getId()), 
-    //             lck.getHolderId()       
-    //         );
-    //     }
-
-    //     try(MockedStatic<InetAddress> theMock = Mockito.mockStatic(InetAddress.class)) {
-    //         theMock.when(() -> InetAddress.getLocalHost())
-    //             .thenReturn(throwAddr);
-    //         SqlServerLock lck = new SqlServerLock(null, null, cnf);
-    //         assertEquals(
-    //             String.format("%s%c%d", "1.1.1.1:8080:rack", '-', Thread.currentThread().getId()), 
-    //             lck.getHolderId()       
-    //         );
-    //     }
-    // }
 }

@@ -25,8 +25,6 @@ import com.netflix.conductor.elasticsearch.EmbeddedElasticSearchProvider;
 import com.netflix.conductor.elasticsearch.SystemPropertiesElasticSearchConfiguration;
 import com.netflix.conductor.jetty.server.JettyServer;
 import com.netflix.conductor.tests.utils.TestEnvironment;
-import java.util.HashMap;
-import java.util.Map;
 import org.elasticsearch.client.RestClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -54,12 +52,11 @@ public class ESRestClientHttpEndToEndTest extends AbstractHttpEndToEndTest {
 
         search = serverInjector.getInstance(EmbeddedElasticSearchProvider.class).get().get();
         search.start();
+        search.waitForGreenCluster();
 
         SystemPropertiesElasticSearchConfiguration configuration = new SystemPropertiesElasticSearchConfiguration();
         ElasticSearchRestClientProvider restClientProvider = new ElasticSearchRestClientProvider(configuration);
         elasticSearchAdminClient = restClientProvider.get();
-
-        waitForGreenCluster();
 
         JettyServer server = new JettyServer(SERVER_PORT, false);
         server.start();
@@ -81,16 +78,4 @@ public class ESRestClientHttpEndToEndTest extends AbstractHttpEndToEndTest {
         TestEnvironment.teardown();
         search.stop();
     }
-
-    private static void waitForGreenCluster() throws Exception {
-        long startTime = System.currentTimeMillis();
-
-        Map<String, String> params = new HashMap<>();
-        params.put("wait_for_status", "green");
-        params.put("timeout", "30s");
-
-        elasticSearchAdminClient.performRequest("GET", "/_cluster/health", params);
-        logger.info("Elasticsearch Cluster ready in {} ms", System.currentTimeMillis() - startTime);
-    }
-
 }

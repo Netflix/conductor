@@ -110,8 +110,7 @@ router.get('/id/:workflowId', async (req, res, next) => {
       map(task => {
         if (task.taskType === 'SUB_WORKFLOW') {
           const subWorkflowId = task.subWorkflowId;
-
-          if (subWorkflowId != null) {
+          if (subWorkflowId != null && task.inputData.subWorkflowDefinition === undefined) {
             return {
               name: task.inputData.subWorkflowName,
               version: task.inputData.subWorkflowVersion,
@@ -195,7 +194,7 @@ router.post('/bulk/restart', async (req, res, next) => {
 
 router.post('/bulk/restart_with_latest_definition', async (req, res, next) => {
   try {
-    const result = await http.post(baseURL2 + "bulk/restart?useLatestDefinition=true", req.body, req.token);
+    const result = await http.post(baseURL2 + "bulk/restart?useLatestDefinitions=true", req.body, req.token);
     res.status(200).send(result);
   } catch (err) {
     next(err);
@@ -241,7 +240,7 @@ router.post('/restart/:workflowId', async (req, res, next) => {
 
 router.post('/retry/:workflowId', async (req, res, next) => {
   try {
-    const result = await http.post(baseURL2 + req.params.workflowId + '/retry', {}, req.token);
+    const result = await http.post(baseURL2 + req.params.workflowId + '/retry?resumeSubworkflowTasks=' + (req.query && req.query.resumeSubworkflowTasks || false) , {}, req.token);
     res.status(200).send({ result: req.params.workflowId });
   } catch (err) {
     next(err);

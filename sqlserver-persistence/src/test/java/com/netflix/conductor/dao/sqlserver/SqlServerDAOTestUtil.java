@@ -1,4 +1,27 @@
+/*
+ * Copyright 2016 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.conductor.dao.sqlserver;
+
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.sql.DataSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
@@ -8,15 +31,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 
 @SuppressWarnings("Duplicates")
@@ -49,7 +63,7 @@ public class SqlServerDAOTestUtil {
             "   WHERE name = N'%1$s'",
             ")",
             "BEGIN",
-            "   CREATE DATABASE [%1$s]",
+            "   CREATE DATABASE [%1$s];",
             "END"
         );
         try (Connection connection = dataSource.getConnection()) {
@@ -81,12 +95,16 @@ public class SqlServerDAOTestUtil {
     }
 
     private void flywayMigrate(DataSource dataSource) {
-        
-        Flyway flyway = new Flyway();
-        flyway.setDataSource(dataSource);
-        flyway.setPlaceholderReplacement(false);
-        flyway.setLocations(Paths.get("db","migration_sqlserver").toString());
+        Flyway flyway = Flyway.configure()
+            .dataSource(dataSource)
+            .table("schema_version")
+            .placeholderReplacement(false)
+            .locations(Paths.get("db","migration_sqlserver").toString())
+            .schemas("data")
+            .load();
+
         flyway.migrate();
+
     }
 
     public HikariDataSource getDataSource() {
@@ -137,47 +155,5 @@ public class SqlServerDAOTestUtil {
             logger.error(ex.getMessage(), ex);
             throw new RuntimeException(ex);
         }
-    }
-
-    public void configureInMemoryTableForLock() throws SQLException{
-        final String CREATE_AS_MEMORY = String.join("\n", 
-            "DROP TABLE [dbo].[reentrant_lock]",
-            "CREATE TABLE [dbo].[reentrant_lock] (",
-            "lock_id VARCHAR(255) PRIMARY KEY NONCLUSTERED,",
-            "holder_id VARCHAR(255) NOT NULL,",
-            "expire_time DATETIME2 DEFAULT SYSDATETIME() NOT NULL",
-            ")",
-            "with ( memory_optimized=on,",
-            "durability=schema_and_data",
-            ")"
-        );
-
-        Connection conn = dataSource.getConnection();
-        conn.prepareStatement(CREATE_AS_MEMORY).execute();
-    }
-
-    public void configureInMemoryTableForQueue() throws SQLException{
-        final String CREATE_AS_MEMORY = String.join("\n", 
-            "DROP TABLE [dbo].[queue_message]",
-            "CREATE TABLE [dbo].[queue_message] (",
-            "   id INT PRIMARY KEY NONCLUSTERED IDENTITY(1, 1),",
-            "   created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,",
-            "   deliver_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,",
-            "   queue_name VARCHAR(255) NOT NULL,",
-            "   message_id VARCHAR(255) NOT NULL,",
-            "   priority TINYINT DEFAULT 0,",
-            "   popped BIT DEFAULT 0,",
-            "   offset_time_seconds VARCHAR(64),",
-            "   payload NVARCHAR(4000),",
-            "   UNIQUE (queue_name, message_id),",
-            "   UNIQUE (queue_name, popped, deliver_on, created_on, priority)",
-            ")",
-            "with ( memory_optimized=on,",
-            "durability=schema_and_data",
-            ")"
-        );
-
-        Connection conn = dataSource.getConnection();
-        conn.prepareStatement(CREATE_AS_MEMORY).execute();
     }
 }

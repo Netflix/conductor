@@ -93,7 +93,9 @@ public class WorkflowRepairService {
      */
     public void verifyAndRepairWorkflowTasks(String workflowId) {
         Workflow workflow = executionDAO.getWorkflow(workflowId, true);
-        workflow.getTasks().forEach(task -> verifyAndRepairTask(task));
+        if (workflow != null) {
+            workflow.getTasks().forEach(task -> verifyAndRepairTask(task));
+        }
     }
 
     /**
@@ -106,6 +108,7 @@ public class WorkflowRepairService {
             String queueName = WorkflowExecutor.DECIDER_QUEUE;
             if (!queueDAO.containsMessage(queueName, workflow.getWorkflowId())) {
                 queueDAO.push(queueName, workflow.getWorkflowId(), configuration.getSweepFrequency());
+                LOGGER.info("Workflow {} re-queued for repairs", workflow.getWorkflowId());
                 Monitors.recordQueueMessageRepushFromRepairService(queueName);
                 return true;
             }
@@ -125,6 +128,7 @@ public class WorkflowRepairService {
             String taskQueueName = QueueUtils.getQueueName(task);
             if (!queueDAO.containsMessage(taskQueueName, task.getTaskId())) {
                 queueDAO.push(taskQueueName, task.getTaskId(), task.getCallbackAfterSeconds());
+                LOGGER.info("Task {} in workflow {} re-queued for repairs", task.getTaskId(), task.getWorkflowInstanceId());
                 Monitors.recordQueueMessageRepushFromRepairService(task.getTaskDefName());
                 return true;
             }

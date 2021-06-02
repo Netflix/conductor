@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Netflix, Inc.
+ * Copyright 2016 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,6 @@
  */
 package com.netflix.conductor.dao.sqlserver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
-import com.netflix.conductor.common.metadata.events.EventHandler;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.core.config.Configuration;
-import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.dao.EventHandlerDAO;
-import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.metrics.Monitors;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +27,17 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.core.config.Configuration;
+import com.netflix.conductor.core.execution.ApplicationException;
+import com.netflix.conductor.dao.EventHandlerDAO;
+import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.metrics.Monitors;
 
 @Singleton
 public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDAO, EventHandlerDAO {
@@ -88,7 +89,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
 
     @Override
     public void removeTaskDef(String name) {
-        final String DELETE_TASKDEF_QUERY = "DELETE FROM dbo.meta_task_def WHERE name = ?";
+        final String DELETE_TASKDEF_QUERY = "DELETE FROM [data].[meta_task_def] WHERE name = ?";
 
         executeWithTransaction(DELETE_TASKDEF_QUERY, q -> {
             if (!q.addParameter(name).executeDelete()) {
@@ -122,7 +123,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
 
     @Override
     public Optional<WorkflowDef> getLatestWorkflowDef(String name) {
-        final String GET_LATEST_WORKFLOW_DEF_QUERY = "SELECT json_data FROM dbo.meta_workflow_def WHERE NAME = ? AND " +
+        final String GET_LATEST_WORKFLOW_DEF_QUERY = "SELECT json_data FROM [data].[meta_workflow_def] WHERE NAME = ? AND " +
                 "version = latest_version";
 
         return Optional.ofNullable(
@@ -133,7 +134,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
 
     @Override
     public Optional<WorkflowDef> getWorkflowDef(String name, int version) {
-        final String GET_WORKFLOW_DEF_QUERY = "SELECT json_data FROM dbo.meta_workflow_def WHERE NAME = ? AND version = ?";
+        final String GET_WORKFLOW_DEF_QUERY = "SELECT json_data FROM [data].[meta_workflow_def] WHERE NAME = ? AND version = ?";
         return Optional.ofNullable(
                 queryWithTransaction(GET_WORKFLOW_DEF_QUERY, q -> q.addParameter(name)
                         .addParameter(version)
@@ -143,7 +144,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
 
     @Override
     public void removeWorkflowDef(String name, Integer version) {
-        final String DELETE_WORKFLOW_QUERY = "DELETE from dbo.meta_workflow_def WHERE name = ? AND version = ?";
+        final String DELETE_WORKFLOW_QUERY = "DELETE from [data].[meta_workflow_def] WHERE name = ? AND version = ?";
 
         withTransaction( tx -> {
             // remove specified workflow
@@ -161,26 +162,26 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
     }
 
     public List<String> findAll() {
-        final String FIND_ALL_WORKFLOW_DEF_QUERY = "SELECT DISTINCT name FROM dbo.meta_workflow_def";
+        final String FIND_ALL_WORKFLOW_DEF_QUERY = "SELECT DISTINCT name FROM [data].[meta_workflow_def]";
         return queryWithTransaction(FIND_ALL_WORKFLOW_DEF_QUERY, q -> q.executeAndFetch(String.class));
     }
 
     @Override
     public List<WorkflowDef> getAllWorkflowDefs() {
-        final String GET_ALL_WORKFLOW_DEF_QUERY = "SELECT json_data FROM dbo.meta_workflow_def ORDER BY name, version";
+        final String GET_ALL_WORKFLOW_DEF_QUERY = "SELECT json_data FROM [data].[meta_workflow_def] ORDER BY name, version";
 
         return queryWithTransaction(GET_ALL_WORKFLOW_DEF_QUERY, q -> q.executeAndFetch(WorkflowDef.class));
     }
 
     public List<WorkflowDef> getAllLatest() {
-        final String GET_ALL_LATEST_WORKFLOW_DEF_QUERY = "SELECT json_data FROM dbo.meta_workflow_def WHERE version = " +
+        final String GET_ALL_LATEST_WORKFLOW_DEF_QUERY = "SELECT json_data FROM [data].[meta_workflow_def] WHERE version = " +
                 "latest_version";
 
         return queryWithTransaction(GET_ALL_LATEST_WORKFLOW_DEF_QUERY, q -> q.executeAndFetch(WorkflowDef.class));
     }
 
     public List<WorkflowDef> getAllVersions(String name) {
-        final String GET_ALL_VERSIONS_WORKFLOW_DEF_QUERY = "SELECT json_data FROM dbo.meta_workflow_def WHERE name = ? " +
+        final String GET_ALL_VERSIONS_WORKFLOW_DEF_QUERY = "SELECT json_data FROM [data].[meta_workflow_def] WHERE name = ? " +
                 "ORDER BY version";
 
         return queryWithTransaction(GET_ALL_VERSIONS_WORKFLOW_DEF_QUERY,
@@ -191,7 +192,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
     public void addEventHandler(EventHandler eventHandler) {
         Preconditions.checkNotNull(eventHandler.getName(), "EventHandler name cannot be null");
 
-        final String INSERT_EVENT_HANDLER_QUERY = "INSERT INTO dbo.meta_event_handler (name, event, active, json_data) " +
+        final String INSERT_EVENT_HANDLER_QUERY = "INSERT INTO [data].[meta_event_handler] (name, event, active, json_data) " +
                 "VALUES (?, ?, ?, ?)";
 
         withTransaction(tx -> {
@@ -213,7 +214,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
         Preconditions.checkNotNull(eventHandler.getName(), "EventHandler name cannot be null");
 
         //@formatter:off
-        final String UPDATE_EVENT_HANDLER_QUERY = "UPDATE dbo.meta_event_handler SET " +
+        final String UPDATE_EVENT_HANDLER_QUERY = "UPDATE [data].[meta_event_handler] SET " +
                 "event = ?, active = ?, json_data = ?, " +
                 "modified_on = CURRENT_TIMESTAMP WHERE name = ?";
         //@formatter:on
@@ -235,7 +236,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
 
     @Override
     public void removeEventHandler(String name) {
-        final String DELETE_EVENT_HANDLER_QUERY = "DELETE FROM dbo.meta_event_handler WHERE name = ?";
+        final String DELETE_EVENT_HANDLER_QUERY = "DELETE FROM [data].[meta_event_handler] WHERE name = ?";
 
         withTransaction(tx -> {
             EventHandler existing = getEventHandler(tx, name);
@@ -250,13 +251,13 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
 
     @Override
     public List<EventHandler> getAllEventHandlers() {
-        final String READ_ALL_EVENT_HANDLER_QUERY = "SELECT json_data FROM dbo.meta_event_handler";
+        final String READ_ALL_EVENT_HANDLER_QUERY = "SELECT json_data FROM [data].[meta_event_handler]";
         return queryWithTransaction(READ_ALL_EVENT_HANDLER_QUERY, q -> q.executeAndFetch(EventHandler.class));
     }
 
     @Override
     public List<EventHandler> getEventHandlersForEvent(String event, boolean activeOnly) {
-        final String READ_ALL_EVENT_HANDLER_BY_EVENT_QUERY = "SELECT json_data FROM dbo.meta_event_handler WHERE event = ?";
+        final String READ_ALL_EVENT_HANDLER_BY_EVENT_QUERY = "SELECT json_data FROM [data].[meta_event_handler] WHERE event = ?";
         return queryWithTransaction(READ_ALL_EVENT_HANDLER_BY_EVENT_QUERY, q -> {
             q.addParameter(event);
             return q.executeAndFetch(rs -> {
@@ -303,7 +304,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
      * @return {@literal null} if nothing is found, otherwise the {@code EventHandler}.
      */
     private EventHandler getEventHandler(Connection connection, String name) {
-        final String READ_ONE_EVENT_HANDLER_QUERY = "SELECT json_data FROM dbo.meta_event_handler WHERE name = ?";
+        final String READ_ONE_EVENT_HANDLER_QUERY = "SELECT json_data FROM [data].[meta_event_handler] WHERE name = ?";
 
         return query(connection, READ_ONE_EVENT_HANDLER_QUERY,
                 q -> q.addParameter(name).executeAndFetchFirst(EventHandler.class));
@@ -317,7 +318,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
      * @return {@literal true} if a {@code WorkflowDef} already exists with the same values.
      */
     private Boolean workflowExists(Connection connection, WorkflowDef def) {
-        final String CHECK_WORKFLOW_DEF_EXISTS_QUERY = "SELECT COUNT(*) FROM dbo.meta_workflow_def WHERE name = ? AND " +
+        final String CHECK_WORKFLOW_DEF_EXISTS_QUERY = "SELECT COUNT(*) FROM [data].[meta_workflow_def] WHERE name = ? AND " +
                 "version = ?";
 
         return query(connection, CHECK_WORKFLOW_DEF_EXISTS_QUERY,
@@ -332,7 +333,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
      * @return {@code Optional.empty()} if no versions exist, otherwise the max {@link WorkflowDef#getVersion} found.
      */
     private Optional<Integer> getLatestVersion(Connection tx, String name) {
-        final String GET_LATEST_WORKFLOW_DEF_VERSION = "SELECT max(version) AS version FROM dbo.meta_workflow_def WHERE " +
+        final String GET_LATEST_WORKFLOW_DEF_VERSION = "SELECT max(version) AS version FROM [data].[meta_workflow_def] WHERE " +
                 "name = ?";
 
         Integer val = query(tx, GET_LATEST_WORKFLOW_DEF_VERSION, q -> {
@@ -357,7 +358,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
      * @param version The new latest {@code version} value.
      */
     private void updateLatestVersion(Connection tx, String name, int version) {
-        final String UPDATE_WORKFLOW_DEF_LATEST_VERSION_QUERY = "UPDATE dbo.meta_workflow_def SET latest_version = ? " +
+        final String UPDATE_WORKFLOW_DEF_LATEST_VERSION_QUERY = "UPDATE [data].[meta_workflow_def] SET latest_version = ? " +
                 "WHERE name = ?";
 
         execute(tx, UPDATE_WORKFLOW_DEF_LATEST_VERSION_QUERY,
@@ -365,7 +366,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
     }
 
     private void insertOrUpdateWorkflowDef(Connection tx, WorkflowDef def) {
-        final String INSERT_WORKFLOW_DEF_QUERY = "INSERT INTO dbo.meta_workflow_def (name, version, json_data) VALUES (?," +
+        final String INSERT_WORKFLOW_DEF_QUERY = "INSERT INTO [data].[meta_workflow_def] (name, version, json_data) VALUES (?," +
                 " ?, ?)";
 
         Optional<Integer> version = getLatestVersion(tx, def.getName());
@@ -377,7 +378,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
         } else {
             //@formatter:off
             final String UPDATE_WORKFLOW_DEF_QUERY =
-                    "UPDATE dbo.meta_workflow_def " +
+                    "UPDATE [data].meta_workflow_def " +
                             "SET json_data = ?, modified_on = CURRENT_TIMESTAMP " +
                             "WHERE name = ? AND version = ?";
             //@formatter:on
@@ -426,7 +427,7 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
      * @return A new {@code List<TaskDef>} with all the {@code TaskDef} data that was retrieved.
      */
     private List<TaskDef> findAllTaskDefs(Connection tx) {
-        final String READ_ALL_TASKDEF_QUERY = "SELECT json_data FROM dbo.meta_task_def";
+        final String READ_ALL_TASKDEF_QUERY = "SELECT json_data FROM [data].[meta_task_def]";
 
         return query(tx, READ_ALL_TASKDEF_QUERY, q -> q.executeAndFetch(TaskDef.class));
     }
@@ -438,16 +439,16 @@ public class SqlServerMetadataDAO extends SqlServerBaseDAO implements MetadataDA
      * @return {@literal null} if nothing is found, otherwise the {@code TaskDef}.
      */
     private TaskDef getTaskDefFromDB(String name) {
-        final String READ_ONE_TASKDEF_QUERY = "SELECT json_data FROM dbo.meta_task_def WHERE name = ?";
+        final String READ_ONE_TASKDEF_QUERY = "SELECT json_data FROM [data].[meta_task_def] WHERE name = ?";
 
         return queryWithTransaction(READ_ONE_TASKDEF_QUERY,
                 q -> q.addParameter(name).executeAndFetchFirst(TaskDef.class));
     }
 
     private String insertOrUpdateTaskDef(TaskDef taskDef) {
-        final String UPDATE_TASKDEF_QUERY = "UPDATE dbo.meta_task_def SET json_data = ?, modified_on = CURRENT_TIMESTAMP WHERE name = ?";
+        final String UPDATE_TASKDEF_QUERY = "UPDATE [data].[meta_task_def] SET json_data = ?, modified_on = CURRENT_TIMESTAMP WHERE name = ?";
 
-        final String INSERT_TASKDEF_QUERY = "INSERT INTO dbo.meta_task_def (name, json_data) VALUES (?, ?)";
+        final String INSERT_TASKDEF_QUERY = "INSERT INTO [data].[meta_task_def] (name, json_data) VALUES (?, ?)";
 
         return getWithRetriedTransactions(tx -> {
             execute(tx, UPDATE_TASKDEF_QUERY, update -> {

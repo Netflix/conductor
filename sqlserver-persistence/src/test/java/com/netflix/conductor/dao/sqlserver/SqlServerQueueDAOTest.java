@@ -1,10 +1,36 @@
+/*
+ * Copyright 2016 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.conductor.dao.sqlserver;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import com.google.common.collect.ImmutableList;
-import com.jayway.jsonpath.Configuration;
-import com.netflix.conductor.config.TestConfiguration;
 import com.netflix.conductor.core.events.queue.Message;
-import com.netflix.conductor.sqlserver.SqlServerConfiguration;
 
 import org.junit.After;
 import org.junit.Before;
@@ -13,28 +39,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.runners.JUnit4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.bytebuddy.build.Plugin.Engine.Source.InMemory;
-
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 @SuppressWarnings("Duplicates")
-@RunWith(Parameterized.class)
+@RunWith(JUnit4.class)
 public class SqlServerQueueDAOTest {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SqlServerQueueDAOTest.class);
@@ -59,28 +69,20 @@ public class SqlServerQueueDAOTest {
         testUtil.getDataSource().close();
 	}
 	
-	public SqlServerQueueDAOTest(Boolean isInMemory) throws Exception{
+	public SqlServerQueueDAOTest() throws Exception{
 		testUtil = new SqlServerDAOTestUtil(name.getMethodName());
-		if(isInMemory)
-			testUtil.configureInMemoryTableForQueue();
-	}
-
-	@Parameterized.Parameters
-	public static Collection primeNumbers() {
-	   return Arrays.asList(new Object[][] {
-		  { false },
-		  { true },
-	   });
 	}
 
 	@Test
 	public void complexQueueTest() {
-		String queueName = "TestQueue";
+		String queueName = "complexQueueTestQueue";
 		long offsetTimeInSecond = 0;
 
+		List<String> messageIds2 = new ArrayList<>();
 		for(int i = 0; i < 10; i++) {
-			String messageId = "msg" + i;
+			String messageId = UUID.randomUUID().toString();
 			dao.push(queueName, messageId, offsetTimeInSecond);
+			messageIds2.add(messageId);
 		}
 		int size = dao.getSize(queueName);
 		assertEquals(10, size);
@@ -88,10 +90,8 @@ public class SqlServerQueueDAOTest {
 		assertTrue(details.size() > 0);
 		assertEquals(10L, details.get(queueName).longValue());
 
-
 		for(int i = 0; i < 10; i++) {
-			String messageId = "msg" + i;
-			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond);
+			dao.pushIfNotExists(queueName, messageIds2.get(i), offsetTimeInSecond);
 		}
 
 		List<String> popped = dao.pop(queueName, 10, 100);
@@ -119,14 +119,13 @@ public class SqlServerQueueDAOTest {
 		assertEquals(0, popped.size());
 
 		for(int i = 0; i < 10; i++) {
-			String messageId = "msg" + i;
-			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond);
+			dao.pushIfNotExists(queueName, messageIds2.get(i), offsetTimeInSecond);
 		}
 		size = dao.getSize(queueName);
 		assertEquals(10, size);
 
 		for(int i = 0; i < 10; i++) {
-			String messageId = "msg" + i;
+			String messageId = messageIds2.get(i);
 			assertTrue(dao.containsMessage(queueName, messageId));
 			dao.remove(queueName, messageId);
 		}
@@ -135,7 +134,7 @@ public class SqlServerQueueDAOTest {
 		assertEquals(0, size);
 
 		for(int i = 0; i < 10; i++) {
-			String messageId = "msg" + i;
+			String messageId = messageIds2.get(i);
 			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond);
 		}
 		dao.flush(queueName);
@@ -150,23 +149,24 @@ public class SqlServerQueueDAOTest {
 	 * */
 	@Test
 	public void containsMessageTest() {
-		String queueName = "TestQueue";
+		String queueName = "containsMessageTestQueue";
 		long offsetTimeInSecond = 0;
-
+		List<String> messageIds = new ArrayList<>();
 		for(int i = 0; i < 10; i++) {
-			String messageId = "msg" + i;
+			String messageId = UUID.randomUUID().toString();
 			dao.push(queueName, messageId, offsetTimeInSecond);
+			messageIds.add(messageId);
 		}
 		int size = dao.getSize(queueName);
-		assertEquals(10, size);
+		assertEquals(10, size);	
 
 		for(int i = 0; i < 10; i++) {
-			String messageId = "msg" + i;
+			String messageId = messageIds.get(i);
 			assertTrue(dao.containsMessage(queueName, messageId));
 			dao.remove(queueName, messageId);
 		}
 		for(int i = 0; i < 10; i++) {
-			String messageId = "msg" + i;
+			String messageId = messageIds.get(i);
 			assertFalse(dao.containsMessage(queueName, messageId));
 		}
 	}
@@ -183,7 +183,7 @@ public class SqlServerQueueDAOTest {
 
 		for(int i = 0; i < totalSize; i++) {
 			String payload = "{\"id\": " + i + ", \"msg\":\"test " + i + "\"}";
-			Message m = new Message("testmsg-" + i, payload, "");
+			Message m = new Message(UUID.randomUUID().toString(), payload, "");
 			if (i % 2 == 0) {
 				// Set priority on message with pair id
 				m.setPriority(99-i);
@@ -216,7 +216,7 @@ public class SqlServerQueueDAOTest {
 		// Assert that our un-popped messages match our expected size
 		final long expectedSize = totalSize - firstPollSize - secondPollSize;
 		try(Connection c = testUtil.getDataSource().getConnection()) {
-			String UNPOPPED = "SELECT COUNT(*) FROM queue_message WHERE queue_name = ? AND popped = 0";
+			String UNPOPPED = "SELECT COUNT(*) FROM data.queue_message WHERE queue_name = ? AND popped = 0";
 			try(Query q = new Query(testUtil.getObjectMapper(), c, UNPOPPED)) {
 				long count = q.addParameter(queueName).executeCount();
 				assertEquals("Remaining queue size mismatch", expectedSize, count);
@@ -251,9 +251,9 @@ public class SqlServerQueueDAOTest {
 			}
 
 			String payload = "{\"id\": " + i + ",\"offset_time_seconds\":" + offset + "}";
-			Message m = new Message("testmsg-" + i, payload, "");
+			Message m = new Message(UUID.randomUUID().toString(), payload, "");
 			messages.add(m);
-			dao.push(queueName, "testmsg-" + i, offset);
+			dao.push(queueName, m.getId(), offset);
 		}
 
 		// Assert that all messages were persisted and no extras are in there
@@ -284,7 +284,7 @@ public class SqlServerQueueDAOTest {
 		assertFalse("Second poll was empty", secondPoll.isEmpty());
 		assertEquals("Second poll size mismatch", secondPollSize, secondPoll.size());
 
-		List<String> expectedIds = Arrays.asList("testmsg-4","testmsg-6","testmsg-7");
+		List<String> expectedIds = Arrays.asList(messages.get(4).getId(),messages.get(6).getId(),messages.get(7).getId());
 		for(int i = 0; i < secondPollSize; i++) {
 			String actual = secondPoll.get(i).getId();
 			assertTrue("Unexpected Id: " + actual, expectedIds.contains(actual));
@@ -296,7 +296,7 @@ public class SqlServerQueueDAOTest {
 		// Assert that our un-popped messages match our expected size
 		final long expectedSize = totalSize - firstPollSize - secondPollSize;
 		try(Connection c = testUtil.getDataSource().getConnection()) {
-			String UNPOPPED = "SELECT COUNT(*) FROM queue_message WHERE queue_name = ? AND popped = 0";
+			String UNPOPPED = "SELECT COUNT(*) FROM data.queue_message WHERE queue_name = ? AND popped = 0";
 			try(Query q = new Query(testUtil.getObjectMapper(), c, UNPOPPED)) {
 				long count = q.addParameter(queueName).executeCount();
 				assertEquals("Remaining queue size mismatch", expectedSize, count);
@@ -317,17 +317,20 @@ public class SqlServerQueueDAOTest {
 		// A secondary queue to make sure we don't accidentally process other queues
 		final String otherQueueName = "process_unacks_test_other_queue";
 
+		List<String> messageIds = new ArrayList<>();
 		// Create testing queue with some messages (but not all) that will be popped/acked.
 		for(int i = 0; i < count; i++) {
 			int offset = 0;
 			if(i >= unackedCount){ offset = 1_000_000; }
-
-			dao.push(queueName, "unack-" + i, offset);
+			
+			String id = UUID.randomUUID().toString();
+			dao.push(queueName, id, offset);
+			messageIds.add(id);
 		}
 
 		// Create a second queue to make sure that unacks don't occur for it
 		for(int i = 0; i < count; i++) {
-			dao.push(otherQueueName, "other-" + i, 0);
+			dao.push(otherQueueName, UUID.randomUUID().toString() + i, 0);
 		}
 
 		// Poll for first batch of messages (should be equal to unackedCount)
@@ -340,7 +343,7 @@ public class SqlServerQueueDAOTest {
 		dao.pollMessages(otherQueueName, 100, 10_000);
 
 		// Ack one of the polled messages
-		assertTrue(dao.ack(queueName, "unack-1"));
+		assertTrue(dao.ack(queueName, messageIds.get(1)));
 
 		// Should have one less un-acked popped message in the queue
 		Long uacked = dao.queuesDetailVerbose().get(queueName).get("a").get("uacked");
@@ -366,17 +369,5 @@ public class SqlServerQueueDAOTest {
 		assertEquals(size.longValue(), count - unackedCount);
 		dao.flush(queueName);
 		dao.flush(otherQueueName);
-	}
-
-	@Test
-	public void testCalculateQueueName() {
-		TestConfiguration cnf = new TestConfiguration();
-		cnf.setProperty("LOCAL_RACK", "rack");
-		cnf.setProperty("conductor.sqlserver.queue.sharding.strategy", "local_only");
-		SqlServerQueueDAO q = new SqlServerQueueDAO(null, null, cnf);
-		assertEquals("asdf.rack", q.calculateQueueName("asdf"));
-		cnf.setProperty("conductor.sqlserver.queue.sharding.strategy", "shared");
-		q = new SqlServerQueueDAO(null, null, cnf);
-		assertEquals("asdf", q.calculateQueueName("asdf"));
 	}
 }

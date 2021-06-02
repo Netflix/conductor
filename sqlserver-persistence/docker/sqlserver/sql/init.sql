@@ -2,14 +2,8 @@ GO
 CREATE DATABASE Conductor;
 GO
 
-ALTER DATABASE Conductor
- ADD FILEGROUP fgInMemory contains MEMORY_OPTIMIZED_DATA
+USE Conductor;
 GO
 
-ALTER DATABASE Conductor
-ADD FILE (
-  NAME = 'fInMemory',
-  filename = '/var/sqlmem/fInMemory.mdf'
-)
-to filegroup fgInMemory
+CREATE SCHEMA data;
 GO

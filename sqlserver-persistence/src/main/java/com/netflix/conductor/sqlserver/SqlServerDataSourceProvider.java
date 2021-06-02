@@ -1,23 +1,19 @@
 package com.netflix.conductor.sqlserver;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.microsoft.sqlserver.jdbc.SQLServerDriver;
-import com.netflix.conductor.core.execution.ApplicationException;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
-import org.flywaydb.core.Flyway;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.ThreadFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.sql.DataSource;
 
-import java.nio.file.Paths;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.concurrent.ThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SqlServerDataSourceProvider implements Provider<DataSource> {
     private static final Logger logger = LoggerFactory.getLogger(SqlServerDataSourceProvider.class);
@@ -57,6 +53,9 @@ public class SqlServerDataSourceProvider implements Provider<DataSource> {
         cfg.setIdleTimeout(configuration.getConnectionIdleTimeout());
         cfg.setConnectionTimeout(configuration.getConnectionTimeout());
         cfg.setTransactionIsolation(configuration.getTransactionIsolationLevel());
+        cfg.setSchema("data");
+        cfg.setConnectionInitSql(String.format(
+            "SET IMPLICIT_TRANSACTIONS OFF; SET XACT_ABORT ON; SET LOCK_TIMEOUT %d", configuration.getLockTimeout()));
         ThreadFactory tf = new ThreadFactoryBuilder()
                 .setDaemon(true)
                 .setNameFormat("hikari-sqlserver-%d")
@@ -74,16 +73,15 @@ public class SqlServerDataSourceProvider implements Provider<DataSource> {
         }
 
 
-        Flyway flyway = new Flyway();
-        configuration.getFlywayTable().ifPresent(tableName -> {
-            logger.debug("Using Flyway migration table '{}'", tableName);
-            flyway.setTable(tableName);
-        });
-
-        flyway.setDataSource(dataSource);
-        flyway.setLocations(Paths.get("db","migration_sqlserver").toString());
-        flyway.setPlaceholderReplacement(false);
-        // flyway.baseline();
+        String table = configuration.getFlywayTable().orElse("__migrations");
+        FluentConfiguration flywayConfiguration = Flyway.configure()
+                .table(table)
+                .dataSource(dataSource)
+                .schemas("data")
+                .locations("db/migration_sqlserver")
+                // .locations(Paths.get("db","migration_sqlserver").toString())
+                .placeholderReplacement(false);
+        Flyway flyway = flywayConfiguration.load();
         flyway.migrate();
     }
 }

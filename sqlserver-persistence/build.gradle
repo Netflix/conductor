@@ -1,26 +1,30 @@
 buildscript {
+
     repositories {
-        jcenter()
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
 
     dependencies {
         classpath "com.avast.gradle:gradle-docker-compose-plugin:${revDockerCompose}"
     }
 }
-
 apply plugin: 'docker-compose'
 
 dependencies {
     compile project(':conductor-core')
     compile "com.google.inject:guice:${revGuice}"
 
-    compile "com.microsoft.sqlserver:mssql-jdbc:${revMicrosoftSqlServerDriver}"
     compile "commons-io:commons-io:${revCommonsIo}"
+    compile "com.microsoft.sqlserver:mssql-jdbc:${revMicrosoftSqlServerDriver}"
     compile "com.zaxxer:HikariCP:${revHikariCP}"
     compile "org.flywaydb:flyway-core:${revFlywayCore}"
 
     testCompile project(':conductor-core').sourceSets.test.output
     testCompile "org.slf4j:slf4j-log4j12:${revSlf4jlog4j}"
+    testCompile "org.testinfected.hamcrest-matchers:all-matchers:${revHamcrestAllMatchers}"
 }
 
 dockerCompose{
@@ -52,6 +56,6 @@ test.doFirst {
 test.finalizedBy("intDockerDown")
 
 test {
-    //the MySQL unit tests must run within the same JVM to share the same embedded DB
+    //the unit tests must run within the same JVM to share the same embedded DB
     maxParallelForks = 1
 }

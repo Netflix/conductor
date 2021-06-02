@@ -1,16 +1,36 @@
 /*
  * Copyright 2016 Netflix, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.netflix.conductor.dao.sqlserver;
+
+import static com.netflix.conductor.core.execution.ApplicationException.Code.BACKEND_ERROR;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.sql.DataSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -26,23 +46,6 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.PollDataDAO;
 import com.netflix.conductor.dao.RateLimitingDAO;
 import com.netflix.conductor.metrics.Monitors;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.sql.DataSource;
-
-import static com.netflix.conductor.core.execution.ApplicationException.Code.BACKEND_ERROR;
-
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Singleton
 public class SqlServerExecutionDAO extends SqlServerBaseDAO implements ExecutionDAO, RateLimitingDAO, PollDataDAO {
@@ -68,9 +71,9 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     @Override
     public List<Task> getPendingTasksByWorkflow(String taskDefName, String workflowId) {
         // @formatter:off
-        String GET_IN_PROGRESS_TASKS_FOR_WORKFLOW = "SELECT json_data FROM dbo.task_in_progress tip "
-                + "INNER JOIN dbo.task t ON t.task_id = tip.task_id " + 
-                "WHERE task_def_name = ? AND workflow_id = ?";
+        String GET_IN_PROGRESS_TASKS_FOR_WORKFLOW = "SELECT json_data FROM [data].[task_in_progress] tip "
+                + "INNER JOIN [data].[task] t ON t.task_id = tip.task_id " + 
+                "WHERE task_def_name = ? AND workflow_id = CONVERT(UNIQUEIDENTIFIER, ?)";
         // @formatter:on
 
         return queryWithTransaction(GET_IN_PROGRESS_TASKS_FOR_WORKFLOW,
@@ -107,6 +110,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
         return task.getReferenceTaskName() + "_" + task.getRetryCount();
     }
 
+    // TODO: deadlocks
     @Override
     public List<Task> createTasks(List<Task> tasks) {
         List<Task> created = Lists.newArrayListWithCapacity(tasks.size());
@@ -145,12 +149,11 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     }
 
     /**
-     * This is a dummy implementation and this feature is not for Mysql backed
+     * This is a dummy implementation and this feature is not for SqlServer backed
      * Conductor
-     * TODO: WTF
      *
      * @param task: which needs to be evaluated whether it is rateLimited or not
-     * @return
+     * @return returns false
      */
     @Override
     public boolean exceedsRateLimitPerFrequency(Task task, TaskDef taskDef) {
@@ -173,7 +176,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
         }
 
         long current = getInProgressTaskCount(task.getTaskDefName());
-
+        
         if (current >= limit) {
             Monitors.recordTaskConcurrentExecutionLimited(task.getTaskDefName(), limit);
             return true;
@@ -219,7 +222,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
 
     @Override
     public Task getTask(String taskId) {
-        String GET_TASK = "SELECT json_data FROM dbo.task WHERE task_id = ?";
+        String GET_TASK = "SELECT json_data FROM [data].[task] WHERE task_id = CONVERT(UNIQUEIDENTIFIER, ?)";
         return queryWithTransaction(GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(Task.class));
     }
 
@@ -235,8 +238,8 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     public List<Task> getPendingTasksForTaskType(String taskName) {
         Preconditions.checkNotNull(taskName, "task name cannot be null");
         // @formatter:off
-        String GET_IN_PROGRESS_TASKS_FOR_TYPE = "SELECT json_data FROM dbo.task_in_progress tip "
-                + "INNER JOIN dbo.task t ON t.task_id = tip.task_id " + "WHERE task_def_name = ?";
+        String GET_IN_PROGRESS_TASKS_FOR_TYPE = "SELECT json_data FROM [data].[task_in_progress] tip "
+                + "INNER JOIN [data].[task] t ON t.task_id = tip.task_id " + "WHERE task_def_name = ?";
         // @formatter:on
 
         return queryWithTransaction(GET_IN_PROGRESS_TASKS_FOR_TYPE,
@@ -245,7 +248,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
 
     @Override
     public List<Task> getTasksForWorkflow(String workflowId) {
-        String GET_TASKS_FOR_WORKFLOW = "SELECT task_id FROM dbo.workflow_to_task WHERE workflow_id = ?";
+        String GET_TASKS_FOR_WORKFLOW = "SELECT LOWER(task_id) FROM [data].[workflow_to_task] WHERE workflow_id = CONVERT(UNIQUEIDENTIFIER, ?)";
         return getWithRetriedTransactions(tx -> query(tx, GET_TASKS_FOR_WORKFLOW, q -> {
             List<String> taskIds = q.addParameter(workflowId).executeScalarList(String.class);
             return getTasks(tx, taskIds);
@@ -324,7 +327,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     @Override
     public List<String> getRunningWorkflowIds(String workflowName, int version) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-        String GET_PENDING_WORKFLOW_IDS = "SELECT workflow_id FROM dbo.workflow_pending WHERE workflow_type = ?";
+        String GET_PENDING_WORKFLOW_IDS = "SELECT LOWER(workflow_id) FROM [data].[workflow_pending] WHERE workflow_type = ?";
 
         return queryWithTransaction(GET_PENDING_WORKFLOW_IDS,
                 q -> q.addParameter(workflowName).executeScalarList(String.class));
@@ -347,14 +350,14 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     @Override
     public long getPendingWorkflowCount(String workflowName) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
-        String GET_PENDING_WORKFLOW_COUNT = "SELECT COUNT(*) FROM dbo.workflow_pending WHERE workflow_type = ?";
+        String GET_PENDING_WORKFLOW_COUNT = "SELECT COUNT(*) FROM [data].[workflow_pending] WHERE workflow_type = ?";
 
         return queryWithTransaction(GET_PENDING_WORKFLOW_COUNT, q -> q.addParameter(workflowName).executeCount());
     }
 
     @Override
     public long getInProgressTaskCount(String taskDefName) {
-        String GET_IN_PROGRESS_TASK_COUNT = "SELECT COUNT(*) FROM dbo.task_in_progress WHERE task_def_name = ? AND in_progress_status = 1";
+        String GET_IN_PROGRESS_TASK_COUNT = "SELECT COUNT(*) FROM [data].[task_in_progress] WHERE task_def_name = ? AND in_progress_status = 1";
 
         return queryWithTransaction(GET_IN_PROGRESS_TASK_COUNT, q -> q.addParameter(taskDefName).executeCount());
     }
@@ -369,7 +372,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
 
         withTransaction(tx -> {
             // @formatter:off
-            String GET_ALL_WORKFLOWS_FOR_WORKFLOW_DEF = "SELECT workflow_id FROM dbo.workflow_def_to_workflow "
+            String GET_ALL_WORKFLOWS_FOR_WORKFLOW_DEF = "SELECT LOWER(workflow_id) FROM [data].[workflow_def_to_workflow] "
                     + "WHERE workflow_def = ? AND date_str BETWEEN ? AND ?";
             // @formatter:on
 
@@ -393,7 +396,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     @Override
     public List<Workflow> getWorkflowsByCorrelationId(String workflowName, String correlationId, boolean includeTasks) {
         Preconditions.checkNotNull(correlationId, "correlationId cannot be null");
-        String GET_WORKFLOWS_BY_CORRELATION_ID = "SELECT w.json_data FROM dbo.workflow w left join dbo.workflow_def_to_workflow wd on w.workflow_id = wd.workflow_id  WHERE w.correlation_id = ? and wd.workflow_def = ?";
+        String GET_WORKFLOWS_BY_CORRELATION_ID = "SELECT w.json_data FROM [data].[workflow] w left join [data].[workflow_def_to_workflow] wd on w.workflow_id = wd.workflow_id  WHERE w.correlation_id = ? and wd.workflow_def = ?";
 
         return queryWithTransaction(GET_WORKFLOWS_BY_CORRELATION_ID,
                 q -> q.addParameter(correlationId).addParameter(workflowName).executeAndFetch(Workflow.class));
@@ -485,7 +488,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
             boolean previousAutoCommitMode = tx.getAutoCommit();
             tx.setAutoCommit(true);
             try {
-                String GET_ALL_POLL_DATA = "SELECT json_data FROM dbo.poll_data ORDER BY queue_name";
+                String GET_ALL_POLL_DATA = "SELECT json_data FROM [data].[poll_data] ORDER BY queue_name";
                 return query(tx, GET_ALL_POLL_DATA, q -> q.executeAndFetch(PollData.class));
             } catch (Throwable th) {
                 throw new ApplicationException(BACKEND_ERROR, th.getMessage(), th);
@@ -505,10 +508,11 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
         // Generate a formatted query string with a variable number of bind params based
         // on taskIds.size()
         final String GET_TASKS_FOR_IDS = String.format(
-                "SELECT json_data FROM dbo.task WHERE task_id IN (%s) AND json_data IS NOT NULL",
+                "SELECT json_data FROM [data].[task] WHERE task_id IN (%s) AND json_data IS NOT NULL",
                 Query.generateInBindings(taskIds.size()));
+        
 
-        return query(connection, GET_TASKS_FOR_IDS, q -> q.addParameters(taskIds).executeAndFetch(Task.class));
+        return query(connection, GET_TASKS_FOR_IDS, q -> q.addParameters(taskIds.stream().map(i -> i.toUpperCase()).collect(Collectors.toList())).executeAndFetch(Task.class));
     }
 
     private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
@@ -556,33 +560,33 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     }
 
     private Workflow readWorkflow(Connection connection, String workflowId) {
-        String GET_WORKFLOW = "SELECT json_data FROM dbo.workflow WHERE workflow_id = ?";
+        String GET_WORKFLOW = "SELECT json_data FROM [data].[workflow] WHERE workflow_id = CONVERT(UNIQUEIDENTIFIER, ?)";
 
         return query(connection, GET_WORKFLOW, q -> q.addParameter(workflowId).executeAndFetchFirst(Workflow.class));
     }
 
     private void addWorkflow(Connection connection, Workflow workflow) {
-        String INSERT_WORKFLOW = "INSERT INTO dbo.workflow (workflow_id, correlation_id, json_data) VALUES (?, ?, ?)";
+        String INSERT_WORKFLOW = "INSERT INTO [data].[workflow] (workflow_id, correlation_id, json_data) VALUES (?, ?, ?)";
 
         execute(connection, INSERT_WORKFLOW, q -> q.addParameter(workflow.getWorkflowId())
                 .addParameter(workflow.getCorrelationId()).addJsonParameter(workflow).executeUpdate());
     }
 
     private void updateWorkflow(Connection connection, Workflow workflow) {
-        String UPDATE_WORKFLOW = "UPDATE dbo.workflow SET json_data = ?, modified_on = SYSDATETIME() WHERE workflow_id = ?";
+        String UPDATE_WORKFLOW = "UPDATE [data].[workflow] SET json_data = ?, modified_on = SYSDATETIME() WHERE workflow_id = ?";
 
         execute(connection, UPDATE_WORKFLOW,
                 q -> q.addJsonParameter(workflow).addParameter(workflow.getWorkflowId()).executeUpdate());
     }
 
     private void removeWorkflow(Connection connection, String workflowId) {
-        String REMOVE_WORKFLOW = "DELETE FROM dbo.workflow WHERE workflow_id = ?";
+        String REMOVE_WORKFLOW = "DELETE FROM [data].[workflow] WHERE workflow_id = CONVERT(UNIQUEIDENTIFIER, ?)";
         execute(connection, REMOVE_WORKFLOW, q -> q.addParameter(workflowId).executeDelete());
     }
 
     private void addPendingWorkflow(Connection connection, String workflowType, String workflowId) {
         String INSERT_PENDING_WORKFLOW = String.join("\n",
-            "INSERT INTO [dbo].[workflow_pending] (workflow_type, workflow_id)",
+            "INSERT INTO [data].[workflow_pending] (workflow_type, workflow_id)",
             "VALUES (?, ?)"
         );
         execute(connection, INSERT_PENDING_WORKFLOW,
@@ -590,7 +594,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     }
 
     private void removePendingWorkflow(Connection connection, String workflowType, String workflowId) {
-        String REMOVE_PENDING_WORKFLOW = "DELETE FROM dbo.workflow_pending WHERE workflow_type = ? AND workflow_id = ?";
+        String REMOVE_PENDING_WORKFLOW = "DELETE FROM [data].[workflow_pending] WHERE workflow_type = ? AND workflow_id = CONVERT(UNIQUEIDENTIFIER, ?)";
 
         execute(connection, REMOVE_PENDING_WORKFLOW,
                 q -> q.addParameter(workflowType).addParameter(workflowId).executeDelete());
@@ -601,51 +605,43 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
 		 * Most times the row will be updated so let's try the update first. This used to be an 'INSERT/ON DUPLICATE KEY update' sql statement. The problem with that
 		 * is that if we try the INSERT first, the sequence will be increased even if the ON DUPLICATE KEY happens.
 		 */
-		String UPDATE_TASK = "UPDATE dbo.task SET json_data=?, modified_on=SYSDATETIME() WHERE task_id=?";
-		int rowsUpdated = query(connection, UPDATE_TASK, q -> q.addJsonParameter(task).addParameter(task.getTaskId()).executeUpdate());
-		if(rowsUpdated == 0) { // TODO: CR
-            String INSERT_TASK = String.join("\n",
-                "MERGE [dbo].[task] AS target",
-                "USING (SELECT ? AS col1, ? AS col2, SYSDATETIME() as col3) AS source(task_id, json_data, modified_on)",
-                "ON source.task_id = target.task_id",
-                "WHEN MATCHED THEN",
-                "UPDATE SET target.json_data=source.json_data, target.modified_on=source.modified_on",
-                "WHEN NOT MATCHED THEN",
-                "INSERT (task_id, json_data, modified_on)",
-                "VALUES (source.task_id, source.json_data, source.modified_on);"
-            );
-            execute(connection, INSERT_TASK, q -> q.addParameter(task.getTaskId()).addJsonParameter(task).executeUpdate());
-		}
+        String INSERT_TASK = String.join("\n",
+            "MERGE [data].[task] WITH(RowLock,xLock) AS target ",
+            "USING (SELECT ? AS col1, ? AS col2) AS source(task_id, json_data)",
+            "ON source.task_id = target.task_id",
+            "WHEN MATCHED THEN",
+            "UPDATE SET target.json_data=source.json_data, target.modified_on=SYSDATETIME()",
+            "WHEN NOT MATCHED THEN",
+            "INSERT (task_id, json_data)",
+            "VALUES (source.task_id, source.json_data);"
+        );
+        execute(connection, INSERT_TASK, q -> q.addParameter(task.getTaskId()).addJsonParameter(task).executeUpdate());
     }
 
     private void removeTaskData(Connection connection, Task task) {
-        String REMOVE_TASK = "DELETE FROM dbo.task WHERE task_id = ?";
-        execute(connection, REMOVE_TASK, q -> q.addParameter(task.getTaskId()).executeDelete());
+        String REMOVE_TASK = "DELETE FROM [data].[task] WITH(RowLock) WHERE task_id = CONVERT(UNIQUEIDENTIFIER, ?)";
+        execute(connection, REMOVE_TASK, q -> q.addParameter(task.getTaskId().toUpperCase()).executeDelete());
     }
 
     private void addWorkflowToTaskMapping(Connection connection, Task task) {
+        // Unique index ignores duplicate keys
         String INSERT_WORKFLOW_TO_TASK = String.join("\n",
-            "MERGE [dbo].[workflow_to_task] AS target",
-            "USING (SELECT ? AS col1, ? AS col2) AS source(workflow_id, task_id)",
-            "ON source.workflow_id = target.workflow_id AND source.task_id = target.task_id",
-            "WHEN NOT MATCHED THEN",
-            "INSERT (workflow_id, task_id)",
-            "VALUES (source.workflow_id, source.task_id);"
+            "INSERT INTO [data].[workflow_to_task](workflow_id, task_id)",
+            "VALUES (?, ?)"
         );
-        // String EXISTS_WORKFLOW_TO_TASK = "SELECT EXISTS(SELECT 1 FROM dbo.workflow_to_task WHERE workflow_id = ? AND task_id = ?)";
         execute(connection, INSERT_WORKFLOW_TO_TASK,
                 q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).executeUpdate());
     }
 
     private void removeWorkflowToTaskMapping(Connection connection, Task task) {
-        String REMOVE_WORKFLOW_TO_TASK = "DELETE FROM dbo.workflow_to_task WHERE workflow_id = ? AND task_id = ?";
+        String REMOVE_WORKFLOW_TO_TASK = "DELETE FROM [data].[workflow_to_task] WITH(RowLock) WHERE workflow_id = CONVERT(UNIQUEIDENTIFIER, ?) AND task_id = CONVERT(UNIQUEIDENTIFIER, ?)";
 
         execute(connection, REMOVE_WORKFLOW_TO_TASK,
                 q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(task.getTaskId()).executeDelete());
     }
 
     private void addWorkflowDefToWorkflowMapping(Connection connection, Workflow workflow) {
-        String INSERT_WORKFLOW_DEF_TO_WORKFLOW = "INSERT INTO dbo.workflow_def_to_workflow (workflow_def, date_str, workflow_id) VALUES (?, ?, ?)";
+        String INSERT_WORKFLOW_DEF_TO_WORKFLOW = "INSERT INTO [data].[workflow_def_to_workflow] (workflow_def, date_str, workflow_id) VALUES (?, ?, ?)";
 
         execute(connection, INSERT_WORKFLOW_DEF_TO_WORKFLOW,
                 q -> q.addParameter(workflow.getWorkflowName()).addParameter(dateStr(workflow.getCreateTime()))
@@ -653,7 +649,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     }
 
     private void removeWorkflowDefToWorkflowMapping(Connection connection, Workflow workflow) {
-        String REMOVE_WORKFLOW_DEF_TO_WORKFLOW = "DELETE FROM dbo.workflow_def_to_workflow WHERE workflow_def = ? AND date_str = ? AND workflow_id = ?";
+        String REMOVE_WORKFLOW_DEF_TO_WORKFLOW = "DELETE FROM [data].[workflow_def_to_workflow] WHERE workflow_def = ? AND date_str = ? AND workflow_id = CONVERT(UNIQUEIDENTIFIER, ?)";
 
         execute(connection, REMOVE_WORKFLOW_DEF_TO_WORKFLOW,
                 q -> q.addParameter(workflow.getWorkflowName()).addParameter(dateStr(workflow.getCreateTime()))
@@ -662,13 +658,10 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
 
     @VisibleForTesting
     boolean addScheduledTask(Connection connection, Task task, String taskKey) {
+        // Unique index ignores duplicates
         final String INSERT_SCHEDULED_TASK = String.join("\n",
-            "MERGE [dbo].[task_scheduled] AS target ",
-            "USING (SELECT ? AS col1, ? AS col2, ? AS col3) AS source (workflow_id, task_key, task_id) ",
-            "ON source.workflow_id = target.workflow_id AND source.task_key = target.task_key ",
-            "WHEN NOT MATCHED THEN ",
-            "INSERT (workflow_id, task_key, task_id) ",
-            "VALUES (source.workflow_id, source.task_key, source.task_id);"
+            "INSERT INTO [data].[task_scheduled](workflow_id, task_key, task_id) ",
+            "VALUES (?, ?, ?);"
         );
         int count = query(connection, 
             INSERT_SCHEDULED_TASK,
@@ -678,42 +671,39 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     }
 
     private void removeScheduledTask(Connection connection, Task task, String taskKey) {
-        String REMOVE_SCHEDULED_TASK = "DELETE FROM dbo.task_scheduled WHERE workflow_id = ? AND task_key = ?";
+        String REMOVE_SCHEDULED_TASK = "DELETE FROM [data].[task_scheduled] WITH(RowLock) WHERE workflow_id = CONVERT(UNIQUEIDENTIFIER, ?) AND task_key = ?";
         execute(connection, REMOVE_SCHEDULED_TASK,
                 q -> q.addParameter(task.getWorkflowInstanceId()).addParameter(taskKey).executeDelete());
     }
 
     private void addTaskInProgress(Connection connection, Task task) {
+        // Unique index ignores duplicate keys
         String INSERT_IN_PROGRESS_TASK = String.join("\n",
-            "MERGE [dbo].[task_in_progress] AS target",
-            "USING (SELECT ? AS col1, ? AS col2, ? AS col3) AS source(task_def_name, task_id, workflow_id)",
-            "ON source.task_def_name = target.task_def_name AND source.task_id = target.task_id",
-            "WHEN NOT MATCHED THEN", 
-            "INSERT (task_def_name, task_id, workflow_id)",
-            "VALUES (source.task_def_name, source.task_id, source.workflow_id);"
+            "INSERT INTO [data].[task_in_progress](task_def_name, task_id, workflow_id)",
+            "VALUES (?, ?, ?)"
         );
         execute(connection, INSERT_IN_PROGRESS_TASK, q -> q.addParameter(task.getTaskDefName())
                 .addParameter(task.getTaskId()).addParameter(task.getWorkflowInstanceId()).executeUpdate());
     }
 
     private void removeTaskInProgress(Connection connection, Task task) {
-        String REMOVE_IN_PROGRESS_TASK = "DELETE FROM dbo.task_in_progress WHERE task_def_name = ? AND task_id = ?";
+        String REMOVE_IN_PROGRESS_TASK = "DELETE FROM [data].[task_in_progress] WITH(RowLock) WHERE task_def_name = ? AND task_id = CONVERT(UNIQUEIDENTIFIER, ?)";
 
         execute(connection, REMOVE_IN_PROGRESS_TASK,
                 q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
     }
 
     private void updateInProgressStatus(Connection connection, Task task, boolean inProgress) {
-        String UPDATE_IN_PROGRESS_TASK_STATUS = "UPDATE dbo.task_in_progress SET in_progress_status = ?, modified_on = SYSDATETIME() "
-                + "WHERE task_def_name = ? AND task_id = ?";
+        String UPDATE_IN_PROGRESS_TASK_STATUS = "UPDATE [data].[task_in_progress] WITH(RowLock) SET in_progress_status = ?, modified_on = SYSDATETIME() "
+                + "WHERE task_def_name = ? AND task_id = CONVERT(UNIQUEIDENTIFIER, ?)";
 
-        execute(connection, UPDATE_IN_PROGRESS_TASK_STATUS, q -> q.addParameter(inProgress)
+        execute(connection, UPDATE_IN_PROGRESS_TASK_STATUS, q -> q.addParameter(inProgress ? 1 : 0)
                 .addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
     }
 
     private boolean insertEventExecution(Connection connection, EventExecution eventExecution) {
 
-        String INSERT_EVENT_EXECUTION = "INSERT INTO dbo.event_execution (event_handler_name, event_name, message_id, execution_id, json_data) "
+        String INSERT_EVENT_EXECUTION = "INSERT INTO [data].[event_execution] (event_handler_name, event_name, message_id, execution_id, json_data) "
                 + "VALUES (?, ?, ?, ?, ?)";
         int count = query(connection, INSERT_EVENT_EXECUTION,
                 q -> q.addParameter(eventExecution.getName()).addParameter(eventExecution.getEvent())
@@ -724,7 +714,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
 
     private void updateEventExecution(Connection connection, EventExecution eventExecution) {
         // @formatter:off
-        String UPDATE_EVENT_EXECUTION = "UPDATE dbo.event_execution SET " + "json_data = ?, "
+        String UPDATE_EVENT_EXECUTION = "UPDATE [data].[event_execution] SET " + "json_data = ?, "
                 + "modified_on = SYSDATETIME() " + "WHERE event_handler_name = ? " + "AND event_name = ? "
                 + "AND message_id = ? " + "AND execution_id = ?";
         // @formatter:on
@@ -736,7 +726,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     }
 
     private void removeEventExecution(Connection connection, EventExecution eventExecution) {
-        String REMOVE_EVENT_EXECUTION = "DELETE FROM dbo.event_execution " + "WHERE event_handler_name = ? "
+        String REMOVE_EVENT_EXECUTION = "DELETE FROM [data].[event_execution] " + "WHERE event_handler_name = ? "
                 + "AND event_name = ? " + "AND message_id = ? " + "AND execution_id = ?";
 
         execute(connection, REMOVE_EVENT_EXECUTION,
@@ -748,7 +738,7 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     private EventExecution readEventExecution(Connection connection, String eventHandlerName, String eventName,
                                               String messageId, String executionId) {
         // @formatter:off
-        String GET_EVENT_EXECUTION = "SELECT json_data FROM dbo.event_execution " + "WHERE event_handler_name = ? "
+        String GET_EVENT_EXECUTION = "SELECT json_data FROM [data].[event_execution] " + "WHERE event_handler_name = ? "
                 + "AND event_name = ? " + "AND message_id = ? " + "AND execution_id = ?";
         // @formatter:on
         return query(connection, GET_EVENT_EXECUTION, q -> q.addParameter(eventHandlerName).addParameter(eventName)
@@ -762,36 +752,36 @@ public class SqlServerExecutionDAO extends SqlServerBaseDAO implements Execution
     	 * is that if we try the INSERT first, the sequence will be increased even if the ON DUPLICATE KEY happens. Since polling happens *a lot*, the sequence can increase 
     	 * dramatically even though it won't be used.
     	 */
-        String UPDATE_POLL_DATA = "UPDATE dbo.poll_data SET json_data=?, modified_on=SYSDATETIME() WHERE queue_name=? AND domain=?";
+        String UPDATE_POLL_DATA = "UPDATE [data].[poll_data] WITH(RowLock) SET json_data=?, modified_on=SYSDATETIME() WHERE queue_name=? AND domain=?";
         int rowsUpdated = query(connection, UPDATE_POLL_DATA, q -> q.addJsonParameter(pollData).addParameter(pollData.getQueueName()).addParameter(domain).executeUpdate());
         
-       if(rowsUpdated == 0) {
-           String INSERT_POLL_DATA = "MERGE [dbo].[poll_data] AS target " +
-                                     "USING SELECT (? as col1, ? as col2, ? as col3, SYSDATETIME() as col4) AS source (queue_name, domain, json_data, modified_on) " + 
+       if(rowsUpdated == 0) { // TODO: syntax error near select
+           String INSERT_POLL_DATA = "MERGE [data].[poll_data] WITH(RowLock) AS target " +
+                                     "USING (SELECT ? as col1, ? as col2, ? as col3) AS source (queue_name, domain, json_data) " + 
                                      "ON source.queue_name = target.queue_name AND source.domain = target.domain " +
                                      "WHEN MATCHED THEN " +
-                                     "UPDATE SET target.json_data=source.json_data, target.modified_on=source.modified_on " +
+                                     "UPDATE SET target.json_data=source.json_data, target.modified_on=SYSDATETIME() " +
                                      "WHEN NOT MATCHED THEN " +
-                                     "INSERT (queue_name, domain, json_data, modified_on) " +
-                                     "VALUES (source.queue_name, source.domain, source.json_data, source.modified_on);";
+                                     "INSERT (queue_name, domain, json_data) " +
+                                     "VALUES (source.queue_name, source.domain, source.json_data);";
            execute(connection, INSERT_POLL_DATA, q -> q.addParameter(pollData.getQueueName()).addParameter(domain)
                   .addJsonParameter(pollData).executeUpdate());
         }
     }
 
     private PollData readPollData(Connection connection, String queueName, String domain) {
-        String GET_POLL_DATA = "SELECT json_data FROM dbo.poll_data WHERE queue_name = ? AND domain = ?";
+        String GET_POLL_DATA = "SELECT json_data FROM [data].[poll_data] WHERE queue_name = ? AND domain = ?";
         return query(connection, GET_POLL_DATA,
                 q -> q.addParameter(queueName).addParameter(domain).executeAndFetchFirst(PollData.class));
     }
 
     private List<PollData> readAllPollData(String queueName) {
-        String GET_ALL_POLL_DATA = "SELECT json_data FROM dbo.poll_data WHERE queue_name = ?";
+        String GET_ALL_POLL_DATA = "SELECT json_data FROM [data].[poll_data] WHERE queue_name = ?";
         return queryWithTransaction(GET_ALL_POLL_DATA, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
     }
 
     private List<String> findAllTasksInProgressInOrderOfArrival(Task task, int limit) {
-        String GET_IN_PROGRESS_TASKS_WITH_LIMIT = "SELECT TOP (?) task_id FROM dbo.task_in_progress WHERE task_def_name = ? ORDER BY id";
+        String GET_IN_PROGRESS_TASKS_WITH_LIMIT = "SELECT TOP (?) LOWER(task_id) FROM [data].[task_in_progress] WHERE task_def_name = ? ORDER BY created_on";
 
         return queryWithTransaction(GET_IN_PROGRESS_TASKS_WITH_LIMIT,
                 q -> q.addParameter(limit).addParameter(task.getTaskDefName()).executeScalarList(String.class));

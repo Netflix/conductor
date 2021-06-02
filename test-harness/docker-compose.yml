@@ -40,4 +40,3 @@ services:
       MSSQL_SA_PASSWORD: "Password1"
       MSSQL_PID: 'Developer'
       MSSQL_AGENT_ENABLED: 'false'
-    restart: always

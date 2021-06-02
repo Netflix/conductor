@@ -1,9 +1,24 @@
+/*
+ * Copyright 2016 Netflix, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.netflix.conductor.sqlserver;
-
-import com.netflix.conductor.core.config.Configuration;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import com.netflix.conductor.core.config.Configuration;
 
 public interface SqlServerConfiguration extends Configuration {
 
@@ -38,6 +53,9 @@ public interface SqlServerConfiguration extends Configuration {
     String CONNECTION_TIMEOUT_PROPERTY_NAME = "conductor.sqlserver.connection.timeout";
     long CONNECTION_TIMEOUT_DEFAULT_VALUE = TimeUnit.SECONDS.toMillis(30);
 
+    String LOCK_TIMEOUT_PROPERTY_NAME = "conductor.sqlserver.lock.timeout";
+    long LOCK_TIMEOUT_DEFAULT_VALUE = TimeUnit.SECONDS.toMillis(30);
+
     String ISOLATION_LEVEL_PROPERTY_NAME = "conductor.sqlserver.transaction.isolation.level";
     String ISOLATION_LEVEL_DEFAULT_VALUE = "";
 
@@ -47,6 +65,12 @@ public interface SqlServerConfiguration extends Configuration {
 
     String QUEUE_STRATEGY_PROPERTY_NAME = "conductor.sqlserver.queue.sharding.strategy";
     String QUEUE_STRATEGY_DEFAULT_VALUE = "shared";
+
+    String PROC_REMOVES_INTERVAL_PROPERTY_NAME = "conductor.sqlserver.processRemoves.intervalSeconds";
+    long PROC_REMOVES_INTERVAL_DEFAULT_VALUE = 0;
+
+    String PROC_UNACKS_INTERVAL_PROPERTY_NAME = "conductor.sqlserver.processUnacks.intervalMillieconds";
+    long PROC_UNACKS_INTERVAL_DEFAULT_VALUE = 60_000L;
 
     default QUEUE_STRATEGY getQueueStrategy() {
         return QUEUE_STRATEGY.valueOf(getQueueStrategyString());
@@ -95,6 +119,10 @@ public interface SqlServerConfiguration extends Configuration {
     default long getConnectionTimeout() {
         return getLongProperty(CONNECTION_TIMEOUT_PROPERTY_NAME, CONNECTION_TIMEOUT_DEFAULT_VALUE);
     }
+    
+    default long getLockTimeout() {
+        return getLongProperty(LOCK_TIMEOUT_PROPERTY_NAME, LOCK_TIMEOUT_DEFAULT_VALUE);
+    }
 
     default String getTransactionIsolationLevel() {
         return getProperty(ISOLATION_LEVEL_PROPERTY_NAME, ISOLATION_LEVEL_DEFAULT_VALUE);
@@ -106,5 +134,13 @@ public interface SqlServerConfiguration extends Configuration {
 
     enum QUEUE_STRATEGY {
         SHARED, LOCAL_ONLY
+    }
+
+    default long getProcessAllRemovesInterval() {
+        return getLongProperty(PROC_REMOVES_INTERVAL_PROPERTY_NAME, PROC_REMOVES_INTERVAL_DEFAULT_VALUE);
+    }
+
+    default long getProcessAllUnacksInterval() {
+        return getLongProperty(PROC_REMOVES_INTERVAL_PROPERTY_NAME, PROC_REMOVES_INTERVAL_DEFAULT_VALUE);
     }
 }

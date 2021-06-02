@@ -1,16 +1,14 @@
 -- --------------------------------------------------------------------------------------------------------------
 -- Migration script V1 for SQLSERVER
--- Table and index names are taken from MySQL
 -- --------------------------------------------------------------------------------------------------------------
 GO
 
 -- --------------------------------------------------------------------------------------------------------------
--- TAGLES FOR METADATA DAO
+-- TABLES FOR METADATA DAO
 -- --------------------------------------------------------------------------------------------------------------
 
 -- meta_event_handler
-CREATE TABLE [dbo].[meta_event_handler] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[meta_event_handler] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -20,31 +18,29 @@ CREATE TABLE [dbo].[meta_event_handler] (
 );
 GO
 
+CREATE CLUSTERED INDEX cidx_meta_event_handler
+ON [data].[meta_event_handler](created_on);
+GO
+
 CREATE INDEX event_handler_name_index 
-ON dbo.meta_event_handler(name);
+ON [data].[meta_event_handler](name);
 GO
 
 CREATE INDEX event_handler_event_index 
-ON dbo.meta_event_handler(event);
+ON [data].[meta_event_handler](event);
 GO
 
 -- meta_task_def 
-CREATE TABLE [dbo].[meta_task_def] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[meta_task_def] (
+    name VARCHAR(255) PRIMARY KEY,
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
-    name VARCHAR(255) NOT NULL,
     json_data NVARCHAR(MAX) NOT NULL
 );
 GO
 
-CREATE UNIQUE INDEX unique_task_def_name
-ON dbo.meta_task_def(name);
-GO
-
 -- meta_workflow_def
-CREATE TABLE [dbo].[meta_workflow_def] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[meta_workflow_def] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -54,21 +50,21 @@ CREATE TABLE [dbo].[meta_workflow_def] (
 );
 GO
 
-CREATE UNIQUE INDEX unique_name_version 
-ON dbo.meta_workflow_def(name, version);
+CREATE CLUSTERED INDEX cidx_meta_workflow_def
+ON [data].[meta_workflow_def](created_on);
 GO
 
-CREATE INDEX workflow_def_name_index
-ON dbo.meta_workflow_def(name);
+CREATE UNIQUE INDEX unique_name_version 
+ON [data].[meta_workflow_def](name, version)
+include(json_data);
 GO
 
 -- --------------------------------------------------------------------------------------------------------------
--- TAGLES FOR EXECUTION DAO
+-- TABLES FOR EXECUTION DAO
 -- --------------------------------------------------------------------------------------------------------------
 
 -- event_execution 
-CREATE TABLE [dbo].[event_execution] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[event_execution] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,    
     event_handler_name VARCHAR(255) NOT NULL,
@@ -79,13 +75,16 @@ CREATE TABLE [dbo].[event_execution] (
 );
 GO
 
+CREATE CLUSTERED INDEX cidx_event_execution
+ON [data].[event_execution](created_on);
+GO
+
 CREATE UNIQUE INDEX unique_event_execution
-ON dbo.event_execution(event_handler_name, event_name, execution_id);
+ON [data].[event_execution](event_handler_name, event_name, execution_id);
 GO
 
 -- poll_data
-CREATE TABLE [dbo].[poll_data] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[poll_data] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,    
     queue_name VARCHAR(255) NOT NULL,
@@ -94,152 +93,142 @@ CREATE TABLE [dbo].[poll_data] (
 );
 GO
 
-CREATE UNIQUE INDEX unique_poll_data
-ON dbo.poll_data(queue_name, domain);
-GO
-
-CREATE INDEX queue_name
-ON dbo.poll_data(queue_name);
+CREATE UNIQUE CLUSTERED INDEX unique_poll_data
+ON [data].[poll_data](queue_name, domain);
 GO
 
 -- task_scheduled 
-CREATE TABLE [dbo].[task_scheduled] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[task_scheduled] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,    
-    workflow_id VARCHAR(255) NOT NULL,
+    workflow_id uniqueidentifier NOT NULL,
     task_key VARCHAR(255) NOT NULL,
-    task_id VARCHAR(255) NOT NULL
+    task_id uniqueidentifier NOT NULL
 );
 GO
 
-CREATE UNIQUE INDEX unique_workflow_id_task_key
-ON dbo.task_scheduled(workflow_id, task_key);
+CREATE UNIQUE CLUSTERED INDEX unique_workflow_id_task_key
+ON [data].[task_scheduled](workflow_id, task_key)
+with( allow_row_locks = on, allow_page_locks=off, IGNORE_DUP_KEY=ON, sort_in_tempdb=on, pad_index=on, fillfactor=70 );
+GO
+
+CREATE INDEX xi_task_scheduled_task_id
+ON [data].[task_scheduled](task_id)
+with( allow_row_locks = on, allow_page_locks=off)
 GO
 
 -- task_in_progress
-CREATE TABLE [dbo].[task_in_progress] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[task_in_progress] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,    
     task_def_name VARCHAR(255) NOT NULL,
-    task_id VARCHAR(255) NOT NULL,
-    workflow_id VARCHAR(255) NOT NULL,
+    task_id uniqueidentifier NOT NULL,
+    workflow_id uniqueidentifier NOT NULL,
     in_progress_status BIT DEFAULT 0 NOT NULL
 );
 GO
 
-CREATE UNIQUE INDEX unique_task_def_task_id1
-ON dbo.task_in_progress(task_def_name, task_id);
+CREATE UNIQUE CLUSTERED INDEX unique_task_def_task_id1
+ON [data].[task_in_progress](task_def_name, task_id)
+with( allow_row_locks = on, allow_page_locks=off, IGNORE_DUP_KEY=ON, sort_in_tempdb=on, pad_index=on, fillfactor=70);
+GO
+
+CREATE INDEX task_in_progress_task_id_idx
+ON [data].[task_in_progress](task_id, task_def_name, workflow_id)
+with( allow_row_locks = on, allow_page_locks=off, sort_in_tempdb=on);
 GO
 
 -- task
-CREATE TABLE [dbo].[task] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[task] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,    
-    task_id VARCHAR(255) NOT NULL,
+    task_id uniqueidentifier NOT NULL,
     json_data NVARCHAR(MAX) NOT NULL
 );
 GO
 
-CREATE UNIQUE INDEX unique_task_id
-ON dbo.task(task_id);
+CREATE UNIQUE CLUSTERED INDEX unique_task_id
+ON [data].[task](task_id)
+with( sort_in_tempdb=on, allow_row_locks = on, allow_page_locks=off, data_compression=page, pad_index=on, fillfactor=70);
 GO
 
 -- workflow
-CREATE TABLE [dbo].[workflow] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[workflow] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,    
-    workflow_id VARCHAR(255) NOT NULL,
+    workflow_id uniqueidentifier NOT NULL,
     correlation_id VARCHAR(255),
     json_data NVARCHAR(MAX) NOT NULL
 );
 GO
 
-CREATE UNIQUE INDEX unique_workflow_id
-ON dbo.workflow(workflow_id);
-GO
-
-CREATE INDEX workflow_corr_id_index
-ON dbo.workflow(correlation_id);
+CREATE UNIQUE CLUSTERED INDEX cui_workflow_id
+ON [data].[workflow](workflow_id)
+with( sort_in_tempdb=on, allow_row_locks = on, allow_page_locks=off,data_compression=page, pad_index=on, fillfactor=70);
 GO
 
 -- workflow_def_to_workflow
-CREATE TABLE [dbo].[workflow_def_to_workflow] (
+CREATE TABLE [data].[workflow_def_to_workflow] (
     id INT PRIMARY KEY IDENTITY(1, 1),
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     workflow_def VARCHAR(255) NOT NULL,
     date_str INT NOT NULL,
-    workflow_id VARCHAR(255) NOT NULL,
+    workflow_id uniqueidentifier NOT NULL,
 );
 GO
 
 CREATE UNIQUE INDEX unique_workflow_def_date_str
-ON dbo.workflow_def_to_workflow(workflow_def, date_str, workflow_id);
+ON [data].[workflow_def_to_workflow](workflow_id, workflow_def, date_str);
 GO
 
 -- workflow_pending
-CREATE TABLE [dbo].[workflow_pending] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[workflow_pending] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     workflow_type VARCHAR(255) NOT NULL,
-    workflow_id VARCHAR(255) NOT NULL
+    workflow_id uniqueidentifier NOT NULL
 );
 GO
 
-CREATE UNIQUE INDEX unique_workflow_type_workflow_id 
-ON dbo.workflow_pending(workflow_type, workflow_id) WITH IGNORE_DUP_KEY;
-GO
-
-CREATE INDEX workflow_type_index
-ON dbo.workflow_pending(workflow_type);
+CREATE UNIQUE CLUSTERED INDEX unique_workflow_type_workflow_id 
+ON [data].[workflow_pending](workflow_type, workflow_id) 
+WITH (IGNORE_DUP_KEY=ON);
 GO
 
 -- workflow_to_task
-CREATE TABLE [dbo].[workflow_to_task] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
+CREATE TABLE [data].[workflow_to_task] (
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     modified_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
-    workflow_id VARCHAR(255) NOT NULL,
-    task_id VARCHAR(255) NOT NULL
+    workflow_id uniqueidentifier NOT NULL,
+    task_id uniqueidentifier NOT NULL
 );
 GO
 
-CREATE UNIQUE INDEX unique_workflow_to_task_id
-ON dbo.workflow_to_task(workflow_id, task_id);
-GO
-
-CREATE INDEX workflow_id_index
-ON dbo.workflow_to_task(workflow_id);
+CREATE UNIQUE CLUSTERED INDEX unique_workflow_to_task_id
+ON [data].[workflow_to_task](workflow_id, task_id)
+with(pad_index=on,fillfactor=70,sort_in_tempdb=on, online=on, allow_row_locks = on, allow_page_locks=off,IGNORE_DUP_KEY=ON  );
 GO
 
 -- --------------------------------------------------------------------------------------------------------------
--- TAGLES FOR QUEUE DAO
+-- TABLES FOR QUEUE DAO
 -- --------------------------------------------------------------------------------------------------------------
 
 -- queue 
-CREATE TABLE [dbo].[queue] (
-    id INT PRIMARY KEY IDENTITY(1, 1),
-    created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
-    queue_name VARCHAR(255) NOT NULL,
+CREATE TABLE [data].[queue] (
+    queue_name VARCHAR(255) PRIMARY KEY WITH (IGNORE_DUP_KEY=ON),
+    created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL
 );
 GO
 
-CREATE UNIQUE INDEX unique_queue_name
-ON dbo.queue(queue_name) WITH IGNORE_DUP_KEY;
-GO
-
 -- queue_message
-CREATE TABLE [dbo].[queue_message] (
+CREATE TABLE [data].[queue_message] (
     id INT IDENTITY(1, 1),
     created_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     deliver_on DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
+    queue_shard CHAR(4) NOT NULL,
     queue_name VARCHAR(255) NOT NULL,
-    message_id VARCHAR(255) NOT NULL,
+    message_id uniqueidentifier NOT NULL,
     priority TINYINT DEFAULT 0,
     popped BIT DEFAULT 0,
     offset_time_seconds VARCHAR(64),
@@ -247,29 +236,52 @@ CREATE TABLE [dbo].[queue_message] (
 );
 GO
 
-CREATE UNIQUE CLUSTERED INDEX UIX_queue_message
-ON dbo.queue_message( id asc )
-with( allow_row_locks = on, allow_page_locks=off  );
+CREATE UNIQUE CLUSTERED INDEX cui_queue_message
+ON [data].[queue_message]( id asc )
+with( allow_row_locks = on, allow_page_locks=off,sort_in_tempdb=on);
 GO
 
 CREATE UNIQUE INDEX unique_queue_name_message_id
-ON dbo.queue_message(queue_name, message_id)
+ON [data].[queue_message](queue_shard, queue_name, message_id)
 with( allow_row_locks = on, allow_page_locks=off  );
 GO
 
 CREATE INDEX combo_queue_message
-ON dbo.queue_message(queue_name, popped, deliver_on, created_on, priority)
-with( allow_row_locks = on, allow_page_locks=off );
+ON [data].[queue_message](queue_shard, queue_name, popped, deliver_on)
+with( allow_row_locks = on, allow_page_locks=off,sort_in_tempdb=on);
+GO
+
+CREATE INDEX xi_popped_deliver_on
+ON [data].[queue_message](popped, deliver_on)
+with( allow_row_locks = on, allow_page_locks=off  );
+GO
+
+-- queue_message
+CREATE TABLE [data].[queue_removed] (
+    queue_shard CHAR(4) NOT NULL,
+    queue_name VARCHAR(255) NOT NULL,
+    message_id uniqueidentifier NOT NULL,
+);
+GO
+
+CREATE UNIQUE INDEX unique_queue_shard_name_message_id
+ON [data].[queue_removed](queue_shard, queue_name, message_id)
+with( allow_row_locks = on, allow_page_locks=off,IGNORE_DUP_KEY=ON);
 GO
 
 -- --------------------------------------------------------------------------------------------------------------
--- TAGLES FOR LOCK DAO
+-- TABLES FOR LOCK DAO
 -- --------------------------------------------------------------------------------------------------------------
 
 -- reentrant_lock 
-CREATE TABLE [dbo].[reentrant_lock] (
-    lock_id VARCHAR(255) PRIMARY KEY NOT NULL,
+CREATE TABLE [data].[reentrant_lock] (
+    lock_id VARCHAR(100) PRIMARY KEY WITH (IGNORE_DUP_KEY=ON, ALLOW_PAGE_LOCKS=OFF) NOT NULL,
     holder_id VARCHAR(255) NOT NULL,
     expire_time DATETIME2 DEFAULT SYSDATETIME() NOT NULL
 );
+GO
+
+CREATE INDEX ix_reentrant_lock
+ON [data].[reentrant_lock](holder_id, lock_id )
+with( allow_row_locks = on, allow_page_locks=off );
 GO
