@@ -96,8 +96,11 @@ public class TaskSummary {
 	@ProtoField(id = 19)
 	private int workflowPriority;
 
-	public TaskSummary() {
-	}
+	@ProtoField(id = 20)
+	private String referenceTaskName;
+
+    public TaskSummary() {
+    }
 
 	public TaskSummary(Task task) {
 
@@ -118,6 +121,7 @@ public class TaskSummary {
 		this.status = task.getStatus();
 		this.reasonForIncompletion = task.getReasonForIncompletion();
 		this.queueWaitTime = task.getQueueWaitTime();
+		this.referenceTaskName = task.getReferenceTaskName();
 		if (task.getInputData() != null) {
 			this.input = SummaryUtil.serializeInputOutput(task.getInputData());
 		}
@@ -409,6 +413,17 @@ public class TaskSummary {
 		this.workflowPriority = workflowPriority;
 	}
 
+	public String getReferenceTaskName() {
+		return referenceTaskName;
+	}
+
+	/**
+	 * @param name Priority defined for workflow
+	 */
+	public void setReferenceTaskName(String name) {
+		this.referenceTaskName = name;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -432,7 +447,8 @@ public class TaskSummary {
 			Objects.equals(getReasonForIncompletion(), that.getReasonForIncompletion()) &&
 			Objects.equals(getTaskDefName(), that.getTaskDefName()) &&
 			getTaskType().equals(that.getTaskType()) &&
-			getTaskId().equals(that.getTaskId());
+			getTaskId().equals(that.getTaskId()) &&
+			getReferenceTaskName() == that.getReferenceTaskName();
 	}
 
 	@Override
@@ -440,6 +456,6 @@ public class TaskSummary {
 		return Objects.hash(getWorkflowId(), getWorkflowType(), getCorrelationId(), getScheduledTime(), getStartTime(),
 			getUpdateTime(), getEndTime(), getStatus(), getReasonForIncompletion(), getExecutionTime(),
 			getQueueWaitTime(),
-			getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority());
+			getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority(), getReferenceTaskName());
 	}
 }

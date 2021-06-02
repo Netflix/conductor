@@ -36,6 +36,7 @@ dependencies {
     compile project(':conductor-grpc-server')
     compile project(':conductor-zookeeper-lock')
     compile project(':conductor-redis-lock')
+    compile project(':conductor-sqlserver-persistence')
 
     compile "com.netflix.runtime:health-guice:${revHealth}"
 

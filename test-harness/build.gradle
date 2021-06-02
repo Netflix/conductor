@@ -28,6 +28,7 @@ dependencies {
     testCompile project(':conductor-jersey')
     testCompile project(':conductor-redis-persistence').sourceSets.test.output
     testCompile project(':conductor-mysql-persistence').sourceSets.test.output
+    testCompile project(':conductor-sqlserver-persistence').sourceSets.test.output
     testCompile project(':conductor-postgres-persistence').sourceSets.test.output
     testCompile project(':conductor-client')
     testCompile project(':conductor-server')
@@ -56,7 +57,7 @@ dependencies {
 dockerCompose{
     integrationTestDocker{
         useComposeFiles = ["./docker-compose.yml"]
-        startedServices = ["mysqldb", "postgresdb"]
+        startedServices = ["mysqldb", "postgresdb", "sqlserver"]
         waitForTcpPorts = true
         isRequiredBy(tasks.test)
         projectName = project.name

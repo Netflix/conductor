@@ -81,6 +81,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -750,11 +751,11 @@ public abstract class AbstractWorkflowServiceTest {
         metadataService.registerTaskDef(Arrays.asList(taskDef1));
 
         TaskDef taskDef3 = new TaskDef();
-        taskDef1.setName("http3");
-        taskDef1.setTimeoutSeconds(5);
-        taskDef1.setRetryCount(1);
-        taskDef1.setTimeoutPolicy(TimeoutPolicy.RETRY);
-        taskDef1.setRetryDelaySeconds(10);
+        taskDef3.setName("http3");
+        taskDef3.setTimeoutSeconds(5);
+        taskDef3.setRetryCount(1);
+        taskDef3.setTimeoutPolicy(TimeoutPolicy.RETRY);
+        taskDef3.setRetryDelaySeconds(10);
         metadataService.registerTaskDef(Arrays.asList(taskDef3));
 
         Map<String, Object> input = new HashMap<>();
@@ -5488,7 +5489,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testTerminateTaskWithCompletedStatus() {
         WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setName("test_terminate_task_wf");
+        workflowDef.setName("testTerminateTaskWithCompletedStatus");
         workflowDef.setSchemaVersion(2);
 
         Map<String, Object> lambdaTaskInputParams = new HashMap<>();
@@ -5537,14 +5538,14 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(TaskType.TASK_TYPE_TERMINATE, workflow.getTasks().get(1).getTaskType());
         assertEquals(workflow.getTasks().get(1).getOutputData(), workflow.getOutput());
 
-        metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
+        metadataService.unregisterWorkflowDef("testTerminateTaskWithCompletedStatus", 1);
     }
 
     @Test
     public void testTerminateTaskWithFailedStatus() {
         String failureWorkflowName = "failure_workflow";
         WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setName("test_terminate_task_wf");
+        workflowDef.setName("testTerminateTaskWithFailedStatus");
         workflowDef.setSchemaVersion(2);
 
         Map<String, Object> lambdaTaskInputParams = new HashMap<>();
@@ -5609,7 +5610,7 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(1, failureWorkflow.getTasks().size());
         assertEquals(TaskType.TASK_TYPE_LAMBDA, failureWorkflow.getTasks().get(0).getTaskType());
 
-        metadataService.unregisterWorkflowDef("test_terminate_task_wf", 1);
+        metadataService.unregisterWorkflowDef("testTerminateTaskWithFailedStatus", 1);
         metadataService.unregisterWorkflowDef(failureWorkflowName, 1);
     }
 
@@ -6195,6 +6196,8 @@ public abstract class AbstractWorkflowServiceTest {
         assertEquals(WorkflowStatus.COMPLETED, workflow.getStatus());
 
         workflow.getTasks().forEach(workflowTask -> {
+            System.out.println(new DateTime(workflowTask.getScheduledTime()).toString());
+            System.out.println(new DateTime(workflowTask.getStartTime()).toString());
             assertTrue(workflowTask.getScheduledTime() <= workflowTask.getStartTime());
             assertTrue("" + (workflowTask.getStartTime() - workflowTask.getEndTime()), workflowTask.getStartTime() <= workflowTask.getEndTime());
         });
@@ -6671,7 +6674,7 @@ public abstract class AbstractWorkflowServiceTest {
     @Test
     public void testTerminateTaskInASubworkflow() {
         WorkflowDef subWorkflowDef = new WorkflowDef();
-        subWorkflowDef.setName("test_terminate_task_wf");
+        subWorkflowDef.setName("testTerminateTaskInASubworkflow");
         subWorkflowDef.setSchemaVersion(2);
         subWorkflowDef.setVersion(1);
 
@@ -6706,7 +6709,7 @@ public abstract class AbstractWorkflowServiceTest {
 
         // Create Parent workflow
         WorkflowDef parentWorkflowDef = new WorkflowDef();
-        parentWorkflowDef.setName("test_parent_wf_for_terminate_task_subwf");
+        parentWorkflowDef.setName("test_parent_testTerminateTaskInASubworkflow");
         parentWorkflowDef.setSchemaVersion(2);
 
         WorkflowTask subWorkflowTask = new WorkflowTask();

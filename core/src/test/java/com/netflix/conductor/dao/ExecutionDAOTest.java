@@ -61,7 +61,7 @@ public abstract class ExecutionDAOTest {
             task.setScheduledTime(1L);
             task.setSeq(i + 1);
             task.setTaskId("t_" + i);
-            task.setWorkflowInstanceId("workflow_" + i);
+            task.setWorkflowInstanceId("w_" + i);
             task.setReferenceTaskName("task1");
             task.setTaskDefName("task1");
             tasks.add(task);
@@ -120,7 +120,7 @@ public abstract class ExecutionDAOTest {
             Task task = new Task();
             task.setScheduledTime(1L);
             task.setSeq(i + 1);
-            task.setTaskId(workflowId + "_t" + i);
+            task.setTaskId(UUID.randomUUID().toString());
             task.setReferenceTaskName("t" + i);
             task.setRetryCount(0);
             task.setWorkflowInstanceId(workflowId);
@@ -133,7 +133,7 @@ public abstract class ExecutionDAOTest {
         Task task = new Task();
         task.setScheduledTime(1L);
         task.setSeq(1);
-        task.setTaskId(workflowId + "_t" + 2);
+        task.setTaskId(UUID.randomUUID().toString());
         task.setReferenceTaskName("t" + 2);
         task.setRetryCount(1);
         task.setWorkflowInstanceId(workflowId);
@@ -145,7 +145,7 @@ public abstract class ExecutionDAOTest {
         task = new Task();
         task.setScheduledTime(1L);
         task.setSeq(1);
-        task.setTaskId(workflowId + "_t" + 1);
+        task.setTaskId(UUID.randomUUID().toString());
         task.setReferenceTaskName("t" + 1);
         task.setRetryCount(0);
         task.setWorkflowInstanceId(workflowId);
@@ -181,7 +181,7 @@ public abstract class ExecutionDAOTest {
             Task task = new Task();
             task.setScheduledTime(1L);
             task.setSeq(1);
-            task.setTaskId(workflowId + "_t" + i);
+            task.setTaskId(UUID.randomUUID().toString());
             task.setReferenceTaskName("testTaskOps" + i);
             task.setRetryCount(0);
             task.setWorkflowInstanceId(workflowId);
@@ -190,16 +190,18 @@ public abstract class ExecutionDAOTest {
             tasks.add(task);
         }
 
+        List<String> createdTaskIds = new ArrayList<String>();
         for (int i = 0; i < 3; i++) {
             Task task = new Task();
             task.setScheduledTime(1L);
             task.setSeq(1);
-            task.setTaskId("x" + workflowId + "_t" + i);
+            task.setTaskId(UUID.randomUUID().toString());
             task.setReferenceTaskName("testTaskOps" + i);
             task.setRetryCount(0);
-            task.setWorkflowInstanceId("x" + workflowId);
+            task.setWorkflowInstanceId(UUID.randomUUID().toString());
             task.setTaskDefName("testTaskOps" + i);
             task.setStatus(Task.Status.IN_PROGRESS);
+            createdTaskIds.add(task.getTaskId());
             getExecutionDAO().createTasks(Collections.singletonList(task));
         }
 
@@ -215,24 +217,25 @@ public abstract class ExecutionDAOTest {
         assertTrue(EqualsBuilder.reflectionEquals(matching, tasks.get(0)));
 
         for (int i = 0; i < 3; i++) {
-            Task found = getExecutionDAO().getTask(workflowId + "_t" + i);
+            Task found = getExecutionDAO().getTask(createdTaskIds.get(i));
             assertNotNull(found);
             found.getOutputData().put("updated", true);
             found.setStatus(Task.Status.COMPLETED);
             getExecutionDAO().updateTask(found);
         }
 
-        List<String> taskIds = tasks.stream().map(Task::getTaskId).collect(Collectors.toList());
-        List<Task> found = getExecutionDAO().getTasks(taskIds);
-        assertEquals(taskIds.size(), found.size());
+        List<Task> found = getExecutionDAO().getTasks(createdTaskIds);
+        assertEquals(createdTaskIds.size(), found.size());
         found.forEach(task -> {
+            System.out.println(task.getOutputData());
             assertTrue(task.getOutputData().containsKey("updated"));
             assertEquals(true, task.getOutputData().get("updated"));
             boolean removed = getExecutionDAO().removeTask(task.getTaskId());
             assertTrue(removed);
         });
 
-        found = getExecutionDAO().getTasks(taskIds);
+        found = getExecutionDAO().getTasks(createdTaskIds);
+        System.out.println(found);
         assertTrue(found.isEmpty());
     }
 

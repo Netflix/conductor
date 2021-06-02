@@ -44,6 +44,7 @@ ext {
     revLog4jApi = '2.11.1'
     revLog4jCore = '2.11.1'
     revMockito = '3.1.0'
+    revMicrosoftSqlServerDriver = '8.4.1.jre8'
     revPowerMock = '2.0.9'
     revMySqlConnector = '8.0.11'
     revNatsStreaming = '0.5.0'

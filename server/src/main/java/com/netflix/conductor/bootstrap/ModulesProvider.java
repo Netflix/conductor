@@ -35,6 +35,8 @@ import com.netflix.conductor.dao.RedisWorkflowModule;
 import com.netflix.conductor.elasticsearch.ElasticSearchModule;
 import com.netflix.conductor.locking.redis.config.RedisLockModule;
 import com.netflix.conductor.mysql.MySQLWorkflowModule;
+import com.netflix.conductor.sqlserver.SqlServerLockModule;
+import com.netflix.conductor.sqlserver.SqlServerWorkflowModule;
 import com.netflix.conductor.server.DynomiteClusterModule;
 import com.netflix.conductor.server.JerseyModule;
 import com.netflix.conductor.server.LocalRedisModule;
@@ -127,6 +129,10 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 modules.add(new RedisWorkflowModule());
                 logger.info("Starting conductor server using redis_sentinel.");
                 break;
+            case SQLSERVER:
+                modules.add(new SqlServerWorkflowModule());
+                logger.info("Starting conductor server using SqlServer data store.");
+                break;
         }
 
         if (configuration.isIndexingPersistenceEnabled())
@@ -160,6 +166,10 @@ public class ModulesProvider implements Provider<List<AbstractModule>> {
                 case ZOOKEEPER:
                     modules.add(new ZookeeperModule());
                     logger.info("Starting locking module using Zookeeper cluster.");
+                    break;
+                case SQLSERVER:
+                    modules.add(new SqlServerLockModule());
+                    logger.info("Starting locking module using SqlServer cluster.");
                     break;
                 case LOCAL_ONLY:
                     modules.add(new LocalOnlyLockModule());
