@@ -19,7 +19,7 @@
 ## Lock
 - `workflow.decider.locking.server` - set to `SQLSERVER` to use with Microsoft Sql Server
 - `workflow.decider.locking.enabled` - enable decider lock
-- `workflow.decider.locking.namespace` - a prefix for the lockId
+- `workflow.decider.locking.namespace` - a namespace for the locks. Max length is 4 characters.
 - `conductor.jetty.server.port` - will be used in the `[reentrant_lock].[holder_id]` to identify a locker, along with the hostname and thread id which will are provided by the runtime. The default is 8080, you should probably not set this property unless you really need to.
 - `LOCAL_RACK` - ^
 

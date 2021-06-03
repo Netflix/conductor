@@ -150,7 +150,11 @@ public abstract class SqlServerBaseDAO {
                     "transactional"
             );
         } catch (RuntimeException e){
-            throw (ApplicationException)e.getCause();
+            if (e.getCause() instanceof ApplicationException) {
+                throw (ApplicationException)e.getCause();
+            } else {
+                throw new ApplicationException("e.getCause is not instance of ApplicationException returned null", e);
+            }
         }
     }
 

@@ -99,6 +99,10 @@ public class TestConfiguration implements SqlServerConfiguration {
 		testProperties.put(key, value);
 	}
 
+	public void setProperties(Map<String, String> props) {
+		testProperties.putAll(props);
+	}
+
 	@Override
 	public int getIntProperty(String key, int defaultValue) {
 		String val = getProperty(key, Integer.toString(defaultValue));
@@ -141,6 +145,14 @@ public class TestConfiguration implements SqlServerConfiguration {
 		Map<String, Object> map = new HashMap<>();
 		Properties props = System.getProperties();
 		props.forEach((key, value) -> map.put(key.toString(), value));
+		map.putAll(testProperties);
+		return map;
+	}
+
+	public Map<String, String> getAllAsString() {
+		Map<String, String> map = new HashMap<>();
+		Properties props = System.getProperties();
+		props.forEach((key, value) -> map.put(key.toString(), value.toString()));
 		map.putAll(testProperties);
 		return map;
 	}

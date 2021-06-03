@@ -30,13 +30,13 @@ import com.netflix.conductor.sqlserver.SqlServerConfiguration;
 
 public class SqlServerLock extends SqlServerBaseDAO implements Lock {
 
-    private static String LOCK_NAMESPACE = "";
-    private static String INSTANCE_IDENTIFIER = "";
+    private String LOCK_NAMESPACE = "";
+    private String INSTANCE_IDENTIFIER = "";
 
     @Inject
     public SqlServerLock(ObjectMapper om, DataSource dataSource, SqlServerConfiguration configuration) throws UnknownHostException{
         super(om, dataSource);
-        LOCK_NAMESPACE = configuration.getProperty("workflow.decider.locking.namespace", "");
+        LOCK_NAMESPACE = configuration.getProperty("workflow.decider.locking.namespace", "GLBL");
         
         String host = "", rack = configuration.getProperty("LOCAL_RACK", ""), port = configuration.getProperty("conductor.jetty.server.port", "8080");
         try {
@@ -69,7 +69,7 @@ public class SqlServerLock extends SqlServerBaseDAO implements Lock {
         withTransaction(tx -> deleteExpired(tx, lockId));
         
         return this.tryAcquire(
-            this.getLockId(lockId),
+            lockId,
             this.getHolderId(),
             TimeUnit.MILLISECONDS.convert(timeToTry, unit),
             TimeUnit.MILLISECONDS.convert(leaseTime, unit)
@@ -84,22 +84,22 @@ public class SqlServerLock extends SqlServerBaseDAO implements Lock {
     @Override
     public void deleteLock(String lockId) {
         final String SQL = String.join("\n", 
-            "DELETE FROM [data].[reentrant_lock] WITH(TabLock,xLock)",
-            "WHERE lock_id = ?;"
+            "DELETE FROM [data].[reentrant_lock] WITH(RowLock,xLock)",
+            "WHERE ns=? AND lock_id = ?;"
         );
-        getWithRetriedTransactions(tx -> query(tx, SQL, q -> q.addParameter(lockId).executeDelete()));
+        getWithRetriedTransactions(tx -> query(tx, SQL, q -> q.addParameter(LOCK_NAMESPACE).addParameter(lockId).executeDelete()));
     }
 
     private boolean tryAcquire(String lockId, String holderId, long timeToTryMillis, long leaseTimeMillis) {
         final String SQL = String.join("\n", 
-            "MERGE [data].[reentrant_lock] WITH(TabLock,xLock) target",
-            "USING (SELECT ? AS col1, ? AS col2, DATEADD(millisecond, ?, SYSDATETIMEOFFSET()) AS col3) AS source(lock_id, holder_id, expire_time)",
-            "ON source.lock_id = target.lock_id AND source.holder_id = target.holder_id",
+            "MERGE [data].[reentrant_lock] WITH(RowLock,xLock) target",
+            "USING (SELECT ? as col1, ? AS col2, ? AS col3, DATEADD(millisecond, ?, SYSDATETIMEOFFSET()) AS col4) AS source(ns, lock_id, holder_id, expire_time)",
+            "ON source.ns = target.ns AND source.lock_id = target.lock_id AND source.holder_id = target.holder_id",
             "WHEN MATCHED THEN",
             "UPDATE SET target.expire_time=source.expire_time",
             "WHEN NOT MATCHED THEN",
-            "INSERT (lock_id, holder_id, expire_time)",
-            "VALUES (source.lock_id, source.holder_id, source.expire_time);"
+            "INSERT (ns, lock_id, holder_id, expire_time)",
+            "VALUES (source.ns, source.lock_id, source.holder_id, source.expire_time);"
         );
         long start = System.currentTimeMillis();
 
@@ -107,14 +107,16 @@ public class SqlServerLock extends SqlServerBaseDAO implements Lock {
             return getWithTransactionWithOutErrorPropagation(
                 tx -> {
                     int rows = 0;
+                    System.out.println("ns:"+LOCK_NAMESPACE+" id:"+lockId+" holder:"+holderId);
                     do {
-                        rows = query(tx, SQL, q -> q.addParameter(lockId).addParameter(holderId).addParameter(leaseTimeMillis).executeUpdate());
+                        rows = query(tx, SQL, q -> q.addParameter(LOCK_NAMESPACE).addParameter(lockId).addParameter(holderId).addParameter(leaseTimeMillis).executeUpdate());
                         Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
                         deleteExpired(tx, lockId);
                     } while (rows < 1 && ((System.currentTimeMillis() - start) < timeToTryMillis));
                     if (rows > 1) {
                         System.out.println("ERROR!!!!!!!!!");
                     }
+                    System.out.println("rows affected: "+rows);
                     return rows > 0;
             });    
         } catch (Exception e) {
@@ -126,21 +128,13 @@ public class SqlServerLock extends SqlServerBaseDAO implements Lock {
     private void deleteExpired(Connection conn, String lockId) {
         final String SQL = String.join("\n", 
             "DELETE FROM [data].[reentrant_lock] WITH(xLock)",
-            "WHERE lock_id = ? AND expire_time < SYSDATETIMEOFFSET();"
+            "WHERE ns=? AND lock_id = ? AND expire_time < SYSDATETIMEOFFSET();"
         );
-        execute(conn, SQL, q -> q.addParameter(lockId).executeUpdate());
+        execute(conn, SQL, q -> q.addParameter(LOCK_NAMESPACE).addParameter(lockId).executeUpdate());
     }
 
     public String getHolderId()
     {
         return String.format("%s%c%d", INSTANCE_IDENTIFIER, '-', Thread.currentThread().getId());
-    }
-
-    public String getLockId(String lockId)
-    {
-        if (LOCK_NAMESPACE.isEmpty()) {
-            return lockId;
-        }
-        return String.format("%s%c%s", LOCK_NAMESPACE, '.', lockId);
     }
 }

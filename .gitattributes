@@ -1,4 +1,5 @@
 docs/* linguist-documentation
 server/src/main/resources/swagger-ui/* linguist-vendored
 
-
+# Make sure the entrypoint for sqlserver is always lf otherwise it worn't work on Windows
+sqlserver-persistence/docker/sqlserver/entrypoint.sh text eol=lf

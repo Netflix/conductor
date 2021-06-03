@@ -15,7 +15,7 @@
  */
 package com.netflix.conductor.dao.sqlserver;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
@@ -109,12 +109,32 @@ public class SqlServerLockTest {
     }
 
     @Test
-    public void testGetLockId() throws Exception
+    public void testSameLockIdDifferentNamespace() throws Exception
     {
         TestConfiguration cnf = new TestConfiguration();
-        cnf.setProperty("workflow.decider.locking.namespace", "asdf");
-        SqlServerLock lck = new SqlServerLock(null, null, cnf);
-        assertEquals("asdf.qwerty", lck.getLockId("qwerty"));
+        cnf.setProperties(testUtil.getTestConfiguration().getAllAsString());
+        String lockId = UUID.randomUUID().toString();
+
+        // Simulate 4 conductor instances, 2 in each locking namespace
+        cnf.setProperty("workflow.decider.locking.namespace", "ns1");
+        cnf.setProperty("conductor.jetty.server.port", "14");
+        SqlServerLock lck14 = new SqlServerLock(testUtil.getObjectMapper(), testUtil.getDataSource(), cnf);
+        cnf.setProperty("workflow.decider.locking.namespace", "ns2");
+        cnf.setProperty("conductor.jetty.server.port", "15");
+        SqlServerLock lck25 = new SqlServerLock(testUtil.getObjectMapper(), testUtil.getDataSource(), cnf);
+        cnf.setProperty("workflow.decider.locking.namespace", "ns1");
+        cnf.setProperty("conductor.jetty.server.port", "16");
+        SqlServerLock lck16 = new SqlServerLock(testUtil.getObjectMapper(), testUtil.getDataSource(), cnf);
+        cnf.setProperty("workflow.decider.locking.namespace", "ns2");
+        cnf.setProperty("conductor.jetty.server.port", "17");
+        SqlServerLock lck27 = new SqlServerLock(testUtil.getObjectMapper(), testUtil.getDataSource(), cnf);
+        
+
+        assertTrue("ns1 lock", lck14.acquireLock(lockId, 1000, 10000, TimeUnit.MILLISECONDS));
+        assertTrue("ns2 lock", lck25.acquireLock(lockId, 1000, 10000, TimeUnit.MILLISECONDS));
+        lck14.deleteLock(lockId);
+        assertTrue("ns1 lock", lck16.acquireLock(lockId, 1000, 10000, TimeUnit.MILLISECONDS));
+        assertFalse("ns2 lock", lck27.acquireLock(lockId, 1000, 10000, TimeUnit.MILLISECONDS));
     }
 
     @Test(expected = UnsupportedOperationException.class)
