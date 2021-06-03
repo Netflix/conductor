@@ -67,7 +67,7 @@ public class SqlServerLockTest {
     }
 
     @Test
-    public void testLockExpiration() throws InterruptedException {
+    public void testLockReentryAndExpiration() throws InterruptedException {
         String lockId = UUID.randomUUID().toString();
 
         boolean isLocked = lock.acquireLock(lockId, 1000, 1000, TimeUnit.MILLISECONDS);
@@ -135,6 +135,29 @@ public class SqlServerLockTest {
         lck14.deleteLock(lockId);
         assertTrue("ns1 lock", lck16.acquireLock(lockId, 1000, 10000, TimeUnit.MILLISECONDS));
         assertFalse("ns2 lock", lck27.acquireLock(lockId, 1000, 10000, TimeUnit.MILLISECONDS));
+    }
+
+    @Test
+    public void testLockExpiration() throws Exception
+    {
+        TestConfiguration cnf = new TestConfiguration();
+        cnf.setProperties(testUtil.getTestConfiguration().getAllAsString());
+        String lockId = UUID.randomUUID().toString();
+
+        // Simulate 2 conductor instances
+        cnf.setProperty("conductor.jetty.server.port", "24");
+        SqlServerLock lck1 = new SqlServerLock(testUtil.getObjectMapper(), testUtil.getDataSource(), cnf);
+        cnf.setProperty("conductor.jetty.server.port", "25");
+        SqlServerLock lck2 = new SqlServerLock(testUtil.getObjectMapper(), testUtil.getDataSource(), cnf);
+        
+
+        assertTrue("initial lock 1", lck1.acquireLock(lockId, 1000, 1000, TimeUnit.MILLISECONDS));
+        assertFalse("lock 2 should fail, lock 1 already locked", lck2.acquireLock(lockId, 1000, 1000, TimeUnit.MILLISECONDS));
+        
+        Thread.sleep(1500);
+
+        assertTrue("lock 2 acquire", lck2.acquireLock(lockId, 1000, 1000, TimeUnit.MILLISECONDS));
+        assertFalse("lock 1 should fail, lock 2 already locked", lck1.acquireLock(lockId, 1000, 1000, TimeUnit.MILLISECONDS));
     }
 
     @Test(expected = UnsupportedOperationException.class)

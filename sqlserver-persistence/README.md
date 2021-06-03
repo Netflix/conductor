@@ -18,36 +18,52 @@
 
 ## Lock
 - `workflow.decider.locking.server` - set to `SQLSERVER` to use with Microsoft Sql Server
-- `workflow.decider.locking.enabled` - enable decider lock
+- `workflow.decider.locking.enabled` - set to `true` to enable decider lock
+- `conductor.sqlserver.locking.cleanIntervalSeconds` - The interval at which to delete expired items from the table. **Default is 0 (disabled)**
 - `workflow.decider.locking.namespace` - a namespace for the locks. Max length is 4 characters.
 - `conductor.jetty.server.port` - will be used in the `[reentrant_lock].[holder_id]` to identify a locker, along with the hostname and thread id which will are provided by the runtime. The default is 8080, you should probably not set this property unless you really need to.
-- `LOCAL_RACK` - ^
+- `LOCAL_RACK` - See above
 
 # More info
+
+## General information
 
 * When deleting/acking a message from a queue, instead of deleting the row form `queue_message` just the
   message id will be written to `queue_removed` and when accessing a queue a join will be preformed between
   `queue_message` and `queue_removed` to make sure that removed/acked messages are not returned to the user.
-  The reason we are doing this is because sqlserver is pretty bad with `DELETE`s on very active table, but
+  The reason we are doing this is because sqlserver is pretty bad with `DELETE`s on very active tables, but
   pretty good with `JOIN`s. This is called a logical delete. Please note that `queue_removed` will grow
   over time and therefore should be cleaned from time to time. We recommend to clean them when `queue_removed`
   reaches around 10k rows.
-* You can partition `queue_message` by `queue_shard` which will contain 
-whatever you'll configure in `LOCAL_RACK` for possibly better performance.
-* Some indexes have `sort_in_tempdb=on`, you can move the tempdb to the memory 
-to increase performance
+* You can set the query timeout from the connection string by adding `queryTimeout=10`
+* You can set `conductor.sqlserver.deadlock.retry.max` to the max retries when a deadlock, lock timeout 
+  or query timeout occurs.
+
+## Highly recommended maintenance
+
 * You will probably want to write jobs to clean out the following tables:
     * `event_execution`
     * `task_scheduled`
     * `task`
     * `workflow_def_to_workflow`
     * `workflow_to_task`
+    * `workflow`
     * `reentrant_lock`
-    * `queue_removed` and `queue_message` 
+    * `queue_removed` and `queue_message`
+
+## Potential for performance improvements
+
+* You can partition `queue_message` (and `queue_removed`) by `queue_shard` which will contain 
+  whatever you'll configure in `LOCAL_RACK` for possibly better performance.
+* You can partition `reentrant_lock` by `ns` which will contain 
+  whatever you'll configure in `workflow.decider.locking.namespace` for possibly better performance.
+* Some indexes have `sort_in_tempdb=on`, you can move the tempdb to the memory 
 * When cleaning `queue_message` and `queue_removed`, you should not clean the whole table, but
   leave a 1000 or so rows because if the table is too small sqlserver won't use the indexes
   and everything will slow down to a crawl.
-* You can set the query timeout from the connection string by adding `queryTimeout=10`
-* You can set `conductor.sqlserver.deadlock.retry.max` to the max retries when a deadlock, lock timeout 
-  or query timeout occurs.
+  to increase performance
 * You can make `queue_message` and `queue_removed` in memory tables to improve performance
+* To improve the lock's performance, you may try adding 1000 or so dummy rows with an expiry time of 
+  the year 3000 to make sure that they won't be ever deleted. Alternatively, you can set the cleanup interval
+  to 0 and write your own job to always leave 1000 expired items in the table. That way, on the off chance 
+  there will be a GUID collision, the `expire_time` will just get updated instead of the workflow getting stuck.

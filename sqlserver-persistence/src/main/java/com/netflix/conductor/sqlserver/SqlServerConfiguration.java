@@ -56,6 +56,9 @@ public interface SqlServerConfiguration extends Configuration {
     String LOCK_TIMEOUT_PROPERTY_NAME = "conductor.sqlserver.lock.timeout";
     long LOCK_TIMEOUT_DEFAULT_VALUE = TimeUnit.SECONDS.toMillis(30);
 
+    String LOCK_CLEAN_INTERVAL_PROPERTY_NAME = "conductor.sqlserver.locking.cleanIntervalSeconds";
+    long LOCK_CLEAN_INTERVAL_DEFAULT_VALUE = TimeUnit.HOURS.toMillis(6);
+
     String ISOLATION_LEVEL_PROPERTY_NAME = "conductor.sqlserver.transaction.isolation.level";
     String ISOLATION_LEVEL_DEFAULT_VALUE = "";
 
@@ -122,6 +125,10 @@ public interface SqlServerConfiguration extends Configuration {
     
     default long getLockTimeout() {
         return getLongProperty(LOCK_TIMEOUT_PROPERTY_NAME, LOCK_TIMEOUT_DEFAULT_VALUE);
+    }
+
+    default long getLockCleanInterval() {
+        return getLongProperty(LOCK_CLEAN_INTERVAL_PROPERTY_NAME, LOCK_CLEAN_INTERVAL_DEFAULT_VALUE);
     }
 
     default String getTransactionIsolationLevel() {

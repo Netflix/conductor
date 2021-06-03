@@ -286,8 +286,3 @@ CREATE UNIQUE CLUSTERED INDEX unique_reentrant_lock
 ON [data].[reentrant_lock](ns, lock_id)
 with( allow_row_locks = on, allow_page_locks=off, IGNORE_DUP_KEY=ON, pad_index=on, fillfactor=70 );
 GO
-
-CREATE INDEX ix_reentrant_lock
-ON [data].[reentrant_lock](holder_id, lock_id )
-with( allow_row_locks = on, allow_page_locks=off );
-GO
