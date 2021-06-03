@@ -107,16 +107,14 @@ public class SqlServerLock extends SqlServerBaseDAO implements Lock {
             return getWithTransactionWithOutErrorPropagation(
                 tx -> {
                     int rows = 0;
-                    System.out.println("ns:"+LOCK_NAMESPACE+" id:"+lockId+" holder:"+holderId);
                     do {
                         rows = query(tx, SQL, q -> q.addParameter(LOCK_NAMESPACE).addParameter(lockId).addParameter(holderId).addParameter(leaseTimeMillis).executeUpdate());
                         Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
                         deleteExpired(tx, lockId);
                     } while (rows < 1 && ((System.currentTimeMillis() - start) < timeToTryMillis));
                     if (rows > 1) {
-                        System.out.println("ERROR!!!!!!!!!");
+                        logger.error("ERROR!!!!!!!!!");
                     }
-                    System.out.println("rows affected: "+rows);
                     return rows > 0;
             });    
         } catch (Exception e) {
