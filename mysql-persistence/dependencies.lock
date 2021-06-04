@@ -306,10 +306,24 @@
         "com.zaxxer:HikariCP": {
             "locked": "3.4.5"
         },
+        "commons-codec:commons-codec": {
+            "locked": "1.9",
+            "transitive": [
+                "org.apache.httpcomponents:httpclient"
+            ]
+        },
         "commons-io:commons-io": {
             "locked": "2.7",
             "transitive": [
                 "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "commons-logging:commons-logging": {
+            "locked": "1.2",
+            "transitive": [
+                "com.amazonaws:aws-java-sdk-core",
+                "org.apache.httpcomponents:httpclient",
+                "org.springframework:spring-core"
             ]
         },
         "io.reactivex:rxjava": {
@@ -342,6 +356,12 @@
                 "com.netflix.conductor:conductor-core"
             ]
         },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.slf4j:slf4j-log4j12"
+            ]
+        },
         "mysql:mysql-connector-java": {
             "locked": "8.0.20"
         },
@@ -355,6 +375,18 @@
             "locked": "2.3",
             "transitive": [
                 "com.jayway.jsonpath:json-path"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "org.apache.bval:bval-jsr": {
@@ -540,6 +572,12 @@
                 "org.testcontainers:testcontainers"
             ]
         },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.slf4j:slf4j-log4j12"
+            ]
+        },
         "mysql:mysql-connector-java": {
             "locked": "8.0.20"
         },
@@ -721,23 +759,11 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
-        "org.objenesis:objenesis": {
-            "locked": "2.6",
-            "transitive": [
-                "org.mockito:mockito-core"
-            ]
-        },
         "org.opentest4j:opentest4j": {
             "locked": "1.2.0",
             "transitive": [
                 "org.junit.jupiter:junit-jupiter-api",
                 "org.junit.platform:junit-platform-engine"
-            ]
-        },
-        "org.ow2.asm:asm": {
-            "locked": "5.0.4",
-            "transitive": [
-                "net.minidev:accessors-smart"
             ]
         },
         "org.rnorth.duct-tape:duct-tape": {
@@ -763,6 +789,18 @@
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-log4j2",
                 "org.springframework.boot:spring-boot-starter-logging"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "org.ow2.asm:asm": {
+            "locked": "5.0.3",
+            "transitive": [
+                "net.minidev:accessors-smart"
             ]
         },
         "org.slf4j:slf4j-api": {
@@ -906,6 +944,14 @@
             "locked": "1.15.1",
             "transitive": [
                 "org.testcontainers:database-commons"
+            ]
+        },
+        "org.springframework:spring-asm": {
+            "locked": "3.0.2.RELEASE",
+            "transitive": [
+                "org.springframework:spring-aop",
+                "org.springframework:spring-context",
+                "org.springframework:spring-core"
             ]
         },
         "org.testinfected.hamcrest-matchers:all-matchers": {
@@ -1123,6 +1169,12 @@
         "com.zaxxer:HikariCP": {
             "locked": "3.4.5"
         },
+        "commons-codec:commons-codec": {
+            "locked": "1.9",
+            "transitive": [
+                "org.apache.httpcomponents:httpclient"
+            ]
+        },
         "commons-io:commons-io": {
             "locked": "2.7",
             "transitive": [
@@ -1189,6 +1241,12 @@
             "transitive": [
                 "org.junit.vintage:junit-vintage-engine",
                 "org.testcontainers:testcontainers"
+            ]
+        },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.slf4j:slf4j-log4j12"
             ]
         },
         "mysql:mysql-connector-java": {
@@ -1406,12 +1464,6 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
-        "org.objenesis:objenesis": {
-            "locked": "2.6",
-            "transitive": [
-                "org.mockito:mockito-core"
-            ]
-        },
         "org.opentest4j:opentest4j": {
             "locked": "1.2.0",
             "transitive": [
@@ -1448,6 +1500,12 @@
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-log4j2",
                 "org.springframework.boot:spring-boot-starter-logging"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "org.slf4j:slf4j-api": {
@@ -1593,6 +1651,14 @@
             "locked": "1.15.1",
             "transitive": [
                 "org.testcontainers:database-commons"
+            ]
+        },
+        "org.springframework:spring-asm": {
+            "locked": "3.0.2.RELEASE",
+            "transitive": [
+                "org.springframework:spring-aop",
+                "org.springframework:spring-context",
+                "org.springframework:spring-core"
             ]
         },
         "org.testinfected.hamcrest-matchers:all-matchers": {

@@ -1,0 +1,9 @@
+GO
+CREATE DATABASE Conductor;
+GO
+
+USE Conductor;
+GO
+
+CREATE SCHEMA data;
+GO

@@ -549,11 +549,18 @@
                 "org.glassfish.jaxb:jaxb-runtime"
             ]
         },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
         "org.ow2.asm:asm": {
             "locked": "5.0.4",
             "transitive": [
                 "com.github.jnr:jnr-ffi",
                 "net.minidev:accessors-smart",
+                "org.apache.cassandra:cassandra-all",
                 "org.ow2.asm:asm-tree"
             ]
         },
@@ -582,6 +589,13 @@
             "locked": "5.0.3",
             "transitive": [
                 "com.github.jnr:jnr-ffi"
+            ]
+        },
+        "org.slf4j:jcl-over-slf4j": {
+            "locked": "1.7.7",
+            "transitive": [
+                "org.apache.cassandra:cassandra-all",
+                "org.apache.cassandra:cassandra-thrift"
             ]
         },
         "org.slf4j:slf4j-api": {
@@ -1197,12 +1211,6 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
-        "org.objenesis:objenesis": {
-            "locked": "2.6",
-            "transitive": [
-                "org.mockito:mockito-core"
-            ]
-        },
         "org.opentest4j:opentest4j": {
             "locked": "1.2.0",
             "transitive": [
@@ -1210,37 +1218,7 @@
                 "org.junit.platform:junit-platform-engine"
             ]
         },
-        "org.ow2.asm:asm": {
-            "locked": "5.0.4",
-            "transitive": [
-                "com.github.jnr:jnr-ffi",
-                "net.minidev:accessors-smart",
-                "org.apache.cassandra:cassandra-all",
-                "org.ow2.asm:asm-tree"
-            ]
-        },
-        "org.ow2.asm:asm-analysis": {
-            "locked": "5.0.3",
-            "transitive": [
-                "com.github.jnr:jnr-ffi"
-            ]
-        },
         "org.ow2.asm:asm-commons": {
-            "locked": "5.0.3",
-            "transitive": [
-                "com.github.jnr:jnr-ffi"
-            ]
-        },
-        "org.ow2.asm:asm-tree": {
-            "locked": "5.0.3",
-            "transitive": [
-                "com.github.jnr:jnr-ffi",
-                "org.ow2.asm:asm-analysis",
-                "org.ow2.asm:asm-commons",
-                "org.ow2.asm:asm-util"
-            ]
-        },
-        "org.ow2.asm:asm-util": {
             "locked": "5.0.3",
             "transitive": [
                 "com.github.jnr:jnr-ffi"
@@ -1264,6 +1242,42 @@
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-log4j2",
                 "org.springframework.boot:spring-boot-starter-logging"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "org.ow2.asm:asm": {
+            "locked": "5.0.4",
+            "transitive": [
+                "com.github.jnr:jnr-ffi",
+                "net.minidev:accessors-smart",
+                "org.apache.cassandra:cassandra-all",
+                "org.ow2.asm:asm-tree"
+            ]
+        },
+        "org.ow2.asm:asm-analysis": {
+            "locked": "5.0.3",
+            "transitive": [
+                "com.github.jnr:jnr-ffi"
+            ]
+        },
+        "org.ow2.asm:asm-tree": {
+            "locked": "5.0.3",
+            "transitive": [
+                "com.github.jnr:jnr-ffi",
+                "org.ow2.asm:asm-analysis",
+                "org.ow2.asm:asm-commons",
+                "org.ow2.asm:asm-util"
+            ]
+        },
+        "org.ow2.asm:asm-util": {
+            "locked": "5.0.3",
+            "transitive": [
+                "com.github.jnr:jnr-ffi"
             ]
         },
         "org.slf4j:slf4j-api": {
@@ -2163,37 +2177,7 @@
                 "org.junit.platform:junit-platform-engine"
             ]
         },
-        "org.ow2.asm:asm": {
-            "locked": "5.0.4",
-            "transitive": [
-                "com.github.jnr:jnr-ffi",
-                "net.minidev:accessors-smart",
-                "org.apache.cassandra:cassandra-all",
-                "org.ow2.asm:asm-tree"
-            ]
-        },
         "org.ow2.asm:asm-analysis": {
-            "locked": "5.0.3",
-            "transitive": [
-                "com.github.jnr:jnr-ffi"
-            ]
-        },
-        "org.ow2.asm:asm-commons": {
-            "locked": "5.0.3",
-            "transitive": [
-                "com.github.jnr:jnr-ffi"
-            ]
-        },
-        "org.ow2.asm:asm-tree": {
-            "locked": "5.0.3",
-            "transitive": [
-                "com.github.jnr:jnr-ffi",
-                "org.ow2.asm:asm-analysis",
-                "org.ow2.asm:asm-commons",
-                "org.ow2.asm:asm-util"
-            ]
-        },
-        "org.ow2.asm:asm-util": {
             "locked": "5.0.3",
             "transitive": [
                 "com.github.jnr:jnr-ffi"
@@ -2217,6 +2201,36 @@
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-log4j2",
                 "org.springframework.boot:spring-boot-starter-logging"
+            ]
+        },
+        "org.ow2.asm:asm": {
+            "locked": "5.0.4",
+            "transitive": [
+                "com.github.jnr:jnr-ffi",
+                "net.minidev:accessors-smart",
+                "org.apache.cassandra:cassandra-all",
+                "org.ow2.asm:asm-tree"
+            ]
+        },
+        "org.ow2.asm:asm-commons": {
+            "locked": "5.0.3",
+            "transitive": [
+                "com.github.jnr:jnr-ffi"
+            ]
+        },
+        "org.ow2.asm:asm-tree": {
+            "locked": "5.0.3",
+            "transitive": [
+                "com.github.jnr:jnr-ffi",
+                "org.ow2.asm:asm-analysis",
+                "org.ow2.asm:asm-commons",
+                "org.ow2.asm:asm-util"
+            ]
+        },
+        "org.ow2.asm:asm-util": {
+            "locked": "5.0.3",
+            "transitive": [
+                "com.github.jnr:jnr-ffi"
             ]
         },
         "org.slf4j:slf4j-api": {

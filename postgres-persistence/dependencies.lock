@@ -305,10 +305,24 @@
         "com.zaxxer:HikariCP": {
             "locked": "3.4.5"
         },
+        "commons-codec:commons-codec": {
+            "locked": "1.9",
+            "transitive": [
+                "org.apache.httpcomponents:httpclient"
+            ]
+        },
         "commons-io:commons-io": {
             "locked": "2.7",
             "transitive": [
                 "com.netflix.conductor:conductor-core"
+            ]
+        },
+        "commons-logging:commons-logging": {
+            "locked": "1.2",
+            "transitive": [
+                "com.amazonaws:aws-java-sdk-core",
+                "org.apache.httpcomponents:httpclient",
+                "org.springframework:spring-core"
             ]
         },
         "io.reactivex:rxjava": {
@@ -353,6 +367,24 @@
                 "com.jayway.jsonpath:json-path"
             ]
         },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
         "org.apache.bval:bval-jsr": {
             "locked": "2.0.5",
             "transitive": [
@@ -392,6 +424,12 @@
             "locked": "5.0.4",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "org.postgresql:postgresql": {
@@ -717,12 +755,6 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
-        "org.objenesis:objenesis": {
-            "locked": "2.6",
-            "transitive": [
-                "org.mockito:mockito-core"
-            ]
-        },
         "org.opentest4j:opentest4j": {
             "locked": "1.2.0",
             "transitive": [
@@ -734,6 +766,12 @@
             "locked": "5.0.4",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "org.postgresql:postgresql": {
@@ -905,6 +943,14 @@
             "locked": "1.15.1",
             "transitive": [
                 "org.testcontainers:database-commons"
+            ]
+        },
+        "org.springframework:spring-asm": {
+            "locked": "3.0.2.RELEASE",
+            "transitive": [
+                "org.springframework:spring-aop",
+                "org.springframework:spring-context",
+                "org.springframework:spring-core"
             ]
         },
         "org.testinfected.hamcrest-matchers:all-matchers": {
@@ -1122,6 +1168,12 @@
         "com.zaxxer:HikariCP": {
             "locked": "3.4.5"
         },
+        "commons-codec:commons-codec": {
+            "locked": "1.9",
+            "transitive": [
+                "org.apache.httpcomponents:httpclient"
+            ]
+        },
         "commons-io:commons-io": {
             "locked": "2.7",
             "transitive": [
@@ -1219,6 +1271,12 @@
             "locked": "2.3",
             "transitive": [
                 "com.jayway.jsonpath:json-path"
+            ]
+        },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.slf4j:slf4j-log4j12"
             ]
         },
         "org.apache.bval:bval-jsr": {
@@ -1592,6 +1650,14 @@
             "locked": "1.15.1",
             "transitive": [
                 "org.testcontainers:database-commons"
+            ]
+        },
+        "org.springframework:spring-asm": {
+            "locked": "3.0.2.RELEASE",
+            "transitive": [
+                "org.springframework:spring-aop",
+                "org.springframework:spring-context",
+                "org.springframework:spring-core"
             ]
         },
         "org.testinfected.hamcrest-matchers:all-matchers": {

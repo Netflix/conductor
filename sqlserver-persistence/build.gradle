@@ -1,0 +1,58 @@
+dependencies {
+    implementation project(':conductor-common')
+    implementation project(':conductor-core')
+    implementation project(':conductor-grpc-server')
+    compileOnly 'org.springframework.boot:spring-boot-starter'
+
+    // SBMTODO: remove guava dep
+    implementation "com.google.guava:guava:${revGuava}"
+
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.fasterxml.jackson.core:jackson-core"
+
+    implementation "org.apache.commons:commons-lang3"
+
+    implementation "com.microsoft.sqlserver:mssql-jdbc:8.4.1.jre8"
+    implementation "com.zaxxer:HikariCP"
+    implementation "org.flywaydb:flyway-core"
+
+    compile "commons-io:commons-io:${revCommonsIo}"
+
+    testImplementation "org.testcontainers:mssqlserver:1.15.2"
+    testImplementation "org.testinfected.hamcrest-matchers:all-matchers:${revHamcrestAllMatchers}"
+    testImplementation project(':conductor-core').sourceSets.test.output
+    testImplementation project(':conductor-common').sourceSets.test.output
+}
+
+// dockerCompose{
+//     integrationTestDocker{
+//         useComposeFiles = ["./docker-compose.yml"]
+//         startedServices = ["sqlserver"]
+//         waitForTcpPorts = true
+//         isRequiredBy(tasks.test)
+//         projectName = project.name
+//     }
+// }
+
+// task intDockerStart() {
+//     group = "SqlServer data access based Integration Test"
+//     description "Starts a local db container for SqlServer data access integration tests."
+//     dependsOn integrationTestDockerComposeDownForced
+//     dependsOn integrationTestDockerComposeUp
+// }
+
+// task intDockerDown(dependsOn: integrationTestDockerComposeDownForced) {
+//     group = "SqlServer data access based Integration Test"
+//     description "Stops a local db container for SqlServer data access integration tests."
+// }
+
+// test.doFirst {
+//     dockerCompose.exposeAsSystemProperties(test)
+// }
+
+// test.finalizedBy("intDockerDown")
+
+test {
+    //the unit tests must run within the same JVM to share the same embedded DB
+    maxParallelForks = 1
+}

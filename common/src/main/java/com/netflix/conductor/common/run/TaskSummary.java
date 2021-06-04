@@ -90,8 +90,8 @@ public class TaskSummary {
     @ProtoField(id = 19)
     private int workflowPriority;
 
-    public TaskSummary() {
-    }
+	// @ProtoField(id = 20)
+	// private String referenceTaskName;
 
     public TaskSummary(Task task) {
 
@@ -381,12 +381,23 @@ public class TaskSummary {
         return workflowPriority;
     }
 
-    /**
-     * @param workflowPriority Priority defined for workflow
-     */
-    public void setWorkflowPriority(int workflowPriority) {
-        this.workflowPriority = workflowPriority;
-    }
+    // /**
+    //  * @param workflowPriority Priority defined for workflow
+    //  */
+    // public void setWorkflowPriority(int workflowPriority) {
+    //     this.workflowPriority = workflowPriority;
+    // }
+
+    // public String getReferenceTaskName() {
+	// 	return referenceTaskName;
+	// }
+
+	// /**
+	//  * @param workflowPriority Priority defined for workflow
+	//  */
+	// public void setReferenceTaskName(String name) {
+	// 	this.referenceTaskName = name;
+	// }
 
     @Override
     public boolean equals(Object o) {
@@ -412,6 +423,7 @@ public class TaskSummary {
             Objects.equals(getTaskDefName(), that.getTaskDefName()) &&
             getTaskType().equals(that.getTaskType()) &&
             getTaskId().equals(that.getTaskId());
+            // getReferenceTaskName() == that.getReferenceTaskName();
     }
 
     @Override
@@ -419,6 +431,6 @@ public class TaskSummary {
         return Objects.hash(getWorkflowId(), getWorkflowType(), getCorrelationId(), getScheduledTime(), getStartTime(),
             getUpdateTime(), getEndTime(), getStatus(), getReasonForIncompletion(), getExecutionTime(),
             getQueueWaitTime(),
-            getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority());
+            getTaskDefName(), getTaskType(), getTaskId(), getWorkflowPriority());//, getReferenceTaskName());
     }
 }

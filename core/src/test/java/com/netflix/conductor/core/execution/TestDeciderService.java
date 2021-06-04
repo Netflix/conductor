@@ -1065,6 +1065,7 @@ public class TestDeciderService {
         assertNotNull(workflow.getOutput());
         assertEquals("taskValue", workflow.getOutput().get("taskKey"));
     }
+    
 
     // when workflow definition has outputParameters defined
     @SuppressWarnings({"unchecked", "rawtypes"})

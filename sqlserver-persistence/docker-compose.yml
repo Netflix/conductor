@@ -1,0 +1,22 @@
+version: '3.1'
+
+services:
+  sqlserver:
+    image: conductor:sqlserver
+    build: 
+      context: ./docker
+      dockerfile: sqlserver/Dockerfile
+    restart: always
+    ports:
+    - "1433:1433"
+    healthcheck:
+      test: timeout 5 bash -c '/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P Password1 -l 3 -t 3 -d Conductor -Q "SELECT 1"'
+      interval: 5s
+      timeout: 5s
+      retries: 50
+    environment:
+      ACCEPT_EULA: 1
+      MSSQL_SA_PASSWORD: "Password1"
+      MSSQL_PID: 'Developer'
+      MSSQL_AGENT_ENABLED: 'false'
+    restart: always

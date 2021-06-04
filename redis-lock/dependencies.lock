@@ -519,6 +519,18 @@
                 "com.jayway.jsonpath:json-path"
             ]
         },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
         "org.apache.bval:bval-jsr": {
             "locked": "2.0.5",
             "transitive": [
@@ -580,6 +592,13 @@
             "transitive": [
                 "io.projectreactor:reactor-core",
                 "io.reactivex.rxjava2:rxjava"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "de.ruedigermoeller:fst",
+                "org.mockito:mockito-core"
             ]
         },
         "org.redisson:redisson": {
@@ -935,12 +954,6 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
-        "org.objenesis:objenesis": {
-            "locked": "2.6",
-            "transitive": [
-                "org.mockito:mockito-core"
-            ]
-        },
         "org.opentest4j:opentest4j": {
             "locked": "1.2.0",
             "transitive": [
@@ -959,6 +972,13 @@
             "transitive": [
                 "io.projectreactor:reactor-core",
                 "io.reactivex.rxjava2:rxjava"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "de.ruedigermoeller:fst",
+                "org.mockito:mockito-core"
             ]
         },
         "org.redisson:redisson": {
@@ -1401,6 +1421,12 @@
                 "com.jayway.jsonpath:json-path"
             ]
         },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.slf4j:slf4j-log4j12"
+            ]
+        },
         "org.apache.bval:bval-jsr": {
             "locked": "2.0.5",
             "transitive": [
@@ -1571,12 +1597,6 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
-        "org.objenesis:objenesis": {
-            "locked": "2.6",
-            "transitive": [
-                "org.mockito:mockito-core"
-            ]
-        },
         "org.opentest4j:opentest4j": {
             "locked": "1.2.0",
             "transitive": [
@@ -1595,6 +1615,13 @@
             "transitive": [
                 "io.projectreactor:reactor-core",
                 "io.reactivex.rxjava2:rxjava"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "de.ruedigermoeller:fst",
+                "org.mockito:mockito-core"
             ]
         },
         "org.redisson:redisson": {

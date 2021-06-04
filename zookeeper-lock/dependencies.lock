@@ -328,12 +328,6 @@
                 "org.apache.zookeeper:zookeeper"
             ]
         },
-        "log4j:log4j": {
-            "locked": "1.2.15",
-            "transitive": [
-                "org.apache.zookeeper:zookeeper"
-            ]
-        },
         "net.minidev:accessors-smart": {
             "locked": "1.2",
             "transitive": [
@@ -344,6 +338,25 @@
             "locked": "2.3",
             "transitive": [
                 "com.jayway.jsonpath:json-path"
+            ]
+        },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.apache.zookeeper:zookeeper",
+                "org.slf4j:slf4j-log4j12"
+            ]
+        },
+        "net.bytebuddy:byte-buddy": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
+            ]
+        },
+        "net.bytebuddy:byte-buddy-agent": {
+            "locked": "1.9.10",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "org.apache.bval:bval-jsr": {
@@ -405,6 +418,12 @@
             "locked": "5.0.4",
             "transitive": [
                 "net.minidev:accessors-smart"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "org.slf4j:slf4j-api": {
@@ -1020,12 +1039,6 @@
                 "org.junit.vintage:junit-vintage-engine"
             ]
         },
-        "log4j:log4j": {
-            "locked": "1.2.15",
-            "transitive": [
-                "org.apache.zookeeper:zookeeper"
-            ]
-        },
         "net.bytebuddy:byte-buddy": {
             "locked": "1.10.11",
             "transitive": [
@@ -1048,6 +1061,13 @@
             "locked": "2.3",
             "transitive": [
                 "com.jayway.jsonpath:json-path"
+            ]
+        },
+        "log4j:log4j": {
+            "locked": "1.2.17",
+            "transitive": [
+                "org.apache.zookeeper:zookeeper",
+                "org.slf4j:slf4j-log4j12"
             ]
         },
         "org.apache.bval:bval-jsr": {
@@ -1241,12 +1261,6 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
-        "org.objenesis:objenesis": {
-            "locked": "2.6",
-            "transitive": [
-                "org.mockito:mockito-core"
-            ]
-        },
         "org.opentest4j:opentest4j": {
             "locked": "1.2.0",
             "transitive": [
@@ -1271,6 +1285,12 @@
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-log4j2",
                 "org.springframework.boot:spring-boot-starter-logging"
+            ]
+        },
+        "org.objenesis:objenesis": {
+            "locked": "2.6",
+            "transitive": [
+                "org.mockito:mockito-core"
             ]
         },
         "org.slf4j:slf4j-api": {

@@ -515,28 +515,6 @@
                 "io.grpc:grpc-services"
             ]
         },
-        "io.netty:netty-buffer": {
-            "locked": "4.1.50.Final",
-            "transitive": [
-                "io.netty:netty-codec",
-                "io.netty:netty-codec-http",
-                "io.netty:netty-codec-http2",
-                "io.netty:netty-codec-socks",
-                "io.netty:netty-handler",
-                "io.netty:netty-handler-proxy",
-                "io.netty:netty-transport"
-            ]
-        },
-        "io.netty:netty-codec": {
-            "locked": "4.1.50.Final",
-            "transitive": [
-                "io.netty:netty-codec-http",
-                "io.netty:netty-codec-http2",
-                "io.netty:netty-codec-socks",
-                "io.netty:netty-handler",
-                "io.netty:netty-handler-proxy"
-            ]
-        },
         "io.netty:netty-codec-http": {
             "locked": "4.1.50.Final",
             "transitive": [
@@ -548,12 +526,6 @@
             "locked": "4.1.50.Final",
             "transitive": [
                 "io.grpc:grpc-netty"
-            ]
-        },
-        "io.netty:netty-codec-socks": {
-            "locked": "4.1.50.Final",
-            "transitive": [
-                "io.netty:netty-handler-proxy"
             ]
         },
         "io.netty:netty-common": {
@@ -606,6 +578,40 @@
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-netty"
+            ]
+        },
+        "io.netty:netty-buffer": {
+            "locked": "4.1.27.Final",
+            "transitive": [
+                "io.netty:netty-handler",
+                "io.netty:netty-transport"
+            ]
+        },
+        "io.netty:netty-codec": {
+            "locked": "4.1.27.Final",
+            "transitive": [
+                "io.netty:netty-codec-http",
+                "io.netty:netty-codec-socks",
+                "io.netty:netty-handler"
+            ]
+        },
+        "io.netty:netty-codec-socks": {
+            "locked": "4.1.27.Final",
+            "transitive": [
+                "io.netty:netty-handler-proxy"
+            ]
+        },
+        "io.opencensus:opencensus-api": {
+            "locked": "0.12.3",
+            "transitive": [
+                "io.grpc:grpc-core",
+                "io.opencensus:opencensus-contrib-grpc-metrics"
+            ]
+        },
+        "io.opencensus:opencensus-contrib-grpc-metrics": {
+            "locked": "0.12.3",
+            "transitive": [
+                "io.grpc:grpc-core"
             ]
         },
         "io.reactivex:rxjava": {
@@ -1255,6 +1261,14 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
+        "org.springframework:spring-asm": {
+            "locked": "3.0.2.RELEASE",
+            "transitive": [
+                "org.springframework:spring-aop",
+                "org.springframework:spring-context",
+                "org.springframework:spring-core"
+            ]
+        },
         "org.testinfected.hamcrest-matchers:all-matchers": {
             "locked": "1.8"
         },
@@ -1661,6 +1675,12 @@
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-netty"
+            ]
+        },
+        "io.opencensus:opencensus-contrib-grpc-metrics": {
+            "locked": "0.12.3",
+            "transitive": [
+                "io.grpc:grpc-core"
             ]
         },
         "io.reactivex:rxjava": {
@@ -2090,6 +2110,14 @@
             "locked": "5.2.7.RELEASE",
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-test"
+            ]
+        },
+        "org.springframework:spring-asm": {
+            "locked": "3.0.2.RELEASE",
+            "transitive": [
+                "org.springframework:spring-aop",
+                "org.springframework:spring-context",
+                "org.springframework:spring-core"
             ]
         },
         "org.testinfected.hamcrest-matchers:all-matchers": {

@@ -1204,6 +1204,18 @@
                 "com.netflix.conductor:conductor-grpc"
             ]
         },
+        "io.swagger:swagger-models": {
+            "locked": "1.5.9",
+            "transitive": [
+                "io.swagger:swagger-core"
+            ]
+        },
+        "javax.cache:cache-api": {
+            "locked": "1.0.0",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -1516,6 +1528,14 @@
                 "io.grpc:grpc-protobuf-lite",
                 "io.grpc:grpc-services",
                 "io.grpc:grpc-stub"
+            ]
+        },
+        "org.eclipse.jetty:jetty-util": {
+            "locked": "9.4.22.v20191022",
+            "transitive": [
+                "org.eclipse.jetty:jetty-http",
+                "org.eclipse.jetty:jetty-io",
+                "org.eclipse.jetty:jetty-jmx"
             ]
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
@@ -2895,6 +2915,18 @@
                 "com.netflix.conductor:conductor-grpc"
             ]
         },
+        "io.swagger:swagger-models": {
+            "locked": "1.5.9",
+            "transitive": [
+                "io.swagger:swagger-core"
+            ]
+        },
+        "javax.cache:cache-api": {
+            "locked": "1.0.0",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -3207,6 +3239,14 @@
                 "io.grpc:grpc-protobuf-lite",
                 "io.grpc:grpc-services",
                 "io.grpc:grpc-stub"
+            ]
+        },
+        "org.eclipse.jetty:jetty-util": {
+            "locked": "9.4.22.v20191022",
+            "transitive": [
+                "org.eclipse.jetty:jetty-http",
+                "org.eclipse.jetty:jetty-io",
+                "org.eclipse.jetty:jetty-jmx"
             ]
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
@@ -5084,6 +5124,18 @@
                 "com.netflix.conductor:conductor-grpc"
             ]
         },
+        "io.swagger:swagger-models": {
+            "locked": "1.5.9",
+            "transitive": [
+                "io.swagger:swagger-core"
+            ]
+        },
+        "javax.cache:cache-api": {
+            "locked": "1.0.0",
+            "transitive": [
+                "org.redisson:redisson"
+            ]
+        },
         "javax.inject:javax.inject": {
             "locked": "1",
             "transitive": [
@@ -5431,6 +5483,14 @@
                 "io.grpc:grpc-protobuf-lite",
                 "io.grpc:grpc-services",
                 "io.grpc:grpc-stub"
+            ]
+        },
+        "org.eclipse.jetty:jetty-util": {
+            "locked": "9.4.22.v20191022",
+            "transitive": [
+                "org.eclipse.jetty:jetty-http",
+                "org.eclipse.jetty:jetty-io",
+                "org.eclipse.jetty:jetty-jmx"
             ]
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {

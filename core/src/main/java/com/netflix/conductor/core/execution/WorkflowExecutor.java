@@ -13,6 +13,7 @@
 package com.netflix.conductor.core.execution;
 
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.CANCELED;
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.TIMED_OUT;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.FAILED_WITH_TERMINAL_ERROR;
 import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;

@@ -1,0 +1,91 @@
+version: '2.3'
+
+services:
+  conductor-server:
+    environment:
+      - CONFIG_PROP=config.properties
+      - LOG4J_PROP=log4j.properties
+      - CLASSPATH=/app/libs/*.jar
+    image: conductor:server
+    build:
+      context: ../..
+      dockerfile: sqlserver-persistence/docker/server/Dockerfile
+    networks:
+      - internal
+    ports:
+      - 8080:8080
+    links:
+      - elasticsearch:es
+      - sqlserver:sqlserver
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      sqlserver:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  conductor-ui:
+    environment:
+      - WF_SERVER=http://conductor-server:8080/api/
+    image: conductor:ui
+    build:
+      context: ../..
+      dockerfile: sqlserver-persistence/docker/ui/Dockerfile
+    networks:
+      - internal
+    ports:
+      - 5000:5000
+    links:
+      - conductor-server
+
+  sqlserver:
+    image: conductor:sqlserver
+    build: 
+      context: .
+      dockerfile: sqlserver/Dockerfile
+    restart: always
+    ports:
+    - "1433:1433"
+    healthcheck:
+      test: timeout 5 bash -c '/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P Password1 -l 3 -t 3 -d Conductor -Q "SELECT 1"'
+      interval: 5s
+      timeout: 5s
+      retries: 50
+    environment:
+      ACCEPT_EULA: 1
+      MSSQL_SA_PASSWORD: "Password1"
+      MSSQL_PID: 'Developer'
+      MSSQL_AGENT_ENABLED: 'false'
+    networks:
+      - internal
+
+  # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.8
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - transport.host=0.0.0.0
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    networks:
+      - internal
+    ports:
+      - 9200:9200
+      - 9300:9300
+    healthcheck:
+      test: timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/9300'
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+networks:
+  internal:

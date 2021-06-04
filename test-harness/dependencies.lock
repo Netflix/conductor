@@ -1208,6 +1208,12 @@
                 "org.springframework.boot:spring-boot-starter"
             ]
         },
+        "org.xerial.snappy:snappy-java": {
+            "locked": "1.1.7.2",
+            "transitive": [
+                "org.apache.kafka:kafka-clients"
+            ]
+        },
         "redis.clients:jedis": {
             "locked": "3.3.0",
             "transitive": [
