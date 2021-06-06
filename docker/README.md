@@ -45,3 +45,21 @@ Start Prometheus with:
 `docker-compose -f docker-compose-prometheus.yaml up -d`
 
 Go to [http://127.0.0.1:9090](http://127.0.0.1:9090).
+
+
+## Potential problem when using docker compose
+
+Elasticsearch timeout
+Standalone elasticsearch has a yellow status which will cause the timeout.
+Check issue: https://github.com/Netflix/conductor/issues/2262
+
+Changes does not reflect after changes in config.properties
+Config is copy into image during docker build. You have to rebuild the image or better, link a volume to it to reflect new changes.
+
+To troubleshoot a failed startup
+Check the log of the server, which is located at app/logs (default directory in dockerfile)
+
+Unable to access to conductor:server with rest
+It may takes some time for conductor server to connect elastic search, check server log to check for potential error.
+issue: https://github.com/Netflix/conductor/issues/1725#issuecomment-651806800
+
