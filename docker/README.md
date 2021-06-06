@@ -60,6 +60,6 @@ To troubleshoot a failed startup
 Check the log of the server, which is located at app/logs (default directory in dockerfile)
 
 Unable to access to conductor:server with rest
-It may takes some time for conductor server to connect elastic search, check server log to check for potential error.
+It may takes some time for conductor server to start. Please check server log for potential error.
 issue: https://github.com/Netflix/conductor/issues/1725#issuecomment-651806800
 
