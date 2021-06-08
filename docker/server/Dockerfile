@@ -31,6 +31,12 @@ COPY --from=builder /conductor/docker/server/bin /app
 COPY --from=builder /conductor/docker/server/config /app/config
 COPY --from=builder /conductor/server/build/libs/conductor-server-*-boot.jar /app/libs
 
+RUN groupadd -r conductor && \
+    useradd -m conductor -r -g conductor && \
+    chown -R conductor:conductor /app
+
+USER conductor
+
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh
 
