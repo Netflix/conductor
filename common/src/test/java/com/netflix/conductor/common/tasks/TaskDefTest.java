@@ -92,6 +92,7 @@ public class TaskDefTest {
         assertTrue(validationErrors.contains("ownerEmail cannot be empty"));
     }
 
+    @Ignore
     @Test
     public void testTaskDefInvalidEmail() {
         TaskDef taskDef = new TaskDef();

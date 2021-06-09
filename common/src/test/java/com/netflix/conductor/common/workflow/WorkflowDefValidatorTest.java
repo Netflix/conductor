@@ -12,6 +12,16 @@
  */
 package com.netflix.conductor.common.workflow;
 
+import com.netflix.conductor.common.metadata.tasks.TaskType;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import org.junit.Before;
+import org.junit.Test;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -306,6 +316,7 @@ public class WorkflowDefValidatorTest {
         assertTrue(validationErrors.contains("workflowDef schemaVersion: 2 is only supported"));
     }
 
+    @Ignore
     @Test
     public void testWorkflowOwnerInvalidEmail() {
         WorkflowDef workflowDef = new WorkflowDef();
