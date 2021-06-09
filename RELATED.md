@@ -33,3 +33,11 @@
 ## Conductor Web UI
 
 * https://github.com/maheshyaddanapudi/conductor-ng-ui - Angular based - Conductor Workflow Management UI
+
+## Conductor Persistence
+
+### Mongo Persistence
+
+* https://github.com/maheshyaddanapudi/conductor/tree/mongo_persistence - With option to use Mongo Database as persistence unit.
+  * Mongo Persistence / Option to use Mongo Database as persistence unit.
+  * Docker Compose example with MongoDB Container.
