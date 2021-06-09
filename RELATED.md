@@ -33,3 +33,11 @@
 ## Conductor Web UI
 
 * https://github.com/maheshyaddanapudi/conductor-ng-ui - Angular based - Conductor Workflow Management UI
+
+## Conductor Persistence
+
+### Oracle Persistence
+
+* https://github.com/maheshyaddanapudi/conductor/tree/oracle_persistence - With option to use Oracle Database as persistence unit.
+  * Oracle Persistence / Option to use Oracle Database as persistence unit : version > 12.2 - Tested well with 19C
+  * Docker Compose example with Oracle Container.
