@@ -258,6 +258,7 @@ public class WorkflowExecutor {
 			wf.setUpdateTime(null);
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
+			wf.setAttributes(exists.getAttributes());
 
 			if (StringUtils.isNotEmpty(exists.getTags())) {
 				Map<String, Map<String, Object>> inputMap = pu.getInputMap(null, wf, null, null);
@@ -884,6 +885,7 @@ public class WorkflowExecutor {
 				map.put("workflowVersion", workflow.getVersion());
 				map.put("workflowRestartCount", workflow.getRestartCount());
 				map.put("workflowRerunCount", workflow.getRerunCount());
+				map.put("attributes", workflow.getAttributes());
 				originalFailed = map;
 			}
 			workflow.getOutput().put("originalFailedTask", originalFailed);

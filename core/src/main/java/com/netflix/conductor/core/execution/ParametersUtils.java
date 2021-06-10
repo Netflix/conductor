@@ -114,6 +114,7 @@ public class ParametersUtils {
 		wf.put("tags", workflow.getTags());
 		wf.put("traceId", workflow.getTraceId());
 		wf.put("jobPriority", workflow.getJobPriority());
+		wf.put("attributes", workflow.getAttributes());
 
 		String correlationId = workflow.getCorrelationId();
 		if (StringUtils.isNotEmpty(correlationId) && correlationId.startsWith("{") && correlationId.endsWith("}")) {

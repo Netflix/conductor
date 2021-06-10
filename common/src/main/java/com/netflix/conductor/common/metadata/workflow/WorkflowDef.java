@@ -58,7 +58,10 @@ public class WorkflowDef extends Auditable {
 
 	private Integer sweepFrequency;
 
-    /**
+	private Map<String, Object> attributes = new HashMap<>();;
+
+
+	/**
 	 * @return the name
 	 */
 	public String getName() {
@@ -272,6 +275,15 @@ public class WorkflowDef extends Auditable {
 	 */
 	public void setSweepFrequency(Integer sweepFrequency) {
 		this.sweepFrequency = sweepFrequency;
+	}
+
+
+	public Map<String, Object> getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(Map<String, Object> attributes) {
+		this.attributes = attributes;
 	}
 
     public WorkflowTask getNextTask(String taskReferenceName){

@@ -1,3 +1,8 @@
+FROM java:8-jdk as builder
+WORKDIR /stage
+ADD . /stage
+RUN ./gradlew build -x test
+
 #
 # conductor:server - Netflix conductor server
 #
@@ -9,10 +14,10 @@ MAINTAINER Netflix OSS <conductor@netflix.com>
 RUN mkdir -p /app/config /app/logs /app/libs
 
 # Copy the project directly onto the image
-COPY ./docker/server/bin /app
-COPY ./docker/server/config /app/config
-COPY ./docker/server/lib/dd-java-agent-0.46.0.jar /app/libs
-COPY ./server/build/libs/conductor-server-*-all.jar /app/libs
+COPY --from=builder /stage/docker/server/bin /app
+COPY --from=builder /stage/docker/server/config /app/config
+COPY --from=builder /stage/docker/server/lib/dd-java-agent-0.46.0.jar /app/libs
+COPY --from=builder /stage/server/build/libs/conductor-server-*-all.jar /app/libs
 
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh

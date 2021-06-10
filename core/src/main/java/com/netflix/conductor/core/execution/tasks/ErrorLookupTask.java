@@ -21,6 +21,7 @@ public class ErrorLookupTask extends WorkflowSystemTask {
     private static final Logger logger = LoggerFactory.getLogger(GetConfig.class);
 
     final String NO_MAPPING = "No Detailed Message for this error was found.";
+    final String NO_MAPPING_ERROR_CODE = "COND-999";
     final String formattedErr = "{0}: {1}: Resolution: {2}";
 
     ErrorLookupDAO errorLookupDAO;
@@ -41,14 +42,18 @@ public class ErrorLookupTask extends WorkflowSystemTask {
         }
 
         String error = NO_MAPPING;
+        String errorCode = NO_MAPPING_ERROR_CODE;
         try{
-            Optional<ErrorLookup> errorLookup  = errorLookupDAO.getErrorMatching(workflow_name, lookupMessage).stream().findFirst();
-            if (errorLookup.isPresent()){
-                error = getFormattedError(errorLookup.get());
+            Optional<ErrorLookup> errorLookupOpt  = errorLookupDAO.getErrorMatching(workflow_name, lookupMessage).stream().findFirst();
+            if (errorLookupOpt.isPresent()){
+                ErrorLookup errorLookup = errorLookupOpt.get();
+                errorCode = errorLookup.getErrorCode();
+                error = getFormattedError(errorLookup);
             }
         }catch(Exception ex){
             error = "Error occured when trying to lookup the detailed message. " + ex.getMessage();
         }
+        task.getOutputData().put("errorCode", errorCode);
         task.getOutputData().put("error", error);
         task.setStatus(Task.Status.COMPLETED);
     }
