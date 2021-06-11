@@ -100,8 +100,8 @@ class FrinxConductorWrapper(ConductorWorker):
                 log.debug(self.timestamp() + ' Polled batch for ' + taskType + ':' + str(len(polled)))
                 for task in polled:
                     log.debug(self.timestamp() + ' Polled ' + taskType + ': ' + task['taskId'])
-                    if self.taskClient.ackTask(task['taskId'], self.worker_id):
-                        self.execute(task, exec_function)
+#                    if self.taskClient.ackTask(task['taskId'], self.worker_id):
+                    self.execute(task, exec_function)
 
     # Check if latest local copy of queues contains >0 number of tasks for current queue
     def tasksInQueue(self, taskType, domain=None):
@@ -160,3 +160,4 @@ class FrinxConductorWrapper(ConductorWorker):
 
 if __name__ == '__main__':
     main()
+
