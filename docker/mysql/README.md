@@ -6,7 +6,8 @@ By default, it will create a volume link from server log to your mysql/log
 log: `- ./logs:/app/logs`
 
 
-Problems?:
+# Problems?:
+
 Elasticsearch Container Stopped with Exit 78
 run `sudo sysctl -w vm.max_map_count = 262144` in terminal (Not docker)
 https://github.com/laradock/laradock/issues/1699
