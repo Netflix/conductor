@@ -1,9 +1,12 @@
-## Start with:
-docker-compose up
+# MYSQL docker compose
 
-By default, it will create a volume link from app/log to mysql/log (Check any fail to startup there)
+## Running the conductor server
+`docker-compose up`
 
-## Problems?:
+## Side note
+By default, it will create a volume link from `app/log` to `mysql/log` (Check for any startup failure)
+
+## Problems?
 
 ### Elasticsearch Container Stopped with Exit 78
 
