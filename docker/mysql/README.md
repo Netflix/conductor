@@ -1,7 +1,8 @@
 Start with:
 docker-compose up
 
-By default, it will create a volume link from server log to your mysql/log,
+By default, it will create a volume link from server log to your mysql/log
+
 log: `- ./logs:/app/logs`
 
 
