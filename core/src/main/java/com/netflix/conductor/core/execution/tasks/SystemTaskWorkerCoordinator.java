@@ -142,7 +142,7 @@ public class SystemTaskWorkerCoordinator {
 				logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
 				return;
 			}
-			
+
 			String name = systemTask.getName();
 			String lockQueue = name.toLowerCase() + ".lock";
 			List<String> polled = taskQueues.pop(name, pollCount, pollTimeout);
@@ -173,6 +173,7 @@ public class SystemTaskWorkerCoordinator {
 						}
 					});
 				}catch(RejectedExecutionException ree) {
+					taskQueues.unpop(name, task); //Unpop it back so other cluster instance might pick up it
 					logger.warn("Queue full for workers {}, taskId {}", workerQueue.size(), task);
 					MetricService.getInstance().systemWorkersQueueFull(name);
 				}

@@ -130,4 +130,9 @@ public interface QueueDAO {
 	public default boolean wakeup(String queueName, String id) {
 		throw new IllegalStateException("Not implemented");
 	}
+
+	public default void unpop(String queueName, String messageId)  {
+		throw new IllegalStateException("Not implemented");
+	}
+
 }
