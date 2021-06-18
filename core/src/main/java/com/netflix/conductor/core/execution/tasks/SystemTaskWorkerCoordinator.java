@@ -172,7 +172,7 @@ public class SystemTaskWorkerCoordinator {
 						}
 					});
 				}catch(RejectedExecutionException ree) {
-					taskQueues.unpop(name, task); //Unpop it back so other cluster instance might pick up it
+					taskQueues.unpop(name, task); //Unpop it back so other cluster instance might pick it up
 					logger.warn("Queue full for workers {}, taskId {}", workerQueue.size(), task);
 					MetricService.getInstance().systemWorkersQueueFull(name);
 				}
