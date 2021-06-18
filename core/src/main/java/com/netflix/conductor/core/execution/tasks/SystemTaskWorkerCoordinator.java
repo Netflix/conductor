@@ -142,7 +142,6 @@ public class SystemTaskWorkerCoordinator {
 				logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
 				return;
 			}
-
 			String name = systemTask.getName();
 			String lockQueue = name.toLowerCase() + ".lock";
 			List<String> polled = taskQueues.pop(name, pollCount, pollTimeout);
