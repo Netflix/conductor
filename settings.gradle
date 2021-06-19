@@ -41,7 +41,8 @@ include 'redis-persistence'
 include 'mysql-persistence'
 include 'postgres-persistence'
 
-include 'es6-persistence'
+//include 'es6-persistence'
+include 'es7-persistence'
 
 include 'redis-lock'
 include 'zookeeper-lock'
