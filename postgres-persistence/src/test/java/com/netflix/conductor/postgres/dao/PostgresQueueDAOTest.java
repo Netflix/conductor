@@ -18,7 +18,6 @@ import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.postgres.config.PostgresConfiguration;
 import com.netflix.conductor.postgres.util.Query;
-import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
 import org.junit.Before;
 import org.junit.Rule;
@@ -28,11 +27,13 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,8 +58,9 @@ public class PostgresQueueDAOTest {
     @Autowired
     private PostgresQueueDAO queueDAO;
 
+    @Qualifier("dataSource")
     @Autowired
-    private HikariDataSource dataSource;
+    private DataSource dataSource;
 
     @Autowired
     private ObjectMapper objectMapper;
