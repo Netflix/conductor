@@ -681,8 +681,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		//remove from the sweep queue
@@ -740,8 +739,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
@@ -818,8 +816,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		//remove from the sweep queue
@@ -908,8 +905,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		// Handle task timeout
