@@ -43,8 +43,7 @@ subprojects {
 apply from: "$rootDir/dependencies.gradle"
 
 // change the ES version used by Spring Boot Dependency Management plugin
-//ext['elasticsearch.version'] = revElasticSearch6
-ext['elasticsearch.version'] = revElasticSearch7
+ext['elasticsearch.version'] = revElasticSearch6
 
 allprojects {
     apply plugin: 'nebula.netflixoss'
