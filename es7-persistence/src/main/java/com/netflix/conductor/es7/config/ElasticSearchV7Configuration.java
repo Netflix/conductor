@@ -20,13 +20,8 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -34,10 +29,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
-import java.net.InetAddress;
 import java.net.URL;
 import java.util.List;
-import java.util.Optional;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ElasticSearchProperties.class)
@@ -45,32 +38,6 @@ import java.util.Optional;
 public class ElasticSearchV7Configuration {
 
     private static final Logger log = LoggerFactory.getLogger(ElasticSearchV7Configuration.class);
-
-    @Bean
-    public Client client(ElasticSearchProperties properties) {
-        Settings settings = Settings.builder()
-                .put("client.transport.ignore_cluster_name", true)
-                .put("client.transport.sniff", true)
-                .build();
-
-        TransportClient transportClient = new PreBuiltTransportClient(settings);
-
-        List<URL> clusterAddresses = properties.toURLs();
-
-        if (clusterAddresses.isEmpty()) {
-            log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
-        }
-        for (URL hostAddress : clusterAddresses) {
-            int port = Optional.ofNullable(hostAddress.getPort()).orElse(9200);
-            try {
-                transportClient
-                        .addTransportAddress(new TransportAddress(InetAddress.getByName(hostAddress.getHost()), port));
-            } catch (Exception e) {
-                throw new RuntimeException("Invalid host" + hostAddress.getHost(), e);
-            }
-        }
-        return transportClient;
-    }
 
     @Bean
     public RestClient restClient(ElasticSearchProperties properties) {
