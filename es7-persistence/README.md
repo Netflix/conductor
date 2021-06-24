@@ -58,6 +58,8 @@ In file:
 
 change conductor.elasticsearch.version from 6 to 7
 change DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("6.8.12") to DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("7.10.1")
+change restClient.performRequest("GET", "/_cat/indices") to restClient.performRequest(new Request("GET", "/_cat/indices"))
+change restClient.performRequest("DELETE", endpoint) to restClient.performRequest(new Request("DELETE", endpoint))
 
 Also you need to recreate dependencies.lock files with ES7 dependencies. To do that delete all dependencies.lock files and then run: 
 
