@@ -20,6 +20,9 @@ In order to use the ES7, you must change the following files from ES6 to ES7:
 https://github.com/Netflix/conductor/blob/master/server/build.gradle
 https://github.com/Netflix/conductor/blob/master/settings.gradle
 https://github.com/Netflix/conductor/blob/master/test-harness/build.gradle
+https://github.com/Netflix/conductor/blob/master/build.gradle
+https://github.com/Netflix/conductor/blob/main/server/src/main/resources/application.properties
+https://github.com/Netflix/conductor/blob/main/test-harness/src/test/java/com/netflix/conductor/test/integration/AbstractEndToEndTest.java
 
 In files:
 - /server/build.gradle
@@ -34,6 +37,27 @@ In file:
 
 change org.elasticsearch:elasticsearch:${revElasticSearch6} dependency version from ${revElasticSearch6} to ${revElasticSearch7}
 
+
+In file:
+ 
+- /build.gradle
+
+change ext['elasticsearch.version'] from revElasticSearch6 to revElasticSearch7
+
+
+In file:
+ 
+- /main/server/src/main/resources/application.properties
+
+change conductor.elasticsearch.version from 6 to 7
+
+
+In file:
+ 
+- /main/test-harness/src/test/java/com/netflix/conductor/test/integration/AbstractEndToEndTest.java
+
+change conductor.elasticsearch.version from 6 to 7
+change DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("6.8.12") to DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("7.10.1")
 
 Also you need to recreate dependencies.lock files with ES7 dependencies. To do that delete all dependencies.lock files and then run: 
 
