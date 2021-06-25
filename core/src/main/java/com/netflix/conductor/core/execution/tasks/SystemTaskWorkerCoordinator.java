@@ -142,10 +142,19 @@ public class SystemTaskWorkerCoordinator {
 				logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
 				return;
 			}
-			
+
+			// Returns the number of additional elements that this queue can ideally
+			// (in the absence of memory or resource constraints) accept without blocking.
+			// This is always equal to the initial capacity of this queue less the current size of this queue.
+			int remainingCapacity = workerQueue.remainingCapacity();
+
+			// Grab either remaining worker's queue capacity or the poll count per configuration
+			// In the high load, it basically picks only what can process
+			int effectivePollCount = Math.min(remainingCapacity, pollCount);
+
 			String name = systemTask.getName();
 			String lockQueue = name.toLowerCase() + ".lock";
-			List<String> polled = taskQueues.pop(name, pollCount, pollTimeout);
+			List<String> polled = taskQueues.pop(name, effectivePollCount, pollTimeout);
 			if (CollectionUtils.isNotEmpty(polled)) {
 				MetricService.getInstance().taskPoll(name, workerId, polled.size());
 			}
@@ -173,6 +182,7 @@ public class SystemTaskWorkerCoordinator {
 						}
 					});
 				}catch(RejectedExecutionException ree) {
+					taskQueues.unpop(name, task); //Unpop it back so other cluster instance might pick it up
 					logger.warn("Queue full for workers {}, taskId {}", workerQueue.size(), task);
 					MetricService.getInstance().systemWorkersQueueFull(name);
 				}

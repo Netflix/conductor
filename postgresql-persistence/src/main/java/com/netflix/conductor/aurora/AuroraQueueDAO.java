@@ -143,6 +143,17 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
+	public void unpop(String queueName, String messageId)  {
+		final String UPDATE = "UPDATE queue_message " +
+				"SET popped = false, unack_on = null, unacked = false, version = version + 1 " +
+				"WHERE queue_name = ? AND message_id = ?";
+
+		executeWithTransaction(UPDATE, q -> q.addParameter(queueName.toLowerCase())
+				.addParameter(messageId)
+				.executeUpdate());
+	}
+
+	@Override
 	public boolean setUnackTimeout(String queueName, String messageId, long unackTimeout) {
 		long unack_on = System.currentTimeMillis() + unackTimeout; // now + timeout
 
