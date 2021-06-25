@@ -646,6 +646,7 @@ public class WorkflowExecutor {
 		workflow.setOutput(wf.getOutput());
 		edao.updateWorkflow(workflow);
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// If the following task, for some reason fails, the sweep will take
 		// care of this again!
@@ -686,6 +687,7 @@ public class WorkflowExecutor {
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflowId);
+		queue.remove(sweeperQueue, workflowId);
 
 		// metrics
 		MetricService.getInstance().workflowForceComplete(workflow.getWorkflowType());
@@ -781,6 +783,7 @@ public class WorkflowExecutor {
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflowId);
+		queue.remove(sweeperQueue, workflowId);
 
 		// metrics
 		MetricService.getInstance().workflowCancel(workflow.getWorkflowType());
@@ -821,6 +824,7 @@ public class WorkflowExecutor {
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflow.getWorkflowId());
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// metrics
 		MetricService.getInstance().workflowReset(workflow.getWorkflowType());
@@ -901,6 +905,7 @@ public class WorkflowExecutor {
 
 		logger.debug("Removing decider record for " + workflow.getWorkflowId());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
@@ -1042,6 +1047,7 @@ public class WorkflowExecutor {
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
 			queue.remove(deciderQueue, wf.getWorkflowId());	//remove from the sweep queue
+			queue.remove(sweeperQueue, wf.getWorkflowId());
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			if(!task.getStatus().isTerminal()) {
 				task.setStatus(Status.COMPLETED);
