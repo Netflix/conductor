@@ -190,6 +190,8 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
 
         logger.trace("processAllUnacks started");
 
+		// Get queue_name and message_id because those are in an index so using both increases performance
+		
         getWithRetriedTransactions(tx -> {
             String LOCK_TASKS = "SELECT queue_name, message_id FROM queue_message WHERE popped = true AND (deliver_on + (60 ||' seconds')::interval)  <  current_timestamp limit 1000 FOR UPDATE SKIP LOCKED";
 
