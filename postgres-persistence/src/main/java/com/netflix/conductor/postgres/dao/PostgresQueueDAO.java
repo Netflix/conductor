@@ -339,4 +339,9 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
             execute(connection, CREATE_QUEUE, q -> q.addParameter(queueName).executeUpdate());
         }
     }
+    
+    private class QueueMessage {
+    	public String queueName;
+    	public String messageId;
+    }
 }
