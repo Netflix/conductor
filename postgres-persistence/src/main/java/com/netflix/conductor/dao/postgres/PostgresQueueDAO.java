@@ -214,7 +214,6 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
             	queueMessageMap.get(qm.queueName).add(qm.messageId);
             }
             
-			long start = System.currentTimeMillis();            
 			int totalUnacked = 0;
             for(String queueName : queueMessageMap.keySet()) {
     			Integer unacked = 0;;
