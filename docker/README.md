@@ -22,12 +22,14 @@ Running the images:
  - `docker run -p 8080:8080 -d -t conductor:server`
  - `docker run -p 5000:5000 -d -t conductor:ui` (requires elasticsearch running locally)
 
-Using compose:
-`docker-compose up`
+Using compose (with Dynomite):
+`docker-compose -f docker-compose.yaml -f docker-compose-dynomite.yaml up`
+
+Using compose (with Postgres):
+`docker-compose -f docker-compose.yaml -f docker-compose-postgres.yaml up`
 
 ## Exiting Compose
 `ctrl+c` will exit docker compose.
-
 
 To ensure images are stopped do:
  - `docker-compose down`
@@ -51,7 +53,7 @@ Go to [http://127.0.0.1:9090](http://127.0.0.1:9090).
 
 Elasticsearch timeout
 Standalone(single node) elasticsearch has a yellow status which will cause timeout for conductor server(Required: Green).
-Spin up a cluster(More than one) to prevent timeout or edit the local code(check the issue tagged for more)
+Spin up a cluster(More than once) to prevent timeout or edit the local code(check the issue tagged for more)
 Check issue: https://github.com/Netflix/conductor/issues/2262
 
 Changes does not reflect after changes in config.properties
