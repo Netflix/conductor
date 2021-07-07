@@ -236,10 +236,6 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
 			if (totalUnacked > 0) {
                 logger.debug("Unacked {} messages from all queues", totalUnacked);
             }
-			long elapsed = System.currentTimeMillis() - start;
-			if(elapsed > 5000) {
-				logger.error("***************** " + (start % 2 == 0 ? "IN " : "ANY ") + "processAllUnacks found " + messages.size() + " messages to unack, unacked " + totalUnacked + " messages in " + elapsed + " milliseconds");
-			}
             return totalUnacked;
         });
     }
