@@ -246,35 +246,8 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
 
     @Override
     public void processUnacks(String queueName) {
-        getWithRetriedTransactions(tx -> {
-            String LOCK_TASKS = "SELECT message_id FROM queue_message WHERE queue_name = ? AND popped = true AND (deliver_on + (60 ||' seconds')::interval)  <  current_timestamp FOR UPDATE SKIP LOCKED";
-
-            List<String> messages = query(tx, LOCK_TASKS, p -> p.executeAndFetch(rs -> {
-            	List<String> results = new ArrayList<String>();
-                while (rs.next()) {
-                    results.add(rs.getString("message_id"));
-                }
-                return results;
-            }));
-
-            if (messages.size() == 0) {
-                return 0;
-            }
-
-			Integer unacked = 0;;
-			try {            
-		        final String UPDATE_POPPED = String.format(
-		        		"UPDATE queue_message SET popped = false WHERE queue_name = ? and message_id IN (%s)",
-		                Query.generateInBindings(messages.size()));
-
-				unacked = query(tx, UPDATE_POPPED, q -> q.addParameter(queueName)
-    					.addParameters(messages).executeUpdate());
-			} catch(Exception e) {
-				logger.error("While processing unacks", e);
-			}            
-            logger.debug("Unacked {} messages from all queues", unacked);
-            return unacked;
-        });
+        final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND (current_timestamp - (60 ||' seconds')::interval)  > deliver_on";
+        executeWithTransaction(PROCESS_UNACKS, q -> q.addParameter(queueName).executeUpdate());
     }
 
     @Override
