@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
+import com.netflix.conductor.postgres.util.Query;
 
 public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
 
