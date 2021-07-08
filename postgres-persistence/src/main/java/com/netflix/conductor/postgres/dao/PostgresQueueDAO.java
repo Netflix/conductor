@@ -216,7 +216,6 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
             	queueMessageMap.get(qm.queueName).add(qm.messageId);
             }
             
-			long start = System.currentTimeMillis();            
 			int totalUnacked = 0;
             for(String queueName : queueMessageMap.keySet()) {
     			Integer unacked = 0;;
@@ -238,45 +237,14 @@ public class PostgresQueueDAO extends PostgresBaseDAO implements QueueDAO {
 			if (totalUnacked > 0) {
                 logger.debug("Unacked {} messages from all queues", totalUnacked);
             }
-			long elapsed = System.currentTimeMillis() - start;
-			if(elapsed > 5000) {
-				logger.error("***************** " + (start % 2 == 0 ? "IN " : "ANY ") + "processAllUnacks found " + messages.size() + " messages to unack, unacked " + totalUnacked + " messages in " + elapsed + " milliseconds");
-			}
             return totalUnacked;
         });
     }
 
     @Override
     public void processUnacks(String queueName) {
-        getWithRetriedTransactions(tx -> {
-            String LOCK_TASKS = "SELECT message_id FROM queue_message WHERE queue_name = ? AND popped = true AND (deliver_on + (60 ||' seconds')::interval)  <  current_timestamp limit 1000 FOR UPDATE SKIP LOCKED";
-
-            List<String> messages = query(tx, LOCK_TASKS, p -> p.executeAndFetch(rs -> {
-            	List<String> results = new ArrayList<String>();
-                while (rs.next()) {
-                    results.add(rs.getString("message_id"));
-                }
-                return results;
-            }));
-
-            if (messages.size() == 0) {
-                return 0;
-            }
-
-			Integer unacked = 0;;
-			try {            
-		        final String UPDATE_POPPED = String.format(
-		        		"UPDATE queue_message SET popped = false WHERE queue_name = ? and message_id IN (%s)",
-		                Query.generateInBindings(messages.size()));
-
-				unacked = query(tx, UPDATE_POPPED, q -> q.addParameter(queueName)
-    					.addParameters(messages).executeUpdate());
-			} catch(Exception e) {
-				logger.error("While processing unacks", e);
-			}            
-            logger.debug("Unacked {} messages from all queues", unacked);
-            return unacked;
-        });
+        final String PROCESS_UNACKS = "UPDATE queue_message SET popped = false WHERE queue_name = ? AND popped = true AND (current_timestamp - (60 ||' seconds')::interval)  > deliver_on";
+        executeWithTransaction(PROCESS_UNACKS, q -> q.addParameter(queueName).executeUpdate());
     }
 
     @Override

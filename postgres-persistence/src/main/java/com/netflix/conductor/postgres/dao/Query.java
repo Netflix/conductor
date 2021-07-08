@@ -14,8 +14,8 @@ package com.netflix.conductor.dao.postgres;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.core.execution.ApplicationException;
-import com.netflix.conductor.postgres.sql.ResultSetHandler;
+import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.postgres.util.ResultSetHandler;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
