@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.netflix.conductor.core.execution.ApplicationException.Code;
+import static com.netflix.conductor.core.exception.ApplicationException.Code;
 
 /**
  * Represents a {@link PreparedStatement} that is wrapped with convenience methods and utilities.
