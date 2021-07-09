@@ -1203,6 +1203,7 @@ public class WorkflowExecutor {
 	 * @throws Exception If there was an error - caller should retry in this case.
 	 */
 	public Pair<Boolean, Integer> decide(String workflowId) throws Exception {
+		logger.debug("Invoked decide for workflow " + workflowId);
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
 			return Pair.of(false, config.getSweepFrequency());
