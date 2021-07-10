@@ -6,7 +6,6 @@ Conductor maintains a registry of worker tasks.  A task MUST be registered befor
 {
   "name": "encode_task",
   "retryCount": 3,
-  
   "timeoutSeconds": 1200,
   "pollTimeoutSeconds": 3600,
   "inputKeys": [

@@ -20,6 +20,7 @@ Workflows are defined using a JSON based DSL.
       "name": "deploy",
       "taskReferenceName": "d1",
       "type": "SIMPLE",
+      "retryIfJqIsTrue": "if .subkey == 4 then true else false end",
       "inputParameters": {
         "fileLocation": "${encode.output.encodeLocation}"
       }
@@ -60,6 +61,7 @@ Workflows are defined using a JSON based DSL.
 |optional|true  or false.  When set to true - workflow continues even if the task fails.  The status of the task is reflected as `COMPLETED_WITH_ERRORS`|Defaults to `false`|
 |inputParameters|JSON template that defines the input given to the task|See [Wiring Inputs and Outputs](#wiring-inputs-and-outputs) for details|
 |domain|See [Task Domains](/conductor/configuration/taskdomains) for more information.|optional|
+|retryIfJqIsTrue|If present, jq query evaluated on the output of the task. If the result of the jq query evaluation is "true", then the task will be set for a retry if its retryCount is not exhausted yet. This allows to better control if a task should be retried given the context of the workflow it's running in. | optional, defaults to `null` |
 
 In addition to these parameters, System Tasks have their own parameters. Checkout [System Tasks](/conductor/configuration/systask/) for more information.
 
