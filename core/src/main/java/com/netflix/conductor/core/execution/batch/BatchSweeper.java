@@ -122,6 +122,10 @@ public class BatchSweeper {
                 Workflow workflow = workflowExecutor.getWorkflow(task.getWorkflowInstanceId(), false);
                 workflow.getAttributes().put(attribute, lastStartTime);
                 execDao.updateWorkflow(workflow);
+                logger.debug("Set last start time attribute for " + attribute
+                        + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
+                        + ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
+                        + ",clientId=" + workflow.getClientId());
                 queues.remove(queueName, task.getTaskId());
             });
         } catch (Exception ex) {
