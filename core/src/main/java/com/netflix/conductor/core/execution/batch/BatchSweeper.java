@@ -101,7 +101,7 @@ public class BatchSweeper {
         // Requeue task back if the task was rate limited
         int unackTimeout = config.getIntProperty("workflow.batch." + name + ".unack.timeout", 30_000);
 
-        NDC.push("batch-" + name + "-" + UUID.randomUUID().toString());
+        NDC.push("batch-" + name + "-" + UUID.randomUUID());
         try {
             String workerId = InetAddress.getLocalHost().getHostName();
             String queueName = QueueUtils.getQueueName("batch." + name, null);
@@ -120,8 +120,7 @@ public class BatchSweeper {
                 String jobId = getJobId(task);
                 String attribute = task.getReferenceTaskName() + "-jobId-" + jobId;
                 Workflow workflow = workflowExecutor.getWorkflow(task.getWorkflowInstanceId(), false);
-                workflow.getAttributes().put(attribute, lastStartTime);
-                execDao.updateWorkflow(workflow);
+                execDao.setWorkflowAttribute(workflow.getWorkflowId(), attribute, lastStartTime);
                 logger.debug("Set last start time attribute for " + attribute
                         + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
                         + ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
