@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "netflix-conductor.name" . }}-server
+  labels:
+    app: {{ include "netflix-conductor.name" . }}-server
+    chart: {{ include "netflix-conductor.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: server
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "netflix-conductor.name" . }}
+      release: {{ .Release.Name }}
+      component: server
+  template:
+    metadata:
+      labels:
+        app: {{ include "netflix-conductor.name" . }}
+        release: {{ .Release.Name }}
+        chart: {{ include "netflix-conductor.chart" . }}
+        heritage: {{ .Release.Service }}
+        component: server
+{{- if .Values.server.podLabels }}
+{{ toYaml .Values.server.podLabels | indent 8 }}
+{{- end }}
+{{- if .Values.server.podAnnotations }}
+      annotations:
+{{ toYaml .Values.server.podAnnotations | indent 8 }}
+{{- end }}
+    spec:
+      # without printf, the following if will print its value on same line as 'spec:'
+      {{ printf "" }}
+      {{- if .Values.serviceAccount.create -}}
+      serviceAccountName: {{  .Values.serviceAccount.name }}
+      {{- end }}
+      {{- if .Values.server.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.server.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.server.affinity }}
+      affinity:
+{{ toYaml .Values.server.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.server.tolerations }}
+      tolerations:
+{{ toYaml .Values.server.tolerations | indent 8 }}
+    {{- end }}
+      {{- if .Values.server.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.server.image.pullSecret }}
+      {{- end }}
+      restartPolicy: Always
+      containers:
+        - name: {{ include "netflix-conductor.name" . }}-server
+          image: "kayosportsau/netflixconductor:{{ .Values.server.tag }}"
+          imagePullPolicy: {{ .Values.server.pullPolicy }}
+          command:
+             - /bin/sh
+             - -c
+             - >
+               ln -sf /usr/share/zoneinfo/Australia/Sydney /etc/localtime &&
+               cd /app/libs/ &&
+               java  -javaagent:/newrelic/newrelic.jar {{ .Values.server.jvmStartupOpts }} -jar conductor-server-*-all.jar /app/config/conductor-config.properties /app/config/log4j.properties {{ .Values.server.appStartupOpts }}
+          env:
+{{- range $pkey, $pval := .Values.server.env }}
+            - name: {{ $pkey }}
+              value: "{{ $pval }}"
+{{- end }}
+            - name: NEW_RELIC_APP_NAME
+              value: {{ include "netflix-conductor.name" . }}-server
+            - name: NEW_RELIC_LICENSE_KEY
+              value: {{ .Values.server.newrelic.licenseKey }}
+            - name: NEW_RELIC_AGENT_ENABLED
+              value: {{ .Values.server.newrelic.enabled | quote }}
+            - name: NEW_RELIC_DISTRIBUTED_TRACING_ENABLED
+              value: {{ .Values.server.newrelic.tracing.enabled | quote }}
+{{- if .Values.server.databaseSecrets }}
+            - name: jdbc_username
+              valueFrom:
+                secretKeyRef:
+                  key: {{ .Values.server.databaseSecrets.username | quote}}
+                  name: {{ .Values.server.databaseSecrets.secretname | quote}}
+            - name: jdbc_password
+              valueFrom:
+                secretKeyRef:
+                  key: {{ .Values.server.databaseSecrets.password | quote}}
+                  name: {{ .Values.server.databaseSecrets.secretname | quote}}
+{{- end }}
+          ports:
+            - name: server
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 210
+            httpGet:
+              path: {{ .Values.server.probePath }}
+              port: server
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.server.probePath }}
+              port: server
+            initialDelaySeconds: 120
+            periodSeconds: 10
+          resources:
+{{ toYaml .Values.server.resources | indent 12 }}
+          volumeMounts:
+            - name: conductor-server-config
+              mountPath: /app/config/conductor-config.properties
+              subPath: conductor-config.properties
+            - name: log4j-config
+              mountPath: /app/config/log4j.properties
+              subPath: log4j.properties
+{{- if .Values.server.extraVolumeMounts }}
+{{ toYaml .Values.server.extraVolumeMounts | indent 12 }}
+{{- end }}
+      volumes:
+        - name: conductor-server-config
+          configMap:
+            name: {{ template "netflix-conductor.name" . }}-config
+            items:
+            - key: conductor-config.properties
+              path: conductor-config.properties
+            defaultMode: 0644
+        - name: log4j-config
+          configMap:
+            name: {{ template "netflix-conductor.name" . }}-config
+            items:
+            - key: log4j.properties
+              path: log4j.properties
+            defaultMode: 0644
+{{- if .Values.server.extraVolumes }}
+{{ toYaml .Values.server.extraVolumes | indent 8 }}
+{{- end }}

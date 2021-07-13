@@ -1,0 +1,27 @@
+# !! File must end with empty line !!
+dependencies:
+- alias: expose
+  name: exposecontroller
+  repository: https://artifactory.cluster.foxsports-gitops-prod.com.au/artifactory/helm/
+  version: 2.3.112
+- alias: cleanup
+  name: exposecontroller
+  repository: https://artifactory.cluster.foxsports-gitops-prod.com.au/artifactory/helm/
+  version: 2.3.112
+
+- name: elasticsearch
+  repository: https://helm.elastic.co
+  version: 6.8.13
+  condition: elasticsearch.enabled
+
+- name: mysql
+  version: 1.6.9
+  repository: https://charts.helm.sh/stable
+  condition: mysql.enabled
+
+- alias: netflix-conductor
+  name: netflix-conductor
+  version: 0.4.12
+  repository: file://../netflix-conductor
+
+

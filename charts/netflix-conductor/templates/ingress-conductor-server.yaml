@@ -1,0 +1,31 @@
+{{- if .Values.ingress.server.enabled -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "netflix-conductor.name" . }}-server
+  labels:
+    app: {{ include "netflix-conductor.name" . }}
+    chart: {{ include "netflix-conductor.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: server
+  annotations:
+  {{- range $key, $value := .Values.ingress.server.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+spec:
+{{- if .Values.ingress.server.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.server.host }}
+      secretName: {{ .Values.ingress.server.tls.secretName }}
+{{- end }}
+  rules:
+    - http:
+        paths:
+          - path: {{ .Values.ingress.server.path }}
+            backend:
+              serviceName: {{ template "netflix-conductor.name" . }}-server
+              servicePort: server
+      host: {{ .Values.ingress.server.host }}
+{{- end }}

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "netflix-conductor.name" . }}-server
+  labels:
+    app: {{ include "netflix-conductor.name" . }}
+    chart: {{ include "netflix-conductor.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.server.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.server.ingress.annotations | indent 4 }}
+{{- end }}
+
+spec:
+  type: {{ .Values.server.service.type }}
+  ports:
+    - name: server
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+  selector:
+    app: {{ include "netflix-conductor.name" . }}
+    release: {{ .Release.Name }}
+    component: server

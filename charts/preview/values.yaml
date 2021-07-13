@@ -1,0 +1,147 @@
+expose:
+  Annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: hook-succeeded
+  config:
+    exposer: Ingress
+    http: true
+    tlsacme: false
+
+cleanup:
+  Args:
+    - --cleanup
+  Annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: hook-succeeded
+
+netflix-conductor:
+  image:
+    preview_repository:
+    preview_tag: 
+    pullPolicy: IfNotPresent
+  redis_host: preview-redis-master
+  elasticsearch_host: elasticsearch
+
+  nameOverride: "conductor"
+  fullnameOverride: "netflix-conductor"
+
+  server:
+    loadSamples: true
+#    podAnnotations:
+#     iam.amazonaws.com/role: conductor-role
+    replicaCount: 1
+    ingress:
+      annotations:
+        fabric8.io/expose: "true"
+        fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+    image:
+      preview_repository_server:
+      preview_tag_server:
+      pullPolicy: IfNotPresent
+    newrelic:
+      enabled: true
+      tracing:
+        enabled: false
+      licenseKey: "70e37aaa633e349320a9c1107d5daca497fc4791"
+    resources:
+      limits:
+        # We'r setting Xms = Xmx anyway, whichever the amount we know conductor will be comfortable with.
+        memory: 4.5Gi
+      requests:
+        cpu: 4
+        memory: 4.5Gi
+    env:
+      workflow_elasticsearch_instanceType: "external"
+      workflow_elasticsearch_url: "http://elasticsearch:9200"
+      workflow_elasticsearch_cluster_health_color: "yellow"
+      workflow_elasticsearch_index_shard_count: 1
+      db: "mysql"
+      conductor_mysql_connection_pool_idle_min: "7"
+      conductor_mysql_connection_pool_size_max: "10"
+      jdbc_username: "conductor"
+      jdbc_password: "ConductorMysqlPassword"
+      jdbc_url: "jdbc:mysql://preview-mysql:3306/conductor?useSSL=false&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Australia/Sydney"
+  ui:
+    ingress:
+      annotations:
+        fabric8.io/expose: "true"
+        fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+    serverUrl: "http://conductor-server/api/"
+
+    image:
+      preview_repository_ui:
+      preview_tag_ui:
+      pullPolicy: IfNotPresent
+
+    resources:
+      limits:
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 200Mi
+
+  # Not needed for preview but commented as a reminder to fix preview ingress
+
+  # ingress:
+  #   server:
+  #     enabled: false
+  #     host: "server.conductor.dev.cluster.foxsports-gitops-prod.com.au"
+  #   ui:
+  #     enabled: false
+  #     host: "ui.conductor.dev.cluster.foxsports-gitops-prod.com.au"
+
+  redis:
+    enabled: false
+
+  mysql:
+    enabled: true
+    host: preview-mysql
+    username: conductor
+    password: ConductorMysqlPassword
+    dbName: conductor
+
+# Add the following and change enabled to true if external es required
+elasticsearch:
+  image: "docker.elastic.co/elasticsearch/elasticsearch"
+  imageTag: "6.8.1"
+  replicas: 1
+  minimumMasterNodes: 1
+  nameOverride: elasticsearch
+  fullnameOverride: elasticsearch
+  antiAffinity: "soft"
+  persistence:
+    enabled: false
+  extraEnvs:
+    - name: xpack.security.enabled
+      value: "false"
+  clusterHealthCheckParams: "wait_for_status=green&timeout=10s"
+  enabled: true
+  indexName: "conductor"
+  master:
+    persistence:
+      enabled: false
+
+# Add the following and change enabled to true if external redis required
+redis:
+  enabled: false
+
+# # Add the following and change enabled to true if external mysql required
+mysql:
+  enabled: true
+  mysqlRootPassword: pass
+  mysqlUser: conductor
+  mysqlPassword: ConductorMysqlPassword
+  username: conductor
+  password: ConductorMysqlPassword
+  mysqlDatabase: conductor
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 2000m
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types
+  service:
+    annotations:
+      fabric8.io/expose: "true"
+      fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+    type: ClusterIP
+    port: 3306

@@ -1,0 +1,132 @@
+# Default values for netflix-conductor.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: "conductor"
+fullnameOverride: "netflix-conductor"
+
+server:
+  repository: kayosportsau/netflixconductor
+  tag: server-2019.0.3
+  pullPolicy: IfNotPresent
+  replicaCount: 2
+  # nodeSelector: {}
+  # tolerations: []
+  # affinity: {}
+  image:
+    pullSecret:
+  # extraVolumeMounts: []
+  # extraVolumes: []
+  resources:
+    requests:
+      memory: "2500Mi"
+      cpu: "250m"
+  service:
+    type: ClusterIP
+  probePath: /api/health
+  ingress:
+    annotations:
+      fabric8.io/expose: "true"
+      fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+  jvmStartupOpts: "  -Xms2g -Xmx2g  -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+  appStartupOpts: ""
+  loadSamples: false
+  newrelic:
+    enabled: true
+    licenseKey: "c3a6b94918f96d44af11c628b52630d59f5ad20c"
+    tracing:
+      enabled: false
+  env:
+    workflow_task_pending_time_threshold_minutes: 480
+    workflow_elasticsearch_instanceType: "external"
+    workflow_elasticsearch_url: "https://vpc-conductor-elasticsearch-stg-d2ivhx73ka55yzcbdbcrvk4vea.ap-southeast-2.es.amazonaws.com:443"
+    db: "mysql"
+    conductor_mysql_connection_pool_idle_min: "7"
+    conductor_mysql_connection_pool_size_max: "10"
+    workflow_elasticsearch_index_name: "conductor"
+    conductor_jetty_server_enabled: "true"
+    conductor_grpc_server_enabled: "false"
+    EC2_AVAILABILITY_ZONE: "ap-southeast-2"
+    workflow_namespace_prefix: "conductor"
+    flyway_enabled: "true"
+    #Add database secrets here.
+    #databaseSecrets:
+    #  secretname: secret_name
+    #  username: secret_key_username
+    #  password: secret_key_password
+
+# EKS clusters, built since Jan2021 do not use KIAM, rather IRSA
+# https://aws.amazon.com/blogs/opensource/introducing-fine-grained-iam-roles-service-accounts/
+# You must already have the matching AWS IAM role deployed, normally done by
+# sceptre/cloudformation
+serviceAccount:
+  create: false
+  name: ""
+#   annotations:
+#     eks.amazonaws.com/role-arn: arn:aws:iam::<account>:role/<clustername>-eks-aws-<microservicename>-iam-role
+#   name: <clustername>-eks-aws-<microservicename>-iam-role
+
+# EKS Clusters built after Jan2021 do not use KIAM, and will just ignore
+# the following pod annotation: iam.amazonaws.com/role
+
+ui:
+  repository: kayosportsau/netflixconductor
+  tag: ui-2019.0.3
+  pullPolicy: IfNotPresent
+  serverUrl: "http://conductor-server/api/"
+  replicaCount: 1
+  # nodeSelector: {}
+  # tolerations: []
+  # affinity: {}
+  image:
+    pullSecret:
+  resources: {}
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+  service:
+    type: ClusterIP
+  ingress:
+    annotations:
+      fabric8.io/expose: "true"
+      fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
+
+ingress:
+  server:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls:
+      enabled: false
+      secretName:
+    host: ""
+    path: /
+  ui:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    tls:
+      enabled: false
+      secretName:
+    host: ""
+    path: /
+
+elasticsearch:
+  enabled: false
+  indexName: "conductor"
+
+maxConnsPerHost: 31
+
+redis:
+  enabled: false
+  host: ""
+  port: 6379
+
+mysql:
+  enabled: false
+  # https://docs.amazonaws.cn/en_us/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Managing.Performance.html
+  connectionPoolMaxSize: 50
+  connectionPoolMinIdle: 20

@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "netflix-conductor.name" . }}-ui
+  labels:
+    app: {{ include "netflix-conductor.name" . }}-ui
+    chart: {{ include "netflix-conductor.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: ui
+spec:
+  replicas: {{ .Values.ui.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "netflix-conductor.name" . }}
+      release: {{ .Release.Name }}
+      component: ui
+  template:
+    metadata:
+      labels:
+        app: {{ include "netflix-conductor.name" . }}
+        chart: {{ include "netflix-conductor.chart" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+        component: ui
+    spec:
+{{- if .Values.ui.podLabels }}
+{{ toYaml .Values.ui.podLabels | indent 8 }}
+{{- end }}
+{{- if .Values.ui.podAnnotations }}
+      annotations:
+{{ toYaml .Values.ui.podAnnotations | indent 8 }}
+{{- end }}
+    spec:
+      {{- if .Values.ui.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.ui.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.ui.affinity }}
+      affinity:
+{{ toYaml .Values.ui.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.ui.tolerations }}
+      tolerations:
+{{ toYaml .Values.ui.tolerations | indent 8 }}
+    {{- end }}
+      {{- if .Values.ui.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.ui.image.pullSecret }}
+      {{- end }}
+      restartPolicy: Always
+      containers:
+        - name: {{ include "netflix-conductor.name" . }}-ui
+          image: "{{ .Values.ui.repository }}:{{ .Values.ui.tag }}"
+          imagePullPolicy: {{ .Values.ui.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - >
+              apk add tzdata &&
+              ln -sf /usr/share/zoneinfo/Australia/Sydney /etc/localtime &&
+              /app/startup.sh
+          env:
+            - name: WF_SERVER
+              value: "{{ .Values.ui.serverUrl }}"
+          ports:
+            - name: ui
+              protocol: TCP
+              containerPort: 5000
+          livenessProbe:
+            initialDelaySeconds: 60
+            httpGet:
+              path: /
+              port: ui
+          readinessProbe:
+            httpGet:
+              path: /
+              port: ui
+          resources:
+{{ toYaml .Values.ui.resources | indent 12 }}
