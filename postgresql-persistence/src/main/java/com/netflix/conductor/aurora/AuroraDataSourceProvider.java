@@ -10,13 +10,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
-	private Configuration config;
+	private final Configuration config;
 
 	@Inject
 	public AuroraDataSourceProvider(Configuration config) {
 		this.config = config;
 	}
-
 
 	@Override
 	public HikariDataSource get() {
@@ -40,8 +39,8 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 		poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 		poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 		poolConfig.setMaximumPoolSize(config.getIntProperty("aurora.core.pool.size", 10));
-		poolConfig.setConnectionTimeout(config.getIntProperty("aurora.core.connect.timeout", 30) * 1000);
-		poolConfig.setLeakDetectionThreshold(config.getIntProperty("aurora.core.leakDetection.timeout", 0) * 1000);
+		poolConfig.setConnectionTimeout(config.getIntProperty("aurora.core.connect.timeout", 30) * 1000L);
+		poolConfig.setLeakDetectionThreshold(config.getIntProperty("aurora.core.leakDetection.timeout", 0) * 1000L);
 
 		return new HikariDataSource(poolConfig);
 	}

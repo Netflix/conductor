@@ -32,10 +32,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -72,6 +69,8 @@ public class SystemTaskWorkerCoordinator {
 	private static Set<WorkflowSystemTask> listeningTasks = new HashSet<>();
 	
 	private static final String className = SystemTaskWorkerCoordinator.class.getName();
+
+	private final Map<String, ScheduledExecutorService> taskPools = new HashMap<>();
 
 	private String workerId;
 		
@@ -110,6 +109,27 @@ public class SystemTaskWorkerCoordinator {
 		logger.debug("Adding system task {}", systemTask.getName());
 		queue.add(systemTask);
 	}
+
+	public void shutdown() {
+		for (Map.Entry<String, ScheduledExecutorService> pool : taskPools.entrySet()) {
+			try {
+				logger.info("Closing task pool " + pool.getKey());
+				pool.getValue().shutdown();
+				pool.getValue().awaitTermination(5, TimeUnit.SECONDS);
+			} catch (Exception e) {
+				logger.debug("Closing task pool " + pool.getKey() + " failed " + e.getMessage(), e);
+			}
+		}
+		try {
+			if (es != null) {
+				logger.info("Closing executor pool");
+				es.shutdown();
+				es.awaitTermination(5, TimeUnit.SECONDS);
+			}
+		} catch (Exception e) {
+			logger.debug("Closing executor pool failed " + e.getMessage(), e);
+		}
+	}
 	
 	private void listen() {
 		try {
@@ -126,8 +146,10 @@ public class SystemTaskWorkerCoordinator {
 	}
 	
 	private void listen(WorkflowSystemTask systemTask) {
-		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, pollFrequency, TimeUnit.MILLISECONDS);
+		ScheduledExecutorService taskPool = Executors.newScheduledThreadPool(1);
+		taskPool.scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, pollFrequency, TimeUnit.MILLISECONDS);
 		logger.debug("Started listening {}", systemTask.getName());
+		taskPools.put(systemTask.getName(), taskPool);
 	}
 
 	private void pollAndExecute(WorkflowSystemTask systemTask) {

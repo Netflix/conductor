@@ -54,6 +54,7 @@ public class BatchSweeper {
     private static final String JOB_ID_URN_PREFIX = "urn:deluxe:one-orders:deliveryjob:";
     private final Map<String, AbstractBatchProcessor> processors = new HashMap<>();
     private final TaskStatusListener taskStatusListener;
+    private ScheduledExecutorService batchPool;
     private final WorkflowExecutor workflowExecutor;
     private final ExecutionDAO execDao;
     private final Configuration config;
@@ -75,7 +76,7 @@ public class BatchSweeper {
             int batchInitDelay = config.getIntProperty("workflow.sweeper.batch.init.delay", 1000);
             int batchFrequency = config.getIntProperty("workflow.sweeper.batch.frequency", 5000);
 
-            ScheduledExecutorService batchPool = Executors.newScheduledThreadPool(batchNames.length);
+            batchPool = Executors.newScheduledThreadPool(batchNames.length);
             for (String name : batchNames) {
                 if (!processors.containsKey(name)) {
                     logger.error("Batch type " + name + " is not supported!");
@@ -83,6 +84,18 @@ public class BatchSweeper {
                 }
                 batchPool.scheduleWithFixedDelay(() -> handle(name), batchInitDelay, batchFrequency, TimeUnit.MILLISECONDS);
             }
+        }
+    }
+
+    public void shutdown() {
+        try {
+            if (batchPool != null) {
+                logger.info("Closing batch sweeper pool");
+                batchPool.shutdown();
+                batchPool.awaitTermination(5, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            logger.debug("Closing batch sweeper pool failed " + e.getMessage(), e);
         }
     }
 
