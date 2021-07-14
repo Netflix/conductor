@@ -4,7 +4,7 @@ pipeline {
     }
 
     environment {
-        GRADLE_OPTS: "-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false"
+        GRADLE_OPTS = "-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false"
     }
 
     stages {
