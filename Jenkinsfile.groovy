@@ -7,7 +7,7 @@ pipeline {
         stage('Compile & Test') {
             steps {
                 container('maven') {
-                    sh "./gradlew build"
+                    sh "./gradlew build --info --stacktrace --scan"
                 }
             }
         }
