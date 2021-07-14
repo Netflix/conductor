@@ -10,20 +10,22 @@ pipeline {
 
     stages {
         stage('Setup Docker in Docker') {
-            container('maven') {
-                sh '''yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \\
+            steps {
+                container('maven') {
+                    sh '''yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \\
                       yum update -y && \\
                       yum install -y docker-ce docker-ce-cli containerd.io'''
 
-                sh '''update-alternatives --set iptables  /usr/sbin/iptables-legacy || true && \\
+                    sh '''update-alternatives --set iptables  /usr/sbin/iptables-legacy || true && \\
                       update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true && \\
                       update-alternatives --set arptables /usr/sbin/arptables-legacy || true'''
 
-                sh '''set -x && \\
+                    sh '''set -x && \\
                       groupadd --system dockremap && \\
                       adduser --system -g dockremap dockremap && \\
                       echo 'dockremap:165536:65536' >> /etc/subuid && \\
                       echo 'dockremap:165536:65536' >> /etc/subgid'''
+                }
             }
         }
 
