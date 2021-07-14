@@ -3,11 +3,15 @@ pipeline {
         label "streamotion-maven-java11"
     }
 
+    environment {
+        GRADLE_OPTS: "-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false"
+    }
+
     stages {
         stage('Compile & Test') {
             steps {
                 container('maven') {
-                    sh "./gradlew build --info --stacktrace --scan"
+                    sh "./gradlew build --info --stacktrace"
                 }
             }
         }
