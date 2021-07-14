@@ -4,7 +4,8 @@ pipeline {
     }
 
     environment {
-        GRADLE_OPTS = "-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false"
+        GRADLE_OPTS = '-Xmx3g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false'
+        TESTCONTAINERS_HOST_OVERRIDE = 'docker.svc.local'
     }
 
     stages {
