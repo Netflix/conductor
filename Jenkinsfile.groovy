@@ -15,6 +15,12 @@ pipeline {
 
     post {
         always {
+            container('maven') {
+                junit(
+                        testResults: '**/build/test-results/**/TEST-*.xml',
+                        allowEmptyResults: true
+                )
+            }
             cleanWs()
         }
     }
