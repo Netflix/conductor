@@ -26,9 +26,7 @@ pipeline {
                       echo 'dockremap:165536:65536' >> /etc/subgid'''
             }
         }
-    }
 
-    stages {
         stage('Compile & Test') {
             steps {
                 container('maven') {
