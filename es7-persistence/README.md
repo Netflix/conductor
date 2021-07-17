@@ -14,28 +14,17 @@ More information can be found here: https://www.elastic.co/guide/en/elasticsearc
 
 ## Build
 
-In order to use the ES7, you must change the following files from ES6 to ES7:
-
+1. In order to use the ES7, you must change the following files from ES6 to ES7:
 
 https://github.com/Netflix/conductor/blob/master/server/build.gradle
-https://github.com/Netflix/conductor/blob/master/settings.gradle
-https://github.com/Netflix/conductor/blob/master/test-harness/build.gradle
 https://github.com/Netflix/conductor/blob/master/build.gradle
 https://github.com/Netflix/conductor/blob/main/server/src/main/resources/application.properties
-https://github.com/Netflix/conductor/blob/main/test-harness/src/test/java/com/netflix/conductor/test/integration/AbstractEndToEndTest.java
-
-In files:
-- /server/build.gradle
-- /settings.gradle
-
-change module inclusion from 'es6-persistence' to 'es7-persistence'
-
 
 In file:
- 
-- /test-harness/build.gradle
 
-change org.elasticsearch:elasticsearch:${revElasticSearch6} dependency version from ${revElasticSearch6} to ${revElasticSearch7}
+- /server/build.gradle
+
+change module inclusion from 'es6-persistence' to 'es7-persistence'
 
 
 In file:
@@ -51,21 +40,33 @@ In file:
 
 change conductor.elasticsearch.version from 6 to 7
 
-
-In file:
- 
-- /main/test-harness/src/test/java/com/netflix/conductor/test/integration/AbstractEndToEndTest.java
-
-change conductor.elasticsearch.version from 6 to 7
-change DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("6.8.12") to DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("7.10.1")
-change restClient.performRequest("GET", "/_cat/indices") to restClient.performRequest(new Request("GET", "/_cat/indices"))
-change restClient.performRequest("DELETE", endpoint) to restClient.performRequest(new Request("DELETE", endpoint))
-
 Also you need to recreate dependencies.lock files with ES7 dependencies. To do that delete all dependencies.lock files and then run: 
 
 ```
 ./gradlew generateLock updateLock saveLock
 ```
+
+
+2. To use the ES7 for all modules include test-harness, you must change also the following files:
+
+https://github.com/Netflix/conductor/blob/master/test-harness/build.gradle
+https://github.com/Netflix/conductor/blob/main/test-harness/src/test/java/com/netflix/conductor/test/integration/AbstractEndToEndTest.java
+
+In file:
+ 
+- /test-harness/build.gradle
+
+change org.elasticsearch:elasticsearch:${revElasticSearch6} dependency version from ${revElasticSearch6} to ${revElasticSearch7}
+
+In file:
+ 
+- /main/test-harness/src/test/java/com/netflix/conductor/test/integration/AbstractEndToEndTest.java
+
+* change conductor.elasticsearch.version from 6 to 7
+* change DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("6.8.12") to DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("7.10.1")
+* change restClient.performRequest("GET", "/_cat/indices") to restClient.performRequest(new Request("GET", "/_cat/indices"))
+* change restClient.performRequest("DELETE", endpoint) to restClient.performRequest(new Request("DELETE", endpoint))
+
 
 ## Usage
 
