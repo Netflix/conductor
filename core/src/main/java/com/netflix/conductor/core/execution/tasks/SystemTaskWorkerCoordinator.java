@@ -73,6 +73,8 @@ public class SystemTaskWorkerCoordinator {
 	private final Map<String, ScheduledExecutorService> taskPools = new HashMap<>();
 
 	private String workerId;
+
+	private boolean useTaskLock;
 		
 	@Inject
 	public SystemTaskWorkerCoordinator(QueueDAO taskQueues, WorkflowExecutor executor, Configuration config) {
@@ -103,6 +105,7 @@ public class SystemTaskWorkerCoordinator {
 		} catch (UnknownHostException e) {
 			this.workerId = "unknown";
 		}
+		this.useTaskLock = Boolean.parseBoolean(config.getProperty("workflow.system.task.use.lock", "true"));
 	}
 
 	static synchronized void add(WorkflowSystemTask systemTask) {
@@ -180,20 +183,24 @@ public class SystemTaskWorkerCoordinator {
 			if (CollectionUtils.isNotEmpty(polled)) {
 				MetricService.getInstance().taskPoll(name, workerId, polled.size());
 			}
-			logger.debug("Polling for {}, got {}", name, polled.size());
+			logger.trace("Polling for {}, got {}", name, polled.size());
 			for(String task : polled) {
 				try {
 					es.submit(()-> {
 						NDC.push("system-"+ UUID.randomUUID().toString());
 
-						// This prevents another containers executing the same action
-						// true means this session added the record to lock queue and can start the task
-						long expireTime = systemTask.getRetryTimeInSecond() * 2L; // 2 times longer than task retry time
-						boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime);
-						if (!locked) {
-							logger.warn("Cannot lock the task " + task);
-							MetricService.getInstance().taskLockFailed(name);
-							return;
+						// This workaround was applied some time ago as somehow task id picked up multiple times at close same time
+						// Adding this option to manage it per environment as eventually we need to find root cause of the issue
+						if (useTaskLock) {
+							long expireTime = systemTask.getRetryTimeInSecond() * 2L; // 2 times longer than task retry time
+							boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime);
+							// This prevents another containers executing the same action
+							// true means this session added the record to lock queue and can start the task
+							if (!locked) {
+								logger.warn("Cannot lock the task " + task);
+								MetricService.getInstance().taskLockFailed(name);
+								return;
+							}
 						}
 
 						try {

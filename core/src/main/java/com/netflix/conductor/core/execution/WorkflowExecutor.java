@@ -1457,7 +1457,7 @@ public class WorkflowExecutor {
 			}
 
 			logger.debug("Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
-				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(),
+				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(),
 				workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
@@ -1500,7 +1500,7 @@ public class WorkflowExecutor {
 
 			updateTask(new TaskResult(task));
 			logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
-				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(), workflow.getCorrelationId(),
+				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(), workflow.getCorrelationId(),
 				workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 		} catch (Exception e) {

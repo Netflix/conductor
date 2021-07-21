@@ -1,4 +1,5 @@
 package com.netflix.conductor.core;
+import com.netflix.conductor.service.MetricService;
 import org.apache.commons.lang3.ArrayUtils;
 import org.xbill.DNS.*;
 
@@ -13,14 +14,24 @@ public class DNSLookup {
     public DNSLookup(){}
 
     public static String lookup(String service) {
-        DNSLookup lookup = new DNSLookup();
-        DNSLookup.DNSResponses responses = lookup.lookupService(service);
-        if (responses != null && ArrayUtils.isNotEmpty(responses.getResponses())) {
-            String address = responses.getResponses()[0].getAddress();
-            int port = responses.getResponses()[0].getPort();
-            return "http://" + address + ":" + port;
+        long sd_start_time = System.currentTimeMillis();
+        long sd_lookup_time = -1;
+        try {
+            DNSLookup lookup = new DNSLookup();
+            DNSLookup.DNSResponses responses = lookup.lookupService(service);
+            if (responses != null && ArrayUtils.isNotEmpty(responses.getResponses())) {
+                String address = responses.getResponses()[0].getAddress();
+                int port = responses.getResponses()[0].getPort();
+                sd_lookup_time = System.currentTimeMillis() - sd_start_time;
+                return "http://" + address + ":" + port;
+            }
+            return null;
+        } finally {
+            // Service Discovery Metric
+            MetricService
+                    .getInstance()
+                    .serviceDiscovery(service, sd_lookup_time);
         }
-        return null;
     }
 
     public DNSResponses lookupService(String query) {
