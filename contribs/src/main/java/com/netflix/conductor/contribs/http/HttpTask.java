@@ -119,12 +119,17 @@ public class HttpTask extends GenericHttpTask {
 			return;
 		}
 
+		String serviceName = input.getServiceDiscoveryQuery();
+		if (StringUtils.isEmpty(serviceName)) {
+			serviceName = new URL(input.getUri()).getHost();
+		}
+
 		long start_time = System.currentTimeMillis();
 		try {
 			HttpResponse response = new HttpResponse();
 			logger.debug("http task starting. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
-					+ ",service=" + input.getServiceDiscoveryQuery()
+					+ ",service=" + serviceName
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
 					+ ",correlationId=" + workflow.getCorrelationId()
@@ -175,7 +180,7 @@ public class HttpTask extends GenericHttpTask {
 			long exec_time = System.currentTimeMillis() - start_time;
 			logger.info("http task completed. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
-					+ ",service=" + input.getServiceDiscoveryQuery()
+					+ ",service=" + serviceName
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
 					+ ",executeTimeMs=" + exec_time
@@ -188,7 +193,7 @@ public class HttpTask extends GenericHttpTask {
 			long exec_time = System.currentTimeMillis() - start_time;
 			logger.error("http task failed. WorkflowId=" + workflow.getWorkflowId()
 					+ ",taskReferenceName=" + task.getReferenceTaskName()
-					+ ",service=" + input.getServiceDiscoveryQuery()
+					+ ",service=" + serviceName
 					+ ",taskId=" + task.getTaskId()
 					+ ",url=" + input.getUri()
 					+ ",executeTimeMs=" + exec_time
