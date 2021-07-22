@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>
  * Make sure your dependencies include both micrometer-registry-datadog & spring-boot-starter-actuator
  */
-@ConditionalOnProperty(value = "management.metrics.export.datadog.enabled", havingValue = "true")
+@ConditionalOnProperty(value = "conductor.metrics-datadog.enabled", havingValue = "true")
 @Configuration
 public class DatadogMetricsConfiguration {
 
