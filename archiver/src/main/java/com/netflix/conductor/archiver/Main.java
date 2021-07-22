@@ -52,31 +52,31 @@ public class Main {
 		poolConfig.addDataSourceProperty("prepStmtCacheSize", "250");
 		poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
-		HikariDataSource dataSource = new HikariDataSource(poolConfig);
+		try (HikariDataSource dataSource = new HikariDataSource(poolConfig)) {
+			List<AbstractJob> jobs = new ArrayList<>();
+			jobs.add(new EventMesgsJob(dataSource));
+			jobs.add(new EventExecsJob(dataSource));
+			jobs.add(new EventPubsJob(dataSource));
+			jobs.add(new WorkflowJob(dataSource));
+			jobs.add(new DbLogJob(dataSource));
 
-		List<AbstractJob> jobs = new ArrayList<>();
-		jobs.add(new EventMesgsJob(dataSource));
-		jobs.add(new EventExecsJob(dataSource));
-		jobs.add(new EventPubsJob(dataSource));
-		jobs.add(new WorkflowJob(dataSource));
-		jobs.add(new DbLogJob(dataSource));
+			// Run jobs in threads
+			CountDownLatch countDown = new CountDownLatch(jobs.size());
+			jobs.forEach(job -> {
+				new Thread(() -> {
+					try {
+						job.cleanup();
+					} catch (Throwable e) {
+						logger.error(job.getClass().getName() + " failed with " + e.getMessage(), e);
+					} finally {
+						countDown.countDown();
+					}
+				}).start();
+			});
 
-		// Run jobs in threads
-		CountDownLatch countDown = new CountDownLatch(jobs.size());
-		jobs.forEach(job -> {
-			new Thread(() -> {
-				try {
-					job.cleanup();
-				} catch (Throwable e) {
-					logger.error(job.getClass().getName() + " failed with " + e.getMessage(), e);
-				} finally {
-					countDown.countDown();
-				}
-			}).start();
-		});
-
-		// Wait for the exporters
-		countDown.await();
+			// Wait for the exporters
+			countDown.await();
+		}
 
 		String FORMAT = "H'h' m'm' s's'";
 		String duration = DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, FORMAT, true);

@@ -28,6 +28,7 @@ import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.config.CoreModule;
 import com.netflix.conductor.core.execution.TaskStatusListener;
 import com.netflix.conductor.core.execution.WorkflowStatusListener;
+import com.netflix.conductor.core.execution.WorkflowSweeper;
 import com.netflix.conductor.core.utils.PriorityLookup;
 import com.netflix.conductor.dao.*;
 import com.netflix.conductor.dao.dynomite.DynoProxy;
@@ -101,13 +102,13 @@ public class ServerModule extends AbstractModule {
 		} else if (ConductorServer.DB.aurora.equals(db)) {
 			install(new AuroraModule());
 
-			bind(ExecutionDAO.class).to(AuroraExecutionDAO.class);
-			bind(MetadataDAO.class).to(AuroraMetadataDAO.class);
-			bind(QueueDAO.class).to(AuroraQueueDAO.class);
-			bind(MetricsDAO.class).to(AuroraMetricsDAO.class);
-			bind(IndexDAO.class).to(AuroraIndexDAO.class);
-			bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class);
-			bind(PriorityLookupDAO.class).to(AuroraPriorityLookupDAO.class);
+			bind(ExecutionDAO.class).to(AuroraExecutionDAO.class).asEagerSingleton();;
+			bind(MetadataDAO.class).to(AuroraMetadataDAO.class).asEagerSingleton();;
+			bind(QueueDAO.class).to(AuroraQueueDAO.class).asEagerSingleton();;
+			bind(MetricsDAO.class).to(AuroraMetricsDAO.class).asEagerSingleton();;
+			bind(IndexDAO.class).to(AuroraIndexDAO.class).asEagerSingleton();;
+			bind(ErrorLookupDAO.class).to(AuroraErrorLookupDAO.class).asEagerSingleton();;
+			bind(PriorityLookupDAO.class).to(AuroraPriorityLookupDAO.class).asEagerSingleton();;
 		} else {
 			String localDC = localRack.replaceAll(region, "");
 			DynoShardSupplier ss = new DynoShardSupplier(hs, region, localDC);
@@ -138,8 +139,9 @@ public class ServerModule extends AbstractModule {
 		install(new TaskUpdateModule());
 		new JsonJqTransform();
 		new ValidationTask();
-		bind(TaskStatusListener.class).to(StatusEventPublisher.class);
-		bind(WorkflowStatusListener.class).to(StatusEventPublisher.class);
+		bind(TaskStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
+		bind(WorkflowStatusListener.class).to(StatusEventPublisher.class).asEagerSingleton();
+		bind(ServerShutdown.class).asEagerSingleton();
 	}
 
 	@Provides

@@ -73,17 +73,6 @@ class GenericHttpTask extends WorkflowSystemTask {
 		this.authContextEnabled = Boolean.parseBoolean(config.getProperty("workflow.authcontext.enabled", "false"));
 	}
 
-	String lookup(String service) {
-		DNSLookup lookup = new DNSLookup();
-		DNSLookup.DNSResponses responses = lookup.lookupService(service);
-		if (responses != null && ArrayUtils.isNotEmpty(responses.getResponses())) {
-			String address = responses.getResponses()[0].getAddress();
-			int port = responses.getResponses()[0].getPort();
-			return "http://" + address + ":" + port;
-		}
-		return null;
-	}
-
 	@SuppressWarnings("unchecked")
 	HttpResponse httpCallUrlEncoded(Input input, String body) throws Exception {
 		Client client = rcm.getClient(input);
@@ -171,7 +160,7 @@ class GenericHttpTask extends WorkflowSystemTask {
 		if (headers.containsKey(CommonParams.AUTH_CONTEXT)) {
 			headers.put(CommonParams.AUTH_CONTEXT, "xxxxxxxxxxxxxxxxxxx");
 		}
-		logger.debug("http task headers " + headers);
+		logger.trace("http task headers " + headers);
 
 		// Store input headers back to the input request
 		if (MapUtils.isNotEmpty(input.getHeaders())) {

@@ -93,6 +93,18 @@ public class MetricService {
 		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
 	}
 
+	public void serviceDiscovery(String serviceName, Long time) {
+		Set<String> tagsCounter = new HashSet<>();
+		tagsCounter.add("metric:deluxe.conductor.service.discovery");
+		tagsCounter.add("service:" + serviceName);
+		statsd.incrementCounter(aspect, toArray(tagsCounter));
+
+		Set<String> tagsTimer = new HashSet<>();
+		tagsTimer.add("metric:deluxe.conductor.service.discovery.time");
+		tagsTimer.add("service:" + serviceName);
+		statsd.recordExecutionTime(aspect, time, toArray(tagsTimer));
+	}
+
 	public void taskWait(String taskType, String refName, Long waitTime) {
 		Set<String> tags = new HashSet<>();
 		tags.add("metric:deluxe.conductor.task.queue.wait.time");

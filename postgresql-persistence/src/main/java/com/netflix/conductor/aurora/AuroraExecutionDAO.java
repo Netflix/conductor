@@ -482,6 +482,20 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.executeUpdate());
 	}
 
+	@Override
+	public void setWorkflowAttribute(String workflowId, String name, Object value) {
+		Map<String, Object> payload = new HashMap<>();
+		payload.put(name, value);
+
+		String SQL = "UPDATE workflow " +
+				"SET json_data=jsonb_set(json_data::jsonb, '{attributes}', coalesce(json_data::jsonb->'attributes','{}')::jsonb || ?::jsonb)::text " +
+				"WHERE workflow_id = ?";
+		executeWithTransaction(SQL, q -> q
+				.addJsonParameter(payload)
+				.addParameter(workflowId)
+				.executeUpdate());
+	}
+
 	private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
 		String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED')";
 		return query(tx, SQL, q -> q.addParameter(workflowName).executeScalarList(String.class));

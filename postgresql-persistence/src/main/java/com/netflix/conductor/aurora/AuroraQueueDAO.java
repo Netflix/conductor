@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -33,8 +34,18 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		this.config = config;
 		loadQueues();
 
-		Executors.newSingleThreadScheduledExecutor()
-			.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
+		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+		executorService.scheduleWithFixedDelay(this::processAllUnacks, UNACK_SCHEDULE_MS, UNACK_SCHEDULE_MS, TimeUnit.MILLISECONDS);
+
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			try {
+				logger.info("Closing processAllUnacks pool");
+				executorService.shutdown();
+				executorService.awaitTermination(5, TimeUnit.SECONDS);
+			} catch (Exception e) {
+				logger.debug("Closing processAllUnacks pool failed " + e.getMessage(), e);;
+			}
+		}));
 	}
 
 	@Override
@@ -140,6 +151,17 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		}
 
 		return Collections.emptyList();
+	}
+
+	@Override
+	public void unpop(String queueName, String messageId)  {
+		final String UPDATE = "UPDATE queue_message " +
+				"SET popped = false, unack_on = null, unacked = false, version = version + 1 " +
+				"WHERE queue_name = ? AND message_id = ?";
+
+		executeWithTransaction(UPDATE, q -> q.addParameter(queueName.toLowerCase())
+				.addParameter(messageId)
+				.executeUpdate());
 	}
 
 	@Override

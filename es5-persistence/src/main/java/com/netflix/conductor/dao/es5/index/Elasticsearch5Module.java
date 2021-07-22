@@ -41,6 +41,7 @@ import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -135,26 +136,8 @@ public class Elasticsearch5Module extends AbstractModule {
 	}
 
 	private List<TransportAddress> lookupNodes(String dnsService) {
-		DNSLookup lookup = new DNSLookup();
-		DNSLookup.DNSResponses responses = lookup.lookupService(dnsService);
-		if (ArrayUtils.isEmpty(responses.getResponses()))
-			throw new RuntimeException("Unable to lookup service. No records found for " + dnsService);
-
-		List<TransportAddress> addressList = new ArrayList<>(responses.getResponses().length);
-		for (DNSLookup.DNSResponse response : responses.getResponses()) {
-
-			String address = response.getAddress();
-			String name = response.getHostName();
-			Integer port = response.getPort();
-			try {
-				InetAddress inetAddress = InetAddress.getByName(address);
-				addressList.add(new InetSocketTransportAddress(inetAddress, port));
-			} catch (UnknownHostException ex) {
-				throw new RuntimeException(ex);
-			}
-		}
-
-		return addressList;
+		// NO longer in use
+		return Collections.emptyList();
 	}
 
 	private void monitor(TransportClient transport, String dnsService, Integer clusterSize) {

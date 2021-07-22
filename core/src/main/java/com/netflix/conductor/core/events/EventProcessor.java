@@ -55,6 +55,7 @@ public class EventProcessor {
 	private Map<String, Pair<ObservableQueue, ThreadPoolExecutor>> queuesMap = new ConcurrentHashMap<>();
 	private ParametersUtils pu = new ParametersUtils();
 	private volatile List<EventHandler> activeHandlers;
+	private ScheduledExecutorService refreshPool;
 	private MetadataService ms;
 	private ExecutionService es;
 	private ActionProcessor ap;
@@ -73,8 +74,8 @@ public class EventProcessor {
 
 			int initialDelay = config.getIntProperty("workflow.event.processor.initial.delay", 60);
 			int refreshPeriod = config.getIntProperty("workflow.event.processor.refresh.seconds", 60);
-			Executors.newScheduledThreadPool(1)
-				.scheduleWithFixedDelay(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
+			refreshPool = Executors.newScheduledThreadPool(1);
+			refreshPool.scheduleWithFixedDelay(this::refresh, initialDelay, refreshPeriod, TimeUnit.SECONDS);
 		} else {
 			logger.debug("Event processing is DISABLED");
 		}
@@ -179,6 +180,29 @@ public class EventProcessor {
 
 		} catch (Exception ex) {
 			logger.debug("refresh failed " + ex.getMessage(), ex);
+		}
+	}
+
+	public void shutdown() {
+		try {
+			if (refreshPool != null) {
+				logger.info("Closing refresh pool");
+				refreshPool.shutdown();
+				refreshPool.awaitTermination(5, TimeUnit.SECONDS);
+			}
+		} catch (Exception e) {
+			logger.debug("Closing refresh pool failed " + e.getMessage(), e);
+		}
+		try {
+			if (!queuesMap.isEmpty()) {
+				logger.info("Closing queues & executors");
+				queuesMap.entrySet().parallelStream().forEach(entry -> {
+					closeQueue(entry.getKey());
+					closeExecutor(entry.getKey(), entry.getValue().getRight());
+				});
+			}
+		} catch (Exception e) {
+			logger.debug("Closing queues & executors failed " + e.getMessage(), e);
 		}
 	}
 

@@ -656,6 +656,7 @@ public class WorkflowExecutor {
 		workflow.setOutput(wf.getOutput());
 		edao.updateWorkflow(workflow);
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// If the following task, for some reason fails, the sweep will take
 		// care of this again!
@@ -691,12 +692,12 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflowId);
+		queue.remove(sweeperQueue, workflowId);
 
 		// metrics
 		MetricService.getInstance().workflowForceComplete(workflow.getWorkflowType());
@@ -750,8 +751,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
@@ -793,6 +793,7 @@ public class WorkflowExecutor {
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflowId);
+		queue.remove(sweeperQueue, workflowId);
 
 		// metrics
 		MetricService.getInstance().workflowCancel(workflow.getWorkflowType());
@@ -828,12 +829,12 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflow.getWorkflowId());
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// metrics
 		MetricService.getInstance().workflowReset(workflow.getWorkflowType());
@@ -914,12 +915,12 @@ public class WorkflowExecutor {
 
 		logger.debug("Removing decider record for " + workflow.getWorkflowId());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId());
 		}
 
 		// Handle task timeout
@@ -1056,6 +1057,7 @@ public class WorkflowExecutor {
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
 			queue.remove(deciderQueue, wf.getWorkflowId());	//remove from the sweep queue
+			queue.remove(sweeperQueue, wf.getWorkflowId());
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			if(!task.getStatus().isTerminal()) {
 				task.setStatus(Status.COMPLETED);
@@ -1211,6 +1213,7 @@ public class WorkflowExecutor {
 	 * @throws Exception If there was an error - caller should retry in this case.
 	 */
 	public Pair<Boolean, Integer> decide(String workflowId) throws Exception {
+		logger.debug("Invoked decide for workflow " + workflowId);
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
 			return Pair.of(false, config.getSweepFrequency());
@@ -1464,7 +1467,7 @@ public class WorkflowExecutor {
 			}
 
 			logger.debug("Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
-				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(),
+				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(),
 				workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
@@ -1507,7 +1510,7 @@ public class WorkflowExecutor {
 
 			updateTask(new TaskResult(task));
 			logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
-				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(), workflow.getCorrelationId(),
+				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(), workflow.getCorrelationId(),
 				workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 		} catch (Exception e) {

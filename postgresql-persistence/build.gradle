@@ -2,6 +2,6 @@ dependencies {
     compile project(':conductor-core')
 
     compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
-    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.3.1'
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
     provided 'log4j:log4j:1.2.17'
 }

@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -29,8 +30,18 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 		super(dataSource, mapper);
 
 		int cacheRefreshTime = config.getIntProperty(PROP_TASKDEF_CACHE_REFRESH, DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS);
-		Executors.newSingleThreadScheduledExecutor()
-			.scheduleWithFixedDelay(this::refreshTaskDefs, cacheRefreshTime, cacheRefreshTime, TimeUnit.SECONDS);
+		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+		executorService.scheduleWithFixedDelay(this::refreshTaskDefs, cacheRefreshTime, cacheRefreshTime, TimeUnit.SECONDS);
+
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			try {
+				logger.info("Closing refreshTaskDefs pool");
+				executorService.shutdown();
+				executorService.awaitTermination(5, TimeUnit.SECONDS);
+			} catch (Exception e) {
+				logger.debug("Closing refreshTaskDefs pool failed " + e.getMessage(), e);;
+			}
+		}));
 	}
 
 	@Override
