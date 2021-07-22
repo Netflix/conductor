@@ -22,6 +22,8 @@ configurations {
     testRuntime.extendsFrom compileOnly
 }
 
+ext['elasticsearch.version'] = revElasticSearch7
+
 dependencies {
     implementation project(':conductor-common')
     implementation project(':conductor-core')
@@ -36,10 +38,8 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "com.fasterxml.jackson.core:jackson-core"
 
-    implementation "org.elasticsearch:elasticsearch:${revElasticSearch7}"
-    implementation "org.elasticsearch.client:transport:${revElasticSearch7}"
-    implementation "org.elasticsearch.client:elasticsearch-rest-client:${revElasticSearch7}"
-    implementation "org.elasticsearch.client:elasticsearch-rest-high-level-client:${revElasticSearch7}"
+    implementation "org.elasticsearch.client:elasticsearch-rest-client"
+    implementation "org.elasticsearch.client:elasticsearch-rest-high-level-client"
 
     testImplementation "org.awaitility:awaitility:${revAwaitility}"
     testImplementation "org.testcontainers:elasticsearch:${revTestContainer}"

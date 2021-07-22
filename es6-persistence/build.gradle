@@ -11,6 +11,8 @@
  *  specific language governing permissions and limitations under the License.
  */
 
+ext['elasticsearch.version'] = revElasticSearch6
+
 dependencies {
     implementation project(':conductor-common')
     implementation project(':conductor-core')
