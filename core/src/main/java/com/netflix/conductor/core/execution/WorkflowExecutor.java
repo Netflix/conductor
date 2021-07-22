@@ -692,7 +692,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			wakeUpSweeper(workflow.getParentWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 
 		//remove from the sweep queue
@@ -751,7 +751,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			wakeUpSweeper(workflow.getParentWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
@@ -829,7 +829,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			wakeUpSweeper(workflow.getParentWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 
 		//remove from the sweep queue
@@ -920,7 +920,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			wakeUpSweeper(workflow.getParentWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 
 		// Handle task timeout
