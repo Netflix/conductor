@@ -56,7 +56,8 @@ In file:
  
 - /test-harness/build.gradle
 
-change module inclusion from 'es6-persistence' to 'es7-persistence'
+* change ext['elasticsearch.version'] from revElasticSearch6 to revElasticSearch7
+* change module inclusion from 'es6-persistence' to 'es7-persistence'
 
 In file:
  
@@ -64,8 +65,6 @@ In file:
 
 * change conductor.elasticsearch.version from 6 to 7
 * change DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("6.8.12") to DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("7.10.1")
-* change restClient.performRequest("GET", "/_cat/indices") to restClient.performRequest(new Request("GET", "/_cat/indices"))
-* change restClient.performRequest("DELETE", endpoint) to restClient.performRequest(new Request("DELETE", endpoint))
 
 
 ## Usage

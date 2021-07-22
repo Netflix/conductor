@@ -1,7 +1,6 @@
 apply plugin: 'groovy'
 
 ext['elasticsearch.version'] = revElasticSearch6
-//ext['elasticsearch.version'] = revElasticSearch7
 
 dependencies {
     testImplementation project(':conductor-server')
