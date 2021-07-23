@@ -68,6 +68,7 @@ public class ScriptEvaluator {
 		Bindings bindings = engine.createBindings();
 		bindings.put("$", input);
 		return engine.eval(script, bindings);
+
 	}
 
 	public static String evalJq(String expression, Object payload) throws Exception {
