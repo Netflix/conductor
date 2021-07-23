@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 
 import javax.inject.Inject;
@@ -43,7 +42,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				executorService.shutdown();
 				executorService.awaitTermination(5, TimeUnit.SECONDS);
 			} catch (Exception e) {
-				logger.debug("Closing processAllUnacks pool failed " + e.getMessage(), e);;
+				logger.debug("Closing processAllUnacks pool failed " + e.getMessage(), e);
 			}
 		}));
 	}
@@ -58,7 +57,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	public void push(String queueName, List<Message> messages, int priority) {
 		createQueueIfNotExists(queueName);
 		withTransaction(tx -> messages
-			.forEach(message -> pushMessage(tx, queueName, message.getId(), message.getPayload(), 0, priority)));
+				.forEach(message -> pushMessage(tx, queueName, message.getId(), message.getPayload(), 0, priority)));
 	}
 
 	@Override
@@ -84,21 +83,20 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public List<String> pop(String queueName, int count, int timeout) {
 		final String QUERY = "SELECT id FROM queue_message " +
-			"WHERE queue_name = ? AND deliver_on < now() AND popped = false " +
-			"ORDER BY priority, deliver_on, version, id LIMIT ? FOR UPDATE SKIP LOCKED";
+				"WHERE queue_name = ? AND deliver_on < now() AND popped = false " +
+				"ORDER BY priority, deliver_on, id LIMIT ? FOR UPDATE SKIP LOCKED";
 
 		final String LOCK = "UPDATE queue_message " +
-			"SET popped = true, unack_on = ?, version = version + 1 " +
-			"WHERE id = ANY(?) RETURNING message_id";
+				"SET popped = true, unack_on = ?, version = version + 1 " +
+				"WHERE id IN (" + QUERY + ") RETURNING message_id";
 
-		MetricService.getInstance().queuePop(queueName);
 		try {
 			long start = System.currentTimeMillis();
 
 			// Returns true until foundIds = count or time spent = timeout
-			Set<String> foundIds = new LinkedHashSet<>();
+			Set<String> foundIds = new LinkedHashSet<>(count);
 			final Supplier<Boolean> keepPooling = () -> foundIds.size() < count
-				&& ((System.currentTimeMillis() - start) < timeout);
+					&& ((System.currentTimeMillis() - start) < timeout);
 
 			try (Connection tx = dataSource.getConnection()) {
 				tx.setAutoCommit(false);
@@ -108,28 +106,21 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 						// Limit how many left to pick up
 						int limit = count - foundIds.size();
 
+						// Unack threshold
+						long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
+
 						// Get the list of locked message ids
-						List<Long> locked = query(tx, QUERY, q -> q
-							.addParameter(queueName.toLowerCase())
-							.addParameter(limit)
-							.executeScalarList(Long.class));
-
-						// Update the locked records returning list of message_id
-						if (!locked.isEmpty()) {
-							long unack_on = System.currentTimeMillis() + UNACK_TIME_MS;
-							List<String> updated = query(tx, LOCK, q -> q
+						List<String> locked = query(tx, LOCK, q -> q
 								.addTimestampParameter(unack_on)
-								.addLongListParameter(locked)
+								.addParameter(queueName.toLowerCase())
+								.addParameter(limit)
 								.executeScalarList(String.class));
-
-							// Add updated ids only
-							if (!updated.isEmpty()) {
-								foundIds.addAll(updated);
-							}
-						}
 
 						// Commit
 						tx.commit();
+
+						// Add found message ids
+						foundIds.addAll(locked);
 
 						// We recheck this condition after each message to ensure
 						// foundIds not greater than requested count and within timeout window
@@ -154,7 +145,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
-	public void unpop(String queueName, String messageId)  {
+	public void unpop(String queueName, String messageId) {
 		final String UPDATE = "UPDATE queue_message " +
 				"SET popped = false, unack_on = null, unacked = false, version = version + 1 " +
 				"WHERE queue_name = ? AND message_id = ?";
@@ -165,18 +156,31 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
+	public void unpop(String queueName, String messageId, long offset) {
+		long deliver_on = System.currentTimeMillis() + offset;
+		final String UPDATE = "UPDATE queue_message " +
+				"SET deliver_on = ?, popped = false, unack_on = null, unacked = false, version = version + 1 " +
+				"WHERE queue_name = ? AND message_id = ?";
+
+		executeWithTransaction(UPDATE, q -> q.addTimestampParameter(deliver_on)
+				.addParameter(queueName.toLowerCase())
+				.addParameter(messageId)
+				.executeUpdate());
+	}
+
+	@Override
 	public boolean setUnackTimeout(String queueName, String messageId, long unackTimeout) {
 		long unack_on = System.currentTimeMillis() + unackTimeout; // now + timeout
 
 		final String UPDATE = "UPDATE queue_message " +
-			"SET popped = true, unack_on = ?, unacked = true, version = version + 1 " +
-			"WHERE queue_name = ? AND message_id = ?";
+				"SET popped = true, unack_on = ?, unacked = true, version = version + 1 " +
+				"WHERE queue_name = ? AND message_id = ?";
 
 		return queryWithTransaction(UPDATE,
-			q -> q.addTimestampParameter(unack_on)
-				.addParameter(queueName.toLowerCase())
-				.addParameter(messageId)
-				.executeUpdate()) == 1;
+				q -> q.addTimestampParameter(unack_on)
+						.addParameter(queueName.toLowerCase())
+						.addParameter(messageId)
+						.executeUpdate()) == 1;
 	}
 
 	@Override
@@ -187,13 +191,13 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			long unack_on = System.currentTimeMillis() - threshold;
 
 			final String SQL = "UPDATE queue_message " +
-				"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
-				"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND unack_on < ? AND popped = true FOR UPDATE SKIP LOCKED)";
+					"SET popped = false, deliver_on = now(), unack_on = null, unacked = false, version = version + 1 " +
+					"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND unack_on < ? AND popped = true FOR UPDATE SKIP LOCKED)";
 
 			executeWithTransaction(SQL, q -> q
-				.addParameter(queueName.toLowerCase())
-				.addTimestampParameter(unack_on)
-				.executeUpdate());
+					.addParameter(queueName.toLowerCase())
+					.addTimestampParameter(unack_on)
+					.executeUpdate());
 		} catch (Exception ex) {
 			logger.error("processUnacks: failed for {} with {}", queueName, ex.getMessage(), ex);
 		}
@@ -204,12 +208,12 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 			long deliver_on = System.currentTimeMillis() - UNACK_TIME_MS;
 
 			final String SQL = "DELETE FROM queue_message " +
-				"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND deliver_on < ? FOR UPDATE SKIP LOCKED)";
+					"WHERE id IN (SELECT id FROM queue_message WHERE queue_name = ? AND deliver_on < ? FOR UPDATE SKIP LOCKED)";
 
 			executeWithTransaction(SQL, q -> q
-				.addParameter(lockQueueName)
-				.addTimestampParameter(deliver_on)
-				.executeDelete());
+					.addParameter(lockQueueName)
+					.addTimestampParameter(deliver_on)
+					.executeDelete());
 		} catch (Exception ex) {
 			logger.error("processUnacks: failed for {} with {}", lockQueueName, ex.getMessage(), ex);
 		}
@@ -269,9 +273,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	@Override
 	public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose() {
 		final String SQL = "SELECT queue_name, \n"
-			+ "       (SELECT count(*) FROM queue_message WHERE popped = false AND queue_name = q.queue_name) AS size,\n"
-			+ "       (SELECT count(*) FROM queue_message WHERE popped = true AND queue_name = q.queue_name) AS uacked \n"
-			+ "FROM queue q";
+				+ "       (SELECT count(*) FROM queue_message WHERE popped = false AND queue_name = q.queue_name) AS size,\n"
+				+ "       (SELECT count(*) FROM queue_message WHERE popped = true AND queue_name = q.queue_name) AS uacked \n"
+				+ "FROM queue q";
 
 		return queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
 			Map<String, Map<String, Map<String, Long>>> result = Maps.newHashMap();
@@ -280,8 +284,8 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				Long size = rs.getLong("size");
 				Long queueUnacked = rs.getLong("uacked");
 				result.put(queueName, ImmutableMap.of("a", ImmutableMap.of( // sharding not implemented, returning only
-					// one shard with all the info
-					"size", size, "uacked", queueUnacked)));
+						// one shard with all the info
+						"size", size, "uacked", queueUnacked)));
 			}
 			return result;
 		}));
@@ -298,23 +302,23 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		final String SQL = "SELECT * FROM queue_message WHERE queue_name = ? AND message_id = ?";
 
 		QueueMessage record = queryWithTransaction(SQL, p -> p.addParameter(queueName.toLowerCase())
-			.addParameter(id).executeAndFetch(rs -> {
-				if (rs.next()) {
-					QueueMessage m = new QueueMessage();
-					m.id = rs.getLong("id");
-					m.version = rs.getLong("version");
-					m.queue_name = rs.getString("queue_name");
-					m.message_id = rs.getString("message_id");
-					m.payload = rs.getString("payload");
-					m.popped = rs.getBoolean("popped");
-					m.deliver_on = rs.getTimestamp("deliver_on");
-					m.unack_on = rs.getTimestamp("unack_on");
-					m.unacked = rs.getBoolean("unacked");
+				.addParameter(id).executeAndFetch(rs -> {
+					if (rs.next()) {
+						QueueMessage m = new QueueMessage();
+						m.id = rs.getLong("id");
+						m.version = rs.getLong("version");
+						m.queue_name = rs.getString("queue_name");
+						m.message_id = rs.getString("message_id");
+						m.payload = rs.getString("payload");
+						m.popped = rs.getBoolean("popped");
+						m.deliver_on = rs.getTimestamp("deliver_on");
+						m.unack_on = rs.getTimestamp("unack_on");
+						m.unacked = rs.getBoolean("unacked");
 
-					return m;
-				}
-				return null;
-			}));
+						return m;
+					}
+					return null;
+				}));
 
 		if (record == null) {
 			logger.debug("wakeup no record exists for " + queueName + "/" + id);
@@ -329,13 +333,13 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		// Otherwise make it visible right away
 		final String UPDATE = "UPDATE queue_message " +
-			"SET popped = false, deliver_on = ?, unack_on = null, unacked = false, version = version + 1 " +
-			"WHERE id = ? AND version = ?";
+				"SET popped = false, deliver_on = ?, unack_on = null, unacked = false, version = version + 1 " +
+				"WHERE id = ? AND version = ?";
 
 		return queryWithTransaction(UPDATE, q -> q.addTimestampParameter(1L)
-			.addParameter(record.id)
-			.addParameter(record.version)
-			.executeUpdate()) > 0;
+				.addParameter(record.id)
+				.addParameter(record.version)
+				.executeUpdate()) > 0;
 	}
 
 	private boolean existsMessage(Connection connection, String queueName, String messageId) {
@@ -345,32 +349,32 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 	private boolean pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds, int priority) {
 		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload, priority) " +
-			"VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
+				"VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
 		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
 
 		return query(connection, SQL, q -> q.addParameter(queueName.toLowerCase())
-			.addParameter(messageId)
-			.addParameter(false)
-			.addTimestampParameter(deliverOn)
-			.addParameter(payload)
-			.addParameter(priority)
-			.executeUpdate() > 0);
+				.addParameter(messageId)
+				.addParameter(false)
+				.addTimestampParameter(deliverOn)
+				.addParameter(payload)
+				.addParameter(priority)
+				.executeUpdate() > 0);
 	}
 
 	private Message peekMessage(Connection connection, String queueName, String messageId) {
 		final String SQL = "SELECT message_id, payload FROM queue_message WHERE queue_name = ? AND message_id = ?";
 
 		return query(connection, SQL, p -> p.addParameter(queueName.toLowerCase())
-			.addParameter(messageId).executeAndFetch(rs -> {
-				if (rs.next()) {
-					Message m = new Message();
-					m.setId(rs.getString("message_id"));
-					m.setPayload(rs.getString("payload"));
-					return m;
-				}
-				return null;
-			}));
+				.addParameter(messageId).executeAndFetch(rs -> {
+					if (rs.next()) {
+						Message m = new Message();
+						m.setId(rs.getString("message_id"));
+						m.setPayload(rs.getString("payload"));
+						return m;
+					}
+					return null;
+				}));
 	}
 
 	private int getMessagePriority(Connection connection, String queueName, String messageId) {
@@ -382,7 +386,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private boolean removeMessage(Connection connection, String queueName, String messageId) {
 		final String SQL = "DELETE FROM queue_message WHERE queue_name = ? AND message_id = ?";
 		return query(connection, SQL,
-			q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeDelete());
+				q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeDelete());
 	}
 
 	private void loadQueues() {

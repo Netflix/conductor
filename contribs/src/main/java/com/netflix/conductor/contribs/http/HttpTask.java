@@ -28,6 +28,7 @@ import com.netflix.conductor.core.DNSLookup;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.service.MetricService;
 import datadog.trace.api.Trace;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
@@ -137,7 +138,7 @@ public class HttpTask extends GenericHttpTask {
 					+ ",contextUser=" + workflow.getContextUser());
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
-					String json = new ObjectMapper().writeValueAsString(task.getInputData());
+					String json = om.writeValueAsString(task.getInputData());
 					JSONObject obj = new JSONObject(json);
 					JSONObject getSth = obj.getJSONObject("http_request");
 
@@ -166,8 +167,7 @@ public class HttpTask extends GenericHttpTask {
 				}
 			}
 
-			// Check the http response validation. It will overwrite the task status if
-			// needed
+			// Check the http response validation. It will overwrite the task status if needed
 			if (task.getStatus() == Status.COMPLETED) {
 				checkHttpResponseValidation(task, response);
 			} else {
@@ -189,6 +189,11 @@ public class HttpTask extends GenericHttpTask {
 					+ ",contextUser=" + workflow.getContextUser()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",request=" + input.getBody());
+			MetricService.getInstance().httpComplete(task.getTaskType(),
+					task.getReferenceTaskName(),
+					task.getTaskDefName(),
+					serviceName,
+					exec_time);
 		} catch (Exception ex) {
 			long exec_time = System.currentTimeMillis() - start_time;
 			logger.error("http task failed. WorkflowId=" + workflow.getWorkflowId()
@@ -202,6 +207,11 @@ public class HttpTask extends GenericHttpTask {
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(ex.getMessage());
 			task.getOutputData().put("response", ex.getMessage());
+			MetricService.getInstance().httpFailed(task.getTaskType(),
+					task.getReferenceTaskName(),
+					task.getTaskDefName(),
+					serviceName,
+					exec_time);
 		}
 	}
 
