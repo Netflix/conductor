@@ -478,6 +478,20 @@ public class DeciderService {
                 // Reset integer overflow to max value
                 startDelay = retryDelaySeconds < 0 ? Integer.MAX_VALUE : retryDelaySeconds;
                 break;
+            case CUSTOM:
+                // Custom strategy
+                int taskStartDelay = task.getStartDelayInSeconds();
+                if (taskStartDelay < 0) {
+                    // NO retry delay if the worker sends a negative value (<0) in the TaskResult
+                    startDelay = 0;
+                } else if (taskStartDelay == 0) {
+                    // Retry delay from the task definition if the worker sends 0 in the TaskResult.
+                    startDelay = taskDefinition.getRetryDelaySeconds();
+                } else {
+                    // Retry delay from the WorkflowTask
+                    startDelay = task.getStartDelayInSeconds();
+                }
+                break;
         }
 
         task.setRetried(true);

@@ -970,6 +970,7 @@ public class WorkflowExecutor {
         task.setCallbackAfterSeconds(taskResult.getCallbackAfterSeconds());
         task.setOutputData(taskResult.getOutputData());
         task.setSubWorkflowId(taskResult.getSubWorkflowId());
+        task.setStartDelayInSeconds(taskResult.getRetryDelaySeconds());
 
         if (task.getOutputData() != null && !task.getOutputData().isEmpty()) {
             deciderService.externalizeTaskData(task);

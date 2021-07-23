@@ -39,7 +39,7 @@ public class TaskDef extends Auditable {
     public enum TimeoutPolicy {RETRY, TIME_OUT_WF, ALERT_ONLY}
 
     @ProtoEnum
-    public enum RetryLogic {FIXED, EXPONENTIAL_BACKOFF}
+    public enum RetryLogic {FIXED, EXPONENTIAL_BACKOFF, CUSTOM}
 
     private static final int ONE_HOUR = 60 * 60;
 

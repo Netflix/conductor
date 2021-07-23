@@ -786,6 +786,35 @@ public class TestDeciderService {
     }
 
     @Test
+    public void testCustom() {
+        Workflow workflow = createDefaultWorkflow();
+
+        Task task = new Task();
+        task.setStatus(Status.FAILED);
+        task.setTaskId("t1");
+        task.setStartDelayInSeconds(30);
+
+        TaskDef taskDef = new TaskDef();
+        taskDef.setRetryDelaySeconds(60);
+        taskDef.setRetryLogic(TaskDef.RetryLogic.CUSTOM);
+        WorkflowTask workflowTask = new WorkflowTask();
+
+        // Retry delay from the task
+        Optional<Task> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
+        assertEquals(30, task2.get().getCallbackAfterSeconds());
+
+        // No retry delay
+        task2.get().setStartDelayInSeconds(-1);
+        Optional<Task> task3 = deciderService.retry(taskDef, workflowTask, task2.get(), workflow);
+        assertEquals(0, task3.get().getCallbackAfterSeconds());
+
+        // Retry delay from task definition
+        task3.get().setStartDelayInSeconds(0);
+        Optional<Task> task4 = deciderService.retry(taskDef, workflowTask, task3.get(), workflow);
+        assertEquals(60, task4.get().getCallbackAfterSeconds());
+    }
+
+    @Test
     public void testFork() throws IOException {
         InputStream stream = TestDeciderService.class.getResourceAsStream("/test.json");
         Workflow workflow = objectMapper.readValue(stream, Workflow.class);
