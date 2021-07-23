@@ -740,6 +740,7 @@ public abstract class AbstractProtoMapper {
         switch (from) {
             case FIXED: to = TaskDefPb.TaskDef.RetryLogic.FIXED; break;
             case EXPONENTIAL_BACKOFF: to = TaskDefPb.TaskDef.RetryLogic.EXPONENTIAL_BACKOFF; break;
+            case CUSTOM: to = TaskDefPb.TaskDef.RetryLogic.CUSTOM; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -750,6 +751,7 @@ public abstract class AbstractProtoMapper {
         switch (from) {
             case FIXED: to = TaskDef.RetryLogic.FIXED; break;
             case EXPONENTIAL_BACKOFF: to = TaskDef.RetryLogic.EXPONENTIAL_BACKOFF; break;
+            case CUSTOM: to = TaskDef.RetryLogic.CUSTOM; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -821,6 +823,7 @@ public abstract class AbstractProtoMapper {
         if (from.getOutputMessage() != null) {
             to.setOutputMessage( toProto( from.getOutputMessage() ) );
         }
+        to.setRetryDelaySeconds( from.getRetryDelaySeconds() );
         return to.build();
     }
 
@@ -840,6 +843,7 @@ public abstract class AbstractProtoMapper {
         if (from.hasOutputMessage()) {
             to.setOutputMessage( fromProto( from.getOutputMessage() ) );
         }
+        to.setRetryDelaySeconds( from.getRetryDelaySeconds() );
         return to;
     }
 
