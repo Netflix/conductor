@@ -380,7 +380,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	private int getMessagePriority(Connection connection, String queueName, String messageId) {
 		final String SQL = "SELECT priority FROM queue_message WHERE queue_name = ? AND message_id = ?";
 		return query(connection, SQL,
-			q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeScalar(Integer.class));
+				q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeScalar(Integer.class));
 	}
 
 	private boolean removeMessage(Connection connection, String queueName, String messageId) {
