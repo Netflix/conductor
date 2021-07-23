@@ -59,8 +59,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
-
-  # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+      
+  # These configuration are copied from elastic multi-node configuration,
+  # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-compose-file
+  #
   # if Elasticsearch Container Stopped with Exit 78
   # run `sudo sysctl -w vm.max_map_count = 262144` in terminal 
   # https://github.com/laradock/laradock/issues/1699
