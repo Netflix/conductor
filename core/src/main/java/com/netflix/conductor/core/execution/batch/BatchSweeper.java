@@ -215,6 +215,7 @@ public class BatchSweeper {
                 // Metrics
                 MetricService.getInstance().taskWait(task.getTaskType(),
                     task.getReferenceTaskName(),
+                    task.getTaskDefName(),
                     task.getQueueWaitTime());
 
                 task.setWorkerId(workerId);

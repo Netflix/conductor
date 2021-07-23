@@ -28,6 +28,7 @@ public class AuroraMetadataDAO extends AuroraBaseDAO implements MetadataDAO {
 	@Inject
 	public AuroraMetadataDAO(DataSource dataSource, ObjectMapper mapper, Configuration config) {
 		super(dataSource, mapper);
+		refreshTaskDefs();
 
 		int cacheRefreshTime = config.getIntProperty(PROP_TASKDEF_CACHE_REFRESH, DEFAULT_TASKDEF_CACHE_REFRESH_SECONDS);
 		ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();

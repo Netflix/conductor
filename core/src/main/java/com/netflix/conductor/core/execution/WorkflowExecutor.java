@@ -29,6 +29,7 @@ import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
@@ -1096,6 +1097,7 @@ public class WorkflowExecutor {
 		if (task.isTerminal()) {
 			MetricService.getInstance().taskComplete(task.getTaskType(),
 				task.getReferenceTaskName(),
+				task.getTaskDefName(),
 				task.getStatus().name(),
 				task.getStartTime());
 		}
@@ -1403,18 +1405,19 @@ public class WorkflowExecutor {
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {
-			logger.debug("Executing async taskId={}, callbackSeconds={}, unackTimeout={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
+			logger.debug("Executing async taskId={}, callbackSeconds={}, retryTimeIn={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
 
 			Task task = edao.getTask(taskId);
 			if (task == null) {
 				logger.debug("No task found for task id = " + taskId + ". System task is " + systemTask);
 				return;
 			}
+			String queueName = QueueUtils.getQueueName(task);
 
 			if (task.getStatus().isTerminal()) {
 				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
 				logger.debug("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
-				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				queue.remove(queueName, task.getTaskId());
 				return;
 			}
 
@@ -1427,24 +1430,26 @@ public class WorkflowExecutor {
 					task.setStatus(Status.CANCELED);
 				}
 				edao.updateTask(task);
-				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				queue.remove(queueName, task.getTaskId());
 				taskStatusListener.onTaskFinished(task);
 				return;
 			}
 
 			if (task.getStatus().equals(Status.SCHEDULED)) {
+				String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unpop.offset";
+				int unpopOffset = config.getIntProperty(propName, 30);
 
 				if (edao.exceedsInProgressLimit(task)) {
-					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
-					logger.debug("Concurrent Execution limited for {}:{}", taskId, task.getTaskDefName());
-					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
+					logger.debug("Concurrent Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
 					return;
 				}
 
 				if (edao.exceedsRateLimitPerFrequency(task)) {
-					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
-					logger.debug("RateLimit Execution limited for {}:{}", taskId, task.getTaskDefName());
-					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
+					logger.debug("RateLimit Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
 					return;
 				}
 			}
@@ -1460,24 +1465,28 @@ public class WorkflowExecutor {
 				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(),
 				workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
-			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+			String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unack.timeout";
+			int unackTimeout = config.getIntProperty(propName, systemTask.getRetryTimeInSecond());
+
+			queue.setUnackTimeout(queueName, task.getTaskId(), unackTimeout * 1000L);
 			task.setStarted(true);
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());
 			}
 			task.setPollCount(task.getPollCount() + 1);
+			edao.updateTask(task);
 
 			// Metrics
 			MetricService.getInstance().taskWait(task.getTaskType(),
 				task.getReferenceTaskName(),
+				task.getTaskDefName(),
 				task.getQueueWaitTime());
-
-			edao.updateTask(task);
 
 			switch (task.getStatus()) {
 
 				case SCHEDULED:
 					try {
+						edao.updateInProgressStatus(task);
 						taskStatusListener.onTaskStarted(task);
 						systemTask.start(workflow, task, this);
 					} catch (Exception ex) {

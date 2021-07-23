@@ -125,9 +125,23 @@ public class ExecutionService {
 				continue;
 			}
 
-			if (edao.exceedsInProgressLimit(task)) {
-				MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
-				continue;
+			if (task.getStatus().equals(Status.SCHEDULED)) {
+				String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unpop.offset";
+				int unpopOffset = config.getIntProperty(propName, 30);
+
+				if (edao.exceedsInProgressLimit(task)) {
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
+					logger.debug("Concurrent Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
+					continue;
+				}
+
+				if (edao.exceedsRateLimitPerFrequency(task)) {
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
+					logger.debug("RateLimit Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
+					continue;
+				}
 			}
 
 			task.setStarted(true);
@@ -141,6 +155,7 @@ public class ExecutionService {
 			// Metrics
 			MetricService.getInstance().taskWait(task.getTaskType(),
 				task.getReferenceTaskName(),
+				task.getTaskDefName(),
 				task.getQueueWaitTime());
 
 			edao.updateTask(task);
@@ -197,8 +212,8 @@ public class ExecutionService {
 
 		if (task != null) {
 			if (task.getResponseTimeoutSeconds() > 0) {
-				logger.debug("Adding task " + queueName + "/" + taskId + " to be requeued if no response received " + task.getResponseTimeoutSeconds());
-				return queue.setUnackTimeout(queueName, task.getTaskId(), 1000 * task.getResponseTimeoutSeconds());        //Value is in millisecond
+				logger.debug("Adding task " + queueName + "/" + taskId + " to be re-queued if no response received " + task.getResponseTimeoutSeconds());
+				return queue.setUnackTimeout(queueName, task.getTaskId(), task.getResponseTimeoutSeconds() * 1000L);        //Value is in millisecond
 			} else {
 				return queue.ack(queueName, taskId);
 			}

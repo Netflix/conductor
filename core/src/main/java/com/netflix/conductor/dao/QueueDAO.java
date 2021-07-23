@@ -134,4 +134,8 @@ public interface QueueDAO {
 	public default void unpop(String queueName, String messageId)  {
 		throw new IllegalStateException("Not implemented");
 	}
+
+	public default void unpop(String queueName, String messageId, long offset)   {
+		throw new IllegalStateException("Not implemented");
+	}
 }
