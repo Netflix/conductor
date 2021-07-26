@@ -136,8 +136,7 @@ public class TaskResult {
     }
 
     /**
-     * Return the retry delay.
-     * @return
+     * @return Return the retry delay for the FAILED tasks
      */
     public int getRetryDelaySeconds()  {return retryDelaySeconds; }
 
