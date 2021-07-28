@@ -1,10 +1,9 @@
 package com.netflix.conductor.aurora;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.aurora.sql.ResultSetHandler;
-
 import com.netflix.conductor.dao.MetricsDAO;
 import com.netflix.conductor.service.MetricService;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -32,11 +31,10 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 		try {
 			List<Future<?>> futures = new LinkedList<>();
 
-			// Admin counters
-			futures.add(pool.submit(this::adminCounters));
-
-			// Workflow count
-			futures.add(pool.submit(this::workflowCount));
+			futures.add(pool.submit(this::queueDepth));
+			futures.add(pool.submit(this::httpQueueDepth));
+			futures.add(pool.submit(this::deciderQueueDepth));
+			futures.add(pool.submit(this::httpRunning));
 
 			// Wait until completed
 			waitCompleted(futures);
@@ -60,32 +58,95 @@ public class AuroraMetricsDAO extends AuroraBaseDAO implements MetricsDAO {
 		}
 	}
 
-	private void adminCounters() {
-		ResultSetHandler<Object> handler = rs -> {
+	private void queueDepth() {
+		String SQL = "SELECT queue_name, count(*) as count FROM queue_message GROUP BY queue_name";
+		List<Pair<String, Long>> queueData = queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
+			List<Pair<String, Long>> result = new LinkedList<>();
 			while (rs.next()) {
 				String queueName = rs.getString("queue_name").toLowerCase();
 				Long count = rs.getLong("count");
-				MetricService.getInstance().queueGauge(queueName, count);
+				result.add(Pair.of(queueName, count));
 			}
-			return null;
-		};
-
-		String SQL = "select queue_name, count(*) as count from queue_message group by queue_name";
-		queryWithTransaction(SQL, q -> q.executeAndFetch(handler));
+			return result;
+		}));
+		queueData.forEach(p -> MetricService.getInstance().queueDepth(p.getKey(), p.getValue()));
 	}
 
-	private void workflowCount() {
-		ResultSetHandler<Object> handler = rs -> {
+	private void httpQueueDepth() {
+		String SQL = "SELECT t.task_refname as task_refname " +
+				", t.json_data::jsonb->>'taskDefName' as task_defname " +
+				", (CASE WHEN (t.input::jsonb->'http_request')::jsonb->>'serviceDiscoveryQuery' IS NOT NULL THEN (t.input::jsonb->'http_request')::jsonb->>'serviceDiscoveryQuery' " +
+				"  WHEN (t.input::jsonb->'http_request')::jsonb->>'uri' LIKE 'https://%' THEN substr(ltrim((t.input::jsonb->'http_request')::jsonb->>'uri','https://'),0,strpos(ltrim((t.input::jsonb->'http_request')::jsonb->>'uri','https://'),'/')) " +
+				"  WHEN (t.input::jsonb->'http_request')::jsonb->>'uri' LIKE 'http://%' THEN substr(ltrim((t.input::jsonb->'http_request')::jsonb->>'uri','http://'),0,strpos(ltrim((t.input::jsonb->'http_request')::jsonb->>'uri','http://'),':')) " +
+				"  END) as service_name " +
+				", count(*) " +
+				"FROM task t JOIN queue_message q ON t.task_id = q.message_id " +
+				"WHERE q.queue_name = 'http' " +
+				"GROUP BY 1,2,3";
+		List<Pair<Pair<String, String>, Pair<String, Long>>> httpData = queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
+			List<Pair<Pair<String, String>, Pair<String, Long>>> result = new LinkedList<>();
+			while (rs.next()) {
+				String taskRefName = rs.getString("task_refname");
+				String taskDefName = rs.getString("task_defname");
+				String serviceName = rs.getString("service_name");
+				Long count = rs.getLong("count");
+
+				result.add(Pair.of(Pair.of(taskRefName, taskDefName), Pair.of(serviceName, count)));
+			}
+			return result;
+		}));
+		httpData.forEach(p -> MetricService.getInstance().httpQueueDepth(
+				p.getKey().getLeft(),      // task ref name
+				p.getKey().getRight(),     // task def name
+				p.getValue().getLeft(),    // service name
+				p.getValue().getRight())); // count
+	}
+
+	private void deciderQueueDepth() {
+		String SQL = "SELECT w.workflow_type, count(*) as count " +
+				"FROM queue_message q JOIN workflow w ON w.workflow_id = q.message_id " +
+				"WHERE q.queue_name = '_deciderqueue' " +
+				"GROUP BY w.workflow_type";
+		List<Pair<String, Long>> wfData = queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
+			List<Pair<String, Long>> result = new LinkedList<>();
 			while (rs.next()) {
 				String workflowType = rs.getString("workflow_type").toLowerCase();
 				Long count = rs.getLong("count");
-				MetricService.getInstance().workflowGauge(workflowType, count);
+				result.add(Pair.of(workflowType, count));
 			}
-			return null;
-		};
+			return result;
+		}));
+		wfData.forEach(p -> MetricService.getInstance().deciderQueueDepth(p.getKey(), p.getValue()));
+	}
 
-		String SQL = "select workflow_type, count(*) as count from workflow where workflow_status = 'RUNNING' group by workflow_type";
-		queryWithTransaction(SQL, q -> q.executeAndFetch(handler));
+	private void httpRunning() {
+		String SQL = "SELECT t.task_refname as task_refname " +
+				", t.json_data::jsonb->>'taskDefName' as task_defname " +
+				",(CASE WHEN (t.input::jsonb->'http_request')::jsonb->>'serviceDiscoveryQuery' IS NOT NULL THEN (t.input::jsonb->'http_request')::jsonb->>'serviceDiscoveryQuery' " +
+				"  WHEN (t.input::jsonb->'http_request')::jsonb->>'uri' LIKE 'https://%' THEN substr(ltrim((t.input::jsonb->'http_request')::jsonb->>'uri','https://'),0,strpos(ltrim((t.input::jsonb->'http_request')::jsonb->>'uri','https://'),'/')) " +
+				"  WHEN (t.input::jsonb->'http_request')::jsonb->>'uri' LIKE 'http://%' THEN substr(ltrim((t.input::jsonb->'http_request')::jsonb->>'uri','http://'),0,strpos(ltrim((t.input::jsonb->'http_request')::jsonb->>'uri','http://'),':')) " +
+				"  END) as service_name\n" +
+				", count(*)\n" +
+				"FROM task t JOIN task_in_progress p ON t.task_id = p.task_id\n" +
+				"WHERE p.in_progress = true\n" +
+				"GROUP BY 1, 2, 3";
+		List<Pair<Pair<String, String>, Pair<String, Long>>> httpData = queryWithTransaction(SQL, q -> q.executeAndFetch(rs -> {
+			List<Pair<Pair<String, String>, Pair<String, Long>>> result = new LinkedList<>();
+			while (rs.next()) {
+				String taskRefName = rs.getString("task_refname");
+				String taskDefName = rs.getString("task_defname");
+				String serviceName = rs.getString("service_name");
+				Long count = rs.getLong("count");
+
+				result.add(Pair.of(Pair.of(taskRefName, taskDefName), Pair.of(serviceName, count)));
+			}
+			return result;
+		}));
+		httpData.forEach(p -> MetricService.getInstance().httpRunningGauge(
+				p.getKey().getLeft(),      // task ref name
+				p.getKey().getRight(),     // task def name
+				p.getValue().getLeft(),    // service name
+				p.getValue().getRight())); // count
 	}
 
 	@Override
