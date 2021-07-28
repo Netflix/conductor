@@ -136,9 +136,11 @@ public class TaskResult {
     }
 
     /**
-     * @return Return the retry delay for the FAILED tasks.
+     * @return the retry delay for the FAILED tasks.
      */
-    public int getRetryDelaySeconds()  {return retryDelaySeconds; }
+    public int getRetryDelaySeconds()  {
+        return retryDelaySeconds;
+    }
 
     /**
      * When set to non-zero values, the task remains in the queue for the specified seconds before sent back to the
@@ -154,8 +156,8 @@ public class TaskResult {
     /**
      * Retry delay. It follows following logic to decide on retry interval:
      * <p>NO retry delay if the worker sends a negative value (<0) in the TaskResult</p>
-     * <p>Retry delay from the task definition or (workflow task?) if the worker sends 0 in the TaskResult</p>
-     * <p>Retry delay from the workflow task if the worker sends 0 in the TaskResult</p>
+     * <p>Retry delay from the task definition if the worker sends 0 in the TaskResult</p>
+     * <p>Retry delay from the workflow task if the worker sends a positive value (>0) value in the TaskResult</p>
      *
      * @param retryDelaySeconds
      */
