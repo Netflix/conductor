@@ -131,6 +131,16 @@ public class MetricService {
 		statsd.incrementCounter(aspect, toArray(tags));
 	}
 
+	public void httpStarted(String taskType, String refName, String defName, String service) {
+		Set<String> tagsCounter = new HashSet<>();
+		tagsCounter.add("metric:deluxe.conductor.http.started");
+		tagsCounter.add("task_type:" + taskType);
+		tagsCounter.add("ref_name:" + refName);
+		tagsCounter.add("def_name:" + defName);
+		tagsCounter.add("service:" + service);
+		statsd.incrementCounter(aspect, toArray(tagsCounter));
+	}
+
 	public void httpComplete(String taskType, String refName, String defName, String service, long execTime) {
 		Set<String> tagsCounter = new HashSet<>();
 		tagsCounter.add("metric:deluxe.conductor.http.complete");
@@ -377,27 +387,35 @@ public class MetricService {
 		statsd.recordExecutionTime(aspect, execTime, toArray(tagsTime));
 	}
 
-	public void queueGauge(String queue, Long count) {
-		Set<String> tagsCounter = new HashSet<>();
-		tagsCounter.add("metric:deluxe.conductor.queue.count");
-		tagsCounter.add("queue:" + queue);
-		statsd.incrementCounter(aspect, toArray(tagsCounter));
-
+	public void queueDepth(String queue, Long count) {
 		Set<String> tagsGauge = new HashSet<>();
 		tagsGauge.add("metric:deluxe.conductor.queue.gauge");
 		tagsGauge.add("queue:" + queue);
 		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
 	}
 
-	public void workflowGauge(String workflow, Long count) {
-		Set<String> tagsCounter = new HashSet<>();
-		tagsCounter.add("metric:deluxe.conductor.workflow.running.count");
-		tagsCounter.add("workflow:" + workflow);
-		statsd.incrementCounter(aspect, toArray(tagsCounter));
-
+	public void httpQueueDepth(String refName, String defName, String serviceName, Long count) {
 		Set<String> tagsGauge = new HashSet<>();
-		tagsGauge.add("metric:deluxe.conductor.workflow.running.gauge");
+		tagsGauge.add("metric:deluxe.conductor.queue.http.gauge");
+		tagsGauge.add("ref_name:" + refName);
+		tagsGauge.add("def_name:" + defName);
+		tagsGauge.add("service:" + serviceName);
+		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
+	}
+
+	public void deciderQueueDepth(String workflow, Long count) {
+		Set<String> tagsGauge = new HashSet<>();
+		tagsGauge.add("metric:deluxe.conductor.queue.decider.gauge");
 		tagsGauge.add("workflow:" + workflow);
+		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
+	}
+
+	public void httpRunningGauge(String refName, String defName, String serviceName, Long count) {
+		Set<String> tagsGauge = new HashSet<>();
+		tagsGauge.add("metric:deluxe.conductor.http.running.gauge");
+		tagsGauge.add("ref_name:" + refName);
+		tagsGauge.add("def_name:" + defName);
+		tagsGauge.add("service:" + serviceName);
 		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
 	}
 }

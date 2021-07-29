@@ -136,6 +136,11 @@ public class HttpTask extends GenericHttpTask {
 					+ ",correlationId=" + workflow.getCorrelationId()
 					+ ",traceId=" + workflow.getTraceId()
 					+ ",contextUser=" + workflow.getContextUser());
+			MetricService.getInstance().httpStarted(task.getTaskType(),
+					task.getReferenceTaskName(),
+					task.getTaskDefName(),
+					serviceName);
+
 			if (input.getContentType() != null) {
 				if (input.getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
 					String json = om.writeValueAsString(task.getInputData());
