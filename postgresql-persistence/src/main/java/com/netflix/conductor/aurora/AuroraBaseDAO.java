@@ -55,7 +55,10 @@ public abstract class AuroraBaseDAO {
 				tx.commit();
 				return result;
 			} catch (Throwable th) {
-				tx.rollback();
+				try {
+					tx.rollback();
+				} catch (SQLException ignore) {
+				}
 				logger.debug("Rollback issued due to " + th.getMessage(), th);
 				throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, th.getMessage(), th);
 			}
