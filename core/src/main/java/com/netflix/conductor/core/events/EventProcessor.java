@@ -19,6 +19,7 @@
 package com.netflix.conductor.core.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventExecution.Status;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -111,8 +112,12 @@ public class EventProcessor {
 
 			List<ObservableQueue> created = new LinkedList<>();
 			activeHandlers.parallelStream().forEach(handler -> queuesMap.computeIfAbsent(handler.getEvent(), s -> {
+				//validate handler/action conditions
+				validateHandlerConditions(handler);
+
 				ObservableQueue queue = EventQueues.getQueue(handler.getEvent(), false,
-					handler.isRetryEnabled(), handler.getPrefetchSize(), this::handle);
+						handler.isRetryEnabled(), handler.getPrefetchSize(), this::handle);
+
 				if (queue == null) {
 					return null;
 				}
@@ -476,5 +481,35 @@ public class EventProcessor {
 				NDC.remove();
 			}
 		});
+	}
+
+	public void validateHandlerConditions(EventHandler handler) {
+		String condition = handler.getCondition();
+		String conditionClass = handler.getConditionClass();
+		ObjectNode payloadObj = om.createObjectNode();
+		if (isNotEmpty(condition) || isNotEmpty(conditionClass)) {
+			try {
+				evalCondition(condition, conditionClass, payloadObj);
+			} catch (Exception ex) {
+				logger.error(handler.getName() + " event handler condition validation failed " + ex.getMessage(), ex);
+			}
+		}
+
+		//Validate handler action conditions
+		int i = 0;
+		List<Action> actions = handler.getActions();
+		for (Action action : actions) {
+			String actionName = action.getAction().name() + "_" + i;
+			String actionCondition = action.getCondition();
+			String actionConditionClass = action.getConditionClass();
+			ObjectNode actionPayloadObj = om.createObjectNode();
+			if (isNotEmpty(actionCondition) || isNotEmpty(actionConditionClass)) {
+				try {
+					evalCondition(actionCondition, actionConditionClass, actionPayloadObj);
+				} catch (Exception ex) {
+					logger.error(handler.getName() + " event handler action " + actionName + " condition validation failed " + ex.getMessage(), ex);
+				}
+			}
+		}
 	}
 }
