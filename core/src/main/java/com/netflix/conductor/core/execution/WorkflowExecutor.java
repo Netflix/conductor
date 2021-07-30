@@ -223,11 +223,17 @@ public class WorkflowExecutor {
 			wf.setAuthorization(authorization);
 			wf.setClientId(clientId);
 			wf.setContextUser(contextUser);
-			if (jobPriority != null) {
-				wf.setJobPriority(jobPriority);
-			} else {
-				wf.setJobPriority(5);
+			if (jobPriority == null) {
+				Object priority = input.get("jobPriority");
+				if (priority instanceof String) {
+					jobPriority = Integer.parseInt((String) priority);
+				} else if (priority instanceof Integer) {
+					jobPriority = (Integer)priority;
+				} else {
+					jobPriority = 5;
+				}
 			}
+			wf.setJobPriority(jobPriority);
 			if (traceIdEnabled) {
 				wf.setTraceId(traceId);
 			}
