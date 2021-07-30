@@ -332,6 +332,7 @@ public class WorkflowExecutor {
 				workflow.setInput(workflowInput);
 			}
 
+			workflow.setResetTags(false);
 			edao.updateWorkflow(workflow);
 
 			// metrics
@@ -381,6 +382,7 @@ public class WorkflowExecutor {
 				workflow.setInput(workflowInput);
 			}
 
+			workflow.setResetTags(false);
 			edao.updateWorkflow(workflow);
 
 			// metrics
@@ -485,6 +487,7 @@ public class WorkflowExecutor {
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
 		}
+		workflow.setResetTags(false);
 		edao.updateWorkflow(workflow);
 
 		// metrics
@@ -604,6 +607,7 @@ public class WorkflowExecutor {
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
 		}
+		workflow.setResetTags(false);
 		edao.updateWorkflow(workflow);
 
 		// metrics
@@ -1270,6 +1274,10 @@ public class WorkflowExecutor {
 
 			if(!outcome.tasksToBeUpdated.isEmpty() || !outcome.tasksToBeScheduled.isEmpty()) {
 				edao.updateTasks(tasksToBeUpdated);
+				boolean shallResetTags = tasksToBeUpdated.stream().anyMatch(t -> t.isTerminal() && t.shallResetTags());
+				if (shallResetTags) {
+					workflow.setResetTags(true);
+				}
 				edao.updateWorkflow(workflow);
 				queue.push(deciderQueue, workflow.getWorkflowId(), sweepFrequency, workflow.getJobPriority());
 			}

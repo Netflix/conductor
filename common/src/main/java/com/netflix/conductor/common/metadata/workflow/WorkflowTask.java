@@ -112,6 +112,8 @@ public class WorkflowTask {
 
 	private Long timeoutSeconds;
 
+	private Boolean resetTags;
+
 	/**
 	 * @return the name
 	 */
@@ -448,6 +450,14 @@ public class WorkflowTask {
 
 	public void setTimeoutSeconds(Long timeoutSeconds) {
 		this.timeoutSeconds = timeoutSeconds;
+	}
+
+	public Boolean getResetTags() {
+		return resetTags;
+	}
+
+	public void setResetTags(Boolean resetTags) {
+		this.resetTags = resetTags;
 	}
 
 	private Collection<List<WorkflowTask>> children(){

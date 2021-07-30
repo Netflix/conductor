@@ -99,6 +99,8 @@ public class Workflow extends Auditable {
 
 	private String traceId;
 
+	private boolean resetTags;
+
 	private int jobPriority;
 
 	public Workflow(){
@@ -442,6 +444,14 @@ public class Workflow extends Auditable {
 
 	public void setAttributes(Map<String, Object> attributes) {
 		this.attributes = attributes;
+	}
+
+	public boolean getResetTags() {
+		return resetTags;
+	}
+
+	public void setResetTags(boolean resetTags) {
+		this.resetTags = resetTags;
 	}
 
 	@Override
