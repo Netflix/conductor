@@ -224,7 +224,7 @@ public class WorkflowExecutor {
 			wf.setClientId(clientId);
 			wf.setContextUser(contextUser);
 			if (jobPriority == null) {
-				Object priority = input.get("jobPriority");
+				Object priority = input.get("jobPriority"); // Backward compatible
 				if (priority instanceof String) {
 					jobPriority = Integer.parseInt((String) priority);
 				} else if (priority instanceof Integer) {
