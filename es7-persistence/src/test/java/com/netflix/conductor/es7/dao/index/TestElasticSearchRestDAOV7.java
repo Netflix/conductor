@@ -63,16 +63,16 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
         String messageIndex = INDEX_PREFIX + "_" + MSG_DOC_TYPE + "_" + SIMPLE_DATE_FORMAT.format(new Date());
         String eventIndex = INDEX_PREFIX + "_" + EVENT_DOC_TYPE + "_" + SIMPLE_DATE_FORMAT.format(new Date());
 
-        assertTrue("Index 'conductor_workflow' should exist", indexExists("conductor_workflow"));
-        assertTrue("Index 'conductor_task' should exist", indexExists("conductor_task"));
+        assertTrue("Index 'conductor_workflow' should exist", indexExists(workflowIndex));
+        assertTrue("Index 'conductor_task' should exist", indexExists(taskIndex));
 
         assertTrue("Index '" + taskLogIndex + "' should exist", indexExists(taskLogIndex));
         assertTrue("Index '" + messageIndex + "' should exist", indexExists(messageIndex));
         assertTrue("Index '" + eventIndex + "' should exist", indexExists(eventIndex));
 
-        assertTrue("Index template for 'message' should exist", indexDAO.doesResourceExist("/_index_template/template_" + MSG_DOC_TYPE));
-        assertTrue("Index template for 'event' should exist", indexDAO.doesResourceExist("/_index_template/template_" + EVENT_DOC_TYPE));
-        assertTrue("Index template for 'task_log' should exist", indexDAO.doesResourceExist("/_index_template/template_" + LOG_DOC_TYPE));
+        assertTrue("Index template for 'message' should exist", indexDAO.doesResourceExist("/_template/template_" + MSG_DOC_TYPE));
+        assertTrue("Index template for 'event' should exist", indexDAO.doesResourceExist("/_template/template_" + EVENT_DOC_TYPE));
+        assertTrue("Index template for 'task_log' should exist", indexDAO.doesResourceExist("/_template/template_" + LOG_DOC_TYPE));
     }
 
     @Test

@@ -16,16 +16,8 @@ More information can be found here: https://www.elastic.co/guide/en/elasticsearc
 
 1. In order to use the ES7, you must change the following files from ES6 to ES7:
 
-https://github.com/Netflix/conductor/blob/main/server/build.gradle
 https://github.com/Netflix/conductor/blob/main/build.gradle
 https://github.com/Netflix/conductor/blob/main/server/src/main/resources/application.properties
-
-In file:
-
-- /server/build.gradle
-
-change module inclusion from 'es6-persistence' to 'es7-persistence'
-
 
 In file:
  
@@ -56,7 +48,6 @@ In file:
  
 - /test-harness/build.gradle
 
-* change ext['elasticsearch.version'] from revElasticSearch6 to revElasticSearch7
 * change module inclusion from 'es6-persistence' to 'es7-persistence'
 
 In file:
@@ -64,7 +55,7 @@ In file:
 - /test-harness/src/test/java/com/netflix/conductor/test/integration/AbstractEndToEndTest.java
 
 * change conductor.elasticsearch.version from 6 to 7
-* change DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("6.8.12") to DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("7.10.1")
+* change DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("6.8.12") to DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss").withTag("7.6.2")
 
 
 ## Usage

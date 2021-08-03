@@ -77,7 +77,13 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -249,13 +255,13 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
     private void initIndexTemplate(String type) {
         String template = "template_" + type;
         try {
-            if (doesResourceNotExist("/_index_template/" + template)) {
+            if (doesResourceNotExist("/_template/" + template)) {
                 logger.info("Creating the index template '" + template + "'");
                 InputStream stream = ElasticSearchRestDAOV7.class.getResourceAsStream("/" + template + ".json");
                 byte[] templateSource = IOUtils.toByteArray(stream);
 
                 HttpEntity entity = new NByteArrayEntity(templateSource, ContentType.APPLICATION_JSON);
-                Request request = new Request(HttpMethod.PUT, "/_index_template/" + template);
+                Request request = new Request(HttpMethod.PUT, "/_template/" + template);
                 request.setEntity(entity);
                 String test = IOUtils.toString(elasticSearchAdminClient
                     .performRequest(request).getEntity().getContent());
