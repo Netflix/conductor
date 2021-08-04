@@ -531,7 +531,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 	private void receiveMessagesFromQueue(String queueName) throws Exception {
 		int nb = 0;
-		Consumer consumer = new DefaultConsumer(publisherChannel) {
+		Consumer consumer = new DefaultConsumer(subscriberChannel) {
 
 			@Override
 			public void handleDelivery(final String consumerTag, final Envelope envelope,
@@ -555,10 +555,9 @@ public class AMQPObservableQueue implements ObservableQueue {
 			}
 			
 			
-			@Override
-		    public void handleRecoverOk(String consumerTag) {
-		        logger.info("consumer {} has recovered now", consumerTag);
-		    }
+			public void handleCancel(String consumerTag) throws IOException{
+				logger.info("Recieved a cancel notification for subscriber. Will monitor and make changes");										
+			}			
 			
 			
 		};
