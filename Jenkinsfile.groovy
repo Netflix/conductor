@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label "streamotion-maven-java11"
+        label "streamotion-docker-in-docker"
     }
 
     environment {
@@ -8,47 +8,97 @@ pipeline {
         container = 'docker'
     }
 
+
+
     stages {
-        stage('Setup Docker in Docker') {
+        stage('Integration-Test') {
+            when {
+                branch 'PR-*'
+            }
+            environment {
+                /*in the dind container, jenkins-k8s plugin mounts the default /var/run/docker.sock to the k8s node host docker daemon port, lets not mess with that
+                * instead the DOCKER im gonna run in this POD will use /var/run/dind.sock to publish docker daemon api*/
+                DOCKER_HOST = "unix:///var/run/dind.sock"
+                KUBECONFIG = "$HOME/.kube/config"
+
+                PREVIEW_VERSION = "0.0.0-SNAPSHOT-$PREVIEW_NAMESPACE-$BUILD_NUMBER"
+            }
             steps {
-                container('maven') {
-                    sh '''yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \\
-                      yum update -y && \\
-                      yum install -y docker-ce docker-ce-cli containerd.io'''
+                container('dind') {
+                    sh "env"
+                    sh "whoami"
+                    sh "echo $HOME"
+                    retry(3) { //flacky docker pulls
+                        sh 'kill -SIGTERM "$(pgrep dockerd)" || echo "NO dockerd found"'
+                        sh "sleep 5"
+                        sh "/usr/bin/dockerd -H unix:///var/run/dind.sock &"
+                        sh 'sleep 15' //wait for docker to be ready
+                        sh "docker ps"
+                        sh 'rm -rf $HOME/.kube/config | echo "No previous Kubeconfig found"'
+                    }
 
-                    sh '''update-alternatives --set iptables  /usr/sbin/iptables-legacy || true && \\
-                      update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true && \\
-                      update-alternatives --set arptables /usr/sbin/arptables-legacy || true'''
-
-                    sh '''set -x && \\
-                      groupadd --system dockremap && \\
-                      adduser --system -g dockremap dockremap && \\
-                      echo 'dockremap:165536:65536' >> /etc/subuid && \\
-                      echo 'dockremap:165536:65536' >> /etc/subgid'''
+                    sh "sleep 10"
+                    sh "docker ps"
                 }
             }
-        }
+            post {
 
-        stage('Compile & Test') {
-            steps {
-                container('maven') {
-                    sh "./gradlew build --info --stacktrace"
+                failure {
+                    //kill the docker engine
+                    sh "echo FAILED!!! Pls see POD logs"
+                    sh "sleep 6000"
+//                    sh 'kill -SIGTERM "$(pgrep dockerd)" || echo "dockerd not running"'
                 }
+
+
             }
+
         }
+
     }
 
-    post {
-        always {
-            container('maven') {
-                junit(
-                        testResults: '**/build/test-results/**/TEST-*.xml',
-                        allowEmptyResults: true
-                )
-            }
-            cleanWs()
-        }
-    }
+
+    // stages {
+    //     stage('Setup Docker in Docker') {
+    //         steps {
+    //             container('maven') {
+    //                 sh '''yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \\
+    //                   yum update -y && \\
+    //                   yum install -y docker-ce docker-ce-cli containerd.io'''
+
+    //                 sh '''update-alternatives --set iptables  /usr/sbin/iptables-legacy || true && \\
+    //                   update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true && \\
+    //                   update-alternatives --set arptables /usr/sbin/arptables-legacy || true'''
+
+    //                 sh '''set -x && \\
+    //                   groupadd --system dockremap && \\
+    //                   adduser --system -g dockremap dockremap && \\
+    //                   echo 'dockremap:165536:65536' >> /etc/subuid && \\
+    //                   echo 'dockremap:165536:65536' >> /etc/subgid'''
+    //             }
+    //         }
+    //     }
+
+    //     stage('Compile & Test') {
+    //         steps {
+    //             container('maven') {
+    //                 sh "./gradlew build --info --stacktrace"
+    //             }
+    //         }
+    //     }
+    // }
+
+    // post {
+    //     always {
+    //         container('maven') {
+    //             junit(
+    //                     testResults: '**/build/test-results/**/TEST-*.xml',
+    //                     allowEmptyResults: true
+    //             )
+    //         }
+    //         cleanWs()
+    //     }
+    // }
 
 //    environment {
 //        APP_NAME = 'netflix-conductor'
