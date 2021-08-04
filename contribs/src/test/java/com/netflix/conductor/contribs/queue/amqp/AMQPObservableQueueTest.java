@@ -202,7 +202,7 @@ public class AMQPObservableQueueTest {
 
 	ConnectionFactory mockConnectionFactory(Connection connection) throws IOException, TimeoutException {
 		ConnectionFactory connectionFactory = Mockito.mock(ConnectionFactory.class);
-		Mockito.when(connectionFactory.newConnection(eq(addresses))).thenReturn(connection);
+		Mockito.when(connectionFactory.newConnection(eq(addresses),Mockito.any())).thenReturn(connection);
 		return connectionFactory;
 	}
 
@@ -371,15 +371,9 @@ public class AMQPObservableQueueTest {
 
 		runObserve(channel, observableQueue, queueName, useWorkingChannel, batchSize);
 
-		if (useWorkingChannel) {
-			if (exists) {
-				verify(channel, atLeastOnce()).exchangeDeclarePassive(eq(name));
-			} else {
-				verify(channel, atLeastOnce()).exchangeDeclare(eq(name), eq(type), eq(settings.isDurable()),
-						eq(settings.autoDelete()), eq(Collections.emptyMap()));
-				verify(channel, atLeastOnce()).queueDeclare(eq(queueName), eq(settings.isDurable()), eq(settings.isExclusive()), eq(settings.autoDelete()),
-						anyMap());
-			}
+		if (useWorkingChannel) {		
+			verify(channel, atLeastOnce()).exchangeDeclare(eq(name), eq(type), eq(settings.isDurable()),eq(settings.autoDelete()), eq(Collections.emptyMap()));
+			verify(channel, atLeastOnce()).queueDeclare(eq(queueName), eq(settings.isDurable()), eq(settings.isExclusive()), eq(settings.autoDelete()),anyMap());			
 			verify(channel, atLeastOnce()).queueBind(eq(queueName), eq(name), eq(routingKey));
 		}
 	}
@@ -424,14 +418,11 @@ public class AMQPObservableQueueTest {
 		runObserve(channel, observableQueue, queueName, useWorkingChannel, batchSize);
 
 		if (useWorkingChannel) {
-			if (exists) {
-				verify(channel, atLeastOnce()).exchangeDeclarePassive(eq(name));
-			} else {
-				verify(channel, atLeastOnce()).exchangeDeclare(eq(name), eq(type), eq(settings.isDurable()),
-						eq(settings.autoDelete()), eq(Collections.emptyMap()));
-				verify(channel, atLeastOnce()).queueDeclare(eq(queueName), eq(settings.isDurable()), eq(settings.isExclusive()), eq(settings.autoDelete()),
-						anyMap());
-			}
+			
+			verify(channel, atLeastOnce()).exchangeDeclare(eq(name), eq(type), eq(settings.isDurable()),
+					eq(settings.autoDelete()), eq(Collections.emptyMap()));
+			verify(channel, atLeastOnce()).queueDeclare(eq(queueName), eq(settings.isDurable()), eq(settings.isExclusive()), eq(settings.autoDelete()),
+					anyMap());		
 			verify(channel, atLeastOnce()).queueBind(eq(queueName), eq(name), eq(routingKey));
 		}
 	}

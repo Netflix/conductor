@@ -13,6 +13,7 @@
 package com.netflix.conductor.contribs.queue.amqp;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -62,11 +63,13 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 	private boolean useExchange;
 	private int pollTimeInMS;
-	private boolean isConnOpened = false, isChanOpened = false;
+	
 
 	private ConnectionFactory factory;
-	private Connection connection;
-	private Channel channel;
+	private Connection publisherConnection;
+	private Connection subscriberConnection;
+	private Channel publisherChannel;
+	private Channel subscriberChannel;
 	private Address[] addresses;
 	protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
 
@@ -95,24 +98,20 @@ public class AMQPObservableQueue implements ObservableQueue {
 		this.setPollTimeInMS(pollTimeInMS);
 	}
 
-	private void connect() {
-		if (isConnOpened) {
-			return;
-		}
+		
+	private Connection createConnection() {
 		try {
-			connection = factory.newConnection(addresses);
-			isConnOpened = connection.isOpen();
-			if (!isConnOpened) {
+			Connection connection = factory.newConnection(addresses, System.getenv("HOSTNAME"));			
+			if (connection == null || !connection.isOpen()) {
 				throw new RuntimeException("Failed to open connection");
 			}
-		} catch (final IOException e) {
-			isConnOpened = false;
+			return connection;			
+		} catch (final IOException e) {			
 			final String error = "IO error while connecting to "
 					+ Arrays.stream(addresses).map(address -> address.toString()).collect(Collectors.joining(","));
 			logger.error(error, e);
 			throw new RuntimeException(error, e);
-		} catch (final TimeoutException e) {
-			isConnOpened = false;
+		} catch (final TimeoutException e) {			
 			final String error = "Timeout while connecting to "
 					+ Arrays.stream(addresses).map(address -> address.toString()).collect(Collectors.joining(","));
 			logger.error(error, e);
@@ -120,13 +119,6 @@ public class AMQPObservableQueue implements ObservableQueue {
 		}
 	}
 
-	private boolean isClosed() {
-		return !isConnOpened && !isChanOpened;
-	}
-
-	private void open() {
-		connect();
-	}
 
 	@Override
 	public Observable<Message> observe() {
@@ -192,7 +184,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 		for (final Message message : messages) {
 			try {
 				logger.info("ACK message with delivery tag {}", message.getReceipt());
-				getOrCreateChannel().basicAck(Long.valueOf(message.getReceipt()), false);
+				getOrCreateSubscriberChannel().basicAck(Long.valueOf(message.getReceipt()), false);
 				// Message ACKed
 				processedDeliveryTags.add(message.getReceipt());
 			} catch (final IOException e) {
@@ -214,7 +206,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 	private void publishMessage(Message message, String exchange, String routingKey) {
 		try {
 			final String payload = message.getPayload();
-			getOrCreateChannel().basicPublish(exchange, routingKey, buildBasicProperties(message, settings),
+			getOrCreatePublisherChannel().basicPublish(exchange, routingKey, buildBasicProperties(message, settings),
 					payload.getBytes(settings.getContentEncoding()));
 			logger.info(String.format("Published message to %s: %s", exchange, payload));
 		} catch (Exception ex) {
@@ -259,7 +251,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 	@Override
 	public long size() {
 		try {
-			return getOrCreateChannel().messageCount(settings.getQueueOrExchangeName());
+			return getOrCreateSubscriberChannel().messageCount(settings.getQueueOrExchangeName());
 		} catch (final Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -267,8 +259,19 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 	@Override
 	public void close() {
-		closeChannel();
-		closeConnection();
+		logger.info("Closing publisher channel");
+		try {
+			closeChannel(publisherChannel);		
+			closeConnection(publisherConnection);
+			closeChannel(subscriberChannel);
+			closeConnection(subscriberConnection);
+		}finally {
+			publisherChannel = null;
+			publisherConnection = null;
+			subscriberChannel = null;
+			subscriberConnection = null;
+		}
+		logger.info("Closing subscribe channel channel");
 	}
 
 	public static class Builder {
@@ -366,32 +369,83 @@ public class AMQPObservableQueue implements ObservableQueue {
 		}
 	}
 
-	private Channel getOrCreateChannel() {
-		if (!isConnOpened) {
-			open();
-		}
+	private Channel getOrCreateSubscriberChannel() {		
 		// Return the existing channel if it's still opened
-		if (channel != null && isChanOpened) {
-			return channel;
+		if (subscriberChannel != null ) {
+			return subscriberChannel;
 		}
 		// Channel creation is required
-		try {
-			channel = null;
-			channel = connection.createChannel();
-			channel.addShutdownListener(cause -> {
-				isChanOpened = false;
-				logger.error("Channel has been shutdown: {}", cause.getMessage(), cause);
+		try {			
+			if (subscriberConnection == null) {
+				subscriberConnection = createConnection();
+			}
+			subscriberChannel = subscriberConnection.createChannel();
+			subscriberChannel.addShutdownListener(cause -> {				
+				logger.error("subscription Channel has been shutdown: {}", cause.getMessage(), cause);				
+				if (cause.isHardError())
+				{
+					logger.warn("Hard error for subcription channel. Waiting for connection be recovered");
+				}
+				else
+				{
+					logger.error("A subscription channel level error. Recovery may not work.");
+					try {
+						closeChannel(subscriberChannel);
+					}finally {
+						subscriberChannel = null;
+					}
+				}
+			});
+		} catch (final IOException e) {
+			throw new RuntimeException("Cannot open subscription channel on "
+					+ Arrays.stream(addresses).map(address -> address.toString()).collect(Collectors.joining(",")), e);
+		}
+		
+		if (subscriberChannel == null || !subscriberChannel.isOpen()) {
+			throw new RuntimeException("Fail to open  subscription channel");
+		}
+		return subscriberChannel;
+	}
+	
+	private Channel getOrCreatePublisherChannel() {		
+		// Return the existing channel 
+		if (publisherChannel != null ) {
+			return publisherChannel;
+		}
+		// Channel creation is required
+		try {	
+			if (publisherConnection == null) {
+				publisherConnection = createConnection();
+			}
+			
+			publisherChannel = publisherConnection.createChannel();
+			publisherChannel.addShutdownListener(cause -> {				
+				logger.error("Publish Channel has been shutdown: {}", cause.getMessage(), cause);				
+				if (cause.isHardError())
+				{
+					logger.warn("Publish channel had a hard error. Application will wait for connection to be recovered");
+				}
+				else
+				{
+					logger.error("A channel level error occured for publishing channel. Recovery may not work.");
+					try {
+						closeChannel(publisherChannel);						
+					}finally {
+						publisherChannel = null;
+					} 
+				}
 			});
 		} catch (final IOException e) {
 			throw new RuntimeException("Cannot open channel on "
 					+ Arrays.stream(addresses).map(address -> address.toString()).collect(Collectors.joining(",")), e);
 		}
-		isChanOpened = channel.isOpen();
-		if (!isChanOpened) {
-			throw new RuntimeException("Fail to open channel");
+		
+		if (publisherChannel == null || !publisherChannel.isOpen()) {
+			throw new RuntimeException("Fail to open publish channel");
 		}
-		return channel;
+		return publisherChannel;
 	}
+		
 
 	private AMQP.Exchange.DeclareOk getOrCreateExchange() throws IOException {
 		return getOrCreateExchange(settings.getQueueOrExchangeName(), settings.getExchangeType(), settings.isDurable(),
@@ -406,15 +460,14 @@ public class AMQPObservableQueue implements ObservableQueue {
 		if (StringUtils.isEmpty(type)) {
 			throw new RuntimeException("Exchange type is undefined");
 		}
-		if (!isClosed()) {
-			open();
-		}
+		
 		AMQP.Exchange.DeclareOk declareOk;
 		try {
-			declareOk = getOrCreateChannel().exchangeDeclarePassive(name);
+			declareOk = getOrCreatePublisherChannel().exchangeDeclare(name, type, isDurable, autoDelete, arguments);
 		} catch (final IOException e) {
-			logger.warn("Exchange {} of type {} might not exists", name, type, e);
-			declareOk = getOrCreateChannel().exchangeDeclare(name, type, isDurable, autoDelete, arguments);
+			logger.error("Failed to create Exchange {} of type {} ", name, type);
+			throw e;
+			
 		}
 		return declareOk;
 	}
@@ -429,62 +482,40 @@ public class AMQPObservableQueue implements ObservableQueue {
 		if (StringUtils.isEmpty(name)) {
 			throw new RuntimeException("Queue name is undefined");
 		}
-		if (!isClosed()) {
-			open();
-		}
+		
 		AMQP.Queue.DeclareOk declareOk;
 		try {
-			declareOk = getOrCreateChannel().queueDeclarePassive(name);
+			declareOk = getOrCreatePublisherChannel().queueDeclare(name, isDurable, isExclusive, autoDelete, arguments);
 		} catch (final IOException e) {
-			logger.warn("Queue {} might not exists", name, e);
-			declareOk = getOrCreateChannel().queueDeclare(name, isDurable, isExclusive, autoDelete, arguments);
+			logger.warn("Failed to create queue {}", name);
+			throw e;
 		}
 		return declareOk;
 	}
 
-	private void closeConnection() {
+	private void closeConnection(Connection connection) {
 		if (connection == null) {
 			logger.warn("Connection is null. Do not close it");
 		} else {
 			try {
-				if (connection.isOpen()) {
-					try {
-						if (logger.isInfoEnabled()) {
-							logger.info("Close AMQP connection");
-						}
-						connection.close();
-					} catch (final IOException e) {
-						logger.warn("Fail to close connection: {}", e.getMessage(), e);
-					}
-				}
-			} finally {
-				isConnOpened = connection.isOpen();
-				connection = null;
+				publisherConnection.close();
+			} catch (final Exception e) {
+				logger.warn("Fail to close connection: {}", e.getMessage(), e);
 			}
 		}
 	}
+	
 
-	private void closeChannel() {
+	private void closeChannel(Channel channel) {
 		if (channel == null) {
 			logger.warn("Channel is null. Do not close it");
-		} else {
-			try {
-				if (channel.isOpen()) {
-					try {
-						if (logger.isInfoEnabled()) {
-							logger.info("Close AMQP channel");
-						}
-						channel.close();
-					} catch (final TimeoutException e) {
-						logger.warn("Timeout while closing channel: {}", e.getMessage(), e);
-					} catch (final IOException e) {
-						logger.warn("Fail to close channel: {}", e.getMessage(), e);
-					}
-				}
-			} finally {
-				channel = null;
+		} else {		
+			try {				
+				channel.close();
+			} catch (final Exception e) {
+				logger.warn("Fail to close channel: {}", e.getMessage(), e);
 			}
-		}
+		}				
 	}
 
 	private static Message asMessage(AMQPSettings settings, GetResponse response) throws Exception {
@@ -500,7 +531,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 	private void receiveMessagesFromQueue(String queueName) throws Exception {
 		int nb = 0;
-		Consumer consumer = new DefaultConsumer(channel) {
+		Consumer consumer = new DefaultConsumer(publisherChannel) {
 
 			@Override
 			public void handleDelivery(final String consumerTag, final Envelope envelope,
@@ -522,16 +553,26 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 				}
 			}
+			
+			
+			@Override
+		    public void handleRecoverOk(String consumerTag) {
+		        logger.info("consumer {} has recovered now", consumerTag);
+		    }
+			
+			
 		};
+		
+		
 
-		getOrCreateChannel().basicConsume(queueName, false, consumer);
+		getOrCreateSubscriberChannel().basicConsume(queueName, false, consumer);
 		Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
 		return;
 	}
 
 	protected void receiveMessages() {
 		try {
-			getOrCreateChannel().basicQos(batchSize);
+			getOrCreateSubscriberChannel().basicQos(batchSize);
 			String queueName;
 			if (useExchange) {
 				// Consume messages from an exchange
@@ -548,7 +589,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 						Maps.newHashMap());
 				// Bind the declared queue to exchange
 				queueName = declareOk.getQueue();
-				getOrCreateChannel().queueBind(queueName, settings.getQueueOrExchangeName(), settings.getRoutingKey());
+				getOrCreateSubscriberChannel().queueBind(queueName, settings.getQueueOrExchangeName(), settings.getRoutingKey());
 			} else {
 				// Consume messages from a queue
 				queueName = getOrCreateQueue().getQueue();
