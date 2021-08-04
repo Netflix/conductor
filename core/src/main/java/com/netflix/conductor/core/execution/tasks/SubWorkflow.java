@@ -69,6 +69,14 @@ public class SubWorkflow extends WorkflowSystemTask {
 		}
 		String correlationId = workflow.getCorrelationId();
 
+		int jobPriority = workflow.getJobPriority();
+		Object priority = wfInput.get("jobPriority"); // Backward compatible
+		if (priority instanceof String) {
+			jobPriority = Integer.parseInt((String) priority);
+		} else if (priority instanceof Integer) {
+			jobPriority = (Integer)priority;
+		}
+
 		try {
 
 			String subWorkflowId = provider.startWorkflow(name, version, wfInput, correlationId,
@@ -76,7 +84,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 				workflow.getTaskToDomain(), workflow.getWorkflowIds(),
 				workflow.getAuthorization(), workflow.getContextToken(),
 				workflow.getContextUser(), workflow.getTraceId(), async,
-				workflow.getJobPriority());
+				jobPriority);
 
 			task.getOutputData().put("subWorkflowId", subWorkflowId);
 			task.getInputData().put("subWorkflowId", subWorkflowId);
