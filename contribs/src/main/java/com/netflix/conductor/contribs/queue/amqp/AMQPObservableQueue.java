@@ -391,8 +391,10 @@ public class AMQPObservableQueue implements ObservableQueue {
 					logger.error("A subscription channel level error. Recovery may not work.");
 					try {
 						closeChannel(subscriberChannel);
+						closeConnection(subscriberConnection);
 					}finally {
 						subscriberChannel = null;
+						subscriberConnection = null;
 					}
 				}
 			});
@@ -429,9 +431,11 @@ public class AMQPObservableQueue implements ObservableQueue {
 				{
 					logger.error("A channel level error occured for publishing channel. Recovery may not work.");
 					try {
-						closeChannel(publisherChannel);						
+						closeChannel(publisherChannel);	
+						closeConnection(publisherConnection);
 					}finally {
 						publisherChannel = null;
+						publisherConnection = null;
 					} 
 				}
 			});

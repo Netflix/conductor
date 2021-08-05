@@ -65,7 +65,7 @@ ext {
     revCuratorRecipes = '2.4.0'
     revCuratorTest = '2.4.0'
     revPostgres = '42.2.6'
-    revAmqpClient = '5.8.0'
+    revAmqpClient = '5.13.0'
     revDockerCompose= '0.8.13'
     revGroovy = '2.4.15'
     revSpock = '1.3-groovy-2.4'
