@@ -13,7 +13,6 @@
 package com.netflix.conductor.contribs.queue.amqp;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -31,20 +30,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
-
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.metrics.Monitors;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Address;
-import com.rabbitmq.client.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.DeliverCallback;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 
@@ -71,6 +67,9 @@ public class AMQPObservableQueue implements ObservableQueue {
 	private Channel publisherChannel;
 	private Channel subscriberChannel;
 	private Address[] addresses;
+	
+	private final String PUBLISHER = "Publisher";
+	private final String SUBSCRIBER = "Subscriber";
 	protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
 
 	AMQPObservableQueue(final ConnectionFactory factory, final Address[] addresses, final boolean useExchange,
@@ -99,9 +98,9 @@ public class AMQPObservableQueue implements ObservableQueue {
 	}
 
 		
-	private Connection createConnection() {
+	private Connection createConnection(String connectionPrefix) {
 		try {
-			Connection connection = factory.newConnection(addresses, System.getenv("HOSTNAME"));			
+			Connection connection = factory.newConnection(addresses, System.getenv("HOSTNAME") + "-" + connectionPrefix);			
 			if (connection == null || !connection.isOpen()) {
 				throw new RuntimeException("Failed to open connection");
 			}
@@ -259,7 +258,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 	@Override
 	public void close() {
-		logger.info("Closing publisher channel");
+		logger.info("Closing all connections and channels");
 		try {
 			closeChannel(publisherChannel);		
 			closeConnection(publisherConnection);
@@ -271,7 +270,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 			subscriberChannel = null;
 			subscriberConnection = null;
 		}
-		logger.info("Closing subscribe channel channel");
+		
 	}
 
 	public static class Builder {
@@ -377,8 +376,9 @@ public class AMQPObservableQueue implements ObservableQueue {
 		// Channel creation is required
 		try {			
 			if (subscriberConnection == null) {
-				subscriberConnection = createConnection();
+				subscriberConnection = createConnection(SUBSCRIBER);
 			}
+			logger.debug("Creating a channel for subscriber");
 			subscriberChannel = subscriberConnection.createChannel();
 			subscriberChannel.addShutdownListener(cause -> {				
 				logger.error("subscription Channel has been shutdown: {}", cause.getMessage(), cause);				
@@ -417,9 +417,9 @@ public class AMQPObservableQueue implements ObservableQueue {
 		// Channel creation is required
 		try {	
 			if (publisherConnection == null) {
-				publisherConnection = createConnection();
+				publisherConnection = createConnection(PUBLISHER);
 			}
-			
+			logger.debug("Creating a channel for publisher");
 			publisherChannel = publisherConnection.createChannel();
 			publisherChannel.addShutdownListener(cause -> {				
 				logger.error("Publish Channel has been shutdown: {}", cause.getMessage(), cause);				
@@ -502,7 +502,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 			logger.warn("Connection is null. Do not close it");
 		} else {
 			try {
-				publisherConnection.close();
+				connection.close();
 			} catch (final Exception e) {
 				logger.warn("Fail to close connection: {}", e.getMessage(), e);
 			}
@@ -534,7 +534,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 	}
 
 	private void receiveMessagesFromQueue(String queueName) throws Exception {
-		int nb = 0;
+		
 		Consumer consumer = new DefaultConsumer(subscriberChannel) {
 
 			@Override
