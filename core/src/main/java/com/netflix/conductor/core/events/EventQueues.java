@@ -65,7 +65,7 @@ public class EventQueues {
 		}
 
 		String type = event.substring(0, index);
-		String queueURI = event.substring(index + 1);
+		String queueURI = event.substring(index + 1);		
 		EventQueueProvider provider = providers.get(type);
 		if (provider != null) {
 			return provider.getQueue(queueURI);
