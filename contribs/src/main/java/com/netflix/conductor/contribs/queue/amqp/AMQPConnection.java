@@ -57,8 +57,7 @@ public class AMQPConnection {
 	}
 	
 	private Connection createConnection(String connectionPrefix) {
-			
-			logger.info("Creating connection for {} instance {}" , connectionPrefix, System.identityHashCode(this));
+						
 			try {
 				Connection connection = factory.newConnection(addresses, System.getenv("HOSTNAME") + "-" + connectionPrefix);			
 				if (connection == null || !connection.isOpen()) {
@@ -113,7 +112,7 @@ public class AMQPConnection {
 	}
 	
 	private  Channel getOrCreateSubscriberChannel(String queueOrExchangeName) {		
-		logger.info("Subscriber for {}",queueOrExchangeName );
+		
 		String prefix = SUBSCRIBER + SEPARATOR;
 		// Return the existing channel if it's still opened
 		Channel subscriberChannel = queueNameToChannel.get(prefix+ queueOrExchangeName);
@@ -146,8 +145,7 @@ public class AMQPConnection {
 	}
 	
 	private Channel getOrCreatePublisherChannel(String queueOrExchangeName) {		
-		// Return the existing channel 
-		logger.info("Publisher for {}",queueOrExchangeName );
+		
 		String prefix = PUBLISHER + SEPARATOR;
 		Channel publisherChannel = queueNameToChannel.get(prefix +queueOrExchangeName);
 		if (publisherChannel != null ) {
