@@ -20,8 +20,11 @@ import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.constraints.OwnerEmailMandatoryConstraint;
+import com.netflix.conductor.common.constraints.RetryDelayPolicyConstraint;
 import com.netflix.conductor.common.constraints.TaskTimeoutConstraint;
 import com.netflix.conductor.common.metadata.Auditable;
+import com.netflix.conductor.common.metadata.RetryLogic;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,14 +42,12 @@ import javax.validation.constraints.NotNull;
  */
 @ProtoMessage
 @TaskTimeoutConstraint
+@RetryDelayPolicyConstraint
 @Valid
 public class TaskDef extends Auditable {
 
 	@ProtoEnum
 	public enum TimeoutPolicy {RETRY, TIME_OUT_WF, ALERT_ONLY}
-
-	@ProtoEnum
-	public enum RetryLogic {FIXED, EXPONENTIAL_BACKOFF, CUSTOM}
 
 	private static final int ONE_HOUR = 60 * 60;
 
@@ -78,10 +79,11 @@ public class TaskDef extends Auditable {
 	private TimeoutPolicy timeoutPolicy = TimeoutPolicy.TIME_OUT_WF;
 
 	@ProtoField(id = 8)
-	private RetryLogic retryLogic = RetryLogic.FIXED;
+	private RetryLogic.RetryLogicPolicy retryLogicPolicy = RetryLogic.RetryLogicPolicy.FIXED;
 
 	@ProtoField(id = 9)
 	private int retryDelaySeconds = 60;
+	private boolean isRetryDelaySet = false;
 
 	@ProtoField(id = 10)
 	@Min(value = 1, message = "TaskDef responseTimeoutSeconds: ${validatedValue} should be minimum {value} second")
@@ -248,17 +250,17 @@ public class TaskDef extends Auditable {
 	}
 
 	/**
-	 * @return the retryLogic
+	 * @return the retryLogic policy
 	 */
-	public RetryLogic getRetryLogic() {
-		return retryLogic;
+	public RetryLogic.RetryLogicPolicy getRetryLogicPolicy() {
+		return retryLogicPolicy;
 	}
 
 	/**
-	 * @param retryLogic the retryLogic to set
+	 * @param retryLogicPolicy the retryLogic to set
 	 */
-	public void setRetryLogic(RetryLogic retryLogic) {
-		this.retryLogic = retryLogic;
+	public void setRetryLogicPolicy(RetryLogic.RetryLogicPolicy retryLogicPolicy) {
+		this.retryLogicPolicy = retryLogicPolicy;
 	}
 
 	/**
@@ -266,6 +268,21 @@ public class TaskDef extends Auditable {
 	 */
 	public int getRetryDelaySeconds() {
 		return retryDelaySeconds;
+	}
+
+	/**
+	 * @param retryDelaySeconds the retryDelaySeconds to set
+	 */
+	public void setRetryDelaySeconds(int retryDelaySeconds) {
+		this.retryDelaySeconds = retryDelaySeconds;
+		this.isRetryDelaySet = true;
+	}
+
+	/**
+	 * @return if retryDelaySeconds is set
+	 */
+	public boolean isRetryDelaySet() {
+		return isRetryDelaySet;
 	}
 
 	/**
@@ -282,13 +299,6 @@ public class TaskDef extends Auditable {
 	 */
 	public void setResponseTimeoutSeconds(long responseTimeoutSeconds) {
 		this.responseTimeoutSeconds = responseTimeoutSeconds;
-	}
-
-	/**
-	 * @param retryDelaySeconds the retryDelaySeconds to set
-	 */
-	public void setRetryDelaySeconds(int retryDelaySeconds) {
-		this.retryDelaySeconds = retryDelaySeconds;
 	}
 
 	/**
@@ -426,7 +436,7 @@ public class TaskDef extends Auditable {
 				Objects.equals(getInputKeys(), taskDef.getInputKeys()) &&
 				Objects.equals(getOutputKeys(), taskDef.getOutputKeys()) &&
 				getTimeoutPolicy() == taskDef.getTimeoutPolicy() &&
-				getRetryLogic() == taskDef.getRetryLogic() &&
+				getRetryLogicPolicy() == taskDef.getRetryLogicPolicy() &&
 				Objects.equals(getConcurrentExecLimit(), taskDef.getConcurrentExecLimit()) &&
 				Objects.equals(getRateLimitPerFrequency(), taskDef.getRateLimitPerFrequency()) &&
 				Objects.equals(getInputTemplate(), taskDef.getInputTemplate()) &&
@@ -439,7 +449,7 @@ public class TaskDef extends Auditable {
 	public int hashCode() {
 
 		return Objects.hash(getName(), getDescription(), getRetryCount(), getTimeoutSeconds(), getInputKeys(),
-				getOutputKeys(), getTimeoutPolicy(), getRetryLogic(), getRetryDelaySeconds(),
+				getOutputKeys(), getTimeoutPolicy(), getRetryLogicPolicy(), getRetryDelaySeconds(),
 				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate(),
 				getIsolationGroupId(), getExecutionNameSpace(), getOwnerEmail());
 	}

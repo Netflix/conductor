@@ -21,8 +21,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.tasks.TaskDef.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.TaskDef.TimeoutPolicy;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.utils.JsonMapperProvider;
@@ -171,7 +171,7 @@ public class RedisMetadataDAOTest {
 		def.setOwnerApp("ownerApp");
 		def.setRetryCount(3);
 		def.setRetryDelaySeconds(100);
-		def.setRetryLogic(RetryLogic.FIXED);
+		def.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.FIXED);
 		def.setTimeoutPolicy(TimeoutPolicy.ALERT_ONLY);
 		def.setUpdatedBy("unit_test2");
 		def.setUpdateTime(2L);

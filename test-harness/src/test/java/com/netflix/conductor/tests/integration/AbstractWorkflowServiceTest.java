@@ -35,11 +35,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.netflix.conductor.common.metadata.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.tasks.TaskDef.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.TaskDef.TimeoutPolicy;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.DynamicForkJoinTaskList;
@@ -1438,7 +1438,7 @@ public abstract class AbstractWorkflowServiceTest {
         int retryCount = taskDef.getRetryCount();
         taskDef.setRetryCount(2);
         taskDef.setRetryDelaySeconds(0);
-        taskDef.setRetryLogic(RetryLogic.FIXED);
+        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.FIXED);
         metadataService.updateTaskDef(taskDef);
 
         Map<String, Object> workflowInput = new HashMap<>();
@@ -3641,14 +3641,20 @@ public abstract class AbstractWorkflowServiceTest {
 
     }
 
-    private void verifyRetriedTask(String wfId, String taskType, String workerId, boolean failed, int retryDelay, boolean terminal) {
+    private void verifyRetriedTask(String wfId, String taskType, String workerId, boolean failed, int retryDelayFromTask, boolean terminal,
+                                   boolean overrideRetryLogicWithWFTask, int retryDelayFromWorkflowTask) {
         Task task = workflowExecutionService.poll(taskType, workerId);
         assertNotNull(task);
         assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
         if (failed) {
             task.setStatus(FAILED);
-            task.setStartDelayInSeconds(retryDelay);
+            task.setStartDelayInSeconds(retryDelayFromTask);
             task.setReasonForIncompletion("failure...0");
+            if (overrideRetryLogicWithWFTask) {
+                WorkflowTask wfTask = task.getWorkflowTask();
+                wfTask.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.FIXED);
+                wfTask.setStartDelay(retryDelayFromWorkflowTask);
+            }
         } else {
             task.setStatus(COMPLETED);
         }
@@ -3666,14 +3672,14 @@ public abstract class AbstractWorkflowServiceTest {
         String taskName = "junit_task_2";
         TaskDef taskDef = notFoundSafeGetTaskDef(taskName);
         taskDef.setRetryCount(2);
-        taskDef.setRetryLogic(RetryLogic.CUSTOM);
+        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
         taskDef.setRetryDelaySeconds(2);
         metadataService.updateTaskDef(taskDef);
 
         taskName = "junit_task_3";
         taskDef = notFoundSafeGetTaskDef(taskName);
         taskDef.setRetryCount(2);
-        taskDef.setRetryLogic(RetryLogic.CUSTOM);
+        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
         taskDef.setRetryDelaySeconds(2);
         metadataService.updateTaskDef(taskDef);
 
@@ -3708,15 +3714,87 @@ public abstract class AbstractWorkflowServiceTest {
         task.setStatus(COMPLETED);
         workflowExecutionService.updateTask(task);
 
-        verifyRetriedTask(wfid, "junit_task_2", "task2.junit.worker", true, -1, false);
+        verifyRetriedTask(wfid, "junit_task_2", "task2.junit.worker", true, -1, false, false, -1);
         // Should have not delay since retry delay < 0
         Uninterruptibles.sleepUninterruptibly(0, TimeUnit.SECONDS);
-        verifyRetriedTask(wfid, "junit_task_2", "task2.junit.worker", false, -1, false);
+        verifyRetriedTask(wfid, "junit_task_2", "task2.junit.worker", false, -1, false, false, -1);
 
-        verifyRetriedTask(wfid, "junit_task_3", "task3.junit.worker", true, 0, true);
+        verifyRetriedTask(wfid, "junit_task_3", "task3.junit.worker", true, 0, true, false, -1);
         // Should use retry from task definition since retry delay = 0
         Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
-        verifyRetriedTask(wfid, "junit_task_3", "task3.junit.worker", false, 0, true);
+        verifyRetriedTask(wfid, "junit_task_3", "task3.junit.worker", false, 0, true, false, -1);
+
+        es = workflowExecutionService.getExecutionStatus(wfid, true);
+        assertEquals(5, es.getTasks().size());
+        assertEquals(COMPLETED, es.getTasks().get(0).getStatus());
+        assertEquals(FAILED, es.getTasks().get(1).getStatus());
+        assertEquals(COMPLETED, es.getTasks().get(2).getStatus());
+        assertEquals(FAILED, es.getTasks().get(3).getStatus());
+        assertEquals(COMPLETED, es.getTasks().get(4).getStatus());
+    }
+
+    @Test
+    public void testCustomRetryPolicyWithWorkflowTask() {
+        String taskName = "junit_task_2";
+        TaskDef taskDef = notFoundSafeGetTaskDef(taskName);
+        taskDef.setRetryCount(2);
+        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        taskDef.setRetryDelaySeconds(2);
+        metadataService.updateTaskDef(taskDef);
+
+        taskName = "junit_task_3";
+        taskDef = notFoundSafeGetTaskDef(taskName);
+        taskDef.setRetryCount(2);
+        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        taskDef.setRetryDelaySeconds(2);
+        metadataService.updateTaskDef(taskDef);
+
+        metadataService.getWorkflowDef(TEST_WORKFLOW, 1);
+
+        String correlationId = "unit_test_1";
+        Map<String, Object> input = new HashMap<String, Object>();
+        String inputParam1 = "p1 value";
+        input.put("param1", inputParam1);
+        input.put("param2", "p2 value");
+        String wfid = startOrLoadWorkflowExecution(TEST_WORKFLOW, 1, correlationId, input, null, null);
+        System.out.println("testRetries.wfid=" + wfid);
+        assertNotNull(wfid);
+
+        List<String> ids = workflowExecutionService.getRunningWorkflows(TEST_WORKFLOW, 1);
+        assertNotNull(ids);
+        assertTrue("found no ids: " + ids, ids.size() > 0);        //if there are concurrent tests running, this would be more than 1
+        boolean foundId = false;
+        for (String id : ids) {
+            if (id.equals(wfid)) {
+                foundId = true;
+            }
+        }
+        assertTrue(foundId);
+        Workflow es = workflowExecutionService.getExecutionStatus(wfid, true);
+        assertNotNull(es);
+        assertEquals(RUNNING, es.getStatus());
+
+        Task task = workflowExecutionService.poll("junit_task_1", "task1.junit.worker");
+        assertNotNull(task);
+        assertTrue(workflowExecutionService.ackTaskReceived(task.getTaskId()));
+        task.setStatus(COMPLETED);
+        workflowExecutionService.updateTask(task);
+
+        verifyRetriedTask(wfid, "junit_task_2", "task2.junit.worker", true, -1,
+            false, true, 3);
+        // Should have not delay since retry delay < 0, but since wfTask has fixed retry delay,
+        // it will be retried after 3 seconds
+        Uninterruptibles.sleepUninterruptibly(3, TimeUnit.SECONDS);
+        verifyRetriedTask(wfid, "junit_task_2", "task2.junit.worker", false, -1,
+            false, true, 3);
+
+        verifyRetriedTask(wfid, "junit_task_3", "task3.junit.worker", true, 0,
+            true, true, 3);
+        // Should use retry from task definition since retry delay = 0, but since wfTask has fixed retry delay,
+        // it will be retried after 3 seconds
+        Uninterruptibles.sleepUninterruptibly(3, TimeUnit.SECONDS);
+        verifyRetriedTask(wfid, "junit_task_3", "task3.junit.worker", false, 0,
+            true, true, 3);
 
         es = workflowExecutionService.getExecutionStatus(wfid, true);
         assertEquals(5, es.getTasks().size());

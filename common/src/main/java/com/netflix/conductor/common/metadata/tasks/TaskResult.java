@@ -155,9 +155,9 @@ public class TaskResult {
 
     /**
      * Retry delay. It follows following logic to decide on retry interval:
-     * <p>NO retry delay if the worker sends a negative value (<0) in the TaskResult</p>
+     * <p>NO retry delay if the worker sends a negative value in the TaskResult</p>
      * <p>Retry delay from the task definition if the worker sends 0 in the TaskResult</p>
-     * <p>Retry delay from the workflow task if the worker sends a positive value (>0) value in the TaskResult</p>
+     * <p>Retry delay from the workflow task if the worker sends a positive value in the TaskResult</p>
      *
      * @param retryDelaySeconds
      */

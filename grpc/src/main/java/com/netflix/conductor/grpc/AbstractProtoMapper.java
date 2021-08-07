@@ -2,6 +2,7 @@ package com.netflix.conductor.grpc;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.Value;
+import com.netflix.conductor.common.metadata.RetryLogic;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -26,6 +27,7 @@ import com.netflix.conductor.proto.EventExecutionPb;
 import com.netflix.conductor.proto.EventHandlerPb;
 import com.netflix.conductor.proto.PollDataPb;
 import com.netflix.conductor.proto.RerunWorkflowRequestPb;
+import com.netflix.conductor.proto.RetryLogicPb;
 import com.netflix.conductor.proto.SkipTaskRequestPb;
 import com.netflix.conductor.proto.StartWorkflowRequestPb;
 import com.netflix.conductor.proto.SubWorkflowParamsPb;
@@ -388,6 +390,40 @@ public abstract class AbstractProtoMapper {
         return to;
     }
 
+    public RetryLogicPb.RetryLogic toProto(RetryLogic from) {
+        RetryLogicPb.RetryLogic.Builder to = RetryLogicPb.RetryLogic.newBuilder();
+        return to.build();
+    }
+
+    public RetryLogic fromProto(RetryLogicPb.RetryLogic from) {
+        RetryLogic to = new RetryLogic();
+        return to;
+    }
+
+    public RetryLogicPb.RetryLogic.RetryLogicPolicy toProto(RetryLogic.RetryLogicPolicy from) {
+        RetryLogicPb.RetryLogic.RetryLogicPolicy to;
+        switch (from) {
+            case FIXED: to = RetryLogicPb.RetryLogic.RetryLogicPolicy.FIXED; break;
+            case EXPONENTIAL_BACKOFF: to = RetryLogicPb.RetryLogic.RetryLogicPolicy.EXPONENTIAL_BACKOFF; break;
+            case CUSTOM: to = RetryLogicPb.RetryLogic.RetryLogicPolicy.CUSTOM; break;
+            case UNSPECIFIED: to = RetryLogicPb.RetryLogic.RetryLogicPolicy.UNSPECIFIED; break;
+            default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
+        }
+        return to;
+    }
+
+    public RetryLogic.RetryLogicPolicy fromProto(RetryLogicPb.RetryLogic.RetryLogicPolicy from) {
+        RetryLogic.RetryLogicPolicy to;
+        switch (from) {
+            case FIXED: to = RetryLogic.RetryLogicPolicy.FIXED; break;
+            case EXPONENTIAL_BACKOFF: to = RetryLogic.RetryLogicPolicy.EXPONENTIAL_BACKOFF; break;
+            case CUSTOM: to = RetryLogic.RetryLogicPolicy.CUSTOM; break;
+            case UNSPECIFIED: to = RetryLogic.RetryLogicPolicy.UNSPECIFIED; break;
+            default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
+        }
+        return to;
+    }
+
     public SkipTaskRequest fromProto(SkipTaskRequestPb.SkipTaskRequest from) {
         SkipTaskRequest to = new SkipTaskRequest();
         Map<String, Object> taskInputMap = new HashMap<String, Object>();
@@ -676,8 +712,8 @@ public abstract class AbstractProtoMapper {
         if (from.getTimeoutPolicy() != null) {
             to.setTimeoutPolicy( toProto( from.getTimeoutPolicy() ) );
         }
-        if (from.getRetryLogic() != null) {
-            to.setRetryLogic( toProto( from.getRetryLogic() ) );
+        if (from.getRetryLogicPolicy() != null) {
+            to.setRetryLogicPolicy( toProto( from.getRetryLogicPolicy() ) );
         }
         to.setRetryDelaySeconds( from.getRetryDelaySeconds() );
         to.setResponseTimeoutSeconds( from.getResponseTimeoutSeconds() );
@@ -717,7 +753,7 @@ public abstract class AbstractProtoMapper {
         to.setInputKeys( from.getInputKeysList().stream().collect(Collectors.toCollection(ArrayList::new)) );
         to.setOutputKeys( from.getOutputKeysList().stream().collect(Collectors.toCollection(ArrayList::new)) );
         to.setTimeoutPolicy( fromProto( from.getTimeoutPolicy() ) );
-        to.setRetryLogic( fromProto( from.getRetryLogic() ) );
+        to.setRetryLogicPolicy( fromProto( from.getRetryLogicPolicy() ) );
         to.setRetryDelaySeconds( from.getRetryDelaySeconds() );
         to.setResponseTimeoutSeconds( from.getResponseTimeoutSeconds() );
         to.setConcurrentExecLimit( from.getConcurrentExecLimit() );
@@ -732,28 +768,6 @@ public abstract class AbstractProtoMapper {
         to.setExecutionNameSpace( from.getExecutionNameSpace() );
         to.setOwnerEmail( from.getOwnerEmail() );
         to.setPollTimeoutSeconds( from.getPollTimeoutSeconds() );
-        return to;
-    }
-
-    public TaskDefPb.TaskDef.RetryLogic toProto(TaskDef.RetryLogic from) {
-        TaskDefPb.TaskDef.RetryLogic to;
-        switch (from) {
-            case FIXED: to = TaskDefPb.TaskDef.RetryLogic.FIXED; break;
-            case EXPONENTIAL_BACKOFF: to = TaskDefPb.TaskDef.RetryLogic.EXPONENTIAL_BACKOFF; break;
-            case CUSTOM: to = TaskDefPb.TaskDef.RetryLogic.CUSTOM; break;
-            default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
-        }
-        return to;
-    }
-
-    public TaskDef.RetryLogic fromProto(TaskDefPb.TaskDef.RetryLogic from) {
-        TaskDef.RetryLogic to;
-        switch (from) {
-            case FIXED: to = TaskDef.RetryLogic.FIXED; break;
-            case EXPONENTIAL_BACKOFF: to = TaskDef.RetryLogic.EXPONENTIAL_BACKOFF; break;
-            case CUSTOM: to = TaskDef.RetryLogic.CUSTOM; break;
-            default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
-        }
         return to;
     }
 
@@ -1283,6 +1297,9 @@ public abstract class AbstractProtoMapper {
         if (from.getRetryCount() != null) {
             to.setRetryCount( from.getRetryCount() );
         }
+        if (from.getRetryLogicPolicy() != null) {
+            to.setRetryLogicPolicy( toProto( from.getRetryLogicPolicy() ) );
+        }
         return to.build();
     }
 
@@ -1326,6 +1343,7 @@ public abstract class AbstractProtoMapper {
         to.setLoopCondition( from.getLoopCondition() );
         to.setLoopOver( from.getLoopOverList().stream().map(this::fromProto).collect(Collectors.toCollection(ArrayList::new)) );
         to.setRetryCount( from.getRetryCount() );
+        to.setRetryLogicPolicy( fromProto( from.getRetryLogicPolicy() ) );
         return to;
     }
 
