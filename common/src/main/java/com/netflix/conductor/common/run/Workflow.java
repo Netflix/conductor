@@ -101,7 +101,7 @@ public class Workflow extends Auditable {
 
 	private boolean resetTags;
 
-	private int jobPriority;
+	private int jobPriority = 5;
 
 	public Workflow(){
 		
