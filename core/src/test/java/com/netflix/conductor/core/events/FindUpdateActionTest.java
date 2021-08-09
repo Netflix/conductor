@@ -91,4 +91,59 @@ public class FindUpdateActionTest {
         assertTrue(matches);
     }
 
+    @Test
+    public void match_integer_params_true() throws Exception {
+        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
+
+        Map<String, Object> task = new HashMap<>();
+        task.put("p", 1);
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("p", 1);
+
+        boolean matches = findUpdateAction.matches(task, event, null);
+        assertTrue(matches);
+    }
+
+    @Test
+    public void match_integer_params_false() throws Exception {
+        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
+
+        Map<String, Object> task = new HashMap<>();
+        task.put("p", 1);
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("p", 2);
+
+        boolean matches = findUpdateAction.matches(task, event, null);
+        assertFalse(matches);
+    }
+
+    @Test
+    public void match_integer_params_with_string_true() throws Exception {
+        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
+
+        Map<String, Object> task = new HashMap<>();
+        task.put("p", 1);
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("p", "1");
+
+        boolean matches = findUpdateAction.matches(task, event, null);
+        assertTrue(matches);
+    }
+
+    @Test
+    public void match_integer_params_with_string_false() throws Exception {
+        FindUpdateAction findUpdateAction = new FindUpdateAction(mock(WorkflowExecutor.class));
+
+        Map<String, Object> task = new HashMap<>();
+        task.put("p", 1);
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("p", "2");
+
+        boolean matches = findUpdateAction.matches(task, event, null);
+        assertFalse(matches);
+    }
 }
