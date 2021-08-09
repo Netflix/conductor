@@ -12,7 +12,7 @@ COPY . /conductor
 WORKDIR /conductor
 
 # Build the server on run
-RUN ./gradlew build -x test
+#RUN ./gradlew build -x test
 
 # 1. Bin stage
 FROM openjdk:8-jre-alpine

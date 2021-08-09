@@ -69,9 +69,9 @@ public class QueueManager {
 		this.queues = queues;
 		this.executionService = executionService;
 		this.objectMapper = objectMapper;
-		queues.entrySet().forEach(e -> {
+		queues.entrySet().forEach(e -> {			
 			Status status = e.getKey();
-			ObservableQueue queue = e.getValue();
+			ObservableQueue queue = e.getValue();			
 			startMonitor(status, queue);
 		});
 	}
