@@ -60,7 +60,10 @@ public class AuroraErrorLookupDAO extends AuroraBaseDAO implements ErrorLookupDA
 			SQL.append("WHERE matched_txt IS NOT NULL ");
 			SQL.append("ORDER BY WORKFLOW_NAME, LENGTH(matched_txt) DESC ");
 
-			return query( tx, SQL.toString(), q-> q.addParameter(errorString).addParameter(workflow).executeAndFetch(handler));
+			// remove "null character" that is not supported by Aurora in text fields
+			String normalizedErrorString = errorString.replace("\u0000", "");
+
+			return query( tx, SQL.toString(), q-> q.addParameter(normalizedErrorString).addParameter(workflow).executeAndFetch(handler));
 
 		});
 	}
