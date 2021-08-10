@@ -20,10 +20,9 @@ import com.github.vmg.protogen.annotations.ProtoEnum;
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
 import com.netflix.conductor.common.constraints.OwnerEmailMandatoryConstraint;
-import com.netflix.conductor.common.constraints.RetryDelayPolicyConstraint;
+import com.netflix.conductor.common.constraints.RetryLogicConstraint;
 import com.netflix.conductor.common.constraints.TaskTimeoutConstraint;
 import com.netflix.conductor.common.metadata.Auditable;
-import com.netflix.conductor.common.metadata.RetryLogic;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,12 +41,15 @@ import javax.validation.constraints.NotNull;
  */
 @ProtoMessage
 @TaskTimeoutConstraint
-@RetryDelayPolicyConstraint
+@RetryLogicConstraint
 @Valid
 public class TaskDef extends Auditable {
 
 	@ProtoEnum
 	public enum TimeoutPolicy {RETRY, TIME_OUT_WF, ALERT_ONLY}
+
+	@ProtoEnum
+	public enum RetryLogic {FIXED, EXPONENTIAL_BACKOFF, CUSTOM, UNSPECIFIED}
 
 	private static final int ONE_HOUR = 60 * 60;
 
@@ -79,7 +81,7 @@ public class TaskDef extends Auditable {
 	private TimeoutPolicy timeoutPolicy = TimeoutPolicy.TIME_OUT_WF;
 
 	@ProtoField(id = 8)
-	private RetryLogic.RetryLogicPolicy retryLogicPolicy = RetryLogic.RetryLogicPolicy.FIXED;
+	private RetryLogic retryLogic = RetryLogic.FIXED;
 
 	@ProtoField(id = 9)
 	private int retryDelaySeconds = 60;
@@ -250,17 +252,17 @@ public class TaskDef extends Auditable {
 	}
 
 	/**
-	 * @return the retryLogic policy
+	 * @return the retryLogic
 	 */
-	public RetryLogic.RetryLogicPolicy getRetryLogicPolicy() {
-		return retryLogicPolicy;
+	public RetryLogic getRetryLogic() {
+		return retryLogic;
 	}
 
 	/**
-	 * @param retryLogicPolicy the retryLogic to set
+	 * @param retryLogic the retryLogic to set
 	 */
-	public void setRetryLogicPolicy(RetryLogic.RetryLogicPolicy retryLogicPolicy) {
-		this.retryLogicPolicy = retryLogicPolicy;
+	public void setRetryLogic(RetryLogic retryLogic) {
+		this.retryLogic = retryLogic;
 	}
 
 	/**
@@ -436,7 +438,7 @@ public class TaskDef extends Auditable {
 				Objects.equals(getInputKeys(), taskDef.getInputKeys()) &&
 				Objects.equals(getOutputKeys(), taskDef.getOutputKeys()) &&
 				getTimeoutPolicy() == taskDef.getTimeoutPolicy() &&
-				getRetryLogicPolicy() == taskDef.getRetryLogicPolicy() &&
+				getRetryLogic() == taskDef.getRetryLogic() &&
 				Objects.equals(getConcurrentExecLimit(), taskDef.getConcurrentExecLimit()) &&
 				Objects.equals(getRateLimitPerFrequency(), taskDef.getRateLimitPerFrequency()) &&
 				Objects.equals(getInputTemplate(), taskDef.getInputTemplate()) &&
@@ -449,7 +451,7 @@ public class TaskDef extends Auditable {
 	public int hashCode() {
 
 		return Objects.hash(getName(), getDescription(), getRetryCount(), getTimeoutSeconds(), getInputKeys(),
-				getOutputKeys(), getTimeoutPolicy(), getRetryLogicPolicy(), getRetryDelaySeconds(),
+				getOutputKeys(), getTimeoutPolicy(), getRetryLogic(), getRetryDelaySeconds(),
 				getResponseTimeoutSeconds(), getConcurrentExecLimit(), getRateLimitPerFrequency(), getInputTemplate(),
 				getIsolationGroupId(), getExecutionNameSpace(), getOwnerEmail());
 	}

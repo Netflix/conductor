@@ -17,11 +17,11 @@ package com.netflix.conductor.common.tasks;
 
 import static org.junit.Assert.*;
 
-import com.netflix.conductor.common.metadata.RetryLogic;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.tasks.TaskDef.RetryLogic;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -66,7 +66,7 @@ public class TaskDefTest {
         taskDef.setRetryCount(-1);
         taskDef.setTimeoutSeconds(1000);
         taskDef.setResponseTimeoutSeconds(1001);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.FIXED);
+        taskDef.setRetryLogic(RetryLogic.FIXED);
         taskDef.setRetryDelaySeconds(10);
 
         Set<ConstraintViolation<Object>> result = validator.validate(taskDef);
@@ -88,7 +88,7 @@ public class TaskDefTest {
         taskDef.setTimeoutSeconds(1000);
         taskDef.setResponseTimeoutSeconds(10);
         taskDef.setOwnerEmail("test@xyz.com");
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.UNSPECIFIED);
+        taskDef.setRetryLogic(RetryLogic.UNSPECIFIED);
         taskDef.setRetryDelaySeconds(100);
 
         Set<ConstraintViolation<Object>> result = validator.validate(taskDef);

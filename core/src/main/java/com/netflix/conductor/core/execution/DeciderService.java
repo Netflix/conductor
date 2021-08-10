@@ -21,7 +21,6 @@ import static com.netflix.conductor.common.metadata.workflow.TaskType.SUB_WORKFL
 import static com.netflix.conductor.common.metadata.workflow.TaskType.TERMINATE;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.netflix.conductor.common.metadata.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -442,15 +441,15 @@ public class DeciderService {
         // retry... - but not immediately - put a delay...
         int startDelay;
         // If workflowTask has a retry policy, prefer it over taskDef
-        if (workflowTask.getRetryLogicPolicy() != RetryLogic.RetryLogicPolicy.UNSPECIFIED) {
-            startDelay = getRetryDelayInSeconds(workflowTask.getRetryLogicPolicy(), workflowTask.getStartDelay(), task);
+        if (workflowTask.getRetryLogic() != TaskDef.RetryLogic.UNSPECIFIED) {
+            startDelay = getRetryDelayInSeconds(workflowTask.getRetryLogic(), workflowTask.getStartDelay(), task);
         } else {
             // TaskDef policy is unspecified
-            if (taskDefinition.getRetryLogicPolicy() == RetryLogic.RetryLogicPolicy.UNSPECIFIED) {
+            if (taskDefinition.getRetryLogic() == TaskDef.RetryLogic.UNSPECIFIED) {
                 // Constant value
                 startDelay = taskDefinition.getRetryDelaySeconds();
             } else {
-                startDelay = getRetryDelayInSeconds(taskDefinition.getRetryLogicPolicy(), taskDefinition.getRetryDelaySeconds(), task);
+                startDelay = getRetryDelayInSeconds(taskDefinition.getRetryLogic(), taskDefinition.getRetryDelaySeconds(), task);
             }
         }
 
@@ -494,7 +493,7 @@ public class DeciderService {
      * @param task
      * @return the derived value of retry delay in seconds
      */
-    int getRetryDelayInSeconds(RetryLogic.RetryLogicPolicy retryLogicPolicy, int retryDelay, Task task) {
+    int getRetryDelayInSeconds(TaskDef.RetryLogic retryLogicPolicy, int retryDelay, Task task) {
         int startDelayInSeconds;
         switch (retryLogicPolicy) {
             case FIXED:

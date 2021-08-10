@@ -26,10 +26,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.common.metadata.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.tasks.TaskDef.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.TaskDef.TimeoutPolicy;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.TaskType;
@@ -729,7 +729,7 @@ public class TestDeciderService {
 
         TaskDef taskDef = new TaskDef();
         taskDef.setRetryDelaySeconds(60);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.EXPONENTIAL_BACKOFF);
+        taskDef.setRetryLogic(TaskDef.RetryLogic.EXPONENTIAL_BACKOFF);
         WorkflowTask workflowTask = new WorkflowTask();
 
         Optional<Task> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
@@ -758,7 +758,7 @@ public class TestDeciderService {
 
         TaskDef taskDef = new TaskDef();
         taskDef.setRetryDelaySeconds(60);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        taskDef.setRetryLogic(TaskDef.RetryLogic.CUSTOM);
         WorkflowTask workflowTask = new WorkflowTask();
 
         // Retry delay from the task
@@ -787,10 +787,10 @@ public class TestDeciderService {
 
         TaskDef taskDef = new TaskDef();
         taskDef.setRetryDelaySeconds(60);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        taskDef.setRetryLogic(TaskDef.RetryLogic.CUSTOM);
 
         WorkflowTask workflowTask = new WorkflowTask();
-        workflowTask.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.FIXED);
+        workflowTask.setRetryLogic(RetryLogic.FIXED);
         workflowTask.setStartDelay(80);
 
         // Retry delay from the task as tasDef retry policy is CUSTOM,
@@ -801,7 +801,7 @@ public class TestDeciderService {
         // Retry delay from the task as tasDef retry policy is CUSTOM,
         // but workflow task would be preferred which is CUSTOM (retryDelay will be 0 since task.retryDelay = -1)
         task2.get().setStartDelayInSeconds(-1);
-        workflowTask.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        workflowTask.setRetryLogic(RetryLogic.CUSTOM);
         workflowTask.setStartDelay(90);
         // Custom retry policy from Workflow,
         Optional<Task> task3 = deciderService.retry(taskDef, workflowTask, task2.get(), workflow);

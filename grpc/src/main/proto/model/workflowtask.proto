@@ -3,7 +3,6 @@ package conductor.proto;
 
 import "model/taskdef.proto";
 import "model/subworkflowparams.proto";
-import "model/retrylogic.proto";
 import "google/protobuf/struct.proto";
 
 option java_package = "com.netflix.conductor.proto";
@@ -40,5 +39,5 @@ message WorkflowTask {
     string loop_condition = 24;
     repeated WorkflowTask loop_over = 25;
     int32 retry_count = 26;
-    RetryLogic.RetryLogicPolicy retry_logic_policy = 27;
+    TaskDef.RetryLogic retry_logic = 27;
 }

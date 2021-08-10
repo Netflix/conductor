@@ -17,7 +17,6 @@ package com.netflix.conductor.common.metadata.workflow;
 
 import com.github.vmg.protogen.annotations.ProtoField;
 import com.github.vmg.protogen.annotations.ProtoMessage;
-import com.netflix.conductor.common.metadata.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import java.util.Collection;
 import java.util.HashMap;
@@ -168,7 +167,7 @@ public class WorkflowTask {
 	private Integer retryCount;
 
 	@ProtoField(id = 27)
-	private RetryLogic.RetryLogicPolicy retryLogicPolicy = RetryLogic.RetryLogicPolicy.UNSPECIFIED;
+	private TaskDef.RetryLogic retryLogic = TaskDef.RetryLogic.UNSPECIFIED;
 
 	/**
 	 * @return the name
@@ -534,17 +533,17 @@ public class WorkflowTask {
 	}
 
 	/**
-	 * @return the retryLogicPolicy
+	 * @return the retryLogic
 	 */
-	public RetryLogic.RetryLogicPolicy getRetryLogicPolicy() {
-		return retryLogicPolicy;
+	public TaskDef.RetryLogic getRetryLogic() {
+		return retryLogic;
 	}
 
 	/**
-	 * @param retryLogicPolicy the retryLogicPolicy to set
+	 * @param retryLogic the retryLogic to set
 	 */
-	public void setRetryLogicPolicy(RetryLogic.RetryLogicPolicy retryLogicPolicy) {
-		this.retryLogicPolicy = retryLogicPolicy;
+	public void setRetryLogic(TaskDef.RetryLogic retryLogic) {
+		this.retryLogic = retryLogic;
 	}
 
 	private Collection<List<WorkflowTask>> children() {

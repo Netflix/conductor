@@ -35,11 +35,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.netflix.conductor.common.metadata.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.tasks.TaskDef.RetryLogic;
 import com.netflix.conductor.common.metadata.tasks.TaskDef.TimeoutPolicy;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.DynamicForkJoinTaskList;
@@ -1438,7 +1438,7 @@ public abstract class AbstractWorkflowServiceTest {
         int retryCount = taskDef.getRetryCount();
         taskDef.setRetryCount(2);
         taskDef.setRetryDelaySeconds(0);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.FIXED);
+        taskDef.setRetryLogic(RetryLogic.FIXED);
         metadataService.updateTaskDef(taskDef);
 
         Map<String, Object> workflowInput = new HashMap<>();
@@ -3652,7 +3652,7 @@ public abstract class AbstractWorkflowServiceTest {
             task.setReasonForIncompletion("failure...0");
             if (overrideRetryLogicWithWFTask) {
                 WorkflowTask wfTask = task.getWorkflowTask();
-                wfTask.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.FIXED);
+                wfTask.setRetryLogic(RetryLogic.FIXED);
                 wfTask.setStartDelay(retryDelayFromWorkflowTask);
             }
         } else {
@@ -3672,14 +3672,14 @@ public abstract class AbstractWorkflowServiceTest {
         String taskName = "junit_task_2";
         TaskDef taskDef = notFoundSafeGetTaskDef(taskName);
         taskDef.setRetryCount(2);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        taskDef.setRetryLogic(RetryLogic.CUSTOM);
         taskDef.setRetryDelaySeconds(2);
         metadataService.updateTaskDef(taskDef);
 
         taskName = "junit_task_3";
         taskDef = notFoundSafeGetTaskDef(taskName);
         taskDef.setRetryCount(2);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        taskDef.setRetryLogic(RetryLogic.CUSTOM);
         taskDef.setRetryDelaySeconds(2);
         metadataService.updateTaskDef(taskDef);
 
@@ -3738,14 +3738,14 @@ public abstract class AbstractWorkflowServiceTest {
         String taskName = "junit_task_2";
         TaskDef taskDef = notFoundSafeGetTaskDef(taskName);
         taskDef.setRetryCount(2);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        taskDef.setRetryLogic(RetryLogic.CUSTOM);
         taskDef.setRetryDelaySeconds(2);
         metadataService.updateTaskDef(taskDef);
 
         taskName = "junit_task_3";
         taskDef = notFoundSafeGetTaskDef(taskName);
         taskDef.setRetryCount(2);
-        taskDef.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.CUSTOM);
+        taskDef.setRetryLogic(RetryLogic.CUSTOM);
         taskDef.setRetryDelaySeconds(2);
         metadataService.updateTaskDef(taskDef);
 

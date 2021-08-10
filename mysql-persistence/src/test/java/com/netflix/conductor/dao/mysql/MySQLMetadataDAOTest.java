@@ -1,6 +1,5 @@
 package com.netflix.conductor.dao.mysql;
 
-import com.netflix.conductor.common.metadata.RetryLogic;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -177,7 +176,7 @@ public class MySQLMetadataDAOTest {
         def.setOwnerApp("ownerApp");
         def.setRetryCount(3);
         def.setRetryDelaySeconds(100);
-        def.setRetryLogicPolicy(RetryLogic.RetryLogicPolicy.FIXED);
+        def.setRetryLogic(TaskDef.RetryLogic.FIXED);
         def.setTimeoutPolicy(TaskDef.TimeoutPolicy.ALERT_ONLY);
         def.setUpdatedBy("unit_test2");
         def.setUpdateTime(2L);
