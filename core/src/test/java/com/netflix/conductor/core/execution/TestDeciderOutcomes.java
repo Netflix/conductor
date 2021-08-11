@@ -23,6 +23,9 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
+import com.netflix.conductor.core.execution.evaluators.Evaluator;
+import com.netflix.conductor.core.execution.evaluators.JavascriptEvaluator;
+import com.netflix.conductor.core.execution.evaluators.ValueParamEvaluator;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
@@ -32,11 +35,13 @@ import com.netflix.conductor.core.execution.mapper.HTTPTaskMapper;
 import com.netflix.conductor.core.execution.mapper.JoinTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SimpleTaskMapper;
 import com.netflix.conductor.core.execution.mapper.SubWorkflowTaskMapper;
+import com.netflix.conductor.core.execution.mapper.SwitchTaskMapper;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.execution.mapper.UserDefinedTaskMapper;
 import com.netflix.conductor.core.execution.mapper.WaitTaskMapper;
 import com.netflix.conductor.core.execution.tasks.Decision;
 import com.netflix.conductor.core.execution.tasks.Join;
+import com.netflix.conductor.core.execution.tasks.Switch;
 import com.netflix.conductor.core.execution.tasks.SystemTaskRegistry;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
@@ -72,9 +77,11 @@ import static com.netflix.conductor.common.metadata.tasks.TaskType.HTTP;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.JOIN;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.SIMPLE;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.SWITCH;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DECISION;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_FORK;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SWITCH;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.USER_DEFINED;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.WAIT;
 import static org.junit.Assert.assertEquals;
@@ -91,6 +98,7 @@ import static org.mockito.Mockito.when;
 public class TestDeciderOutcomes {
 
     private DeciderService deciderService;
+    private Map<String, Evaluator> evaluators;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -104,6 +112,11 @@ public class TestDeciderOutcomes {
         @Bean(TASK_TYPE_DECISION)
         public Decision decision() {
             return new Decision();
+        }
+
+        @Bean(TASK_TYPE_SWITCH)
+        public Switch switchTask() {
+            return new Switch();
         }
 
         @Bean(TASK_TYPE_JOIN)
@@ -133,8 +146,13 @@ public class TestDeciderOutcomes {
         taskDef.setResponseTimeoutSeconds(60 * 60);
         when(metadataDAO.getTaskDef(anyString())).thenReturn(taskDef);
         ParametersUtils parametersUtils = new ParametersUtils(objectMapper);
+        evaluators = new HashMap<>() {{
+            put(ValueParamEvaluator.NAME, new ValueParamEvaluator());
+            put(JavascriptEvaluator.NAME, new JavascriptEvaluator());
+        }};
         Map<TaskType, TaskMapper> taskMappers = new HashMap<>();
         taskMappers.put(DECISION, new DecisionTaskMapper());
+        taskMappers.put(SWITCH, new SwitchTaskMapper(evaluators));
         taskMappers.put(DYNAMIC, new DynamicTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put(FORK_JOIN, new ForkJoinTaskMapper());
         taskMappers.put(JOIN, new JoinTaskMapper());
@@ -153,6 +171,33 @@ public class TestDeciderOutcomes {
     @Test
     public void testWorkflowWithNoTasks() throws Exception {
         InputStream stream = new ClassPathResource("./conditional_flow.json").getInputStream();
+        WorkflowDef def = objectMapper.readValue(stream, WorkflowDef.class);
+        assertNotNull(def);
+
+        Workflow workflow = new Workflow();
+        workflow.setWorkflowDefinition(def);
+        workflow.setStartTime(0);
+        workflow.getInput().put("param1", "nested");
+        workflow.getInput().put("param2", "one");
+
+        DeciderOutcome outcome = deciderService.decide(workflow);
+        assertNotNull(outcome);
+        assertFalse(outcome.isComplete);
+        assertTrue(outcome.tasksToBeUpdated.isEmpty());
+        assertEquals(3, outcome.tasksToBeScheduled.size());
+
+        outcome.tasksToBeScheduled.forEach(t -> t.setStatus(Status.COMPLETED));
+        workflow.getTasks().addAll(outcome.tasksToBeScheduled);
+        outcome = deciderService.decide(workflow);
+        assertFalse(outcome.isComplete);
+        assertEquals(outcome.tasksToBeUpdated.toString(), 3, outcome.tasksToBeUpdated.size());
+        assertEquals(1, outcome.tasksToBeScheduled.size());
+        assertEquals("junit_task_3", outcome.tasksToBeScheduled.get(0).getTaskDefName());
+    }
+
+    @Test
+    public void testWorkflowWithNoTasksWithSwitch() throws Exception {
+        InputStream stream = new ClassPathResource("./conditional_flow_with_switch.json").getInputStream();
         WorkflowDef def = objectMapper.readValue(stream, WorkflowDef.class);
         assertNotNull(def);
 

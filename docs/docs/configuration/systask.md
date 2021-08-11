@@ -69,6 +69,80 @@ The task takes 3 parameters:
 }
 ```
 
+## Switch
+A switch task is similar to `Decision` task with the exception that it uses the extensible expression evaluation 
+framework.
+The task takes 2 parameters and even with growing number of evaluators, it always takes to 2 parameters:
+
+**Parameters:**
+
+|name|type|description|
+|---|---|---|
+|evaluatorType|String|Type of the evaluator used. Supported types `value-param` (equivalent to `caseValueParam` for `Decision` task, `javascript` (equivalent to `caseExpression` for `Decision` task).|
+|expression|String|Expression related to the evaluator type. FOr `value-param` type evaluator, it is the input parameter, for `javascript` type evaluator, it is the javascript expression.|
+|decisionCases|Map[String, List[task]]|Map where key is possible values of ```caseValueParam``` with value being list of tasks to be executed.|
+|defaultCase|List[task]|List of tasks to be executed when no matching value if found in decision case (default condition)|
+
+
+**Outputs:**
+
+|name|type|description|
+|---|---|---|
+|evaluationResult|List[String]|A List of string representing the list of cases that matched.|
+
+**Example**
+
+``` json
+{
+  "name": "switch_task",
+  "taskReferenceName": "switch",
+  "inputParameters": {
+    "case_value_param": "${workflow.input.movieType}"
+  },
+  "type": "SWITCH",
+  "evaluatorType": "value-param",
+  "expression": "case_value_param",
+  "decisionCases": {
+    "Show": [
+      {
+        "name": "setup_episodes",
+        "taskReferenceName": "se1",
+        "inputParameters": {
+          "movieId": "${workflow.input.movieId}"
+        },
+        "type": "SIMPLE"
+      },
+      {
+        "name": "generate_episode_artwork",
+        "taskReferenceName": "ga",
+        "inputParameters": {
+          "movieId": "${workflow.input.movieId}"
+        },
+        "type": "SIMPLE"
+      }
+    ],
+    "Movie": [
+      {
+        "name": "setup_movie",
+        "taskReferenceName": "sm",
+        "inputParameters": {
+          "movieId": "${workflow.input.movieId}"
+        },
+        "type": "SIMPLE"
+      },
+      {
+        "name": "generate_movie_artwork",
+        "taskReferenceName": "gma",
+        "inputParameters": {
+          "movieId": "${workflow.input.movieId}"
+        },
+        "type": "SIMPLE"
+      }
+    ]
+  }
+}
+```
+
 
 ## Event
 Event task provides ability to publish an event (message) to either Conductor or an external eventing system like SQS.  Event tasks are useful for creating event based dependencies for workflows and tasks.
@@ -548,6 +622,45 @@ The task output can then be referenced in downstream tasks like:
 }
 ```
 
+## Inline Task
+
+Inline Task helps execute ad-hoc logic at Workflow run-time, using any evaluator engine. Supported evaluators 
+are simply using the input parameter and another using javax & `Nashorn` Javascript evaluator engine.
+
+This is particularly helpful in running simple evaluations in Conductor server, over creating Workers.
+
+**Parameters:**
+
+|name|type|description|notes|
+|---|---|---|---|
+|evaluatorType|String|Type of the evaluator. Supported evaluators are 1. `value-param` which translates the input value to output as it is. 2. `javascript` which evaluates javascript expression.|
+|expression|String|Expression associated with the type of evaluator. For `javascript` evaluator, Javascript (`Nashorn`) engine is used to evaluate expression defined as a string. Must return a value.|Must be non-empty.|
+
+Besides `expression`, any value is accessible as `$.value` for the `expression` to evaluate.
+
+**Outputs:**
+
+|name|type|description|
+|---|---|---|
+|result|Map|Contains the output returned by the evaluator based on the `expression`|
+
+The task output can then be referenced in downstream tasks like:
+```"${inline_test.output.result.testvalue}"```
+
+**Example**
+``` json
+{
+  "name": "INLINE_TASK",
+  "taskReferenceName": "inline_test",
+  "type": "INLINE",
+  "inputParameters": {
+      "inlineValue": "${workflow.input.inlineValue}",
+      "evaluatorType": "javascript",
+      "expression": "function scriptFun(){if ($.inlineValue == 1){ return {testvalue: true} } else { return 
+      {testvalue: false} }} scriptFun();"
+  }
+}
+```
 
 ## Terminate Task
 

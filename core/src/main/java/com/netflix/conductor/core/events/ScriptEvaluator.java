@@ -25,19 +25,21 @@ public class ScriptEvaluator {
     }
 
     public static Boolean evalBool(String script, Object input) throws ScriptException {
-        Object ret = eval(script, input);
-
-        if (ret instanceof Boolean) {
-            return ((Boolean) ret);
-        } else if (ret instanceof Number) {
-            return ((Number) ret).doubleValue() > 0;
-        }
-        return false;
+        return toBoolean(eval(script, input));
     }
 
     public static Object eval(String script, Object input) throws ScriptException {
         Bindings bindings = engine.createBindings();
         bindings.put("$", input);
         return engine.eval(script, bindings);
+    }
+
+    public static Boolean toBoolean(Object result) {
+        if (result instanceof Boolean) {
+            return ((Boolean) result);
+        } else if (result instanceof Number) {
+            return ((Number) result).doubleValue() > 0;
+        }
+        return false;
     }
 }

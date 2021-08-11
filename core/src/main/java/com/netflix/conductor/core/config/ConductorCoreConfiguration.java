@@ -16,6 +16,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.core.events.EventQueueProvider;
+import com.netflix.conductor.core.execution.evaluators.Evaluator;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
 import com.netflix.conductor.core.listener.WorkflowStatusListenerStub;
@@ -86,5 +87,11 @@ public class ConductorCoreConfiguration {
     public Map<String, EventQueueProvider> getEventQueueProviders(List<EventQueueProvider> eventQueueProviders) {
         return eventQueueProviders.stream()
             .collect(Collectors.toMap(EventQueueProvider::getQueueType, identity()));
+    }
+
+    @Bean
+    public Map<String, Evaluator> getEvaluators(List<Evaluator> evaluators) {
+        return evaluators.stream()
+              .collect(Collectors.toMap(Evaluator::getName, identity()));
     }
 }
