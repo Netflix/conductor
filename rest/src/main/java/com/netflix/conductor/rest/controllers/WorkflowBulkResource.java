@@ -98,7 +98,7 @@ public class WorkflowBulkResource {
      */
     @DeleteMapping("/terminate")
     @Operation(summary = "Terminate workflows execution")
-    public BulkResponse terminate(@RequestBody List<String> workflowIds, @RequestParam("reason") String reason) {
+    public BulkResponse terminate(@RequestBody List<String> workflowIds, @RequestParam(value = "reason", required = false) String reason) {
         return workflowBulkService.terminate(workflowIds, reason);
     }
 }
