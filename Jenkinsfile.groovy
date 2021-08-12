@@ -22,6 +22,8 @@ pipeline {
                 KUBECONFIG = "$HOME/.kube/config"
 
                 PREVIEW_VERSION = "0.0.0-SNAPSHOT-$PREVIEW_NAMESPACE-$BUILD_NUMBER"
+                JAVA_OPTIONS = ""
+                _JAVA_OPTIONS = ""
             }
             steps {
                 container('dind') {
