@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 
-@Component
 public class JavascriptEvaluator implements Evaluator {
 
    public static final String NAME = "javascript";

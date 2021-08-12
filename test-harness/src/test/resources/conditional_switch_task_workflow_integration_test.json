@@ -127,8 +127,9 @@
       "inputParameters": {
         "finalCase": "${workflow.input.finalCase}"
       },
-      "type": "DECISION",
-      "caseValueParam": "finalCase",
+      "type": "SWITCH",
+      "evaluatorType": "value-param",
+      "expression": "finalCase",
       "decisionCases": {
         "notify": [
           {

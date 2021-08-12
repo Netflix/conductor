@@ -54,7 +54,7 @@ class SwitchTaskSpec extends AbstractSpecification {
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 2
-            tasks[0].taskType == 'DECISION'
+            tasks[0].taskType == 'SWITCH'
             tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == 'integration_task_1'
             tasks[1].status == Task.Status.SCHEDULED
@@ -214,7 +214,7 @@ class SwitchTaskSpec extends AbstractSpecification {
             tasks.size() == 2
             tasks[0].taskType == 'SWITCH'
             tasks[0].status == Task.Status.COMPLETED
-            tasks[0].outputData['caseOutput'] == ['xxx']
+            tasks[0].outputData['evaluationResult'] == ['xxx']
             tasks[1].taskType == 'integration_task_10'
             tasks[1].status == Task.Status.SCHEDULED
         }
@@ -233,7 +233,7 @@ class SwitchTaskSpec extends AbstractSpecification {
             tasks[1].status == Task.Status.COMPLETED
             tasks[2].taskType == 'SWITCH'
             tasks[2].status == Task.Status.COMPLETED
-            tasks[2].outputData['caseOutput'] == ['null']
+            tasks[2].outputData['evaluationResult'] == ['null']
         }
     }
 
@@ -255,10 +255,10 @@ class SwitchTaskSpec extends AbstractSpecification {
             tasks.size() == 3
             tasks[0].taskType == 'SWITCH'
             tasks[0].status == Task.Status.COMPLETED
-            tasks[0].outputData['caseOutput'] == ['nested']
+            tasks[0].outputData['evaluationResult'] == ['nested']
             tasks[1].taskType == 'SWITCH'
             tasks[1].status == Task.Status.COMPLETED
-            tasks[1].outputData['caseOutput'] == [caseValue]
+            tasks[1].outputData['evaluationResult'] == [caseValue]
             tasks[2].taskType == expectedTaskName
             tasks[2].status == Task.Status.SCHEDULED
         }
@@ -277,7 +277,7 @@ class SwitchTaskSpec extends AbstractSpecification {
             tasks[2].status == endTaskStatus
             tasks[3].taskType == 'SWITCH'
             tasks[3].status == Task.Status.COMPLETED
-            tasks[3].outputData['caseOutput'] == ['null']
+            tasks[3].outputData['evaluationResult'] == ['null']
         }
 
         where:
@@ -304,7 +304,7 @@ class SwitchTaskSpec extends AbstractSpecification {
             tasks.size() == 2
             tasks[0].taskType == 'SWITCH'
             tasks[0].status == Task.Status.COMPLETED
-            tasks[0].outputData['caseOutput'] == ['three']
+            tasks[0].outputData['evaluationResult'] == ['three']
             tasks[1].taskType == 'integration_task_3'
             tasks[1].status == Task.Status.SCHEDULED
         }
@@ -323,7 +323,7 @@ class SwitchTaskSpec extends AbstractSpecification {
             tasks[1].status == Task.Status.COMPLETED
             tasks[2].taskType == 'SWITCH'
             tasks[2].status == Task.Status.COMPLETED
-            tasks[2].outputData['caseOutput'] == ['notify']
+            tasks[2].outputData['evaluationResult'] == ['notify']
             tasks[3].taskType == 'integration_task_4'
             tasks[3].status == Task.Status.SCHEDULED
         }
@@ -342,7 +342,7 @@ class SwitchTaskSpec extends AbstractSpecification {
             tasks[1].status == Task.Status.COMPLETED
             tasks[2].taskType == 'SWITCH'
             tasks[2].status == Task.Status.COMPLETED
-            tasks[2].outputData['caseOutput'] == ['notify']
+            tasks[2].outputData['evaluationResult'] == ['notify']
             tasks[3].taskType == 'integration_task_4'
             tasks[3].status == Task.Status.COMPLETED
         }

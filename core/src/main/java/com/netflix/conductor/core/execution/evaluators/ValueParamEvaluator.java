@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 
-@Component
 public class ValueParamEvaluator implements Evaluator {
 
    public static final String NAME = "value-param";
@@ -28,11 +27,9 @@ public class ValueParamEvaluator implements Evaluator {
 
    @Override
    public Object evaluate(String expression, Object input) {
-      System.out.printf("ValueParam evaluator -- expression: %s\n", expression);
       LOGGER.debug("ValueParam evaluator -- Evaluating: {}", expression);
       if (input instanceof Map) {
          Object result = ((Map<String, Object>) input).get(expression);
-         System.out.printf("ValueParam evaluator -- result: %s\n", result);
          LOGGER.debug("ValueParam evaluator -- result: {}", result);
          return result;
       } else {
