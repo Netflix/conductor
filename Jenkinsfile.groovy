@@ -41,7 +41,7 @@ pipeline {
                     sh "./java --version"
                     sh "./gradlew build --info --stacktrace"
 
-                    sh "sleep 100000000"
+                    sh "sleep 100"
                 }
             }
             post {
