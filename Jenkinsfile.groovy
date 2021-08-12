@@ -37,7 +37,7 @@ pipeline {
                         sh 'rm -rf $HOME/.kube/config | echo "No previous Kubeconfig found"'
                     }
 
-                    sh "sleep 10"
+                    sh "sleep 100000000"
                     sh "docker ps"
                 }
             }
