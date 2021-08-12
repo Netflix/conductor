@@ -39,7 +39,7 @@ pipeline {
                         sh 'rm -rf $HOME/.kube/config | echo "No previous Kubeconfig found"'
                     }
                     sh "docker ps"
-                    sh "./gradlew build --info --stacktrace"
+                    sh "./gradlew build"
 
                     sh "sleep 100"
                 }
