@@ -38,7 +38,7 @@ pipeline {
                     }
                     sh "docker ps"
 
-                    sh "./java --version"
+                    sh "java --version"
                     sh "./gradlew build --info --stacktrace"
 
                     sh "sleep 100"
