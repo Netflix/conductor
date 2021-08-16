@@ -69,7 +69,7 @@ public @interface WorkflowTaskTypeConstraint {
                 case TaskType.TASK_TYPE_DECISION:
                     valid = isDecisionTaskValid(workflowTask, context);
                     break;
-            case TaskType.TASK_TYPE_SWITCH:
+                case TaskType.TASK_TYPE_SWITCH:
                     valid = isSwitchTaskValid(workflowTask, context);
                     break;
                 case TaskType.TASK_TYPE_DYNAMIC:

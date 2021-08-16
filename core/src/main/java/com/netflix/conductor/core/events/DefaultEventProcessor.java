@@ -133,7 +133,7 @@ public class DefaultEventProcessor {
             String evaluatorType = eventHandler.getEvaluatorType();
             // Set default to true so that if condition is not specified, it falls through to process the event.
             Boolean success = true;
-            if (StringUtils.isNotEmpty(evaluatorType) && StringUtils.isNotEmpty(condition) &&  evaluators.get(evaluatorType) != null) {
+            if (StringUtils.isNotEmpty(condition) && evaluators.get(evaluatorType) != null) {
                 Object result = evaluators.get(evaluatorType).evaluate(condition, jsonUtils.expand(payloadObject));
                 success = ScriptEvaluator.toBoolean(result);
             } else if (StringUtils.isNotEmpty(condition)) {
