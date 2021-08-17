@@ -1052,7 +1052,7 @@ public class WorkflowExecutor {
         executionDAOFacade.addTaskExecLog(taskResult.getLogs());
 
         if (task.getStatus().isTerminal()) {
-            long duration = getTaskDuration(0, task);
+            long duration = getTaskDuration(task);
             long lastDuration = task.getEndTime() - task.getStartTime();
             Monitors.recordTaskExecutionTime(task.getTaskDefName(), duration, true, task.getStatus());
             Monitors.recordTaskExecutionTime(task.getTaskDefName(), lastDuration, false, task.getStatus());
@@ -1529,13 +1529,12 @@ public class WorkflowExecutor {
                 : domains[domains.length - 1].trim());
     }
 
-    private long getTaskDuration(long s, Task task) {
+    private long getTaskDuration(Task task) {
         long duration = task.getEndTime() - task.getStartTime();
-        s += duration;
         if (task.getRetriedTaskId() == null) {
-            return s;
+            return duration;
         }
-        return s + getTaskDuration(s, executionDAOFacade.getTaskById(task.getRetriedTaskId()));
+        return duration + getTaskDuration(executionDAOFacade.getTaskById(task.getRetriedTaskId()));
     }
 
     @VisibleForTesting
