@@ -6,7 +6,7 @@
     },
     "compileClasspath": {
         "com.azure:azure-storage-blob": {
-            "locked": "12.13.0"
+            "locked": "12.7.0"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
@@ -23,7 +23,7 @@
     },
     "runtimeClasspath": {
         "com.azure:azure-storage-blob": {
-            "locked": "12.13.0"
+            "locked": "12.7.0"
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
             "firstLevelTransitive": [
@@ -144,7 +144,7 @@
     },
     "testCompileClasspath": {
         "com.azure:azure-storage-blob": {
-            "locked": "12.13.0"
+            "locked": "12.7.0"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
@@ -164,7 +164,7 @@
     },
     "testRuntimeClasspath": {
         "com.azure:azure-storage-blob": {
-            "locked": "12.13.0"
+            "locked": "12.7.0"
         },
         "com.fasterxml.jackson.core:jackson-annotations": {
             "firstLevelTransitive": [
