@@ -35,7 +35,7 @@ import com.rabbitmq.client.Address;
 
 public class AMQPConnection {
 	
-	private static Logger logger = LoggerFactory.getLogger(AMQPConnection.class);	
+	private static Logger LOGGER = LoggerFactory.getLogger(AMQPConnection.class);	
 	private volatile Connection publisherConnection = null;
 	private volatile Connection subscriberConnection = null;
 	private ConnectionFactory factory = null;
@@ -58,12 +58,18 @@ public class AMQPConnection {
 	
 	public static synchronized AMQPConnection getInstance(final ConnectionFactory factory, final Address[] address)
 	{
-		if (amqpConnection == null)
+		if (AMQPConnection.amqpConnection == null)
 		{
-			amqpConnection = new AMQPConnection(factory,address);
+			AMQPConnection.amqpConnection = new AMQPConnection(factory,address);
 		}
 		
-		return amqpConnection;
+		return AMQPConnection.amqpConnection;
+	}
+	
+	//Exposed for UT
+	public static void setAMQPConnection(AMQPConnection amqpConnection)
+	{
+		AMQPConnection.amqpConnection = amqpConnection;
 	}
 	
 	public Address[] getAddresses() {
@@ -73,7 +79,7 @@ public class AMQPConnection {
 	private Connection createConnection(String connectionPrefix) {
 						
 			try {
-				Connection connection = factory.newConnection(addresses, System.getenv("HOSTNAME") + "-" + connectionPrefix);			
+				Connection connection = factory.newConnection(addresses, System.getenv("HOSTNAME") + "-" + connectionPrefix);
 				if (connection == null || !connection.isOpen()) {
 					throw new RuntimeException("Failed to open connection");
 				}
@@ -81,7 +87,7 @@ public class AMQPConnection {
 				connection.addShutdownListener(new ShutdownListener() {
 					@Override
 					public void shutdownCompleted(ShutdownSignalException cause) {
-						logger.error("Received a shutdown exception for the connection {}. reason {} cause{}",connection.getClientProvidedName(),cause.getMessage(),cause);
+						LOGGER.error("Received a shutdown exception for the connection {}. reason {} cause{}",connection.getClientProvidedName(),cause.getMessage(),cause);
 						
 					}
 				});
@@ -89,12 +95,12 @@ public class AMQPConnection {
 				connection.addBlockedListener(new BlockedListener() {				
 					@Override
 					public void handleUnblocked() throws IOException {
-						logger.info("Connection {} is unblocked",connection.getClientProvidedName());					
+						LOGGER.info("Connection {} is unblocked",connection.getClientProvidedName());					
 					}
 					
 					@Override
 					public void handleBlocked(String reason) throws IOException {
-						logger.error("Connection {} is blocked. reason: {}",connection.getClientProvidedName(),reason);					
+						LOGGER.error("Connection {} is blocked. reason: {}",connection.getClientProvidedName(),reason);					
 					}
 				});
 				
@@ -102,12 +108,12 @@ public class AMQPConnection {
 			} catch (final IOException e) {			
 				final String error = "IO error while connecting to "
 						+ Arrays.stream(addresses).map(address -> address.toString()).collect(Collectors.joining(","));
-				logger.error(error, e);
+				LOGGER.error(error, e);
 				throw new RuntimeException(error, e);
 			} catch (final TimeoutException e) {			
 				final String error = "Timeout while connecting to "
 						+ Arrays.stream(addresses).map(address -> address.toString()).collect(Collectors.joining(","));
-				logger.error(error, e);
+				LOGGER.error(error, e);
 				throw new RuntimeException(error, e);
 			}
 		}
@@ -139,10 +145,10 @@ public class AMQPConnection {
 				if(subscriberConnection == null) {
 					subscriberConnection = createConnection(SUBSCRIBER);
 				}
-				logger.debug("Creating a channel for subscriber");
+				LOGGER.debug("Creating a channel for subscriber");
 				subscriberChannel = subscriberConnection.createChannel();
 				subscriberChannel.addShutdownListener(cause -> {				
-					logger.error("subscription Channel has been shutdown: {}", cause.getMessage(), cause);
+					LOGGER.error("subscription Channel has been shutdown: {}", cause.getMessage(), cause);
 				});
 				if (subscriberChannel == null || !subscriberChannel.isOpen()) {
 					throw new RuntimeException("Fail to open  subscription channel");
@@ -173,10 +179,10 @@ public class AMQPConnection {
 					publisherConnection = createConnection(PUBLISHER);
 				}
 				
-				logger.debug("Creating a channel for publisher");
+				LOGGER.debug("Creating a channel for publisher");
 				publisherChannel = publisherConnection.createChannel();
 				publisherChannel.addShutdownListener(cause -> {				
-					logger.error("Publish Channel has been shutdown: {}", cause.getMessage(), cause);
+					LOGGER.error("Publish Channel has been shutdown: {}", cause.getMessage(), cause);
 				});
 				
 				if (publisherChannel == null || !publisherChannel.isOpen()) {
@@ -194,7 +200,7 @@ public class AMQPConnection {
 	}
 	
 	public void close() {
-		logger.info("Closing all connections and channels");
+		LOGGER.info("Closing all connections and channels");
 		try {
 			for (Map.Entry<String, Channel> entry : queueNameToChannel.entrySet()) {
 				closeChannel(entry.getValue());
@@ -211,12 +217,12 @@ public class AMQPConnection {
 	
 	private void closeConnection(Connection connection) {
 		if (connection == null) {
-			logger.warn("Connection is null. Do not close it");
+			LOGGER.warn("Connection is null. Do not close it");
 		} else {
 			try {
 				connection.close();
 			} catch (Exception e) {
-				logger.warn("Fail to close connection: {}", e.getMessage(), e);
+				LOGGER.warn("Fail to close connection: {}", e.getMessage(), e);
 			}
 		}
 	}
@@ -224,12 +230,12 @@ public class AMQPConnection {
 
 	private void closeChannel(Channel channel) {
 		if (channel == null) {
-			logger.warn("Channel is null. Do not close it");
+			LOGGER.warn("Channel is null. Do not close it");
 		} else {		
 			try {				
 				channel.close();
 			} catch (Exception e) {
-				logger.warn("Fail to close channel: {}", e.getMessage(), e);
+				LOGGER.warn("Fail to close channel: {}", e.getMessage(), e);
 			}
 		}				
 	}

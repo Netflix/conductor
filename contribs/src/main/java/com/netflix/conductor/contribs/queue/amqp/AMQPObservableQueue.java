@@ -62,11 +62,7 @@ public class AMQPObservableQueue implements ObservableQueue {
     private final boolean useExchange;
     private int pollTimeInMS;
     private AMQPConnection amqpConnection;
-
-    private final ConnectionFactory factory;
-    private Connection connection;
-    private Channel channel;
-    private final Address[] addresses;
+    
     protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     private volatile boolean running;
 
@@ -87,8 +83,6 @@ public class AMQPObservableQueue implements ObservableQueue {
         if (pollTimeInMS <= 0) {
             throw new IllegalArgumentException("Poll time must be greater than 0 ms");
         }
-        this.factory = factory;
-        this.addresses = addresses;
         this.useExchange = useExchange;
         this.settings = settings;
         this.batchSize = batchSize;
