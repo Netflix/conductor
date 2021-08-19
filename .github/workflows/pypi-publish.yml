@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-18.04
     defaults:
       run:
-        working-directory: ./client/python
+        working-directory: ./polyglot-clients/python
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.6
