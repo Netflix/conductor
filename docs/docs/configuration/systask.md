@@ -1,86 +1,19 @@
-## Decision
-A decision task is similar to ```case...switch``` statement in a programming language.
-The task takes 3 parameters:
-
-**Parameters:**
-
-|name|type|description|
-|---|---|---|
-|caseValueParam|String|Name of the parameter in task input whose value will be used as a switch.|
-|decisionCases|Map[String, List[task]]|Map where key is possible values of ```caseValueParam``` with value being list of tasks to be executed.|
-|defaultCase|List[task]|List of tasks to be executed when no matching value if found in decision case (default condition)|
-|caseExpression|String|Case expression to use instead of caseValueParam when the case should depend on complex values. This is a Javascript expression evaluated by the Nashorn Engine. Task names with arithmetic operators should not be used.|
-
-**Outputs:**
-
-|name|type|description|
-|---|---|---|
-|caseOutput|List[String]|A List of string representing the list of cases that matched.|
-
-**Example**
-
-``` json
-{
-  "name": "decide_task",
-  "taskReferenceName": "decide1",
-  "inputParameters": {
-    "case_value_param": "${workflow.input.movieType}"
-  },
-  "type": "DECISION",
-  "caseValueParam": "case_value_param",
-  "decisionCases": {
-    "Show": [
-      {
-        "name": "setup_episodes",
-        "taskReferenceName": "se1",
-        "inputParameters": {
-          "movieId": "${workflow.input.movieId}"
-        },
-        "type": "SIMPLE"
-      },
-      {
-        "name": "generate_episode_artwork",
-        "taskReferenceName": "ga",
-        "inputParameters": {
-          "movieId": "${workflow.input.movieId}"
-        },
-        "type": "SIMPLE"
-      }
-    ],
-    "Movie": [
-      {
-        "name": "setup_movie",
-        "taskReferenceName": "sm",
-        "inputParameters": {
-          "movieId": "${workflow.input.movieId}"
-        },
-        "type": "SIMPLE"
-      },
-      {
-        "name": "generate_movie_artwork",
-        "taskReferenceName": "gma",
-        "inputParameters": {
-          "movieId": "${workflow.input.movieId}"
-        },
-        "type": "SIMPLE"
-      }
-    ]
-  }
-}
-```
-
 ## Switch
-A switch task is similar to `Decision` task with the exception that it uses the extensible expression evaluation 
-framework.
-The task takes 2 parameters and even with growing number of evaluators, it always takes to 2 parameters:
+A switch task is similar to ```case...switch``` statement in a programming language. 
+The `switch` expression, however, is simply an input parameter (`value-param` evaluator) or a complex javascript 
+expression (`javascript` evaluator). Only two evaluators are supported by default in conductor. 
+
+**For Developers** Any type of custom evaluator can be implemented without having to touch the way `switch` task works.
+
+The task takes 2 parameters and even with growing number of evaluators, it always takes 2 parameters:
 
 **Parameters:**
 
 |name|type|description|
 |---|---|---|
-|evaluatorType|String|Type of the evaluator used. Supported types `value-param` (equivalent to `caseValueParam` for `Decision` task, `javascript` (equivalent to `caseExpression` for `Decision` task).|
-|expression|String|Expression related to the evaluator type. FOr `value-param` type evaluator, it is the input parameter, for `javascript` type evaluator, it is the javascript expression.|
-|decisionCases|Map[String, List[task]]|Map where key is possible values of ```caseValueParam``` with value being list of tasks to be executed.|
+|evaluatorType|String|Type of the evaluator used. Supported types: `value-param`, `javascript`.|
+|expression|String|Expression that depends on the evaluator type. For `value-param` evaluator, expression is input parameter, for `javascript` evaluator, it is the javascript expression.|
+|decisionCases|Map[String, List[task]]|Map where key is possible values that can result from `expression` being evaluated by `evaluatorType` with value being list of tasks to be executed.|
 |defaultCase|List[task]|List of tasks to be executed when no matching value if found in decision case (default condition)|
 
 
@@ -142,7 +75,6 @@ The task takes 2 parameters and even with growing number of evaluators, it alway
   }
 }
 ```
-
 
 ## Event
 Event task provides ability to publish an event (message) to either Conductor or an external eventing system like SQS.  Event tasks are useful for creating event based dependencies for workflows and tasks.
@@ -585,47 +517,11 @@ Dynamic Task allows to execute one of the registered Tasks dynamically at run-ti
 ```
 If the workflow is started with input parameter user_supplied_task's value as __user_task_2__, Conductor will schedule __user_task_2__ when scheduling this dynamic task.
 
-
-## Lambda Task
-
-Lambda Task helps execute ad-hoc logic at Workflow run-time, using javax & `Nashorn` Javascript evaluator engine.
-
-This is particularly helpful in running simple evaluations in Conductor server, over creating Workers.
-
-**Parameters:**
-
-|name|type|description|notes|
-|---|---|---|---|
-|scriptExpression|String|Javascript (`Nashorn`) evaluation expression defined as a string. Must return a value.|Must be non-empty.|
-
-Besides `scriptExpression`, any value is accessible as `$.value` for the `scriptExpression` to evaluate.
-
-**Outputs:**
-
-|name|type|description|
-|---|---|---|
-|result|Map|Contains the output returned by the `scriptExpression`|
-
-The task output can then be referenced in downstream tasks like:
-```"${lambda_test.output.result.testvalue}"```
-
-**Example**
-``` json
-{
-  "name": "LAMBDA_TASK",
-  "taskReferenceName": "lambda_test",
-  "type": "LAMBDA",
-  "inputParameters": {
-      "lambdaValue": "${workflow.input.lambdaValue}",
-      "scriptExpression": "if ($.lambdaValue == 1){ return {testvalue: true} } else { return {testvalue: false} }"
-  }
-}
-```
-
 ## Inline Task
 
 Inline Task helps execute ad-hoc logic at Workflow run-time, using any evaluator engine. Supported evaluators 
-are simply using the input parameter and another using javax & `Nashorn` Javascript evaluator engine.
+are `value-param` evaluator which simply translates the input parameter to output and `javascript` evaluator that 
+evaluates Javascript expression.
 
 This is particularly helpful in running simple evaluations in Conductor server, over creating Workers.
 
@@ -633,8 +529,8 @@ This is particularly helpful in running simple evaluations in Conductor server, 
 
 |name|type|description|notes|
 |---|---|---|---|
-|evaluatorType|String|Type of the evaluator. Supported evaluators are 1. `value-param` which translates the input value to output as it is. 2. `javascript` which evaluates javascript expression.|
-|expression|String|Expression associated with the type of evaluator. For `javascript` evaluator, Javascript (`Nashorn`) engine is used to evaluate expression defined as a string. Must return a value.|Must be non-empty.|
+|evaluatorType|String|Type of the evaluator. Supported evaluators: `value-param`, `javascript` which evaluates javascript expression.|
+|expression|String|Expression associated with the type of evaluator. For `javascript` evaluator, Javascript evaluation engine is used to evaluate expression defined as a string. Must return a value.|Must be non-empty.|
 
 Besides `expression`, any value is accessible as `$.value` for the `expression` to evaluate.
 

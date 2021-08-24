@@ -30,7 +30,12 @@ import java.util.Optional;
 
 /**
  * @author x-ultra
+ *
+ * @deprecated {@link com.netflix.conductor.core.execution.tasks.Lambda} is also deprecated.
+ * Use {@link com.netflix.conductor.core.execution.tasks.Inline} and so ${@link InlineTaskMapper} will be used as a
+ * result.
  */
+@Deprecated
 @Component
 public class LambdaTaskMapper implements TaskMapper {
 

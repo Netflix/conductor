@@ -56,9 +56,11 @@ public class WorkflowTask {
     @ProtoField(id = 6)
     private String dynamicTaskNameParam;
 
+    @Deprecated
     @ProtoField(id = 7)
     private String caseValueParam;
 
+    @Deprecated
     @ProtoField(id = 8)
     private String caseExpression;
 
@@ -302,8 +304,10 @@ public class WorkflowTask {
     }
 
     /**
+     * @deprecated Use {@link WorkflowTask#getEvaluatorType()} and {@link WorkflowTask#getExpression()} combination.
      * @return the caseValueParam
      */
+    @Deprecated
     public String getCaseValueParam() {
         return caseValueParam;
     }
@@ -336,7 +340,9 @@ public class WorkflowTask {
 
     /**
      * @param caseValueParam the caseValueParam to set
+     * @deprecated Use {@link WorkflowTask#getEvaluatorType()} and {@link WorkflowTask#getExpression()} combination.
      */
+    @Deprecated
     public void setCaseValueParam(String caseValueParam) {
         this.caseValueParam = caseValueParam;
     }
@@ -345,7 +351,9 @@ public class WorkflowTask {
      * @return A javascript expression for decision cases.  The result should be a scalar value that is used to decide
      * the case branches.
      * @see #getDecisionCases()
+     * @deprecated Use {@link WorkflowTask#getEvaluatorType()} and {@link WorkflowTask#getExpression()} combination.
      */
+    @Deprecated
     public String getCaseExpression() {
         return caseExpression;
     }
@@ -353,7 +361,9 @@ public class WorkflowTask {
     /**
      * @param caseExpression A javascript expression for decision cases.  The result should be a scalar value that is
      *                       used to decide the case branches.
+     * @deprecated Use {@link WorkflowTask#getEvaluatorType()} and {@link WorkflowTask#getExpression()} combination.
      */
+    @Deprecated
     public void setCaseExpression(String caseExpression) {
         this.caseExpression = caseExpression;
     }

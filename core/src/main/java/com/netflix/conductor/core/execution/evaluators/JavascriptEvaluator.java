@@ -32,7 +32,7 @@ public class JavascriptEvaluator implements Evaluator {
    public Object evaluate(String expression, Object input) {
       LOGGER.debug("Javascript evaluator -- expression: {}", expression);
       try {
-         //Evaluate the expression by using the Nashhorn based script evaluator
+         // Evaluate the expression by using the Javascript evaluation engine.
          Object result = ScriptEvaluator.eval(expression, input);
          LOGGER.debug("Javascript evaluator -- result: {}", result);
          return result;

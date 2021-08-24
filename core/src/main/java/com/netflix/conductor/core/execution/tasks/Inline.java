@@ -30,7 +30,7 @@ import com.netflix.conductor.core.execution.evaluators.Evaluator;
 /**
  * @author X-Ultra
  * <p>
- * Task that enables execute inline script at workflow execution, For example,
+ * Task that enables execute inline script at workflow execution. For example,
  * <pre>
  * ...
  * {
@@ -50,6 +50,8 @@ import com.netflix.conductor.core.execution.evaluators.Evaluator;
  * ...
  * </pre>
  * then to use task output, e.g.  <code>script_test.output.testvalue</code>
+ *
+ * {@link Inline} is a replacement for deprecated {@link Lambda}
  */
 @Component(TASK_TYPE_INLINE)
 public class Inline extends WorkflowSystemTask {

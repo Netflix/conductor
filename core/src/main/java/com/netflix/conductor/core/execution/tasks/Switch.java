@@ -21,6 +21,9 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 
+/**
+ * {@link Switch} task is a replacement for now deprecated {@link Decision} task.
+ */
 @Component(TASK_TYPE_SWITCH)
 public class Switch extends WorkflowSystemTask {
 
