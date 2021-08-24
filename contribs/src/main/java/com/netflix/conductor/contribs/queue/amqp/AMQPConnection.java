@@ -120,6 +120,7 @@ public class AMQPConnection {
 	
 	public Channel getOrCreateChannel(ConnectionType connectionType, String queueOrExchangeName)
 	{
+		LOGGER.debug("Accessing the channel for queueOrExchange {} with type {} ", queueOrExchangeName,connectionType);
 		switch (connectionType) {
 		case SUBSCRIBER:
 			return getOrCreateSubscriberChannel(queueOrExchangeName);

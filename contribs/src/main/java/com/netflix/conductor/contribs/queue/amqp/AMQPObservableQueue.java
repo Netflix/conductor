@@ -345,6 +345,7 @@ public class AMQPObservableQueue implements ObservableQueue {
         }
 
         try {
+        	LOGGER.debug("Creating exchange {} of type {}", name, type);
             return amqpConnection.getOrCreateChannel(connectionType,getSettings().getQueueOrExchangeName()).exchangeDeclare(name, type, isDurable, autoDelete, arguments);
         } catch (final IOException e) {
             LOGGER.warn("Failed to create exchange {} of type {}", name, type, e);
@@ -364,6 +365,7 @@ public class AMQPObservableQueue implements ObservableQueue {
         }
 
         try {
+        	LOGGER.debug("Creating queue {}",name);
             return  amqpConnection.getOrCreateChannel(connectionType,getSettings().getQueueOrExchangeName()).queueDeclare(name, isDurable, isExclusive, autoDelete, arguments);
         } catch (final IOException e) {
              LOGGER.warn("Failed to create queue {}", name, e);
@@ -384,6 +386,8 @@ public class AMQPObservableQueue implements ObservableQueue {
 
     private void receiveMessagesFromQueue(String queueName) throws Exception {
         int nb = 0;
+        LOGGER.debug("Accessing channel for queue {}", queueName);
+        
         Consumer consumer = new DefaultConsumer(amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER,getSettings().getQueueOrExchangeName())) {
 
             @Override
