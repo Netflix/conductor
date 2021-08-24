@@ -20,10 +20,10 @@
             ]
         },
         "com.azure:azure-storage-blob": {
-            "locked": "12.7.0"
+            "locked": "12.2.0"
         },
         "com.azure:azure-storage-common": {
-            "locked": "12.7.0",
+            "locked": "12.2.0",
             "transitive": [
                 "com.azure:azure-storage-blob"
             ]
@@ -353,10 +353,10 @@
             ]
         },
         "com.azure:azure-storage-blob": {
-            "locked": "12.7.0"
+            "locked": "12.2.0"
         },
         "com.azure:azure-storage-common": {
-            "locked": "12.7.0",
+            "locked": "12.2.0",
             "transitive": [
                 "com.azure:azure-storage-blob"
             ]
@@ -755,10 +755,10 @@
             ]
         },
         "com.azure:azure-storage-blob": {
-            "locked": "12.7.0"
+            "locked": "12.2.0"
         },
         "com.azure:azure-storage-common": {
-            "locked": "12.7.0",
+            "locked": "12.2.0",
             "transitive": [
                 "com.azure:azure-storage-blob"
             ]
@@ -1308,10 +1308,10 @@
             ]
         },
         "com.azure:azure-storage-blob": {
-            "locked": "12.7.0"
+            "locked": "12.2.0"
         },
         "com.azure:azure-storage-common": {
-            "locked": "12.7.0",
+            "locked": "12.2.0",
             "transitive": [
                 "com.azure:azure-storage-blob"
             ]
