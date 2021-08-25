@@ -21,10 +21,4 @@ public interface Evaluator {
     * @return Return the evaluation result.
     */
    Object evaluate(String expression, Object input);
-
-   /**
-    * Get the name of the evaluator.
-    * @return Name of the evaluator
-    */
-   String getName();
 }

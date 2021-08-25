@@ -20,6 +20,8 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+@Component(ValueParamEvaluator.NAME)
 public class ValueParamEvaluator implements Evaluator {
 
    public static final String NAME = "value-param";
@@ -37,10 +39,5 @@ public class ValueParamEvaluator implements Evaluator {
          LOGGER.error(errorMsg);
          throw new TerminateWorkflowException(errorMsg);
       }
-   }
-
-   @Override
-   public String getName() {
-      return NAME;
    }
 }

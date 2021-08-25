@@ -24,8 +24,6 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.execution.DeciderService.DeciderOutcome;
 import com.netflix.conductor.core.execution.evaluators.Evaluator;
-import com.netflix.conductor.core.execution.evaluators.JavascriptEvaluator;
-import com.netflix.conductor.core.execution.evaluators.ValueParamEvaluator;
 import com.netflix.conductor.core.execution.mapper.DecisionTaskMapper;
 import com.netflix.conductor.core.execution.mapper.DynamicTaskMapper;
 import com.netflix.conductor.core.execution.mapper.EventTaskMapper;
@@ -52,6 +50,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
@@ -67,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.DECISION;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.DYNAMIC;
@@ -84,6 +84,7 @@ import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOI
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SWITCH;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.USER_DEFINED;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.WAIT;
+import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -98,6 +99,8 @@ import static org.mockito.Mockito.when;
 public class TestDeciderOutcomes {
 
     private DeciderService deciderService;
+
+    @Autowired
     private Map<String, Evaluator> evaluators;
 
     @Autowired
@@ -107,6 +110,7 @@ public class TestDeciderOutcomes {
     private SystemTaskRegistry systemTaskRegistry;
 
     @Configuration
+    @ComponentScan(basePackageClasses = {Evaluator.class}) // load all Evaluator beans.
     public static class TestConfiguration {
 
         @Bean(TASK_TYPE_DECISION)
@@ -128,7 +132,6 @@ public class TestDeciderOutcomes {
         public SystemTaskRegistry systemTaskRegistry(Set<WorkflowSystemTask> tasks) {
             return new SystemTaskRegistry(tasks);
         }
-
     }
 
     @Before
@@ -146,10 +149,6 @@ public class TestDeciderOutcomes {
         taskDef.setResponseTimeoutSeconds(60 * 60);
         when(metadataDAO.getTaskDef(anyString())).thenReturn(taskDef);
         ParametersUtils parametersUtils = new ParametersUtils(objectMapper);
-        evaluators = new HashMap<>() {{
-            put(ValueParamEvaluator.NAME, new ValueParamEvaluator());
-            put(JavascriptEvaluator.NAME, new JavascriptEvaluator());
-        }};
         Map<TaskType, TaskMapper> taskMappers = new HashMap<>();
         taskMappers.put(DECISION, new DecisionTaskMapper());
         taskMappers.put(SWITCH, new SwitchTaskMapper(evaluators));

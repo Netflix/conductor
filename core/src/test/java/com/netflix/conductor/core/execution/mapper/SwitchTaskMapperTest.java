@@ -28,6 +28,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -46,7 +49,7 @@ import com.netflix.conductor.core.execution.evaluators.ValueParamEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
+@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, SwitchTaskMapperTest.TestConfiguration.class})
 @RunWith(SpringRunner.class)
 public class SwitchTaskMapperTest {
 
@@ -54,10 +57,17 @@ public class SwitchTaskMapperTest {
     private DeciderService deciderService;
     //Subject
     private SwitchTaskMapper switchTaskMapper;
-    private Map<String, Evaluator> evaluators;
+
+    @Configuration
+    @ComponentScan(basePackageClasses = {Evaluator.class}) // load all Evaluator beans.
+    public static class TestConfiguration {
+    }
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private Map<String, Evaluator> evaluators;
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -91,10 +101,6 @@ public class SwitchTaskMapperTest {
         task3.setInputParameters(ip1);
         task3.setTaskReferenceName("t3");
         deciderService = mock(DeciderService.class);
-        evaluators = new HashMap<>() {{
-            put(ValueParamEvaluator.NAME, new ValueParamEvaluator());
-            put(JavascriptEvaluator.NAME, new JavascriptEvaluator());
-        }};
         switchTaskMapper = new SwitchTaskMapper(evaluators);
     }
 

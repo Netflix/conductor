@@ -68,6 +68,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -110,6 +111,7 @@ import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.PAUSED;
 import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.RUNNING;
 import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
 import static java.util.Comparator.comparingInt;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.maxBy;
 import static org.junit.Assert.assertEquals;
@@ -143,9 +145,9 @@ public class TestWorkflowExecutor {
     private QueueDAO queueDAO;
     private WorkflowStatusListener workflowStatusListener;
     private ExecutionLockService executionLockService;
-    private Map<String, Evaluator> evaluators;
 
     @Configuration
+    @ComponentScan(basePackageClasses = {Evaluator.class}) // load all Evaluator beans.
     public static class TestConfiguration {
 
         @Bean(TASK_TYPE_SUB_WORKFLOW)
@@ -193,6 +195,9 @@ public class TestWorkflowExecutor {
     @Autowired
     private DefaultListableBeanFactory beanFactory;
 
+    @Autowired
+    private Map<String, Evaluator> evaluators;
+
     @Before
     public void init() {
         executionDAOFacade = mock(ExecutionDAOFacade.class);
@@ -202,10 +207,6 @@ public class TestWorkflowExecutor {
         ExternalPayloadStorageUtils externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
         executionLockService = mock(ExecutionLockService.class);
         ParametersUtils parametersUtils = new ParametersUtils(objectMapper);
-        evaluators = new HashMap<>() {{
-            put(ValueParamEvaluator.NAME, new ValueParamEvaluator());
-            put(JavascriptEvaluator.NAME, new JavascriptEvaluator());
-        }};
         Map<TaskType, TaskMapper> taskMappers = new HashMap<>();
         taskMappers.put(DECISION, new DecisionTaskMapper());
         taskMappers.put(SWITCH, new SwitchTaskMapper(evaluators));

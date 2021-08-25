@@ -17,8 +17,6 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.execution.evaluators.Evaluator;
-import com.netflix.conductor.core.execution.evaluators.JavascriptEvaluator;
-import com.netflix.conductor.core.execution.evaluators.ValueParamEvaluator;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
 import com.netflix.conductor.core.listener.WorkflowStatusListenerStub;
@@ -33,7 +31,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -90,13 +87,5 @@ public class ConductorCoreConfiguration {
     public Map<String, EventQueueProvider> getEventQueueProviders(List<EventQueueProvider> eventQueueProviders) {
         return eventQueueProviders.stream()
             .collect(Collectors.toMap(EventQueueProvider::getQueueType, identity()));
-    }
-
-    @Bean
-    public Map<String, Evaluator> getEvaluators() {
-        return new HashMap<>() {{
-            put(ValueParamEvaluator.NAME, new ValueParamEvaluator());
-            put(JavascriptEvaluator.NAME, new JavascriptEvaluator());
-        }};
     }
 }

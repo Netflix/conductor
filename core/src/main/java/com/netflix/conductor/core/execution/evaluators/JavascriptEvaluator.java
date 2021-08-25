@@ -12,8 +12,6 @@
  */
 package com.netflix.conductor.core.execution.evaluators;
 
-import java.util.Map;
-
 import javax.script.ScriptException;
 
 import org.slf4j.Logger;
@@ -23,6 +21,8 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+@Component(JavascriptEvaluator.NAME)
 public class JavascriptEvaluator implements Evaluator {
 
    public static final String NAME = "javascript";
@@ -41,10 +41,5 @@ public class JavascriptEvaluator implements Evaluator {
          LOGGER.error(errorMsg, e);
          throw new TerminateWorkflowException(errorMsg);
       }
-   }
-
-   @Override
-   public String getName() {
-      return NAME;
    }
 }

@@ -39,17 +39,23 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+import static java.util.function.Function.identity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -64,7 +70,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
+@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, TestDefaultEventProcessor.TestConfiguration.class})
 @RunWith(SpringRunner.class)
 public class TestDefaultEventProcessor {
 
@@ -79,10 +85,17 @@ public class TestDefaultEventProcessor {
     private JsonUtils jsonUtils;
     private ConductorProperties properties;
     private Message message;
+
+    @Autowired
     private Map<String, Evaluator> evaluators;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Configuration
+    @ComponentScan(basePackageClasses = {Evaluator.class}) // load all Evaluator beans
+    public static class TestConfiguration {
+    }
 
     @Before
     public void setup() {
@@ -108,11 +121,6 @@ public class TestDefaultEventProcessor {
         properties = mock(ConductorProperties.class);
         when(properties.isEventMessageIndexingEnabled()).thenReturn(true);
         when(properties.getEventProcessorThreadCount()).thenReturn(2);
-
-        evaluators = new HashMap<>() {{
-            put(ValueParamEvaluator.NAME, new ValueParamEvaluator());
-            put(JavascriptEvaluator.NAME, new JavascriptEvaluator());
-        }};
     }
 
     @Test
