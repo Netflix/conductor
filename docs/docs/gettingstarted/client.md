@@ -62,9 +62,9 @@ Further, these properties can be set either by Worker implementation or by setti
 
 
 ## Python
-[https://github.com/Netflix/conductor/tree/main/client/python](https://github.com/Netflix/conductor/tree/main/client/python)
+[https://github.com/Netflix/conductor/tree/main/polyglot-clients/python](https://github.com/Netflix/conductor/tree/main/polyglot-clients/python)
 
-Follow the example as documented in the readme or take a look at [kitchensink_workers.py](https://github.com/Netflix/conductor/blob/main/client/python/kitchensink_workers.py)
+Follow the example as documented in the readme or take a look at [kitchensink_workers.py](https://github.com/Netflix/conductor/blob/main/polyglot-clients/python/kitchensink_workers.py)
 
 !!!warning
 	Python client is a community contribution. We encourage you to test it out and let us know the feedback. Pull Requests with fixes or enhancements are welcomed!
