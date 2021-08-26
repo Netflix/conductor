@@ -179,7 +179,7 @@ class FrinxConductorWrapper:
 
     def register(self, task_type, task_definition, exec_function):
         if task_definition is None:
-            task_definition = DEFAULT_TASK_DEFINITION
+            task_definition = copy.deepcopy(DEFAULT_TASK_DEFINITION)
         else:
             task_definition = {**DEFAULT_TASK_DEFINITION, **task_definition}
 
