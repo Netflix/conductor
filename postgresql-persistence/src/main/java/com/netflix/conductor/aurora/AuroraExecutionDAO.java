@@ -10,6 +10,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowErrorRegistry;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
@@ -771,4 +772,23 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		String SQL = "SELECT json_data FROM poll_data WHERE queue_name = ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
 	}
+
+    private void addErrorRegistry(Connection tx, WorkflowErrorRegistry workflowErrorRegistry) {
+        String SQL = "INSERT INTO workflow_error_registry (workflow_id, parent_workflow_id, workflow_type, workflow_status, " +
+                "start_time,end_time,complete_error,job_id,ranking_id,order_id,error_lookup_id) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+
+        execute(tx, SQL, q -> q.addParameter(workflowErrorRegistry.getWorkflowId())
+                .addParameter(workflowErrorRegistry.getParentWorkflowId())
+                .addParameter(workflowErrorRegistry.getWorkflowType())
+                .addParameter(workflowErrorRegistry.getStatus())
+                .addTimestampParameter(workflowErrorRegistry.getStartTime())
+                .addTimestampParameter(workflowErrorRegistry.getEndTime())
+                .addParameter(workflowErrorRegistry.getCompleteError())
+                .addParameter(workflowErrorRegistry.getJobId())
+                .addParameter(workflowErrorRegistry.getRankingId())
+                .addParameter(workflowErrorRegistry.getOrderId())
+                .addParameter(workflowErrorRegistry.getErrorLookUpId())
+                .executeUpdate());
+    }
 }
