@@ -249,7 +249,6 @@ public class ExecutionService {
 	}
 
 	public int requeuePendingTasks(Workflow workflow, long threshold) {
-
 		int count = 0;
 		List<Task> tasks = workflow.getTasks();
 		for (Task pending : tasks) {
@@ -266,7 +265,7 @@ public class ExecutionService {
 				if (callback < 0) {
 					callback = 0;
 				}
-				boolean pushed = queue.pushIfNotExists(QueueUtils.getQueueName(pending), pending.getTaskId(), callback);
+				boolean pushed = queue.pushIfNotExists(QueueUtils.getQueueName(pending), pending.getTaskId(), callback, workflow.getJobPriority());
 				if (pushed) {
 					count++;
 				}
@@ -304,13 +303,15 @@ public class ExecutionService {
 		if (callback < 0) {
 			callback = 0;
 		}
-		queue.remove(QueueUtils.getQueueName(pending), pending.getTaskId());
+		String queueName = QueueUtils.getQueueName(pending);
+		int priority = queue.getPriority(queueName, pending.getTaskId());
+		queue.remove(queueName, pending.getTaskId());
 		long now = System.currentTimeMillis();
 		callback = callback - ((now - pending.getUpdateTime()) / 1000);
 		if (callback < 0) {
 			callback = 0;
 		}
-		return queue.pushIfNotExists(QueueUtils.getQueueName(pending), pending.getTaskId(), callback);
+		return queue.pushIfNotExists(queueName, pending.getTaskId(), callback, priority);
 	}
 
 	public List<Workflow> getWorkflowInstances(String workflowName, String correlationId, boolean includeClosed, boolean includeTasks)

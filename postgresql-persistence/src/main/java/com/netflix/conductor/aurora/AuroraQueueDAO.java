@@ -48,22 +48,22 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
-	public void push(String queueName, String id, long offsetSeconds) {
+	public void push(String queueName, String id, long offsetSeconds, int priority) {
 		createQueueIfNotExists(queueName);
-		withTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds));
+		withTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds, priority));
 	}
 
 	@Override
-	public void push(String queueName, List<Message> messages) {
+	public void push(String queueName, List<Message> messages, int priority) {
 		createQueueIfNotExists(queueName);
 		withTransaction(tx -> messages
-				.forEach(message -> pushMessage(tx, queueName, message.getId(), message.getPayload(), 0)));
+				.forEach(message -> pushMessage(tx, queueName, message.getId(), message.getPayload(), 0, priority)));
 	}
 
 	@Override
-	public boolean pushIfNotExists(String queueName, String id, long offsetSeconds) {
+	public boolean pushIfNotExists(String queueName, String id, long offsetSeconds, int priority) {
 		createQueueIfNotExists(queueName);
-		return getWithTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds));
+		return getWithTransaction(tx -> pushMessage(tx, queueName, id, null, offsetSeconds, priority));
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	public List<String> pop(String queueName, int count, int timeout) {
 		final String QUERY = "SELECT id FROM queue_message " +
 				"WHERE queue_name = ? AND deliver_on < now() AND popped = false " +
-				"ORDER BY deliver_on, id LIMIT ? FOR UPDATE SKIP LOCKED";
+				"ORDER BY priority, deliver_on, id LIMIT ? FOR UPDATE SKIP LOCKED";
 
 		final String LOCK = "UPDATE queue_message " +
 				"SET popped = true, unack_on = ?, version = version + 1 " +
@@ -230,6 +230,11 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
+	public int getPriority(String queueName, String messageId) {
+		return getWithTransaction(tx -> getMessagePriority(tx, queueName, messageId));
+	}
+
+	@Override
 	public void remove(String queueName, String messageId) {
 		withTransaction(tx -> removeMessage(tx, queueName, messageId));
 	}
@@ -292,7 +297,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 	}
 
 	@Override
-	public boolean wakeup(String queueName, String id) {
+	public boolean wakeup(String queueName, String id, int priority) {
 		createQueueIfNotExists(queueName);
 		final String SQL = "SELECT * FROM queue_message WHERE queue_name = ? AND message_id = ?";
 
@@ -317,7 +322,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 
 		if (record == null) {
 			logger.debug("wakeup no record exists for " + queueName + "/" + id);
-			return pushIfNotExists(queueName, id, 0);
+			return pushIfNotExists(queueName, id, 0, priority);
 		}
 
 		// pop happened but setUnackTimeout dit not yet - mostly means the record in the decider at this moment
@@ -342,9 +347,9 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 		return query(connection, SQL, q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).exists());
 	}
 
-	private boolean pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds) {
-		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload) " +
-				"VALUES (?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
+	private boolean pushMessage(Connection connection, String queueName, String messageId, String payload, long offsetSeconds, int priority) {
+		String SQL = "INSERT INTO queue_message (queue_name, message_id, popped, deliver_on, payload, priority) " +
+				"VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT ON CONSTRAINT queue_name_msg DO NOTHING";
 
 		long deliverOn = System.currentTimeMillis() + (offsetSeconds * 1000);
 
@@ -353,6 +358,7 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 				.addParameter(false)
 				.addTimestampParameter(deliverOn)
 				.addParameter(payload)
+				.addParameter(priority)
 				.executeUpdate() > 0);
 	}
 
@@ -369,6 +375,12 @@ public class AuroraQueueDAO extends AuroraBaseDAO implements QueueDAO {
 					}
 					return null;
 				}));
+	}
+
+	private int getMessagePriority(Connection connection, String queueName, String messageId) {
+		final String SQL = "SELECT priority FROM queue_message WHERE queue_name = ? AND message_id = ?";
+		return query(connection, SQL,
+				q -> q.addParameter(queueName.toLowerCase()).addParameter(messageId).executeScalar(Integer.class));
 	}
 
 	private boolean removeMessage(Connection connection, String queueName, String messageId) {

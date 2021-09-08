@@ -161,7 +161,7 @@ public class WorkflowResource {
 				logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked + ",path=/{name}");
 				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
 						request.getInput(), null, request.getTaskToDomain(),
-						auth, contextToken, contextUser, traceId, asyncStart);
+						auth, contextToken, contextUser, traceId, asyncStart, request.getJobPriority());
 			} finally {
 				NDC.remove();
 			}
@@ -171,7 +171,7 @@ public class WorkflowResource {
 				logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked + ",path=/{name}");
 				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
 						request.getInput(), null, request.getTaskToDomain(),
-						Collections.emptyMap(), contextToken, contextUser, traceId, asyncStart);
+						Collections.emptyMap(), contextToken, contextUser, traceId, asyncStart, request.getJobPriority());
 			} finally {
 				NDC.remove();
 			}
@@ -198,13 +198,14 @@ public class WorkflowResource {
 		@ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
 	public Response startWorkflow(@Context HttpHeaders headers,
-								  @PathParam("name") String name, @QueryParam("version") Integer version,
+								  @PathParam("name") String name, @QueryParam("version") Integer version, @QueryParam("jobPriority") Integer jobPriority,
 								  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
 
 		StartWorkflowRequest request = new StartWorkflowRequest();
 		request.setName(name);
 		request.setVersion(version);
 		request.setCorrelationId(correlationId);
+		request.setJobPriority(jobPriority);
 		request.setInput(input);
 
 		return startWorkflow(request, headers);

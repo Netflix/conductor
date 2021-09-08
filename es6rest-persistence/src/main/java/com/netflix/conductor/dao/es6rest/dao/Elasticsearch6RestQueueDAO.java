@@ -59,7 +59,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     @Override
-    public void push(String queueName, String id, long offsetTimeInSecond) {
+    public void push(String queueName, String id, long offsetTimeInSecond, int priority) {
         if (logger.isDebugEnabled())
             logger.debug("push: {}/{}/{}", queueName, id, offsetTimeInSecond);
         initQueue(queueName);
@@ -71,7 +71,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     @Override
-    public void push(String queueName, List<Message> messages) {
+    public void push(String queueName, List<Message> messages, int priority) {
         if (logger.isDebugEnabled())
             logger.debug("push: {}/{}", queueName, toJson(messages));
         initQueue(queueName);
@@ -83,7 +83,7 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     @Override
-    public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
+    public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond, int priority) {
         if (logger.isDebugEnabled())
             logger.debug("pushIfNotExists: {}/{}/{}", queueName, id, offsetTimeInSecond);
         initQueue(queueName);
@@ -460,14 +460,14 @@ public class Elasticsearch6RestQueueDAO extends Elasticsearch6RestAbstractDAO im
     }
 
     @Override
-    public boolean wakeup(String queueName, String id) {
+    public boolean wakeup(String queueName, String id, int priority) {
         initQueue(queueName);
         try (RestHighLevelClient client = new RestHighLevelClient(builder)) {
             String indexName = toIndexName(queueName);
             String typeName = toTypeName(queueName);
             GetResponse record = findOne(indexName, typeName, id);
             if (!record.isExists()) {
-                boolean created = pushIfNotExists(queueName, id, 0);
+                boolean created = pushIfNotExists(queueName, id, 0, priority);
                 if (logger.isDebugEnabled())
                     logger.debug("wakeup: created for " + queueName + "/" + id + "/" + created);
                 return created;

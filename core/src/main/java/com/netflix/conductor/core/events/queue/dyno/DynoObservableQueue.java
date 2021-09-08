@@ -77,7 +77,7 @@ public class DynoObservableQueue implements ObservableQueue {
 	
 	@Override
 	public void publish(List<Message> messages) {
-		queueDAO.push(queueName, messages);
+		queueDAO.push(queueName, messages, 0);
 	}
 	
 	@Override

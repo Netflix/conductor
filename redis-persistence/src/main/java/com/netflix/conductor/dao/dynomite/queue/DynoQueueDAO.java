@@ -125,20 +125,20 @@ public class DynoQueueDAO implements QueueDAO {
 	}
 
 	@Override
-	public void push(String queueName, String id, long offsetTimeInSecond) {
+	public void push(String queueName, String id, long offsetTimeInSecond, int priority) {
 		Message msg = new Message(id, null);
 		msg.setTimeout(offsetTimeInSecond, TimeUnit.SECONDS);
 		queues.get(queueName).push(Arrays.asList(msg));
 	}
 
 	@Override
-	public void push(String queueName, List<com.netflix.conductor.core.events.queue.Message> messages) {
+	public void push(String queueName, List<com.netflix.conductor.core.events.queue.Message> messages, int priority) {
 		List<Message> msgs = messages.stream().map(msg -> new Message(msg.getId(), msg.getPayload())).collect(Collectors.toList());
 		queues.get(queueName).push(msgs);
 	}
 	
 	@Override
-	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
+	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond, int priority) {
 		DynoQueue queue = queues.get(queueName);
 		if (queue.get(id) != null) {
 			return false;

@@ -75,7 +75,7 @@ public class SystemTaskWorkerCoordinator {
 	private String workerId;
 
 	private boolean useTaskLock;
-		
+
 	@Inject
 	public SystemTaskWorkerCoordinator(QueueDAO taskQueues, WorkflowExecutor executor, Configuration config) {
 		this.taskQueues = taskQueues;
@@ -133,7 +133,7 @@ public class SystemTaskWorkerCoordinator {
 			logger.debug("Closing executor pool failed " + e.getMessage(), e);
 		}
 	}
-	
+
 	private void listen() {
 		try {
 			for(;;) {
@@ -193,7 +193,7 @@ public class SystemTaskWorkerCoordinator {
 						// Adding this option to manage it per environment as eventually we need to find root cause of the issue
 						if (useTaskLock) {
 							long expireTime = systemTask.getRetryTimeInSecond() * 2L; // 2 times longer than task retry time
-							boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime);
+							boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime, 0);
 							// This prevents another containers executing the same action
 							// true means this session added the record to lock queue and can start the task
 							if (!locked) {

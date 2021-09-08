@@ -113,6 +113,7 @@ public class ParametersUtils {
 		wf.put("contextUser", workflow.getContextUser());
 		wf.put("tags", workflow.getTags());
 		wf.put("traceId", workflow.getTraceId());
+		wf.put("jobPriority", workflow.getJobPriority());
 		wf.put("attributes", workflow.getAttributes());
 
 		String correlationId = workflow.getCorrelationId();
