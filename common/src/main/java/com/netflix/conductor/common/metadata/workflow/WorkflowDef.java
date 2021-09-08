@@ -302,9 +302,8 @@ public class WorkflowDef extends Auditable {
         return inputTemplate;
     }
 
-    public WorkflowDef setInputTemplate(Map<String, Object> inputTemplate) {
+    public void setInputTemplate(Map<String, Object> inputTemplate) {
         this.inputTemplate = inputTemplate;
-        return this;
     }
 
     public String key() {
