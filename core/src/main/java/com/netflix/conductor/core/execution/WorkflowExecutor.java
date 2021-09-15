@@ -1036,7 +1036,7 @@ public class WorkflowExecutor {
 		// send wf end message
 		workflowStatusListener.onWorkflowTerminated(workflow);
 
-		int errorId = 0 ;
+		int errorId = 0;
 		try {
 			Optional<ErrorLookup> errorLookupOpt = errorLookupDAO.getErrorMatching(workflow.getWorkflowType(), reason).stream().findFirst();
 			if (errorLookupOpt.isPresent()) {
@@ -1047,6 +1047,31 @@ public class WorkflowExecutor {
 
 		}
 
+		Map<String, Object> map = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
+		String orderId = "";
+		String jobId = "";
+		String rankingId = "";
+		try {
+			//convert JSON string to Map
+			if (workflow.getCorrelationId() != null) {
+				map = mapper.readValue(workflow.getCorrelationId(), new TypeReference<HashMap<String, Object>>() {
+				});
+				List<String> urns = (List<String>) map.get("urns");
+				for (String urn : urns) {
+					if (urn.contains("orderid:")) {
+						orderId = urn.substring(urn.lastIndexOf(':') + 1);
+					} else if (urn.contains("jobid:")) {
+						jobId = urn.substring(urn.lastIndexOf(':') + 1);
+					} else if (urn.contains("rankingid:")) {
+						rankingId = urn.substring(urn.lastIndexOf(':') + 1);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
 		workflowErrorRegistry.setStatus(workflow.getStatus().name());
 		workflowErrorRegistry.setWorkflowId(workflow.getWorkflowId());
@@ -1055,6 +1080,9 @@ public class WorkflowExecutor {
 		workflowErrorRegistry.setStartTime(workflow.getStartTime());
 		workflowErrorRegistry.setEndTime(workflow.getEndTime());
 		workflowErrorRegistry.setParentWorkflowId(workflow.getParentWorkflowId());
+		workflowErrorRegistry.setJobId(jobId);
+		workflowErrorRegistry.setRankingId(rankingId);
+		workflowErrorRegistry.setOrderId(orderId);
 		edao.addErrorRegistry(workflowErrorRegistry);
 
 		// Send to data dog
