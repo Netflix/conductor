@@ -773,22 +773,28 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return queryWithTransaction(SQL, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
 	}
 
-    private void addErrorRegistry(Connection tx, WorkflowErrorRegistry workflowErrorRegistry) {
-        String SQL = "INSERT INTO workflow_error_registry (workflow_id, parent_workflow_id, workflow_type, workflow_status, " +
-                "start_time,end_time,complete_error,job_id,ranking_id,order_id,error_lookup_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+	public void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) {
+		withTransaction(tx -> {
+			addErrorRegistry(tx, workflowErrorRegistry);
+		});
+	}
 
-        execute(tx, SQL, q -> q.addParameter(workflowErrorRegistry.getWorkflowId())
-                .addParameter(workflowErrorRegistry.getParentWorkflowId())
-                .addParameter(workflowErrorRegistry.getWorkflowType())
-                .addParameter(workflowErrorRegistry.getStatus())
-                .addTimestampParameter(workflowErrorRegistry.getStartTime())
-                .addTimestampParameter(workflowErrorRegistry.getEndTime())
-                .addParameter(workflowErrorRegistry.getCompleteError())
-                .addParameter(workflowErrorRegistry.getJobId())
-                .addParameter(workflowErrorRegistry.getRankingId())
-                .addParameter(workflowErrorRegistry.getOrderId())
-                .addParameter(workflowErrorRegistry.getErrorLookUpId())
-                .executeUpdate());
-    }
+	private void addErrorRegistry(Connection tx, WorkflowErrorRegistry workflowErrorRegistry) {
+		String SQL = "INSERT INTO workflow_error_registry (workflow_id, parent_workflow_id, workflow_type, workflow_status, " +
+				"start_time,end_time,complete_error,job_id,ranking_id,order_id,error_lookup_id) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+
+		execute(tx, SQL, q -> q.addParameter(workflowErrorRegistry.getWorkflowId())
+				.addParameter(workflowErrorRegistry.getParentWorkflowId())
+				.addParameter(workflowErrorRegistry.getWorkflowType())
+				.addParameter(workflowErrorRegistry.getStatus())
+				.addTimestampParameter(workflowErrorRegistry.getStartTime())
+				.addTimestampParameter(workflowErrorRegistry.getEndTime())
+				.addParameter(workflowErrorRegistry.getCompleteError())
+				.addParameter(workflowErrorRegistry.getJobId())
+				.addParameter(workflowErrorRegistry.getRankingId())
+				.addParameter(workflowErrorRegistry.getOrderId())
+				.addParameter(workflowErrorRegistry.getErrorLookUpId())
+				.executeUpdate());
+	}
 }

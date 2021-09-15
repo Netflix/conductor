@@ -37,6 +37,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.common.run.WorkflowErrorRegistry;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
@@ -51,6 +52,8 @@ import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.common.run.ErrorLookup;
+import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -65,6 +68,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.text.MessageFormat;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -82,6 +86,8 @@ public class WorkflowExecutor {
 	private ExecutionDAO edao;
 
 	private QueueDAO queue;
+
+	private ErrorLookupDAO errorLookupDAO;
 
 	private DeciderService decider;
 
@@ -105,13 +111,14 @@ public class WorkflowExecutor {
 	private ParametersUtils pu = new ParametersUtils();
 
 	@Inject
-	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ObjectMapper om,
+	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ErrorLookupDAO errorLookupDAO,ObjectMapper om,
 							AuthManager auth, Configuration config,
 							TaskStatusListener taskStatusListener,
 							WorkflowStatusListener workflowStatusListener) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
+		this.errorLookupDAO = errorLookupDAO;
 		this.om = om;
 		this.config = config;
 		this.auth = auth;
@@ -1013,11 +1020,33 @@ public class WorkflowExecutor {
 		// send wf end message
 		workflowStatusListener.onWorkflowTerminated(workflow);
 
+		int errorId = 0 ;
+		try {
+			Optional<ErrorLookup> errorLookupOpt = errorLookupDAO.getErrorMatching(workflow.getWorkflowType(), reason).stream().findFirst();
+			if (errorLookupOpt.isPresent()) {
+				ErrorLookup errorLookup = errorLookupOpt.get();
+				errorId = errorLookup.getId();
+			}
+		} catch (Exception ex) {
+
+		}
+
+		WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
+		workflowErrorRegistry.setStatus(workflow.getStatus().name());
+		workflowErrorRegistry.setWorkflowId(workflow.getWorkflowId());
+		workflowErrorRegistry.setWorkflowType(workflow.getWorkflowType());
+		workflowErrorRegistry.setErrorLookUpId(errorId);
+		workflowErrorRegistry.setStartTime(workflow.getStartTime());
+		workflowErrorRegistry.setEndTime(workflow.getEndTime());
+		workflowErrorRegistry.setParentWorkflowId(workflow.getParentWorkflowId());
+		edao.addErrorRegistry(workflowErrorRegistry);
+
 		// Send to data dog
 		MetricService.getInstance().workflowFailure(workflow.getWorkflowType(),
 			workflow.getStatus().name(),
 			workflow.getStartTime());
 	}
+
 
 	public QueueDAO getQueueDao() {
 		return queue;
