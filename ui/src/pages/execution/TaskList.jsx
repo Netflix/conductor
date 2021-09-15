@@ -1,22 +1,28 @@
 import React from "react";
+import { Link } from "@material-ui/core";
 import { DataTable } from "../../components";
 import _ from "lodash";
 
-const taskDetailFields = [
-  { name: "seq" },
-  { name: "workflowTask.name", label: "Name" },
-  { name: "referenceTaskName", label: "Task Reference" },
-  { name: "workflowTask.type", label: "Type" },
-  { name: "scheduledTime", type: "date" },
-  { name: "startTime", type: "date" },
-  { name: "endTime", type: "date" },
-  { name: "status" },
-  { name: "updateTime", type: "date" },
-  { name: "callbackAfterSeconds" },
-  { name: "pollCount" },
-];
 
 export default function TaskList({ selectedTask, tasks, dag, onClick }) {
+  const taskDetailFields = [
+    { name: "seq", grow: 0.2 },
+    { name: "taskId", renderer: (taskId, row, idx) => {
+      console.log(row)
+      return <Link href="#" onClick={() => handleClick(row)}>{taskId}</Link>
+    }},
+    { name: "workflowTask.name", id: "taskName", label: "Task Name" },
+    { name: "referenceTaskName", label: "Ref" },
+    { name: "workflowTask.type", id: "taskType" ,label: "Type", grow: 0.5 },
+    { name: "scheduledTime", type: "date" },
+    { name: "startTime", type: "date" },
+    { name: "endTime", type: "date" },
+    { name: "status", grow: 0.5 },
+    { name: "updateTime", type: "date" },
+    { name: "callbackAfterSeconds" },
+    { name: "pollCount" },
+  ];
+
   let selectedTaskIdx = -1;
   if (selectedTask) {
     const { ref, taskId } = selectedTask;
@@ -32,10 +38,10 @@ export default function TaskList({ selectedTask, tasks, dag, onClick }) {
 
   if (selectedTaskIdx === -1) selectedTaskIdx = null;
 
-  const handleClick = (currentRowsSelected, allRowsSelected, rowsSelected) => {
-    if (!_.isEmpty(rowsSelected)) {
+  function handleClick (row) {
+    if (!_.isEmpty(row)) {
       if (onClick) {
-        const task = tasks[rowsSelected[0]];
+        const task = row;
         const node = dag.graph.node(task.referenceTaskName);
 
         // If there are more than 1 task associated, use task ID
@@ -62,21 +68,15 @@ export default function TaskList({ selectedTask, tasks, dag, onClick }) {
       columns={taskDetailFields}
       defaultShowColumns={[
         "seq",
-        "workflowTask.name",
+        "taskId",
+        "taskName",
         "referenceTaskName",
-        "workflowTask.type",
+        "taskType",
         "startTime",
         "endTime",
         "status",
       ]}
-      localStorageKey="taskListTable"
-      options={{
-        selectableRows: "single",
-        selectableRowsOnClick: true,
-        selectableRowsHideCheckboxes: true,
-        rowsSelected: [selectedTaskIdx],
-        onRowSelectionChange: handleClick,
-      }}
+      localStorageKey="taskListTable"   
     />
   );
 }

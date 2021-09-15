@@ -119,7 +119,7 @@ export default function Execution() {
   const { data: execution, isFetching, refetch: refresh } = useFetch(url);
 
   const [tabIndex, setTabIndex] = useState(0);
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);  
 
   const dag = useMemo(
     () => (execution ? new WorkflowDAG(execution) : null),
