@@ -1,0 +1,40 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "Conductor\nConductorServer.java" as css
+participant "Conductor\nExecutionService.java" as ess
+participant "Conductor\nMetricService.java" as msj
+participant "External Service\ndatadog.service.{env}" as dds
+participant "SaaS\nData Dog" as saas
+
+alt Conductor instance started
+css -> msj: Invokes serverStarted
+msj -> dds: Increment counter value (metric:deluxe.conductor.server.started)
+dds -> saas: Pushes metrics
+end
+
+alt WorkflowComposer invokes ExecutionService via REST API
+ess -> ess: taskPoll Invoked
+ess -> msj: Invokes taskPoll (task type, count)
+msj -> dds: Increment counter value (metric:deluxe.conductor.task.poll)
+dds -> saas: Pushes metrics
+msj -> dds: Records gauge value (metric:deluxe.conductor.task.poll.gauge)
+dds -> saas: Pushes metrics
+loop For all polled task ids
+ess -> ess: Checks exceeding InProgressLimit/RateLimitPerFrequency
+ess -> ess: When InProgressLimit/RateLimitPerFrequency exceeded
+activate ess
+ess -> msj: Invokes taskRateLimited (task type, task ref name, task def name)
+msj -> dds: Increment counter value (metric:deluxe.conductor.task.rate.limit)
+dds -> saas: Pushes metrics
+deactivate ess
+ess -> msj: Invokes taskWait (task type, task ref name, task def name, queue wait time)
+msj -> dds: Records execution time (metric:deluxe.conductor.task.queue.wait.time)
+dds -> saas: Pushes metrics
+end
+end
+
+
+@enduml

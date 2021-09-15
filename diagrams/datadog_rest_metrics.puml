@@ -1,0 +1,52 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "External Service\ndd-metrics.service.{env}" as ddm
+participant "Conductor\nREST API /v1/metrics" as rest
+participant "Conductor\nAuroraMetricsDAO.java" as mdao
+participant "Conductor\nMetricService.java" as msj
+participant "External Service\ndatadog.service.{env}" as dds
+participant "SaaS\nData Dog" as saas
+
+ddm -> rest: Calls /v1/metrics
+rest -> mdao: Calls getMetrics
+
+mdao -> mdao: Invokes **queueDepth**
+activate mdao
+mdao -> mdao: Queries queue_message table\ngroups by queue name
+mdao -> msj: Invokes queueDepth(queue, count)
+deactivate mdao
+msj -> dds: Records gauge value (metric:deluxe.conductor.queue.gauge)
+dds -> saas: Pushes metrics
+
+mdao -> mdao: Invokes **httpQueueDepth**
+activate mdao
+mdao -> mdao: Queries task/queue_message tables\n**http** queue related only
+mdao -> msj: Invokes httpQueueDepth(ref name, def name, service name, count)
+deactivate mdao
+msj -> dds: Records gauge value (metric:deluxe.conductor.queue.http.gauge)
+dds -> saas: Pushes metrics
+
+mdao -> mdao: Invokes **deciderQueueDepth**
+activate mdao
+mdao -> mdao: Queries workflow/queue_message tables\n**_deciderqueue** queue related only
+mdao -> msj: Invokes deciderQueueDepth(workflow type, count)
+deactivate mdao
+msj -> dds: Records gauge value (metric:deluxe.conductor.queue.decider.gauge)
+dds -> saas: Pushes metrics
+
+mdao -> mdao: Invokes **httpRunning**
+activate mdao
+mdao -> mdao: Queries task/task_in_progress tables
+mdao -> msj: Invokes httpRunningGauge(ref name, def name, service name, count)
+deactivate mdao
+msj -> dds: Records gauge value (metric:deluxe.conductor.http.running.gauge)
+dds -> saas: Pushes metrics
+
+rest <- mdao: Returns empty list
+ddm <- rest: Returns empty list
+ddm -> ddm: Publishes nothing to DataDog
+
+@enduml

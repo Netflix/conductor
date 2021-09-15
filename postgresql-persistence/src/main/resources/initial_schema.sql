@@ -11,7 +11,7 @@ create table log4j_logs
     stack    text,
     alloc_id text,
     trace_id text,
-    span_id text
+    span_id  text
 );
 create index log4j_logs_log_time_idx on log4j_logs (log_time);
 
@@ -88,13 +88,13 @@ CREATE SEQUENCE meta_error_registry_id_seq;
 
 CREATE TABLE meta_error_registry
 (
-    id INTEGER DEFAULT nextval('meta_error_registry_id_seq'::regclass) NOT NULL,
-    error_code TEXT NOT NULL,
-    lookup TEXT NOT NULL,
-    workflow_name TEXT,
+    id              INTEGER DEFAULT nextval('meta_error_registry_id_seq'::regclass) NOT NULL,
+    error_code      TEXT                                                            NOT NULL,
+    lookup          TEXT                                                            NOT NULL,
+    workflow_name   TEXT,
     general_message TEXT,
-    root_cause TEXT,
-    resolution TEXT NOT NULL,
+    root_cause      TEXT,
+    resolution      TEXT                                                            NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (error_code),
     UNIQUE (lookup, workflow_name)
@@ -104,13 +104,13 @@ CREATE sequence meta_priority_id_seq START WITH 1 increment BY 1 no maxvalue no 
 
 CREATE TABLE meta_priority
 (
-    id BIGINT DEFAULT nextval('meta_priority_id_seq'::regclass) NOT NULL,
-    created_on timestamp not null default now(),
-    modified_on timestamp not null default now(),
-    min_priority INTEGER NOT NULL,
-    max_priority INTEGER NOT NULL,
-    name CHARACTER VARYING(255) NOT NULL,
-    value TEXT NOT NULL,
+    id           BIGINT                          DEFAULT nextval('meta_priority_id_seq'::regclass) NOT NULL,
+    created_on   timestamp              not null default now(),
+    modified_on  timestamp              not null default now(),
+    min_priority INTEGER                NOT NULL,
+    max_priority INTEGER                NOT NULL,
+    name         CHARACTER VARYING(255) NOT NULL,
+    value        TEXT                   NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -273,7 +273,7 @@ create index event_execution_created_on on event_execution (created_on);
 create unique index event_execution_fields on event_execution (handler_name, event_name, message_id, execution_id);
 alter table event_execution
     add constraint event_execution_fields unique using index event_execution_fields;
-create index event_execution_combo ON event_execution(subject, received_on);
+create index event_execution_combo ON event_execution (subject, received_on);
 
 create table event_published
 (
@@ -310,7 +310,8 @@ create table queue_message
     unacked    boolean      not null default false,
     deliver_on timestamp,
     unack_on   timestamp,
-    payload    text
+    payload    text,
+    priority   int          not null default 0
 );
 create unique index queue_name_msg on queue_message (queue_name, message_id);
 alter table queue_message

@@ -86,7 +86,7 @@ public class DynoQueueDAOTest {
 		
 		for(int i = 0; i < 10; i++) {
 			String messageId = "msg" + i;
-			dao.push(queueName, messageId, offsetTimeInSecond);
+			dao.push(queueName, messageId, offsetTimeInSecond, 0);
 		}
 		int size = dao.getSize(queueName);
 		assertEquals(10, size);
@@ -97,7 +97,7 @@ public class DynoQueueDAOTest {
 		
 		for(int i = 0; i < 10; i++) {
 			String messageId = "msg" + i;
-			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond);
+			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond, 0);
 		}
 		
 		List<String> popped = dao.pop(queueName, 10, 100);
@@ -126,7 +126,7 @@ public class DynoQueueDAOTest {
 		
 		for(int i = 0; i < 10; i++) {
 			String messageId = "msg" + i;
-			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond);
+			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond, 0);
 		}
 		size = dao.getSize(queueName);
 		assertEquals(10, size);
@@ -141,7 +141,7 @@ public class DynoQueueDAOTest {
 		
 		for(int i = 0; i < 10; i++) {
 			String messageId = "msg" + i;
-			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond);
+			dao.pushIfNotExists(queueName, messageId, offsetTimeInSecond, 0);
 		}
 		dao.flush(queueName);
 		size = dao.getSize(queueName);

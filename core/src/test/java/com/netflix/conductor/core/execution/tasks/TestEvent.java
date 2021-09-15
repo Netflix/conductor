@@ -193,7 +193,7 @@ public class TestEvent {
 				publishedMessages.addAll(messages);
 				return null;
 			}
-		}).when(dao).push(any(), any());
+		}).when(dao).push(any(), any(), any());
 		
 		doAnswer(new Answer<List<String>>() {
 

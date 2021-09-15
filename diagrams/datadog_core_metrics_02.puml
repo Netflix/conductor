@@ -1,0 +1,25 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "Conductor\nBatchSweeper.java" as bsw
+participant "Conductor\nMetricService.java" as msj
+participant "External Service\ndatadog.service.{env}" as dds
+participant "SaaS\nData Dog" as saas
+
+alt BatchSweeper wakes up
+bsw -> bsw: taskPoll Invoked
+bsw -> msj: Invokes taskPoll (task type, count)
+msj -> dds: Increment counter value (metric:deluxe.conductor.task.poll)
+dds -> saas: Pushes metrics
+msj -> dds: Records gauge value (metric:deluxe.conductor.task.poll.gauge)
+dds -> saas: Pushes metrics
+loop For all polled task ids
+bsw -> msj: Invokes taskWait (task type, task ref name, task def name, queue wait time)
+msj -> dds: Records execution time (metric:deluxe.conductor.task.queue.wait.time)
+dds -> saas: Pushes metrics
+end
+end
+
+@enduml

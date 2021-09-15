@@ -34,13 +34,13 @@ public interface QueueDAO {
 	 * @param id message id
 	 * @param offsetTimeInSecond time in seconds, after which the message should be marked visible.  (for timed queues)
 	 */
-	public void push(String queueName, String id, long offsetTimeInSecond);
+	public void push(String queueName, String id, long offsetTimeInSecond, int priority);
 
 	/**
 	 * @param queueName Name of the queue
 	 * @param messages messages to be pushed.
 	 */
-	public void push(String queueName, List<Message> messages);
+	public void push(String queueName, List<Message> messages, int priority);
 
 	/**
 	 *
@@ -49,7 +49,7 @@ public interface QueueDAO {
 	 * @param offsetTimeInSecond time in seconds, after which the message should be marked visible.  (for timed queues)
 	 * @return true if the element was added to the queue.  false otherwise indicating the element already exists in the queue.
 	 */
-	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond);
+	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond, int priority);
 
 	/**
 	 *
@@ -120,14 +120,17 @@ public interface QueueDAO {
 	public Map<String, Map<String, Map<String, Long>>> queuesDetailVerbose();
 
 	public default void processUnacks(String queueName) {
-
 	}
 
 	public default boolean exists(String queueName, String id) {
 		throw new IllegalStateException("Not implemented");
 	}
 
-	public default boolean wakeup(String queueName, String id) {
+	public default boolean wakeup(String queueName, String id, int priority) {
+		throw new IllegalStateException("Not implemented");
+	}
+
+	public default int getPriority(String queueName, String messageId) {
 		throw new IllegalStateException("Not implemented");
 	}
 

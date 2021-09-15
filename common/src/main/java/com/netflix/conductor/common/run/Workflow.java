@@ -101,6 +101,8 @@ public class Workflow extends Auditable {
 
 	private boolean resetTags;
 
+	private int jobPriority = 5;
+
 	public Workflow(){
 		
 	}
@@ -426,6 +428,14 @@ public class Workflow extends Auditable {
 
 	public void setTraceId(String traceId) {
 		this.traceId = traceId;
+	}
+
+	public int getJobPriority() {
+		return jobPriority;
+	}
+
+	public void setJobPriority(int jobPriority) {
+		this.jobPriority = jobPriority;
 	}
 
 	public Map<String, Object> getAttributes() {
