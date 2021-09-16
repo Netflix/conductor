@@ -26,9 +26,9 @@ The easiest way to get started is with Docker containers. Please follow the inst
 Conductor Server is a [Spring Boot](https://spring.io/projects/spring-boot) project and follows all applicable conventions. First, ensure that Java JDK 14 is installed.
 
 #### Development
- The server can be started locally by running `./gradlew bootRun` from the project root. This will start up Conductor with an in-memory persistence and queue implementation. It is not recommended for production use but can come in handy for quickly evaluating what Conductor's all about. For actual production use-cases, please use one of the supported persistence and queue implementations.
+The server can be started locally by running `./gradlew bootRun` from the project root. This will start up Conductor with an in-memory persistence and queue implementation. It is not recommended for production use but can come in handy for quickly evaluating what Conductor's all about. For actual production use-cases, please use one of the supported persistence and queue implementations.
 
- You can verify the development server is up by navigating to `http://localhost:8080/swagger-ui/index.html` in a browser.
+You can verify the development server is up by navigating to `http://localhost:8080/swagger-ui/index.html` in a browser.
 
 #### Production Build
 Running `./gradlew build -x test` from the project root builds the project into the `/build` directory.
@@ -54,7 +54,6 @@ To run the UI on the bundled development server, run `yarn run start`. Navigate 
 
 ## Published Artifacts
 Binaries are available from [Netflix OSS Maven](https://artifacts.netflix.net/netflixoss/com/netflix/conductor/) repository, or the [Maven Central Repository](https://search.maven.org/search?q=g:com.netflix.conductor).
-
 
 | Artifact | Description |
 | ----------- | --------------- |
