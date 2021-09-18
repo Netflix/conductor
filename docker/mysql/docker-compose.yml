@@ -60,22 +60,13 @@ services:
       timeout: 5s
       retries: 12
       
-  # These configuration are copied from elastic multi-node configuration,
-  # https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-compose-file
-  #
-  # if Elasticsearch Container Stopped with Exit 78
-  # run `sudo sysctl -w vm.max_map_count = 262144` in terminal 
-  # https://github.com/laradock/laradock/issues/1699
   elasticsearch:
     image: elasticsearch:6.8.15
     environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - transport.host=0.0.0.0
+      - discovery.type=single-node
+      - xpack.security.enabled=false
     networks:
       - internal
     ports:
@@ -86,20 +77,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
-
-  elasticsearch2:
-    image: elasticsearch:6.8.15
-    environment:
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "discovery.zen.ping.unicast.hosts=elasticsearch"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    networks:
-      - internal 
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
 
 volumes:
   conductor_mysql:
