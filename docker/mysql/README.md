@@ -18,3 +18,6 @@ https://github.com/laradock/laradock/issues/1699
 
 Flyway has dropped support for 5.6 and below. Use 5.7 and above instead.
 
+### mysql container is unhealthy
+
+You may have corrupted volume you have previously created. You may use `docker volume rm your_volume` to remove it, your previously saved mysql data will be gone too.
