@@ -52,10 +52,11 @@ class TaskPollExecutor {
     private final Map<String/*taskType*/, String/*domain*/> taskToDomain;
 
     private static final String DOMAIN = "domain";
+    private static final String OVERRIDE_DISCOVERY = "poll.out.of.discovery";
     private static final String ALL_WORKERS = "all";
 
     TaskPollExecutor(EurekaClient eurekaClient, TaskClient taskClient, int threadCount, int updateRetryCount,
-        Map<String, String> taskToDomain, String workerNamePrefix) {
+                     Map<String, String> taskToDomain, String workerNamePrefix) {
         this.eurekaClient = eurekaClient;
         this.taskClient = taskClient;
         this.updateRetryCount = updateRetryCount;
@@ -64,16 +65,22 @@ class TaskPollExecutor {
         LOGGER.info("Initialized the TaskPollExecutor with {} threads", threadCount);
 
         this.executorService = Executors.newFixedThreadPool(threadCount,
-            new BasicThreadFactory.Builder()
-                .namingPattern(workerNamePrefix)
-                .uncaughtExceptionHandler(uncaughtExceptionHandler)
-                .build());
+                new BasicThreadFactory.Builder()
+                        .namingPattern(workerNamePrefix)
+                        .uncaughtExceptionHandler(uncaughtExceptionHandler)
+                        .build());
 
         this.pollingSemaphore = new PollingSemaphore(threadCount);
     }
 
     void pollAndExecute(Worker worker) {
-        if (eurekaClient != null && !eurekaClient.getInstanceRemoteStatus().equals(InstanceStatus.UP)) {
+        Boolean discoveryOverride = Optional.ofNullable(PropertyFactory.getBoolean(worker.getTaskDefName(), OVERRIDE_DISCOVERY, false))
+                .orElseGet(() -> Optional.ofNullable(PropertyFactory.getBoolean(ALL_WORKERS, DOMAIN, null))
+                        .orElse(false));
+
+        if (eurekaClient != null &&
+                !eurekaClient.getInstanceRemoteStatus().equals(InstanceStatus.UP) &&
+                !discoveryOverride) {
             LOGGER.debug("Instance is NOT UP in discovery - will not poll");
             return;
         }
@@ -92,20 +99,20 @@ class TaskPollExecutor {
 
             String taskType = worker.getTaskDefName();
             String domain = Optional.ofNullable(PropertyFactory.getString(taskType, DOMAIN, null))
-                .orElseGet(() -> Optional.ofNullable(PropertyFactory.getString(ALL_WORKERS, DOMAIN, null))
-                    .orElse(taskToDomain.get(taskType)));
+                    .orElseGet(() -> Optional.ofNullable(PropertyFactory.getString(ALL_WORKERS, DOMAIN, null))
+                            .orElse(taskToDomain.get(taskType)));
 
             LOGGER.debug("Polling task of type: {} in domain: '{}'", taskType, domain);
             task = MetricsContainer.getPollTimer(taskType)
-                .record(() -> taskClient.pollTask(taskType, worker.getIdentity(), domain));
+                    .record(() -> taskClient.pollTask(taskType, worker.getIdentity(), domain));
 
             if (Objects.nonNull(task) && StringUtils.isNotBlank(task.getTaskId())) {
                 MetricsContainer.incrementTaskPollCount(taskType, 1);
                 LOGGER.debug("Polled task: {} of type: {} in domain: '{}', from worker: {}",
-                    task.getTaskId(), taskType, domain, worker.getIdentity());
+                        task.getTaskId(), taskType, domain, worker.getIdentity());
 
                 CompletableFuture<Task> taskCompletableFuture = CompletableFuture.supplyAsync(() ->
-                    processTask(task, worker), executorService);
+                        processTask(task, worker), executorService);
 
                 taskCompletableFuture.whenComplete(this::finalizeTask);
             } else {
@@ -150,7 +157,7 @@ class TaskPollExecutor {
 
     private Task processTask(Task task, Worker worker) {
         LOGGER.debug("Executing task: {} of type: {} in worker: {} at {}", task.getTaskId(), task.getTaskDefName(),
-            worker.getClass().getSimpleName(), worker.getIdentity());
+                worker.getClass().getSimpleName(), worker.getIdentity());
         try {
             executeTask(worker, task);
         } catch (Throwable t) {
@@ -168,7 +175,7 @@ class TaskPollExecutor {
         TaskResult result = null;
         try {
             LOGGER.debug("Executing task: {} in worker: {} at {}", task.getTaskId(), worker.getClass().getSimpleName(),
-                worker.getIdentity());
+                    worker.getIdentity());
             result = worker.execute(task);
             result.setWorkflowInstanceId(task.getWorkflowInstanceId());
             result.setTaskId(task.getTaskId());
@@ -183,11 +190,11 @@ class TaskPollExecutor {
         } finally {
             stopwatch.stop();
             MetricsContainer.getExecutionTimer(worker.getTaskDefName())
-                .record(stopwatch.elapsed(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
+                    .record(stopwatch.elapsed(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
         }
 
         LOGGER.debug("Task: {} executed by worker: {} at {} with status: {}", task.getTaskId(),
-            worker.getClass().getSimpleName(), worker.getIdentity(), result.getStatus());
+                worker.getClass().getSimpleName(), worker.getIdentity(), result.getStatus());
         updateWithRetry(updateRetryCount, task, result, worker);
     }
 
@@ -197,18 +204,18 @@ class TaskPollExecutor {
             MetricsContainer.incrementTaskExecutionErrorCount(task.getTaskType(), throwable);
         } else {
             LOGGER.debug("Task:{} of type:{} finished processing with status:{}", task.getTaskId(),
-                task.getTaskDefName(), task.getStatus());
+                    task.getTaskDefName(), task.getStatus());
         }
     }
 
     private void updateWithRetry(int count, Task task, TaskResult result, Worker worker) {
         try {
             String updateTaskDesc = String
-                .format("Retry updating task result: %s for task: %s in worker: %s", result.toString(),
-                    task.getTaskDefName(), worker.getIdentity());
+                    .format("Retry updating task result: %s for task: %s in worker: %s", result.toString(),
+                            task.getTaskDefName(), worker.getIdentity());
             String evaluatePayloadDesc = String
-                .format("Evaluate Task payload for task: %s in worker: %s", task.getTaskDefName(),
-                    worker.getIdentity());
+                    .format("Evaluate Task payload for task: %s in worker: %s", task.getTaskDefName(),
+                            worker.getIdentity());
             String methodName = "updateWithRetry";
 
             TaskResult finalResult = new RetryUtil<TaskResult>().retryOnException(() ->
@@ -227,7 +234,7 @@ class TaskPollExecutor {
             worker.onErrorUpdate(task);
             MetricsContainer.incrementTaskUpdateErrorCount(worker.getTaskDefName(), e);
             LOGGER.error(String.format("Failed to update result: %s for task: %s in worker: %s", result.toString(),
-                task.getTaskDefName(), worker.getIdentity()), e);
+                    task.getTaskDefName(), worker.getIdentity()), e);
         }
     }
 
