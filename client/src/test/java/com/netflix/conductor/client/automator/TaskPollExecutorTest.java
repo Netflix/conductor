@@ -55,23 +55,23 @@ public class TaskPollExecutorTest {
         });
         TaskClient taskClient = Mockito.mock(TaskClient.class);
         TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, new HashMap<>(),
-                "test-worker-%d");
+            "test-worker-%d");
 
         when(taskClient.pollTask(any(), any(), any())).thenReturn(testTask());
         when(taskClient.ack(any(), any())).thenReturn(true);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
-                    assertEquals("test-worker-1", Thread.currentThread().getName());
-                    Object[] args = invocation.getArguments();
-                    TaskResult result = (TaskResult) args[0];
-                    assertEquals(TaskResult.Status.FAILED, result.getStatus());
-                    latch.countDown();
-                    return null;
-                }
+                assertEquals("test-worker-1", Thread.currentThread().getName());
+                Object[] args = invocation.getArguments();
+                TaskResult result = (TaskResult) args[0];
+                assertEquals(TaskResult.Status.FAILED, result.getStatus());
+                latch.countDown();
+                return null;
+            }
         ).when(taskClient).updateTask(any());
 
         Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
+            .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
 
         Uninterruptibles.awaitUninterruptibly(latch);
         verify(taskClient).updateTask(any());
@@ -101,7 +101,7 @@ public class TaskPollExecutorTest {
 
         TaskClient taskClient = Mockito.mock(TaskClient.class);
         TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, new HashMap<>(),
-                "test-worker-");
+            "test-worker-");
         when(taskClient.pollTask(any(), any(), any())).thenReturn(task);
         when(taskClient.ack(any(), any())).thenReturn(true);
         CountDownLatch latch = new CountDownLatch(3);
@@ -121,7 +121,7 @@ public class TaskPollExecutorTest {
         ).when(taskClient).updateTask(any());
 
         Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
+            .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
         Uninterruptibles.awaitUninterruptibly(latch);
 
         // execute() is called 3 times on the worker (once for each task)
@@ -151,16 +151,16 @@ public class TaskPollExecutorTest {
         }).when(taskClient).evaluateAndUploadLargePayload(any(TaskResult.class), any());
 
         TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 3, new HashMap<>(),
-                "test-worker-");
+            "test-worker-");
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
-                    latch.countDown();
-                    return null;
-                }
+                latch.countDown();
+                return null;
+            }
         ).when(worker).onErrorUpdate(any());
 
         Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
+            .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
         Uninterruptibles.awaitUninterruptibly(latch);
 
         // When evaluateAndUploadLargePayload fails indefinitely, task update shouldn't be called.
@@ -178,24 +178,24 @@ public class TaskPollExecutorTest {
 
         TaskClient taskClient = Mockito.mock(TaskClient.class);
         when(taskClient.pollTask(any(), any(), any()))
-                .thenThrow(ConductorClientException.class)
-                .thenReturn(task);
+            .thenThrow(ConductorClientException.class)
+            .thenReturn(task);
 
         TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, new HashMap<>(),
-                "test-worker-");
+            "test-worker-");
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
-                    Object[] args = invocation.getArguments();
-                    TaskResult result = (TaskResult) args[0];
-                    assertEquals(IN_PROGRESS, result.getStatus());
-                    assertEquals(task.getTaskId(), result.getTaskId());
-                    latch.countDown();
-                    return null;
-                }
+                Object[] args = invocation.getArguments();
+                TaskResult result = (TaskResult) args[0];
+                assertEquals(IN_PROGRESS, result.getStatus());
+                assertEquals(task.getTaskId(), result.getTaskId());
+                latch.countDown();
+                return null;
+            }
         ).when(taskClient).updateTask(any());
 
         Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
+            .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
 
         Uninterruptibles.awaitUninterruptibly(latch);
         verify(taskClient).updateTask(any());
@@ -212,24 +212,24 @@ public class TaskPollExecutorTest {
 
         TaskClient taskClient = Mockito.mock(TaskClient.class);
         when(taskClient.pollTask(any(), any(), any()))
-                .thenReturn(new Task())
-                .thenReturn(task);
+            .thenReturn(new Task())
+            .thenReturn(task);
 
         TaskPollExecutor taskPollExecutor = new TaskPollExecutor(null, taskClient, 1, 1, new HashMap<>(),
-                "test-worker-");
+            "test-worker-");
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
-                    Object[] args = invocation.getArguments();
-                    TaskResult result = (TaskResult) args[0];
-                    assertEquals(IN_PROGRESS, result.getStatus());
-                    assertEquals(task.getTaskId(), result.getTaskId());
-                    latch.countDown();
-                    return null;
-                }
+                Object[] args = invocation.getArguments();
+                TaskResult result = (TaskResult) args[0];
+                assertEquals(IN_PROGRESS, result.getStatus());
+                assertEquals(task.getTaskId(), result.getTaskId());
+                latch.countDown();
+                return null;
+            }
         ).when(taskClient).updateTask(any());
 
         Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
+            .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
 
         Uninterruptibles.awaitUninterruptibly(latch);
         verify(taskClient).updateTask(any());
@@ -250,13 +250,13 @@ public class TaskPollExecutorTest {
 
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
-                    latch.countDown();
-                    return null;
-                }
+                latch.countDown();
+                return null;
+            }
         ).when(taskClient).pollTask(TEST_TASK_DEF_NAME, workerName, testDomain);
 
         Executors.newSingleThreadScheduledExecutor()
-                .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
+            .scheduleAtFixedRate(() -> taskPollExecutor.pollAndExecute(worker), 0, 1, TimeUnit.SECONDS);
 
         Uninterruptibles.awaitUninterruptibly(latch);
         verify(taskClient).pollTask(TEST_TASK_DEF_NAME, workerName, testDomain);
