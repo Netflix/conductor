@@ -56,7 +56,7 @@ class TaskPollExecutor {
     private static final String ALL_WORKERS = "all";
 
     TaskPollExecutor(EurekaClient eurekaClient, TaskClient taskClient, int threadCount, int updateRetryCount,
-            Map<String, String> taskToDomain, String workerNamePrefix) {
+        Map<String, String> taskToDomain, String workerNamePrefix) {
         this.eurekaClient = eurekaClient;
         this.taskClient = taskClient;
         this.updateRetryCount = updateRetryCount;
