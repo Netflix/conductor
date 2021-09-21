@@ -32,6 +32,22 @@ func NewConductorHttpClient(baseUrl string) *ConductorHttpClient {
     return conductorClient
 }
 
+type ConductorHttpClientConfig struct {
+    baseUrl string
+    bearerToken *string
+}
+
+func NewConductorHttpClientWithConfig(config ConductorHttpClientConfig) *ConductorHttpClient {
+    conductorClient := new(ConductorHttpClient)
+    headers := map[string]string{"Content-Type": "application/json", "Accept": "application/json"}
+    if bearerToken != nil {
+        headers["Authorization"] = *config.bearerToken
+    }
+    httpClient := httpclient.NewHttpClient(config.baseUrl, headers, true)
+    conductorClient.httpClient = httpClient
+    return conductorClient
+}
+
 
 /**********************/
 /* Metadata Functions */
