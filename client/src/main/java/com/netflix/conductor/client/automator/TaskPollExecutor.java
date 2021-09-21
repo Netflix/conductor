@@ -211,11 +211,11 @@ class TaskPollExecutor {
     private void updateWithRetry(int count, Task task, TaskResult result, Worker worker) {
         try {
             String updateTaskDesc = String
-               .format("Retry updating task result: %s for task: %s in worker: %s", result.toString(),
-                   task.getTaskDefName(), worker.getIdentity());
+                .format("Retry updating task result: %s for task: %s in worker: %s", result.toString(),
+                    task.getTaskDefName(), worker.getIdentity());
             String evaluatePayloadDesc = String
-               .format("Evaluate Task payload for task: %s in worker: %s", task.getTaskDefName(),
-                   worker.getIdentity());
+                .format("Evaluate Task payload for task: %s in worker: %s", task.getTaskDefName(),
+                    worker.getIdentity());
             String methodName = "updateWithRetry";
 
             TaskResult finalResult = new RetryUtil<TaskResult>().retryOnException(() ->
