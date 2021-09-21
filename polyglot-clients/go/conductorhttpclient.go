@@ -40,7 +40,7 @@ type ConductorHttpClientConfig struct {
 func NewConductorHttpClientWithConfig(config ConductorHttpClientConfig) *ConductorHttpClient {
     conductorClient := new(ConductorHttpClient)
     headers := map[string]string{"Content-Type": "application/json", "Accept": "application/json"}
-    if bearerToken != nil {
+    if config.bearerToken != nil {
         headers["Authorization"] = fmt.Sprintf("Bearer %s", *config.bearerToken)
     }
     httpClient := httpclient.NewHttpClient(config.baseUrl, headers, true)
