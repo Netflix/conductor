@@ -23,7 +23,7 @@ The latest version is [![Github release](https://img.shields.io/github/v/release
 The easiest way to get started is with Docker containers. Please follow the instructions [here](https://github.com/Netflix/conductor/tree/main/docker). The server and UI can also be built from source separately.
 
 ### Conductor Server From Source
-Conductor Server is a [Spring Boot](https://spring.io/projects/spring-boot) project and follows all applicable conventions. First, ensure that Java JDK 14 is installed.
+Conductor Server is a [Spring Boot](https://spring.io/projects/spring-boot) project and follows all applicable conventions. First, ensure that Java JDK 11+ is installed.
 
 #### Development
 The server can be started locally by running `./gradlew bootRun` from the project root. This will start up Conductor with an in-memory persistence and queue implementation. It is not recommended for production use but can come in handy for quickly evaluating what Conductor's all about. For actual production use-cases, please use one of the supported persistence and queue implementations.
@@ -31,7 +31,9 @@ The server can be started locally by running `./gradlew bootRun` from the projec
 You can verify the development server is up by navigating to `http://localhost:8080/swagger-ui/index.html` in a browser.
 
 #### Production Build
-Running `./gradlew build -x test` from the project root builds the project into the `/build` directory.
+Running `./gradlew build` from the project root builds the project into the `/build` directory. Note that Docker is a requirement for tests to run, and thus a requirement to build even if you are building
+outside of a Docker container. If you do not have Docker installed you can run `./gradlew build -x test` to skip tests.
+
 
 #### Pre-built JAR
 A [pre-built](https://artifacts.netflix.net/netflixoss/com/netflix/conductor/conductor-server/) executable jar is available that can be downloaded and run using:
