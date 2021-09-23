@@ -52,7 +52,7 @@ class TaskPollExecutor {
     private final Map<String/*taskType*/, String/*domain*/> taskToDomain;
 
     private static final String DOMAIN = "domain";
-    private static final String OVERRIDE_DISCOVERY = "poll.out.of.discovery";
+    private static final String OVERRIDE_DISCOVERY = "pollOutOfDiscovery";
     private static final String ALL_WORKERS = "all";
 
     TaskPollExecutor(EurekaClient eurekaClient, TaskClient taskClient, int threadCount, int updateRetryCount,
