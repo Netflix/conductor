@@ -132,7 +132,7 @@ public class ExternalPayloadStorageUtils {
                     String errorMsg = String.format(
                         "The output payload size: %dB of workflow: %s is greater than the permissible limit: %dKB",
                         payloadSize, ((Workflow) entity).getWorkflowId(), maxThreshold);
-                    failWorkflow(errorMsg);
+                    failWorkflow(((Workflow) entity), payloadType, errorMsg);
                 }
             } else if (payloadSize > threshold * 1024) {
                 switch (payloadType) {
@@ -194,8 +194,16 @@ public class ExternalPayloadStorageUtils {
         throw new TerminateWorkflowException(errorMsg, Workflow.WorkflowStatus.FAILED, task);
     }
 
-    private void failWorkflow(String errorMsg) {
+    @VisibleForTesting
+    void failWorkflow(Workflow workflow, PayloadType payloadType, String errorMsg) {
         LOGGER.error(errorMsg);
-        throw new TerminateWorkflowException(errorMsg);
+        workflow.setReasonForIncompletion(errorMsg);
+        workflow.setStatus(Workflow.WorkflowStatus.FAILED);
+        if (payloadType == PayloadType.TASK_INPUT) {
+            workflow.setInput(null);
+        } else {
+            workflow.setOutput(null);
+        }
+        throw new TerminateWorkflowException(errorMsg, Workflow.WorkflowStatus.FAILED);
     }
 }

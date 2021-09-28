@@ -192,4 +192,28 @@ public class ExternalPayloadStorageUtilsTest {
         assertNotNull(task);
         assertNull(task.getOutputData());
     }
+
+    @Test
+    public void testFailWorkflowWithInputPayload() {
+        Workflow workflow = new Workflow();
+        workflow.setInput(new HashMap<>());
+
+        expectedException.expect(TerminateWorkflowException.class);
+        externalPayloadStorageUtils.failWorkflow(workflow, ExternalPayloadStorage.PayloadType.TASK_INPUT, "error");
+        assertNotNull(workflow);
+        assertNull(workflow.getInput());
+        assertEquals(Workflow.WorkflowStatus.FAILED, workflow.getStatus());
+    }
+
+    @Test
+    public void testFailWorkflowWithOutputPayload() {
+        Workflow workflow = new Workflow();
+        workflow.setOutput(new HashMap<>());
+
+        expectedException.expect(TerminateWorkflowException.class);
+        externalPayloadStorageUtils.failWorkflow(workflow, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, "error");
+        assertNotNull(workflow);
+        assertNull(workflow.getOutput());
+        assertEquals(Workflow.WorkflowStatus.FAILED, workflow.getStatus());
+    }
 }
