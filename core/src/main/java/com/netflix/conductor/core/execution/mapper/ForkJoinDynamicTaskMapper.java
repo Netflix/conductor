@@ -153,7 +153,7 @@ public class ForkJoinDynamicTaskMapper implements TaskMapper {
 
                 // Construct an informative error message
                 String terminateMessage = "No dynamic tasks could be created for the Workflow: " +
-                        workflowInstance + ", Dynamic Fork Task: " + dynForkTask;
+                        workflowInstance.toShortString() + ", Dynamic Fork Task: " + dynForkTask;
                 if (existingTaskRefName.isPresent()) {
                     terminateMessage += "Attempted to create a duplicate task reference name: " + existingTaskRefName.get();
                 }
