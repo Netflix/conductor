@@ -404,7 +404,8 @@ public class WorkflowExecutor {
         workflow.setVariables(workflowDefinition.getVariables());
 
         if (workflowInput != null && !workflowInput.isEmpty()) {
-            workflow.setInput(workflowInput);
+            Map<String, Object> parsedInput = parametersUtils.getWorkflowInput(workflowDefinition, workflowInput);
+            workflow.setInput(parsedInput);
             deciderService.externalizeWorkflowData(workflow);
         } else {
             workflow.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
@@ -1561,6 +1562,7 @@ public class WorkflowExecutor {
 
         // Get the workflow
         Workflow workflow = executionDAOFacade.getWorkflowById(workflowId, true);
+        updateAndPushParents(workflow, "reran");
 
         // If the task Id is null it implies that the entire workflow has to be rerun
         if (taskId == null) {
