@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -58,7 +59,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
     @Override
     public void start(Workflow workflow, Task task, WorkflowExecutor executor) {
         final Map<String, Object> taskInput = task.getInputData();
-        final Map<String, Object> taskOutput = task.getOutputData();
+        final Map<String, Object> taskOutput = task.getOutputData() != null ? task.getOutputData(): new HashMap<>();
 
         final String queryExpression = (String) taskInput.get(QUERY_EXPRESSION_PARAMETER);
 
@@ -87,6 +88,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
                 taskOutput.put(OUTPUT_RESULT, result.get(0));
                 taskOutput.put(OUTPUT_RESULT_LIST, result);
             }
+            task.setOutputData(taskOutput);
         } catch (final Exception e) {
             LOGGER.error("Error executing task: {} in workflow: {}", task.getTaskId(), workflow.getWorkflowId(), e);
             task.setStatus(Task.Status.FAILED);
