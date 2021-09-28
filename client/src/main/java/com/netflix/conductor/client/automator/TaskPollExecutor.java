@@ -74,9 +74,8 @@ class TaskPollExecutor {
     }
 
     void pollAndExecute(Worker worker) {
-        Boolean discoveryOverride = Optional.ofNullable(PropertyFactory.getBoolean(worker.getTaskDefName(), OVERRIDE_DISCOVERY, false))
-                .orElseGet(() -> Optional.ofNullable(PropertyFactory.getBoolean(ALL_WORKERS, OVERRIDE_DISCOVERY, null))
-                        .orElse(false));
+        Boolean discoveryOverride = Optional.ofNullable(PropertyFactory.getBoolean(worker.getTaskDefName(), OVERRIDE_DISCOVERY, null))
+                .orElseGet(() -> PropertyFactory.getBoolean(ALL_WORKERS, OVERRIDE_DISCOVERY, false));
 
         if (eurekaClient != null &&
                 !eurekaClient.getInstanceRemoteStatus().equals(InstanceStatus.UP) &&
