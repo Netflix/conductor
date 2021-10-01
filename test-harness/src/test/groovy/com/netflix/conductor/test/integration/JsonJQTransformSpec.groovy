@@ -55,7 +55,7 @@ class JsonJQTransformSpec extends AbstractSpecification {
             tasks.size() == 1
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].taskType == 'JSON_JQ_TRANSFORM'
-            tasks[0].outputData as String == "[result:[out:[a, b, c, d]], resultList:[[out:[a, b, c, d]]]]"
+            tasks[0].outputData as String == '[result:[out:[a, b, c, d]], resultList:[[out:[a, b, c, d]]]]'
         }
     }
 
@@ -82,7 +82,7 @@ class JsonJQTransformSpec extends AbstractSpecification {
             tasks.size() == 1
             tasks[0].status == Task.Status.FAILED
             tasks[0].taskType == 'JSON_JQ_TRANSFORM'
-            tasks[0].reasonForIncompletion as String == "Cannot index string with string \"array\""
+            tasks[0].reasonForIncompletion == 'Cannot index string with string \"array\"'
         }
     }
 
@@ -126,7 +126,7 @@ class JsonJQTransformSpec extends AbstractSpecification {
             tasks.size() == 1
             tasks[0].status == Task.Status.FAILED
             tasks[0].taskType == 'JSON_JQ_TRANSFORM'
-            tasks[0].reasonForIncompletion as String == "Cannot index string with string \"array\""
+            tasks[0].reasonForIncompletion == 'Cannot index string with string \"array\"'
         }
 
         when: "workflow which has the json jq transform task reran"
@@ -144,7 +144,7 @@ class JsonJQTransformSpec extends AbstractSpecification {
             tasks.size() == 1
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].taskType == 'JSON_JQ_TRANSFORM'
-            tasks[0].outputData as String == "[result:[out:[a, b, c, d]], resultList:[[out:[a, b, c, d]]]]"
+            tasks[0].outputData as String == '[result:[out:[a, b, c, d]], resultList:[[out:[a, b, c, d]]]]'
         }
     }
 }
