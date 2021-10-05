@@ -1639,7 +1639,7 @@ public class WorkflowExecutor {
             rerunFromTask.setStartTime(0);
             rerunFromTask.setUpdateTime(0);
             rerunFromTask.setEndTime(0);
-            rerunFromTask.setOutputData(null);
+            rerunFromTask.getOutputData().clear();
             rerunFromTask.setRetried(false);
             rerunFromTask.setExecuted(false);
             rerunFromTask.setExternalOutputPayloadStoragePath(null);

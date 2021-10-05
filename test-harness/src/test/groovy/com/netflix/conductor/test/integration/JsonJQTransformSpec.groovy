@@ -55,7 +55,7 @@ class JsonJQTransformSpec extends AbstractSpecification {
             tasks.size() == 1
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].taskType == 'JSON_JQ_TRANSFORM'
-            tasks[0].outputData as String == '[result:[out:[a, b, c, d]], resultList:[[out:[a, b, c, d]]]]'
+            tasks[0].outputData.containsKey("result") && tasks[0].outputData.containsKey("resultList")
         }
     }
 
@@ -144,7 +144,7 @@ class JsonJQTransformSpec extends AbstractSpecification {
             tasks.size() == 1
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].taskType == 'JSON_JQ_TRANSFORM'
-            tasks[0].outputData as String == '[result:[out:[a, b, c, d]], resultList:[[out:[a, b, c, d]]]]'
+            tasks[0].outputData.containsKey("result") && tasks[0].outputData.containsKey("resultList")
         }
     }
 }
