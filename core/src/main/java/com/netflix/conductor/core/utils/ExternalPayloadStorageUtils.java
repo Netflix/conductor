@@ -197,13 +197,11 @@ public class ExternalPayloadStorageUtils {
     @VisibleForTesting
     void failWorkflow(Workflow workflow, PayloadType payloadType, String errorMsg) {
         LOGGER.error(errorMsg);
-        workflow.setReasonForIncompletion(errorMsg);
-        workflow.setStatus(Workflow.WorkflowStatus.FAILED);
         if (payloadType == PayloadType.TASK_INPUT) {
             workflow.setInput(null);
         } else {
             workflow.setOutput(null);
         }
-        throw new TerminateWorkflowException(errorMsg, Workflow.WorkflowStatus.FAILED);
+        throw new TerminateWorkflowException(errorMsg);
     }
 }
