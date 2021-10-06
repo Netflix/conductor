@@ -189,57 +189,6 @@ public abstract class AbstractEndToEndTest {
     }
 
     @Test
-    @Ignore("This test needs a long run time")
-    public void testEventTaskAndEventHandler() throws Exception {
-        String workflowName = "test_workflow_for_eventHandler";
-        WorkflowDef workflowDefinition = createWorkflowDefinition(workflowName);
-
-        WorkflowTask eventTask = new WorkflowTask();
-        eventTask.setName("test_complete_task_event");
-        eventTask.setWorkflowTaskType(TaskType.EVENT);
-        eventTask.setTaskReferenceName("complete_task_with_event");
-        eventTask.setSink("conductor");
-
-        WorkflowTask waitTask = new WorkflowTask();
-        waitTask.setName("test_task_tobe_completed_by_eventHandler");
-        waitTask.setWorkflowTaskType(TaskType.WAIT);
-        waitTask.setTaskReferenceName("test_task_tobe_completed_by_eventHandler");
-
-        workflowDefinition.getTasks().add(eventTask);
-        workflowDefinition.getTasks().add(waitTask);
-        registerWorkflowDefinition(workflowDefinition);
-
-        String event = "conductor:test_workflow_for_eventHandler:complete_task_with_event";
-
-        String workflowId = startWorkflow(workflowName, workflowDefinition);
-        assertNotNull(workflowId);
-
-        Workflow workflow = getWorkflow(workflowId, true);
-        assertNotNull(workflow);
-        assertEquals(Workflow.WorkflowStatus.RUNNING, workflow.getStatus());
-
-        EventHandler eventHandler = new EventHandler();
-        eventHandler.setName("test_complete_task_event");
-        EventHandler.Action completeTaskAction = new EventHandler.Action();
-        completeTaskAction.setAction(EventHandler.Action.Type.complete_task);
-        completeTaskAction.setComplete_task(new EventHandler.TaskDetails());
-        completeTaskAction.getComplete_task().setTaskRefName(waitTask.getTaskReferenceName());
-        completeTaskAction.getComplete_task().setWorkflowId(workflowId);
-        completeTaskAction.getComplete_task().setOutput(new HashMap<>());
-        eventHandler.getActions().add(completeTaskAction);
-        eventHandler.setEvent(event);
-        eventHandler.setActive(true);
-        registerEventHandler(eventHandler);
-
-        // sleep for 100 seconds (need a really long wait time for the event to be processed)
-        Thread.sleep(100000L);
-
-        workflow = getWorkflow(workflowId, true);
-        assertNotNull(workflow);
-        assertEquals(Workflow.WorkflowStatus.COMPLETED, workflow.getStatus());
-    }
-
-    @Test
     public void testEventHandler() {
         String eventName = "conductor:test_workflow:complete_task_with_event";
         EventHandler eventHandler = new EventHandler();
