@@ -137,7 +137,7 @@ public class ExternalPayloadStorageUtils {
             } else if (payloadSize > threshold * 1024) {
                 switch (payloadType) {
                     case TASK_INPUT:
-                        ((Task) entity).getInputData().clear();
+                        ((Task) entity).setInputData(new HashMap<>());
                         ((Task) entity).setExternalInputPayloadStoragePath(
                             uploadHelper(payloadBytes, payloadSize, PayloadType.TASK_INPUT));
                         Monitors
@@ -145,21 +145,21 @@ public class ExternalPayloadStorageUtils {
                                 ExternalPayloadStorage.Operation.WRITE.toString(), PayloadType.TASK_INPUT.toString());
                         break;
                     case TASK_OUTPUT:
-                        ((Task) entity).getOutputData().clear();
+                        ((Task) entity).setOutputData(new HashMap<>());
                         ((Task) entity).setExternalOutputPayloadStoragePath(
                             uploadHelper(payloadBytes, payloadSize, PayloadType.TASK_OUTPUT));
                         Monitors.recordExternalPayloadStorageUsage(((Task) entity).getTaskDefName(),
                             ExternalPayloadStorage.Operation.WRITE.toString(), PayloadType.TASK_OUTPUT.toString());
                         break;
                     case WORKFLOW_INPUT:
-                        ((Workflow) entity).getInput().clear();
+                        ((Workflow) entity).setInput(new HashMap<>());
                         ((Workflow) entity).setExternalInputPayloadStoragePath(
                             uploadHelper(payloadBytes, payloadSize, PayloadType.WORKFLOW_INPUT));
                         Monitors.recordExternalPayloadStorageUsage(((Workflow) entity).getWorkflowName(),
                             ExternalPayloadStorage.Operation.WRITE.toString(), PayloadType.WORKFLOW_INPUT.toString());
                         break;
                     case WORKFLOW_OUTPUT:
-                        ((Workflow) entity).getOutput().clear();
+                        ((Workflow) entity).setOutput(new HashMap<>());
                         ((Workflow) entity).setExternalOutputPayloadStoragePath(
                             uploadHelper(payloadBytes, payloadSize, PayloadType.WORKFLOW_OUTPUT));
                         Monitors.recordExternalPayloadStorageUsage(((Workflow) entity).getWorkflowName(),
@@ -187,9 +187,9 @@ public class ExternalPayloadStorageUtils {
         task.setReasonForIncompletion(errorMsg);
         task.setStatus(Task.Status.FAILED_WITH_TERMINAL_ERROR);
         if (payloadType == PayloadType.TASK_INPUT) {
-            task.getInputData().clear();
+            task.setInputData(new HashMap<>());
         } else {
-            task.getOutputData().clear();
+            task.setOutputData(new HashMap<>());
         }
         throw new TerminateWorkflowException(errorMsg, Workflow.WorkflowStatus.FAILED, task);
     }
@@ -198,9 +198,9 @@ public class ExternalPayloadStorageUtils {
     void failWorkflow(Workflow workflow, PayloadType payloadType, String errorMsg) {
         LOGGER.error(errorMsg);
         if (payloadType == PayloadType.WORKFLOW_INPUT) {
-            workflow.getInput().clear();
+            workflow.setInput(new HashMap<>());
         } else {
-            workflow.getOutput().clear();
+            workflow.setOutput(new HashMap<>());
         }
         throw new TerminateWorkflowException(errorMsg);
     }
