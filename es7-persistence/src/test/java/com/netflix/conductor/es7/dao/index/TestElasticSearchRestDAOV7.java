@@ -297,6 +297,39 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
         assertEquals(recentWorkflow.getWorkflowId(), ids.get(0));
     }
 
+    @Test
+    public void shouldCountWorkflows() {
+        int counts = 3000;
+        for (int i = 0; i < counts; i++) {
+            Workflow workflow = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow");
+            indexDAO.indexWorkflow(workflow);
+        }
+
+        // wait for workflow to be indexed
+        long result = tryGetCounts(() -> getWorkflowCounts("template_workflow", "RUNNING"), counts);
+        assertEquals(counts, result);
+    }
+
+    private long tryGetCounts(Supplier<Long> countFunction, int resultsCount) {
+        long result = 0;
+        for (int i = 0; i < 20; i++) {
+            result = countFunction.get();
+            if (result == resultsCount) {
+                return result;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+        }
+        return result;
+    }
+
+    private long getWorkflowCounts(String workflowName, String status) {
+        return indexDAO.getWorkflowCounts("status=\"" + status +"\" AND workflowType=\"" + workflowName + "\"", "*");
+    }
+
     private void assertWorkflowSummary(String workflowId, WorkflowSummary summary) {
         assertEquals(summary.getWorkflowType(), indexDAO.get(workflowId, "workflowType"));
         assertEquals(String.valueOf(summary.getVersion()), indexDAO.get(workflowId, "version"));

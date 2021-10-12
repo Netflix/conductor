@@ -177,4 +177,12 @@ public interface IndexDAO {
      * @return List of worlflow Ids matching the pattern
      */
     List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays);
+
+    /**
+     *
+     * @param query SQL like query for workflow search parameters.
+     * @param freeText Additional query in free text.  Lucene syntax
+     * @return Number of matches for the query
+     */
+    long getWorkflowCounts(String query, String freeText);
 }
