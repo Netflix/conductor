@@ -304,7 +304,7 @@ public class TestElasticSearchDAOV6 extends ElasticSearchDaoBaseTest {
 
     @Test
     public void shouldCountWorkflows() {
-        int counts = 3000;
+        int counts = 1100;
         for (int i = 0; i < counts; i++) {
             Workflow workflow = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow");
             indexDAO.indexWorkflow(workflow);
@@ -331,6 +331,7 @@ public class TestElasticSearchDAOV6 extends ElasticSearchDaoBaseTest {
         return result;
     }
 
+    // Get total workflow counts given the name and status
     private long getWorkflowCounts(String workflowName, String status) {
         return indexDAO.getWorkflowCounts("status=\"" + status +"\" AND workflowType=\"" + workflowName + "\"", "*");
     }

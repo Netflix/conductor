@@ -179,7 +179,7 @@ public interface IndexDAO {
     List<String> searchArchivableWorkflows(String indexName, long archiveTtlDays);
 
     /**
-     *
+     * Get total workflow counts that matches the query
      * @param query SQL like query for workflow search parameters.
      * @param freeText Additional query in free text.  Lucene syntax
      * @return Number of matches for the query
