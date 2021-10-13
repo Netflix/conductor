@@ -61,6 +61,8 @@ public class TaskResult {
     @ProtoField(id = 8)
     private Any outputMessage;
 
+    private String taskReferenceName;
+
     private List<TaskExecLog> logs = new CopyOnWriteArrayList<>();
 
     private String externalOutputPayloadStoragePath;
@@ -76,6 +78,7 @@ public class TaskResult {
         this.outputData = task.getOutputData();
         this.externalOutputPayloadStoragePath = task.getExternalOutputPayloadStoragePath();
         this.subWorkflowId = task.getSubWorkflowId();
+        this.taskReferenceName = task.getReferenceTaskName();
         switch (task.getStatus()) {
             case CANCELED:
             case COMPLETED_WITH_ERRORS:
@@ -113,6 +116,12 @@ public class TaskResult {
 
     public void setTaskId(String taskId) {
         this.taskId = taskId;
+    }
+
+    public String getTaskReferenceName() { return this.taskReferenceName; }
+
+    public void setTaskReferenceName(String referenceName) {
+        this.taskReferenceName = referenceName;
     }
 
     public String getReasonForIncompletion() {
@@ -266,6 +275,7 @@ public class TaskResult {
             ", logs=" + logs +
             ", externalOutputPayloadStoragePath='" + externalOutputPayloadStoragePath + '\'' +
             ", subWorkflowId='" + subWorkflowId + '\'' +
+            ", taskReferenceName='" + taskReferenceName + '\'' +
             '}';
     }
 
@@ -310,6 +320,7 @@ public class TaskResult {
         taskResult.setOutputMessage(outputMessage);
         taskResult.setLogs(logs);
         taskResult.setSubWorkflowId(subWorkflowId);
+        taskResult.setTaskReferenceName(taskReferenceName);
         return taskResult;
     }
 }

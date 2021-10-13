@@ -936,9 +936,17 @@ public class WorkflowExecutor {
             workflowInstance = metadataMapperService.populateWorkflowWithDefinitions(workflowInstance);
         }
 
-        Task task = Optional.ofNullable(executionDAOFacade.getTaskById(taskResult.getTaskId()))
-            .orElseThrow(() -> new ApplicationException(ApplicationException.Code.NOT_FOUND,
-                "No such task found by id: " + taskResult.getTaskId()));
+        Task task;
+
+        if (taskResult.getTaskReferenceName() != null && !taskResult.getTaskReferenceName().isEmpty()) {
+            task = Optional.ofNullable(workflowInstance.getTaskByRefName(taskResult.getTaskReferenceName()))
+                    .orElseThrow(() -> new ApplicationException(ApplicationException.Code.NOT_FOUND,
+                            "No such task found by reference name: " + taskResult.getTaskReferenceName()));
+        } else {
+            task = Optional.ofNullable(executionDAOFacade.getTaskById(taskResult.getTaskId()))
+                    .orElseThrow(() -> new ApplicationException(ApplicationException.Code.NOT_FOUND,
+                            "No such task found by id: " + taskResult.getTaskId()));
+        }
 
         LOGGER.debug("Task: {} belonging to Workflow {} being updated", task, workflowInstance);
 
