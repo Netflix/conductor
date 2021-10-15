@@ -72,6 +72,10 @@ allprojects {
             url "https://artifactory-oss.prod.netflix.net/artifactory/maven-oss-candidates"
         }
 
+        maven {
+            url "https://packages.confluent.io/maven/"
+        }
+
         /**
          * This repository locates artifacts that don't exist in maven central but we had to backup from jcenter
          * The exclusiveContent

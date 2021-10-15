@@ -50,8 +50,8 @@ public class KafkaPublishTask extends WorkflowSystemTask {
 
     static final String REQUEST_PARAMETER_NAME = "kafka_request";
     private static final String MISSING_REQUEST =
-        "Missing Kafka request. Task input MUST have a '" + REQUEST_PARAMETER_NAME
-            + "' key with KafkaTask.Input as value. See documentation for KafkaTask for required input parameters";
+            "Missing Kafka request. Task input MUST have a '" + REQUEST_PARAMETER_NAME
+                    + "' key with KafkaTask.Input as value. See documentation for KafkaTask for required input parameters";
     private static final String MISSING_BOOT_STRAP_SERVERS = "No boot strap servers specified";
     private static final String MISSING_KAFKA_TOPIC = "Missing Kafka topic. See documentation for KafkaTask for required input parameters";
     private static final String MISSING_KAFKA_VALUE = "Missing Kafka value.  See documentation for KafkaTask for required input parameters";
@@ -144,10 +144,10 @@ public class KafkaPublishTask extends WorkflowSystemTask {
         Object key = getKey(input);
 
         Iterable<Header> headers = input.getHeaders().entrySet().stream()
-            .map(header -> new RecordHeader(header.getKey(), String.valueOf(header.getValue()).getBytes()))
-            .collect(Collectors.toList());
-        ProducerRecord rec = new ProducerRecord(input.getTopic(), null,
-            null, key, objectMapper.writeValueAsString(input.getValue()), headers);
+                .map(header -> new RecordHeader(header.getKey(), String.valueOf(header.getValue()).getBytes()))
+                .collect(Collectors.toList());
+        ProducerRecord<String, Object> rec = new ProducerRecord(input.getTopic(), null,
+                null, key, objectMapper.writeValueAsString(input.getValue()), headers);
 
         Future send = producer.send(rec);
 
@@ -198,6 +198,8 @@ public class KafkaPublishTask extends WorkflowSystemTask {
         private Integer maxBlockMs;
         private String topic;
         private String keySerializer = STRING_SERIALIZER;
+        private String valueSerializer = STRING_SERIALIZER;
+        private String schemaRegistryUrl;
 
         public Map<String, Object> getHeaders() {
             return headers;
@@ -263,18 +265,36 @@ public class KafkaPublishTask extends WorkflowSystemTask {
             this.maxBlockMs = maxBlockMs;
         }
 
+        public String getValueSerializer() {
+            return valueSerializer;
+        }
+
+        public void setValueSerializer(String valueSerializer) {
+            this.valueSerializer = valueSerializer;
+        }
+
+        public String getSchemaRegistryUrl() {
+            return schemaRegistryUrl;
+        }
+
+        public void setSchemaRegistryUrl(String schemaRegistryUrl) {
+            this.schemaRegistryUrl = schemaRegistryUrl;
+        }
+
         @Override
         public String toString() {
             return "Input{" +
-                "headers=" + headers +
-                ", bootStrapServers='" + bootStrapServers + '\'' +
-                ", key=" + key +
-                ", value=" + value +
-                ", requestTimeoutMs=" + requestTimeoutMs +
-                ", maxBlockMs=" + maxBlockMs +
-                ", topic='" + topic + '\'' +
-                ", keySerializer='" + keySerializer + '\'' +
-                '}';
+                    "headers=" + headers +
+                    ", bootStrapServers='" + bootStrapServers + '\'' +
+                    ", key=" + key +
+                    ", value=" + value +
+                    ", requestTimeoutMs=" + requestTimeoutMs +
+                    ", maxBlockMs=" + maxBlockMs +
+                    ", topic='" + topic + '\'' +
+                    ", keySerializer='" + keySerializer + '\'' +
+                    ", valueSerializer='" + valueSerializer + '\'' +
+                    ", schemaRegistryUrl='" + schemaRegistryUrl + '\'' +
+                    '}';
         }
     }
 }
