@@ -140,7 +140,7 @@ public class NoopIndexDAO implements IndexDAO {
     }
 
     @Override
-    public long getWorkflowCounts(String query, String freeText) {
+    public long getWorkflowCount(String query, String freeText) {
         return 0;
     }
 }

@@ -612,7 +612,7 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
     }
 
     @Override
-    public long getWorkflowCounts(String query, String freeText) {
+    public long getWorkflowCount(String query, String freeText) {
         return count(query, freeText, WORKFLOW_DOC_TYPE);
     }
 

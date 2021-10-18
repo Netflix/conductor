@@ -909,7 +909,7 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
     }
 
     @Override
-    public long getWorkflowCounts(String query, String freeText) {
+    public long getWorkflowCount(String query, String freeText) {
         try {
             return getObjectCounts(query, freeText, WORKFLOW_DOC_TYPE);
         } catch (Exception e) {
