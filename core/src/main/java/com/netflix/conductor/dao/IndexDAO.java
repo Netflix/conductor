@@ -184,5 +184,5 @@ public interface IndexDAO {
      * @param freeText Additional query in free text.  Lucene syntax
      * @return Number of matches for the query
      */
-    long getWorkflowCounts(String query, String freeText);
+    long getWorkflowCount(String query, String freeText);
 }
