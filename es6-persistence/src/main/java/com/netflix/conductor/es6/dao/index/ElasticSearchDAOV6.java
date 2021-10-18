@@ -699,7 +699,7 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
         try {
             docType = StringUtils.isBlank(docTypeOverride) ? docType : docTypeOverride;
             BoolQueryBuilder fq = boolQueryBuilder(structuredQuery, freeTextQuery);
-            // The deprecated count api has been removed from the Java api, use the search api instead and set size to 0.
+            // The count api has been removed from the Java api, use the search api instead and set size to 0.
             final SearchRequestBuilder srb = elasticSearchClient.prepareSearch(getIndexName(docType))
                     .setQuery(fq)
                     .setTypes(docType)
