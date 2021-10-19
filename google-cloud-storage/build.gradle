@@ -1,0 +1,10 @@
+dependencies {
+    implementation project(':conductor-common')
+    implementation project(':conductor-core')
+    implementation 'org.jetbrains:annotations:20.1.0'
+    compileOnly 'org.springframework.boot:spring-boot-starter'
+
+    implementation "com.google.cloud:google-cloud-storage:${revGoogleCloudStorageSdk}"
+    implementation 'com.google.cloud:google-cloud-nio:0.123.10'
+    implementation "org.apache.commons:commons-lang3"
+}

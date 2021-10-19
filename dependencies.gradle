@@ -20,6 +20,7 @@ ext {
     revAwaitility = '3.1.6'
     revAwsSdk = '1.11.86'
     revAzureStorageBlobSdk = '12.7.0'
+    revGoogleCloudStorageSdk = '2.1.1'
     revBval = '2.0.5'
     revCassandra = '3.10.2'
     revCassandraUnit = '3.11.2.0'
