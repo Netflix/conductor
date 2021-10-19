@@ -175,7 +175,37 @@ class FrinxConductorWrapper:
                 "Polled for a task %s of type %s", polled_task["taskId"], next_task.task_type
             )
 
+            # Check if task input is externalized and if so, download the input
+            polled_task = self.replaceExternalPayloadInput(polled_task)
+            if polled_task is None:
+                # Error replacing external payload
+                continue
+
             self.execute(polled_task, next_task.exec_function)
+
+
+    def replaceExternalPayloadInput(self, task):
+        # No external payload placeholder present, just return original task
+        if self.taskClient.EXTERNAL_INPUT_KEY not in task:
+            return task
+
+        location = {}
+        try:
+            # Get the exact uri from conductor where the payload is stored
+            location = self.taskClient.getTaskInputExternalPayloadLocation(task[self.taskClient.EXTERNAL_INPUT_KEY])
+            if 'uri' not in location:
+                raise Exception("Unexpected output for external payload location: %s" % location)
+
+            # Replace placeholder with real output
+            task.pop(self.taskClient.EXTERNAL_INPUT_KEY)
+            task['inputData'] = requests.get(location['uri']).json()
+            return task
+
+        except Exception:
+            logger.error("Unable to download external task input: %s for path: %s", task["taskId"], location, exc_info=True)
+            self.handleTaskException(task)
+            return None
+
 
     def register(self, task_type, task_definition, exec_function):
         if task_definition is None:
@@ -209,21 +239,22 @@ class FrinxConductorWrapper:
             task["logs"] = resp.get('logs', "")
             self.taskClient.updateTask(task)
         except Exception:
-            logger.error("Unable to execute a task %s", task["taskId"], exc_info=True)
-            error_info = traceback.format_exc().split("\n")[:-1]
-            task["status"] = "FAILED"
-            task["outputData"] = {
-                "Error while executing task": task.get("taskType", ""),
-                "traceback": error_info,
-            }
+            self.handleTaskException(task)
 
-            task['logs'] = ["Logs: %s" % traceback.format_exc()]
-
-            try:
-                self.taskClient.updateTask(task)
-            except Exception:
-                logger.error(
-                    "Unable to update a task %s, it may have timed out",
-                    task["taskId"],
-                    exc_info=True,
-                )
+    def handleTaskException(self, task):
+        logger.error("Unable to execute a task %s", task["taskId"], exc_info=True)
+        error_info = traceback.format_exc().split("\n")[:-1]
+        task["status"] = "FAILED"
+        task["outputData"] = {
+            "Error while executing task": task.get("taskType", ""),
+            "traceback": error_info,
+        }
+        task['logs'] = ["Logs: %s" % traceback.format_exc()]
+        try:
+            self.taskClient.updateTask(task)
+        except Exception:
+            logger.error(
+                "Unable to update a task %s, it may have timed out",
+                task["taskId"],
+                exc_info=True,
+            )

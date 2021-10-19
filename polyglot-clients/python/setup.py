@@ -18,7 +18,7 @@ from setuptools import setup
 setup(
   name = 'frinx_conductor_client',
   packages = ['conductor'],
-  version = '1.0.3',
+  version = '1.0.4',
   description = 'Conductor python client',
   author = 'Frinx',
   author_email = 'info@frinx.io',

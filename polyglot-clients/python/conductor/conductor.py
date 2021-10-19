@@ -173,6 +173,7 @@ class MetadataClient(BaseClient):
 
 class TaskClient(BaseClient):
     BASE_RESOURCE = 'tasks'
+    EXTERNAL_INPUT_KEY = 'externalInputPayloadStoragePath'
 
     def __init__(self, baseURL, headers=None):
         BaseClient.__init__(self, baseURL, self.BASE_RESOURCE, headers)
@@ -228,6 +229,14 @@ class TaskClient(BaseClient):
     def getTaskQueueSizes(self, listOfTaskName):
         url = self.makeUrl('queue/sizes')
         return self.post(url, None, listOfTaskName)
+
+    def getTaskInputExternalPayloadLocation(self, path):
+        url = self.makeUrl('externalstoragelocation')
+        params = {}
+        params['path'] = path
+        params['operation'] = "READ"
+        params['payloadType'] = "TASK_INPUT"
+        return self.get(url, params)
 
 
 class WorkflowClient(BaseClient):
