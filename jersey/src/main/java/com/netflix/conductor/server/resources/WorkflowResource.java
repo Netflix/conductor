@@ -866,6 +866,24 @@ public class WorkflowResource {
 		return service.search(query, freeText, start, size, convert(sort), from, end);
 	}
 
+	@POST
+	@Path("/errorRegistrySearch")
+	@ApiOperation("Search error registry")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public List<WorkflowErrorRegistry>  searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			return executor.searchErrorRegistry(workflowErrorRegistry);
+		} else {
+			return executor.searchErrorRegistry(workflowErrorRegistry);
+		}
+	}
+
 	private List<String> convert(String sortStr) {
 		List<String> list = new ArrayList<String>();
 		if (sortStr != null && sortStr.length() != 0) {
@@ -883,4 +901,6 @@ public class WorkflowResource {
 			return false;
 		return strings.get(0).contains("/docs");
 	}
+
+
 }

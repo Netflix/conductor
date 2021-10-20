@@ -1076,6 +1076,7 @@ public class WorkflowExecutor {
 		workflowErrorRegistry.setStatus(workflow.getStatus().name());
 		workflowErrorRegistry.setWorkflowId(workflow.getWorkflowId());
 		workflowErrorRegistry.setWorkflowType(workflow.getWorkflowType());
+		workflowErrorRegistry.setCompleteError(reason);
 		workflowErrorRegistry.setErrorLookUpId(errorId);
 		workflowErrorRegistry.setStartTime(workflow.getStartTime());
 		workflowErrorRegistry.setEndTime(workflow.getEndTime());
@@ -2123,5 +2124,9 @@ public class WorkflowExecutor {
 			logger.debug("workflowId" + workflowId + ", failed in resumeSubWorkflow with " + e.getMessage(), e);
 			e.printStackTrace();
 		}
+	}
+	public List<WorkflowErrorRegistry> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+		List<WorkflowErrorRegistry> workflowErrorRegistries = edao.searchWorkflowErrorRegistry(workflowErrorRegistry);
+		return workflowErrorRegistries;
 	}
 }

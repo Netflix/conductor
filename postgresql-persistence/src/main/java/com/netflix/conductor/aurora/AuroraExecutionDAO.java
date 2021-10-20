@@ -21,6 +21,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.sql.Timestamp;
 import java.util.stream.Collectors;
 
 public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
@@ -796,5 +797,52 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				.addParameter(workflowErrorRegistry.getOrderId())
 				.addParameter(workflowErrorRegistry.getErrorLookUpId())
 				.executeUpdate());
+	}
+
+	public List<WorkflowErrorRegistry> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistryEntry){
+		StringBuilder SQL =  new StringBuilder("SELECT * FROM workflow_error_registry WHERE 1=1 ");
+		LinkedList<Object> params = new LinkedList<>();
+		if(workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getWorkflowId()!=null )
+		{
+			SQL.append("AND workflow_id = ? ");
+			params.add(workflowErrorRegistryEntry.getWorkflowId());
+		}
+
+		return queryWithTransaction(SQL.toString(), q -> {
+			params.forEach(p -> {
+				if (p instanceof Timestamp) {
+					q.addParameter((Timestamp) p);
+				} else if (p instanceof List) {
+					q.addParameter((Collection<String>) p);
+				} else if (p instanceof String) {
+					q.addParameter((String) p);
+				}
+			});
+
+
+			return q.executeAndFetch(rs -> {
+				List<WorkflowErrorRegistry> workflowErrorRegistries = new LinkedList<>();
+				while (rs.next()) {
+					WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
+
+					workflowErrorRegistry.setStatus(rs.getString("workflow_status"));
+					workflowErrorRegistry.setWorkflowId(rs.getString("workflow_id"));
+					workflowErrorRegistry.setWorkflowType(rs.getString("workflow_type"));
+					workflowErrorRegistry.setErrorLookUpId(rs.getInt("error_lookup_id"));
+					workflowErrorRegistry.setStartTime(rs.getTimestamp("start_time").getTime());
+					workflowErrorRegistry.setEndTime(rs.getTimestamp("end_time").getTime());
+					workflowErrorRegistry.setParentWorkflowId(rs.getString("parent_workflow_id"));
+					workflowErrorRegistry.setJobId(rs.getString("job_id"));
+					workflowErrorRegistry.setRankingId(rs.getString("ranking_id"));
+					workflowErrorRegistry.setOrderId(rs.getString("order_id"));
+					workflowErrorRegistry.setCompleteError(rs.getString("complete_error"));
+
+					workflowErrorRegistries.add(workflowErrorRegistry);
+				}
+
+				return workflowErrorRegistries;
+			});
+		});
+
 	}
 }
