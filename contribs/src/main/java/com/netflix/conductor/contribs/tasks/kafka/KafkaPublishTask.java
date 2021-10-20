@@ -220,7 +220,7 @@ public class KafkaPublishTask extends WorkflowSystemTask {
         private String topic;
         private String keySerializer = STRING_SERIALIZER;
         private String valueSerializer = STRING_SERIALIZER;
-        private String schemaRegistryUrl;
+        private String schemaRegistryUrl = "";
 
         public Map<String, Object> getHeaders() {
             return headers;
