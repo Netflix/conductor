@@ -30,8 +30,8 @@ dependencies {
     implementation "org.apache.kafka:kafka-clients:${revKafka}"
 
     implementation "io.confluent:kafka-avro-serializer:${revConfluent}"
-
     implementation "org.apache.avro:avro:${revAvro}"
+    implementation "tech.allegro.schema.json2avro:converter:${revAvroToJson}"
 
     implementation "com.rabbitmq:amqp-client:${revAmqpClient}"
 

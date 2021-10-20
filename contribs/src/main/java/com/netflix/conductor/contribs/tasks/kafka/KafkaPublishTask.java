@@ -19,6 +19,11 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.Utils;
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -32,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tech.allegro.schema.json2avro.converter.JsonAvroConverter;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -142,14 +148,29 @@ public class KafkaPublishTask extends WorkflowSystemTask {
         LOGGER.debug("Time taken getting producer {}", timeTakenToCreateProducer);
 
         Object key = getKey(input);
+        String jsonString = objectMapper.writeValueAsString(input.getValue());
 
         Iterable<Header> headers = input.getHeaders().entrySet().stream()
                 .map(header -> new RecordHeader(header.getKey(), String.valueOf(header.getValue()).getBytes()))
                 .collect(Collectors.toList());
-        ProducerRecord<String, Object> rec = new ProducerRecord(input.getTopic(), null,
-                null, key, objectMapper.writeValueAsString(input.getValue()), headers);
 
-        Future send = producer.send(rec);
+        Future send;
+
+        if (input.getSchemaRegistryUrl().isEmpty()) {
+            ProducerRecord<String, Object> rec = new ProducerRecord(input.getTopic(), null,
+                    null, key, jsonString, headers);
+            send = producer.send(rec);
+        } else {
+            CachedSchemaRegistryClient schemaReg = new CachedSchemaRegistryClient(input.getSchemaRegistryUrl(), 100);
+            SchemaMetadata schemaMetadata = schemaReg.getLatestSchemaMetadata(input.getTopic() + "-value");
+            Schema schema = new Schema.Parser().parse(schemaMetadata.getSchema());
+            JsonAvroConverter avroConverter = new JsonAvroConverter();
+
+            GenericData.Record recordData = avroConverter.convertToGenericDataRecord(jsonString.getBytes(), schema);
+
+            ProducerRecord<String, GenericRecord> record = new ProducerRecord(input.getTopic(), recordData);
+            send = producer.send(record);
+        }
 
         long timeTakenToPublish = Instant.now().toEpochMilli() - startPublishingEpochMillis;
 
