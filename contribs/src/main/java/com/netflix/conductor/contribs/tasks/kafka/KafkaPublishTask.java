@@ -21,6 +21,8 @@ import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.Utils;
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -39,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tech.allegro.schema.json2avro.converter.JsonAvroConverter;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -132,6 +135,20 @@ public class KafkaPublishTask extends WorkflowSystemTask {
         task.setStatus(Task.Status.FAILED);
     }
 
+    private Future<RecordMetadata> sendAvroMessage(Producer producer, Input input) throws RestClientException, IOException {
+        CachedSchemaRegistryClient schemaReg = new CachedSchemaRegistryClient(
+                input.getSchemaRegistryUrl(), 100);
+        SchemaMetadata schemaMetadata = schemaReg.getLatestSchemaMetadata(input.getTopic() + "-value");
+        Schema schema = new Schema.Parser().parse(schemaMetadata.getSchema());
+        JsonAvroConverter avroConverter = new JsonAvroConverter();
+
+        GenericData.Record recordData = avroConverter.convertToGenericDataRecord(
+                objectMapper.writeValueAsString(input.getValue()).getBytes(), schema);
+
+        ProducerRecord<String, GenericRecord> record = new ProducerRecord(input.getTopic(), recordData);
+        return producer.send(record);
+    }
+
     /**
      * @param input Kafka Request
      * @return Future for execution.
@@ -156,20 +173,18 @@ public class KafkaPublishTask extends WorkflowSystemTask {
 
         Future send;
 
-        if (input.getSchemaRegistryUrl().isEmpty()) {
-            ProducerRecord<String, Object> rec = new ProducerRecord(input.getTopic(), null,
-                    null, key, jsonString, headers);
-            send = producer.send(rec);
+        if (input.getValueSerializer().equals(KafkaAvroSerializer.class.getName())) {
+            send = sendAvroMessage(producer, input);
         } else {
-            CachedSchemaRegistryClient schemaReg = new CachedSchemaRegistryClient(input.getSchemaRegistryUrl(), 100);
-            SchemaMetadata schemaMetadata = schemaReg.getLatestSchemaMetadata(input.getTopic() + "-value");
-            Schema schema = new Schema.Parser().parse(schemaMetadata.getSchema());
-            JsonAvroConverter avroConverter = new JsonAvroConverter();
+            ProducerRecord<String, Object> rec = new ProducerRecord(
+                    input.getTopic(),
+                    null,
+                    null,
+                    key,
+                    jsonString,
+                    headers);
 
-            GenericData.Record recordData = avroConverter.convertToGenericDataRecord(jsonString.getBytes(), schema);
-
-            ProducerRecord<String, GenericRecord> record = new ProducerRecord(input.getTopic(), recordData);
-            send = producer.send(record);
+            send = producer.send(rec);
         }
 
         long timeTakenToPublish = Instant.now().toEpochMilli() - startPublishingEpochMillis;
