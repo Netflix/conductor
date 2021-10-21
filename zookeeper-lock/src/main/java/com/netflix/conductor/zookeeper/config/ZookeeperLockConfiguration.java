@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 public class ZookeeperLockConfiguration {
 
     @Bean
-    public Lock provideLock(ZookeeperProperties properties) {
+    public Lock provideZookeeperLock(ZookeeperProperties properties) {
         return new ZookeeperLock(properties);
     }
 }
