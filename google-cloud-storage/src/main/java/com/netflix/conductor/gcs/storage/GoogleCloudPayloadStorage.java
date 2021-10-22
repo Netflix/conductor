@@ -169,10 +169,7 @@ public class GoogleCloudPayloadStorage implements ExternalPayloadStorage {
         try {
             String objectName = path;
             Blob blob = storage.get(BlobId.of(bucketName, objectName));
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            blob.downloadTo(outputStream);
-
-            return new ByteArrayInputStream(outputStream.toByteArray());
+            return new ByteArrayInputStream(blob.getContent());
         } catch (UncheckedIOException | NullPointerException e) {
             String msg = "Error communicating with Google";
             LOGGER.error(msg, e);
