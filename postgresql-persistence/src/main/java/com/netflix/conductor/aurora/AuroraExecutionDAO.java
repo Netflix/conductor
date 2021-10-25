@@ -802,10 +802,37 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	public List<WorkflowErrorRegistry> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistryEntry){
 		StringBuilder SQL =  new StringBuilder("SELECT * FROM workflow_error_registry WHERE 1=1 ");
 		LinkedList<Object> params = new LinkedList<>();
-		if(workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getWorkflowId()!=null )
-		{
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getWorkflowId() != null) {
 			SQL.append("AND workflow_id = ? ");
 			params.add(workflowErrorRegistryEntry.getWorkflowId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStatus() != null) {
+			SQL.append("AND workflow_status = ? ");
+			params.add(workflowErrorRegistryEntry.getStatus());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getParentWorkflowId() != null) {
+			SQL.append("AND parent_workflow_id = ? ");
+			params.add(workflowErrorRegistryEntry.getParentWorkflowId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getJobId() != null) {
+			SQL.append("AND job_id = ? ");
+			params.add(workflowErrorRegistryEntry.getJobId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getRankingId() != null) {
+			SQL.append("AND ranking_id = ? ");
+			params.add(workflowErrorRegistryEntry.getRankingId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getOrderId() != null) {
+			SQL.append("AND order_id = ? ");
+			params.add(workflowErrorRegistryEntry.getOrderId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
+			SQL.append("AND complete_error = ? ");
+			params.add(workflowErrorRegistryEntry.getCompleteError());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
+			SQL.append("AND complete_error = ? ");
+			params.add(workflowErrorRegistryEntry.getCompleteError());
 		}
 
 		return queryWithTransaction(SQL.toString(), q -> {
