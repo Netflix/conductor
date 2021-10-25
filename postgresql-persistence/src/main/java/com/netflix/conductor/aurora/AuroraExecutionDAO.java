@@ -834,6 +834,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			SQL.append("AND complete_error = ? ");
 			params.add(workflowErrorRegistryEntry.getCompleteError());
 		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStartTime() != 0 && workflowErrorRegistryEntry.getEndTime() != 0) {
+			SQL.append("AND start_time >= ? and end_time <= ?");
+			params.add(workflowErrorRegistryEntry.getStartTime());
+			params.add(workflowErrorRegistryEntry.getEndTime());
+		}
 
 		return queryWithTransaction(SQL.toString(), q -> {
 			params.forEach(p -> {
@@ -843,6 +848,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 					q.addParameter((Collection<String>) p);
 				} else if (p instanceof String) {
 					q.addParameter((String) p);
+				} else if (p instanceof Long) {
+					q.addTimestampParameter((Long)p);
 				}
 			});
 
