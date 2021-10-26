@@ -37,6 +37,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
@@ -2066,5 +2067,10 @@ public class WorkflowExecutor {
 			logger.debug("workflowId" + workflowId + ", failed in resumeSubWorkflow with " + e.getMessage(), e);
 			e.printStackTrace();
 		}
+	}
+
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, String includeOutput) throws Exception {
+		List<TaskDetails> taskDetails = edao.searchTaskDetails(jobId, workflowType, taskName, includeOutput);
+		return taskDetails;
 	}
 }

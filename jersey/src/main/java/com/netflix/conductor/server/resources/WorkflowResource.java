@@ -24,6 +24,7 @@ import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Error;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
@@ -864,6 +865,15 @@ public class WorkflowResource {
 			throw new ApplicationException(Code.INVALID_INPUT, "Cannot return more than " + maxSearchSize + " workflows.  Please use pagination");
 		}
 		return service.search(query, freeText, start, size, convert(sort), from, end);
+	}
+
+	@POST
+	@Path("/getTaskInputPayload")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get a particular task input payload")
+	public List<TaskDetails> getTaskInputPayload(@QueryParam("jobId/workflowId") String jobId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName, @QueryParam("includeOutput") String includeOutput) throws Exception {
+		return executor.searchTaskDetails(jobId, workflowType, taskName, includeOutput);
 	}
 
 	private List<String> convert(String sortStr) {
