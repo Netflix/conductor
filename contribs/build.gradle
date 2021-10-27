@@ -20,6 +20,11 @@ dependencies {
     implementation "com.amazonaws:aws-java-sdk-s3:${revAwsSdk}"
     implementation "com.amazonaws:aws-java-sdk-sqs:${revAwsSdk}"
 
+    implementation "org.postgresql:postgresql"
+    implementation "org.springframework.boot:spring-boot-starter-jdbc"
+    implementation "org.flywaydb:flyway-core"
+    implementation "org.springdoc:springdoc-openapi-ui:${revOpenapi}"
+
     implementation "org.apache.commons:commons-lang3:"
 
     implementation "net.thisptr:jackson-jq:${revJq}"
@@ -44,6 +49,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation "org.testcontainers:mockserver:${revTestContainer}"
     testImplementation "org.mock-server:mockserver-client-java:${revMockServerClient}"
+    testImplementation "org.testcontainers:postgresql:${revTestContainer}"
 
     testImplementation project(':conductor-common').sourceSets.test.output
 }
