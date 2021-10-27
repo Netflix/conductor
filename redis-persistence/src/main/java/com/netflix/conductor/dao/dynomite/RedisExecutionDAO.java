@@ -602,7 +602,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 		return pdata;
 	}
 
-	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, String includeOutput) {
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, Boolean includeOutput) {
 		return null;
 	}
 	

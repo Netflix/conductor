@@ -868,11 +868,11 @@ public class WorkflowResource {
 	}
 
 	@POST
-	@Path("/getTaskInputPayload")
+	@Path("/getTaskDetails")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Get a particular task input payload")
-	public List<TaskDetails> getTaskInputPayload(@QueryParam("jobId/workflowId") String jobId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName, @QueryParam("includeOutput") String includeOutput) throws Exception {
+	@ApiOperation(value = "Search for a particular task details")
+	public List<TaskDetails> searchTaskDetails(@QueryParam("Id") String jobId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName,@DefaultValue("false") @QueryParam("includeOutput") Boolean includeOutput) throws Exception {
 		return executor.searchTaskDetails(jobId, workflowType, taskName, includeOutput);
 	}
 

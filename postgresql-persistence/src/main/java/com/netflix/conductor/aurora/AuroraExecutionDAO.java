@@ -774,7 +774,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return queryWithTransaction(SQL, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
 	}
 
-	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, String includeOutput) {
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, Boolean includeOutput) {
 		StringBuilder SQL = new StringBuilder("select t.task_refname as task_refname, t.task_status as task_status, t.input as input, t.output as output, t.task_id as task_id, w.workflow_id as workflow_id, w.correlation_id as correlation_id, w.workflow_status as workflow_status from task t, workflow w where w.workflow_id = t.workflow_id ");
 		LinkedList<Object> params = new LinkedList<>();
 		if (jobId != null) {
@@ -785,11 +785,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		}
 		if (workflowType != null) {
 			SQL.append("AND w.workflow_type ilike ? ");
-			params.add(workflowType);
+			params.add("%" + workflowType + "%");
 		}
 		if (taskName != null) {
 			SQL.append("AND t.task_refname ilike ? ");
-			params.add(taskName);
+			params.add("%" + taskName + "%");
 		}
 
 		return queryWithTransaction(SQL.toString(), q -> {
@@ -816,7 +816,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 					taskDetails.setCorrelationId(rs.getString("correlation_id"));
 					taskDetails.setTaskId(rs.getString("task_id"));
 					taskDetails.setTaskInput(rs.getString("input"));
-					if (includeOutput != null) {
+					if (includeOutput) {
 						taskDetails.setTaskOutput(rs.getString("output"));
 					}
 					taskDetails.setTaskStatus(rs.getString("task_status"));

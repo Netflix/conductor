@@ -2069,7 +2069,7 @@ public class WorkflowExecutor {
 		}
 	}
 
-	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, String includeOutput) throws Exception {
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, Boolean includeOutput) throws Exception {
 		List<TaskDetails> taskDetails = edao.searchTaskDetails(jobId, workflowType, taskName, includeOutput);
 		return taskDetails;
 	}
