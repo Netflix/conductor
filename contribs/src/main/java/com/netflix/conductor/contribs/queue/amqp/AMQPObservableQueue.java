@@ -14,10 +14,8 @@ package com.netflix.conductor.contribs.queue.amqp;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -56,7 +54,6 @@ public class AMQPObservableQueue implements ObservableQueue {
 	private int pollTimeInMS;
 	private AMQPConnection amqpConnection;
 	private volatile boolean running;
-	protected Set<String> activeSubscribers = new HashSet<String>();
 
 	public AMQPObservableQueue(ConnectionFactory factory, Address[] addresses, boolean useExchange,
 			AMQPSettings settings, int batchSize, int pollTimeInMS) {
