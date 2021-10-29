@@ -90,44 +90,32 @@ public class DefaultEventProcessor {
         LOGGER.info("Event Processing is ENABLED");
     }
 
-    private void handleMsg(ObservableQueue queue, Message msg) {
-    	 try {
-             if (isEventMessageIndexingEnabled) {
-                 executionService.addMessage(queue.getName(), msg);
-             }
-             String event = queue.getType() + ":" + queue.getName();
-             LOGGER.debug("Evaluating message: {} for event: {}", msg.getId(), event);
-             List<EventExecution> transientFailures = executeEvent(event, msg);
-
-             if (transientFailures.isEmpty()) {
-                 queue.ack(Collections.singletonList(msg));
-                 LOGGER.debug("Message: {} acked on queue: {}", msg.getId(), queue.getName());
-             } else if (queue.rePublishIfNoAck()) {
-                 // re-submit this message to the queue, to be retried later
-                 // This is needed for queues with no unack timeout, since messages are removed from the queue
-                 queue.publish(Collections.singletonList(msg));
-                 LOGGER.debug("Message: {} published to queue: {}", msg.getId(), queue.getName());
-             }
-         } catch (Exception e) {
-             LOGGER.error("Error handling message: {} on queue:{}", msg, queue.getName(), e);
-             Monitors.recordEventQueueMessagesError(queue.getType(), queue.getName());
-         } finally {
-             Monitors.recordEventQueueMessagesHandled(queue.getType(), queue.getName());
-         }
-    }
-    
-    /**
-     * For each message from an observable, this spawns a new processing thread. 
-     * @param queue
-     * @param msg
-     */
     public void handle(ObservableQueue queue, Message msg) {
-    	Thread newThread = new Thread(() -> {
-    		handleMsg(queue, msg);
-    	});
-    	newThread.start();
+        try {
+            if (isEventMessageIndexingEnabled) {
+                executionService.addMessage(queue.getName(), msg);
+            }
+            String event = queue.getType() + ":" + queue.getName();
+            LOGGER.debug("Evaluating message: {} for event: {}", msg.getId(), event);
+            List<EventExecution> transientFailures = executeEvent(event, msg);
+
+            if (transientFailures.isEmpty()) {
+                queue.ack(Collections.singletonList(msg));
+                LOGGER.debug("Message: {} acked on queue: {}", msg.getId(), queue.getName());
+            } else if (queue.rePublishIfNoAck()) {
+                // re-submit this message to the queue, to be retried later
+                // This is needed for queues with no unack timeout, since messages are removed from the queue
+                queue.publish(Collections.singletonList(msg));
+                LOGGER.debug("Message: {} published to queue: {}", msg.getId(), queue.getName());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error handling message: {} on queue:{}", msg, queue.getName(), e);
+            Monitors.recordEventQueueMessagesError(queue.getType(), queue.getName());
+        } finally {
+            Monitors.recordEventQueueMessagesHandled(queue.getType(), queue.getName());
+        }
     }
-    
+
     /**
      * Executes all the actions configured on all the event handlers triggered by the {@link Message} on the queue If
      * any of the actions on an event handler fails due to a transient failure, the execution is not persisted such that
