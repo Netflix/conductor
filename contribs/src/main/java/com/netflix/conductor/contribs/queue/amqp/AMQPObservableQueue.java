@@ -352,43 +352,44 @@ public class AMQPObservableQueue implements ObservableQueue {
     }
 
 	private void receiveMessagesFromQueue(String queueName, Subscriber<? super Message> subscriber) throws Exception {
-		LOGGER.debug("Accessing channel for queue {}", queueName);
-		Consumer consumer = new DefaultConsumer(
-				amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER, getSettings().getQueueOrExchangeName())) {
-			@Override
-			public void handleDelivery(final String consumerTag, final Envelope envelope,
-					final AMQP.BasicProperties properties, final byte[] body) throws IOException {
-				try {
-					Message message = asMessage(settings,
-							new GetResponse(envelope, properties, body, Integer.MAX_VALUE));
-					if (message != null) {
-						if (LOGGER.isDebugEnabled()) {
-							LOGGER.debug("Got message with ID {} and receipt {}", message.getId(),
-									message.getReceipt());
-						}
-						Thread newThread = new Thread(() -> {
-							LOGGER.info("Spawning a new thread for message with ID {}", message.getId());
-							subscriber.onNext(message);
-						});
-						newThread.start();
+        LOGGER.debug("Accessing channel for queue {}", queueName);
+        
+        Consumer consumer = new DefaultConsumer(amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER,getSettings().getQueueOrExchangeName())) {
+
+            @Override
+            public void handleDelivery(final String consumerTag, final Envelope envelope,
+                final AMQP.BasicProperties properties, final byte[] body) throws IOException {
+                try {
+                    Message message = asMessage(settings,
+                        new GetResponse(envelope, properties, body, Integer.MAX_VALUE));
+                    if (message == null) {
+                    	return;
+                    }
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("receiveMessagesFromQueue- End method {}", message);
 					}
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				} catch (Exception e) {
-					//
-				}
+					LOGGER.info("Got message with ID {} and receipt {}", message.getId(), message.getReceipt());
+					Thread newThread = new Thread(() -> {
+						LOGGER.info("Spawning a new thread for message with ID {}", message.getId());
+						subscriber.onNext(message);
+					});
+					newThread.start();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    //
+                }
+            }
+            
+            
+            public void handleCancel(String consumerTag) throws IOException{
+            	LOGGER.error("Recieved a consumer cancel notification for subscriber. Will monitor and make changes");										
 			}
+        };
 
-			public void handleCancel(String consumerTag) throws IOException {
-				LOGGER.error("Recieved a consumer cancel notification for subscriber. Will monitor and make changes");
-			}
-		};
-
-		amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER, getSettings().getQueueOrExchangeName())
-				.basicConsume(queueName, false, consumer);
-		// Monitors.recordEventQueueMessagesProcessed(getType(), queueName,
-		// messages.size());
-	}
+        amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER,getSettings().getQueueOrExchangeName()).basicConsume(queueName, false, consumer);
+        // Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
+    }
 
 	protected void receiveMessages(Subscriber<? super Message> subscriber) {
         try {
