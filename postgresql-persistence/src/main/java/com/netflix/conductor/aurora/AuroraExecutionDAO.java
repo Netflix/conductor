@@ -10,6 +10,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
@@ -20,6 +21,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.sql.Timestamp;
 import java.util.stream.Collectors;
 
 public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
@@ -771,4 +773,61 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		String SQL = "SELECT json_data FROM poll_data WHERE queue_name = ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
 	}
+
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, Boolean includeOutput) {
+		StringBuilder SQL = new StringBuilder("select t.task_refname as task_refname, t.task_status as task_status, t.input as input, t.output as output, t.task_id as task_id, w.workflow_id as workflow_id, w.correlation_id as correlation_id, w.workflow_status as workflow_status from task t, workflow w where w.workflow_id = t.workflow_id ");
+		LinkedList<Object> params = new LinkedList<>();
+		if (jobId != null) {
+			SQL.append("AND (w.workflow_id = ?  OR w.correlation_id ilike ? OR w.json_data::jsonb->'workflowIds' ??  ?) ");
+			params.add(jobId);
+			params.add("%jobId:" + jobId + "%");
+			params.add(jobId);
+		}
+		if (workflowType != null) {
+			SQL.append("AND w.workflow_type ilike ? ");
+			params.add("%" + workflowType + "%");
+		}
+		if (taskName != null) {
+			SQL.append("AND t.task_refname ilike ? ");
+			params.add("%" + taskName + "%");
+		}
+
+		return queryWithTransaction(SQL.toString(), q -> {
+			params.forEach(p -> {
+				if (p instanceof Timestamp) {
+					q.addParameter((Timestamp) p);
+				} else if (p instanceof List) {
+					q.addParameter((Collection<String>) p);
+				} else if (p instanceof String) {
+					q.addParameter((String) p);
+				} else if (p instanceof Long) {
+					q.addParameter((Long) p);
+				}
+			});
+
+
+			return q.executeAndFetch(rs -> {
+				List<TaskDetails> TaskDetailsList = new LinkedList<>();
+				while (rs.next()) {
+					TaskDetails taskDetails = new TaskDetails();
+
+					taskDetails.setWorkflowStatus(rs.getString("workflow_status"));
+					taskDetails.setWorkflowId(rs.getString("workflow_id"));
+					taskDetails.setCorrelationId(rs.getString("correlation_id"));
+					taskDetails.setTaskId(rs.getString("task_id"));
+					taskDetails.setTaskInput(rs.getString("input"));
+					if (includeOutput) {
+						taskDetails.setTaskOutput(rs.getString("output"));
+					}
+					taskDetails.setTaskStatus(rs.getString("task_status"));
+					TaskDetailsList.add(taskDetails);
+				}
+
+				return TaskDetailsList;
+			});
+		});
+	}
+
+
+
 }
