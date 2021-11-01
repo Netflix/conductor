@@ -328,5 +328,5 @@ public interface ExecutionDAO {
 		throw new IllegalStateException("Not implemented");
 	}
 
-	public abstract List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, Boolean includeOutput);
+	public abstract List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput);
 }
