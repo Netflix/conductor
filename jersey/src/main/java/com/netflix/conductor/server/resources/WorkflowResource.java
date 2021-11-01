@@ -871,9 +871,9 @@ public class WorkflowResource {
 	@Path("/getTaskDetails")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Search for a particular task details")
-	public List<TaskDetails> searchTaskDetails(@QueryParam("Id") String jobId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName,@DefaultValue("false") @QueryParam("includeOutput") Boolean includeOutput) throws Exception {
-		return executor.searchTaskDetails(jobId, workflowType, taskName, includeOutput);
+	@ApiOperation(value = "Search for a particular task details using either the Job ID or Workflow ID ")
+	public List<TaskDetails> searchTaskDetails(@QueryParam("jobId") String jobId, @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName, @DefaultValue("false") @QueryParam("includeOutput") Boolean includeOutput) throws Exception {
+		return executor.searchTaskDetails(jobId, workflowId, workflowType, taskName, includeOutput);
 	}
 
 	private List<String> convert(String sortStr) {

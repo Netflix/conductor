@@ -29,7 +29,6 @@ import com.netflix.conductor.common.metadata.events.EventPublished;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
@@ -2069,8 +2068,14 @@ public class WorkflowExecutor {
 		}
 	}
 
-	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, Boolean includeOutput) throws Exception {
-		List<TaskDetails> taskDetails = edao.searchTaskDetails(jobId, workflowType, taskName, includeOutput);
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) throws Exception {
+		if ( jobId == null && workflowId == null){
+			throw new ApplicationException(Code.INVALID_INPUT, "Either Job Id or Workflow Id should be passed.");
+		}
+		if ( taskName == null){
+			throw new ApplicationException(Code.INVALID_INPUT, "Task Name is a required parameter.");
+		}
+		List<TaskDetails> taskDetails = edao.searchTaskDetails(jobId, workflowId, workflowType, taskName, includeOutput);
 		return taskDetails;
 	}
 }

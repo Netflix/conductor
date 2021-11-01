@@ -774,15 +774,19 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return queryWithTransaction(SQL, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
 	}
 
-	public List<TaskDetails> searchTaskDetails(String jobId, String workflowType, String taskName, Boolean includeOutput) {
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) {
 		StringBuilder SQL = new StringBuilder("select t.task_refname as task_refname, t.task_status as task_status, t.input as input, t.output as output, t.task_id as task_id, w.workflow_id as workflow_id, w.correlation_id as correlation_id, w.workflow_status as workflow_status from task t, workflow w where w.workflow_id = t.workflow_id ");
 		LinkedList<Object> params = new LinkedList<>();
-		if (jobId != null) {
-			SQL.append("AND (w.workflow_id = ?  OR w.correlation_id ilike ? OR w.json_data::jsonb->'workflowIds' ??  ?) ");
-			params.add(jobId);
+		if (workflowId != null) {
+			SQL.append("AND w.workflow_id = ? ");
+			params.add(workflowId);
+		}else if (jobId != null) {
+			SQL.append("AND w.correlation_id ilike ? ");
 			params.add("%jobId:" + jobId + "%");
-			params.add(jobId);
+		}else{
+			return new ArrayList<TaskDetails>();
 		}
+
 		if (workflowType != null) {
 			SQL.append("AND w.workflow_type ilike ? ");
 			params.add("%" + workflowType + "%");
