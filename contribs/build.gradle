@@ -24,7 +24,7 @@ dependencies {
 	compile 'io.grpc:grpc-stub:1.15.1'
 	compile 'io.grpc:protoc-gen-grpc-java:1.15.1'
 
-	compile 'com.datadoghq:dd-trace-api:0.88.0'
+	compile 'com.datadoghq:dd-trace-api:0.46.0'
 
 	provided 'javax.ws.rs:jsr311-api:1.1.1'
 	provided 'io.swagger:swagger-jaxrs:1.5.9'
