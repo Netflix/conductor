@@ -32,10 +32,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -73,8 +70,12 @@ public class SystemTaskWorkerCoordinator {
 	
 	private static final String className = SystemTaskWorkerCoordinator.class.getName();
 
+	private final Map<String, ScheduledExecutorService> taskPools = new HashMap<>();
+
 	private String workerId;
-		
+
+	private boolean useTaskLock;
+
 	@Inject
 	public SystemTaskWorkerCoordinator(QueueDAO taskQueues, WorkflowExecutor executor, Configuration config) {
 		this.taskQueues = taskQueues;
@@ -104,13 +105,35 @@ public class SystemTaskWorkerCoordinator {
 		} catch (UnknownHostException e) {
 			this.workerId = "unknown";
 		}
+		this.useTaskLock = Boolean.parseBoolean(config.getProperty("workflow.system.task.use.lock", "true"));
 	}
 
 	static synchronized void add(WorkflowSystemTask systemTask) {
 		logger.debug("Adding system task {}", systemTask.getName());
 		queue.add(systemTask);
 	}
-	
+
+	public void shutdown() {
+		for (Map.Entry<String, ScheduledExecutorService> pool : taskPools.entrySet()) {
+			try {
+				logger.info("Closing task pool " + pool.getKey());
+				pool.getValue().shutdown();
+				pool.getValue().awaitTermination(5, TimeUnit.SECONDS);
+			} catch (Exception e) {
+				logger.debug("Closing task pool " + pool.getKey() + " failed " + e.getMessage(), e);
+			}
+		}
+		try {
+			if (es != null) {
+				logger.info("Closing executor pool");
+				es.shutdown();
+				es.awaitTermination(5, TimeUnit.SECONDS);
+			}
+		} catch (Exception e) {
+			logger.debug("Closing executor pool failed " + e.getMessage(), e);
+		}
+	}
+
 	private void listen() {
 		try {
 			for(;;) {
@@ -126,8 +149,10 @@ public class SystemTaskWorkerCoordinator {
 	}
 	
 	private void listen(WorkflowSystemTask systemTask) {
-		Executors.newScheduledThreadPool(1).scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, pollFrequency, TimeUnit.MILLISECONDS);
+		ScheduledExecutorService taskPool = Executors.newScheduledThreadPool(1);
+		taskPool.scheduleWithFixedDelay(()->pollAndExecute(systemTask), 1000, pollFrequency, TimeUnit.MILLISECONDS);
 		logger.debug("Started listening {}", systemTask.getName());
+		taskPools.put(systemTask.getName(), taskPool);
 	}
 
 	private void pollAndExecute(WorkflowSystemTask systemTask) {
@@ -142,27 +167,40 @@ public class SystemTaskWorkerCoordinator {
 				logger.warn("All workers are busy, not polling.  queue size {}, max {}", workerQueue.size(), workerQueueSize);
 				return;
 			}
-			
+
+			// Returns the number of additional elements that this queue can ideally
+			// (in the absence of memory or resource constraints) accept without blocking.
+			// This is always equal to the initial capacity of this queue less the current size of this queue.
+			int remainingCapacity = workerQueue.remainingCapacity();
+
+			// Grab either remaining worker's queue capacity or the poll count per configuration
+			// In the high load, it basically picks only what can process
+			int effectivePollCount = Math.min(remainingCapacity, pollCount);
+
 			String name = systemTask.getName();
 			String lockQueue = name.toLowerCase() + ".lock";
-			List<String> polled = taskQueues.pop(name, pollCount, pollTimeout);
+			List<String> polled = taskQueues.pop(name, effectivePollCount, pollTimeout);
 			if (CollectionUtils.isNotEmpty(polled)) {
 				MetricService.getInstance().taskPoll(name, workerId, polled.size());
 			}
-			logger.debug("Polling for {}, got {}", name, polled.size());
+			logger.trace("Polling for {}, got {}", name, polled.size());
 			for(String task : polled) {
 				try {
 					es.submit(()-> {
 						NDC.push("system-"+ UUID.randomUUID().toString());
 
-						// This prevents another containers executing the same action
-						// true means this session added the record to lock queue and can start the task
-						long expireTime = systemTask.getRetryTimeInSecond() * 2L; // 2 times longer than task retry time
-						boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime);
-						if (!locked) {
-							logger.warn("Cannot lock the task " + task);
-							MetricService.getInstance().taskLockFailed(name);
-							return;
+						// This workaround was applied some time ago as somehow task id picked up multiple times at close same time
+						// Adding this option to manage it per environment as eventually we need to find root cause of the issue
+						if (useTaskLock) {
+							long expireTime = systemTask.getRetryTimeInSecond() * 2L; // 2 times longer than task retry time
+							boolean locked = taskQueues.pushIfNotExists(lockQueue, task, expireTime, 0);
+							// This prevents another containers executing the same action
+							// true means this session added the record to lock queue and can start the task
+							if (!locked) {
+								logger.warn("Cannot lock the task " + task);
+								MetricService.getInstance().taskLockFailed(name);
+								return;
+							}
 						}
 
 						try {
@@ -173,6 +211,7 @@ public class SystemTaskWorkerCoordinator {
 						}
 					});
 				}catch(RejectedExecutionException ree) {
+					taskQueues.unpop(name, task); //Unpop it back so other cluster instance might pick it up
 					logger.warn("Queue full for workers {}, taskId {}", workerQueue.size(), task);
 					MetricService.getInstance().systemWorkersQueueFull(name);
 				}

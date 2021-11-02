@@ -99,6 +99,10 @@ public class Workflow extends Auditable {
 
 	private String traceId;
 
+	private boolean resetTags;
+
+	private int jobPriority = 5;
+
 	public Workflow(){
 		
 	}
@@ -426,12 +430,28 @@ public class Workflow extends Auditable {
 		this.traceId = traceId;
 	}
 
+	public int getJobPriority() {
+		return jobPriority;
+	}
+
+	public void setJobPriority(int jobPriority) {
+		this.jobPriority = jobPriority;
+	}
+
 	public Map<String, Object> getAttributes() {
 		return attributes;
 	}
 
 	public void setAttributes(Map<String, Object> attributes) {
 		this.attributes = attributes;
+	}
+
+	public boolean getResetTags() {
+		return resetTags;
+	}
+
+	public void setResetTags(boolean resetTags) {
+		this.resetTags = resetTags;
 	}
 
 	@Override

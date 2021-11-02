@@ -42,7 +42,7 @@ public class Batch extends WorkflowSystemTask {
         try {
             String queueName = getQueueName(task);
 
-            executor.getQueueDao().pushIfNotExists(queueName, task.getTaskId(), task.getCallbackAfterSeconds());
+            executor.getQueueDao().pushIfNotExists(queueName, task.getTaskId(), task.getCallbackAfterSeconds(), workflow.getJobPriority());
         } catch (Exception ex) {
             task.setStatus(Status.FAILED);
             task.setReasonForIncompletion(ex.getMessage());

@@ -46,13 +46,13 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		"(log_time, logger, level, owner, hostname, fromhost, message, stack, alloc_id, trace_id, span_id) " +
 		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-	private LinkedBlockingDeque<LogEntry> buffer = new LinkedBlockingDeque<>();
-	private AtomicBoolean initialized = new AtomicBoolean(false);
-	private ScheduledExecutorService execs;
-	private DataSource dataSource;
-	private String hostname;
-	private String fromhost;
-	private String allocId;
+	private final LinkedBlockingDeque<LogEntry> buffer = new LinkedBlockingDeque<>();
+	private final AtomicBoolean initialized = new AtomicBoolean(false);
+	private final ScheduledExecutorService execs;
+	private HikariDataSource dataSource;
+	private final String hostname;
+	private final String fromhost;
+	private final String allocId;
 	private String url;
 	private String user;
 	private String password;
@@ -99,6 +99,13 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 				poolConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
 				dataSource = new HikariDataSource(poolConfig);
+				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+					try {
+						this.close();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}));
 			}
 
 			initialized.set(true);
@@ -114,7 +121,7 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		if (!initialized.get()) {
 			init();
 		}
-		try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(INSERT_QUERY);) {
+		try (Connection tx = dataSource.getConnection(); PreparedStatement st = tx.prepareStatement(INSERT_QUERY)) {
 
 			LogEntry entry = buffer.poll();
 			while (entry != null) {
@@ -144,6 +151,11 @@ public class DeluxeAuroraAppender extends AppenderSkeleton {
 		try {
 			execs.awaitTermination(5, TimeUnit.SECONDS);
 		} catch (InterruptedException ignore) {
+		}
+		try {
+			System.out.println("Closing log4j data source");
+			dataSource.close();
+		} catch (Exception ignore) {
 		}
 		this.closed = true;
 	}

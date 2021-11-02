@@ -36,6 +36,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
@@ -133,29 +134,34 @@ public class WorkflowExecutor {
 	}
 
 	public String startWorkflow(String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null, null, null, false);
+		return startWorkflow(null, name, version, input, correlationId, null, null, event, taskToDomain, null, null, null, null, null, false,null);
 	}
 
-	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean asyncStart) throws Exception {
-		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser, traceId, asyncStart);
+	public String startWorkflow(String workflowId, String name, int version, String correlationId, Map<String, Object> input, String event, Map<String, String> taskToDomain, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean asyncStart, Integer jobPriority) throws Exception {
+		return startWorkflow(workflowId, name, version, input, correlationId, null, null, event, taskToDomain, null, authorization, contextToken, contextUser, traceId, asyncStart, jobPriority);
 	}
+
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null, null, null, false);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId,  parentWorkflowTaskId, event, null, null, null, null, null, null, false,null);
 	}
 
-	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, String traceId) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null, traceId, false);
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, String traceId, Integer jobPriority) throws Exception {
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, null, null, null, traceId, false, jobPriority);
 	}
 
 	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean deciderInSweeper) throws Exception {
-		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, authorization, contextToken, contextUser, traceId, deciderInSweeper);
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, authorization, contextToken, contextUser, traceId, deciderInSweeper,null);
+	}
+
+	public String startWorkflow(String name, int version, Map<String, Object> input, String correlationId, String parentWorkflowId, String parentWorkflowTaskId, String event, Map<String, String> taskToDomain, List<String> workflowIds, Map<String, Object> authorization, String contextToken, String contextUser, String traceId, boolean deciderInSweeper, Integer jobPriority) throws Exception {
+		return startWorkflow(null, name, version, input, correlationId, parentWorkflowId, parentWorkflowTaskId, event, taskToDomain, workflowIds, authorization, contextToken, contextUser, traceId, deciderInSweeper, jobPriority);
 	}
 
 	public String startWorkflow(String workflowId, String name, int version, Map<String, Object> input,
 								String correlationId, String parentWorkflowId, String parentWorkflowTaskId,
 								String event, Map<String, String> taskToDomain, List<String> workflowIds,
 								Map<String, Object> authorization, String contextToken, String contextUser,
-								String traceId, boolean deciderInSweeper) throws Exception {
+								String traceId, boolean deciderInSweeper, Integer jobPriority) throws Exception {
 		// If no predefined workflowId - generate one
 		if (StringUtils.isEmpty(workflowId)) {
 			workflowId = IDGenerator.generate();
@@ -217,6 +223,17 @@ public class WorkflowExecutor {
 			wf.setAuthorization(authorization);
 			wf.setClientId(clientId);
 			wf.setContextUser(contextUser);
+			if (jobPriority == null) {
+				Object priority = input.get("jobPriority"); // Backward compatible
+				if (priority instanceof String) {
+					jobPriority = Integer.parseInt((String) priority);
+				} else if (priority instanceof Integer) {
+					jobPriority = (Integer)priority;
+				} else {
+					jobPriority = 5;
+				}
+			}
+			wf.setJobPriority(jobPriority);
 			if (traceIdEnabled) {
 				wf.setTraceId(traceId);
 			}
@@ -266,7 +283,7 @@ public class WorkflowExecutor {
 
 			// Who calls decider ? Sweeper or current thread?
 			if (deciderInSweeper) {
-				wakeUpSweeper(workflowId);
+				wakeUpSweeper(workflowId, wf.getJobPriority());
 			} else {
 				decide(workflowId);
 			}
@@ -315,6 +332,7 @@ public class WorkflowExecutor {
 				workflow.setInput(workflowInput);
 			}
 
+			workflow.setResetTags(false);
 			edao.updateWorkflow(workflow);
 
 			// metrics
@@ -364,6 +382,7 @@ public class WorkflowExecutor {
 				workflow.setInput(workflowInput);
 			}
 
+			workflow.setResetTags(false);
 			edao.updateWorkflow(workflow);
 
 			// metrics
@@ -416,7 +435,7 @@ public class WorkflowExecutor {
 						theTask.setReasonForIncompletion(null);
 						edao.updateTask(theTask);
 
-						addTaskToQueue(theTask);
+						addTaskToQueue(theTask, workflow.getJobPriority());
 					} else {
 						theTask.setScheduledTime(System.currentTimeMillis());
 						theTask.setStartTime(System.currentTimeMillis());
@@ -468,6 +487,7 @@ public class WorkflowExecutor {
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
 		}
+		workflow.setResetTags(false);
 		edao.updateWorkflow(workflow);
 
 		// metrics
@@ -587,6 +607,7 @@ public class WorkflowExecutor {
 		if(StringUtils.isNotEmpty(correlationId)) {
 			workflow.setCorrelationId(correlationId);
 		}
+		workflow.setResetTags(false);
 		edao.updateWorkflow(workflow);
 
 		// metrics
@@ -646,11 +667,12 @@ public class WorkflowExecutor {
 		workflow.setOutput(wf.getOutput());
 		edao.updateWorkflow(workflow);
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// If the following task, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			wakeUpSweeper(workflow.getParentWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 		MetricService.getInstance().workflowComplete(workflow.getWorkflowType(), workflow.getStartTime());
 
@@ -681,12 +703,12 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflowId);
+		queue.remove(sweeperQueue, workflowId);
 
 		// metrics
 		MetricService.getInstance().workflowForceComplete(workflow.getWorkflowType());
@@ -740,8 +762,7 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 
 		WorkflowDef def = metadata.get(workflow.getWorkflowType(), workflow.getVersion());
@@ -770,7 +791,7 @@ public class WorkflowExecutor {
 				WorkflowDef latestCancelWorkflow = metadata.getLatest(cancelWorkflow);
 				String cancelWFId = startWorkflow(cancelWorkflow, latestCancelWorkflow.getVersion(), input,
 					workflow.getCorrelationId(), workflow.getWorkflowId(), null, null, null,
-					workflow.getWorkflowIds(), workflow.getTraceId());
+					workflow.getWorkflowIds(), workflow.getTraceId(), workflow.getJobPriority());
 
 				workflow.getOutput().put("conductor.cancel_workflow", cancelWFId);
 
@@ -783,6 +804,7 @@ public class WorkflowExecutor {
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflowId);
+		queue.remove(sweeperQueue, workflowId);
 
 		// metrics
 		MetricService.getInstance().workflowCancel(workflow.getWorkflowType());
@@ -818,12 +840,12 @@ public class WorkflowExecutor {
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 
 		//remove from the sweep queue
 		queue.remove(deciderQueue, workflow.getWorkflowId());
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// metrics
 		MetricService.getInstance().workflowReset(workflow.getWorkflowType());
@@ -904,12 +926,12 @@ public class WorkflowExecutor {
 
 		logger.debug("Removing decider record for " + workflow.getWorkflowId());
 		queue.remove(deciderQueue, workflow.getWorkflowId());	//remove from the sweep queue
+		queue.remove(sweeperQueue, workflow.getWorkflowId());
 
 		// If the following lines, for some reason fails, the sweep will take
 		// care of this again!
 		if (workflow.getParentWorkflowId() != null) {
-			Workflow parent = edao.getWorkflow(workflow.getParentWorkflowId(), false);
-			decide(parent.getWorkflowId());
+			wakeUpSweeper(workflow.getParentWorkflowId(), workflow.getJobPriority());
 		}
 
 		// Handle task timeout
@@ -947,7 +969,7 @@ public class WorkflowExecutor {
 				try {
 					startWorkflow(workflowName, workflowVersion, input, workflow.getCorrelationId(),
 						workflow.getWorkflowId(), null, null, null,
-						workflow.getWorkflowIds(), workflow.getTraceId());
+						workflow.getWorkflowIds(), workflow.getTraceId(), workflow.getJobPriority());
 				} catch (Exception e) {
 					logger.info("Error workflow " + workflowName + " failed to start. reason: " + e.getMessage(), e);
 					MetricService.getInstance().workflowStartFailed(workflowName);
@@ -994,7 +1016,7 @@ public class WorkflowExecutor {
 				WorkflowDef latestFailureWorkflow = metadata.getLatest(failureWorkflow);
 				String failureWFId = startWorkflow(failureWorkflow, latestFailureWorkflow.getVersion(), input,
 					workflow.getCorrelationId(), workflow.getWorkflowId(), null, null,null,
-					workflow.getWorkflowIds(), workflow.getTraceId());
+					workflow.getWorkflowIds(), workflow.getTraceId(), workflow.getJobPriority());
 				workflow.getOutput().put("conductor.failure_workflow", failureWFId);
 
 			} catch (Exception e) {
@@ -1046,6 +1068,7 @@ public class WorkflowExecutor {
 		if (wf.getStatus().isTerminal()) {
 			// Workflow is in terminal state
 			queue.remove(deciderQueue, wf.getWorkflowId());	//remove from the sweep queue
+			queue.remove(sweeperQueue, wf.getWorkflowId());
 			queue.remove(QueueUtils.getQueueName(task), result.getTaskId());
 			if(!task.getStatus().isTerminal()) {
 				task.setStatus(Status.COMPLETED);
@@ -1094,6 +1117,7 @@ public class WorkflowExecutor {
 		if (task.isTerminal()) {
 			MetricService.getInstance().taskComplete(task.getTaskType(),
 				task.getReferenceTaskName(),
+				task.getTaskDefName(),
 				task.getStatus().name(),
 				task.getStartTime());
 		}
@@ -1124,7 +1148,7 @@ public class WorkflowExecutor {
 				// put it back in queue based in callbackAfterSeconds
 				long callBack = result.getCallbackAfterSeconds();
 				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
-				queue.push(QueueUtils.getQueueName(task), task.getTaskId(), callBack); // Milliseconds
+				queue.push(QueueUtils.getQueueName(task), task.getTaskId(), callBack, wf.getJobPriority()); // Milliseconds
 				break;
 			default:
 				break;
@@ -1137,13 +1161,13 @@ public class WorkflowExecutor {
 
 		// Who calls decider ? Sweeper or current thread?
 		if (lazyDecider) {
-			wakeUpSweeper(workflowId);
+			wakeUpSweeper(workflowId, wf.getJobPriority());
 		} else {
 			decide(workflowId);
 		}
 	}
 
-	private void wakeUpSweeper(String workflowId) {
+	private void wakeUpSweeper(String workflowId, int priority) {
 		boolean active = queue.exists(WorkflowExecutor.sweeperQueue, workflowId);
 		if (active) {
 			logger.debug("wakeUpSweeper. Sweeper in progress for " + workflowId);
@@ -1163,7 +1187,7 @@ public class WorkflowExecutor {
 		}
 
 		// Otherwise wake it up by unacking message via queue
-		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId);
+		boolean result = queue.wakeup(WorkflowExecutor.deciderQueue, workflowId, priority);
 		logger.debug("wakeUpSweeper " + result + " for " + workflowId);
 	}
 
@@ -1201,6 +1225,7 @@ public class WorkflowExecutor {
 	 * @throws Exception If there was an error - caller should retry in this case.
 	 */
 	public Pair<Boolean, Integer> decide(String workflowId) throws Exception {
+		logger.debug("Invoked decide for workflow " + workflowId);
 		if (workflowId == null || workflowId.isEmpty()) {
 			logger.error("ONECOND-1106: Invoked decide() with an empty or null Workflow ID");
 			return Pair.of(false, config.getSweepFrequency());
@@ -1249,8 +1274,12 @@ public class WorkflowExecutor {
 
 			if(!outcome.tasksToBeUpdated.isEmpty() || !outcome.tasksToBeScheduled.isEmpty()) {
 				edao.updateTasks(tasksToBeUpdated);
+				boolean shallResetTags = tasksToBeUpdated.stream().anyMatch(t -> t.isTerminal() && t.shallResetTags());
+				if (shallResetTags) {
+					workflow.setResetTags(true);
+				}
 				edao.updateWorkflow(workflow);
-				queue.push(deciderQueue, workflow.getWorkflowId(), sweepFrequency);
+				queue.push(deciderQueue, workflow.getWorkflowId(), sweepFrequency, workflow.getJobPriority());
 			}
 
 			if(stateChanged) {
@@ -1370,17 +1399,17 @@ public class WorkflowExecutor {
 		return edao.getTask(workflowId, taskRefName);
 	}
 
-	public void addTaskToQueue(Task task) throws Exception {
+	public void addTaskToQueue(Task task, int priority) throws Exception {
 		// put in queue
 		queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
-		pushTaskToQueue(task);
+		pushTaskToQueue(task, priority);
 	}
 
-	public void pushTaskToQueue(Task task) throws Exception {
+	public void pushTaskToQueue(Task task, int priority) throws Exception {
 		if (task.getCallbackAfterSeconds() > 0) {
-			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), task.getCallbackAfterSeconds());
+			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), task.getCallbackAfterSeconds(), priority);
 		} else {
-			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), 0);
+			queue.push(QueueUtils.getQueueName(task), task.getTaskId(), 0, priority);
 		}
 	}
 
@@ -1400,18 +1429,19 @@ public class WorkflowExecutor {
 	//Executes the async system task
 	public void executeSystemTask(WorkflowSystemTask systemTask, String taskId, int callbackSeconds) {
 		try {
-			logger.debug("Executing async taskId={}, callbackSeconds={}, unackTimeout={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
+			logger.debug("Executing async taskId={}, callbackSeconds={}, retryTimeIn={}", taskId, callbackSeconds, systemTask.getRetryTimeInSecond());
 
 			Task task = edao.getTask(taskId);
 			if (task == null) {
 				logger.debug("No task found for task id = " + taskId + ". System task is " + systemTask);
 				return;
 			}
+			String queueName = QueueUtils.getQueueName(task);
 
 			if (task.getStatus().isTerminal()) {
 				//Tune the SystemTaskWorkerCoordinator's queues - if the queue size is very big this can happen!
 				logger.debug("Task {}/{} was already completed.", task.getTaskType(), task.getTaskId());
-				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				queue.remove(queueName, task.getTaskId());
 				return;
 			}
 
@@ -1424,24 +1454,26 @@ public class WorkflowExecutor {
 					task.setStatus(Status.CANCELED);
 				}
 				edao.updateTask(task);
-				queue.remove(QueueUtils.getQueueName(task), task.getTaskId());
+				queue.remove(queueName, task.getTaskId());
 				taskStatusListener.onTaskFinished(task);
 				return;
 			}
 
 			if (task.getStatus().equals(Status.SCHEDULED)) {
+				String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unpop.offset";
+				int unpopOffset = config.getIntProperty(propName, 30);
 
 				if (edao.exceedsInProgressLimit(task)) {
-					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
-					logger.debug("Concurrent Execution limited for {}:{}", taskId, task.getTaskDefName());
-					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
+					logger.debug("Concurrent Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
 					return;
 				}
 
 				if (edao.exceedsRateLimitPerFrequency(task)) {
-					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName());
-					logger.debug("RateLimit Execution limited for {}:{}", taskId, task.getTaskDefName());
-					queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+					MetricService.getInstance().taskRateLimited(task.getTaskType(), task.getReferenceTaskName(), task.getTaskDefName());
+					logger.debug("RateLimit Execution limited for {}:{}:{}", task.getReferenceTaskName(), task.getTaskDefName(), taskId);
+					queue.unpop(queueName, task.getTaskId(), unpopOffset * 1000L);
 					return;
 				}
 			}
@@ -1450,31 +1482,35 @@ public class WorkflowExecutor {
 			boolean exists = queue.exists(WorkflowExecutor.deciderQueue, workflowId);
 			if (!exists) {
 				// If not exists then need place back
-				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency());
+				queue.pushIfNotExists(WorkflowExecutor.deciderQueue, workflowId, config.getSweepFrequency(), workflow.getJobPriority());
 			}
 
 			logger.debug("Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
-				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(),
+				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(),
 				workflow.getCorrelationId(), workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
-			queue.setUnackTimeout(QueueUtils.getQueueName(task), task.getTaskId(), systemTask.getRetryTimeInSecond() * 1000L);
+			String propName = "workflow.system.task." + task.getTaskDefName().toLowerCase() + ".unack.timeout";
+			int unackTimeout = config.getIntProperty(propName, systemTask.getRetryTimeInSecond());
+
+			queue.setUnackTimeout(queueName, task.getTaskId(), unackTimeout * 1000L);
 			task.setStarted(true);
 			if (task.getStartTime() == 0) {
 				task.setStartTime(System.currentTimeMillis());
 			}
 			task.setPollCount(task.getPollCount() + 1);
+			edao.updateTask(task);
 
 			// Metrics
 			MetricService.getInstance().taskWait(task.getTaskType(),
 				task.getReferenceTaskName(),
+				task.getTaskDefName(),
 				task.getQueueWaitTime());
-
-			edao.updateTask(task);
 
 			switch (task.getStatus()) {
 
 				case SCHEDULED:
 					try {
+						edao.updateInProgressStatus(task);
 						taskStatusListener.onTaskStarted(task);
 						systemTask.start(workflow, task, this);
 					} catch (Exception ex) {
@@ -1497,7 +1533,7 @@ public class WorkflowExecutor {
 
 			updateTask(new TaskResult(task));
 			logger.debug("Done Executing {}/{}-{} for workflowId={},correlationId={},traceId={},contextUser={},clientId={}",
-				task.getTaskType(), task.getTaskId(), task.getStatus(), workflow.getWorkflowId(), workflow.getCorrelationId(),
+				task.getTaskType(), task.getReferenceTaskName(), task.getTaskId(), workflow.getWorkflowId(), workflow.getCorrelationId(),
 				workflow.getTraceId(), workflow.getContextUser(), workflow.getClientId());
 
 		} catch (Exception e) {
@@ -1599,7 +1635,7 @@ public class WorkflowExecutor {
 
 			// This prevents another containers executing the same action
 			// true means this session added the record to lock queue and can start the task
-			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600); // 10 minutes
+			boolean locked = queue.pushIfNotExists(lockQueue, task.getTaskId(), 600, workflow.getJobPriority()); // 10 minutes
 
 			// This session couldn't lock the task (cluster pooling)
 			if (!locked) {
@@ -1617,7 +1653,7 @@ public class WorkflowExecutor {
 						logger.debug("queueing stuck task " + task +
 							".workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() +
 							",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser());
-						pushTaskToQueue(task);
+						pushTaskToQueue(task, workflow.getJobPriority());
 					}
 				} else {
 					logger.debug("starting stuck task " + task +
@@ -1645,7 +1681,7 @@ public class WorkflowExecutor {
 				toBeQueued.add(task);
 			}
 		}
-		addTaskToQueue(toBeQueued);
+		addTaskToQueue(toBeQueued, workflow.getJobPriority());
 		return startedSystemTasks;
 	}
 
@@ -1662,9 +1698,9 @@ public class WorkflowExecutor {
 		}
 	}
 
-	private void addTaskToQueue(final List<Task> tasks) throws Exception {
+	private void addTaskToQueue(final List<Task> tasks, int priority) throws Exception {
 		for (Task t : tasks) {
-			pushTaskToQueue(t);
+			pushTaskToQueue(t, priority);
 		}
 	}
 
@@ -2030,5 +2066,16 @@ public class WorkflowExecutor {
 			logger.debug("workflowId" + workflowId + ", failed in resumeSubWorkflow with " + e.getMessage(), e);
 			e.printStackTrace();
 		}
+	}
+
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) throws Exception {
+		if ( jobId == null && workflowId == null){
+			throw new ApplicationException(Code.INVALID_INPUT, "Either Job Id or Workflow Id should be passed.");
+		}
+		if ( taskName == null){
+			throw new ApplicationException(Code.INVALID_INPUT, "Task Name is a required parameter.");
+		}
+		List<TaskDetails> taskDetails = edao.searchTaskDetails(jobId, workflowId, workflowType, taskName, includeOutput);
+		return taskDetails;
 	}
 }

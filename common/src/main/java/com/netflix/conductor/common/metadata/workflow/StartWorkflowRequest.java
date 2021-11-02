@@ -7,6 +7,7 @@ public class StartWorkflowRequest {
 	private String name;
 	private Integer version;
 	private String correlationId;
+	private Integer jobPriority;
 	private Map<String, Object> input = new HashMap<>();
 	private Map<String, String> taskToDomain = new HashMap<>();
 	
@@ -58,6 +59,16 @@ public class StartWorkflowRequest {
 	}
 	public StartWorkflowRequest withTaskToDomain(Map<String, String> taskToDomain) {
 		this.taskToDomain = taskToDomain;
+		return this;
+	}
+	public Integer getJobPriority() {
+		return jobPriority;
+	}
+	public void setJobPriority(Integer jobPriority) {
+		this.jobPriority = jobPriority;
+	}
+	public StartWorkflowRequest withJobPriority(Integer jobPriority) {
+		this.jobPriority = jobPriority;
 		return this;
 	}
 	

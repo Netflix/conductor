@@ -127,7 +127,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 				return;
 			}
 
-			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow), getJobPriority(workflow));
+			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow), workflow.getJobPriority());
 		} catch (Exception ex) {
 			logger.debug("Unable to notify workflow status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
@@ -160,7 +160,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			// Feed preProcessed map as defaults so that already processed for JQ engine
 			Map<String, Map<String, Object>> defaults = Collections.singletonMap("defaults", preProcess);
 			Map<String, Object> doc = pu.getTaskInputV2(eventMap, defaults, workflow, task.getTaskId(), null, null);
-			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow), getJobPriority(workflow));
+			sendMessage(doc, workflow.getTraceId(), getJMSXGroupId(workflow), workflow.getJobPriority());
 		} catch (Exception ex) {
 			logger.debug("Unable to notify task status " + state.name() + ", failed with " + ex.getMessage(), ex);
 			throw new RuntimeException(ex.getMessage(), ex);
@@ -229,15 +229,6 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 			}
 		}
 		return jmsxGroupId;
-	}
-
-	private int getJobPriority(Workflow workflow){
-		String priority = Objects.toString(workflow.getInput().get("jobPriority"), null);
-
-		if ( StringUtils.isNotEmpty(priority)){
-			return Integer.parseInt(priority);
-		}
-		return 5;
 	}
 
 	private String getJobId(String correlationId) {

@@ -545,6 +545,13 @@ public class Task {
 		this.started = started;
 	}
 
+	public boolean shallResetTags() {
+		if (workflowTask != null && workflowTask.getResetTags() != null) {
+			return workflowTask.getResetTags();
+		}
+		return false;
+	}
+
 	public boolean isTerminal() {
 		return status != null && status.isTerminal();
 	}

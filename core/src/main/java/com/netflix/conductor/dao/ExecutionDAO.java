@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.events.queue.Message;
 
 import java.util.Collections;
@@ -99,6 +100,14 @@ public interface ExecutionDAO {
 	 *  
 	 */
 	public abstract void updateTasks(List<Task> tasks);
+
+	/**
+	 * Sets the in progress flag for the task
+	 *
+	 * @param task The task to set flag for
+	 */
+	default void updateInProgressStatus(Task task) {
+	}
 
 	/**
 	 * 
@@ -314,4 +323,10 @@ public interface ExecutionDAO {
 	public default void removeTask(Task task) {
 		throw new IllegalStateException("Not implemented");
 	}
+
+	public default void setWorkflowAttribute(String workflowId, String name, Object value) {
+		throw new IllegalStateException("Not implemented");
+	}
+
+	public abstract List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput);
 }

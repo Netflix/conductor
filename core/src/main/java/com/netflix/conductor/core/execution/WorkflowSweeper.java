@@ -43,13 +43,10 @@ import org.apache.commons.lang3.tuple.Pair;
 public class WorkflowSweeper {
 
     private static Logger logger = LoggerFactory.getLogger(WorkflowSweeper.class);
-
+    private ScheduledExecutorService deciderPool;
     private ExecutorService es;
-
     private Configuration config;
-
     private QueueDAO queues;
-
     private int executorThreadPoolSize;
     private long sweeperFrequency;
     private int poolTimeout;
@@ -70,7 +67,6 @@ public class WorkflowSweeper {
         } else {
             logger.warn("Workflow sweeper is DISABLED");
         }
-
     }
 
     public void init(WorkflowExecutor executor) {
@@ -80,7 +76,7 @@ public class WorkflowSweeper {
             return;
         }
 
-        ScheduledExecutorService deciderPool = Executors.newScheduledThreadPool(1);
+        deciderPool = Executors.newScheduledThreadPool(1);
         deciderPool.scheduleWithFixedDelay(() -> {
             try {
                 List<String> workflowIds = queues.pop(WorkflowExecutor.deciderQueue, 2 * executorThreadPoolSize, poolTimeout);
@@ -89,6 +85,27 @@ public class WorkflowSweeper {
                 logger.debug("Workflow sweep failed " + e.getMessage(), e);
             }
         }, 500, sweeperFrequency, TimeUnit.MILLISECONDS);
+    }
+
+    public void shutdown() {
+        try {
+            if (deciderPool != null) {
+                logger.info("Closing workflow sweeper decider pool");
+                deciderPool.shutdown();
+                deciderPool.awaitTermination(5, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            logger.debug("Closing decider pool failed " + e.getMessage(), e);
+        }
+        try {
+            if (es != null) {
+                logger.info("Closing workflow sweeper executor pool");
+                es.shutdown();
+                es.awaitTermination(5, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            logger.debug("Closing executor pool failed " + e.getMessage(), e);
+        }
     }
 
     public void sweep(List<String> workflowIds, WorkflowExecutor executor) throws Exception {
@@ -105,7 +122,7 @@ public class WorkflowSweeper {
                     if (logger.isDebugEnabled()) {
                         logger.debug("Running sweeper for workflow {}", workflowId);
                     }
-                    queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0);
+                    queues.push(WorkflowExecutor.sweeperQueue, workflowId, 0, 0); // For sweeper queue 0 priority is fine
                     Pair<Boolean, Integer> result = executor.decide(workflowId);
                     if (!result.getLeft()) {
                         if (logger.isDebugEnabled()) {

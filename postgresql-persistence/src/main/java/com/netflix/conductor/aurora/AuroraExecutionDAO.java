@@ -10,6 +10,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
@@ -20,6 +21,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.sql.Timestamp;
 import java.util.stream.Collectors;
 
 public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
@@ -138,21 +140,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		long current = getInProgressTaskCount(task.getTaskDefName());
 		if (current >= limit) {
+			logger.debug("Task execution count limited(case1). {}, limit {}, current {}", task.getTaskDefName(), limit, current);
 			return true;
 		}
-
-		logger.debug("Task execution count for {}: limit={}, current={}", task.getTaskDefName(), limit, current);
-
-		String SQL = "SELECT task_id FROM task_in_progress WHERE task_def_name = ? ORDER BY id LIMIT ?";
-		List<String> taskIds = queryWithTransaction(SQL,
-			q -> q.addParameter(task.getTaskDefName()).addParameter(limit).executeScalarList(String.class));
-
-		boolean rateLimited = !taskIds.contains(task.getTaskId());
-		if (rateLimited) {
-			logger.debug("Task execution count limited. {}, limit {}, current {}", task.getTaskDefName(), limit, current);
-		}
-
-		return rateLimited;
+		return false;
 	}
 
 	@Override
@@ -207,6 +198,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		logger.debug("Task: {} with rateLimitPerFrequency: {} and rateLimitFrequencyInSeconds: {} is out of bounds of rate limit with current count {}",
 			task, rateLimitPerFrequency, rateLimitFrequencyInSeconds, currentBucketCount);
 		return true;
+	}
+
+	@Override
+	public void updateInProgressStatus(Task task) {
+		withTransaction(tx -> updateInProgressStatus(tx, task));
 	}
 
 	@Override
@@ -462,7 +458,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	 */
 	@Override
 	public boolean anyRunningWorkflowsByTags(Set<String> tags) {
-		String SQL = "SELECT COUNT(*) FROM workflow WHERE workflow_status = 'RUNNING' AND tags && ?";
+		String SQL = "SELECT COUNT(*) FROM workflow WHERE workflow_status IN ('RUNNING','RESET','PAUSED') AND tags && ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(tags).executeScalar(Long.class) > 0);
 	}
 
@@ -480,6 +476,20 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			.addJsonParameter(payload)
 			.addParameter(task.getTaskId())
 			.executeUpdate());
+	}
+
+	@Override
+	public void setWorkflowAttribute(String workflowId, String name, Object value) {
+		Map<String, Object> payload = new HashMap<>();
+		payload.put(name, value);
+
+		String SQL = "UPDATE workflow " +
+				"SET json_data=jsonb_set(json_data::jsonb, '{attributes}', coalesce(json_data::jsonb->'attributes','{}')::jsonb || ?::jsonb)::text " +
+				"WHERE workflow_id = ?";
+		executeWithTransaction(SQL, q -> q
+				.addJsonParameter(payload)
+				.addParameter(workflowId)
+				.executeUpdate());
 	}
 
 	private List<String> getRunningWorkflowIds(Connection tx, String workflowName) {
@@ -541,7 +551,9 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		TaskDef taskDef = metadata.getTaskDef(task.getTaskDefName());
 		if (taskDef != null && taskDef.concurrencyLimit() > 0) {
-			updateInProgressStatus(tx, task);
+			if (Task.Status.IN_PROGRESS.equals(task.getStatus())) {
+				updateInProgressStatus(tx, task);
+			}
 		}
 
 		if (update) {
@@ -573,7 +585,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				.executeUpdate());
 		}
 
-		if (task.getStatus() != null && task.getStatus().isTerminal()) {
+		if (task.isTerminal()) {
 			removeTaskInProgress(tx, task);
 		}
 	}
@@ -624,7 +636,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 		// We must not delete tags for RESET as it must be restarted right away
 		Set<String> tags;
-		if (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET) {
+		if (workflow.getResetTags() || (workflow.getStatus().isTerminal() && workflow.getStatus() != Workflow.WorkflowStatus.RESET)) {
 			tags = Collections.emptySet();
 		} else {
 			tags = workflow.getTags();
@@ -670,13 +682,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	private void updateInProgressStatus(Connection tx, Task task) {
-		boolean inProgress = Task.Status.IN_PROGRESS.equals(task.getStatus());
-
-		String SQL = "UPDATE task_in_progress SET in_progress = ?, modified_on = now() "
+		String SQL = "UPDATE task_in_progress SET in_progress = true, modified_on = now() "
 			+ "WHERE task_def_name = ? AND task_id = ?";
 
-		execute(tx, SQL, q -> q.addParameter(inProgress)
-			.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
+		execute(tx, SQL, q -> q.addParameter(task.getTaskDefName()).addParameter(task.getTaskId()).executeUpdate());
 	}
 
 	private void removeScheduledTask(Connection tx, Task task, String taskKey) {
@@ -764,4 +773,65 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		String SQL = "SELECT json_data FROM poll_data WHERE queue_name = ?";
 		return queryWithTransaction(SQL, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
 	}
+
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) {
+		StringBuilder SQL = new StringBuilder("select t.task_refname as task_refname, t.task_status as task_status, t.input as input, t.output as output, t.task_id as task_id, w.workflow_id as workflow_id, w.correlation_id as correlation_id, w.workflow_status as workflow_status from task t, workflow w where w.workflow_id = t.workflow_id ");
+		LinkedList<Object> params = new LinkedList<>();
+		if (workflowId != null) {
+			SQL.append("AND w.workflow_id = ? ");
+			params.add(workflowId);
+		}else if (jobId != null) {
+			SQL.append("AND w.correlation_id ilike ? ");
+			params.add("%jobId:" + jobId + "%");
+		}else{
+			return new ArrayList<TaskDetails>();
+		}
+
+		if (workflowType != null) {
+			SQL.append("AND w.workflow_type ilike ? ");
+			params.add("%" + workflowType + "%");
+		}
+		if (taskName != null) {
+			SQL.append("AND t.task_refname ilike ? ");
+			params.add("%" + taskName + "%");
+		}
+
+		return queryWithTransaction(SQL.toString(), q -> {
+			params.forEach(p -> {
+				if (p instanceof Timestamp) {
+					q.addParameter((Timestamp) p);
+				} else if (p instanceof List) {
+					q.addParameter((Collection<String>) p);
+				} else if (p instanceof String) {
+					q.addParameter((String) p);
+				} else if (p instanceof Long) {
+					q.addParameter((Long) p);
+				}
+			});
+
+
+			return q.executeAndFetch(rs -> {
+				List<TaskDetails> TaskDetailsList = new LinkedList<>();
+				while (rs.next()) {
+					TaskDetails taskDetails = new TaskDetails();
+
+					taskDetails.setWorkflowStatus(rs.getString("workflow_status"));
+					taskDetails.setWorkflowId(rs.getString("workflow_id"));
+					taskDetails.setCorrelationId(rs.getString("correlation_id"));
+					taskDetails.setTaskId(rs.getString("task_id"));
+					taskDetails.setTaskInput(rs.getString("input"));
+					if (includeOutput) {
+						taskDetails.setTaskOutput(rs.getString("output"));
+					}
+					taskDetails.setTaskStatus(rs.getString("task_status"));
+					TaskDetailsList.add(taskDetails);
+				}
+
+				return TaskDetailsList;
+			});
+		});
+	}
+
+
+
 }

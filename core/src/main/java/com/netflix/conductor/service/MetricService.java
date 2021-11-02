@@ -33,10 +33,10 @@ public class MetricService {
 
 		String tld = System.getenv("TLD");
 		statsd = new NonBlockingStatsDClientBuilder()
-			.constantTags("environment:" + stack, "container:" + container, "alloc_id:" + allocId)
-			.hostname("datadog.service." + tld)
-			.port(8125)
-			.build();
+				.constantTags("environment:" + stack, "container:" + container, "alloc_id:" + allocId)
+				.hostname("datadog.service." + tld)
+				.port(8125)
+				.build();
 	}
 
 	private String getHostName() {
@@ -93,11 +93,24 @@ public class MetricService {
 		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
 	}
 
-	public void taskWait(String taskType, String refName, Long waitTime) {
+	public void serviceDiscovery(String serviceName, Long time) {
+		Set<String> tagsCounter = new HashSet<>();
+		tagsCounter.add("metric:deluxe.conductor.service.discovery");
+		tagsCounter.add("service:" + serviceName);
+		statsd.incrementCounter(aspect, toArray(tagsCounter));
+
+		Set<String> tagsTimer = new HashSet<>();
+		tagsTimer.add("metric:deluxe.conductor.service.discovery.time");
+		tagsTimer.add("service:" + serviceName);
+		statsd.recordExecutionTime(aspect, time, toArray(tagsTimer));
+	}
+
+	public void taskWait(String taskType, String refName, String defName, Long waitTime) {
 		Set<String> tags = new HashSet<>();
 		tags.add("metric:deluxe.conductor.task.queue.wait.time");
 		tags.add("task_type:" + taskType);
 		tags.add("ref_name:" + refName);
+		tags.add("def_name:" + defName);
 		statsd.recordExecutionTime(aspect, waitTime, toArray(tags));
 	}
 
@@ -109,19 +122,67 @@ public class MetricService {
 		statsd.incrementCounter(aspect, toArray(tags));
 	}
 
-	public void taskRateLimited(String taskType, String refName) {
+	public void taskRateLimited(String taskType, String refName, String defName) {
 		Set<String> tags = new HashSet<>();
 		tags.add("metric:deluxe.conductor.task.rate.limit");
 		tags.add("task_type:" + taskType);
 		tags.add("ref_name:" + refName);
+		tags.add("def_name:" + defName);
 		statsd.incrementCounter(aspect, toArray(tags));
 	}
 
-	public void taskComplete(String taskType, String refName, String status, long startTime) {
+	public void httpStarted(String taskType, String refName, String defName, String service) {
+		Set<String> tagsCounter = new HashSet<>();
+		tagsCounter.add("metric:deluxe.conductor.http.started");
+		tagsCounter.add("task_type:" + taskType);
+		tagsCounter.add("ref_name:" + refName);
+		tagsCounter.add("def_name:" + defName);
+		tagsCounter.add("service:" + service);
+		statsd.incrementCounter(aspect, toArray(tagsCounter));
+	}
+
+	public void httpComplete(String taskType, String refName, String defName, String service, long execTime) {
+		Set<String> tagsCounter = new HashSet<>();
+		tagsCounter.add("metric:deluxe.conductor.http.complete");
+		tagsCounter.add("task_type:" + taskType);
+		tagsCounter.add("ref_name:" + refName);
+		tagsCounter.add("def_name:" + defName);
+		tagsCounter.add("service:" + service);
+		statsd.incrementCounter(aspect, toArray(tagsCounter));
+
+		Set<String> tagsTime = new HashSet<>();
+		tagsTime.add("metric:deluxe.conductor.http.complete.time");
+		tagsTime.add("task_type:" + taskType);
+		tagsTime.add("ref_name:" + refName);
+		tagsTime.add("def_name:" + defName);
+		tagsTime.add("service:" + service);
+		statsd.recordExecutionTime(aspect, execTime, toArray(tagsTime));
+	}
+
+	public void httpFailed(String taskType, String refName, String defName, String service, long execTime) {
+		Set<String> tagsCounter = new HashSet<>();
+		tagsCounter.add("metric:deluxe.conductor.http.failure");
+		tagsCounter.add("task_type:" + taskType);
+		tagsCounter.add("ref_name:" + refName);
+		tagsCounter.add("def_name:" + defName);
+		tagsCounter.add("service:" + service);
+		statsd.incrementCounter(aspect, toArray(tagsCounter));
+
+		Set<String> tagsTime = new HashSet<>();
+		tagsTime.add("metric:deluxe.conductor.http.failure.time");
+		tagsTime.add("task_type:" + taskType);
+		tagsTime.add("ref_name:" + refName);
+		tagsTime.add("def_name:" + defName);
+		tagsTime.add("service:" + service);
+		statsd.recordExecutionTime(aspect, execTime, toArray(tagsTime));
+	}
+
+	public void taskComplete(String taskType, String refName, String defName, String status, long startTime) {
 		Set<String> tagsCounter = new HashSet<>();
 		tagsCounter.add("metric:deluxe.conductor.task.complete");
 		tagsCounter.add("task_type:" + taskType);
 		tagsCounter.add("ref_name:" + refName);
+		tagsCounter.add("def_name:" + defName);
 		tagsCounter.add("status:" + status);
 		statsd.incrementCounter(aspect, toArray(tagsCounter));
 
@@ -129,6 +190,7 @@ public class MetricService {
 		tagsTime.add("metric:deluxe.conductor.task.complete.time");
 		tagsTime.add("task_type:" + taskType);
 		tagsTime.add("ref_name:" + refName);
+		tagsTime.add("def_name:" + defName);
 		long execTime = System.currentTimeMillis() - startTime;
 		statsd.recordExecutionTime(aspect, execTime, toArray(tagsTime));
 	}
@@ -325,27 +387,35 @@ public class MetricService {
 		statsd.recordExecutionTime(aspect, execTime, toArray(tagsTime));
 	}
 
-	public void queueGauge(String queue, Long count) {
-		Set<String> tagsCounter = new HashSet<>();
-		tagsCounter.add("metric:deluxe.conductor.queue.count");
-		tagsCounter.add("queue:" + queue);
-		statsd.incrementCounter(aspect, toArray(tagsCounter));
-		
+	public void queueDepth(String queue, Long count) {
 		Set<String> tagsGauge = new HashSet<>();
 		tagsGauge.add("metric:deluxe.conductor.queue.gauge");
 		tagsGauge.add("queue:" + queue);
 		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
 	}
 
-	public void workflowGauge(String workflow, Long count) {
-		Set<String> tagsCounter = new HashSet<>();
-		tagsCounter.add("metric:deluxe.conductor.workflow.running.count");
-		tagsCounter.add("workflow:" + workflow);
-		statsd.incrementCounter(aspect, toArray(tagsCounter));
-
+	public void httpQueueDepth(String refName, String defName, String serviceName, Long count) {
 		Set<String> tagsGauge = new HashSet<>();
-		tagsGauge.add("metric:deluxe.conductor.workflow.running.gauge");
+		tagsGauge.add("metric:deluxe.conductor.queue.http.gauge");
+		tagsGauge.add("ref_name:" + refName);
+		tagsGauge.add("def_name:" + defName);
+		tagsGauge.add("service:" + serviceName);
+		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
+	}
+
+	public void deciderQueueDepth(String workflow, Long count) {
+		Set<String> tagsGauge = new HashSet<>();
+		tagsGauge.add("metric:deluxe.conductor.queue.decider.gauge");
 		tagsGauge.add("workflow:" + workflow);
+		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
+	}
+
+	public void httpRunningGauge(String refName, String defName, String serviceName, Long count) {
+		Set<String> tagsGauge = new HashSet<>();
+		tagsGauge.add("metric:deluxe.conductor.http.running.gauge");
+		tagsGauge.add("ref_name:" + refName);
+		tagsGauge.add("def_name:" + defName);
+		tagsGauge.add("service:" + serviceName);
 		statsd.recordGaugeValue(aspect, count, toArray(tagsGauge));
 	}
 }

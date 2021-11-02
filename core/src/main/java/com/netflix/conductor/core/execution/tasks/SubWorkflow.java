@@ -69,13 +69,22 @@ public class SubWorkflow extends WorkflowSystemTask {
 		}
 		String correlationId = workflow.getCorrelationId();
 
+		int jobPriority = workflow.getJobPriority();
+		Object priority = wfInput.get("jobPriority"); // Backward compatible
+		if (priority instanceof String) {
+			jobPriority = Integer.parseInt((String) priority);
+		} else if (priority instanceof Integer) {
+			jobPriority = (Integer)priority;
+		}
+
 		try {
 
 			String subWorkflowId = provider.startWorkflow(name, version, wfInput, correlationId,
 				workflow.getWorkflowId(), task.getTaskId(), null,
 				workflow.getTaskToDomain(), workflow.getWorkflowIds(),
 				workflow.getAuthorization(), workflow.getContextToken(),
-				workflow.getContextUser(), workflow.getTraceId(), async);
+				workflow.getContextUser(), workflow.getTraceId(), async,
+				jobPriority);
 
 			task.getOutputData().put("subWorkflowId", subWorkflowId);
 			task.getInputData().put("subWorkflowId", subWorkflowId);
@@ -102,6 +111,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		Workflow subWorkflow = provider.getWorkflow(workflowId, false);
 		WorkflowStatus subWorkflowStatus = subWorkflow.getStatus();
 		if (!subWorkflowStatus.isTerminal()) {
+			logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " seems still running");
 			return false;
 		}
 
@@ -110,20 +120,24 @@ public class SubWorkflow extends WorkflowSystemTask {
 			logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " has been reset");
 			return handleRestart(subWorkflow, task, param, provider);
 		} else if (subWorkflowStatus.isSuccessful()) {
+			logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " is successful (" + subWorkflowStatus.name() + ")");
 			task.setStatus(Status.COMPLETED);
 			task.setReasonForIncompletion(null);
 		} else if (subWorkflowStatus == WorkflowStatus.CANCELLED) {
+			logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " has been cancelled");
 			task.setStatus(Status.CANCELED);
 			task.setReasonForIncompletion(defaultIfEmpty(subWorkflow.getReasonForIncompletion(), "Sub-workflow " + task.getReferenceTaskName() + " has been cancelled"));
 			task.getOutputData().put("originalFailedTask", subWorkflow.getOutput().get("originalFailedTask"));
 			task.getOutputData().put("cancelledBy", subWorkflow.getCancelledBy());
 			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else if (subWorkflowStatus == WorkflowStatus.TERMINATED) {
+			logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " has been terminated");
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(defaultIfEmpty(subWorkflow.getReasonForIncompletion(), "Sub-workflow " + task.getReferenceTaskName() + " has been terminated"));
 			task.getOutputData().put("originalFailedTask", subWorkflow.getOutput().get("originalFailedTask"));
 			workflow.getOutput().put(SUPPRESS_RESTART_PARAMETER, true);
 		} else if (isSuppressRestart(subWorkflow)) {
+			logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " has been failed (suppress restart mode)");
 			task.setStatus(Status.FAILED);
 			task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
 			task.getOutputData().put("originalFailedTask", subWorkflow.getOutput().get("originalFailedTask"));
@@ -145,6 +159,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
 				return false;
 			} else {
+				logger.debug("The sub-workflow " + subWorkflow.getWorkflowId() + " has been failed (no stand by on fail)");
 				task.setStatus(Status.FAILED);
 				task.setReasonForIncompletion(subWorkflow.getReasonForIncompletion());
 				task.getOutputData().put("originalFailedTask", subWorkflow.getOutput().get("originalFailedTask"));
@@ -231,6 +246,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 	}
 
 	private boolean handleRestart(Workflow subWorkflow, Task task, SubWorkflowParams param, WorkflowExecutor provider) {
+		logger.debug("handleRestart invoked for sub-workflow=" + subWorkflow.getWorkflowId());
+
 		Integer restarted = subWorkflow.getRestartCount();
 
 		Integer restartsAllowed = param.getRestartCount();
@@ -334,7 +351,8 @@ public class SubWorkflow extends WorkflowSystemTask {
 				workflow.getWorkflowId(), task.getTaskId(), null,
 				workflow.getTaskToDomain(), workflow.getWorkflowIds(),
 				workflow.getAuthorization(), workflow.getContextToken(),
-				workflow.getContextUser(), workflow.getTraceId(), true);
+				workflow.getContextUser(), workflow.getTraceId(), true,
+				workflow.getJobPriority());
 
 			task.getOutputData().put("rerunWorkflowId", rerunWorkflowId);
 

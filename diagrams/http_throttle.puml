@@ -1,0 +1,111 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "Async(HTTP) \nQueue Poller" as hqp
+participant "Workflow \nExecutor" as wfe
+participant "Execution DAO\n(Runtime Data)" as edao
+participant "Task Definition \n(Metadata)" as tdf
+participant "HTTP Task\nTask Implementation" as http
+
+hqp -> hqp: Picks task ids \nfrom http queue
+loop For all picked task ids
+hqp -> wfe: Calls executeSystemTask (<task id>)
+wfe -> edao: Reads the task by given id
+wfe <-- edao: The task
+wfe -> wfe: Determines **unpopOffset**
+note over wfe
+**unpopOffset** is the number of seconds to defer task
+back to queue upon throttling execution
+
+Determined by reading vault configuration.
+Default **30 seconds** if no configuration
+defined per task definition name
+end note
+wfe -> wfe: Determines **task definition name** (e.g. <font color=red><b>http_assetreg)
+
+note over wfe
+Each task **optionally** has definition in the system.
+If defined, it will have these options (among others):
+c1) concurrentExecLimit - How many concurrent execution per task definition in the system
+c2) rateLimitPerFrequency - How many concurrent execution per time window period
+c3) rateLimitFrequencyInSeconds - Defines number of seconds for the time window period
+
+**c1** has precedence over **c2/c3**. **c2** and **c3** always work in conjunction
+end note
+
+wfe -> edao: Calls **exceedsInProgressLimit**(<task>)
+activate wfe
+
+edao -> tdf: Gets task definition by name
+edao <-- tdf: Task definition
+edao -> edao: Checks task definition
+wfe <-- edao: Returns **false** (not throttled) \nif **no task definition** in the system \nor **concurrentExecLimit is 0**
+edao -> edao: Gets the number of **in_progress** tasks \nper task definition name in the system
+note over edao
+Reads **task_in_progress** table
+end note
+
+wfe <-- edao: Returns **true** (shall throttle) \nif number exceeds **concurrentExecLimit**
+deactivate wfe
+
+wfe -> wfe: Is above result **false** (not throttled) ?
+activate wfe
+wfe -> edao: Calls **exceedsRateLimitPerFrequency**(<task>)
+edao -> tdf: Gets task definition by name
+edao <-- tdf: Task definition
+edao -> edao: Checks task definition
+wfe <-- edao: Returns **false** (not throttled) \nif **no task definition** in the system \nor **rateLimitPerFrequency is 0** \nor **rateLimitFrequencyInSeconds is 0**
+edao -> edao: Determines start of **window period**
+note over edao
+Start Window Period:
+**Current Time** - **rateLimitFrequencyInSeconds**
+end note
+
+edao -> edao: Gets the number of tasks per \ntask definition name in the system \ntheir start time between **Start Window Period** \nand **Current Time**
+note over edao
+Reads **task_rate_limit** table
+end note
+
+wfe <-- edao: Returns **true** (shall throttle) \nif number exceeds **rateLimitPerFrequency**
+deactivate wfe
+
+newpage
+wfe -> wfe: Determines whether the task shall be throttled
+note over wfe
+Either by result of :
+- **exceedsInProgressLimit**
+- **exceedsRateLimitPerFrequency**
+end note
+
+alt <font color=red><b>Execution shall be throttled
+wfe -> wfe: Logs a debug message & Data Dog metric
+wfe -> edao: Updates queue message back to **unpop** status.
+note over edao
+Queue record will be available for
+pick after **unpopOffset** time
+end note
+wfe <-- edao: Record updated
+hqp <-- wfe: Task id considered as processed
+
+else <font color=green><b>Execution shall NOT be throttled
+wfe -> edao: Updates PollCount in the task
+wfe -> edao: Calls **updateInProgressStatus(<Task>)**
+note over edao
+Sets InProgress flag against the task
+record in **task_in_progress** table
+end note
+wfe -> http: Starts the task
+http -> http: Sends the request to the **X service**
+wfe <-- http: Updated (in **memory**) task
+wfe -> edao: Updates the task with result to the **database**
+wfe -> edao: Wakes up the **Workflow Sweeper** for the workflow task belongs to
+hqp <-- wfe: Task id considered as processed
+end
+
+
+end
+
+
+@enduml

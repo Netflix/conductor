@@ -72,7 +72,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	}
 
 	@Override
-	public void push(String queueName, String id, long offsetTimeInSecond) {
+	public void push(String queueName, String id, long offsetTimeInSecond, int priority) {
 		if (logger.isDebugEnabled())
 			logger.debug("push: {}/{}/{}", queueName, id, offsetTimeInSecond);
 		initQueue(queueName);
@@ -84,7 +84,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	}
 
 	@Override
-	public void push(String queueName, List<Message> messages) {
+	public void push(String queueName, List<Message> messages, int priority) {
 		if (logger.isDebugEnabled())
 			logger.debug("push: {}/{}", queueName, toJson(messages));
 		initQueue(queueName);
@@ -96,7 +96,7 @@ public class ElasticSearch5QueueDAO extends ElasticSearch5BaseDAO implements Que
 	}
 
 	@Override
-	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond) {
+	public boolean pushIfNotExists(String queueName, String id, long offsetTimeInSecond, int priority) {
 		if (logger.isDebugEnabled())
 			logger.debug("pushIfNotExists: {}/{}/{}", queueName, id, offsetTimeInSecond);
 		initQueue(queueName);

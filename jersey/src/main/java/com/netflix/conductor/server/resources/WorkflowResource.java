@@ -24,6 +24,7 @@ import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Error;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
@@ -161,7 +162,7 @@ public class WorkflowResource {
 				logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked + ",path=/{name}");
 				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
 						request.getInput(), null, request.getTaskToDomain(),
-						auth, contextToken, contextUser, traceId, asyncStart);
+						auth, contextToken, contextUser, traceId, asyncStart, request.getJobPriority());
 			} finally {
 				NDC.remove();
 			}
@@ -171,7 +172,7 @@ public class WorkflowResource {
 				logger.info("About to start workflow " + workflowId + ",userInvoked=" + userInvoked + ",path=/{name}");
 				executor.startWorkflow(workflowId, def.getName(), def.getVersion(), request.getCorrelationId(),
 						request.getInput(), null, request.getTaskToDomain(),
-						Collections.emptyMap(), contextToken, contextUser, traceId, asyncStart);
+						Collections.emptyMap(), contextToken, contextUser, traceId, asyncStart, request.getJobPriority());
 			} finally {
 				NDC.remove();
 			}
@@ -198,13 +199,14 @@ public class WorkflowResource {
 		@ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
 		@ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
 	public Response startWorkflow(@Context HttpHeaders headers,
-								  @PathParam("name") String name, @QueryParam("version") Integer version,
+								  @PathParam("name") String name, @QueryParam("version") Integer version, @QueryParam("jobPriority") Integer jobPriority,
 								  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
 
 		StartWorkflowRequest request = new StartWorkflowRequest();
 		request.setName(name);
 		request.setVersion(version);
 		request.setCorrelationId(correlationId);
+		request.setJobPriority(jobPriority);
 		request.setInput(input);
 
 		return startWorkflow(request, headers);
@@ -863,6 +865,15 @@ public class WorkflowResource {
 			throw new ApplicationException(Code.INVALID_INPUT, "Cannot return more than " + maxSearchSize + " workflows.  Please use pagination");
 		}
 		return service.search(query, freeText, start, size, convert(sort), from, end);
+	}
+
+	@POST
+	@Path("/getTaskDetails")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Search for a particular task details using either the Job ID or Workflow ID ")
+	public List<TaskDetails> searchTaskDetails(@QueryParam("jobId") String jobId, @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName, @DefaultValue("false") @QueryParam("includeOutput") Boolean includeOutput) throws Exception {
+		return executor.searchTaskDetails(jobId, workflowId, workflowType, taskName, includeOutput);
 	}
 
 	private List<String> convert(String sortStr) {

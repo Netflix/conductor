@@ -1,0 +1,30 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "Conductor\nSystemTaskWorkerCoordinator.java" as stwc
+participant "Conductor\nMetricService.java" as msj
+participant "External Service\ndatadog.service.{env}" as dds
+participant "SaaS\nData Dog" as saas
+
+alt Conductor core polls http task (SystemTaskWorkerCoordinator)
+stwc -> stwc: pollAndExecute invoked
+stwc -> msj: Invokes taskPoll (task type, count)
+msj -> dds: Increment counter value (metric:deluxe.conductor.task.poll)
+dds -> saas: Pushes metrics
+msj -> dds: Records gauge value (metric:deluxe.conductor.task.poll.gauge)
+dds -> saas: Pushes metrics
+loop For all polled task ids
+stwc -> stwc: Submits task into executor poll
+stwc -> stwc: When submit rejected (queue full)
+activate stwc
+stwc -> msj: Invokes systemWorkersQueueFull (queue name)
+msj -> dds: Increment counter value (metric:deluxe.conductor.system.workers.queue.full)
+dds -> saas: Pushes metrics
+deactivate stwc
+end
+end
+
+
+@enduml

@@ -54,6 +54,7 @@ public class BatchSweeper {
     private static final String JOB_ID_URN_PREFIX = "urn:deluxe:one-orders:deliveryjob:";
     private final Map<String, AbstractBatchProcessor> processors = new HashMap<>();
     private final TaskStatusListener taskStatusListener;
+    private ScheduledExecutorService batchPool;
     private final WorkflowExecutor workflowExecutor;
     private final ExecutionDAO execDao;
     private final Configuration config;
@@ -75,7 +76,7 @@ public class BatchSweeper {
             int batchInitDelay = config.getIntProperty("workflow.sweeper.batch.init.delay", 1000);
             int batchFrequency = config.getIntProperty("workflow.sweeper.batch.frequency", 5000);
 
-            ScheduledExecutorService batchPool = Executors.newScheduledThreadPool(batchNames.length);
+            batchPool = Executors.newScheduledThreadPool(batchNames.length);
             for (String name : batchNames) {
                 if (!processors.containsKey(name)) {
                     logger.error("Batch type " + name + " is not supported!");
@@ -83,6 +84,18 @@ public class BatchSweeper {
                 }
                 batchPool.scheduleWithFixedDelay(() -> handle(name), batchInitDelay, batchFrequency, TimeUnit.MILLISECONDS);
             }
+        }
+    }
+
+    public void shutdown() {
+        try {
+            if (batchPool != null) {
+                logger.info("Closing batch sweeper pool");
+                batchPool.shutdown();
+                batchPool.awaitTermination(5, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            logger.debug("Closing batch sweeper pool failed " + e.getMessage(), e);
         }
     }
 
@@ -101,7 +114,7 @@ public class BatchSweeper {
         // Requeue task back if the task was rate limited
         int unackTimeout = config.getIntProperty("workflow.batch." + name + ".unack.timeout", 30_000);
 
-        NDC.push("batch-" + name + "-" + UUID.randomUUID().toString());
+        NDC.push("batch-" + name + "-" + UUID.randomUUID());
         try {
             String workerId = InetAddress.getLocalHost().getHostName();
             String queueName = QueueUtils.getQueueName("batch." + name, null);
@@ -120,8 +133,11 @@ public class BatchSweeper {
                 String jobId = getJobId(task);
                 String attribute = task.getReferenceTaskName() + "-jobId-" + jobId;
                 Workflow workflow = workflowExecutor.getWorkflow(task.getWorkflowInstanceId(), false);
-                workflow.getAttributes().put(attribute, lastStartTime);
-                execDao.updateWorkflow(workflow);
+                execDao.setWorkflowAttribute(workflow.getWorkflowId(), attribute, lastStartTime);
+                logger.debug("Set last start time attribute for " + attribute
+                        + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId()
+                        + ",traceId=" + workflow.getTraceId() + ",contextUser=" + workflow.getContextUser()
+                        + ",clientId=" + workflow.getClientId());
                 queues.remove(queueName, task.getTaskId());
             });
         } catch (Exception ex) {
@@ -199,6 +215,7 @@ public class BatchSweeper {
                 // Metrics
                 MetricService.getInstance().taskWait(task.getTaskType(),
                     task.getReferenceTaskName(),
+                    task.getTaskDefName(),
                     task.getQueueWaitTime());
 
                 task.setWorkerId(workerId);
