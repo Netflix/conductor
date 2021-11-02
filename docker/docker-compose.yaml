@@ -23,17 +23,17 @@ services:
       - elasticsearch:es
       - dynomite:dyno1
 
-#  conductor-ui:
-#    environment:
-#      - WF_SERVER=http://conductor-server:8080/api/
-#    image: conductor:ui
-#    build:
-#      context: ./ui
-#      dockerfile: Dockerfile
-#    ports:
-#      - 5000:5000
-#    links:
-#      - conductor-server
+  conductor-ui:
+    environment:
+      - WF_SERVER=http://conductor-server:8080/api/
+    image: conductor:ui
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    links:
+      - conductor-server
 
   dynomite:
     image: v1r3n/dynomite
