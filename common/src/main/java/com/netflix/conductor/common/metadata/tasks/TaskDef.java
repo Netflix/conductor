@@ -68,6 +68,8 @@ public class TaskDef extends Auditable {
 
 	private Integer rateLimitFrequencyInSeconds;
 
+	private String retryFailureMessage;
+
 	public TaskDef() {
 	}
 	
@@ -299,6 +301,20 @@ public class TaskDef extends Auditable {
 	 */
 	public void setRateLimitFrequencyInSeconds(Integer rateLimitFrequencyInSeconds) {
 		this.rateLimitFrequencyInSeconds = rateLimitFrequencyInSeconds;
+	}
+
+	/**
+	 * @return the retryFailureMessage
+	 */
+	public String getRetryFailureMessage() {
+		return retryFailureMessage;
+	}
+
+	/**
+	 * @param retryFailureMessage the retryFailureMessage to set
+	 */
+	public void setRetryFailureMessage(String retryFailureMessage) {
+		this.retryFailureMessage = retryFailureMessage;
 	}
 
 	@Override
