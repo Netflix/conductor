@@ -22,93 +22,93 @@ job "conductor" {
     stagger           = "30s"
   }
 
-#  group "ui" {
-#    count = 3
-#
-#    # vault declaration
-#    vault {
-#      change_mode = "restart"
-#      env         = false
-#      policies    = ["read-secrets"]
-#    }
-#
-#    task "ui" {
-#      meta {
-#        product-class = "custom"
-#        stack-role    = "ui"
-#      }
-#
-#      driver = "docker"
-#
-#      config {
-#        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:2.20.3-rc0-ui"
-#
-#        port_map {
-#          http = 5000
-#        }
-#
-#        volumes = [
-#          "local/secrets/conductor-ui.env:/app/config/secrets.env",
-#        ]
-#
-#        labels {
-#          service   = "${NOMAD_JOB_NAME}"
-#          component = "${NOMAD_TASK_NAME}"
-#        }
-#
-#        logging {
-#          type = "syslog"
-#
-#          config {
-#            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
-#          }
-#        }
-#      }
-#
-#      env {
-#        TLD = "${meta.tld}"
-#        APP_VERSION = "[[.app_version]]"
-#        WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
-#        AUTH_SERVICE_NAME    = "auth.service.${meta.tld}"
-#        KEYCLOAK_SERVICE_URL = "http://keycloak.service.${meta.tld}"
-#      }
-#
-#      service {
-#        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
-#        name = "${JOB}-${TASK}"
-#        port = "http"
-#
-#        check {
-#          type     = "http"
-#          path     = "/"
-#          interval = "10s"
-#          timeout  = "3s"
-#        }
-#      }
-#
-#      # Write secrets to the file that can be mounted as volume
-#      template {
-#        data = <<EOF
-#        {{ with printf "secret/conductor/ui" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
-#        {{ end }}{{ end }}
-#        EOF
-#
-#        destination   = "local/secrets/conductor-ui.env"
-#        change_mode   = "signal"
-#        change_signal = "SIGINT"
-#      }
-#
-#      resources {
-#        cpu    = 100 # MHz
-#        memory = 128 # MB
-#
-#        network {
-#          mbits = 4
-#          port  "http"{}
-#        }
-#      }
-#    } // end ui task
-#  } // end ui group
+  group "ui" {
+    count = 3
+
+    # vault declaration
+    vault {
+      change_mode = "restart"
+      env         = false
+      policies    = ["read-secrets"]
+    }
+
+    task "ui" {
+      meta {
+        product-class = "custom"
+        stack-role    = "ui"
+      }
+
+      driver = "docker"
+
+      config {
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:2.20.3-rc0-ui"
+
+        port_map {
+          http = 5000
+        }
+
+        volumes = [
+          "local/secrets/conductor-ui.env:/app/config/secrets.env",
+        ]
+
+        labels {
+          service   = "${NOMAD_JOB_NAME}"
+          component = "${NOMAD_TASK_NAME}"
+        }
+
+        logging {
+          type = "syslog"
+
+          config {
+            tag = "${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}"
+          }
+        }
+      }
+
+      env {
+        TLD = "${meta.tld}"
+        APP_VERSION = "[[.app_version]]"
+        WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
+        AUTH_SERVICE_NAME    = "auth.service.${meta.tld}"
+        KEYCLOAK_SERVICE_URL = "http://keycloak.service.${meta.tld}"
+      }
+
+      service {
+        tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
+        name = "${JOB}-${TASK}"
+        port = "http"
+
+        check {
+          type     = "http"
+          path     = "/"
+          interval = "10s"
+          timeout  = "3s"
+        }
+      }
+
+      # Write secrets to the file that can be mounted as volume
+      template {
+        data = <<EOF
+        {{ with printf "secret/conductor/ui" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ end }}{{ end }}
+        EOF
+
+        destination   = "local/secrets/conductor-ui.env"
+        change_mode   = "signal"
+        change_signal = "SIGINT"
+      }
+
+      resources {
+        cpu    = 100 # MHz
+        memory = 128 # MB
+
+        network {
+          mbits = 4
+          port  "http"{}
+        }
+      }
+    } // end ui task
+  } // end ui group
 
   group "server" {
     count = 5
