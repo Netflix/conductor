@@ -198,7 +198,7 @@ class FrinxConductorWrapper:
 
             # Replace placeholder with real output
             task.pop(self.taskClient.EXTERNAL_INPUT_KEY)
-            task['inputData'] = requests.get(location['uri']).json()
+            task['inputData'] = requests.get(location['uri'], headers=self.taskClient.headers).json()
             return task
 
         except Exception:
