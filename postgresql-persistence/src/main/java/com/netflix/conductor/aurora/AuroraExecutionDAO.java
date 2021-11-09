@@ -778,7 +778,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		StringBuilder SQL = new StringBuilder("select t.task_refname as task_refname, t.task_status as task_status, t.input as input, t.output as output, t.task_id as task_id, w.workflow_id as workflow_id, w.correlation_id as correlation_id, w.workflow_status as workflow_status from task t, workflow w where w.workflow_id = t.workflow_id ");
 		LinkedList<Object> params = new LinkedList<>();
 		if (workflowId != null) {
-			SQL.append("AND w.workflow_id = ? ");
+			SQL.append("AND (w.workflow_id = ? OR w.json_data::jsonb->'workflowIds' ?? ?) ");
+			params.add(workflowId);
 			params.add(workflowId);
 		}else if (jobId != null) {
 			SQL.append("AND w.correlation_id ilike ? ");
