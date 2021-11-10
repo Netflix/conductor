@@ -236,7 +236,7 @@ class FrinxConductorWrapper:
                 raise Exception(error_msg)
             task["status"] = resp["status"]
             task["outputData"] = resp.get("output", {})
-            task["logs"] = resp.get('logs', "")
+            task["logs"] = resp.get('logs', [])
             self.taskClient.updateTask(task)
         except Exception:
             self.handleTaskException(task)
