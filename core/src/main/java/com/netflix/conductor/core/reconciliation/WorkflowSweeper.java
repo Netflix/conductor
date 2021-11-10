@@ -59,6 +59,10 @@ public class WorkflowSweeper {
     }
 
     public void sweep(String workflowId) {
+        sweep(workflowId, true);
+    }
+
+    public void sweep(String workflowId, boolean extendLease) {
         try {
             WorkflowContext workflowContext = new WorkflowContext(properties.getAppId());
             WorkflowContext.set(workflowContext);
@@ -72,7 +76,7 @@ public class WorkflowSweeper {
             boolean done = workflowExecutor.decide(workflowId);
             if (done) {
                 queueDAO.remove(DECIDER_QUEUE, workflowId);
-            } else {
+            } else if (extendLease) {
                 queueDAO.setUnackTimeout(DECIDER_QUEUE, workflowId, properties.getWorkflowOffsetTimeout().toMillis());
             }
         } catch (ApplicationException e) {
@@ -81,7 +85,9 @@ public class WorkflowSweeper {
                 LOGGER.info("Workflow NOT found for id:{}. Removed it from decider queue", workflowId, e);
             }
         } catch (Exception e) {
-            queueDAO.setUnackTimeout(DECIDER_QUEUE, workflowId, properties.getWorkflowOffsetTimeout().toMillis());
+            if (extendLease) {
+                queueDAO.setUnackTimeout(DECIDER_QUEUE, workflowId, properties.getWorkflowOffsetTimeout().toMillis());
+            }
             Monitors.error(CLASS_NAME, "sweep");
             LOGGER.error("Error running sweep for " + workflowId, e);
         }
