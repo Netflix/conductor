@@ -12,12 +12,19 @@ const useStyles = makeStyles({
   },
 });
 
+const filterTask = (tasks) => {
+  let excludeTasksArray = ["__start", "__final"];
+  return tasks.filter((t) => !excludeTasksArray.includes(t));
+};
+
 export default function ReactJson({ title, className, style, ...props }) {
   const [clipboardMode, setClipboardMode] = useState(false);
   const classes = useStyles();
-  
-  let modifiedProps = props && {src:{...props.src, tasks:props.src.tasks.filter(t => !["__start", "__final"].includes(t.taskReferenceName))}};
-  
+
+  let modifiedProps = props && {
+    src: { ...props.src, tasks: filterTask(props.src.tasks) },
+  };
+
   return (
     <div className={clsx([classes.wrapper, className])} style={style}>
       <div style={{ display: "flex", flexDirection: "row" }}>
