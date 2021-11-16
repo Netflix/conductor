@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useReducer, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useMemo,
+  useReducer,
+  useEffect,
+  useCallback,
+} from "react";
 import { useQueryState } from "react-router-use-location-state";
 import { Drawer, Divider } from "@material-ui/core";
 
@@ -30,8 +36,7 @@ import { useFetch } from "../../utils/query";
 import { Helmet } from "react-helmet";
 
 const maxWindowWidth = window.innerWidth;
-const drawerWidth = maxWindowWidth>1000 ? maxWindowWidth/2 : 450;
-console.log(drawerWidth);
+const drawerWidth = maxWindowWidth > 1000 ? maxWindowWidth / 2 : 450;
 
 const useStyles = makeStyles({
   wrapper: {
@@ -41,12 +46,12 @@ const useStyles = makeStyles({
     flexDirection: "row",
   },
   drawer: {
-    width: state => state.drawerWidth,
+    width: (state) => state.drawerWidth,
   },
   drawerPaper: {
     height: "100vh",
-    width: state => state.drawerWidth,
-    overflowY: "hidden"
+    width: (state) => state.drawerWidth,
+    overflowY: "hidden",
   },
   drawerHeader: {
     display: "flex",
@@ -61,7 +66,7 @@ const useStyles = makeStyles({
     flexGrow: 1,
   },
   content: {
-    flexGrow: state => state.isResizing ? 0.8 : 1,
+    flexGrow: (state) => (state.isResizing ? 0.8 : 1),
     paddingBottom: 50,
     /*transition: theme.transitions.create("margin", {
       easing: theme.transitions.easing.sharp,
@@ -113,16 +118,16 @@ const useStyles = makeStyles({
     marginRight: 15,
   },
   dragger: {
-    width: '5px',
-    cursor: 'ew-resize',
-    padding: '4px 0 0',
-    borderTop: '1px solid #ddd',
-    position: 'absolute',
+    width: "5px",
+    cursor: "ew-resize",
+    padding: "4px 0 0",
+    borderTop: "1px solid #ddd",
+    position: "absolute",
     top: 0,
     left: 0,
     bottom: 0,
-    zIndex: '100',
-    backgroundColor: '#f4f7f9',
+    zIndex: "100",
+    backgroundColor: "#f4f7f9",
   },
 });
 
@@ -132,7 +137,7 @@ const actions = {
   MOUSE_DOWN: 3,
   MOUSE_UP: 4,
   MOUSE_MOVE: 5,
-}
+};
 
 const initialState = {
   drawerWidth: drawerWidth,
@@ -140,31 +145,48 @@ const initialState = {
   isResizing: false,
   lastDownX: 0,
   newWidth: {},
-  //drawerVarient: drawerWidth <= 450 ? 'temporary' : 'persistent'
-  drawerVarient: 'persistent'
+  drawerVarient: "persistent",
 };
 
 function reducer(state, action) {
   switch (action.type) {
     case actions.EXPAND_FULL:
-      return {...state, isDrawerFullScreen: true, drawerWidth:'100vw'};
+      return { ...state, isDrawerFullScreen: true, drawerWidth: "100vw" };
     case actions.RESET_EXPAND_FULL:
-      return {...state, isDrawerFullScreen: false, drawerWidth:drawerWidth, drawerVarient:'persistent'};
+      return {
+        ...state,
+        isDrawerFullScreen: false,
+        drawerWidth: drawerWidth,
+        drawerVarient: "persistent",
+      };
     case actions.MOUSE_DOWN:
-      return {...state, isResizing: true, lastDownX: action.clientX, drawerVarient:'temporary'};
+      return {
+        ...state,
+        isResizing: true,
+        lastDownX: action.clientX,
+        drawerVarient: "temporary",
+      };
     case actions.MOUSE_UP:
-      return {...state,  isResizing: false, drawerVarient: state.drawerWidth > maxWindowWidth/2 ? 'temporary' : 'persistent' };
+      return {
+        ...state,
+        isResizing: false,
+        drawerVarient:
+          state.drawerWidth > maxWindowWidth / 2 ? "temporary" : "persistent",
+      };
     case actions.MOUSE_MOVE:
-      return {...state, isDrawerFullScreen: false, drawerWidth: action.offsetRight };
+      return {
+        ...state,
+        isDrawerFullScreen: false,
+        drawerWidth: action.offsetRight,
+      };
     default:
       return state;
   }
 }
 
-export default function Execution() { 
-  
-  const [state, dispatch] = useReducer(reducer, initialState); 
-  
+export default function Execution() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
   const classes = useStyles(state);
   const match = useRouteMatch();
   const url = `/workflow/${match.params.id}`;
@@ -172,51 +194,71 @@ export default function Execution() {
   const { data: execution, isFetching, refetch: refresh } = useFetch(url);
 
   const [tabIndex, setTabIndex] = useQueryState("tabIndex", 0);
-  const [selectedTask, setSelectedTask] = useState(null); 
+  const [selectedTask, setSelectedTask] = useState(null);
 
   const handleMousedown = (e) => {
-    dispatch({type:actions.MOUSE_DOWN, clientX:e.clientX});
+    dispatch({ type: actions.MOUSE_DOWN, clientX: e.clientX });
   };
 
-  const handleMousemove = useCallback((e) => {
-    // we don't want to do anything if we aren't resizing.
-    if (!state.isResizing) {
-      return;
-    }
+  const handleMousemove = useCallback(
+    (e) => {
+      // we don't want to do anything if we aren't resizing.
+      if (!state.isResizing) {
+        return;
+      }
 
-    let offsetRight =
-      document.body.offsetWidth - (e.clientX - document.body.offsetLeft);
-    let minWidth = 0;
-    let maxWidth = 1200;
-    if (offsetRight > minWidth && offsetRight < maxWidth) {
-      dispatch({type:actions.MOUSE_MOVE, offsetRight});
-    }
-  }, [state.isResizing]);
+      const offsetRight =
+        document.body.offsetWidth - (e.clientX - document.body.offsetLeft);
+      const minWidth = 0;
+      const maxWidth = maxWindowWidth-100;
+      if (offsetRight > minWidth && offsetRight < maxWidth) {
+        dispatch({ type: actions.MOUSE_MOVE, offsetRight });
+      }
+    },
+    [state.isResizing]
+  );
 
   const handleMouseup = (e) => {
-    dispatch({ type:actions.MOUSE_UP });
+    dispatch({ type: actions.MOUSE_UP });
   };
+
   
   const handleSelectedTask = (task) => {
-    if(task){
+    if (task) {
       const { taskToDomain } = execution;
       let domain;
-      if(taskToDomain['*']){
-        domain = taskToDomain['*'];
-      }
-      else if(task.taskType){
+      if (taskToDomain["*"]) {
+        domain = taskToDomain["*"];
+      } else if (task.taskType) {
         domain = taskToDomain[task.taskType];
       }
-      
+
       setSelectedTask({
         ...task,
-        domain: domain
+        domain: domain,
       });
-    }
-    else {
+    } else {
       setSelectedTask(null);
     }
-  }
+  };
+
+  useEffect(() => {
+    const mouseMove = (e) => handleMousemove(e);
+    const mouseUp = (e) => handleMouseup(e);
+
+    document.addEventListener("mousemove", mouseMove);
+    document.addEventListener("mouseup", mouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", mouseMove);
+      document.removeEventListener("mouseup", mouseUp);
+    };
+  }, [handleMousemove]);
+
+  const handleDrawerMaximize = () => {
+    if (state.isDrawerFullScreen) dispatch({ type: actions.RESET_EXPAND_FULL });
+    else dispatch({ type: actions.EXPAND_FULL });
+  };
 
   useEffect(() => {
     
@@ -319,27 +361,27 @@ export default function Execution() {
         }}
       >
         <div
-              id="dragger"
-              onMouseDown={(event) => handleMousedown(event)}
-              className={classes.dragger}
-            />
-            <>
-              <div className={classes.drawerHeader}>
-                <IconButton onClick={() => handleDrawerMaximize()}>
-                  <SettingsOverscanIcon />
-                </IconButton>
-                <IconButton onClick={() => handleSelectedTask(null)}>
-                  <CloseIcon />
-                </IconButton>
-              </div>
-              <Divider />
-              <RightPanel
-                className={classes.drawerContent}
-                selectedTask={selectedTask}
-                dag={dag}
-                onTaskChange={handleSelectedTask}
-              />
-          </>
+          id="dragger"
+          onMouseDown={(event) => handleMousedown(event)}
+          className={classes.dragger}
+        />
+        <>
+          <div className={classes.drawerHeader}>
+            <IconButton onClick={() => handleDrawerMaximize()}>
+              <SettingsOverscanIcon />
+            </IconButton>
+            <IconButton onClick={() => handleSelectedTask(null)}>
+              <CloseIcon />
+            </IconButton>
+          </div>
+          <Divider />
+          <RightPanel
+            className={classes.drawerContent}
+            selectedTask={selectedTask}
+            dag={dag}
+            onTaskChange={handleSelectedTask}
+          />
+        </>
       </Drawer>
     </div>
   );
