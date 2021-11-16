@@ -11,6 +11,11 @@ const useStyles = makeStyles({
     fontSize: 12,
   },
 });
+  
+const filterTask = (tasks) => {
+  let excludeTasksArray = ["__start", "__final"];
+  return tasks.filter((t) => !excludeTasksArray.includes(t));
+};
 
 const filterTask = (tasks) => {
   let excludeTasksArray = ["__start", "__final"];
