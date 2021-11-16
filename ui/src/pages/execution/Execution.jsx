@@ -255,11 +255,6 @@ export default function Execution() {
     };
   }, [handleMousemove]);
 
-  const handleDrawerMaximize = () => {
-    if (state.isDrawerFullScreen) dispatch({ type: actions.RESET_EXPAND_FULL });
-    else dispatch({ type: actions.EXPAND_FULL });
-  };
-
   useEffect(() => {
     
     const mouseMove = (e) => handleMousemove(e);
