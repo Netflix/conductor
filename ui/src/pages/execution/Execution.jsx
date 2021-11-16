@@ -125,6 +125,15 @@ export default function Execution() {
   const handleSelectedTask = (task) => {
     if(task){
       const { taskToDomain } = execution;
+
+      if(taskToDomain === undefined){
+        setSelectedTask({
+          ...task,
+          domain: null,
+        });
+        return;
+      }
+
       let domain;
       if(taskToDomain['*']){
         domain = taskToDomain['*'];
