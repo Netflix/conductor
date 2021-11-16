@@ -126,7 +126,11 @@ export default function Execution() {
     if(task){
       const { taskToDomain } = execution;
       let domain;
-      if(taskToDomain['*']){
+
+      if(taskToDomain === undefined){
+        domain = null;
+      }
+      else if(taskToDomain['*']){
         domain = taskToDomain['*'];
       }
       else if(task.taskType){
