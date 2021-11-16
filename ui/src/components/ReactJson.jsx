@@ -15,7 +15,6 @@ const useStyles = makeStyles({
 export default function ReactJson({ title, className, style, ...props }) {
   const [clipboardMode, setClipboardMode] = useState(false);
   const classes = useStyles();
-
   return (
     <div className={clsx([classes.wrapper, className])} style={style}>
       <div style={{ display: "flex", flexDirection: "row" }}>
