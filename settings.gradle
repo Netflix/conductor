@@ -29,6 +29,9 @@ gradleEnterprise {
 
 rootProject.name = 'conductor'
 
+include 'annotations'
+include 'annotations-processor'
+
 include 'server'
 include 'common'
 include 'core'
@@ -48,6 +51,8 @@ include 'redis-lock'
 include 'zookeeper-lock'
 
 include 'azureblob-storage'
+
+include 'redis-concurrency-limit'
 
 include 'rest'
 include 'grpc'
