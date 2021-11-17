@@ -3,6 +3,10 @@ job "conductor" {
   region      = "us-west-2"
   datacenters = ["us-west-2"]
 
+  spread {
+    attribute = "${unique.network.ip-address}"
+  }
+
   meta {
     service-class = "platform"
   }
