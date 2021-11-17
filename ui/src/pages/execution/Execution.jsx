@@ -223,9 +223,7 @@ export default function Execution() {
   };
 
   const handleSelectedTask = (task) => {
-    if (task) {
-      setSelectedTask(task);
-    } 
+    setSelectedTask(task);
   };
 
   useEffect(() => {
