@@ -43,6 +43,7 @@ public class AMQPSettings {
     private String queueOrExchangeName;
     private String eventName;
     private String exchangeType;
+    private String queueType;
     private String routingKey;
     private final String contentEncoding;
     private final String contentType;
@@ -50,6 +51,7 @@ public class AMQPSettings {
     private boolean durable;
     private boolean exclusive;
     private boolean autoDelete;
+    private boolean sequentialProcessing;
 
     private int deliveryMode;
 
@@ -65,6 +67,8 @@ public class AMQPSettings {
         contentEncoding = properties.getContentEncoding();
         exchangeType = properties.getExchangeType();
         routingKey = StringUtils.EMPTY;
+        queueType = properties.getQueueType();
+        sequentialProcessing = properties.isSequentialMsgProcessing();
         // Set common settings for publishing and consuming
         setDeliveryMode(properties.getDeliveryMode());
     }
@@ -201,40 +205,52 @@ public class AMQPSettings {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof AMQPSettings)) {
-            return false;
-        }
-        AMQPSettings that = (AMQPSettings) o;
-        return isDurable() == that.isDurable() && isExclusive() == that.isExclusive() && autoDelete == that.autoDelete
-            && getDeliveryMode() == that.getDeliveryMode()
-            && Objects.equals(getQueueOrExchangeName(), that.getQueueOrExchangeName())
-            && Objects.equals(getExchangeType(), that.getExchangeType())
-            && Objects.equals(getRoutingKey(), that.getRoutingKey())
-            && Objects.equals(getContentType(), that.getContentType())
-            && Objects.equals(getContentEncoding(), that.getContentEncoding())
-            && Objects.equals(getArguments(), that.getArguments());
-    }
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!(obj instanceof AMQPSettings))
+			return false;
+		AMQPSettings other = (AMQPSettings) obj;
+		return Objects.equals(arguments, other.arguments) && autoDelete == other.autoDelete
+				&& Objects.equals(contentEncoding, other.contentEncoding)
+				&& Objects.equals(contentType, other.contentType) && deliveryMode == other.deliveryMode
+				&& durable == other.durable && Objects.equals(eventName, other.eventName)
+				&& Objects.equals(exchangeType, other.exchangeType) && exclusive == other.exclusive
+				&& Objects.equals(queueOrExchangeName, other.queueOrExchangeName)
+				&& Objects.equals(queueType, other.queueType) && Objects.equals(routingKey, other.routingKey)
+				&& sequentialProcessing == other.sequentialProcessing;
+	}
 
     @Override
-    public int hashCode() {
-        return Objects.hash(getQueueOrExchangeName(), getExchangeType(), getRoutingKey(), getContentType(), isDurable(),
-            isExclusive(), autoDelete, getDeliveryMode(), getContentEncoding(), getArguments());
-    }
+	public int hashCode() {
+		return Objects.hash(arguments, autoDelete, contentEncoding, contentType, deliveryMode, durable, eventName,
+				exchangeType, exclusive, queueOrExchangeName, queueType, routingKey, sequentialProcessing);
+	}
 
     @Override
-    public String toString() {
-        return "AMQSettings{" + "queueOrExchangeName='" + queueOrExchangeName + '\'' + ", exchangeType='" + exchangeType
-            + '\'' + ", routingKey='" + routingKey + '\'' + ", contentType='" + contentType + '\'' + ", durable="
-            + durable + ", exclusive=" + exclusive + ", autoDelete=" + autoDelete + ", deliveryMode=" + deliveryMode
-            + ", contentEncoding='" + contentEncoding + '\'' + ", arguments=" + arguments + ", durable="
-            + isDurable() + ", exclusive=" + isExclusive() + '}';
-    }
+	public String toString() {
+		return "AMQPSettings [queueOrExchangeName=" + queueOrExchangeName + ", eventName=" + eventName
+				+ ", exchangeType=" + exchangeType + ", queueType=" + queueType + ", routingKey=" + routingKey
+				+ ", contentEncoding=" + contentEncoding + ", contentType=" + contentType + ", durable=" + durable
+				+ ", exclusive=" + exclusive + ", autoDelete=" + autoDelete + ", sequentialProcessing="
+				+ sequentialProcessing + ", deliveryMode=" + deliveryMode + ", arguments=" + arguments + "]";
+	}
 
     public String getEventName() {
         return eventName;
     }
+
+	/**
+	 * @return the queueType
+	 */
+	public String getQueueType() {
+		return queueType;
+	}
+
+	/**
+	 * @return the sequentialProcessing
+	 */
+	public boolean isSequentialProcessing() {
+		return sequentialProcessing;
+	}
 }

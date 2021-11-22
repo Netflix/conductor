@@ -14,9 +14,14 @@ package com.netflix.conductor.contribs.queue.amqp;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -49,11 +54,13 @@ public class AMQPObservableQueue implements ObservableQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(AMQPObservableQueue.class);
 
     private final AMQPSettings settings;
+    private final String QUEUE_TYPE = "x-queue-type";
     private final int batchSize;
     private final boolean useExchange;
     private int pollTimeInMS;
     private AMQPConnection amqpConnection;
     
+    protected LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<>();
     private volatile boolean running;
 
     public AMQPObservableQueue(ConnectionFactory factory, Address[] addresses, boolean useExchange,
@@ -83,11 +90,47 @@ public class AMQPObservableQueue implements ObservableQueue {
     
     @Override
     public Observable<Message> observe() {
-    	Observable.OnSubscribe<Message> onSubscribe = subscriber -> {
-			LOGGER.info("Subscribing for the messages");
-			receiveMessages(subscriber);
-			LOGGER.info("Subscribed for the messages");
-		};
+    	Observable.OnSubscribe<Message> onSubscribe = null;
+    	// This will enabled the messages to be processed one after the other as per the observable next behavior.
+    	if (settings.isSequentialProcessing()) {
+    		LOGGER.info("Subscribing for the message processing on schedule basis");
+    		receiveMessages();
+            onSubscribe = subscriber -> {
+                Observable<Long> interval = Observable.interval(pollTimeInMS, TimeUnit.MILLISECONDS);
+                interval.flatMap((Long x) -> {
+                    if (!isRunning()) {
+                        LOGGER.debug("Component stopped, skip listening for messages from RabbitMQ");
+                        return Observable.from(Collections.emptyList());
+                    } else {
+                        List<Message> available = new LinkedList<>();
+                        messages.drainTo(available);
+
+                        if (!available.isEmpty()) {
+                            AtomicInteger count = new AtomicInteger(0);
+                            StringBuilder buffer = new StringBuilder();
+                            available.forEach(msg -> {
+                                buffer.append(msg.getId()).append("=").append(msg.getPayload());
+                                count.incrementAndGet();
+
+                                if (count.get() < available.size()) {
+                                    buffer.append(",");
+                                }
+                            });
+                            LOGGER.info(String.format("Batch from %s to conductor is %s", settings.getQueueOrExchangeName(),
+                                buffer.toString()));
+                        }
+                        return Observable.from(available);
+                    }
+                }).subscribe(subscriber::onNext, subscriber::onError);
+            };
+            LOGGER.info("Subscribed for the message processing on schedule basis");
+    	} else {
+    		onSubscribe = subscriber -> {
+    			LOGGER.info("Subscribing for the message processing on-demand basis");
+    			receiveMessages(subscriber);
+    			LOGGER.info("Subscribed for the message processing on-demand basis");
+    		};
+    	}
 		return Observable.create(onSubscribe);
     }
     
@@ -330,7 +373,7 @@ public class AMQPObservableQueue implements ObservableQueue {
         if (StringUtils.isEmpty(name)) {
             throw new RuntimeException("Queue name is undefined");
         }
-
+        arguments.put(QUEUE_TYPE, settings.getQueueType());
         try {
         	LOGGER.debug("Creating queue {}",name);
             return  amqpConnection.getOrCreateChannel(connectionType,getSettings().getQueueOrExchangeName()).queueDeclare(name, isDurable, isExclusive, autoDelete, arguments);
@@ -351,6 +394,42 @@ public class AMQPObservableQueue implements ObservableQueue {
         return message;
     }
 
+    private void receiveMessagesFromQueue(String queueName) throws Exception {
+        LOGGER.debug("Accessing channel for queue {}", queueName);
+        
+        Consumer consumer = new DefaultConsumer(amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER,getSettings().getQueueOrExchangeName())) {
+
+            @Override
+            public void handleDelivery(final String consumerTag, final Envelope envelope,
+                final AMQP.BasicProperties properties, final byte[] body) throws IOException {
+                try {
+                    Message message = asMessage(settings,
+                        new GetResponse(envelope, properties, body, Integer.MAX_VALUE));
+                    if (message != null) {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("Got message with ID {} and receipt {}", message.getId(),
+                                message.getReceipt());
+                        }
+                        messages.add(message);
+                        LOGGER.info("receiveMessagesFromQueue- End method {}", messages);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    //
+                }
+            }
+            
+            
+            public void handleCancel(String consumerTag) throws IOException{
+            	LOGGER.error("Recieved a consumer cancel notification for subscriber. Will monitor and make changes");										
+			}
+        };
+
+        amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER,getSettings().getQueueOrExchangeName()).basicConsume(queueName, false, consumer);
+        Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
+    }
+    
 	private void receiveMessagesFromQueue(String queueName, Subscriber<? super Message> subscriber) throws Exception {
         LOGGER.debug("Accessing channel for queue {}", queueName);
         
@@ -388,9 +467,42 @@ public class AMQPObservableQueue implements ObservableQueue {
         };
 
         amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER,getSettings().getQueueOrExchangeName()).basicConsume(queueName, false, consumer);
-        // Monitors.recordEventQueueMessagesProcessed(getType(), queueName, messages.size());
     }
 
+	protected void receiveMessages() {
+        try {
+        	amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER,getSettings().getQueueOrExchangeName()).basicQos(batchSize);
+            String queueName;
+            if (useExchange) {
+                // Consume messages from an exchange
+            	getOrCreateExchange(ConnectionType.SUBSCRIBER);
+                /*
+                 * Create queue if not present based on the settings provided in the queue URI or configuration properties.
+                 * Sample URI format: amqp-exchange:myExchange?exchangeType=topic&routingKey=myRoutingKey&exclusive=false&autoDelete=false&durable=true
+                 * Default settings if not provided in the queue URI or properties: isDurable: true, autoDelete: false, isExclusive: false
+                 * The same settings are currently used during creation of exchange as well as queue.
+                 * TODO: This can be enhanced further to get the settings separately for exchange and queue from the URI
+                 */
+                final AMQP.Queue.DeclareOk declareOk = getOrCreateQueue(ConnectionType.SUBSCRIBER,
+                    String.format("bound_to_%s", settings.getQueueOrExchangeName()), settings.isDurable(),
+                    settings.isExclusive(), settings.autoDelete(),
+                    Maps.newHashMap());
+                // Bind the declared queue to exchange
+                queueName = declareOk.getQueue();
+                amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER, getSettings().getQueueOrExchangeName()).queueBind(queueName, settings.getQueueOrExchangeName(), settings.getRoutingKey());
+            } else {
+                // Consume messages from a queue
+                queueName = getOrCreateQueue(ConnectionType.SUBSCRIBER).getQueue();
+            }
+            // Consume messages
+            LOGGER.info("Consuming from queue {}", queueName);
+            receiveMessagesFromQueue(queueName);
+        } catch (Exception exception) {
+            LOGGER.error("Exception while getting messages from RabbitMQ", exception);
+            Monitors.recordObservableQMessageReceivedErrors(getType());
+        }
+    }
+	
 	protected void receiveMessages(Subscriber<? super Message> subscriber) {
         try {
         	amqpConnection.getOrCreateChannel(ConnectionType.SUBSCRIBER,getSettings().getQueueOrExchangeName()).basicQos(batchSize);

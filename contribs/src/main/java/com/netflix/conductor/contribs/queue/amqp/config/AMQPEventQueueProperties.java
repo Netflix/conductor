@@ -49,7 +49,11 @@ public class AMQPEventQueueProperties {
     private String contentEncoding = "UTF-8";
 
     private String exchangeType = "topic";
-
+    
+    private String queueType = "classic";
+    
+    private boolean sequentialMsgProcessing = true; 
+    
     private int deliveryMode = 2;
 
     private boolean useExchange = true;
@@ -199,4 +203,35 @@ public class AMQPEventQueueProperties {
     public void setListenerQueuePrefix(String listenerQueuePrefix) {
         this.listenerQueuePrefix = listenerQueuePrefix;
     }
+
+	public String getQueueType() {
+		return queueType;
+	}
+
+	/**
+	 * @param queueType
+	 * Supports two queue types, 'classic' and 'quorum'. 
+	 * Classic will be be deprecated in 2022 and its usage discouraged from RabbitMQ community.
+	 * So not using enum type here to hold different values.
+	 */
+	public void setQueueType(String queueType) {
+		this.queueType = queueType;
+	}
+
+	/**
+	 * @return the sequentialMsgProcessing
+	 */
+	public boolean isSequentialMsgProcessing() {
+		return sequentialMsgProcessing;
+	}
+
+	/**
+	 * @param sequentialMsgProcessing the sequentialMsgProcessing to set
+	 * Supports sequential and parallel message processing capabilities. 
+	 * In parallel message processing, 
+	 * number of threads are controlled by batch size. No thread control or execution framework required here as threads are limited and short-lived. 
+	 */
+	public void setSequentialMsgProcessing(boolean sequentialMsgProcessing) {
+		this.sequentialMsgProcessing = sequentialMsgProcessing;
+	}
 }
