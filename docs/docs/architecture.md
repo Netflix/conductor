@@ -23,14 +23,13 @@ git clone git@github.com:Netflix/conductor.git
 
 #### Start Local Server
 
-The server is in the directory `conductor/server`.
+The server is in the directory `conductor/server`. To start it execute the following command in the root of the project.
 
 ```shell
-cd server
-../gradlew server
+./gradlew bootRun
 # wait for the server to come online
 ```
-Swagger APIs can be accessed at [http://localhost:8080/](http://localhost:8080/)
+Swagger APIs can be accessed at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
 #### Start UI Server
 
