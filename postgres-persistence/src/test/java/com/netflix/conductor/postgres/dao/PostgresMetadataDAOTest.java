@@ -42,7 +42,9 @@ import static com.netflix.conductor.core.exception.ApplicationException.Code.CON
 import static com.netflix.conductor.core.exception.ApplicationException.Code.NOT_FOUND;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -102,7 +104,6 @@ public class PostgresMetadataDAOTest {
         def.setCreateTime(1L);
         def.setOwnerApp("ownerApp");
         def.setUpdatedBy("unit_test2");
-        def.setUpdateTime(2L);
 
         metadataDAO.createWorkflowDef(def);
 
@@ -114,26 +115,38 @@ public class PostgresMetadataDAOTest {
 
         WorkflowDef found = metadataDAO.getWorkflowDef("test", 1).get();
         assertTrue(EqualsBuilder.reflectionEquals(def, found));
+        assertNotNull(found.getCreateTime());
+        assertNull(found.getUpdateTime());
+        Long firstDefCreateTime = found.getCreateTime();
 
         def.setVersion(3);
+        def.setCreateTime(5L);
         metadataDAO.createWorkflowDef(def);
+
+        found = metadataDAO.getLatestWorkflowDef(def.getName()).get();
+        assertEquals(def.getName(), found.getName());
+        assertEquals(def.getVersion(), found.getVersion());
+        assertEquals(3, found.getVersion());
+        assertNotNull(found.getCreateTime());
+        assertNull(found.getUpdateTime());
+        Long secondDefCreateTime = found.getCreateTime();
+        assertNotEquals(firstDefCreateTime, secondDefCreateTime);
 
         all = metadataDAO.getAllWorkflowDefs();
         assertNotNull(all);
         assertEquals(2, all.size());
         assertEquals("test", all.get(0).getName());
         assertEquals(1, all.get(0).getVersion());
-
-        found = metadataDAO.getLatestWorkflowDef(def.getName()).get();
-        assertEquals(def.getName(), found.getName());
-        assertEquals(def.getVersion(), found.getVersion());
-        assertEquals(3, found.getVersion());
+        assertEquals(firstDefCreateTime, all.get(0).getCreateTime());
+        assertNull(all.get(0).getUpdateTime());
 
         all = metadataDAO.getAllLatest();
         assertNotNull(all);
         assertEquals(1, all.size());
         assertEquals("test", all.get(0).getName());
         assertEquals(3, all.get(0).getVersion());
+        assertEquals(secondDefCreateTime, all.get(0).getCreateTime());
+        assertNull(all.get(0).getUpdateTime());
 
         all = metadataDAO.getAllVersions(def.getName());
         assertNotNull(all);
@@ -142,11 +155,19 @@ public class PostgresMetadataDAOTest {
         assertEquals("test", all.get(1).getName());
         assertEquals(1, all.get(0).getVersion());
         assertEquals(3, all.get(1).getVersion());
+        assertEquals(firstDefCreateTime, all.get(0).getCreateTime());
+        assertNull(all.get(0).getUpdateTime());
+        assertEquals(secondDefCreateTime, all.get(1).getCreateTime());
+        assertNull(all.get(1).getUpdateTime());
 
         def.setDescription("updated");
+        Long updateTime = 6L;
+        def.setUpdateTime(updateTime);
         metadataDAO.updateWorkflowDef(def);
         found = metadataDAO.getWorkflowDef(def.getName(), def.getVersion()).get();
         assertEquals(def.getDescription(), found.getDescription());
+        assertEquals(secondDefCreateTime, found.getCreateTime());
+        assertEquals(updateTime, found.getUpdateTime());
 
         List<String> allnames = metadataDAO.findAll();
         assertNotNull(allnames);

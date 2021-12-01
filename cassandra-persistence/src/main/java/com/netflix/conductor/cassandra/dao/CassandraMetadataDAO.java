@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.cassandra.config.CassandraProperties;
 import com.netflix.conductor.cassandra.util.Statements;
+import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.exception.ApplicationException;
@@ -178,6 +179,8 @@ public class CassandraMetadataDAO extends CassandraBaseDAO implements MetadataDA
     @Override
     public void updateWorkflowDef(WorkflowDef workflowDef) {
         try {
+            workflowDef.setCreateTime(getWorkflowDef(workflowDef.getName(), workflowDef.getVersion()).map(Auditable::getCreateTime)
+                .orElse(System.currentTimeMillis()));
             String workflowDefinition = toJson(workflowDef);
             session.execute(updateWorkflowDefStatement.bind(workflowDefinition, workflowDef.getName(),
                 workflowDef.getVersion()));

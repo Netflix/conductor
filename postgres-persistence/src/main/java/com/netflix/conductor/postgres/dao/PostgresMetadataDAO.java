@@ -14,6 +14,7 @@ package com.netflix.conductor.postgres.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -361,8 +362,13 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO,
         final String INSERT_WORKFLOW_DEF_QUERY = "INSERT INTO meta_workflow_def (name, version, json_data) VALUES (?," +
             " ?, ?)";
 
+        Optional<WorkflowDef> optionalDef = getWorkflowDef(def.getName(), def.getVersion());
+        if (def.getCreateTime() == null) {
+            def.setCreateTime(optionalDef.map(Auditable::getCreateTime).orElse(System.currentTimeMillis()));
+        }
+
         Optional<Integer> version = getLatestVersion(tx, def.getName());
-        if (!workflowExists(tx, def)) {
+        if (optionalDef.isEmpty()) {
             execute(tx, INSERT_WORKFLOW_DEF_QUERY, q -> q.addParameter(def.getName())
                 .addParameter(def.getVersion())
                 .addJsonParameter(def)
@@ -374,7 +380,6 @@ public class PostgresMetadataDAO extends PostgresBaseDAO implements MetadataDAO,
                     "SET json_data = ?, modified_on = CURRENT_TIMESTAMP " +
                     "WHERE name = ? AND version = ?";
             //@formatter:on
-
             execute(tx, UPDATE_WORKFLOW_DEF_QUERY, q -> q.addJsonParameter(def)
                 .addParameter(def.getName())
                 .addParameter(def.getVersion())

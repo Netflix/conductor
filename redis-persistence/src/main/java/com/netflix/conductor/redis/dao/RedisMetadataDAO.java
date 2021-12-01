@@ -14,6 +14,7 @@ package com.netflix.conductor.redis.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.config.ConductorProperties;
@@ -156,6 +157,8 @@ public class RedisMetadataDAO extends BaseDynoDAO implements MetadataDAO {
 
     @Override
     public void updateWorkflowDef(WorkflowDef def) {
+        def.setCreateTime(getWorkflowDef(def.getName(), def.getVersion()).map(Auditable::getCreateTime)
+            .orElse(System.currentTimeMillis()));
         _createOrUpdate(def);
     }
 

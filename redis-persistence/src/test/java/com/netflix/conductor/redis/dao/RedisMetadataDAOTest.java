@@ -41,7 +41,9 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -86,7 +88,6 @@ public class RedisMetadataDAOTest {
         def.setCreateTime(1L);
         def.setOwnerApp("ownerApp");
         def.setUpdatedBy("unit_test2");
-        def.setUpdateTime(2L);
 
         redisMetadataDAO.createWorkflowDef(def);
 
@@ -98,20 +99,30 @@ public class RedisMetadataDAOTest {
 
         WorkflowDef found = redisMetadataDAO.getWorkflowDef("test", 1).get();
         assertEquals(def, found);
+        assertNotNull(found.getCreateTime());
+        assertNull(found.getUpdateTime());
+        Long firstDefCreateTime = found.getCreateTime();
 
         def.setVersion(2);
+        def.setCreateTime(5L);
         redisMetadataDAO.createWorkflowDef(def);
+
+        found = redisMetadataDAO.getLatestWorkflowDef(def.getName()).get();
+        assertEquals(def.getName(), found.getName());
+        assertEquals(def.getVersion(), found.getVersion());
+        assertEquals(2, found.getVersion());
+        assertNotNull(found.getCreateTime());
+        assertNull(found.getUpdateTime());
+        Long secondDefCreateTime = found.getCreateTime();
+        assertNotEquals(firstDefCreateTime, secondDefCreateTime);
 
         all = redisMetadataDAO.getAllWorkflowDefs();
         assertNotNull(all);
         assertEquals(2, all.size());
         assertEquals("test", all.get(0).getName());
         assertEquals(1, all.get(0).getVersion());
-
-        found = redisMetadataDAO.getLatestWorkflowDef(def.getName()).get();
-        assertEquals(def.getName(), found.getName());
-        assertEquals(def.getVersion(), found.getVersion());
-        assertEquals(2, found.getVersion());
+        assertEquals(firstDefCreateTime, all.get(0).getCreateTime());
+        assertNull(all.get(0).getUpdateTime());
 
         all = redisMetadataDAO.getAllVersions(def.getName());
         assertNotNull(all);
@@ -120,11 +131,19 @@ public class RedisMetadataDAOTest {
         assertEquals("test", all.get(1).getName());
         assertEquals(1, all.get(0).getVersion());
         assertEquals(2, all.get(1).getVersion());
+        assertEquals(firstDefCreateTime, all.get(0).getCreateTime());
+        assertNull(all.get(0).getUpdateTime());
+        assertEquals(secondDefCreateTime, all.get(1).getCreateTime());
+        assertNull(all.get(1).getUpdateTime());
 
         def.setDescription("updated");
+        Long updateTime = 6L;
+        def.setUpdateTime(updateTime);
         redisMetadataDAO.updateWorkflowDef(def);
         found = redisMetadataDAO.getWorkflowDef(def.getName(), def.getVersion()).get();
         assertEquals(def.getDescription(), found.getDescription());
+        assertEquals(secondDefCreateTime, found.getCreateTime());
+        assertEquals(updateTime, found.getUpdateTime());
 
         List<String> allnames = redisMetadataDAO.findAll();
         assertNotNull(allnames);
