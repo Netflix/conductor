@@ -357,3 +357,23 @@ export function getTaskLogs(taskId) {
     });
   }
 }
+
+export function getErrorData(workflowId) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_ERROR_DATA'
+    });
+
+    const token = authHelper.getLocalAuthToken();
+    return http.post('/errorRegistrySearch', null, token).then((data) => {
+      dispatch({
+        type: 'RECEIVED_ERROR_DATA'
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
