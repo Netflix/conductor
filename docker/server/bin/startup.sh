@@ -15,6 +15,7 @@
 # startup.sh - startup script for the server docker image
 
 echo "Starting Conductor server"
+set -a
 
 # Start the server
 cd /app/libs
@@ -32,5 +33,9 @@ if [ -z "$CONFIG_PROP" ];
 fi
 
 echo "Using java options config: $JAVA_OPTS"
+
+if [ -f "/set_env_secrets.sh" ]; then
+. /set_env_secrets.sh
+fi
 
 java ${JAVA_OPTS} -jar -DCONDUCTOR_CONFIG_FILE=$config_file conductor-server-*-boot.jar
