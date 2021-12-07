@@ -37,7 +37,7 @@ public class NATSStreamConfiguration {
         return new NATSStreamEventQueueProvider(properties, scheduler);
     }
 
-    @ConditionalOnProperty(name = "conductor.default-event-queue.type", havingValue = "nats_stream", matchIfMissing = true)
+    @ConditionalOnProperty(name = "conductor.default-event-queue.type", havingValue = "nats_stream")
     @Bean
     public Map<Task.Status, ObservableQueue> getQueues(ConductorProperties conductorProperties,
         NATSStreamProperties properties, Scheduler scheduler) {
