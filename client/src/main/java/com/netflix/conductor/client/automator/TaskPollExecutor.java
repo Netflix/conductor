@@ -126,12 +126,7 @@ class TaskPollExecutor {
         }
     }
 
-    void shutdown() {
-        shutdownExecutorService(executorService);
-    }
-
-    void shutdownExecutorService(ExecutorService executorService) {
-        int timeout = 10;
+    void shutdownExecutorService(ExecutorService executorService, int timeout) {
         try {
             if (executorService.awaitTermination(timeout, TimeUnit.SECONDS)) {
                 LOGGER.debug("tasks completed, shutting down");
