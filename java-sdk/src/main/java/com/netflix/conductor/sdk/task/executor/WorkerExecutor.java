@@ -81,7 +81,6 @@ public class WorkerExecutor implements Worker {
             if (paramAnnotation != null && paramAnnotation.length > 0) {
                 for (Annotation ann : paramAnnotation) {
                     if (ann.annotationType().equals(IpParam.class)) {
-                        System.out.println("Here");
                         IpParam ip = (IpParam) ann;
                         String name = ip.value();
                         Object value = task.getInputData().get(name);
