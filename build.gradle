@@ -36,6 +36,15 @@ subprojects {
         jcenter()
     }
 
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.apache.logging.log4j' && details.target.version < '2.16.0') {
+                details.useVersion '2.16.0'
+                details.because 'CVE-2021-44228'
+            }
+        }
+    }
+
     dependencies {
     	testCompile 'junit:junit-dep:4.10'
     	testCompile 'org.mockito:mockito-all:1.10.0'
