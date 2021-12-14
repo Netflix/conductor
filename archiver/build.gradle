@@ -25,7 +25,7 @@ dependencies {
 
     // Log4j
 //    compile 'org.apache.logging.log4j:log4j-core:2.11.1'
-    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.15.0'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
 
     // PostgreSQL
     compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
