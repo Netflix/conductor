@@ -31,7 +31,7 @@ export default function KeyValueTable({ data }) {
         let displayValue;
         const renderer = item.type ? customTypeRenderers[item.type] : null;
         if(renderer){
-          displayValue = renderer(item.value, env)
+          displayValue = renderer(item.value, data, env)
         }
         else {
           switch (item.type) {
@@ -59,7 +59,7 @@ export default function KeyValueTable({ data }) {
               classes={{ primary: classes.labelText }}
               primary={item.label}
             />
-            <ListItemText className={classes.value} primary={value} />
+            <ListItemText className={classes.value} primary={displayValue} />
           </ListItem>
         );
       })}
