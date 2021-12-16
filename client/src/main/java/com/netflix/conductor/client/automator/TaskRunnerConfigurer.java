@@ -130,7 +130,7 @@ public class TaskRunnerConfigurer {
          */
         public Builder withShutdownGracePeriodSeconds(int shutdownGracePeriodSeconds) {
             if (shutdownGracePeriodSeconds < 1) {
-                throw new IllegalArgumentException("No. of shutdownGracePeriodSeconds cannot be less than 1");
+                throw new IllegalArgumentException("Seconds of shutdownGracePeriod cannot be less than 1");
             }
             this.shutdownGracePeriodSeconds = shutdownGracePeriodSeconds;
             return this;
