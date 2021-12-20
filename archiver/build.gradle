@@ -16,8 +16,8 @@ repositories {
 dependencies {
     configurations.all {
         resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'org.apache.logging.log4j' && details.target.version < '2.16.0') {
-                details.useVersion '2.16.0'
+            if (details.requested.group == 'org.apache.logging.log4j' && details.target.version < '2.17.0') {
+                details.useVersion '2.17.0'
                 details.because 'CVE-2021-44228'
             }
         }
@@ -25,7 +25,7 @@ dependencies {
 
     // Log4j
 //    compile 'org.apache.logging.log4j:log4j-core:2.11.1'
-    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
 
     // PostgreSQL
     compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
