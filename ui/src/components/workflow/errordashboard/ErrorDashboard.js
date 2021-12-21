@@ -33,7 +33,6 @@ const ErrorDashboard = React.createClass({
       this.setState({ search: val });
     },
  searchBtnClick() {
-    alert("search click"+ this.state.search)
         const inputData = {
                  searchString : this.state.search
                 };

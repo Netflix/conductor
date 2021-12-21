@@ -359,7 +359,6 @@ export function getTaskLogs(taskId) {
 }
 
 export function getErrorData(inputData) {
-console.log("inside workflow action="+inputData.searchString)
   return function (dispatch) {
     dispatch({
       type: 'REQUESTED_ERROR_DATA'

@@ -307,7 +307,6 @@ router.get('/queue/data', async (req, res, next) => {
 });
 
 router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
-console.log(req.params.searchString);
   try {
     const token = getToken(req);
     const baseURL = await lookup.lookup();
