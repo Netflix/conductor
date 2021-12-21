@@ -307,14 +307,15 @@ router.get('/queue/data', async (req, res, next) => {
 });
 
 router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
-console.log(req.searchString);
+console.log(req.params.searchString);
   try {
     const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
     const inputData = {
-               workflowId : req.searchString
+               workflowId : req.params.searchString
               };
+              console.log(inputData);
     const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
     res.status(200).send({result});
   } catch (err) {
