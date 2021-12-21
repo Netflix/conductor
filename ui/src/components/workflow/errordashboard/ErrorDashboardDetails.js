@@ -18,7 +18,7 @@ const ErrorDashboardDetails = React.createClass({
   },
 
   componentWillMount(){
-    //this.props.dispatch(getErrorData());
+
   },
 
   componentWillReceiveProps(nextProps){

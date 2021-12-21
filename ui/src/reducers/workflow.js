@@ -265,6 +265,20 @@ export default function workflows(state = initialState, action) {
         fetching: false,
         refetch: false
       };
+     case 'REQUESTED_ERROR_DATA':
+            return {
+              ...state,
+              fetching: true,
+              error: false
+            };
+     case 'RECEIVED_ERROR_DATA':
+            return {
+              ...state,
+              errorData: action.errorData,
+              error: false,
+              fetching: false,
+              refetch: false
+            };
     default:
       return state;
     };

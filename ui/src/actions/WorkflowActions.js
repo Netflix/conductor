@@ -358,16 +358,17 @@ export function getTaskLogs(taskId) {
   }
 }
 
-export function getErrorData(workflowId) {
+export function getErrorData(inputData) {
+console.log("inside workflow action="+inputData.searchString)
   return function (dispatch) {
     dispatch({
       type: 'REQUESTED_ERROR_DATA'
     });
-
     const token = authHelper.getLocalAuthToken();
-    return http.post('/errorRegistrySearch', null, token).then((data) => {
+    return http.post('/api/wfe/errorRegistrySearch/'+inputData.searchString, null, token).then((data) => {
       dispatch({
-        type: 'RECEIVED_ERROR_DATA'
+        type: 'RECEIVED_ERROR_DATA',
+        errorData: data
       });
     }).catch((e) => {
       dispatch({

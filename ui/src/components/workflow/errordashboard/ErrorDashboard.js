@@ -5,7 +5,7 @@ import { Breadcrumb, BreadcrumbItem, Input, Well, Button, Panel, DropdownButton,
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import Typeahead from 'react-bootstrap-typeahead';
 import { connect } from 'react-redux';
-import { getQueueData } from '../../../actions/WorkflowActions';
+import { getErrorData } from '../../../actions/WorkflowActions';
 
 const ErrorDashboard = React.createClass({
 
@@ -18,15 +18,30 @@ const ErrorDashboard = React.createClass({
   },
 
   componentWillMount(){
-    //this.props.dispatch(getErrorData());
+     const inputData = {
+           searchString :this.state.search
+          };
+        this.props.dispatch(getErrorData(inputData));
   },
 
   componentWillReceiveProps(nextProps){
     this.state.errorData = nextProps.errorData;
   },
 
+  searchChange(e){
+      let val = e.target.value;
+      this.setState({ search: val });
+    },
+ searchBtnClick() {
+    alert("search click"+ this.state.search)
+        const inputData = {
+                 searchString : this.state.search
+                };
+              this.props.dispatch(getErrorData(inputData));
+      },
   render() {
     var errorData = this.state.errorData;
+    console.log(errorData);
     const rangeList = ['All data','This year',
       'Last quarter','This quarter',
       'Last month','This month',

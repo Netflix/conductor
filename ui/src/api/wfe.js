@@ -306,4 +306,20 @@ router.get('/queue/data', async (req, res, next) => {
   }
 });
 
+router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
+console.log(req.searchString);
+  try {
+    const token = getToken(req);
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+    const inputData = {
+               workflowId : req.searchString
+              };
+    const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
+    res.status(200).send({result});
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
