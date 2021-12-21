@@ -7,6 +7,7 @@ import WorkflowMetaList from './components/workflow/WorkflowMetaList';
 import TasksMetaList from './components/workflow/tasks/TasksMetaList';
 import QueueList from './components/workflow/queues/QueueList';
 import ErrorDashboard from './components/workflow/errordashboard/ErrorDashboard';
+import ErrorDashboardDetails from './components/workflow/errordashboard/ErrorDashboardDetails';
 import WorkflowMetaDetails from './components/workflow/WorkflowMetaDetails';
 import Logout from './components/common/Logout';
 import Intro from './components/common/Home';
@@ -28,6 +29,7 @@ const routeConfig = [
       { path: 'logout', component: Logout},
       { path: 'help', component: Help },
       { path: '/workflow/errorDashboard', component: ErrorDashboard },
+      { path: '/workflow/errorDashboard/details', component: ErrorDashboardDetails },
     ]
   }
 ];

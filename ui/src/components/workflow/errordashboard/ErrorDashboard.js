@@ -77,37 +77,19 @@ const ErrorDashboard = React.createClass({
                       </Row>
                    </Grid>
          </Panel>
-       <Panel header="Null pointer exception">
-        <BootstrapTable data={errorData} striped={true} hover={true} exportCSV={false} pagination={false}>
-          <TableHeaderColumn dataField="workflow_id" isKey={true} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
-          <TableHeaderColumn dataField="order_id" dataSort={true} >Order ID</TableHeaderColumn>
-          <TableHeaderColumn dataField="job_id" dataSort={true} >Job ID</TableHeaderColumn>
-          <TableHeaderColumn dataField="ranking_id" dataSort={true} >Ranking ID</TableHeaderColumn>
-          <TableHeaderColumn dataField="failure_time" dataSort={true} >Failure Time</TableHeaderColumn>
-          <TableHeaderColumn dataField="complete_message" dataSort={true} >Complete Error Message</TableHeaderColumn>
-          </BootstrapTable>
-      </Panel>
-       <Panel header="Invalid task specified">
-              <BootstrapTable data={errorData} striped={true} hover={true} exportCSV={false} pagination={false}>
-                <TableHeaderColumn dataField="workflow_id" isKey={true} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="order_id" dataSort={true} >Order ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="job_id" dataSort={true} >Job ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="ranking_id" dataSort={true} >Ranking ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="failure_time" dataSort={true} >Failure Time</TableHeaderColumn>
-                <TableHeaderColumn dataField="complete_message" dataSort={true} >Complete Error Message</TableHeaderColumn>
-                </BootstrapTable>
-            </Panel>
+       <Panel header="Unknown Errors" >
 
-             <Panel header="Ping time out">
-                    <BootstrapTable data={errorData} striped={true} hover={true} exportCSV={false} pagination={false}>
-                      <TableHeaderColumn dataField="workflow_id" isKey={true} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
-                      <TableHeaderColumn dataField="order_id" dataSort={true} >Order ID</TableHeaderColumn>
-                      <TableHeaderColumn dataField="job_id" dataSort={true} >Job ID</TableHeaderColumn>
-                      <TableHeaderColumn dataField="ranking_id" dataSort={true} >Ranking ID</TableHeaderColumn>
-                      <TableHeaderColumn dataField="failure_time" dataSort={true} >Failure Time</TableHeaderColumn>
-                      <TableHeaderColumn dataField="complete_message" dataSort={true} >Complete Error Message</TableHeaderColumn>
-                      </BootstrapTable>
-                  </Panel>
+        <Link to={`/workflow/errorDashboard/details`}>Invalid task specified</Link>&nbsp;&nbsp;
+<label className="small nobold"> - Total count:10</label><br/>
+  <Link to={`/workflow/errorDashboard/details`}>Unknown Error</Link>&nbsp;&nbsp;
+<label className="small nobold"> - Total count:10</label>
+      </Panel>
+       <Panel header="Known Errors">
+        <Link to={`/workflow/errorDashboard/details`}>Transcode job failed-</Link> &nbsp;&nbsp;
+<label className="small nobold"> - Total count:10</label><br/>
+   <Link to={`/workflow/errorDashboard/details`}>Ping Time out</Link>&nbsp;&nbsp;
+              <label className="small nobold"> - Total count:10</label>
+            </Panel>
       </div>
     );
   }
