@@ -312,7 +312,10 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
     const inputData = {
-               workflowId : req.params.searchString
+               workflowId : req.params.searchString,
+               jobId : req.params.searchString,
+               rankingId : req.params.searchString,
+               orderId : req.params.searchString
               };
               console.log(inputData);
     const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);

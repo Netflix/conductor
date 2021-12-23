@@ -815,20 +815,16 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			params.add(workflowErrorRegistryEntry.getParentWorkflowId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getJobId() != null) {
-			SQL.append("AND job_id = ? ");
+			SQL.append("OR job_id = ? ");
 			params.add(workflowErrorRegistryEntry.getJobId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getRankingId() != null) {
-			SQL.append("AND ranking_id = ? ");
+			SQL.append("OR ranking_id = ? ");
 			params.add(workflowErrorRegistryEntry.getRankingId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getOrderId() != null) {
-			SQL.append("AND order_id = ? ");
+			SQL.append("OR order_id = ? ");
 			params.add(workflowErrorRegistryEntry.getOrderId());
-		}
-		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
-			SQL.append("AND complete_error = ? ");
-			params.add(workflowErrorRegistryEntry.getCompleteError());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
 			SQL.append("AND complete_error = ? ");
