@@ -20,199 +20,205 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("conductor.event-queues.amqp")
 public class AMQPEventQueueProperties {
 
-    private int batchSize = 1;
+	private int batchSize = 1;
 
-    private Duration pollTimeDuration = Duration.ofMillis(100);
+	private Duration pollTimeDuration = Duration.ofMillis(100);
 
-    private String hosts = ConnectionFactory.DEFAULT_HOST;
+	private String hosts = ConnectionFactory.DEFAULT_HOST;
 
-    private String username = ConnectionFactory.DEFAULT_USER;
+	private String username = ConnectionFactory.DEFAULT_USER;
 
-    private String password = ConnectionFactory.DEFAULT_PASS;
+	private String password = ConnectionFactory.DEFAULT_PASS;
 
-    private String virtualHost = ConnectionFactory.DEFAULT_VHOST;
+	private String virtualHost = ConnectionFactory.DEFAULT_VHOST;
 
-    private int port = PROTOCOL.PORT;
+	private int port = PROTOCOL.PORT;
 
-    private Duration connectionTimeout = Duration.ofMillis(ConnectionFactory.DEFAULT_CONNECTION_TIMEOUT);
+	private Duration connectionTimeout = Duration.ofMillis(ConnectionFactory.DEFAULT_CONNECTION_TIMEOUT);
 
-    private boolean useNio = false;
+	private int networkRecoveryIntervalInMilliSecs = 60000;
+	
+	private int requestHeartbeatTimeoutInSecs = 30;
+	
+	private int handshakeTimeoutInSecs = 60;
 
-    private boolean durable = true;
+	private boolean useNio = false;
 
-    private boolean exclusive = false;
+	private boolean durable = true;
 
-    private boolean autoDelete = false;
+	private boolean exclusive = false;
 
-    private String contentType = "application/json";
+	private boolean autoDelete = false;
 
-    private String contentEncoding = "UTF-8";
+	private String contentType = "application/json";
 
-    private String exchangeType = "topic";
-    
-    private String queueType = "classic";
-    
-    private boolean sequentialMsgProcessing = true; 
-    
-    private int deliveryMode = 2;
+	private String contentEncoding = "UTF-8";
 
-    private boolean useExchange = true;
+	private String exchangeType = "topic";
 
-    private String listenerQueuePrefix = "";
+	private String queueType = "classic";
 
-    public int getBatchSize() {
-        return batchSize;
-    }
+	private boolean sequentialMsgProcessing = true;
 
-    public void setBatchSize(int batchSize) {
-        this.batchSize = batchSize;
-    }
+	private int deliveryMode = 2;
 
-    public Duration getPollTimeDuration() {
-        return pollTimeDuration;
-    }
+	private boolean useExchange = true;
 
-    public void setPollTimeDuration(Duration pollTimeDuration) {
-        this.pollTimeDuration = pollTimeDuration;
-    }
+	private String listenerQueuePrefix = "";
 
-    public String getHosts() {
-        return hosts;
-    }
+	public int getBatchSize() {
+		return batchSize;
+	}
 
-    public void setHosts(String hosts) {
-        this.hosts = hosts;
-    }
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
+	}
 
-    public String getUsername() {
-        return username;
-    }
+	public Duration getPollTimeDuration() {
+		return pollTimeDuration;
+	}
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	public void setPollTimeDuration(Duration pollTimeDuration) {
+		this.pollTimeDuration = pollTimeDuration;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public String getHosts() {
+		return hosts;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public void setHosts(String hosts) {
+		this.hosts = hosts;
+	}
 
-    public String getVirtualHost() {
-        return virtualHost;
-    }
+	public String getUsername() {
+		return username;
+	}
 
-    public void setVirtualHost(String virtualHost) {
-        this.virtualHost = virtualHost;
-    }
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    public int getPort() {
-        return port;
-    }
+	public String getPassword() {
+		return password;
+	}
 
-    public void setPort(int port) {
-        this.port = port;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    public Duration getConnectionTimeout() {
-        return connectionTimeout;
-    }
+	public String getVirtualHost() {
+		return virtualHost;
+	}
 
-    public void setConnectionTimeout(Duration connectionTimeout) {
-        this.connectionTimeout = connectionTimeout;
-    }
+	public void setVirtualHost(String virtualHost) {
+		this.virtualHost = virtualHost;
+	}
 
-    public boolean isUseNio() {
-        return useNio;
-    }
+	public int getPort() {
+		return port;
+	}
 
-    public void setUseNio(boolean useNio) {
-        this.useNio = useNio;
-    }
+	public void setPort(int port) {
+		this.port = port;
+	}
 
-    public boolean isDurable() {
-        return durable;
-    }
+	public Duration getConnectionTimeout() {
+		return connectionTimeout;
+	}
 
-    public void setDurable(boolean durable) {
-        this.durable = durable;
-    }
+	public void setConnectionTimeout(Duration connectionTimeout) {
+		this.connectionTimeout = connectionTimeout;
+	}
 
-    public boolean isExclusive() {
-        return exclusive;
-    }
+	public boolean isUseNio() {
+		return useNio;
+	}
 
-    public void setExclusive(boolean exclusive) {
-        this.exclusive = exclusive;
-    }
+	public void setUseNio(boolean useNio) {
+		this.useNio = useNio;
+	}
 
-    public boolean isAutoDelete() {
-        return autoDelete;
-    }
+	public boolean isDurable() {
+		return durable;
+	}
 
-    public void setAutoDelete(boolean autoDelete) {
-        this.autoDelete = autoDelete;
-    }
+	public void setDurable(boolean durable) {
+		this.durable = durable;
+	}
 
-    public String getContentType() {
-        return contentType;
-    }
+	public boolean isExclusive() {
+		return exclusive;
+	}
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
+	public void setExclusive(boolean exclusive) {
+		this.exclusive = exclusive;
+	}
 
-    public String getContentEncoding() {
-        return contentEncoding;
-    }
+	public boolean isAutoDelete() {
+		return autoDelete;
+	}
 
-    public void setContentEncoding(String contentEncoding) {
-        this.contentEncoding = contentEncoding;
-    }
+	public void setAutoDelete(boolean autoDelete) {
+		this.autoDelete = autoDelete;
+	}
 
-    public String getExchangeType() {
-        return exchangeType;
-    }
+	public String getContentType() {
+		return contentType;
+	}
 
-    public void setExchangeType(String exchangeType) {
-        this.exchangeType = exchangeType;
-    }
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
 
-    public int getDeliveryMode() {
-        return deliveryMode;
-    }
+	public String getContentEncoding() {
+		return contentEncoding;
+	}
 
-    public void setDeliveryMode(int deliveryMode) {
-        this.deliveryMode = deliveryMode;
-    }
+	public void setContentEncoding(String contentEncoding) {
+		this.contentEncoding = contentEncoding;
+	}
 
-    public boolean isUseExchange() {
-        return useExchange;
-    }
+	public String getExchangeType() {
+		return exchangeType;
+	}
 
-    public void setUseExchange(boolean useExchange) {
-        this.useExchange = useExchange;
-    }
+	public void setExchangeType(String exchangeType) {
+		this.exchangeType = exchangeType;
+	}
 
-    public String getListenerQueuePrefix() {
-        return listenerQueuePrefix;
-    }
+	public int getDeliveryMode() {
+		return deliveryMode;
+	}
 
-    public void setListenerQueuePrefix(String listenerQueuePrefix) {
-        this.listenerQueuePrefix = listenerQueuePrefix;
-    }
+	public void setDeliveryMode(int deliveryMode) {
+		this.deliveryMode = deliveryMode;
+	}
+
+	public boolean isUseExchange() {
+		return useExchange;
+	}
+
+	public void setUseExchange(boolean useExchange) {
+		this.useExchange = useExchange;
+	}
+
+	public String getListenerQueuePrefix() {
+		return listenerQueuePrefix;
+	}
+
+	public void setListenerQueuePrefix(String listenerQueuePrefix) {
+		this.listenerQueuePrefix = listenerQueuePrefix;
+	}
 
 	public String getQueueType() {
 		return queueType;
 	}
 
 	/**
-	 * @param queueType
-	 * Supports two queue types, 'classic' and 'quorum'. 
-	 * Classic will be be deprecated in 2022 and its usage discouraged from RabbitMQ community.
-	 * So not using enum type here to hold different values.
+	 * @param queueType Supports two queue types, 'classic' and 'quorum'. Classic
+	 *                  will be be deprecated in 2022 and its usage discouraged from
+	 *                  RabbitMQ community. So not using enum type here to hold
+	 *                  different values.
 	 */
 	public void setQueueType(String queueType) {
 		this.queueType = queueType;
@@ -226,12 +232,39 @@ public class AMQPEventQueueProperties {
 	}
 
 	/**
-	 * @param sequentialMsgProcessing the sequentialMsgProcessing to set
-	 * Supports sequential and parallel message processing capabilities. 
-	 * In parallel message processing, 
-	 * number of threads are controlled by batch size. No thread control or execution framework required here as threads are limited and short-lived. 
+	 * @param sequentialMsgProcessing the sequentialMsgProcessing to set Supports
+	 *                                sequential and parallel message processing
+	 *                                capabilities. In parallel message processing,
+	 *                                number of threads are controlled by batch
+	 *                                size. No thread control or execution framework
+	 *                                required here as threads are limited and
+	 *                                short-lived.
 	 */
 	public void setSequentialMsgProcessing(boolean sequentialMsgProcessing) {
 		this.sequentialMsgProcessing = sequentialMsgProcessing;
+	}
+
+	public int getNetworkRecoveryIntervalInMilliSecs() {
+		return networkRecoveryIntervalInMilliSecs;
+	}
+
+	public void setNetworkRecoveryIntervalInMilliSecs(int networkRecoveryIntervalInMilliSecs) {
+		this.networkRecoveryIntervalInMilliSecs = networkRecoveryIntervalInMilliSecs;
+	}
+
+	public int getRequestHeartbeatTimeoutInSecs() {
+		return requestHeartbeatTimeoutInSecs;
+	}
+
+	public void setRequestHeartbeatTimeoutInSecs(int requestHeartbeatTimeoutInSecs) {
+		this.requestHeartbeatTimeoutInSecs = requestHeartbeatTimeoutInSecs;
+	}
+
+	public int getHandshakeTimeoutInSecs() {
+		return handshakeTimeoutInSecs;
+	}
+
+	public void setHandshakeTimeoutInSecs(int handshakeTimeoutInSecs) {
+		this.handshakeTimeoutInSecs = handshakeTimeoutInSecs;
 	}
 }
