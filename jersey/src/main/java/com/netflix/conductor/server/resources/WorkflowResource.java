@@ -872,7 +872,7 @@ public class WorkflowResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiImplicitParams({
 			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
-	public List<WorkflowErrorRegistry>  searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry,@Context HttpHeaders headers) throws Exception{
+	public List<WorkflowError>  searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry,@Context HttpHeaders headers) throws Exception{
 		if (!bypassAuth(headers)) {
 			String primarRole = executor.checkUserRoles(headers);
 			if (!primarRole.endsWith("admin")) {

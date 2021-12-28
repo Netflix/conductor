@@ -10,6 +10,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowError;
 import com.netflix.conductor.common.run.WorkflowErrorRegistry;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -799,43 +800,45 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				.executeUpdate());
 	}
 
-	public List<WorkflowErrorRegistry> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistryEntry){
-		StringBuilder SQL =  new StringBuilder("SELECT * FROM workflow_error_registry WHERE 1=1 ");
+	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistryEntry){
+		StringBuilder SQL =  new StringBuilder("SELECT meta_error_registry.id, meta_error_registry.lookup,COUNT(workflow_error_registry.id) AS numberOfErrors FROM workflow_error_registry \n" +
+				"LEFT JOIN meta_error_registry ON workflow_error_registry.error_lookup_id = meta_error_registry.id  \n" +
+				" WHERE 1=1 ");
 		LinkedList<Object> params = new LinkedList<>();
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getWorkflowId() != null) {
-			SQL.append("AND workflow_id = ? ");
+			SQL.append("AND workflow_error_registry.workflow_id = ? ");
 			params.add(workflowErrorRegistryEntry.getWorkflowId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStatus() != null) {
-			SQL.append("AND workflow_status = ? ");
+			SQL.append("AND workflow_error_registry.workflow_status = ? ");
 			params.add(workflowErrorRegistryEntry.getStatus());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getParentWorkflowId() != null) {
-			SQL.append("AND parent_workflow_id = ? ");
+			SQL.append("AND workflow_error_registry.parent_workflow_id = ? ");
 			params.add(workflowErrorRegistryEntry.getParentWorkflowId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getJobId() != null) {
-			SQL.append("OR job_id = ? ");
+			SQL.append("OR workflow_error_registry.job_id = ? ");
 			params.add(workflowErrorRegistryEntry.getJobId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getRankingId() != null) {
-			SQL.append("OR ranking_id = ? ");
+			SQL.append("OR workflow_error_registry.ranking_id = ? ");
 			params.add(workflowErrorRegistryEntry.getRankingId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getOrderId() != null) {
-			SQL.append("OR order_id = ? ");
+			SQL.append("OR workflow_error_registry.order_id = ? ");
 			params.add(workflowErrorRegistryEntry.getOrderId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
-			SQL.append("AND complete_error = ? ");
+			SQL.append("AND workflow_error_registry.complete_error = ? ");
 			params.add(workflowErrorRegistryEntry.getCompleteError());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStartTime() != 0 && workflowErrorRegistryEntry.getEndTime() != 0) {
-			SQL.append("AND start_time >= ? and end_time <= ?");
+			SQL.append("AND workflow_error_registry.start_time >= ? and workflow_error_registry.end_time <= ?");
 			params.add(workflowErrorRegistryEntry.getStartTime());
 			params.add(workflowErrorRegistryEntry.getEndTime());
 		}
-
+		SQL.append(" GROUP BY meta_error_registry.id");
 		return queryWithTransaction(SQL.toString(), q -> {
 			params.forEach(p -> {
 				if (p instanceof Timestamp) {
@@ -851,26 +854,15 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
 
 			return q.executeAndFetch(rs -> {
-				List<WorkflowErrorRegistry> workflowErrorRegistries = new LinkedList<>();
+				List<WorkflowError> workflowErrors = new LinkedList<>();
 				while (rs.next()) {
-					WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
-
-					workflowErrorRegistry.setStatus(rs.getString("workflow_status"));
-					workflowErrorRegistry.setWorkflowId(rs.getString("workflow_id"));
-					workflowErrorRegistry.setWorkflowType(rs.getString("workflow_type"));
-					workflowErrorRegistry.setErrorLookUpId(rs.getInt("error_lookup_id"));
-					workflowErrorRegistry.setStartTime(rs.getTimestamp("start_time").getTime());
-					workflowErrorRegistry.setEndTime(rs.getTimestamp("end_time").getTime());
-					workflowErrorRegistry.setParentWorkflowId(rs.getString("parent_workflow_id"));
-					workflowErrorRegistry.setJobId(rs.getString("job_id"));
-					workflowErrorRegistry.setRankingId(rs.getString("ranking_id"));
-					workflowErrorRegistry.setOrderId(rs.getString("order_id"));
-					workflowErrorRegistry.setCompleteError(rs.getString("complete_error"));
-
-					workflowErrorRegistries.add(workflowErrorRegistry);
+					WorkflowError workflowError = new WorkflowError();
+					workflowError.setId(rs.getInt("id"));
+					workflowError.setLookup(rs.getString("lookup"));
+					workflowError.setTotalCount(rs.getString("numberoferrors"));
+					workflowErrors.add(workflowError);
 				}
-
-				return workflowErrorRegistries;
+				return workflowErrors;
 			});
 		});
 

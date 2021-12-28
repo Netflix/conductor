@@ -317,7 +317,6 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
                rankingId : req.params.searchString,
                orderId : req.params.searchString
               };
-              console.log(inputData);
     const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
     res.status(200).send({result});
   } catch (err) {

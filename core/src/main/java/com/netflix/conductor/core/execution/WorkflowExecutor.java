@@ -37,6 +37,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.common.run.WorkflowError;
 import com.netflix.conductor.common.run.WorkflowErrorRegistry;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
@@ -2125,8 +2126,8 @@ public class WorkflowExecutor {
 			e.printStackTrace();
 		}
 	}
-	public List<WorkflowErrorRegistry> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
-		List<WorkflowErrorRegistry> workflowErrorRegistries = edao.searchWorkflowErrorRegistry(workflowErrorRegistry);
+	public List<WorkflowError> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+		List<WorkflowError> workflowErrorRegistries = edao.searchWorkflowErrorRegistry(workflowErrorRegistry);
 		return workflowErrorRegistries;
 	}
 }
