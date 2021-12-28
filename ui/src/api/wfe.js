@@ -308,7 +308,14 @@ router.get('/queue/data', async (req, res, next) => {
 
 router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
   try {
-  console.log(req.params.searchString);
+    let from = null;
+    let end = null;
+    var frmdate = req.query.frmDate;
+    var todate = req.query.toDate;
+    if (frmdate != 'undefined' && todate != 'undefined' && frmdate != '' && todate != '') {
+         from = moment(frmdate);
+         end = moment(todate);
+       }
     const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
@@ -318,7 +325,9 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
                    workflowId : req.params.searchString,
                    jobId : req.params.searchString,
                    rankingId : req.params.searchString,
-                   orderId : req.params.searchString
+                   orderId : req.params.searchString,
+                   startTime :  from.toISOString(),
+                   endtime : end.toISOString()
                   };
          const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
          res.status(200).send({result});

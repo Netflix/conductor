@@ -19,7 +19,9 @@ const ErrorDashboard = React.createClass({
 
   componentWillMount(){
      const inputData = {
-           searchString :this.state.search
+           searchString :this.state.search,
+           frmDate :this.state.frmDate,
+           toDate: this.state.toDate
           };
         this.props.dispatch(getErrorData(inputData));
   },
@@ -32,9 +34,18 @@ const ErrorDashboard = React.createClass({
       let val = e.target.value;
       this.setState({ search: val });
     },
+    dateChangeFrom(e){
+      this.setState({ datefrm: e.target.value });
+    },
+    dateChangeTo(e){
+         this.setState({ dateto: e.target.value });
+      },
+
  searchBtnClick() {
         const inputData = {
-                 searchString : this.state.search
+                 searchString : this.state.search,
+                 frmDate : this.state.datefrm,
+                 toDate : this.state.dateto,
                 };
               this.props.dispatch(getErrorData(inputData));
       },
