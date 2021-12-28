@@ -97,7 +97,7 @@ const ErrorDashboard = React.createClass({
                   <Link to={`/workflow/errorDashboard/details`}>{item.lookup}-</Link>
                    <label className="small nobold">Total Count:{item.totalCount} </label><br/>
                    </Panel>
-                   )
+                   )}
                     {item.id === undefined && (
                         <Panel header="Unknown Errors">
                           <Link to={`/workflow/errorDashboard/details`}>{item.lookup}-</Link>
