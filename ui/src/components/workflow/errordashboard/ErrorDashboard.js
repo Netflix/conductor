@@ -40,7 +40,6 @@ const ErrorDashboard = React.createClass({
       },
   render() {
     var errorData = this.state.errorData;
-    console.log(errorData);
     const rangeList = ['All data','This year',
       'Last quarter','This quarter',
       'Last month','This month',
@@ -91,19 +90,23 @@ const ErrorDashboard = React.createClass({
                       </Row>
                    </Grid>
          </Panel>
-       <Panel header="Unknown Errors" >
-
-        <Link to={`/workflow/errorDashboard/details`}>Invalid task specified</Link>&nbsp;&nbsp;
-<label className="small nobold"> - Total count:10</label><br/>
-  <Link to={`/workflow/errorDashboard/details`}>Unknown Error</Link>&nbsp;&nbsp;
-<label className="small nobold"> - Total count:10</label>
-      </Panel>
-       <Panel header="Known Errors">
-        <Link to={`/workflow/errorDashboard/details`}>Transcode job failed-</Link> &nbsp;&nbsp;
-<label className="small nobold"> - Total count:10</label><br/>
-   <Link to={`/workflow/errorDashboard/details`}>Ping Time out</Link>&nbsp;&nbsp;
-              <label className="small nobold"> - Total count:10</label>
-            </Panel>
+           {errorData !== undefined && errorData.result !== undefined && errorData.result.map(item=>(
+                  <div>
+                  {item.id !== undefined && (
+                  <Panel header="Known Errors">
+                  <Link to={`/workflow/errorDashboard/details`}>{item.lookup}-</Link>
+                   <label className="small nobold">Total Count:{item.totalCount} </label><br/>
+                   </Panel>
+                   )
+                    {item.id === undefined && (
+                        <Panel header="Unknown Errors">
+                          <Link to={`/workflow/errorDashboard/details`}>{item.lookup}-</Link>
+                          <label className="small nobold">Total Count:{item.totalCount} </label><br/>
+                        </Panel>
+                    )
+                   }
+                   </div>
+                ))}
       </div>
     );
   }
