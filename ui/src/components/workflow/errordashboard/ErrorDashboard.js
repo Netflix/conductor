@@ -85,8 +85,8 @@ const ErrorDashboard = React.createClass({
                          &nbsp;&nbsp;<input type="checkbox" checked={this.state.fullstr} onChange={this.prefChange} ref="fullstr"/><label className="small nobold">&nbsp;Search for entire string</label>
                          </Col>
                        <Col md={5}>
-                         <Typeahead ref="workflowTypes" onChange={this.workflowTypeChange} options={workflowNames} placeholder="Filter by workflow type" multiple={true} selected={this.state.workflowTypes}/>
-                         &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Filter by Workflow Type</label>
+                        <Button bsSize="small" bsStyle="success" onClick={this.clearBtnClick}>&nbsp;&nbsp;Clear date range</Button> &nbsp;&nbsp;
+                                                          <Button bsSize="medium" bsStyle="success" onClick={this.searchBtnClick} className="fa fa-search search-label">&nbsp;&nbsp;Search</Button>
                        </Col>
                      </Row>
                       <Row className="show-grid">
@@ -105,9 +105,7 @@ const ErrorDashboard = React.createClass({
 
                            </Col>
                              <Col md={3}>
-                                  <Button bsSize="small" bsStyle="success" onClick={this.clearBtnClick}>&nbsp;&nbsp;Clear date range</Button> &nbsp;&nbsp;
-                                   <Button bsSize="small" bsStyle="success" onClick={this.exportcsv}>Export Report</Button>&nbsp;&nbsp;
-                                   <Button bsSize="medium" bsStyle="success" onClick={this.searchBtnClick} className="fa fa-search search-label">&nbsp;&nbsp;Search</Button>
+
                               </Col>
                       </Row>
                    </Grid>
