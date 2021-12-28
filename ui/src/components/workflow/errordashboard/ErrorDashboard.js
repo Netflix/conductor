@@ -40,6 +40,28 @@ const ErrorDashboard = React.createClass({
       },
   render() {
     var errorData = this.state.errorData;
+    var knownErrors = [];
+    var unknownErrors = [];
+      if (errorData !== undefined && errorData.result !== undefined ) {
+          errorData.result.forEach(function (d) {
+           if(d.id === 0)
+           {
+            unknownErrors.push({
+              id: d.id,
+              lookup: d.lookup,
+              totalCount: d.totalCount
+            });
+           }
+           else
+           {
+              knownErrors.push({
+                        id: d.id,
+                        lookup: d.lookup,
+                        totalCount: d.totalCount
+                       });
+           }
+          });
+        }
     const rangeList = ['All data','This year',
       'Last quarter','This quarter',
       'Last month','This month',
@@ -90,23 +112,23 @@ const ErrorDashboard = React.createClass({
                       </Row>
                    </Grid>
          </Panel>
-           {errorData !== undefined && errorData.result !== undefined && errorData.result.map(item=>(
+          <Panel header="Unknown Errors">
+          {unknownErrors !== undefined && unknownErrors.map(item=>(
+                                        <div>
+                                        <Link to={`/workflow/errorDashboard/details`}>Error Details-</Link>
+                                         <label className="small nobold">Total Count:{item.totalCount} </label><br/>
+                                         </div>
+                                      ))}
+            </Panel>
+           <Panel header="Known Errors">
+           {knownErrors !== undefined && knownErrors.map(item=>(
                   <div>
-                  {item.id !== undefined && (
-                  <Panel header="Known Errors">
                   <Link to={`/workflow/errorDashboard/details`}>{item.lookup}-</Link>
                    <label className="small nobold">Total Count:{item.totalCount} </label><br/>
-                   </Panel>
-                   )}
-                    {item.id === undefined && (
-                        <Panel header="Unknown Errors">
-                          <Link to={`/workflow/errorDashboard/details`}>{item.lookup}-</Link>
-                          <label className="small nobold">Total Count:{item.totalCount} </label><br/>
-                        </Panel>
-                    )
-                   }
                    </div>
                 ))}
+            </Panel>
+
       </div>
     );
   }
