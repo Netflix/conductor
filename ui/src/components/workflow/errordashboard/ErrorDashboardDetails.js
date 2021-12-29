@@ -22,7 +22,9 @@ const ErrorDashboardDetails = React.createClass({
   },
 
   componentWillReceiveProps(nextProps){
-    this.state.errorData = nextProps.errorData;
+    console.log(nextProps.params.errorLookupId)
+    console.log(nextProps.params.searchString)
+    //this.state.errorData = nextProps.errorData;
   },
 
   render() {

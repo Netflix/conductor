@@ -137,7 +137,7 @@ const ErrorDashboard = React.createClass({
           <Panel header="Unknown Errors">
           {unknownErrors !== undefined && unknownErrors.map(item=>(
                                         <div>
-                                        <Link to={`/workflow/errorDashboard/details`}>Error Details-</Link>
+                                         <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto }>Error Details</Link>
                                          <label className="small nobold">Total Count:{item.totalCount} </label><br/>
                                          </div>
                                       ))}
@@ -145,7 +145,7 @@ const ErrorDashboard = React.createClass({
            <Panel header="Known Errors">
            {knownErrors !== undefined && knownErrors.map(item=>(
                   <div>
-                  <Link to={`/workflow/errorDashboard/details`}>{item.lookup}-</Link>
+                  <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto }>{item.lookup}</Link>
                    <label className="small nobold">Total Count:{item.totalCount} </label><br/>
                    </div>
                 ))}
