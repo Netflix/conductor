@@ -884,6 +884,25 @@ public class WorkflowResource {
 		}
 	}
 
+	@POST
+	@Path("/errorRegistryList")
+	@ApiOperation("Search error registry")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public List<WorkflowErrorRegistry>  searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			return executor.searchErrorRegistryList(workflowErrorRegistry);
+		} else {
+			return executor.searchErrorRegistryList(workflowErrorRegistry);
+		}
+	}
+
+
 	private List<String> convert(String sortStr) {
 		List<String> list = new ArrayList<String>();
 		if (sortStr != null && sortStr.length() != 0) {

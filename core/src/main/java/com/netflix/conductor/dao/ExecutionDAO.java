@@ -301,6 +301,8 @@ public interface ExecutionDAO {
 
 	public abstract List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistry);
 
+	public abstract List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry  workflowErrorRegistry);
+
 	/**
 	 * Returns list of the in progress tasks associated with tags
 

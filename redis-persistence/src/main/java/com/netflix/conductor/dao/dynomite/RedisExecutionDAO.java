@@ -610,4 +610,7 @@ public class RedisExecutionDAO extends BaseDynoDAO implements ExecutionDAO {
 	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistry){
 		return null;
 	}
+	public List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry  workflowErrorRegistry){
+		return null;
+	}
 }

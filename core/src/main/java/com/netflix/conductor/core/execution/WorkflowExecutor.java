@@ -2130,4 +2130,9 @@ public class WorkflowExecutor {
 		List<WorkflowError> workflowErrorRegistries = edao.searchWorkflowErrorRegistry(workflowErrorRegistry);
 		return workflowErrorRegistries;
 	}
+
+	public List<WorkflowErrorRegistry> searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+		List<WorkflowErrorRegistry> workflowErrorRegistries = edao.searchWorkflowErrorRegistryList(workflowErrorRegistry);
+		return workflowErrorRegistries;
+	}
 }
