@@ -41,6 +41,22 @@ const ErrorDashboard = React.createClass({
          this.setState({ dateto: e.target.value });
       },
 
+ rangeChange(range) {
+     if (range != null && range.length > 0) {
+       let value = range[range.length - 1];
+       this.state.range = [value];
+     } else {
+       this.state.range = [];
+     }
+   },
+
+  clearBtnClick() {
+   this.setState({
+     datefrm:"",
+     dateto: ""
+   });
+ },
+
  searchBtnClick() {
         const inputData = {
                  searchString : this.state.search,

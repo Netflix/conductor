@@ -313,9 +313,12 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
     var frmdate = req.query.frmDate;
     var todate = req.query.toDate;
     if (frmdate != 'undefined' && todate != 'undefined' && frmdate != '' && todate != '') {
-         from = moment(frmdate);
-         end = moment(todate);
+         from = moment(frmdate).valueOf();
+         end = moment(todate).valueOf();
+          console.log(from);
+          console.log(end);
        }
+
     const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
@@ -326,9 +329,10 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
                    jobId : req.params.searchString,
                    rankingId : req.params.searchString,
                    orderId : req.params.searchString,
-                   startTime :  from.toISOString(),
-                   endtime : end.toISOString()
+                   startTime :  from,
+                   endTime : end
                   };
+                  console.log(inputData);
          const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
          res.status(200).send({result});
         }

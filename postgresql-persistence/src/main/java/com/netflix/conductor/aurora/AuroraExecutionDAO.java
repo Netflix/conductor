@@ -806,15 +806,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				" WHERE 1=1 ");
 		LinkedList<Object> params = new LinkedList<>();
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getWorkflowId() != null) {
-			SQL.append("AND workflow_error_registry.workflow_id = ? ");
+			SQL.append("AND (workflow_error_registry.workflow_id = ? ");
 			params.add(workflowErrorRegistryEntry.getWorkflowId());
 		}
-		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStatus() != null) {
-			SQL.append("AND workflow_error_registry.workflow_status = ? ");
-			params.add(workflowErrorRegistryEntry.getStatus());
-		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getParentWorkflowId() != null) {
-			SQL.append("AND workflow_error_registry.parent_workflow_id = ? ");
+			SQL.append("OR workflow_error_registry.parent_workflow_id = ? ");
 			params.add(workflowErrorRegistryEntry.getParentWorkflowId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getJobId() != null) {
@@ -826,8 +822,12 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			params.add(workflowErrorRegistryEntry.getRankingId());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getOrderId() != null) {
-			SQL.append("OR workflow_error_registry.order_id = ? ");
+			SQL.append("OR workflow_error_registry.order_id = ? ) ");
 			params.add(workflowErrorRegistryEntry.getOrderId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStatus() != null) {
+			SQL.append("AND workflow_error_registry.workflow_status = ? ");
+			params.add(workflowErrorRegistryEntry.getStatus());
 		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
 			SQL.append("AND workflow_error_registry.complete_error = ? ");
