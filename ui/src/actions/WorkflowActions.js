@@ -377,3 +377,23 @@ export function getErrorData(inputData) {
     });
   }
 }
+
+export function getErrorDataList(inputData) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_ERRORLIST_DATA'
+    });
+    const token = authHelper.getLocalAuthToken();
+    return http.post('/api/wfe/errorRegistrySearchList/'+inputData.searchString+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&range=' + inputData.range, null, token).then((data) => {
+      dispatch({
+        type: 'RECEIVED_ERRORLIST_DATA',
+        errorData: data
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}

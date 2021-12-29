@@ -380,4 +380,78 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
   }
 });
 
+router.post('/errorRegistrySearchList/:searchString', async (req, res, next) => {
+  try {
+    let from = null;
+    let end = null;
+    var frmdate = req.query.frmDate;
+    var todate = req.query.toDate;
+    var range = req.query.range;
+    if (frmdate != 'undefined' && todate != 'undefined' && frmdate != '' && todate != '') {
+         from = moment(frmdate).valueOf();
+         end = moment(todate).valueOf();
+    } else {
+         if (range === 'All data') {
+            // do nothing
+          } else if (range === 'This year') {
+            from = moment().startOf('year').valueOf();
+            end = moment().endOf('year').valueOf();
+          } else if (range === 'Last quarter') {
+            from = moment().subtract(1, 'quarter').startOf('quarter').valueOf();
+            end = moment().subtract(1, 'quarter').endOf('quarter').valueOf();
+          } else if (range === 'This quarter') {
+            from = moment().startOf('quarter').valueOf();
+            end = moment().endOf('quarter').valueOf();
+          } else if (range === 'Last month') {
+            from = moment().subtract(1, 'month').startOf('month').valueOf();
+            end = moment().subtract(1, 'month').endOf('month').valueOf();
+          } else if (range === 'This month') {
+            from = moment().startOf('month').valueOf();
+            end = moment().endOf('month').valueOf();
+          } else if (range === 'Yesterday') {
+            from = moment().subtract(1, 'days').startOf('day').valueOf();
+            end = moment().subtract(1, 'days').endOf('day').valueOf();
+          } else if (range === 'Last 30 minutes') {
+            from = moment().subtract(30, 'minutes').startOf('minute').valueOf();
+            end = moment().valueOf();
+          } else if (range === 'Last 5 minutes') {
+            from = moment().subtract(5, 'minutes').startOf('minute').valueOf();
+            end = moment().valueOf();
+          } else { // Today is default
+            from = moment().startOf('day').valueOf();
+            end = moment().endOf('day').valueOf();
+          }
+        }
+
+    const token = getToken(req);
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+       if (req.params.searchString !== "undefined")
+        {
+          const inputData = {
+                   workflowId : req.params.searchString,
+                   jobId : req.params.searchString,
+                   rankingId : req.params.searchString,
+                   orderId : req.params.searchString,
+                   startTime :  from,
+                   endTime : end
+                  };
+         const result = await http.post(baseURL2 + 'errorRegistryList', inputData, token);
+         res.status(200).send({result});
+        }
+       else
+       {
+         const inputData={
+          startTime :  from,
+          endTime : end
+         };
+         const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
+          res.status(200).send({result});
+       }
+
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
