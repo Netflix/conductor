@@ -44,9 +44,10 @@ const ErrorDashboard = React.createClass({
  rangeChange(range) {
      if (range != null && range.length > 0) {
        let value = range[range.length - 1];
+       this.setState({ range: [value] });
        this.state.range = [value];
      } else {
-       this.state.range = [];
+       this.setState({ range: [] });
      }
    },
 
@@ -62,6 +63,7 @@ const ErrorDashboard = React.createClass({
                  searchString : this.state.search,
                  frmDate : this.state.datefrm,
                  toDate : this.state.dateto,
+                 range : this.state.range
                 };
               this.props.dispatch(getErrorData(inputData));
       },
@@ -117,11 +119,6 @@ const ErrorDashboard = React.createClass({
                        </Col>
                      </Row>
                       <Row className="show-grid">
-
-                         <Col md={2}>
-                                      <Input className="number-input" type="text" ref="h" groupClassName="inline" labelClassName="" label="" value={this.state.h} onChange={this.hourChange}/>
-                                      <br/>&nbsp;&nbsp;&nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">Created (in past hours)</label>
-                        </Col>
                         <Col md={2}>
                            <input  name="datefrm"  type="date" value={this.state.datefrm} className="form-control"  onChange={ this.dateChangeFrom } />
                             &nbsp;<i className="fa fa-angle-up fa-1x"></i>&nbsp;&nbsp;<label className="small nobold">From Date</label>

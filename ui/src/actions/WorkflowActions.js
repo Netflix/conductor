@@ -364,7 +364,7 @@ export function getErrorData(inputData) {
       type: 'REQUESTED_ERROR_DATA'
     });
     const token = authHelper.getLocalAuthToken();
-    return http.post('/api/wfe/errorRegistrySearch/'+inputData.searchString+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate, null, token).then((data) => {
+    return http.post('/api/wfe/errorRegistrySearch/'+inputData.searchString+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&range=' + inputData.range, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_ERROR_DATA',
         errorData: data
