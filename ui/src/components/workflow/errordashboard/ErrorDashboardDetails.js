@@ -54,17 +54,18 @@ constructor(props) {
 
 
   render() {
-    var errorData = [];
+    var errorData = this.props.errorData;
+    console.log(errorData.result);
     return (
       <div className="ui-content">
         <h1>Transcode job failed</h1>
-         <BootstrapTable data={errorData} striped={true} hover={true} exportCSV={false} pagination={false}>
-                <TableHeaderColumn dataField="workflow_id" isKey={true} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="order_id" dataSort={true} >Order ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="job_id" dataSort={true} >Job ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="ranking_id" dataSort={true} >Ranking ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="failure_time" dataSort={true} >Failure Time</TableHeaderColumn>
-                <TableHeaderColumn dataField="complete_message" dataSort={true} >Complete Error Message</TableHeaderColumn>
+         <BootstrapTable data={errorData.result} striped={true} hover={true} exportCSV={false} pagination={true}>
+                <TableHeaderColumn dataField="workflowId" isKey={true} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
+                <TableHeaderColumn dataField="orderId" dataSort={true} >Order ID</TableHeaderColumn>
+                <TableHeaderColumn dataField="jobId" dataSort={true} >Job ID</TableHeaderColumn>
+                <TableHeaderColumn dataField="rankingId" dataSort={true} >Ranking ID</TableHeaderColumn>
+                <TableHeaderColumn dataField="startTime" dataSort={true} >Failure Time</TableHeaderColumn>
+                <TableHeaderColumn dataField="completeError" dataSort={true} >Complete Error Message</TableHeaderColumn>
                 </BootstrapTable>
       </div>
     );
