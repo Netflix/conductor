@@ -135,20 +135,40 @@ const ErrorDashboard = React.createClass({
                    </Grid>
          </Panel>
           <Panel header="Unknown Errors">
-          {unknownErrors !== undefined && unknownErrors.map(item=>(
-                                        <div>
-                                         <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+item.lookup }>Error Details</Link>
-                                         <label className="small nobold">Total Count:{item.totalCount} </label><br/>
-                                         </div>
-                                      ))}
+              <Table striped bordered hover>
+                  <thead>
+                      <tr>
+                      <th>Error Type</th>
+                      <th>Total Count</th>
+                      </tr>
+                    </thead>
+                  {unknownErrors !== undefined && unknownErrors.map(item=>(
+                 <tbody>
+                     <tr>
+                        <td> <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+item.lookup }>Unknown Error</Link></td>
+                        <td><label className="small nobold">{item.totalCount} </label><br/></td>
+                     </tr>
+                 </tbody>
+                ))}
+               </Table>
             </Panel>
            <Panel header="Known Errors">
-           {knownErrors !== undefined && knownErrors.map(item=>(
-                  <div>
-                  <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+item.lookup }>{item.lookup}</Link>
-                   <label className="small nobold">Total Count:{item.totalCount} </label><br/>
-                   </div>
+           <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>Error Type</th>
+                   <th>Total Count</th>
+                </tr>
+               </thead>
+               {knownErrors !== undefined && knownErrors.map(item=>(
+                <tbody>
+                 <tr>
+                 <td> <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+item.lookup }>{item.lookup}</Link></td>
+                 <td><label className="small nobold">{item.totalCount} </label><br/></td>
+                 </tr>
+                 </tbody>
                 ))}
+                 </Table>
             </Panel>
 
       </div>
