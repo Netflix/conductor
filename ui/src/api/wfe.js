@@ -380,13 +380,13 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
   }
 });
 
-router.post('/errorRegistrySearchList/:searchString', async (req, res, next) => {
+router.post('/errorRegistrySearchList/getlist/:range', async (req, res, next) => {
   try {
     let from = null;
     let end = null;
     var frmdate = req.query.frmDate;
     var todate = req.query.toDate;
-    var range = req.query.range;
+    var range = req.params.range;
     if (frmdate != 'undefined' && todate != 'undefined' && frmdate != '' && todate != '') {
          from = moment(frmdate).valueOf();
          end = moment(todate).valueOf();
@@ -426,14 +426,14 @@ router.post('/errorRegistrySearchList/:searchString', async (req, res, next) => 
     const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
-       if (req.params.searchString !== "undefined")
+       if (req.query.searchString !== "undefined")
         {
           const inputData = {
                    errorLookUpId : req.query.errorLookupId,
-                   workflowId : req.params.searchString,
-                   jobId : req.params.searchString,
-                   rankingId : req.params.searchString,
-                   orderId : req.params.searchString,
+                   workflowId : req.query.searchString,
+                   jobId : req.query.searchString,
+                   rankingId : req.query.searchString,
+                   orderId : req.query.searchString,
                    startTime :  from,
                    endTime : end
                   };
@@ -448,7 +448,7 @@ router.post('/errorRegistrySearchList/:searchString', async (req, res, next) => 
           startTime :  from,
           endTime : end
          };
-         const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
+         const result = await http.post(baseURL2 + 'errorRegistryList', inputData, token);
           res.status(200).send({result});
        }
 

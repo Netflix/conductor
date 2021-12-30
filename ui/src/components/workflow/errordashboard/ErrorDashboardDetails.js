@@ -55,10 +55,9 @@ constructor(props) {
 
   render() {
     var errorData = this.props.errorData;
-    console.log(errorData.result);
     return (
       <div className="ui-content">
-        <h1>Transcode job failed</h1>
+       {this.props.params.lookup !== 'undefined' && (<h1>{this.props.params.lookup}</h1>)}
          <BootstrapTable data={errorData.result} striped={true} hover={true} exportCSV={false} pagination={true}>
                 <TableHeaderColumn dataField="workflowId" isKey={true} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="orderId" dataSort={true} >Order ID</TableHeaderColumn>

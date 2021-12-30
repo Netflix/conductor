@@ -904,6 +904,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			params.add(workflowErrorRegistryEntry.getStartTime());
 			params.add(workflowErrorRegistryEntry.getEndTime());
 		}
+		if (workflowErrorRegistryEntry != null) {
+			SQL.append("AND error_lookup_id = ? ");
+			params.add(workflowErrorRegistryEntry.getErrorLookUpId());
+		}
 
 		return queryWithTransaction(SQL.toString(), q -> {
 			params.forEach(p -> {
@@ -914,7 +918,9 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				} else if (p instanceof String) {
 					q.addParameter((String) p);
 				} else if (p instanceof Long) {
-					q.addTimestampParameter((Long)p);
+					q.addTimestampParameter((Long) p);
+				} else if (p instanceof Integer) {
+					q.addParameter((Integer) p);
 				}
 			});
 
