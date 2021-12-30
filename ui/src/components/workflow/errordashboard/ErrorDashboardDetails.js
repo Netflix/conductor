@@ -52,8 +52,16 @@ constructor(props) {
     return true;
   }
 
-
   render() {
+   function formatDate(cell, row){
+         let dt = moment(cell).toDate()
+          if(dt == null || dt == ''){
+            return '';
+          }
+          return new Date(dt).toLocaleString('en-US');
+        };
+
+
     var errorData = this.props.errorData;
     return (
       <div className="ui-content">
@@ -63,7 +71,7 @@ constructor(props) {
                 <TableHeaderColumn dataField="orderId" dataSort={true} >Order ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="jobId" dataSort={true} >Job ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="rankingId" dataSort={true} >Ranking ID</TableHeaderColumn>
-                <TableHeaderColumn dataField="startTime" dataSort={true} >Failure Time</TableHeaderColumn>
+                <TableHeaderColumn dataField="startTime" dataSort={true} dataFormat={formatDate}>Failure Time</TableHeaderColumn>
                 <TableHeaderColumn dataField="completeError" dataSort={true} >Complete Error Message</TableHeaderColumn>
                 </BootstrapTable>
       </div>
