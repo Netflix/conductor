@@ -5,30 +5,56 @@ import { Breadcrumb, BreadcrumbItem, Input, Well, Button, Panel, DropdownButton,
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import Typeahead from 'react-bootstrap-typeahead';
 import { connect } from 'react-redux';
-import { getQueueData } from '../../../actions/WorkflowActions';
+import { getErrorDataList } from '../../../actions/WorkflowActions';
+import http from '../../../core/HttpClient';
 
-const ErrorDashboardDetails = React.createClass({
+class ErrorDashboardDetails extends Component{
 
-  getInitialState() {
-    return {
-      name: '',
-      version: '',
-      errorData: []
+constructor(props) {
+    super(props);
+    this.state = {
+      sys: {}
+    };
+
+    http.get('/api/sys/').then((data) => {
+      this.state = {
+        sys: data.sys
+      };
+      window.sys = this.state.sys;
+    });
+  }
+
+ componentWillReceiveProps(nextProps) {
+    if (this.props.hash != nextProps.hash) {
+     const inputData = {
+                     searchString : nextProps.params.searchString,
+                     errorLookupId : nextProps.params.errorLookupId,
+                     frmDate : nextProps.params.fromDate,
+                     toDate: nextProps.params.toDate,
+                     range: nextProps.params.range
+                    };
+        this.props.dispatch(getErrorDataList(inputData));
     }
-  },
+  }
 
-  componentWillMount(){
+  shouldComponentUpdate(nextProps, nextState){
+    if(nextProps.refetch){
+      const inputData = {
+                      searchString : nextProps.params.searchString,
+                      errorLookupId : nextProps.params.errorLookupId,
+                      frmDate : nextProps.params.fromDate,
+                      toDate: nextProps.params.toDate,
+                      range: nextProps.params.range
+                     };
+         this.props.dispatch(getErrorDataList(inputData));
+      return false;
+    }
+    return true;
+  }
 
-  },
-
-  componentWillReceiveProps(nextProps){
-    console.log(nextProps.params.errorLookupId)
-    console.log(nextProps.params.searchString)
-    //this.state.errorData = nextProps.errorData;
-  },
 
   render() {
-    var errorData = this.state.errorData;
+    var errorData = [];
     return (
       <div className="ui-content">
         <h1>Transcode job failed</h1>
@@ -43,5 +69,5 @@ const ErrorDashboardDetails = React.createClass({
       </div>
     );
   }
-});
+};
 export default connect(state => state.workflow)(ErrorDashboardDetails);

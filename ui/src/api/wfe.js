@@ -429,6 +429,7 @@ router.post('/errorRegistrySearchList/:searchString', async (req, res, next) => 
        if (req.params.searchString !== "undefined")
         {
           const inputData = {
+                   errorLookUpId : req.query.errorLookupId,
                    workflowId : req.params.searchString,
                    jobId : req.params.searchString,
                    rankingId : req.params.searchString,
@@ -441,7 +442,9 @@ router.post('/errorRegistrySearchList/:searchString', async (req, res, next) => 
         }
        else
        {
+
          const inputData={
+          errorLookUpId : req.query.errorLookupId,
           startTime :  from,
           endTime : end
          };

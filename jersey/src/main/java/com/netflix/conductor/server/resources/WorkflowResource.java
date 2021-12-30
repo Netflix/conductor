@@ -886,7 +886,7 @@ public class WorkflowResource {
 
 	@POST
 	@Path("/errorRegistryList")
-	@ApiOperation("Search error registry")
+	@ApiOperation("Get error registry list")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiImplicitParams({
 			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
