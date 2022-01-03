@@ -45,6 +45,7 @@ public class AMQPConnection {
 	private final static String PUBLISHER = "Publisher";
 	private final static String SUBSCRIBER = "Subscriber";
 	private static final Map<ConnectionType, Set<Channel>> RMQ_CHANNEL_MAP = new ConcurrentHashMap<ConnectionType, Set<Channel>>();
+	private static final Map<String, Channel> SUB_CHANNEL_MAP = new ConcurrentHashMap<String, Channel>();
 
 	private AMQPConnection() {
 
@@ -119,12 +120,21 @@ public class AMQPConnection {
 		LOGGER.debug("Accessing the channel for queueOrExchange {} with type {} ", queueOrExchangeName, connectionType);
 		switch (connectionType) {
 		case SUBSCRIBER:
+			String subChnName = connectionType + ";" + queueOrExchangeName;
+			if (SUB_CHANNEL_MAP.containsKey(subChnName)) {
+				Channel locChn = SUB_CHANNEL_MAP.get(subChnName);
+				if (locChn != null && locChn.isOpen()) {
+					return locChn;
+				}
+			}
 			synchronized (this) {
 				if (subscriberConnection == null) {
 					subscriberConnection = createConnection(SUBSCRIBER);
 				}
 			}
-			return borrowChannel(connectionType, subscriberConnection);
+			Channel subChn = borrowChannel(connectionType, subscriberConnection);
+			SUB_CHANNEL_MAP.put(subChnName, subChn);
+			return subChn;
 		case PUBLISHER:
 			synchronized (this) {
 				if (publisherConnection == null) {
