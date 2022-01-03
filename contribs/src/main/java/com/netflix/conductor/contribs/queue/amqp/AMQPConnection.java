@@ -153,13 +153,16 @@ public class AMQPConnection {
 		try {
 			LOGGER.debug("Creating a channel for " + connType);
 			locChn = rmqConnection.createChannel();
-			locChn.addShutdownListener(cause -> {
-				LOGGER.error(connType + " Channel has been shutdown: {}", cause.getMessage(), cause);
-			});
 			if (locChn == null || !locChn.isOpen()) {
 				throw new RuntimeException("Fail to open " + connType + " channel");
 			}
+			locChn.addShutdownListener(cause -> {
+				LOGGER.error(connType + " Channel has been shutdown: {}", cause.getMessage(), cause);
+			});
 		} catch (final IOException e) {
+			throw new RuntimeException("Cannot open " + connType + " channel on "
+					+ Arrays.stream(addresses).map(address -> address.toString()).collect(Collectors.joining(",")), e);
+		} catch (final Exception e) {
 			throw new RuntimeException("Cannot open " + connType + " channel on "
 					+ Arrays.stream(addresses).map(address -> address.toString()).collect(Collectors.joining(",")), e);
 		}

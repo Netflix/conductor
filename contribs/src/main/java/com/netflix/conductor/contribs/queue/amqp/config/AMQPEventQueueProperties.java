@@ -41,6 +41,16 @@ public class AMQPEventQueueProperties {
 	private int requestHeartbeatTimeoutInSecs = 30;
 	
 	private int handshakeTimeoutInSecs = 60;
+	
+	private int maxChannelCount = 65535;
+
+	public int getMaxChannelCount() {
+		return maxChannelCount;
+	}
+
+	public void setMaxChannelCount(int maxChannelCount) {
+		this.maxChannelCount = maxChannelCount;
+	}
 
 	private boolean useNio = false;
 

@@ -359,6 +359,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 			factory.setHandshakeTimeout(properties.getHandshakeTimeoutInSecs());
 			factory.setAutomaticRecoveryEnabled(true);
 			factory.setTopologyRecoveryEnabled(true);
+			factory.setRequestedChannelMax(properties.getMaxChannelCount());
 			return factory;
 		}
 
