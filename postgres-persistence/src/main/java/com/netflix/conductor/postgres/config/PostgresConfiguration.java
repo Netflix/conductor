@@ -16,9 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.postgres.dao.PostgresExecutionDAO;
 import com.netflix.conductor.postgres.dao.PostgresMetadataDAO;
 import com.netflix.conductor.postgres.dao.PostgresQueueDAO;
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.flyway.FlywayConfigurationCustomizer;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -35,28 +36,38 @@ import org.springframework.context.annotation.Import;
 @Import(DataSourceAutoConfiguration.class)
 public class PostgresConfiguration {
 
-    @Bean
-    public FlywayConfigurationCustomizer flywayConfigurationCustomizer() {
-        // override the default location.
-        return configuration -> configuration.locations("classpath:db/migration_postgres");
+    DataSource dataSource;
+
+    public PostgresConfiguration(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    @Bean(initMethod = "migrate")
+    @PostConstruct
+    public Flyway flywayForPrimaryDb() {
+        return Flyway.configure()
+                .locations("classpath:db/migration_postgres")
+                .schemas("public")
+                .dataSource(dataSource)
+                .baselineOnMigrate(true)
+                .load();
     }
 
     @Bean
-    @DependsOn({"flyway", "flywayInitializer"})
-    public PostgresMetadataDAO postgresMetadataDAO(ObjectMapper objectMapper, DataSource dataSource,
-        PostgresProperties properties) {
+    @DependsOn({"flywayForPrimaryDb"})
+    public PostgresMetadataDAO postgresMetadataDAO(ObjectMapper objectMapper, PostgresProperties properties) {
         return new PostgresMetadataDAO(objectMapper, dataSource, properties);
     }
 
     @Bean
-    @DependsOn({"flyway", "flywayInitializer"})
-    public PostgresExecutionDAO postgresExecutionDAO(ObjectMapper objectMapper, DataSource dataSource) {
+    @DependsOn({"flywayForPrimaryDb"})
+    public PostgresExecutionDAO postgresExecutionDAO(ObjectMapper objectMapper) {
         return new PostgresExecutionDAO(objectMapper, dataSource);
     }
 
     @Bean
-    @DependsOn({"flyway", "flywayInitializer"})
-    public PostgresQueueDAO postgresQueueDAO(ObjectMapper objectMapper, DataSource dataSource) {
+    @DependsOn({"flywayForPrimaryDb"})
+    public PostgresQueueDAO postgresQueueDAO(ObjectMapper objectMapper) {
         return new PostgresQueueDAO(objectMapper, dataSource);
     }
 }
