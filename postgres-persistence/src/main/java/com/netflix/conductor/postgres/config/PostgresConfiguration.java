@@ -14,8 +14,8 @@ package com.netflix.conductor.postgres.config;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
-import org.flywaydb.core.Flyway;
 
+import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -58,7 +58,8 @@ public class PostgresConfiguration {
 
     @Bean
     @DependsOn({"flywayForPrimaryDb"})
-    public PostgresMetadataDAO postgresMetadataDAO(ObjectMapper objectMapper, PostgresProperties properties) {
+    public PostgresMetadataDAO postgresMetadataDAO(
+            ObjectMapper objectMapper, PostgresProperties properties) {
         return new PostgresMetadataDAO(objectMapper, dataSource, properties);
     }
 

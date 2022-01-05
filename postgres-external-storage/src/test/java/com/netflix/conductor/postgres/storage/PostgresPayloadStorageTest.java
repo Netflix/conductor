@@ -12,9 +12,6 @@
  */
 package com.netflix.conductor.postgres.storage;
 
-import static org.junit.Assert.assertEquals;
-
-import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +28,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
+
+import static org.junit.Assert.assertEquals;
 
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
@@ -40,8 +42,9 @@ public class PostgresPayloadStorageTest {
 
     public PostgreSQLContainer<?> postgreSQLContainer;
 
-    private final String inputString = "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
-            + " Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.";
+    private final String inputString =
+            "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
+                    + " Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.";
     private final InputStream inputData;
     private final String key = "dummyKey.json";
 
@@ -52,32 +55,45 @@ public class PostgresPayloadStorageTest {
     @Before
     public void setup() {
         postgreSQLContainer =
-                new PostgreSQLContainer<>(DockerImageName.parse("postgres")).withDatabaseName("conductor");
+                new PostgreSQLContainer<>(DockerImageName.parse("postgres"))
+                        .withDatabaseName("conductor");
         postgreSQLContainer.start();
         testPostgres = new PostgresPayloadTestUtil(postgreSQLContainer);
-        executionPostgres = new PostgresPayloadStorage(testPostgres.getTestProperties(), testPostgres.getDataSource());
+        executionPostgres =
+                new PostgresPayloadStorage(
+                        testPostgres.getTestProperties(), testPostgres.getDataSource());
     }
 
     @Test
     public void testWriteInputStreamToDb() throws IOException, SQLException {
         executionPostgres.upload(key, inputData, inputData.available());
 
-        PreparedStatement stmt = testPostgres.getDataSource().getConnection()
-                .prepareStatement("SELECT data FROM external.external_payload WHERE id = 'dummyKey.json'");
+        PreparedStatement stmt =
+                testPostgres
+                        .getDataSource()
+                        .getConnection()
+                        .prepareStatement(
+                                "SELECT data FROM external.external_payload WHERE id = 'dummyKey.json'");
         ResultSet rs = stmt.executeQuery();
         rs.next();
-        assertEquals(inputString, new String(rs.getBinaryStream(1).readAllBytes(), StandardCharsets.UTF_8));
+        assertEquals(
+                inputString,
+                new String(rs.getBinaryStream(1).readAllBytes(), StandardCharsets.UTF_8));
     }
 
     @Test
     public void testReadInputStreamFromDb() throws IOException, SQLException {
-        PreparedStatement stmt = testPostgres.getDataSource().getConnection()
-                .prepareStatement("INSERT INTO external.external_payload  VALUES (?, ?)");
+        PreparedStatement stmt =
+                testPostgres
+                        .getDataSource()
+                        .getConnection()
+                        .prepareStatement("INSERT INTO external.external_payload  VALUES (?, ?)");
         stmt.setString(1, key);
         stmt.setBinaryStream(2, inputData, inputData.available());
         stmt.executeUpdate();
 
-        assertEquals(inputString,
+        assertEquals(
+                inputString,
                 new String(executionPostgres.download(key).readAllBytes(), StandardCharsets.UTF_8));
     }
 
@@ -91,8 +107,11 @@ public class PostgresPayloadStorageTest {
         executionPostgres.upload("dummyKey6.json", inputData, inputData.available());
         executionPostgres.upload("dummyKey7.json", inputData, inputData.available());
 
-        PreparedStatement stmt = testPostgres.getDataSource().getConnection()
-                .prepareStatement("SELECT count(id) FROM external.external_payload");
+        PreparedStatement stmt =
+                testPostgres
+                        .getDataSource()
+                        .getConnection()
+                        .prepareStatement("SELECT count(id) FROM external.external_payload");
         ResultSet rs = stmt.executeQuery();
         rs.next();
         assertEquals(5, rs.getInt(1));

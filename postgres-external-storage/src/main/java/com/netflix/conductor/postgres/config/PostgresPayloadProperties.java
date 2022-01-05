@@ -17,54 +17,46 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("conductor.external-payload-storage.postgres")
 public class PostgresPayloadProperties {
 
-    /**
-     * The PostgreSQL schema and table name where the payloads will be stored
-     */
+    /** The PostgreSQL schema and table name where the payloads will be stored */
     private String tableName = "external.external_payload";
 
-    /**
-     * Username for connecting to PostgreSQL database
-     */
+    /** Username for connecting to PostgreSQL database */
     private String username;
 
-    /**
-     * Password for connecting to PostgreSQL database
-     */
+    /** Password for connecting to PostgreSQL database */
     private String password;
 
-    /**
-     * URL for connecting to PostgreSQL database
-     */
+    /** URL for connecting to PostgreSQL database */
     private String url;
 
     /**
-     * Maximum count of data rows in PostgreSQL database.
-     * After overcoming this limit, the oldest data will be deleted.
+     * Maximum count of data rows in PostgreSQL database. After overcoming this limit, the oldest
+     * data will be deleted.
      */
     private long maxDataRows = Long.MAX_VALUE;
 
     /**
-     * Maximum count of days of data age in PostgreSQL database.
-     * After overcoming limit, the oldest data will be deleted.
+     * Maximum count of days of data age in PostgreSQL database. After overcoming limit, the oldest
+     * data will be deleted.
      */
     private int maxDataDays = 0;
 
     /**
-     * Maximum count of months of data age in PostgreSQL database.
-     * After overcoming limit, the oldest data will be deleted.
+     * Maximum count of months of data age in PostgreSQL database. After overcoming limit, the
+     * oldest data will be deleted.
      */
     private int maxDataMonths = 0;
 
     /**
-     * Maximum count of years of data age in PostgreSQL database.
-     * After overcoming limit, the oldest data will be deleted.
+     * Maximum count of years of data age in PostgreSQL database. After overcoming limit, the oldest
+     * data will be deleted.
      */
     private int maxDataYears = 1;
 
     /**
-     * URL, that can be used to pull the json configurations,
-     * that will be downloaded from PostgreSQL to the conductor server.
-     * For example: for local development it is "http://localhost:8080"
+     * URL, that can be used to pull the json configurations, that will be downloaded from
+     * PostgreSQL to the conductor server. For example: for local development it is
+     * "http://localhost:8080"
      */
     private String conductorUrl = "";
 

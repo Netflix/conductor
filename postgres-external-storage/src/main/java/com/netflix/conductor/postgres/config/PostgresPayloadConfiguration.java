@@ -12,17 +12,20 @@
  */
 package com.netflix.conductor.postgres.config;
 
-import com.netflix.conductor.common.utils.ExternalPayloadStorage;
-import com.netflix.conductor.postgres.storage.PostgresPayloadStorage;
 import java.util.Map;
+
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+
 import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.postgres.storage.PostgresPayloadStorage;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PostgresPayloadProperties.class)
@@ -39,28 +42,42 @@ public class PostgresPayloadConfiguration {
     @PostConstruct
     public Flyway flywayForExternalDb() {
         return Flyway.configure()
-            .locations("classpath:db/migration_external_postgres")
-            .schemas("external")
-            .baselineOnMigrate(true)
-            .placeholderReplacement(true)
-            .placeholders(Map.of("tableName", properties.getTableName(),
-                "maxDataRows", String.valueOf(properties.getMaxDataRows()),
-                "maxDataDays", "'" + properties.getMaxDataDays() + "'",
-                "maxDataMonths", "'" + properties.getMaxDataMonths() + "'",
-                "maxDataYears", "'" + properties.getMaxDataYears() + "'"))
-            .dataSource(DataSourceBuilder.create()
-                .driverClassName("org.postgresql.Driver")
-                .url(properties.getUrl())
-                .username(properties.getUsername())
-                .password(properties.getPassword())
-                .build())
-            .load();
+                .locations("classpath:db/migration_external_postgres")
+                .schemas("external")
+                .baselineOnMigrate(true)
+                .placeholderReplacement(true)
+                .placeholders(
+                        Map.of(
+                                "tableName",
+                                properties.getTableName(),
+                                "maxDataRows",
+                                String.valueOf(properties.getMaxDataRows()),
+                                "maxDataDays",
+                                "'" + properties.getMaxDataDays() + "'",
+                                "maxDataMonths",
+                                "'" + properties.getMaxDataMonths() + "'",
+                                "maxDataYears",
+                                "'" + properties.getMaxDataYears() + "'"))
+                .dataSource(
+                        DataSourceBuilder.create()
+                                .driverClassName("org.postgresql.Driver")
+                                .url(properties.getUrl())
+                                .username(properties.getUsername())
+                                .password(properties.getPassword())
+                                .build())
+                .load();
     }
 
     @Bean
-    public ExternalPayloadStorage postgresExternalPayloadStorage(PostgresPayloadProperties properties) {
-        DataSource dataSource = DataSourceBuilder.create().driverClassName("org.postgresql.Driver")
-            .url(properties.getUrl()).username(properties.getUsername()).password(properties.getPassword()).build();
+    public ExternalPayloadStorage postgresExternalPayloadStorage(
+            PostgresPayloadProperties properties) {
+        DataSource dataSource =
+                DataSourceBuilder.create()
+                        .driverClassName("org.postgresql.Driver")
+                        .url(properties.getUrl())
+                        .username(properties.getUsername())
+                        .password(properties.getPassword())
+                        .build();
         return new PostgresPayloadStorage(properties, dataSource);
     }
 }
